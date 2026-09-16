@@ -86,6 +86,9 @@ onMounted(load);
       <RouterLink v-if="session.active_role?.code === 'coordinador'" class="primary-link" to="/coordinacion/convocatorias">
         Gestionar convocatorias
       </RouterLink>
+      <RouterLink v-if="session.active_role?.code === 'coordinador'" class="primary-link" to="/coordinacion/revisiones">
+        Revisar sílabos
+      </RouterLink>
       <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/usuarios">
         Administrar usuarios
       </RouterLink>

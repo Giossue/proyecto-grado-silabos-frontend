@@ -1,0 +1,12 @@
+<script setup lang="ts">
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { ApiError } from '@/api/client';
+import { getReviews, type ReviewsPage } from '@/api/reviews';
+import { getSession } from '@/api/session';
+const router = useRouter(); const data = ref<ReviewsPage | null>(null); const search = ref(''); const state = ref(''); const error = ref<string | null>(null);
+const label = (value: string) => ({ en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado' }[value] ?? value);
+const load = async () => { try { const session = await getSession(); if (session.active_role?.code !== 'coordinador') { await router.replace('/panel'); return; } data.value = await getReviews({ search: search.value, state: state.value }); } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la cola de revisión.'; } };
+onMounted(() => { void load(); });
+</script>
+<template><main class="app-page"><header class="app-header"><div><p class="eyebrow">Coordinación</p><h1>Cola de revisión</h1><p>Revise el contenido exacto que envió cada docente.</p></div><RouterLink class="back-link" to="/panel">Volver al panel</RouterLink></header><form class="filter-form" @submit.prevent="load"><label>Buscar<input v-model="search" placeholder="Asignatura o código" /></label><label>Estado<select v-model="state"><option value="">Todos</option><option value="en_revision">En revisión</option><option value="correccion_solicitada">Corrección solicitada</option><option value="aprobado">Aprobado</option></select></label><button>Buscar</button></form><p v-if="error" role="alert">{{ error }}</p><section v-if="data" class="detail-card"><div v-if="data.syllabi.data.length" class="table-wrap"><table><thead><tr><th>Asignatura</th><th>Docentes</th><th>Revisión</th><th>Estado</th><th>Pendientes</th><th></th></tr></thead><tbody><tr v-for="item in data.syllabi.data" :key="item.id"><td><strong>{{ item.subject }}</strong><small>{{ item.code }} · {{ item.period }}</small></td><td>{{ item.teachers.join(', ') }}</td><td>N.º {{ item.revision_number }}</td><td><span class="role-badge">{{ label(item.state) }}</span></td><td>{{ item.unresolved_observations }}</td><td><RouterLink class="back-link" :to="`/coordinacion/revisiones/${item.revision_id}`">Abrir</RouterLink></td></tr></tbody></table></div><p v-else class="empty-state">No hay expedientes para los filtros seleccionados.</p></section></main></template>
