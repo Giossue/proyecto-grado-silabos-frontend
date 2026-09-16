@@ -8,7 +8,11 @@ export class ApiError extends Error {
   }
 }
 
-const baseUrl = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(/\/$/, '');
+const baseUrl = (
+  window.__SILABOS_CONFIG__?.apiUrl ||
+  import.meta.env.VITE_API_URL ||
+  'http://localhost:8000'
+).replace(/\/$/, '');
 
 const readCookie = (name: string): string | null => {
   const prefix = `${name}=`;

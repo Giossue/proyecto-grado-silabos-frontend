@@ -1,0 +1,1 @@
+window.__SILABOS_CONFIG__ = { apiUrl: "${PUBLIC_API_URL}" };

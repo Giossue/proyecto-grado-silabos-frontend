@@ -17,6 +17,23 @@ npm run dev
 el cliente solicita `/sanctum/csrf-cookie`; las credenciales nunca se persisten en el
 navegador.
 
+## Imagen independiente
+
+La imagen sirve la SPA con Nginx en el puerto `8080` y expone
+`GET /health/live`. La URL pública del backend se configura al arrancar, sin reconstruir
+el JavaScript:
+
+```bash
+docker build -t silabos-frontend .
+docker run --rm -p 8080:8080 \
+  -e PUBLIC_API_URL=https://api.silabos.example.edu.ec \
+  silabos-frontend
+```
+
+El backend debe incluir el origen del frontend en `FRONTEND_URL` y su host en
+`SANCTUM_STATEFUL_DOMAINS`; ambos deben compartir el dominio raíz para que la cookie de
+sesión `HttpOnly` funcione con `SESSION_DOMAIN`.
+
 ## Estado de migración
 
 La base de sesión ya está integrada: inicio/cierre de sesión, cambio de contraseña
