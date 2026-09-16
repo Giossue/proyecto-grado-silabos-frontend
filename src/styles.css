@@ -51,3 +51,26 @@ td small { display: block; margin-top: .25rem; color: #53657b; }
 .detail-card { display: grid; gap: .75rem; margin-bottom: 1rem; padding: 1.5rem; border: 1px solid #dbe3ef; border-radius: .75rem; background: white; }
 .detail-card h2, .detail-card p { margin: 0; }
 .detail-card button { justify-self: start; padding: .7rem .9rem; border: 0; border-radius: .4rem; background: #075da9; color: white; cursor: pointer; }
+.editor-form { display: grid; gap: 1rem; }
+.editor-form label, .editor-form fieldset { display: grid; gap: .45rem; margin: 0; }
+.editor-form input, .editor-form select, .editor-form textarea, .table-wrap input { width: 100%; padding: .65rem .7rem; border: 1px solid #b8c4d5; border-radius: .4rem; background: white; }
+.editor-form textarea { min-height: 7rem; resize: vertical; }
+.editor-form fieldset { border: 1px solid #dbe3ef; border-radius: .5rem; padding: .8rem; }
+.editor-form fieldset label { display: flex; align-items: center; gap: .5rem; }
+.editor-form fieldset input[type='checkbox'], .editor-form > label input[type='checkbox'] { width: auto; }
+.table-wrap { padding: .75rem; }
+.table-wrap table { min-width: 42rem; }
+.table-wrap input { min-width: 7rem; }
+.table-wrap button, .ai-field-button { margin-top: .75rem; padding: .55rem .7rem; border: 1px solid #b8c4d5; border-radius: .4rem; background: white; color: #172033; cursor: pointer; }
+.table-caption, .save-status { color: #53657b; font-size: .875rem; }
+.ai-field-button { justify-self: start; color: #075da9; }
+.ai-panel { position: fixed; z-index: 10; top: 1rem; right: 1rem; display: grid; width: min(25rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); gap: 1rem; overflow-y: auto; padding: 1rem; border: 1px solid #dbe3ef; border-radius: .75rem; background: white; box-shadow: 0 12px 32px rgb(23 32 51 / 18%); }
+.ai-panel header { display: flex; align-items: start; justify-content: space-between; gap: .75rem; }
+.ai-panel h2, .ai-panel h3, .ai-panel p { margin: 0; }
+.ai-panel header button { border: 0; background: transparent; color: #53657b; font-size: 1.5rem; cursor: pointer; }
+.ai-panel > button, .ai-actions button { padding: .55rem .7rem; border: 0; border-radius: .4rem; background: #075da9; color: white; cursor: pointer; }
+.ai-execution, .ai-recommendation, .ai-evidence { display: grid; gap: .65rem; padding: .85rem; border: 1px solid #dbe3ef; border-radius: .5rem; }
+.ai-recommendation textarea { width: 100%; min-height: 5rem; padding: .6rem; border: 1px solid #b8c4d5; border-radius: .4rem; resize: vertical; }
+.ai-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.ai-evidence article { display: grid; gap: .25rem; padding-top: .65rem; border-top: 1px solid #e6ebf1; }
+@media (max-width: 40rem) { .ai-panel { top: .5rem; right: .5rem; width: calc(100vw - 1rem); max-height: calc(100vh - 1rem); } }

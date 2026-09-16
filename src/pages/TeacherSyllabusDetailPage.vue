@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { getTeacherSyllabus, requestAiReview, respondObservation, saveTeacherField, saveTeacherRows, startTeacherSyllabus, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField } from '@/api/syllabi';
+import { applyAiRecommendation, decideAiRecommendation, getFieldAiAnalysis, getTeacherSyllabus, requestAiReview, requestFieldAiAnalysis, respondObservation, saveTeacherField, saveTeacherRows, startTeacherSyllabus, submitTeacherSyllabus, validateTeacherSyllabus, type AiFieldAnalysis, type RepeatableRow, type SyllabusBlock, type SyllabusDetail, type SyllabusField } from '@/api/syllabi';
 
 const route = useRoute();
 const router = useRouter();
@@ -11,9 +11,15 @@ const error = ref<string | null>(null);
 const starting = ref(false);
 const savingFieldId = ref<string | null>(null);
 const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const rowSaveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+let pendingSave: Promise<void> = Promise.resolve();
 const validationMessages = ref<string[]>([]);
 const validationRan = ref(false);
 const responseDrafts = ref<Record<string, string>>({});
+const aiAnalysis = ref<AiFieldAnalysis | null>(null);
+const aiField = ref<SyllabusField | null>(null);
+const aiLoading = ref(false);
+const aiMessage = ref<string | null>(null);
 
 const syllabusId = (): string => String(route.params.syllabus);
 
@@ -41,26 +47,36 @@ const start = async (): Promise<void> => {
   }
 };
 
-const saveField = async (field: SyllabusField): Promise<void> => {
+const invalidateValidation = (): void => {
+  validationRan.value = false;
+  validationMessages.value = [];
+};
+
+const queueSave = (operation: () => Promise<void>): void => {
+  pendingSave = pendingSave.then(operation).catch((reason: unknown) => {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo guardar el cambio.';
+  });
+};
+
+const saveField = (field: SyllabusField): void => {
+  queueSave(async () => {
   if (!syllabus.value) return;
   savingFieldId.value = field.id;
   try {
     const saved = await saveTeacherField(syllabus.value.id, field.id, syllabus.value.version_bloqueo, field.value);
     syllabus.value.version_bloqueo = saved.version_bloqueo;
     syllabus.value.completion = saved.completion;
-    validationRan.value = false;
-    validationMessages.value = [];
-  } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo guardar el campo.';
+    invalidateValidation();
   } finally {
     savingFieldId.value = null;
   }
+  });
 };
 
 const scheduleSave = (field: SyllabusField): void => {
   const previous = saveTimers.get(field.id);
   if (previous) clearTimeout(previous);
-  saveTimers.set(field.id, setTimeout(() => void saveField(field), 700));
+  saveTimers.set(field.id, setTimeout(() => saveField(field), 700));
 };
 
 const selectedValues = (field: SyllabusField): string[] => {
@@ -79,9 +95,55 @@ const toggleBoolean = (field: SyllabusField, checked: boolean): void => {
   scheduleSave(field);
 };
 
-const isChecked = (field: SyllabusField): boolean => (field as unknown as { value: boolean }).value === true;
-const addRow = (field: SyllabusField): void => { field.rows.push({ id: '', position: field.rows.length + 1, data: Object.fromEntries((field.table?.columns ?? []).map((column) => [column.key, null])) }); };
-const saveRows = async (field: SyllabusField): Promise<void> => { if (!syllabus.value) return; const saved = await saveTeacherRows(syllabus.value.id, field.id, syllabus.value.version_bloqueo, field.rows.map((row) => ({ ...row, id: row.id || undefined })) as SyllabusField['rows']); field.rows = saved.rows; syllabus.value.version_bloqueo = saved.version_bloqueo; syllabus.value.completion = saved.completion; };
+const isChecked = (field: SyllabusField): boolean => (field as unknown as { value: unknown }).value === true;
+
+const addRow = (field: SyllabusField, block: SyllabusBlock): void => {
+  const position = field.rows.length + 1;
+  field.rows.push({
+    position,
+    data: Object.fromEntries((block.table?.columns ?? []).map((column) => [column.key, null])),
+  });
+  scheduleRows(field);
+};
+
+const removeRow = (field: SyllabusField, position: number): void => {
+  field.rows.splice(position, 1);
+  field.rows.forEach((row, index) => { row.position = index + 1; });
+  scheduleRows(field);
+};
+
+const saveRows = (field: SyllabusField): void => {
+  queueSave(async () => {
+    if (!syllabus.value) return;
+    savingFieldId.value = field.id;
+    try {
+      const saved = await saveTeacherRows(
+        syllabus.value.id,
+        field.id,
+        syllabus.value.version_bloqueo,
+        field.rows.map((row) => ({ ...row, id: row.id || undefined })),
+      );
+      field.rows = saved.rows;
+      syllabus.value.version_bloqueo = saved.version_bloqueo;
+      syllabus.value.completion = saved.completion;
+      invalidateValidation();
+    } finally {
+      savingFieldId.value = null;
+    }
+  });
+};
+
+const scheduleRows = (field: SyllabusField): void => {
+  const previous = rowSaveTimers.get(field.id);
+  if (previous) clearTimeout(previous);
+  rowSaveTimers.set(field.id, setTimeout(() => saveRows(field), 700));
+};
+
+const total = (rows: RepeatableRow[], key: string): number => rows.reduce((sum, row) => {
+  const value = row.data[key];
+  const numeric = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(numeric) ? sum + numeric : sum;
+}, 0);
 
 const validate = async (): Promise<void> => {
   if (!syllabus.value) return;
@@ -95,7 +157,61 @@ const submit = async (): Promise<void> => {
   syllabus.value = (await submitTeacherSyllabus(syllabus.value.id, syllabus.value.version_bloqueo)).syllabus;
 };
 const askAi = async (): Promise<void> => { if (syllabus.value) await requestAiReview(syllabus.value.id, syllabus.value.version_bloqueo); };
-const answer = async (observationId: string): Promise<void> => { if (syllabus.value) await respondObservation(syllabus.value.id, observationId, responseDrafts.value[observationId] ?? ''); };
+const answer = async (observationId: string): Promise<void> => {
+  if (!syllabus.value) return;
+  await respondObservation(syllabus.value.id, observationId, responseDrafts.value[observationId] ?? '');
+  await load();
+};
+
+const refreshAiAnalysis = async (): Promise<void> => {
+  if (!syllabus.value || !aiField.value) return;
+  aiLoading.value = true;
+  try {
+    aiAnalysis.value = await getFieldAiAnalysis(syllabus.value.id, aiField.value.id);
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo consultar la ayuda de IA.';
+  } finally {
+    aiLoading.value = false;
+  }
+};
+
+const openAi = async (field: SyllabusField): Promise<void> => {
+  aiField.value = field;
+  aiAnalysis.value = null;
+  aiMessage.value = null;
+  await refreshAiAnalysis();
+};
+
+const requestAiForField = async (): Promise<void> => {
+  if (!syllabus.value || !aiField.value) return;
+  aiLoading.value = true;
+  try {
+    const result = await requestFieldAiAnalysis(syllabus.value.id, aiField.value.id);
+    aiMessage.value = result.message;
+    await refreshAiAnalysis();
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo solicitar el análisis de IA.';
+  } finally {
+    aiLoading.value = false;
+  }
+};
+
+const decideAi = async (recommendationId: string, decision: 'aceptada' | 'ignorada' | 'no_util'): Promise<void> => {
+  if (!syllabus.value || !aiField.value) return;
+  await decideAiRecommendation(syllabus.value.id, aiField.value.id, recommendationId, decision);
+  await refreshAiAnalysis();
+};
+
+const applyAi = async (recommendationId: string): Promise<void> => {
+  if (!syllabus.value || !aiField.value) return;
+  const result = await applyAiRecommendation(syllabus.value.id, aiField.value.id, recommendationId, syllabus.value.version_bloqueo);
+  aiField.value.value = result.value;
+  syllabus.value.version_bloqueo = result.version_bloqueo;
+  syllabus.value.completion = result.completion;
+  invalidateValidation();
+  aiMessage.value = result.message;
+  await refreshAiAnalysis();
+};
 
 onMounted(load);
 </script>
@@ -147,8 +263,68 @@ onMounted(load);
               <label v-else-if="field.teacher_editable && !field.inherited && field.type === 'booleano'">
                 <input type="checkbox" :checked="isChecked(field)" @change="toggleBoolean(field, ($event.target as HTMLInputElement).checked)" /> {{ field.label }}<span v-if="field.required"> *</span>
               </label>
-              <div v-else-if="field.teacher_editable && !field.inherited && field.type === 'repetible'" class="table-wrap"><table><thead><tr><th v-for="column in field.table?.columns" :key="column.key">{{ column.label }}</th></tr></thead><tbody><tr v-for="row in field.rows" :key="row.id || row.position"><td v-for="column in field.table?.columns" :key="column.key"><input v-model="row.data[column.key]" :type="column.type === 'number' ? 'number' : 'text'" /></td></tr></tbody></table><button type="button" @click="addRow(field)">Agregar fila</button><button type="button" @click="saveRows(field)">Guardar filas</button></div>
+              <div v-else-if="field.teacher_editable && !field.inherited && field.type === 'repetible'" class="table-wrap">
+                <p v-if="!block.table">Esta tabla no tiene una estructura configurada.</p>
+                <template v-else>
+                  <p v-if="block.table.repeat.enabled" class="table-caption">{{ block.table.repeat.label }}</p>
+                  <table>
+                    <thead>
+                      <tr v-if="block.table.bands.length">
+                        <th v-for="band in block.table.bands" :key="band.key" :colspan="block.table.columns.filter((column) => column.band === band.key).length">
+                          {{ band.label }}
+                        </th>
+                        <th v-if="block.table.columns.some((column) => !column.band)" :colspan="block.table.columns.filter((column) => !column.band).length"></th>
+                        <th :rowspan="block.table.groups.length ? 3 : 2" scope="col">Acciones</th>
+                      </tr>
+                      <tr v-if="block.table.groups.length">
+                        <th v-for="group in block.table.groups" :key="group.key" :colspan="block.table.columns.filter((column) => column.group === group.key).length">
+                          {{ group.label }}
+                        </th>
+                        <th v-if="block.table.columns.some((column) => !column.group)" :colspan="block.table.columns.filter((column) => !column.group).length"></th>
+                        <th v-if="!block.table.bands.length" scope="col">Acciones</th>
+                      </tr>
+                      <tr>
+                        <th v-for="column in block.table.columns" :key="column.key" scope="col">{{ column.label }}</th>
+                        <th v-if="!block.table.bands.length && !block.table.groups.length" scope="col">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(row, rowIndex) in field.rows" :key="row.id || row.position">
+                        <td v-for="column in block.table.columns" :key="column.key">
+                          <input
+                            v-model="row.data[column.key]"
+                            :type="column.type === 'number' ? 'number' : 'text'"
+                            :disabled="savingFieldId === field.id"
+                            @input="scheduleRows(field)"
+                          />
+                        </td>
+                        <td><button type="button" :disabled="savingFieldId === field.id" @click="removeRow(field, rowIndex)">Quitar</button></td>
+                      </tr>
+                      <tr v-if="!field.rows.length"><td :colspan="block.table.columns.length + 1">Aún no hay filas.</td></tr>
+                    </tbody>
+                    <tfoot v-if="block.table.totals.enabled">
+                      <tr>
+                        <th scope="row">{{ block.table.totals.label }}</th>
+                        <td v-for="column in block.table.columns.slice(1)" :key="column.key">
+                          <template v-if="column.type === 'number' && column.sum">{{ total(field.rows, column.key) }}</template>
+                        </td>
+                        <td></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                  <button type="button" :disabled="savingFieldId === field.id" @click="addRow(field, block)">Agregar fila</button>
+                  <span v-if="savingFieldId === field.id" class="save-status">Guardando…</span>
+                </template>
+              </div>
               <p v-else-if="field.inherited">{{ field.label }}: {{ field.value ?? 'Dato institucional' }}</p>
+              <button
+                v-if="field.teacher_editable && !field.inherited && field.ai_enabled"
+                class="ai-field-button"
+                type="button"
+                @click="openAi(field)"
+              >
+                Consultar IA sobre {{ field.label }}
+              </button>
             </template>
           </template>
         </section>
@@ -160,6 +336,47 @@ onMounted(load);
         <button v-if="validationRan && validationMessages.length === 0 && syllabus.completion === 100" type="button" @click="submit">Enviar a revisión</button>
         <button type="button" @click="askAi">Solicitar consejos de IA</button>
       </section>
+      <aside v-if="aiField" class="ai-panel" aria-label="Asistencia de IA">
+        <header>
+          <div>
+            <p class="eyebrow">Asistencia de IA</p>
+            <h2>{{ aiField.label }}</h2>
+          </div>
+          <button type="button" aria-label="Cerrar asistencia de IA" @click="aiField = null">×</button>
+        </header>
+        <p v-if="aiMessage" class="save-status">{{ aiMessage }}</p>
+        <p v-if="aiLoading">Consultando…</p>
+        <template v-else-if="aiAnalysis">
+          <p v-if="aiAnalysis.environment.is_provisional_simulator">Los resultados provienen del simulador configurado para este entorno.</p>
+          <button type="button" @click="requestAiForField">Analizar este campo</button>
+          <p v-if="!aiAnalysis.executions.length">Aún no hay análisis para este campo.</p>
+          <article v-for="execution in aiAnalysis.executions" :key="execution.id" class="ai-execution">
+            <p><strong>Estado:</strong> {{ execution.status }}</p>
+            <p v-if="execution.reason">{{ execution.reason }}</p>
+            <p v-if="execution.mensaje_error">{{ execution.mensaje_error }}</p>
+            <section v-if="execution.recommendations.length">
+              <article v-for="recommendation in execution.recommendations" :key="recommendation.id" class="ai-recommendation">
+                <h3>{{ recommendation.title }}</h3>
+                <p>{{ recommendation.explanation }}</p>
+                <textarea :value="recommendation.suggested_text" readonly aria-label="Texto sugerido" />
+                <p v-if="recommendation.my_decisions.length">Decisión: {{ recommendation.my_decisions.join(', ') }}</p>
+                <div class="ai-actions">
+                  <button type="button" @click="decideAi(recommendation.id, 'aceptada')">Útil</button>
+                  <button type="button" @click="decideAi(recommendation.id, 'ignorada')">Ignorar</button>
+                  <button type="button" :disabled="recommendation.applied" @click="applyAi(recommendation.id)">Aplicar texto</button>
+                </div>
+              </article>
+            </section>
+            <section v-if="execution.evidence.length" class="ai-evidence">
+              <h3>Fuentes consultadas</h3>
+              <article v-for="evidence in execution.evidence" :key="evidence.id">
+                <strong>{{ evidence.source }}</strong>
+                <p>{{ evidence.excerpt }}</p>
+              </article>
+            </section>
+          </article>
+        </template>
+      </aside>
       <section v-if="syllabus.observations.length" class="detail-card"><h2>Observaciones</h2><article v-for="observation in syllabus.observations" :key="observation.id"><p>{{ observation.content }}</p><p v-if="observation.response">{{ observation.response.content }}</p><template v-else><textarea v-model="responseDrafts[observation.id]" placeholder="Ej. Corrección realizada" /><button type="button" @click="answer(observation.id)">Responder</button></template></article></section>
     </template>
     <p v-else>Cargando sílabo…</p>

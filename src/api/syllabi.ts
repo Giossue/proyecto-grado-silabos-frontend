@@ -40,6 +40,32 @@ export type SyllabusDetail = {
   observations: Array<{ id: string; content: string; state: string; requested: boolean; response: { content: string } | null }>;
 };
 
+export type RepeatableRow = {
+  id?: string;
+  data: Record<string, string | number | null>;
+  position: number;
+};
+
+export type TableColumn = {
+  key: string;
+  label: string;
+  type: 'text' | 'number';
+  group: string | null;
+  band: string | null;
+  sum: boolean;
+  width: number | null;
+  role: string | null;
+};
+
+export type TableLayout = {
+  columns: TableColumn[];
+  groups: Array<{ key: string; label: string }>;
+  bands: Array<{ key: string; label: string }>;
+  header_fields: Array<{ key: string; label: string }>;
+  totals: { enabled: boolean; label: string };
+  repeat: { enabled: boolean; label: string };
+};
+
 export type SyllabusField = {
   id: string;
   label: string;
@@ -49,12 +75,47 @@ export type SyllabusField = {
   required: boolean;
   inherited: boolean;
   teacher_editable: boolean;
+  ai_enabled: boolean;
   value: string | number | null;
-  rows: Array<{ id: string; data: Record<string, string | number | null>; position: number }>;
-  table?: { columns: Array<{ key: string; label: string; type: 'text' | 'number' }>; totals: { enabled: boolean; label: string } } | null;
+  rows: RepeatableRow[];
 };
 
-export type SyllabusBlock = { id: string; title: string | null; fields: SyllabusField[] };
+export type AiRecommendation = {
+  id: string;
+  type: string;
+  title: string;
+  explanation: string;
+  suggested_text: string;
+  evidence_ids: string[];
+  my_decisions: string[];
+  applied: boolean;
+};
+
+export type AiFieldAnalysis = {
+  syllabus: { id: string; subject: string; state: string; version_bloqueo: number };
+  field: { id: string; key: string; label: string; content: string };
+  environment: { is_provisional_simulator: boolean };
+  executions: Array<{
+    id: string;
+    status: string;
+    requested_at: string;
+    completed_at: string | null;
+    analysis_label: string;
+    input_content: string;
+    reason: string | null;
+    mensaje_error: string | null;
+    evidence: Array<{ id: string; source: string; excerpt: string }>;
+    recommendations: AiRecommendation[];
+  }>;
+};
+
+export type SyllabusBlock = {
+  id: string;
+  title: string | null;
+  content_type: string;
+  table: TableLayout | null;
+  fields: SyllabusField[];
+};
 
 export const getTeacherSyllabi = (filters: { q?: string; state?: string; page?: number } = {}) => {
   const query = new URLSearchParams();
@@ -74,7 +135,7 @@ export const saveTeacherField = (syllabusId: string, fieldId: string, version: n
     method: 'PATCH',
     body: JSON.stringify({ version_bloqueo: version, value }),
   });
-export const saveTeacherRows = (syllabusId: string, fieldId: string, version: number, rows: SyllabusField['rows']) => api<{ version_bloqueo: number; completion: number; rows: SyllabusField['rows'] }>(`/teacher/syllabi/${syllabusId}/fields/${fieldId}`, { method: 'PATCH', body: JSON.stringify({ version_bloqueo: version, rows }) });
+export const saveTeacherRows = (syllabusId: string, fieldId: string, version: number, rows: RepeatableRow[]) => api<{ version_bloqueo: number; completion: number; rows: RepeatableRow[] }>(`/teacher/syllabi/${syllabusId}/fields/${fieldId}`, { method: 'PATCH', body: JSON.stringify({ version_bloqueo: version, rows }) });
 export const validateTeacherSyllabus = (syllabusId: string) =>
   api<{ message: string; validation: { blocking_errors: number; warnings: number; results: Array<{ message: string }> } }>(`/teacher/syllabi/${syllabusId}/validate`, { method: 'POST' });
 export const submitTeacherSyllabus = (syllabusId: string, version: number) =>
@@ -83,4 +144,21 @@ export const submitTeacherSyllabus = (syllabusId: string, version: number) =>
     body: JSON.stringify({ version_bloqueo: version, idempotency_key: crypto.randomUUID() }),
   });
 export const requestAiReview = (syllabusId: string, version: number) => api<{ message: string }>(`/teacher/syllabi/${syllabusId}/ai-review`, { method: 'POST', body: JSON.stringify({ version_bloqueo: version, idempotency_key: crypto.randomUUID() }) });
+export const getFieldAiAnalysis = (syllabusId: string, fieldId: string) =>
+  api<AiFieldAnalysis>(`/teacher/syllabi/${syllabusId}/fields/${fieldId}/ai`);
+export const requestFieldAiAnalysis = (syllabusId: string, fieldId: string) =>
+  api<{ message: string }>(`/teacher/syllabi/${syllabusId}/fields/${fieldId}/ai`, {
+    method: 'POST',
+    body: JSON.stringify({ idempotency_key: crypto.randomUUID() }),
+  });
+export const decideAiRecommendation = (syllabusId: string, fieldId: string, recommendationId: string, decision: 'aceptada' | 'ignorada' | 'no_util') =>
+  api<{ message: string }>(`/teacher/syllabi/${syllabusId}/fields/${fieldId}/ai/${recommendationId}/decision`, {
+    method: 'POST',
+    body: JSON.stringify({ decision }),
+  });
+export const applyAiRecommendation = (syllabusId: string, fieldId: string, recommendationId: string, version: number) =>
+  api<{ message: string; version_bloqueo: number; completion: number; value: string }>(`/teacher/syllabi/${syllabusId}/fields/${fieldId}/ai/${recommendationId}/apply`, {
+    method: 'POST',
+    body: JSON.stringify({ version_bloqueo: version }),
+  });
 export const respondObservation = (syllabusId: string, observationId: string, content: string) => api<void>(`/teacher/syllabi/${syllabusId}/observations/${observationId}/response`, { method: 'POST', body: JSON.stringify({ content }) });
