@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getSession, logout, resendEmailVerification, selectActiveRole, updatePassword, type Session } from '@/api/session';
+import { sessionState } from '@/state/session';
 
 const router = useRouter();
 const session = ref<Session | null>(null);
@@ -16,6 +17,7 @@ const verificationMessage = ref<string | null>(null);
 const load = async (): Promise<void> => {
   try {
     session.value = await getSession();
+    sessionState.replace(session.value);
     if (session.value.active_role && !session.value.user.must_change_password) {
       await router.replace('/panel');
       return;
@@ -31,6 +33,7 @@ const load = async (): Promise<void> => {
 
 const selectRole = async (roleAssignmentId: string): Promise<void> => {
   session.value = await selectActiveRole(roleAssignmentId);
+  sessionState.replace(session.value);
   await router.replace('/panel');
 };
 
@@ -45,6 +48,7 @@ const savePassword = async (): Promise<void> => {
   changingPassword.value = true;
   try {
     session.value = await updatePassword(password.value, passwordConfirmation.value);
+    sessionState.replace(session.value);
     password.value = '';
     passwordConfirmation.value = '';
   } catch (reason) {
@@ -56,6 +60,7 @@ const savePassword = async (): Promise<void> => {
 
 const closeSession = async (): Promise<void> => {
   await logout();
+  sessionState.clear();
   await router.replace('/ingresar');
 };
 
