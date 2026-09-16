@@ -11,6 +11,7 @@ import TwoFactorChallengePage from '@/pages/TwoFactorChallengePage.vue';
 import SecurityPage from '@/pages/SecurityPage.vue';
 import NotificationsPage from '@/pages/NotificationsPage.vue';
 import AdminUsersPage from '@/pages/AdminUsersPage.vue';
+import AcademicGovernancePage from '@/pages/AcademicGovernancePage.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -25,6 +26,7 @@ export const router = createRouter({
     { path: '/seguridad', component: SecurityPage, meta: { requiresAuth: true } },
     { path: '/notificaciones', component: NotificationsPage, meta: { requiresAuth: true } },
     { path: '/administracion/usuarios', component: AdminUsersPage, meta: { requiresAuth: true } },
+    { path: '/administracion/estructura-academica', component: AcademicGovernancePage, meta: { requiresAuth: true } },
     { path: '/mis-silabos', component: TeacherSyllabiPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos/:syllabus', component: TeacherSyllabusDetailPage, meta: { requiresAuth: true } },
   ],
