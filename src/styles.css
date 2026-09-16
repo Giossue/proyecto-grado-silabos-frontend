@@ -2,6 +2,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; }
 button, input { font: inherit; }
+textarea, select { font: inherit; }
 .auth-page, .workspace-page { display: grid; min-height: 100vh; place-items: center; padding: 1.5rem; }
 .auth-card { display: flex; width: min(100%, 26rem); flex-direction: column; gap: 1rem; padding: 2rem; background: white; border: 1px solid #dbe3ef; border-radius: .75rem; }
 .auth-card label { display: flex; flex-direction: column; gap: .5rem; }
@@ -79,4 +80,7 @@ td small { display: block; margin-top: .25rem; color: #53657b; }
 .recovery-codes code { width: max-content; padding: .35rem .5rem; border-radius: .25rem; background: #edf2f7; }
 .notification-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: .9rem 0; border-top: 1px solid #e6ebf1; }
 .notification-item p, .notification-item small { display: block; margin: .35rem 0 0; color: #53657b; }
+.process-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .45rem; min-width: 18rem; }
+.process-actions button { margin: 0; padding: .45rem .6rem; border: 1px solid #b8c4d5; border-radius: .4rem; background: white; color: #172033; cursor: pointer; }
+.process-actions input { min-width: 12rem; padding: .45rem .6rem; border: 1px solid #b8c4d5; border-radius: .4rem; }
 @media (max-width: 40rem) { .ai-panel { top: .5rem; right: .5rem; width: calc(100vw - 1rem); max-height: calc(100vh - 1rem); } }

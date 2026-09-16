@@ -12,6 +12,7 @@ import SecurityPage from '@/pages/SecurityPage.vue';
 import NotificationsPage from '@/pages/NotificationsPage.vue';
 import AdminUsersPage from '@/pages/AdminUsersPage.vue';
 import AcademicGovernancePage from '@/pages/AcademicGovernancePage.vue';
+import AdminProcessesPage from '@/pages/AdminProcessesPage.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -27,6 +28,7 @@ export const router = createRouter({
     { path: '/notificaciones', component: NotificationsPage, meta: { requiresAuth: true } },
     { path: '/administracion/usuarios', component: AdminUsersPage, meta: { requiresAuth: true } },
     { path: '/administracion/estructura-academica', component: AcademicGovernancePage, meta: { requiresAuth: true } },
+    { path: '/administracion/procesos', component: AdminProcessesPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos', component: TeacherSyllabiPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos/:syllabus', component: TeacherSyllabusDetailPage, meta: { requiresAuth: true } },
   ],

@@ -89,6 +89,9 @@ onMounted(load);
       <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/estructura-academica">
         Gestionar estructura académica
       </RouterLink>
+      <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/procesos">
+        Gestionar proceso institucional
+      </RouterLink>
     </template>
     <p v-else-if="error" role="alert">{{ error }}</p>
     <p v-else>Cargando panel…</p>
