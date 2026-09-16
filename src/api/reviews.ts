@@ -124,11 +124,12 @@ export type ReviewComparison = {
 };
 
 export const getReviews = (
-  filters: { state?: string; search?: string } = {},
+  filters: { state?: string; search?: string; page?: number } = {},
 ) => {
   const query = new URLSearchParams();
   if (filters.state) query.set("state", filters.state);
   if (filters.search) query.set("search", filters.search);
+  if (filters.page && filters.page > 1) query.set("page", String(filters.page));
   return api<ReviewsPage>(
     `/coordination/reviews${query.size ? `?${query}` : ""}`,
   );

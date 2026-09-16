@@ -1,4 +1,4 @@
-FROM node:22-alpine AS build
+FROM docker.io/library/node:22-alpine AS build
 
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -8,7 +8,7 @@ ARG VITE_API_URL=""
 ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 
-FROM nginx:1.27-alpine
+FROM docker.io/library/nginx:1.27-alpine
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/config.js.template /opt/silabos/config.js.template

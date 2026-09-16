@@ -42,6 +42,7 @@ const validationResults = ref<Array<{
 const validationRan = ref(false);
 const validationBlockingErrors = ref<number | null>(null);
 const responseDrafts = ref<Record<string, string>>({});
+const answeringObservationId = ref<string | null>(null);
 const aiMessage = ref<string | null>(null);
 const aiChat = ref<InstanceType<typeof SyllabusAiChat> | null>(null);
 const conflict = ref(false);
@@ -281,12 +282,24 @@ const submit = async (): Promise<void> => {
 };
 const answer = async (observationId: string): Promise<void> => {
   if (!syllabus.value) return;
-  await respondObservation(
-    syllabus.value.id,
-    observationId,
-    responseDrafts.value[observationId] ?? "",
-  );
-  await load();
+  const content = (responseDrafts.value[observationId] ?? "").trim();
+  if (!content) {
+    error.value = "Escriba la corrección realizada antes de responder.";
+    return;
+  }
+  answeringObservationId.value = observationId;
+  error.value = null;
+  try {
+    await respondObservation(syllabus.value.id, observationId, content);
+    delete responseDrafts.value[observationId];
+    await load();
+  } catch (reason) {
+    error.value = reason instanceof ApiError
+      ? reason.message
+      : "No se pudo responder la observación.";
+  } finally {
+    answeringObservationId.value = null;
+  }
 };
 
 const navigateToField = (fieldId: string): void => {
@@ -605,8 +618,12 @@ onBeforeUnmount(() => {
             <textarea
               v-model="responseDrafts[observation.id]"
               placeholder="Ej. Corrección realizada"
-            /><button type="button" @click="answer(observation.id)">
-              Responder
+            /><button
+              type="button"
+              :disabled="answeringObservationId === observation.id"
+              @click="answer(observation.id)"
+            >
+              {{ answeringObservationId === observation.id ? "Enviando…" : "Responder" }}
             </button></template
           >
         </article>

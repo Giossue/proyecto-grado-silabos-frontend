@@ -105,8 +105,15 @@ const send = async (question?: string): Promise<void> => {
 };
 
 const clear = async (): Promise<void> => {
-  await clearAiChat(props.syllabusId);
-  await load();
+  error.value = null;
+  try {
+    await clearAiChat(props.syllabusId);
+    await load();
+  } catch (reason) {
+    error.value = reason instanceof ApiError
+      ? reason.message
+      : "No se pudo limpiar la conversación.";
+  }
 };
 
 const decide = async (
@@ -114,13 +121,20 @@ const decide = async (
   recommendationId: string,
   decision: "aceptada" | "ignorada" | "no_util",
 ): Promise<void> => {
-  await decideAiRecommendation(
-    props.syllabusId,
-    fieldId,
-    recommendationId,
-    decision,
-  );
-  await load();
+  error.value = null;
+  try {
+    await decideAiRecommendation(
+      props.syllabusId,
+      fieldId,
+      recommendationId,
+      decision,
+    );
+    await load();
+  } catch (reason) {
+    error.value = reason instanceof ApiError
+      ? reason.message
+      : "No se pudo registrar la decisión.";
+  }
 };
 
 const apply = async (

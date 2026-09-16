@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
+import PaginationControls from '@/components/PaginationControls.vue';
 
 const router = useRouter();
 const result = ref<SyllabiResponse | null>(null);
@@ -86,11 +87,12 @@ onMounted(load);
           </tbody>
         </table>
       </div>
-      <nav v-if="result.syllabi.last_page > 1" class="pagination" aria-label="Paginación de sílabos">
-        <button :disabled="result.syllabi.current_page === 1" @click="load(result.syllabi.current_page - 1)">Anterior</button>
-        <span>Página {{ result.syllabi.current_page }} de {{ result.syllabi.last_page }}</span>
-        <button :disabled="result.syllabi.current_page === result.syllabi.last_page" @click="load(result.syllabi.current_page + 1)">Siguiente</button>
-      </nav>
+      <PaginationControls
+        :current-page="result.syllabi.current_page"
+        :last-page="result.syllabi.last_page"
+        :total="result.syllabi.total"
+        @change="load"
+      />
     </template>
     <p v-else>Cargando sílabos…</p>
   </main>

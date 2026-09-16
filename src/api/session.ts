@@ -1,4 +1,4 @@
-import { api, initializeCsrfProtection } from '@/api/client';
+import { api } from '@/api/client';
 
 export type ActiveRole = {
   id: string;
@@ -18,40 +18,25 @@ export type DeviceSession = { id: string; ip_address: string | null; device: str
 export type LoginResult = Session | { two_factor_required: true; message: string };
 
 export const getSession = () => api<Session>('/session');
-export const login = async (email: string, password: string): Promise<LoginResult> => {
-  await initializeCsrfProtection();
-
-  return api<LoginResult>('/authentication/login', { method: 'POST', body: JSON.stringify({ email, password }) });
-};
-export const completeTwoFactorLogin = async (code: string, recoveryCode: string): Promise<{ message: string }> => {
-  await initializeCsrfProtection();
-
-  return api<{ message: string }>('/authentication/two-factor/challenge', {
+export const login = (email: string, password: string): Promise<LoginResult> =>
+  api<LoginResult>('/authentication/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+export const completeTwoFactorLogin = (code: string, recoveryCode: string): Promise<{ message: string }> =>
+  api<{ message: string }>('/authentication/two-factor/challenge', {
     method: 'POST',
     body: JSON.stringify({ code: code || undefined, recovery_code: recoveryCode || undefined }),
   });
-};
-export const requestPasswordRecovery = async (email: string): Promise<{ message: string }> => {
-  await initializeCsrfProtection();
-
-  return api<{ message: string }>('/authentication/password-recovery', {
+export const requestPasswordRecovery = (email: string): Promise<{ message: string }> =>
+  api<{ message: string }>('/authentication/password-recovery', {
     method: 'POST',
     body: JSON.stringify({ email }),
   });
-};
-export const resetForgottenPassword = async (email: string, token: string, password: string, passwordConfirmation: string): Promise<{ message: string }> => {
-  await initializeCsrfProtection();
-
-  return api<{ message: string }>('/authentication/password-reset', {
+export const resetForgottenPassword = (email: string, token: string, password: string, passwordConfirmation: string): Promise<{ message: string }> =>
+  api<{ message: string }>('/authentication/password-reset', {
     method: 'POST',
     body: JSON.stringify({ email, token, password, password_confirmation: passwordConfirmation }),
   });
-};
-export const verifyEmail = async (userId: string, hash: string, query: URLSearchParams): Promise<{ message: string }> => {
-  await initializeCsrfProtection();
-
-  return api<{ message: string }>(`/authentication/email-verification/${userId}/${hash}?${query.toString()}`, { method: 'POST' });
-};
+export const verifyEmail = (userId: string, hash: string, query: URLSearchParams): Promise<{ message: string }> =>
+  api<{ message: string }>(`/authentication/email-verification/${userId}/${hash}?${query.toString()}`, { method: 'POST' });
 export const resendEmailVerification = () => api<{ message: string }>('/authentication/email-verification/resend', { method: 'POST' });
 export const getTwoFactorStatus = () => api<TwoFactorStatus>('/authentication/two-factor');
 export const enableTwoFactor = () => api<TwoFactorStatus & { qr_code_svg: string }>('/authentication/two-factor', { method: 'POST' });

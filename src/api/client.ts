@@ -32,11 +32,17 @@ export async function initializeCsrfProtection(): Promise<void> {
   }
 }
 
-export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const method = (init.method ?? 'GET').toUpperCase();
-  const csrfToken = method === 'GET' || method === 'HEAD' ? null : readCookie('XSRF-TOKEN');
+const isReadOnlyRequest = (method: string): boolean => method === 'GET' || method === 'HEAD';
+
+const notifyUnauthorized = (): void => {
+  window.dispatchEvent(new CustomEvent('silabos:unauthorized'));
+};
+
+const sendApiRequest = (path: string, init: RequestInit, method: string): Promise<Response> => {
+  const csrfToken = isReadOnlyRequest(method) ? null : readCookie('XSRF-TOKEN');
   const isFormData = init.body instanceof FormData;
-  const response = await fetch(`${baseUrl}/api/v1${path}`, {
+
+  return fetch(`${baseUrl}/api/v1${path}`, {
     credentials: 'include',
     headers: {
       Accept: 'application/json',
@@ -46,6 +52,25 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     },
     ...init,
   });
+};
+
+export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const method = (init.method ?? 'GET').toUpperCase();
+
+  if (!isReadOnlyRequest(method) && readCookie('XSRF-TOKEN') === null) {
+    await initializeCsrfProtection();
+  }
+
+  let response = await sendApiRequest(path, init, method);
+
+  // Una cookie CSRF puede caducar mientras la SPA sigue abierta. Renovarla una sola
+  // vez hace la recuperación transparente sin esconder errores persistentes.
+  if (response.status === 419 && !isReadOnlyRequest(method)) {
+    await initializeCsrfProtection();
+    response = await sendApiRequest(path, init, method);
+  }
+
+  if (response.status === 401) notifyUnauthorized();
 
   if (response.status === 204) {
     return undefined as T;
@@ -68,6 +93,8 @@ export async function apiBlob(path: string): Promise<Blob> {
     credentials: 'include',
     headers: { Accept: 'application/octet-stream' },
   });
+
+  if (response.status === 401) notifyUnauthorized();
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => ({}))) as { message?: string };

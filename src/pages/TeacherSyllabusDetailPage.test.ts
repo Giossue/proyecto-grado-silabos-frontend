@@ -4,8 +4,10 @@ import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import {
   getTeacherSyllabus,
   requestAiReview,
+  respondObservation,
   saveTeacherField,
   validateTeacherSyllabus,
+  type SyllabusDetail,
 } from "@/api/syllabi";
 import { ApiError } from "@/api/client";
 
@@ -47,7 +49,7 @@ const appearance = {
   body_alignment: "left",
 };
 
-const syllabus = (state: "borrador" | "en_revision", type = "markdown") => ({
+const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", type = "markdown"): SyllabusDetail => ({
   id: "syllabus-1",
   subject: "Inteligencia Artificial",
   code: "SW-01",
@@ -108,6 +110,7 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.mocked(saveTeacherField).mockReset();
     vi.mocked(validateTeacherSyllabus).mockReset();
     vi.mocked(requestAiReview).mockReset();
+    vi.mocked(respondObservation).mockReset();
   });
 
   it("presenta como documento de solo lectura una revisión enviada", async () => {
@@ -142,6 +145,59 @@ describe("TeacherSyllabusDetailPage", () => {
       2,
       false,
     );
+  });
+
+  it("guarda una selección múltiple como una lista de valores", async () => {
+    vi.useFakeTimers();
+    const draft = syllabus("borrador", "seleccion_multiple");
+    const field = draft.sections[0]!.blocks[0]!.fields[0]!;
+    field.options = [
+      { value: "etica", label: "Ética" },
+      { value: "datos", label: "Datos" },
+    ];
+    field.value = [];
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, completion: 100 });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.findAll('input[type="checkbox"]')[1]!.setValue(true);
+    await vi.advanceTimersByTimeAsync(700);
+    await flushPromises();
+
+    expect(saveTeacherField).toHaveBeenCalledWith(
+      "syllabus-1",
+      "field-1",
+      2,
+      ["datos"],
+    );
+  });
+
+  it("envía la respuesta docente a una observación y recarga el expediente", async () => {
+    const draft = syllabus("correccion_solicitada");
+    draft.observations = [{
+      id: "observation-1",
+      content: "Aclare el resultado.",
+      state: "pendiente",
+      requested: true,
+      response: null,
+    }];
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+    vi.mocked(respondObservation).mockResolvedValue(undefined);
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get('textarea[placeholder="Ej. Corrección realizada"]').setValue("Contenido corregido.");
+    const answerButton = wrapper.findAll("button").find((button) => button.text() === "Responder");
+    await answerButton?.trigger("click");
+    await flushPromises();
+
+    expect(respondObservation).toHaveBeenCalledWith(
+      "syllabus-1",
+      "observation-1",
+      "Contenido corregido.",
+    );
+    expect(getTeacherSyllabus).toHaveBeenCalledTimes(2);
   });
 
   it("detiene el autoguardado y ofrece recarga ante un conflicto de versión", async () => {

@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client';
 import { createConvocation, getConvocations, type ConvocationItem, type ConvocationsPage } from '@/api/convocations';
 import { getSession } from '@/api/session';
 import FormSheet from '@/components/FormSheet.vue';
+import PaginationControls from '@/components/PaginationControls.vue';
 
 const router = useRouter();
 const data = ref<ConvocationsPage | null>(null);
@@ -20,14 +21,14 @@ const stateLabel = (value: ConvocationItem['state']) => ({
   sin_iniciar: 'Sin iniciar', preparacion: 'En preparación', abierta: 'Abierta', pausada: 'Pausada', cerrada: 'Cerrada',
 }[value]);
 
-const load = async (): Promise<void> => {
+const load = async (page = 1): Promise<void> => {
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'coordinador') {
       await router.replace('/panel');
       return;
     }
-    data.value = await getConvocations({ q: search.value, state: state.value });
+    data.value = await getConvocations({ q: search.value, state: state.value, page });
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las convocatorias.';
   }
@@ -64,7 +65,7 @@ onMounted(() => { void load(); });
       <RouterLink class="back-link" to="/panel">Volver al panel</RouterLink>
     </header>
 
-    <form class="filter-form" @submit.prevent="load">
+    <form class="filter-form" @submit.prevent="load()">
       <label>Buscar período<input v-model="search" placeholder="Ej. 2026-2" /></label>
       <label>Estado<select v-model="state"><option value="">Todos</option><option value="sin_iniciar">Sin iniciar</option><option value="abierta">Abierta</option><option value="pausada">Pausada</option><option value="cerrada">Cerrada</option></select></label>
       <button>Buscar</button>
@@ -83,6 +84,7 @@ onMounted(() => { void load(); });
         </tbody></table>
       </div>
       <p v-else class="empty-state">No hay procesos institucionales que coincidan con la búsqueda.</p>
+      <PaginationControls :current-page="data.convocations.current_page" :last-page="data.convocations.last_page" :total="data.convocations.total" @change="load" />
     </section>
     <FormSheet v-if="selectedProcess" :open="true" title="Abrir convocatoria" description="Seleccione las fuentes que podrá consultar la IA durante este período." @close="selectedProcess = null">
       <form class="editor-form" @submit.prevent="start">

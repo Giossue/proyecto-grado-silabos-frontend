@@ -1,7 +1,13 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SyllabusAiChat from "@/components/SyllabusAiChat.vue";
-import { clearAiChat, getAiChat, sendAiChatMessage } from "@/api/syllabi";
+import {
+  applyAiRecommendation,
+  clearAiChat,
+  decideAiRecommendation,
+  getAiChat,
+  sendAiChatMessage,
+} from "@/api/syllabi";
 
 vi.mock("@/api/syllabi", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/api/syllabi")>();
@@ -32,6 +38,13 @@ describe("SyllabusAiChat", () => {
       assistant_message_id: "answer-1",
     });
     vi.mocked(clearAiChat).mockResolvedValue({ message: "Oculta" });
+    vi.mocked(decideAiRecommendation).mockResolvedValue({ message: "Registrada" });
+    vi.mocked(applyAiRecommendation).mockResolvedValue({
+      message: "Aplicada",
+      version_bloqueo: 3,
+      completion: 100,
+      value: "Texto recomendado",
+    });
   });
 
   it("envía una pregunta sugerida y vuelve a consultar la conversación", async () => {
@@ -115,5 +128,61 @@ describe("SyllabusAiChat", () => {
     expect(wrapper.get(".ai-review-progress").text()).toContain(
       "2 de 2 campos",
     );
+  });
+
+  it("registra la decisión humana y aplica una recomendación explícitamente", async () => {
+    vi.mocked(getAiChat).mockResolvedValue({
+      ...emptyChat,
+      review_results: [{
+        id: "result-1",
+        field_id: "field-1",
+        field_label: "Objetivo general",
+        section: { id: "section-1", title: "Objetivos" },
+        status: "completado",
+        stale: false,
+        reason: null,
+        error: null,
+        recommendations: [{
+          id: "recommendation-1",
+          title: "Precise el verbo",
+          explanation: "La acción puede medirse mejor.",
+          suggested_text: "Evaluar soluciones de IA.",
+          applied: false,
+          decisions: [],
+          citations: [],
+        }],
+      }],
+    });
+    const wrapper = mount(SyllabusAiChat, {
+      props: { syllabusId: "syllabus-1", draftVersion: 2 },
+    });
+    await flushPromises();
+
+    const buttons = wrapper.findAll(".ai-review-actions button");
+    await buttons[0]!.trigger("click");
+    await flushPromises();
+    expect(decideAiRecommendation).toHaveBeenCalledWith(
+      "syllabus-1",
+      "field-1",
+      "recommendation-1",
+      "aceptada",
+    );
+
+    await buttons[2]!.trigger("click");
+    await flushPromises();
+    expect(applyAiRecommendation).toHaveBeenCalledWith(
+      "syllabus-1",
+      "field-1",
+      "recommendation-1",
+      2,
+    );
+    expect(wrapper.emitted("recommendationApplied")).toEqual([[
+      {
+        fieldId: "field-1",
+        value: "Texto recomendado",
+        version: 3,
+        completion: 100,
+      },
+    ]]);
   });
 });

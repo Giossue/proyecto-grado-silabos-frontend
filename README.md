@@ -34,8 +34,26 @@ El backend debe incluir el origen del frontend en `FRONTEND_URL` y su host en
 `SANCTUM_STATEFUL_DOMAINS`; ambos deben compartir el dominio raíz para que la cookie de
 sesión `HttpOnly` funcione con `SESSION_DOMAIN`.
 
-## Estado de migración
+## Superficie disponible
 
-La base de sesión ya está integrada: inicio/cierre de sesión, cambio de contraseña
-temporal y selección de rol/carrera. Las demás pantallas se trasladarán por unidades
-verticales, manteniendo al backend como autoridad de permisos y reglas de dominio.
+La SPA cubre identidad completa —ingreso, recuperación y cambio de contraseña,
+verificación de correo, segundo factor, sesiones y selección de ámbito— y las áreas de
+Administración, Coordinación y Docencia. Incluye plantilla institucional, estructura
+académica, procesos y convocatorias, fuentes, revisión, documentos privados, auditoría,
+trabajos, informes, editor docente con autoguardado y tablas repetibles, observaciones y
+asistencia de IA explicable.
+
+Laravel sigue siendo la autoridad de permisos, alcance, validaciones y transiciones. Las
+guardas de Vue y los controles ocultos no sustituyen la autorización del servidor.
+
+## Verificación
+
+```bash
+npm test -- --run
+npm run typecheck
+npm run build
+```
+
+El cliente prepara CSRF antes de cada mutación cuando hace falta, renueva una cookie CSRF
+caducada una sola vez y, si la sesión deja de ser válida, limpia el estado local y vuelve
+al ingreso.

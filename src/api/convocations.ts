@@ -35,10 +35,11 @@ export type ConvocationDetail = {
   };
 };
 
-export const getConvocations = (filters: { q?: string; state?: string } = {}) => {
+export const getConvocations = (filters: { q?: string; state?: string; page?: number } = {}) => {
   const query = new URLSearchParams();
   if (filters.q) query.set('q', filters.q);
   if (filters.state) query.set('state', filters.state);
+  if (filters.page && filters.page > 1) query.set('page', String(filters.page));
   const suffix = query.size ? `?${query.toString()}` : '';
   return api<ConvocationsPage>(`/coordination/convocations${suffix}`);
 };

@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { login } from '@/api/session';
+import { sessionState } from '@/state/session';
 
 const router = useRouter();
 const email = ref('');
@@ -19,6 +20,10 @@ const submit = async (): Promise<void> => {
       await router.replace('/verificar-dos-factores');
       return;
     }
+    // Una salida previa deja el almacén cargado con `null`. Sustituirlo aquí evita que
+    // el guard reutilice ese valor y devuelva a /ingresar pese a que el servidor ya
+    // creó la nueva sesión.
+    sessionState.replace(result);
     await router.replace('/');
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo iniciar sesión.';

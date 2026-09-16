@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { completeTwoFactorLogin } from '@/api/session';
+import { sessionState } from '@/state/session';
 
 const router = useRouter();
 const code = ref('');
@@ -15,6 +16,7 @@ const submit = async (): Promise<void> => {
   error.value = null;
   try {
     await completeTwoFactorLogin(code.value, recoveryCode.value);
+    await sessionState.load(true);
     await router.replace('/');
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo verificar el código.';
