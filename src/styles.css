@@ -1,0 +1,10 @@
+:root { font-family: Arial, sans-serif; color: #172033; background: #f8fafc; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; }
+.auth-page, .workspace-page { display: grid; min-height: 100vh; place-items: center; padding: 1.5rem; }
+.auth-card { display: flex; width: min(100%, 26rem); flex-direction: column; gap: 1rem; padding: 2rem; background: white; border: 1px solid #dbe3ef; border-radius: .75rem; }
+.auth-card label { display: flex; flex-direction: column; gap: .5rem; }
+.auth-card input, .auth-card button, .workspace-page button { padding: .75rem; border-radius: .4rem; border: 1px solid #b8c4d5; }
+.auth-card button, .workspace-page button { border: 0; background: #075da9; color: white; cursor: pointer; }
+.workspace-page { place-content: start center; gap: 1rem; }
