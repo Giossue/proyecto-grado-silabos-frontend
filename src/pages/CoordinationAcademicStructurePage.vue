@@ -7,7 +7,7 @@ import {
   createCareerTeacher,
   createParallels,
   createSubjectRequirement,
-  deleteCareerRecord,
+  deleteCurriculumSubject,
   deleteScheduledSubject,
   deleteSubjectRequirement,
   getCurriculum,
@@ -17,6 +17,7 @@ import {
   relieveCareerTeacher,
   setCareerRecordStatus,
   updateCurriculumConfiguration,
+  updateSubjectLayout,
   updateCareerRecord,
   uploadFacultyLogo,
   type Curriculum,
@@ -25,6 +26,7 @@ import {
 } from "@/api/career-academics";
 import { getSession } from "@/api/session";
 import FormSheet from "@/components/FormSheet.vue";
+import CurriculumCycleBoard from "@/components/CurriculumCycleBoard.vue";
 
 const router = useRouter();
 const curriculum = ref<Curriculum | null>(null);
@@ -207,6 +209,20 @@ const saveSubject = () =>
     subjectEditOpen.value = false;
     return result;
   });
+const saveSubjectLayout = (payload: {
+  subject_id: string;
+  cycle: number;
+  position: number;
+}) =>
+  run(() =>
+    updateSubjectLayout(curriculum.value!.curriculum.id, payload),
+  );
+const removeSubject = (item: Curriculum["subjects"][number]) => {
+  if (window.confirm(`¿Eliminar ${item.code} · ${item.name} de la malla?`))
+    void run(() =>
+      deleteCurriculumSubject(curriculum.value!.curriculum.id, item.id),
+    );
+};
 const addRequirement = () =>
   run(() =>
     createSubjectRequirement(curriculum.value!.curriculum.id, {
@@ -299,63 +315,21 @@ onMounted(() => {
             Guardar configuración
           </button>
         </form>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Código</th>
-                <th>Asignatura</th>
-                <th>Ciclo</th>
-                <th>Créditos</th>
-                <th>Horas</th>
-                <th>Estado</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in curriculum.subjects" :key="item.id">
-                <td>{{ item.code }}</td>
-                <td>
-                  {{ item.name }}<small>{{ item.organization_unit }}</small>
-                </td>
-                <td>{{ item.cycle }}</td>
-                <td>{{ item.credits }}</td>
-                <td>{{ item.total_hours }}</td>
-                <td>{{ item.active ? "Activa" : "Inactiva" }}</td>
-                <td class="process-actions">
-                  <button
-                    type="button"
-                    :disabled="saving || !curriculum.curriculum.editable"
-                    @click="editSubject(item)"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    :disabled="saving || !curriculum.curriculum.editable"
-                    @click="
-                      run(() =>
-                        setCareerRecordStatus(
-                          'asignatura',
-                          item.id,
-                          !item.active,
-                        ),
-                      )
-                    "
-                  >
-                    {{ item.active ? "Desactivar" : "Activar" }}</button
-                  ><button
-                    :disabled="saving || !curriculum.curriculum.editable"
-                    @click="
-                      run(() => deleteCareerRecord('asignatura', item.id))
-                    "
-                  >
-                    Eliminar
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <CurriculumCycleBoard
+          :subjects="curriculum.subjects"
+          :cycle-count="curriculum.curriculum.cycle_count"
+          :disabled="saving || !curriculum.curriculum.editable"
+          :saving="saving"
+          @edit="editSubject"
+          @layout="saveSubjectLayout"
+          @remove="removeSubject"
+          @status="
+            (item) =>
+              run(() =>
+                setCareerRecordStatus('asignatura', item.id, !item.active),
+              )
+          "
+        />
         <form class="editor-form" @submit.prevent="createSubject">
           <h3>Agregar asignatura</h3>
           <div class="form-grid">
@@ -415,6 +389,25 @@ onMounted(() => {
                 min="0"
                 step=".01"
                 required
+            /></label
+            ><label
+              >Horas de proyecto<input
+                v-model.number="subject.hours_project"
+                type="number"
+                min="0"
+                step=".01" /></label
+            ><label
+              >Horas AP<input
+                v-model.number="subject.hours_ap"
+                type="number"
+                min="0"
+                step=".01" /></label
+            ><label
+              >Horas PAEC<input
+                v-model.number="subject.hours_paec"
+                type="number"
+                min="0"
+                step=".01"
             /></label>
           </div>
           <button :disabled="saving || !curriculum.curriculum.editable">
@@ -822,6 +815,28 @@ onMounted(() => {
               type="number"
               min="0"
               required
+          /></label
+          ><label
+            >Horas de proyecto
+            <input
+              v-model.number="editingSubject.hours_project"
+              type="number"
+              min="0"
+              step=".01" /></label
+          ><label
+            >Horas AP
+            <input
+              v-model.number="editingSubject.hours_ap"
+              type="number"
+              min="0"
+              step=".01" /></label
+          ><label
+            >Horas PAEC
+            <input
+              v-model.number="editingSubject.hours_paec"
+              type="number"
+              min="0"
+              step=".01"
           /></label>
         </div>
         <div class="form-sheet-actions">

@@ -134,6 +134,14 @@ export const updateCurriculumConfiguration = (
     `/coordination/academic/curriculum/${careerId}/configuration`,
     { method: "PATCH", body: JSON.stringify(payload) },
   );
+export const updateSubjectLayout = (
+  curriculumId: string,
+  payload: { subject_id: string; cycle: number; position: number },
+) =>
+  api<{ message: string }>(
+    `/coordination/academic/curriculum/${curriculumId}/subject-layout`,
+    { method: "PATCH", body: JSON.stringify(payload) },
+  );
 export const updateCareerRecord = (
   entity: string,
   id: string,
@@ -157,6 +165,14 @@ export const deleteSubjectRequirement = (
 ) =>
   api<{ message: string }>(
     `/coordination/academic/curriculum/${curriculumId}/requirements/${requirementId}`,
+    { method: "DELETE" },
+  );
+export const deleteCurriculumSubject = (
+  curriculumId: string,
+  subjectId: string,
+) =>
+  api<{ message: string }>(
+    `/coordination/academic/curriculum/${curriculumId}/subjects/${subjectId}`,
     { method: "DELETE" },
   );
 export const createParallels = (payload: {
