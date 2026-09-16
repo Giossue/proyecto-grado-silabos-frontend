@@ -17,6 +17,8 @@ import CoordinationConvocationsPage from '@/pages/CoordinationConvocationsPage.v
 import CoordinationConvocationDetailPage from '@/pages/CoordinationConvocationDetailPage.vue';
 import CoordinationReviewsPage from '@/pages/CoordinationReviewsPage.vue';
 import CoordinationReviewDetailPage from '@/pages/CoordinationReviewDetailPage.vue';
+import CoordinationSourcesPage from '@/pages/CoordinationSourcesPage.vue';
+import CoordinationSourceDetailPage from '@/pages/CoordinationSourceDetailPage.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -37,6 +39,8 @@ export const router = createRouter({
     { path: '/coordinacion/convocatorias/:convocation', component: CoordinationConvocationDetailPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/revisiones', component: CoordinationReviewsPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/revisiones/:revision', component: CoordinationReviewDetailPage, meta: { requiresAuth: true } },
+    { path: '/coordinacion/fuentes', component: CoordinationSourcesPage, meta: { requiresAuth: true } },
+    { path: '/coordinacion/fuentes/:source', component: CoordinationSourceDetailPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos', component: TeacherSyllabiPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos/:syllabus', component: TeacherSyllabusDetailPage, meta: { requiresAuth: true } },
   ],
