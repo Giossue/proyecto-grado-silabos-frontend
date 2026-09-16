@@ -62,6 +62,24 @@ const scheduleSave = (field: SyllabusField): void => {
   saveTimers.set(field.id, setTimeout(() => void saveField(field), 700));
 };
 
+const selectedValues = (field: SyllabusField): string[] => {
+  const value = (field as unknown as { value: unknown }).value;
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+};
+
+const toggleChoice = (field: SyllabusField, value: string, checked: boolean): void => {
+  const next = checked ? [...selectedValues(field), value] : selectedValues(field).filter((item) => item !== value);
+  (field as unknown as { value: string[] }).value = next;
+  scheduleSave(field);
+};
+
+const toggleBoolean = (field: SyllabusField, checked: boolean): void => {
+  (field as unknown as { value: boolean }).value = checked;
+  scheduleSave(field);
+};
+
+const isChecked = (field: SyllabusField): boolean => (field as unknown as { value: boolean }).value === true;
+
 const validate = async (): Promise<void> => {
   if (!syllabus.value) return;
   const result = await validateTeacherSyllabus(syllabus.value.id);
@@ -116,6 +134,13 @@ onMounted(load);
               <label v-else-if="field.teacher_editable && !field.inherited && field.type === 'seleccion_unica'">
                 {{ field.label }}<span v-if="field.required"> *</span>
                 <select v-model="field.value" :disabled="savingFieldId === field.id" @change="scheduleSave(field)"><option value="">Seleccione una opción</option><option v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</option></select>
+              </label>
+              <fieldset v-else-if="field.teacher_editable && !field.inherited && field.type === 'seleccion_multiple'">
+                <legend>{{ field.label }}<span v-if="field.required"> *</span></legend>
+                <label v-for="option in field.options" :key="option.value"><input type="checkbox" :checked="selectedValues(field).includes(option.value)" @change="toggleChoice(field, option.value, ($event.target as HTMLInputElement).checked)" /> {{ option.label }}</label>
+              </fieldset>
+              <label v-else-if="field.teacher_editable && !field.inherited && field.type === 'booleano'">
+                <input type="checkbox" :checked="isChecked(field)" @change="toggleBoolean(field, ($event.target as HTMLInputElement).checked)" /> {{ field.label }}<span v-if="field.required"> *</span>
               </label>
               <p v-else-if="field.inherited">{{ field.label }}: {{ field.value ?? 'Dato institucional' }}</p>
             </template>
