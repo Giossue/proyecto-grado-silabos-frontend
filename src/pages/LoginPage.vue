@@ -41,6 +41,7 @@ const submit = async (): Promise<void> => {
       <button :disabled="pending" type="submit">
         {{ pending ? 'Ingresando…' : 'Ingresar' }}
       </button>
+      <RouterLink class="back-link" to="/recuperar-contrasena">Olvidé mi contraseña</RouterLink>
     </form>
   </main>
 </template>

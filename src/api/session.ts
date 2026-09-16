@@ -19,6 +19,22 @@ export const login = async (email: string, password: string): Promise<Session> =
 
   return api<Session>('/authentication/login', { method: 'POST', body: JSON.stringify({ email, password }) });
 };
+export const requestPasswordRecovery = async (email: string): Promise<{ message: string }> => {
+  await initializeCsrfProtection();
+
+  return api<{ message: string }>('/authentication/password-recovery', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+};
+export const resetForgottenPassword = async (email: string, token: string, password: string, passwordConfirmation: string): Promise<{ message: string }> => {
+  await initializeCsrfProtection();
+
+  return api<{ message: string }>('/authentication/password-reset', {
+    method: 'POST',
+    body: JSON.stringify({ email, token, password, password_confirmation: passwordConfirmation }),
+  });
+};
 export const logout = () => api<void>('/authentication/logout', { method: 'POST' });
 export const selectActiveRole = (roleAssignmentId: string) =>
   api<Session>('/active-role', { method: 'PUT', body: JSON.stringify({ role_assignment_id: roleAssignmentId }) });
