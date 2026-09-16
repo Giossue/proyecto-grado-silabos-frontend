@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { getTeacherSyllabus, saveTeacherField, startTeacherSyllabus, type SyllabusDetail, type SyllabusField } from '@/api/syllabi';
+import { getTeacherSyllabus, saveTeacherField, startTeacherSyllabus, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField } from '@/api/syllabi';
 
 const route = useRoute();
 const router = useRouter();
@@ -11,6 +11,8 @@ const error = ref<string | null>(null);
 const starting = ref(false);
 const savingFieldId = ref<string | null>(null);
 const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const validationMessages = ref<string[]>([]);
+const validationRan = ref(false);
 
 const syllabusId = (): string => String(route.params.syllabus);
 
@@ -45,6 +47,8 @@ const saveField = async (field: SyllabusField): Promise<void> => {
     const saved = await saveTeacherField(syllabus.value.id, field.id, syllabus.value.version_bloqueo, field.value);
     syllabus.value.version_bloqueo = saved.version_bloqueo;
     syllabus.value.completion = saved.completion;
+    validationRan.value = false;
+    validationMessages.value = [];
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo guardar el campo.';
   } finally {
@@ -56,6 +60,18 @@ const scheduleSave = (field: SyllabusField): void => {
   const previous = saveTimers.get(field.id);
   if (previous) clearTimeout(previous);
   saveTimers.set(field.id, setTimeout(() => void saveField(field), 700));
+};
+
+const validate = async (): Promise<void> => {
+  if (!syllabus.value) return;
+  const result = await validateTeacherSyllabus(syllabus.value.id);
+  validationRan.value = true;
+  validationMessages.value = result.validation.results.map((issue) => issue.message);
+};
+
+const submit = async (): Promise<void> => {
+  if (!syllabus.value) return;
+  syllabus.value = (await submitTeacherSyllabus(syllabus.value.id, syllabus.value.version_bloqueo)).syllabus;
 };
 
 onMounted(load);
@@ -105,6 +121,12 @@ onMounted(load);
             </template>
           </template>
         </section>
+      </section>
+      <section v-if="syllabus.state === 'borrador' || syllabus.state === 'correccion_solicitada'" class="detail-card">
+        <h2>Revisión del borrador</h2>
+        <button type="button" @click="validate">Validar sílabo</button>
+        <ul v-if="validationMessages.length"><li v-for="message in validationMessages" :key="message">{{ message }}</li></ul>
+        <button v-if="validationRan && validationMessages.length === 0 && syllabus.completion === 100" type="button" @click="submit">Enviar a revisión</button>
       </section>
     </template>
     <p v-else>Cargando sílabo…</p>

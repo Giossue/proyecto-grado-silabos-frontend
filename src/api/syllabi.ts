@@ -71,3 +71,10 @@ export const saveTeacherField = (syllabusId: string, fieldId: string, version: n
     method: 'PATCH',
     body: JSON.stringify({ version_bloqueo: version, value }),
   });
+export const validateTeacherSyllabus = (syllabusId: string) =>
+  api<{ message: string; validation: { blocking_errors: number; warnings: number; results: Array<{ message: string }> } }>(`/teacher/syllabi/${syllabusId}/validate`, { method: 'POST' });
+export const submitTeacherSyllabus = (syllabusId: string, version: number) =>
+  api<{ message: string; syllabus: SyllabusDetail }>(`/teacher/syllabi/${syllabusId}/submit`, {
+    method: 'POST',
+    body: JSON.stringify({ version_bloqueo: version, idempotency_key: crypto.randomUUID() }),
+  });
