@@ -25,3 +25,8 @@ export const getManagedUsers = (filters: { q?: string; status?: string; role?: s
 
 export const createManagedUser = (payload: { nombre: string; correo_electronico: string; password: string; role_code: string; career_id: string | null }) =>
   api<{ message: string }>('/admin/users', { method: 'POST', body: JSON.stringify(payload) });
+export const setManagedUserStatus = (userId: string, active: boolean) =>
+  api<{ message: string }>(`/admin/users/${userId}/status`, { method: 'PATCH', body: JSON.stringify({ active }) });
+export const resendManagedUserAccess = (userId: string) =>
+  api<{ message: string }>(`/admin/users/${userId}/resend-access`, { method: 'POST' });
+export const deleteManagedUser = (userId: string) => api<{ message: string }>(`/admin/users/${userId}`, { method: 'DELETE' });
