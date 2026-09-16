@@ -79,6 +79,9 @@ onMounted(load);
           <span>{{ metric.hint }}</span>
         </article>
       </section>
+      <RouterLink v-if="session.active_role?.code === 'docente'" class="primary-link" to="/mis-silabos">
+        Ver mis sílabos
+      </RouterLink>
     </template>
     <p v-else-if="error" role="alert">{{ error }}</p>
     <p v-else>Cargando panel…</p>
