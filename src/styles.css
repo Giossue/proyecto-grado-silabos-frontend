@@ -148,3 +148,15 @@ td small { display: block; margin-top: .25rem; color: #53657b; }
   .notification-link { font-size: 0; }
   .notification-link span { font-size: .75rem; }
 }
+.settings-page { max-width: 58rem; }
+.settings-section { display: grid; gap: 1.25rem; padding: 1.5rem 0; border-bottom: 1px solid #dbe3ef; }
+.settings-section > header h2, .settings-section > header p { margin: 0; }
+.settings-section > header p { margin-top: .35rem; color: #64748b; }
+.settings-section > button, .settings-form > button { justify-self: start; padding: .65rem .85rem; border: 0; border-radius: .4rem; background: #075da9; color: white; cursor: pointer; }
+.settings-form { display: grid; max-width: 34rem; gap: .75rem; }
+.settings-form label { display: grid; gap: .4rem; }
+.settings-form input { padding: .65rem .7rem; border: 1px solid #b8c4d5; border-radius: .4rem; }
+.profile-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: 1rem; margin: 0; }
+.profile-details div { display: grid; gap: .25rem; }.profile-details dt { color: #64748b; font-size: .875rem; }.profile-details dd { margin: 0; font-weight: 700; }
+.feedback { padding: .75rem 1rem; border-radius: .45rem; }.feedback.success { background: #e8f7ef; color: #17643b; }.feedback.error { background: #fff0f0; color: #a51d2d; }
+.session-list { display: grid; border-top: 1px solid #dbe3ef; }.session-list article { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 0; border-bottom: 1px solid #dbe3ef; }.session-list p { margin: .25rem 0 0; color: #64748b; }.session-list button { padding: .5rem .7rem; border: 1px solid #b8c4d5; border-radius: .4rem; background: white; cursor: pointer; }

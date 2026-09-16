@@ -14,6 +14,7 @@ export type Session = {
 };
 
 export type TwoFactorStatus = { enabled: boolean; confirmation_required: boolean };
+export type DeviceSession = { id: string; ip_address: string | null; device: string; last_activity: string; current: boolean };
 export type LoginResult = Session | { two_factor_required: true; message: string };
 
 export const getSession = () => api<Session>('/session');
@@ -56,11 +57,22 @@ export const getTwoFactorStatus = () => api<TwoFactorStatus>('/authentication/tw
 export const enableTwoFactor = () => api<TwoFactorStatus & { qr_code_svg: string }>('/authentication/two-factor', { method: 'POST' });
 export const confirmTwoFactor = (code: string) => api<TwoFactorStatus & { recovery_codes: string[] }>('/authentication/two-factor/confirm', { method: 'POST', body: JSON.stringify({ code }) });
 export const disableTwoFactor = () => api<TwoFactorStatus>('/authentication/two-factor', { method: 'DELETE' });
+export const regenerateRecoveryCodes = (currentPassword: string) =>
+  api<TwoFactorStatus & { recovery_codes: string[] }>('/authentication/two-factor/recovery-codes', {
+    method: 'POST', body: JSON.stringify({ current_password: currentPassword }),
+  });
+export const getDeviceSessions = () => api<{ sessions: DeviceSession[] }>('/authentication/sessions');
+export const closeDeviceSession = (sessionId: string) =>
+  api<{ message: string }>(`/authentication/sessions/${sessionId}`, { method: 'DELETE' });
+export const closeOtherDeviceSessions = (currentPassword: string) =>
+  api<{ message: string; closed_sessions: number }>('/authentication/sessions/others', {
+    method: 'DELETE', body: JSON.stringify({ current_password: currentPassword }),
+  });
 export const logout = () => api<void>('/authentication/logout', { method: 'POST' });
 export const selectActiveRole = (roleAssignmentId: string) =>
   api<Session>('/active-role', { method: 'PUT', body: JSON.stringify({ role_assignment_id: roleAssignmentId }) });
-export const updatePassword = (password: string, passwordConfirmation: string) =>
+export const updatePassword = (password: string, passwordConfirmation: string, currentPassword?: string) =>
   api<Session>('/authentication/password', {
     method: 'PUT',
-    body: JSON.stringify({ password, password_confirmation: passwordConfirmation }),
+    body: JSON.stringify({ password, password_confirmation: passwordConfirmation, current_password: currentPassword }),
   });
