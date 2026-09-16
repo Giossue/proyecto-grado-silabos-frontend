@@ -29,8 +29,10 @@ const rowSaveTimers = new Map<string, ReturnType<typeof setTimeout>>();
 let pendingSave: Promise<void> = Promise.resolve();
 const validationMessages = ref<string[]>([]);
 const validationRan = ref(false);
+const validationBlockingErrors = ref<number | null>(null);
 const responseDrafts = ref<Record<string, string>>({});
 const aiMessage = ref<string | null>(null);
+const aiChat = ref<InstanceType<typeof SyllabusAiChat> | null>(null);
 
 const syllabusId = (): string => String(route.params.syllabus);
 
@@ -66,6 +68,7 @@ const start = async (): Promise<void> => {
 
 const invalidateValidation = (): void => {
   validationRan.value = false;
+  validationBlockingErrors.value = null;
   validationMessages.value = [];
 };
 
@@ -194,9 +197,28 @@ const validate = async (): Promise<void> => {
   if (!syllabus.value) return;
   const result = await validateTeacherSyllabus(syllabus.value.id);
   validationRan.value = true;
+  validationBlockingErrors.value = result.validation.blocking_errors;
   validationMessages.value = result.validation.results.map(
     (issue) => issue.message,
   );
+  if (
+    result.validation.blocking_errors === 0 &&
+    syllabus.value.completion === 100
+  ) {
+    try {
+      const review = await requestAiReview(
+        syllabus.value.id,
+        syllabus.value.version_bloqueo,
+      );
+      aiMessage.value = review.message;
+      await aiChat.value?.reload();
+    } catch (reason) {
+      aiMessage.value =
+        reason instanceof ApiError
+          ? reason.message
+          : "La ayuda de IA no está disponible; puede enviar el sílabo igualmente.";
+    }
+  }
 };
 
 const submit = async (): Promise<void> => {
@@ -207,14 +229,6 @@ const submit = async (): Promise<void> => {
       syllabus.value.version_bloqueo,
     )
   ).syllabus;
-};
-const askAi = async (): Promise<void> => {
-  if (!syllabus.value) return;
-  const result = await requestAiReview(
-    syllabus.value.id,
-    syllabus.value.version_bloqueo,
-  );
-  aiMessage.value = result.message;
 };
 const answer = async (observationId: string): Promise<void> => {
   if (!syllabus.value) return;
@@ -575,7 +589,16 @@ onMounted(load);
         class="detail-card"
       >
         <h2>Revisión del borrador</h2>
-        <button type="button" @click="validate">Validar sílabo</button>
+        <button
+          v-if="syllabus.completion === 100"
+          type="button"
+          @click="validate"
+        >
+          Validar sílabo
+        </button>
+        <p v-else class="save-status">
+          Complete todos los campos obligatorios para validar el sílabo.
+        </p>
         <ul v-if="validationMessages.length">
           <li v-for="message in validationMessages" :key="message">
             {{ message }}
@@ -584,7 +607,7 @@ onMounted(load);
         <button
           v-if="
             validationRan &&
-            validationMessages.length === 0 &&
+            validationBlockingErrors === 0 &&
             syllabus.completion === 100
           "
           type="button"
@@ -592,10 +615,10 @@ onMounted(load);
         >
           Enviar a revisión
         </button>
-        <button type="button" @click="askAi">Solicitar consejos de IA</button>
         <p v-if="aiMessage" class="save-status">{{ aiMessage }}</p>
       </section>
       <SyllabusAiChat
+        ref="aiChat"
         :syllabus-id="syllabus.id"
         :draft-version="syllabus.version_bloqueo"
         @navigate-to-field="navigateToField"

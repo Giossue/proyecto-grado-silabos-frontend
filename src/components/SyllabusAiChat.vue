@@ -35,8 +35,26 @@ const messages = computed(() =>
     ? []
     : (chat.value?.conversation?.messages ?? []),
 );
+const reviewSections = computed(() => {
+  const sections = new Map<
+    string,
+    { id: string; title: string; results: AiChat["review_results"] }
+  >();
+  for (const result of chat.value?.review_results ?? []) {
+    const section = sections.get(result.section.id) ?? {
+      id: result.section.id,
+      title: result.section.title,
+      results: [],
+    };
+    section.results.push(result);
+    sections.set(section.id, section);
+  }
+
+  return [...sections.values()];
+});
 const hasPending = computed(
   () =>
+    ["pendiente", "en_ejecucion"].includes(chat.value?.review?.status ?? "") ||
     messages.value.some((message) =>
       ["pendiente", "en_ejecucion"].includes(message.status),
     ) ||
@@ -132,6 +150,7 @@ const apply = async (
 };
 
 onMounted(load);
+defineExpose({ reload: load });
 onBeforeUnmount(() => {
   if (pollTimer) clearTimeout(pollTimer);
 });
@@ -215,13 +234,46 @@ onBeforeUnmount(() => {
           </button>
         </details>
       </article>
-      <section v-if="chat?.review_results.length" class="ai-review-results">
+      <section
+        v-if="chat?.review || chat?.review_results.length"
+        class="ai-review-results"
+      >
         <h3>Revisión del sílabo</h3>
-        <article
-          v-for="result in chat.review_results"
-          :key="result.id"
-          class="ai-review-card"
+        <div v-if="chat.review" class="ai-review-progress" aria-live="polite">
+          <div>
+            <strong>{{ chat.review.progress }}%</strong>
+            <span>
+              {{ chat.review.completed_fields }} de
+              {{ chat.review.total_fields }} campos
+            </span>
+          </div>
+          <progress
+            :value="chat.review.completed_fields"
+            :max="chat.review.total_fields"
+          />
+          <p v-if="chat.review.stale" class="save-status">
+            Esta revisión corresponde a una versión anterior del borrador.
+          </p>
+          <p v-else-if="chat.review.status === 'fallida'" class="feedback error">
+            La ayuda no estuvo disponible. Puede continuar y volver a intentarlo tras
+            editar el borrador.
+          </p>
+          <p v-else-if="chat.review.status === 'parcial'" class="save-status">
+            La revisión terminó parcialmente; los resultados disponibles siguen siendo
+            opcionales.
+          </p>
+        </div>
+        <section
+          v-for="section in reviewSections"
+          :key="section.id"
+          class="ai-review-section"
         >
+          <h4>{{ section.title }}</h4>
+          <article
+            v-for="result in section.results"
+            :key="result.id"
+            class="ai-review-card"
+          >
           <button
             class="ai-review-field"
             type="button"
@@ -281,7 +333,8 @@ onBeforeUnmount(() => {
               </button>
             </div>
           </article>
-        </article>
+          </article>
+        </section>
       </section>
     </div>
     <form class="ai-chat-input" @submit.prevent="send()">

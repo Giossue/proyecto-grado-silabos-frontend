@@ -521,6 +521,32 @@ td small {
 .ai-review-results h3 {
   margin: 0;
 }
+.ai-review-progress {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--muted);
+}
+.ai-review-progress > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.ai-review-progress progress {
+  width: 100%;
+  accent-color: var(--primary);
+}
+.ai-review-section {
+  display: grid;
+  gap: 0.65rem;
+}
+.ai-review-section h4 {
+  margin: 0.35rem 0 0;
+  font-size: 0.85rem;
+}
 .ai-review-card,
 .ai-review-recommendation {
   display: grid;

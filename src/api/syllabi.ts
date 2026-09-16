@@ -158,10 +158,30 @@ export type AiChat = {
   } | null;
   suggested_questions: string[];
   available: boolean;
+  review: {
+    id: string;
+    status:
+      | "pendiente"
+      | "en_ejecucion"
+      | "completada"
+      | "no_concluyente"
+      | "parcial"
+      | "fallida";
+    draft_version: number;
+    stale: boolean;
+    total_fields: number;
+    completed_fields: number;
+    fields_with_recommendations: number;
+    failed_fields: number;
+    progress: number;
+    requested_at: string;
+    completed_at: string | null;
+  } | null;
   review_results: Array<{
     id: string;
     field_id: string;
     field_label: string;
+    section: { id: string; title: string };
     status: string;
     stale: boolean;
     reason: string | null;
@@ -238,7 +258,12 @@ export const validateTeacherSyllabus = (syllabusId: string) =>
     validation: {
       blocking_errors: number;
       warnings: number;
-      results: Array<{ message: string }>;
+      results: Array<{
+        field_id: string | null;
+        code: string;
+        severity: string;
+        message: string;
+      }>;
     };
   }>(`/teacher/syllabi/${syllabusId}/validate`, { method: "POST" });
 export const submitTeacherSyllabus = (syllabusId: string, version: number) =>
@@ -253,7 +278,17 @@ export const submitTeacherSyllabus = (syllabusId: string, version: number) =>
     },
   );
 export const requestAiReview = (syllabusId: string, version: number) =>
-  api<{ message: string }>(`/teacher/syllabi/${syllabusId}/ai-review`, {
+  api<{
+    message: string;
+    review: {
+      id: string;
+      status: string;
+      draft_version: number;
+      total_fields: number;
+      completed_fields: number;
+      progress: number;
+    };
+  }>(`/teacher/syllabi/${syllabusId}/ai-review`, {
     method: "POST",
     body: JSON.stringify({
       version_bloqueo: version,

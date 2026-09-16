@@ -20,6 +20,7 @@ const emptyChat = {
   conversation: null,
   suggested_questions: ["¿Qué debo revisar?"],
   available: true,
+  review: null,
   review_results: [],
 };
 
@@ -86,5 +87,33 @@ describe("SyllabusAiChat", () => {
     await wrapper.get(".ai-chat-message details button").trigger("click");
 
     expect(wrapper.emitted("navigateToField")).toEqual([["field-1"]]);
+  });
+
+  it("muestra el progreso agregado de la revisión integral", async () => {
+    vi.mocked(getAiChat).mockResolvedValue({
+      ...emptyChat,
+      review: {
+        id: "review-1",
+        status: "completada",
+        draft_version: 2,
+        stale: false,
+        total_fields: 2,
+        completed_fields: 2,
+        fields_with_recommendations: 1,
+        failed_fields: 0,
+        progress: 100,
+        requested_at: "2026-09-16T00:00:00Z",
+        completed_at: "2026-09-16T00:00:03Z",
+      },
+    });
+    const wrapper = mount(SyllabusAiChat, {
+      props: { syllabusId: "syllabus-1", draftVersion: 2 },
+    });
+    await flushPromises();
+
+    expect(wrapper.get(".ai-review-progress").text()).toContain("100%");
+    expect(wrapper.get(".ai-review-progress").text()).toContain(
+      "2 de 2 campos",
+    );
   });
 });
