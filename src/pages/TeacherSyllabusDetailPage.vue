@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { getTeacherSyllabus, saveTeacherField, startTeacherSyllabus, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField } from '@/api/syllabi';
+import { getTeacherSyllabus, requestAiReview, respondObservation, saveTeacherField, startTeacherSyllabus, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField } from '@/api/syllabi';
 
 const route = useRoute();
 const router = useRouter();
@@ -13,6 +13,7 @@ const savingFieldId = ref<string | null>(null);
 const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const validationMessages = ref<string[]>([]);
 const validationRan = ref(false);
+const responseDrafts = ref<Record<string, string>>({});
 
 const syllabusId = (): string => String(route.params.syllabus);
 
@@ -91,6 +92,8 @@ const submit = async (): Promise<void> => {
   if (!syllabus.value) return;
   syllabus.value = (await submitTeacherSyllabus(syllabus.value.id, syllabus.value.version_bloqueo)).syllabus;
 };
+const askAi = async (): Promise<void> => { if (syllabus.value) await requestAiReview(syllabus.value.id, syllabus.value.version_bloqueo); };
+const answer = async (observationId: string): Promise<void> => { if (syllabus.value) await respondObservation(syllabus.value.id, observationId, responseDrafts.value[observationId] ?? ''); };
 
 onMounted(load);
 </script>
@@ -152,7 +155,9 @@ onMounted(load);
         <button type="button" @click="validate">Validar sílabo</button>
         <ul v-if="validationMessages.length"><li v-for="message in validationMessages" :key="message">{{ message }}</li></ul>
         <button v-if="validationRan && validationMessages.length === 0 && syllabus.completion === 100" type="button" @click="submit">Enviar a revisión</button>
+        <button type="button" @click="askAi">Solicitar consejos de IA</button>
       </section>
+      <section v-if="syllabus.observations.length" class="detail-card"><h2>Observaciones</h2><article v-for="observation in syllabus.observations" :key="observation.id"><p>{{ observation.content }}</p><p v-if="observation.response">{{ observation.response.content }}</p><template v-else><textarea v-model="responseDrafts[observation.id]" placeholder="Ej. Corrección realizada" /><button type="button" @click="answer(observation.id)">Responder</button></template></article></section>
     </template>
     <p v-else>Cargando sílabo…</p>
   </main>

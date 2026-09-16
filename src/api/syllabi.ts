@@ -37,6 +37,7 @@ export type SyllabusDetail = {
   parallels: string[];
   teachers: string[];
   sections: Array<{ id: string; title: string; description: string | null; blocks: SyllabusBlock[] }>;
+  observations: Array<{ id: string; content: string; state: string; requested: boolean; response: { content: string } | null }>;
 };
 
 export type SyllabusField = {
@@ -78,3 +79,5 @@ export const submitTeacherSyllabus = (syllabusId: string, version: number) =>
     method: 'POST',
     body: JSON.stringify({ version_bloqueo: version, idempotency_key: crypto.randomUUID() }),
   });
+export const requestAiReview = (syllabusId: string, version: number) => api<{ message: string }>(`/teacher/syllabi/${syllabusId}/ai-review`, { method: 'POST', body: JSON.stringify({ version_bloqueo: version, idempotency_key: crypto.randomUUID() }) });
+export const respondObservation = (syllabusId: string, observationId: string, content: string) => api<void>(`/teacher/syllabi/${syllabusId}/observations/${observationId}/response`, { method: 'POST', body: JSON.stringify({ content }) });
