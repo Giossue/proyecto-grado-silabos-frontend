@@ -11,7 +11,7 @@ export type ManagedUser = {
 };
 
 export type ManagedUsersResponse = {
-  users: { data: ManagedUser[]; current_page: number; last_page: number; total: number };
+  users: { data: ManagedUser[]; current_page: number; last_page: number; per_page: number; from: number | null; to: number | null; total: number };
   filters: { q: string | null; status: string | null; role: string | null; career: string | null };
   roles: Array<{ codigo: 'administrador' | 'coordinador' | 'docente'; nombre: string }>;
   careers: Array<{ id: string; nombre: string }>;

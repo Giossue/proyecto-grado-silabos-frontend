@@ -8,6 +8,10 @@ import {
 } from "@/api/ai-configuration";
 import CoordinationAiConfigurationPage from "@/pages/CoordinationAiConfigurationPage.vue";
 
+vi.mock("vue-router", () => ({
+  useRoute: () => ({ fullPath: "/coordinacion/ia" }),
+}));
+
 vi.mock("@/api/ai-configuration", () => ({
   getCareerAiConfiguration: vi.fn(),
   resetCareerAiConfiguration: vi.fn(),

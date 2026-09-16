@@ -1,9 +1,96 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'; import { useRouter } from 'vue-router'; import { ApiError } from '@/api/client'; import { getJobExecutions, retryJobExecution, type JobsPayload } from '@/api/operations'; import { getSession } from '@/api/session';
-import PaginationControls from '@/components/PaginationControls.vue';
-const router = useRouter(); const data = ref<JobsPayload | null>(null); const loading = ref(true); const pendingJob = ref<string | null>(null); const error = ref<string | null>(null); const message = ref<string | null>(null); const filters = reactive({ q: '', status: '', type: '', queue: '' });
-const load = async (page = 1) => { loading.value = true; error.value = null; try { const session = await getSession(); if (session.active_role?.code !== 'administrador') { await router.replace('/panel'); return; } data.value = await getJobExecutions({ ...filters, page: String(page) }); } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los trabajos.'; } finally { loading.value = false; } };
-const retry = async (id: string) => { pendingJob.value = id; error.value = null; try { message.value = (await retryJobExecution(id)).message; await load(); } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo reintentar el trabajo.'; } finally { pendingJob.value = null; } };
+import { RotateCw } from '@lucide/vue';
+import { onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { ApiError } from '@/api/client';
+import { getJobExecutions, retryJobExecution, type JobsPayload } from '@/api/operations';
+import { getSession } from '@/api/session';
+import AuditTabs from '@/components/domain/AuditTabs.vue';
+import FilterToolbar from '@/components/domain/FilterToolbar.vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+type Execution = JobsPayload['executions']['data'][number];
+const router = useRouter();
+const data = ref<JobsPayload | null>(null);
+const loading = ref(true);
+const retryingId = ref<string | null>(null);
+const retryCandidate = ref<Execution | null>(null);
+const error = ref<string | null>(null);
+const message = ref<string | null>(null);
+const filters = reactive({ q: '', status: 'all', type: 'all', queue: 'all' });
+
+const load = async (page = 1): Promise<void> => {
+  loading.value = true;
+  error.value = null;
+  try {
+    const session = await getSession();
+    if (session.active_role?.code !== 'administrador') {
+      await router.replace('/panel');
+      return;
+    }
+    data.value = await getJobExecutions({
+      q: filters.q,
+      status: filters.status === 'all' ? '' : filters.status,
+      type: filters.type === 'all' ? '' : filters.type,
+      queue: filters.queue === 'all' ? '' : filters.queue,
+      page: String(page),
+    });
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los trabajos.';
+  } finally {
+    loading.value = false;
+  }
+};
+const clearFilters = (): void => {
+  Object.assign(filters, { q: '', status: 'all', type: 'all', queue: 'all' });
+  void load();
+};
+const retry = async (): Promise<void> => {
+  if (!retryCandidate.value) return;
+  const id = retryCandidate.value.id;
+  retryingId.value = id;
+  error.value = null;
+  try {
+    message.value = (await retryJobExecution(id)).message;
+    retryCandidate.value = null;
+    await load();
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo reintentar el trabajo.';
+  } finally {
+    retryingId.value = null;
+  }
+};
+const statusLabel = (value: string): string => ({ pendiente: 'En cola', en_ejecucion: 'En ejecución', completada: 'Completado', fallida: 'Fallido' })[value] ?? 'Estado no disponible';
+const formatDate = (value: string | null): string => value === null ? '—' : new Intl.DateTimeFormat('es-EC', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value));
+
 onMounted(() => { void load(); });
 </script>
-<template><main class="app-page"><header class="app-header"><div><p class="eyebrow">Administración</p><h1>Trabajos asíncronos</h1><p>IA, documentos y notificaciones procesados en segundo plano.</p></div><RouterLink class="back-link" to="/panel">Volver al panel</RouterLink></header><form class="filter-form" @submit.prevent="load()"><label>Buscar<input v-model="filters.q" /></label><label>Estado<select v-model="filters.status"><option value="">Todos</option><option value="pendiente">Pendiente</option><option value="procesando">Procesando</option><option value="completada">Completada</option><option value="fallida">Fallida</option></select></label><label>Tipo<select v-model="filters.type"><option value="">Todos</option><option v-for="option in data?.type_options" :key="option.value" :value="option.value">{{ option.label }}</option></select></label><label>Cola<select v-model="filters.queue"><option value="">Todas</option><option v-for="option in data?.queue_options" :key="option.value" :value="option.value">{{ option.label }}</option></select></label><button :disabled="loading">Aplicar</button></form><p v-if="message" class="save-status">{{ message }}</p><p v-if="error" role="alert">{{ error }}</p><p v-if="loading && !data" role="status">Cargando trabajos…</p><template v-if="data"><div class="table-wrap"><table><thead><tr><th>Tipo</th><th>Cola</th><th>Estado</th><th>Intentos</th><th>Progreso</th><th>Error</th><th></th></tr></thead><tbody><tr v-for="job in data.executions.data" :key="job.id"><td>{{ job.tipo }}</td><td>{{ job.cola }}</td><td>{{ job.estado }}</td><td>{{ job.intentos }}/{{ job.intentos_maximos }}</td><td>{{ job.progreso }}%</td><td>{{ job.mensaje_error }}</td><td><button v-if="job.reintentable" :disabled="pendingJob === job.id" @click="retry(job.id)">{{ pendingJob === job.id ? 'Reintentando…' : 'Reintentar' }}</button></td></tr><tr v-if="!data.executions.data.length"><td colspan="7" class="empty-state">No hay trabajos para los filtros seleccionados.</td></tr></tbody></table></div><PaginationControls :current-page="data.executions.current_page" :last-page="data.executions.last_page" :total="data.executions.total" @change="load" /></template></main></template>
+
+<template>
+  <PageFrame title="Auditoría" description="Lo que el sistema hace por detrás: correos, documentos y análisis. Aquí se ve qué terminó y qué falló.">
+    <p v-if="message" class="text-sm" role="status">{{ message }}</p><p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p><p v-if="loading && !data" class="text-sm text-muted-foreground" role="status">Cargando trabajos…</p>
+    <AuditTabs active="jobs"><Card><CardContent class="flex flex-col gap-4">
+      <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters"><template #search><Field><FieldLabel for="jobs-search" class="sr-only">Buscar procesos</FieldLabel><Input id="jobs-search" v-model="filters.q" type="search" placeholder="Buscar por proceso o cola" /></Field></template><template #filters>
+        <Field><FieldLabel for="jobs-status" class="sr-only">Estado</FieldLabel><Select v-model="filters.status"><SelectTrigger id="jobs-status"><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="pendiente">En cola</SelectItem><SelectItem value="en_ejecucion">En ejecución</SelectItem><SelectItem value="completada">Completado</SelectItem><SelectItem value="fallida">Fallido</SelectItem></SelectGroup></SelectContent></Select></Field>
+        <Field><FieldLabel for="jobs-type" class="sr-only">Tipo</FieldLabel><Select v-model="filters.type"><SelectTrigger id="jobs-type"><SelectValue placeholder="Todos los tipos" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los tipos</SelectItem><SelectItem v-for="option in data?.type_options" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent></Select></Field>
+        <Field><FieldLabel for="jobs-queue" class="sr-only">Cola</FieldLabel><Select v-model="filters.queue"><SelectTrigger id="jobs-queue"><SelectValue placeholder="Todas las colas" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todas las colas</SelectItem><SelectItem v-for="option in data?.queue_options" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent></Select></Field>
+      </template></FilterToolbar></form>
+      <template v-if="data"><Table><TableHeader><TableRow><TableHead>Proceso</TableHead><TableHead>Cola</TableHead><TableHead>Estado</TableHead><TableHead>Intentos</TableHead><TableHead>Inicio / fin</TableHead><TableHead>Motivo del fallo</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
+        <TableRow v-for="execution in data.executions.data" :key="execution.id"><TableCell>{{ execution.tipo }}</TableCell><TableCell>{{ execution.cola }}</TableCell><TableCell><span :class="execution.estado === 'fallida' ? 'text-destructive' : ''">{{ statusLabel(execution.estado) }}</span><div v-if="['pendiente', 'en_ejecucion'].includes(execution.estado)" class="mt-1 text-xs text-muted-foreground">{{ execution.progreso }} %</div></TableCell><TableCell>{{ execution.intentos }} acumulado(s)<div class="text-xs text-muted-foreground">máximo {{ execution.intentos_maximos }} por ciclo</div></TableCell><TableCell class="text-xs"><div>Inicio: {{ formatDate(execution.iniciado_en) }}</div><div>Fin: {{ formatDate(execution.finalizado_en) }}</div></TableCell><TableCell class="max-w-sm text-sm">{{ execution.mensaje_error ?? '—' }}</TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${execution.tipo}`"><DropdownMenuItem v-if="execution.reintentable" :disabled="retryingId !== null" @select="retryCandidate = execution"><Spinner v-if="retryingId === execution.id" /><RotateCw v-else aria-hidden="true" />Reintentar</DropdownMenuItem><DropdownMenuItem v-else disabled>No hay acciones disponibles</DropdownMenuItem></TableActionsMenu></TableCell></TableRow>
+        <TableEmpty v-if="data.executions.data.length === 0" :colspan="7">No hay procesos para los filtros actuales.</TableEmpty>
+      </TableBody></Table><TablePagination :meta="data.executions" label="Paginación de procesos" @update:page="load" /></template>
+    </CardContent></Card></AuditTabs>
+    <Dialog :open="retryCandidate !== null" @update:open="(isOpen) => { if (!isOpen && retryingId === null) retryCandidate = null; }"><DialogContent><DialogHeader><DialogTitle>Reintentar proceso</DialogTitle><DialogDescription>Se volverá a encolar «{{ retryCandidate?.tipo }}». La operación conserva el conteo y la auditoría de intentos anteriores.</DialogDescription></DialogHeader><DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="retryingId !== null">Cancelar</Button></DialogClose><Button type="button" :disabled="retryingId !== null" @click="retry"><Spinner v-if="retryingId !== null" data-icon="inline-start" /><RotateCw v-else data-icon="inline-start" aria-hidden="true" />Reintentar</Button></DialogFooter></DialogContent></Dialog>
+  </PageFrame>
+</template>

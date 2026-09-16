@@ -70,6 +70,28 @@ plantilla, proceso, fuentes, logo, apertura de convocatoria, módulos de Coordin
 borrador docente, autoguardado, persistencia después de recargar, carga de imágenes,
 ausencia de respuestas 5xx y ausencia de desbordamiento global a 360 px.
 
+La cobertura transversal de accesibilidad (foco de hojas, cierre con Escape y overflow
+móvil) puede ejecutarse de forma aislada con:
+
+```bash
+VITE_API_URL=http://127.0.0.1:8000 npx playwright test tests/e2e/accessibility.spec.ts
+```
+
+Para revisar la paridad visual en local, levante la API aislada en loopback y ejecute:
+
+```bash
+VITE_API_URL=http://127.0.0.1:8000 npm run test:visual-spa
+npm run test:visual-compare
+```
+
+La primera orden captura claro/oscuro a 1440 px y claro a 360 px para los tres roles en
+`tests/visual/current/`. La segunda empareja esas capturas con la línea base generada
+desde el monolito en `tests/visual/baseline/`, valida dimensiones y muestra diferencias
+de píxeles. Los estados y datos dinámicos se revisan manualmente; el informe no sustituye
+la aceptación visual. El comparador es informativo por defecto; para convertir las
+dimensiones incompatibles en una puerta explícita, ejecuta
+`npm run test:visual-compare -- --strict`.
+
 El cliente prepara CSRF antes de cada mutación cuando hace falta, renueva una cookie CSRF
 caducada una sola vez y, si la sesión deja de ser válida, limpia el estado local y vuelve
 al ingreso.

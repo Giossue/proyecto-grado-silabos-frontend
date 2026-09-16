@@ -1,269 +1,86 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
-import { getNotifications } from "@/api/notifications";
-import { logout, selectActiveRole } from "@/api/session";
-import { ApiError } from "@/api/client";
-import { sessionState } from "@/state/session";
-
-type NavigationItem = { label: string; to: string };
-
+import { computed, onMounted, provide, ref } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { Bell, BookOpenCheck, Building2, CalendarRange, ChartNoAxesCombined, ClipboardCheck, FileStack, LayoutGrid, LibraryBig, LogOut, Network, ScrollText, Settings, UsersRound } from '@lucide/vue';
+import { getNotifications } from '@/api/notifications';
+import { logout } from '@/api/session';
+import { sessionState } from '@/state/session';
+import { pageTitleKey, saysTheSame } from '@/composables/usePageTitle';
+import AppLogo from '@/components/AppLogo.vue';
+import AppearanceToggle from '@/components/AppearanceToggle.vue';
+import WorkScopeSwitcherSheet from '@/components/domain/identity/WorkScopeSwitcherSheet.vue';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarHeader, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { Toaster } from '@/components/ui/sonner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+type NavigationItem = { label: string; to: string; icon: unknown };
+const route = useRoute();
 const router = useRouter();
 const unreadCount = ref(0);
-const scopeOpen = ref(false);
-const menuOpen = ref(false);
-const theme = ref<"light" | "dark">("light");
-const actionError = ref<string | null>(null);
-const actionPending = ref(false);
-const scopeTrigger = ref<HTMLButtonElement | null>(null);
-const scopeDialog = ref<HTMLElement | null>(null);
-
+const pending = ref(false);
+const scopeSwitcherOpen = ref(false);
+const contentPageTitle = ref('');
+provide(pageTitleKey, contentPageTitle);
 const navigation = computed<NavigationItem[]>(() => {
+  const common = [{ label: 'Panel', to: '/panel', icon: LayoutGrid }];
   switch (sessionState.current.value?.active_role?.code) {
-    case "administrador":
-      return [
-        { label: "Panel", to: "/panel" },
-        { label: "Usuarios", to: "/administracion/usuarios" },
-        {
-          label: "Estructura académica",
-          to: "/administracion/estructura-academica",
-        },
-        { label: "Procesos", to: "/administracion/procesos" },
-        { label: "Plantilla", to: "/administracion/plantilla" },
-        { label: "Auditoría", to: "/administracion/auditoria" },
-        { label: "Trabajos", to: "/administracion/trabajos" },
-      ];
-    case "coordinador":
-      return [
-        { label: "Panel", to: "/panel" },
-        { label: "Convocatorias", to: "/coordinacion/convocatorias" },
-        { label: "Revisiones", to: "/coordinacion/revisiones" },
-        { label: "Fuentes", to: "/coordinacion/fuentes" },
-        { label: "Configuración IA", to: "/coordinacion/configuracion-ia" },
-        {
-          label: "Estructura académica",
-          to: "/coordinacion/estructura-academica",
-        },
-        { label: "Informes", to: "/coordinacion/informes" },
-      ];
-    case "docente":
-      return [
-        { label: "Panel", to: "/panel" },
-        { label: "Mis sílabos", to: "/mis-silabos" },
-      ];
-    default:
-      return [];
+    case 'administrador': return [...common,
+      { label: 'Convocatorias', to: '/administracion/procesos', icon: CalendarRange },
+      { label: 'Usuarios y roles', to: '/administracion/usuarios', icon: UsersRound },
+      { label: 'Estructura académica', to: '/administracion/estructura-academica', icon: Building2 },
+      { label: 'Plantilla', to: '/administracion/plantilla', icon: FileStack },
+      { label: 'Auditoría', to: '/administracion/auditoria', icon: ScrollText }];
+    case 'coordinador': return [...common,
+      { label: 'Convocatorias', to: '/coordinacion/convocatorias', icon: CalendarRange },
+      { label: 'Revisión', to: '/coordinacion/revisiones', icon: ClipboardCheck },
+      { label: 'Asignación docente', to: '/coordinacion/asignaciones-docentes', icon: UsersRound },
+      { label: 'Materias y paralelos', to: '/coordinacion/materias-paralelos', icon: BookOpenCheck },
+      { label: 'Malla', to: '/coordinacion/malla', icon: Network },
+      { label: 'Fuentes académicas', to: '/coordinacion/fuentes', icon: LibraryBig },
+      { label: 'Configuración IA', to: '/coordinacion/configuracion-ia', icon: BookOpenCheck },
+      { label: 'Informes', to: '/coordinacion/informes', icon: ChartNoAxesCombined }];
+    case 'docente': return [...common, { label: 'Mis sílabos', to: '/mis-silabos', icon: BookOpenCheck }];
+    default: return common;
   }
 });
-
-const roleLabel = computed(() => {
-  const role = sessionState.current.value?.active_role;
-  if (!role) return "";
-  const names = {
-    administrador: "Administración",
-    coordinador: "Coordinación",
-    docente: "Docencia",
-  };
-  return `${names[role.code]}${role.career_name ? ` · ${role.career_name}` : ""}`;
+const initials = computed(() => (sessionState.current.value?.user.name ?? '').split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]?.toUpperCase()).join(''));
+const activeLabel = computed(() => sessionState.current.value?.active_role?.career_name ?? sessionState.current.value?.active_role?.code ?? 'Sin ámbito');
+const pageTitle = computed(() => {
+  const fallback = typeof route.meta.title === 'string'
+    ? route.meta.title
+    : navigation.value.find((item) => route.path.startsWith(item.to))?.label ?? 'Sílabos UEB';
+  if (!contentPageTitle.value || saysTheSame(fallback, contentPageTitle.value)) return fallback;
+  return contentPageTitle.value;
 });
-
-const applyTheme = (value: "light" | "dark"): void => {
-  theme.value = value;
-  document.documentElement.dataset.theme = value;
-  localStorage.setItem("silabos-theme", value);
-};
-
-const toggleTheme = (): void =>
-  applyTheme(theme.value === "light" ? "dark" : "light");
-
-const scopeFocusable = (): HTMLElement[] =>
-  Array.from(
-    scopeDialog.value?.querySelectorAll<HTMLElement>(
-      'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
-    ) ?? [],
-  );
-
-const openScope = async (): Promise<void> => {
-  scopeOpen.value = true;
-  await nextTick();
-  (scopeFocusable()[0] ?? scopeDialog.value)?.focus();
-};
-
-const closeScope = (): void => {
-  scopeOpen.value = false;
-  void nextTick(() => scopeTrigger.value?.focus());
-};
-
-const handleDialogKeydown = (event: KeyboardEvent): void => {
-  if (!scopeOpen.value) return;
-  if (event.key === "Escape") {
-    event.preventDefault();
-    closeScope();
-    return;
-  }
-  if (event.key !== "Tab") return;
-  const focusable = scopeFocusable();
-  const first = focusable[0];
-  const last = focusable.at(-1);
-  if (!first || !last) return;
-  if (event.shiftKey && document.activeElement === first) {
-    event.preventDefault();
-    last.focus();
-  } else if (!event.shiftKey && document.activeElement === last) {
-    event.preventDefault();
-    first.focus();
-  }
-};
-
-const switchScope = async (assignmentId: string): Promise<void> => {
-  actionPending.value = true;
-  actionError.value = null;
-  try {
-    sessionState.replace(await selectActiveRole(assignmentId));
-    closeScope();
-    await router.push("/panel");
-  } catch (reason) {
-    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo cambiar el ámbito de trabajo.";
-  } finally {
-    actionPending.value = false;
-  }
-};
-
-const closeSession = async (): Promise<void> => {
-  actionPending.value = true;
-  actionError.value = null;
-  try {
-    await logout();
-    sessionState.clear();
-    await router.replace("/ingresar");
-  } catch (reason) {
-    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo cerrar la sesión.";
-  } finally {
-    actionPending.value = false;
-  }
-};
-
-onMounted(async () => {
-  document.addEventListener("keydown", handleDialogKeydown);
-  applyTheme(
-    localStorage.getItem("silabos-theme") === "dark" ? "dark" : "light",
-  );
-  try {
-    unreadCount.value = (await getNotifications("unread")).unread_count;
-  } catch {
-    unreadCount.value = 0;
-  }
-});
-onBeforeUnmount(() => document.removeEventListener("keydown", handleDialogKeydown));
+const isActive = (path: string): boolean => route.path === path || (path !== '/panel' && route.path.startsWith(`${path}/`));
+const closeSession = async (): Promise<void> => { pending.value = true; try { await logout(); sessionState.clear(); await router.replace('/ingresar'); } finally { pending.value = false; } };
+onMounted(async () => { try { unreadCount.value = (await getNotifications('unread')).unread_count; } catch { unreadCount.value = 0; } });
 </script>
-
 <template>
-  <div class="app-shell">
-    <aside class="app-sidebar" :class="{ 'is-open': menuOpen }">
-      <div class="brand">
-        <span class="brand-mark">S</span><strong>Sílabos UEB</strong>
-      </div>
-      <nav aria-label="Navegación principal">
-        <RouterLink
-          v-for="item in navigation"
-          :key="item.to"
-          :to="item.to"
-          @click="menuOpen = false"
-        >
-          {{ item.label }}
-        </RouterLink>
-      </nav>
-    </aside>
-
-    <div class="app-workspace">
-      <header class="global-header">
-        <button
-          class="icon-button menu-button"
-          type="button"
-          aria-label="Abrir navegación"
-          @click="menuOpen = !menuOpen"
-        >
-          ☰
-        </button>
-        <button ref="scopeTrigger" class="scope-button" type="button" @click="openScope">
-          <span>{{ sessionState.current.value?.user.name }}</span
-          ><small>{{ roleLabel }}</small>
-        </button>
-        <div class="global-actions">
-          <RouterLink
-            class="notification-link"
-            to="/notificaciones"
-            aria-label="Notificaciones"
-          >
-            Notificaciones <span v-if="unreadCount">{{ unreadCount }}</span>
-          </RouterLink>
-          <button
-            class="icon-button"
-            type="button"
-            :aria-label="
-              theme === 'light' ? 'Activar tema oscuro' : 'Activar tema claro'
-            "
-            @click="toggleTheme"
-          >
-            {{ theme === "light" ? "◐" : "☀" }}
-          </button>
-        </div>
-      </header>
-
-      <p v-if="actionError" class="global-error" role="alert">{{ actionError }}</p>
-      <div class="shell-content"><slot /></div>
-    </div>
-
-    <button
-      v-if="menuOpen"
-      class="shell-backdrop"
-      type="button"
-      aria-label="Cerrar navegación"
-      @click="menuOpen = false"
-    />
-    <div v-if="scopeOpen" class="sheet-backdrop">
-      <aside
-        ref="scopeDialog"
-        class="scope-sheet"
-        aria-modal="true"
-        role="dialog"
-        aria-labelledby="scope-title"
-        tabindex="-1"
-      >
-        <header>
-          <div>
-            <h2 id="scope-title">Ámbito de trabajo</h2>
-            <p>Seleccione el rol y la carrera activos.</p>
-          </div>
-          <button
-            class="icon-button"
-            type="button"
-            aria-label="Cerrar"
-            @click="closeScope"
-          >
-            ×
-          </button>
-        </header>
-        <button
-          v-for="role in sessionState.current.value?.available_roles"
-          :key="role.id"
-          class="scope-option"
-          :class="{
-            active: role.id === sessionState.current.value?.active_role?.id,
-          }"
-          type="button"
-          :disabled="actionPending"
-          @click="switchScope(role.id)"
-        >
-          <strong>{{ role.code }}</strong
-          ><span>{{ role.career_name ?? "Ámbito institucional" }}</span>
-        </button>
-        <footer>
-          <RouterLink to="/seguridad" @click="closeScope"
-            >Seguridad</RouterLink
-          ><button type="button" :disabled="actionPending" @click="closeSession">Cerrar sesión</button>
-        </footer>
-      </aside>
-    </div>
-  </div>
+  <SidebarProvider>
+    <Sidebar collapsible="icon" variant="inset">
+      <SidebarHeader><SidebarMenu><SidebarMenuItem><SidebarMenuButton size="lg" as-child><RouterLink to="/panel"><AppLogo /></RouterLink></SidebarMenuButton></SidebarMenuItem></SidebarMenu></SidebarHeader>
+      <nav class="contents" aria-label="Navegación principal"><SidebarContent><SidebarGroup class="px-2 py-0"><SidebarGroupLabel>Trabajo</SidebarGroupLabel><SidebarMenu>
+        <SidebarMenuItem v-for="item in navigation" :key="item.to"><SidebarMenuButton as-child :is-active="isActive(item.to)" :tooltip="item.label"><RouterLink :to="item.to"><component :is="item.icon" /><span>{{ item.label }}</span></RouterLink></SidebarMenuButton></SidebarMenuItem>
+      </SidebarMenu></SidebarGroup></SidebarContent></nav>
+      <SidebarFooter><SidebarMenu><SidebarMenuItem><DropdownMenu><DropdownMenuTrigger as-child><SidebarMenuButton size="lg" class="data-[state=open]:bg-sidebar-accent">
+        <Avatar class="size-8 rounded-lg"><AvatarFallback class="rounded-lg">{{ initials }}</AvatarFallback></Avatar>
+        <div class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-medium">{{ sessionState.current.value?.user.name }}</span><span class="truncate text-xs text-muted-foreground">{{ activeLabel }}</span></div>
+      </SidebarMenuButton></DropdownMenuTrigger><DropdownMenuContent side="right" align="end" class="w-64">
+        <DropdownMenuLabel>{{ sessionState.current.value?.user.email }}</DropdownMenuLabel><DropdownMenuSeparator />
+        <DropdownMenuGroup v-if="(sessionState.current.value?.available_roles.length ?? 0) > 1"><DropdownMenuItem @select="scopeSwitcherOpen = true"><Building2 />Cambiar carrera o rol</DropdownMenuItem></DropdownMenuGroup>
+        <DropdownMenuSeparator v-if="(sessionState.current.value?.available_roles.length ?? 0) > 1" />
+        <DropdownMenuItem as-child><RouterLink to="/configuracion/perfil"><Settings /> Configuración</RouterLink></DropdownMenuItem><DropdownMenuItem :disabled="pending" @select="closeSession"><LogOut /> Cerrar sesión</DropdownMenuItem>
+      </DropdownMenuContent></DropdownMenu><WorkScopeSwitcherSheet v-model:open="scopeSwitcherOpen" /></SidebarMenuItem></SidebarMenu></SidebarFooter>
+    </Sidebar>
+    <SidebarInset class="overflow-clip">
+      <header class="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/70 bg-background px-6 md:px-4">
+        <SidebarTrigger class="-ml-1" /><h1 class="text-sm font-normal text-foreground">{{ pageTitle }}</h1>
+        <div class="ml-auto flex items-center gap-2"><Tooltip><TooltipTrigger as-child><Button as-child :variant="route.path === '/notificaciones' ? 'secondary' : 'ghost'" size="icon-sm" class="relative" aria-label="Notificaciones"><RouterLink to="/notificaciones"><Bell aria-hidden="true" /><Badge v-if="unreadCount > 0" as="span" class="absolute -top-1 -right-1 min-w-5 px-1" aria-hidden="true">{{ unreadCount > 99 ? '99+' : unreadCount }}</Badge></RouterLink></Button></TooltipTrigger><TooltipContent>Notificaciones</TooltipContent></Tooltip><AppearanceToggle /></div>
+      </header><slot />
+    </SidebarInset><Toaster />
+  </SidebarProvider>
 </template>

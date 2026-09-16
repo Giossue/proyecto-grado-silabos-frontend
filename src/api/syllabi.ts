@@ -1,5 +1,7 @@
 import { api } from "@/api/client";
 import type { TemplateAppearance } from "@/api/template";
+import type { TableColumnRole } from "@/lib/tableLayout";
+import type { DocumentNode } from "@/lib/templateDocument";
 
 export type DocumentPresentation = {
   appearance: TemplateAppearance;
@@ -40,6 +42,8 @@ export type SyllabusPage = {
   last_page: number;
   per_page: number;
   total: number;
+  from: number | null;
+  to: number | null;
 };
 
 export type SyllabiResponse = {
@@ -58,6 +62,21 @@ export type SyllabusDetail = {
   completion: number;
   parallels: string[];
   teachers: string[];
+  template_variables?: Record<string, string>;
+  planning_expectations?: {
+    teaching_weeks: number | null;
+    credits: number | string | null;
+    total_hours: number | string | null;
+    hours_acd: number | string | null;
+    hours_ape: number | string | null;
+    hours_aa: number | string | null;
+  };
+  validation?: {
+    version_bloqueo: number;
+    blocking_errors: number;
+    warnings: number;
+    results: Array<{ field_id: string | null; code: string; severity: string; message: string }>;
+  } | null;
   presentation: DocumentPresentation;
   identification: IdentificationCell[][];
   sections: Array<{
@@ -68,6 +87,9 @@ export type SyllabusDetail = {
   }>;
   observations: Array<{
     id: string;
+    revision_number?: number;
+    section_key?: string | null;
+    field_key?: string | null;
     content: string;
     state: string;
     requested: boolean;
@@ -89,7 +111,7 @@ export type TableColumn = {
   band: string | null;
   sum: boolean;
   width: number | null;
-  role: string | null;
+  role: TableColumnRole | null;
 };
 
 export type TableLayout = {
@@ -224,7 +246,7 @@ export type SyllabusBlock = {
   content_type: string;
   table: TableLayout | null;
   page_orientation?: string;
-  document?: unknown;
+  document?: DocumentNode | null;
   fields: SyllabusField[];
 };
 

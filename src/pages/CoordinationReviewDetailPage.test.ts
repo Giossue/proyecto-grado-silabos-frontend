@@ -14,8 +14,9 @@ import {
 import { getSession } from "@/api/session";
 import CoordinationReviewDetailPage from "@/pages/CoordinationReviewDetailPage.vue";
 
-vi.mock("vue-router", () => ({
-  useRoute: () => ({ params: { revision: "revision-1" } }),
+vi.mock("vue-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("vue-router")>()),
+  useRoute: () => ({ params: { revision: "revision-1" }, fullPath: "/coordinacion/revisiones/revision-1" }),
   useRouter: () => ({ replace: vi.fn() }),
 }));
 
@@ -120,6 +121,7 @@ const detail = (withObservation = false): ReviewDetail => ({
 });
 
 const mountPage = () => mount(CoordinationReviewDetailPage, {
+  attachTo: document.body,
   global: {
     stubs: {
       RouterLink: { template: "<a><slot /></a>" },
@@ -161,22 +163,25 @@ describe("CoordinationReviewDetailPage", () => {
     });
   });
 
-  it("vincula una observación con el campo seleccionado", async () => {
+  it("registra una observación sobre el documento", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
     vi.mocked(addObservation).mockResolvedValue({ message: "Observación registrada." });
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get(".inline-action").trigger("click");
-    await wrapper.get("#new-observation textarea").setValue("Aclare el resultado esperado.");
-    await wrapper.get("#new-observation").trigger("submit");
+    await wrapper.get('[aria-label="Nueva observación"]').trigger("click");
+    await flushPromises();
+    const textarea = document.querySelector<HTMLTextAreaElement>("#observation-content")!;
+    textarea.value = "Aclare el resultado esperado.";
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    await flushPromises();
+    textarea.closest("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     await flushPromises();
 
     expect(addObservation).toHaveBeenCalledWith("revision-1", {
       content: "Aclare el resultado esperado.",
-      section_key: "descripcion",
-      field_key: "objetivo",
     });
+    wrapper.unmount();
   });
 
   it("envía únicamente las observaciones elegidas al solicitar corrección", async () => {
@@ -185,8 +190,8 @@ describe("CoordinationReviewDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get('.ai-recommendation input[type="checkbox"]').setValue(true);
-    const correctionForm = wrapper.findAll("form").at(1)!;
+    await wrapper.get('.ai-recommendation [role="checkbox"]').trigger("click");
+    const correctionForm = wrapper.get("#correction-form");
     await correctionForm.get("textarea").setValue("Debe precisar el resultado observado.");
     await correctionForm.trigger("submit");
     await flushPromises();
@@ -195,5 +200,6 @@ describe("CoordinationReviewDetailPage", () => {
       observation_ids: ["observation-1"],
       justification: "Debe precisar el resultado observado.",
     });
+    wrapper.unmount();
   });
 });

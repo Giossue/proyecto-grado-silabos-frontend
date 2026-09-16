@@ -97,7 +97,11 @@ describe("SyllabusAiChat", () => {
     });
     await flushPromises();
 
-    await wrapper.get(".ai-chat-message details button").trigger("click");
+    await wrapper
+      .get(".ai-chat-message [data-slot='collapsible-trigger']")
+      .trigger("click");
+    await flushPromises();
+    await wrapper.get(".ai-chat-message [data-slot='collapsible-content'] button").trigger("click");
 
     expect(wrapper.emitted("navigateToField")).toEqual([["field-1"]]);
   });

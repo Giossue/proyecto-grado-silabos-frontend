@@ -1,8 +1,73 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'; import { useRouter } from 'vue-router'; import { ApiError } from '@/api/client'; import { createSource, getSources, type Source } from '@/api/sources'; import { getSession } from '@/api/session';
-const router = useRouter(); const sources = ref<Source[]>([]); const loading = ref(true); const lock = ref<string | null>(null); const error = ref<string | null>(null); const form = ref({ nombre: '', description: '' }); const creating = ref(false);
-const load = async () => { loading.value = true; error.value = null; try { const session = await getSession(); if (session.active_role?.code !== 'coordinador') { await router.replace('/panel'); return; } const response = await getSources(); sources.value = response.sources; lock.value = response.processLock; } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las fuentes.'; } finally { loading.value = false; } };
-const create = async () => { try { creating.value = true; const source = await createSource({ nombre: form.value.nombre, description: form.value.description || undefined }); await router.push(`/coordinacion/fuentes/${source.source_id}`); } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo crear la fuente.'; } finally { creating.value = false; } };
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { ApiError } from '@/api/client';
+import { getSources, type Source } from '@/api/sources';
+import { getSession } from '@/api/session';
+import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import AcademicSourceActions from '@/components/domain/configuration/AcademicSourceActions.vue';
+import AcademicSourceCreationSheet from '@/components/domain/configuration/AcademicSourceCreationSheet.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useClientFilter } from '@/composables/useClientFilter';
+import { useClientPagination } from '@/composables/useClientPagination';
+
+const router = useRouter();
+const sources = ref<Source[]>([]);
+const loading = ref(true);
+const lock = ref<string | null>(null);
+const error = ref<string | null>(null);
+const message = ref<string | null>(null);
+
+const filter = useClientFilter(() => sources.value, (item) => [item.name, item.description ?? '']);
+const filteredSources = computed(() => filter.items.value);
+const { items: sourcePage, meta: sourceMeta, setPage: setSourcePage } = useClientPagination(filteredSources);
+
+const load = async (): Promise<void> => {
+  loading.value = true;
+  error.value = null;
+  try {
+    const session = await getSession();
+    if (session.active_role?.code !== 'coordinador') {
+      await router.replace('/panel');
+      return;
+    }
+    const response = await getSources();
+    sources.value = response.sources;
+    lock.value = response.processLock;
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las fuentes.';
+  } finally { loading.value = false; }
+};
+const created = async (sourceId: string): Promise<void> => {
+  await router.push(`/coordinacion/fuentes/${sourceId}`);
+};
+const changed = async (value: string): Promise<void> => {
+  message.value = value;
+  await load();
+};
+
 onMounted(() => { void load(); });
 </script>
-<template><main class="app-page"><header class="app-header"><div><p class="eyebrow">Coordinación</p><h1>Fuentes académicas</h1><p>Documentos académicos que respaldan las recomendaciones de IA.</p></div><RouterLink class="back-link" to="/panel">Volver al panel</RouterLink></header><p v-if="lock" role="alert">{{ lock }}</p><p v-if="error" role="alert">{{ error }}</p><p v-if="loading" role="status">Cargando fuentes…</p><template v-else><section class="detail-card"><h2>Nueva fuente</h2><form class="editor-form" @submit.prevent="create"><label>Nombre<input v-model="form.nombre" required maxlength="180" :disabled="Boolean(lock)" /></label><label>Descripción<textarea v-model="form.description" maxlength="2000" :disabled="Boolean(lock)" /></label><button :disabled="creating || Boolean(lock)">{{ creating ? 'Creando…' : 'Crear fuente' }}</button></form></section><section class="detail-card"><h2>Fuentes de la carrera</h2><div v-if="sources.length" class="table-wrap"><table><thead><tr><th>Nombre</th><th>Contenido</th><th></th></tr></thead><tbody><tr v-for="source in sources" :key="source.id"><td><strong>{{ source.name }}</strong><small>{{ source.description }}</small></td><td>{{ source.has_content ? 'Redactada' : 'Pendiente' }}</td><td><RouterLink class="back-link" :to="`/coordinacion/fuentes/${source.id}`">Editar</RouterLink></td></tr></tbody></table></div><p v-else class="empty-state">Todavía no hay fuentes académicas.</p></section></template></main></template>
+
+<template>
+  <PageFrame title="Fuentes académicas" description="Los documentos que la coordinación entrega a los docentes como apoyo para elaborar sus sílabos.">
+    <template #actions><AcademicSourceCreationSheet v-if="!lock" @created="created" /></template>
+    <ProcessLockAlert v-if="lock" title="Fuentes protegidas durante la convocatoria" :reason="lock" />
+    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
+    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <p v-if="loading && sources.length === 0" class="text-sm text-muted-foreground" role="status">Cargando fuentes…</p>
+    <Card v-else><CardContent class="flex flex-col gap-4">
+      <ClientFilterBar :filter="filter" input-id="sources-search" label="Buscar fuente" placeholder="Buscar por nombre o descripción" />
+      <Table><TableHeader><TableRow><TableHead>Fuente</TableHead><TableHead>Contenido</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
+        <TableEmpty v-if="sourcePage.length === 0" :colspan="3">No existen fuentes.</TableEmpty>
+        <TableRow v-for="source in sourcePage" v-else :key="source.id"><TableCell><div>{{ source.name }}</div><div v-if="source.description" class="max-w-md truncate text-sm text-muted-foreground">{{ source.description }}</div></TableCell><TableCell>{{ source.has_content ? 'Redactado' : 'Sin contenido' }}</TableCell><TableCell class="text-right"><AcademicSourceActions :source="source" :locked="Boolean(lock)" @changed="changed" /></TableCell></TableRow>
+      </TableBody></Table>
+      <TablePagination :meta="sourceMeta" label="Paginación de fuentes académicas" @update:page="setSourcePage" />
+    </CardContent></Card>
+  </PageFrame>
+</template>

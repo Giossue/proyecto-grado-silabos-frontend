@@ -4,6 +4,7 @@ import type {
   IdentificationCell,
   TableLayout,
 } from "@/api/syllabi";
+import type { DocumentNode } from "@/lib/templateDocument";
 
 export type ReviewQueueItem = {
   id: string;
@@ -23,6 +24,9 @@ export type ReviewsPage = {
     data: ReviewQueueItem[];
     current_page: number;
     last_page: number;
+    per_page: number;
+    from: number | null;
+    to: number | null;
     total: number;
   };
 };
@@ -53,7 +57,7 @@ export type SnapshotField = {
   rows: Array<{
     id: string;
     position: number;
-    data: Record<string, string | number | null>;
+    data: Record<string, string | number | boolean | null>;
   }>;
 };
 export type ReviewDetail = {
@@ -72,6 +76,19 @@ export type ReviewDetail = {
     submitted_at: string;
     submitted_by: string;
     snapshot: {
+      schema_version?: number;
+      template_variables?: Record<string, string>;
+      academic_context?: {
+        scheduled_subject?: { teaching_weeks?: number | null };
+        offering?: { teaching_weeks?: number | null };
+        subject?: {
+          credits?: number | string | null;
+          total_hours?: number | string | null;
+          hours_ac?: number | string | null;
+          hours_pae?: number | string | null;
+          hours_aa?: number | string | null;
+        };
+      };
       sections: Array<{
         key: string;
         title: string;
@@ -80,6 +97,7 @@ export type ReviewDetail = {
           title: string;
           content_type: string;
           table: TableLayout | null;
+          document?: DocumentNode | null;
           fields: SnapshotField[];
         }>;
       }>;

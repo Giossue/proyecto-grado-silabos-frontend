@@ -1,56 +1,64 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import { ApiError } from '@/api/client';
 import { login } from '@/api/session';
 import { sessionState } from '@/state/session';
 
 const router = useRouter();
+const route = useRoute();
 const email = ref('');
 const password = ref('');
+const remember = ref(false);
+const errors = ref<Record<string, string[]>>({});
 const error = ref<string | null>(null);
-const pending = ref(false);
+const processing = ref(false);
 
 const submit = async (): Promise<void> => {
-  pending.value = true;
+  processing.value = true;
   error.value = null;
+  errors.value = {};
   try {
-    const result = await login(email.value, password.value);
-    if ('two_factor_required' in result) {
-      await router.replace('/verificar-dos-factores');
-      return;
-    }
-    // Una salida previa deja el almacén cargado con `null`. Sustituirlo aquí evita que
-    // el guard reutilice ese valor y devuelva a /ingresar pese a que el servidor ya
-    // creó la nueva sesión.
+    const result = await login(email.value, password.value, remember.value);
+    if ('two_factor_required' in result) { await router.replace('/verificar-dos-factores'); return; }
     sessionState.replace(result);
     await router.replace('/');
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo iniciar sesión.';
-  } finally {
-    pending.value = false;
-  }
+    if (reason instanceof ApiError) { errors.value = reason.errors; error.value = reason.message; }
+    else { error.value = 'No se pudo iniciar sesión.'; }
+  } finally { processing.value = false; }
 };
 </script>
 
 <template>
-  <main class="auth-page">
-    <form class="auth-card" @submit.prevent="submit">
-      <h1>Sílabos UEB</h1>
-      <p>Ingrese con sus credenciales institucionales.</p>
-      <label>
-        Correo electrónico
-        <input v-model="email" type="email" autocomplete="email" required />
-      </label>
-      <label>
-        Contraseña
-        <input v-model="password" type="password" autocomplete="current-password" required />
-      </label>
-      <p v-if="error" role="alert">{{ error }}</p>
-      <button :disabled="pending" type="submit">
-        {{ pending ? 'Ingresando…' : 'Ingresar' }}
-      </button>
-      <RouterLink class="back-link" to="/recuperar-contrasena">Olvidé mi contraseña</RouterLink>
+  <AuthSimpleLayout title="Iniciar sesión" description="Ingrese con la cuenta asignada por la institución.">
+    <div v-if="typeof route.query.status === 'string'" class="mb-4 text-center text-sm font-medium text-foreground" role="status">{{ route.query.status }}</div>
+    <p v-if="error && Object.keys(errors).length === 0" class="text-center text-sm text-destructive" role="alert">{{ error }}</p>
+    <form class="flex flex-col gap-6" @submit.prevent="submit">
+      <FieldGroup>
+        <Field :data-invalid="Boolean(errors.email || errors.correo_electronico)">
+          <FieldLabel for="email" required>Correo institucional</FieldLabel>
+          <Input id="email" v-model="email" type="email" name="email" required autocomplete="email" placeholder="Ej. nombre@ueb.edu.ec" :aria-invalid="Boolean(errors.email || errors.correo_electronico)" />
+          <FieldError :errors="errors.email ?? errors.correo_electronico" />
+        </Field>
+        <Field :data-invalid="Boolean(errors.password)">
+          <div class="flex items-center justify-between">
+            <FieldLabel for="password" required>Contraseña</FieldLabel>
+            <RouterLink to="/recuperar-contrasena" class="text-sm text-foreground underline decoration-neutral-300 underline-offset-4 hover:decoration-current dark:decoration-neutral-500">¿Olvidó su contraseña?</RouterLink>
+          </div>
+          <PasswordInput id="password" v-model="password" name="password" required autocomplete="current-password" placeholder="Contraseña" :aria-invalid="Boolean(errors.password)" />
+          <FieldError :errors="errors.password" />
+        </Field>
+        <Field orientation="horizontal"><Checkbox id="remember" v-model="remember" /><FieldLabel for="remember" class="font-normal">Mantener la sesión iniciada</FieldLabel></Field>
+        <Button type="submit" class="mt-4 w-full" :disabled="processing" data-test="login-button"><Spinner v-if="processing" />Ingresar</Button>
+      </FieldGroup>
     </form>
-  </main>
+  </AuthSimpleLayout>
 </template>

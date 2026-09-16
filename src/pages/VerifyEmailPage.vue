@@ -3,6 +3,9 @@ import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { verifyEmail } from '@/api/session';
+import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
+import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 const route = useRoute();
 const message = ref<string | null>(null);
@@ -28,13 +31,10 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="auth-page">
-    <section class="auth-card">
-      <h1>Verificación de correo</h1>
-      <p v-if="message" class="save-status" role="status">{{ message }}</p>
-      <p v-else-if="error" role="alert">{{ error }}</p>
-      <p v-else>Verificando correo…</p>
-      <RouterLink class="back-link" to="/ingresar">Ingresar</RouterLink>
-    </section>
-  </main>
+  <AuthSimpleLayout title="Verificación de correo" description="Confirmamos la dirección institucional asociada a su cuenta.">
+    <div class="flex flex-col gap-5 text-center">
+      <p v-if="message" class="text-sm" role="status">{{ message }}</p><p v-else-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p><p v-else class="flex items-center justify-center gap-2 text-sm text-muted-foreground"><Spinner />Verificando correo…</p>
+      <Button as-child><RouterLink to="/ingresar">Iniciar sesión</RouterLink></Button>
+    </div>
+  </AuthSimpleLayout>
 </template>

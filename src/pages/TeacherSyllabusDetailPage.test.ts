@@ -188,7 +188,7 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     await wrapper.get('textarea[placeholder="Ej. Corrección realizada"]').setValue("Contenido corregido.");
-    const answerButton = wrapper.findAll("button").find((button) => button.text() === "Responder");
+    const answerButton = wrapper.findAll("button").find((button) => button.text() === "Guardar respuesta");
     await answerButton?.trigger("click");
     await flushPromises();
 

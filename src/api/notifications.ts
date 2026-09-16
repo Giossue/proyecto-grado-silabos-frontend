@@ -13,7 +13,7 @@ export type Notification = {
 export type NotificationsResponse = {
   filters: { status: 'all' | 'unread' };
   unread_count: number;
-  notifications: { data: Notification[]; current_page: number; last_page: number; total: number };
+  notifications: { data: Notification[]; current_page: number; last_page: number; per_page: number; from: number | null; to: number | null; total: number };
 };
 
 export const getNotifications = (status: 'all' | 'unread', page = 1) =>

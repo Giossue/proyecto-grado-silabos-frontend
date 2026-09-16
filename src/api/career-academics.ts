@@ -13,29 +13,42 @@ export type Curriculum = {
     editable: boolean;
     lock_reason: string | null;
   };
+  fixedFields: Array<{
+    id: string;
+    key: string;
+    label: string;
+    type: "texto" | "numero" | "entero" | "booleano";
+    system_key: string;
+    system_label: string;
+    position: number;
+    visible_on_card: boolean;
+    totalizable: boolean;
+  }>;
+  fixedFieldTotals: Array<{ id: string; label: string; value: number }>;
   subjects: Array<{
     id: string;
     code: string;
     name: string;
-    cycle: number;
-    position: number | null;
-    organization_unit: string;
+    cycle: number | null;
+    position: number;
+    organization_unit: string | null;
     modality: string | null;
-    credits: number | string;
-    total_hours: number | string;
+    modality_label: string | null;
+    credits: string | null;
+    total_hours: number | null;
     active: boolean;
     system_values: Record<string, number | string | null>;
     display_fields: Array<{
       id: string;
       label: string;
-      value: string | number | null;
+      value: string | number | boolean | null;
     }>;
   }>;
   requirements: Array<{
     id: string;
     subject_id: string;
     requirement_id: string;
-    type: string;
+    type: "prerrequisito" | "correquisito";
   }>;
   modalityOptions: Array<{ value: string; label: string }>;
 };
@@ -47,8 +60,16 @@ export type ScheduledSubjects = {
     id: string;
     subject_id: string;
     period_id: string;
+    campus_id: string;
     label: string;
+    subject_code: string;
+    subject_name: string;
+    subject_cycle: number | null;
+    period_starts_on: string;
+    period_ends_on: string;
+    period_status: "proximo" | "en_curso" | "finalizado";
     period_status_label: string;
+    period_planning_enabled: boolean;
     campus_name: string;
     modality_name: string;
     parallels: Array<{ id: string; code: string; shift: string | null }>;
@@ -56,7 +77,15 @@ export type ScheduledSubjects = {
     editable: boolean;
   }>;
   options: {
-    periods: Array<{ id: string; code: string; planning_enabled: boolean }>;
+    periods: Array<{
+      id: string;
+      code: string;
+      starts_on: string;
+      ends_on: string;
+      status: "proximo" | "en_curso" | "finalizado";
+      status_label: string;
+      planning_enabled: boolean;
+    }>;
     campuses: Array<{ id: string; nombre: string }>;
     activeSubjects: Array<{
       id: string;
@@ -85,6 +114,8 @@ export type TeacherAssignments = {
     parallel_code: string;
     subject_name: string;
     period_name: string;
+    period_status: "proximo" | "en_curso" | "finalizado";
+    period_planning_enabled: boolean;
     active: boolean;
     editable: boolean;
   }>;
@@ -96,8 +127,13 @@ export type TeacherAssignments = {
 
 export const getCurriculum = (careerId: string) =>
   api<Curriculum>(`/coordination/academic/curriculum/${careerId}`);
-export const getScheduledSubjects = () =>
-  api<ScheduledSubjects>("/coordination/academic/scheduled-subjects");
+export const getScheduledSubjects = (periodId?: string) => {
+  const query = periodId ? `?period=${encodeURIComponent(periodId)}` : "";
+
+  return api<ScheduledSubjects>(
+    `/coordination/academic/scheduled-subjects${query}`,
+  );
+};
 export const getTeacherAssignments = () =>
   api<TeacherAssignments>("/coordination/academic/teacher-assignments");
 export const createCareerRecord = (
@@ -153,7 +189,11 @@ export const updateCareerRecord = (
   });
 export const createSubjectRequirement = (
   curriculumId: string,
-  payload: { subject_id: string; requirement_id: string; type: string },
+  payload: {
+    subject_id: string;
+    requirement_id: string;
+    type: "prerrequisito" | "correquisito";
+  },
 ) =>
   api<{ message: string }>(
     `/coordination/academic/curriculum/${curriculumId}/requirements`,

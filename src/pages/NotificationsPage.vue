@@ -3,7 +3,13 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getNotifications, markAllNotificationsRead, markNotificationRead, type NotificationsResponse } from '@/api/notifications';
-import PaginationControls from '@/components/PaginationControls.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { ExternalLink } from '@lucide/vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Spinner } from '@/components/ui/spinner';
 
 const router = useRouter();
 const result = ref<NotificationsResponse | null>(null);
@@ -32,10 +38,15 @@ onMounted(load);
 </script>
 
 <template>
-  <main class="app-page">
-    <header class="app-header"><div><p class="eyebrow">Sílabos UEB</p><h1>Notificaciones</h1></div><RouterLink class="back-link" to="/panel">Volver al panel</RouterLink></header>
-    <div class="header-actions"><button :disabled="status === 'all' || pending" @click="status = 'all'; load()">Todas</button><button :disabled="status === 'unread' || pending" @click="status = 'unread'; load()">No leídas</button><button v-if="result?.unread_count" :disabled="pending" @click="readAll">Marcar todas leídas</button></div>
-    <p v-if="error" role="alert">{{ error }}</p>
-    <p v-if="loading && !result" role="status">Cargando notificaciones…</p><section v-else-if="result" class="detail-card"><p v-if="!result.notifications.data.length">No tiene notificaciones.</p><article v-for="notification in result.notifications.data" :key="notification.id" class="notification-item"><div><strong>{{ notification.titulo }}</strong><p>{{ notification.mensaje }}</p><small>{{ formatDate(notification.notificado_en) }}</small></div><div class="header-actions"><button v-if="!notification.leido_en" :disabled="pending" @click="read(notification.id)">Marcar leída</button><RouterLink v-if="notification.resource_path" class="back-link" :to="notification.resource_path">Abrir</RouterLink></div></article><PaginationControls :current-page="result.notifications.current_page" :last-page="result.notifications.last_page" :total="result.notifications.total" @change="load" /></section>
-  </main>
+  <PageFrame title="Notificaciones" description="Avisos de lo que va pasando con sus sílabos y sus documentos.">
+    <template #actions><Button v-if="result?.unread_count" type="button" variant="outline" :disabled="pending" @click="readAll"><Spinner v-if="pending" />Marcar todas como leídas</Button></template>
+    <nav class="flex gap-2" aria-label="Filtrar notificaciones"><Button :variant="status === 'all' ? 'default' : 'outline'" :disabled="pending" @click="status = 'all'; load()">Todas</Button><Button :variant="status === 'unread' ? 'default' : 'outline'" :disabled="pending" @click="status = 'unread'; load()">No leídas</Button></nav>
+    <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
+    <p v-if="loading && !result" class="text-sm text-muted-foreground" role="status">Cargando notificaciones…</p>
+    <Card v-else-if="result"><CardContent class="space-y-3" aria-live="polite">
+      <article v-for="notification in result.notifications.data" :key="notification.id" class="rounded-lg border p-4" :class="notification.leido_en === null ? 'bg-muted/40' : ''"><div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><h2 class="font-medium">{{ notification.titulo }}</h2><Badge v-if="notification.leido_en === null" variant="secondary">Nueva</Badge></div><p class="mt-1 text-sm">{{ notification.mensaje }}</p><p class="mt-2 text-xs text-muted-foreground">{{ formatDate(notification.notificado_en) }}</p></div><div class="flex shrink-0 flex-wrap gap-2"><Button v-if="!notification.leido_en" type="button" size="sm" variant="outline" :disabled="pending" @click="read(notification.id)">Marcar leída</Button><Button v-if="notification.resource_path" as-child size="sm"><RouterLink :to="notification.resource_path"><ExternalLink />Abrir expediente</RouterLink></Button></div></div></article>
+      <div v-if="result.notifications.data.length === 0" class="py-12 text-center text-sm text-muted-foreground">No existen notificaciones.</div>
+    </CardContent></Card>
+    <TablePagination v-if="result" :meta="result.notifications" label="Paginación de notificaciones" @update:page="load" />
+  </PageFrame>
 </template>

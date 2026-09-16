@@ -15,7 +15,7 @@ export default defineConfigWithVueTs(
       'vuejs-accessibility/form-control-has-label': 'off',
       'vuejs-accessibility/label-has-for': [
         'error',
-        { required: 'nesting', allowChildren: true },
+        { required: { some: ['nesting', 'id'] }, allowChildren: true },
       ],
     },
   },

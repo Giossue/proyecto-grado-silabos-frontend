@@ -2,26 +2,70 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { getConvocation, transitionConvocation, type ConvocationDetail } from '@/api/convocations';
+import { getConvocation, type ConvocationDetail } from '@/api/convocations';
 import { getSession } from '@/api/session';
+import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useClientFilter } from '@/composables/useClientFilter';
+import { useClientPagination } from '@/composables/useClientPagination';
 
-const route = useRoute(); const router = useRouter();
-const data = ref<ConvocationDetail | null>(null); const error = ref<string | null>(null); const message = ref<string | null>(null); const pauseReason = ref(''); const processing = ref(false);
-const convocationId = () => String(route.params.convocation);
-const asDate = (value: string | null) => value?.slice(0, 10) ?? 'No definido';
-const stateLabel = (value: string) => ({ sin_iniciar: 'Sin iniciar', preparacion: 'En preparación', abierto: 'Abierto', abierta: 'Abierta', borrador: 'Borrador', en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado', pausado: 'Pausado', pausada: 'Pausada', cerrado: 'Cerrado', cerrada: 'Cerrada' }[value] ?? value);
-const metricLabel = (value: string) => ({ total: 'Total', not_started: 'Sin iniciar', draft: 'Borrador', in_review: 'En revisión', approved: 'Aprobados' }[value] ?? value);
-const load = async () => { try { const session = await getSession(); if (session.active_role?.code !== 'coordinador') { await router.replace('/panel'); return; } data.value = await getConvocation(convocationId()); } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la convocatoria.'; } };
-const transition = async (action: 'pausar' | 'reanudar') => { if (action === 'pausar' && pauseReason.value.trim().length < 10) { error.value = 'Indique un motivo de al menos 10 caracteres para pausar la convocatoria.'; return; } try { processing.value = true; error.value = null; message.value = (await transitionConvocation(convocationId(), action, action === 'pausar' ? pauseReason.value.trim() : undefined)).message; pauseReason.value = ''; await load(); } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo cambiar el estado.'; } finally { processing.value = false; } };
+const route = useRoute();
+const router = useRouter();
+const data = ref<ConvocationDetail | null>(null);
+const error = ref<string | null>(null);
+const convocationId = (): string => String(route.params.convocation);
+const stateLabel = (value: string): string => ({ sin_iniciar: 'Sin iniciar', borrador: 'Borrador', en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado' })[value] ?? 'Estado no disponible';
+const convocationStateLabel = (value: string): string => ({ preparacion: 'En preparación', abierta: 'Abierta', pausada: 'En pausa', cerrada: 'Cerrada' })[value] ?? 'Estado no disponible';
+const formatDate = (value: string | null): string => value ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'long' }).format(new Date(value)) : 'Sin fecha';
+const syllabusFilter = useClientFilter(
+  () => data.value?.convocation.syllabi ?? [],
+  (item) => [item.subject, item.code, item.state],
+  { estado: { matches: (item, value) => item.state === value } },
+);
+const { items: syllabusPage, meta: syllabusMeta, setPage: setSyllabusPage } = useClientPagination(() => syllabusFilter.items.value);
+const load = async (): Promise<void> => {
+  error.value = null;
+  try {
+    const session = await getSession();
+    if (session.active_role?.code !== 'coordinador') {
+      await router.replace('/panel');
+      return;
+    }
+    data.value = await getConvocation(convocationId());
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la convocatoria.';
+  }
+};
+
 onMounted(() => { void load(); });
 </script>
 
 <template>
-  <main class="app-page"><header class="app-header"><div><p class="eyebrow">Coordinación</p><h1>{{ data?.convocation.name ?? 'Convocatoria' }}</h1><p>{{ data?.convocation.period }}</p></div><RouterLink class="back-link" to="/coordinacion/convocatorias">Volver a convocatorias</RouterLink></header>
-    <p v-if="message" class="save-status" role="status">{{ message }}</p><p v-if="error" role="alert">{{ error }}</p>
-    <template v-if="data"><section class="detail-card"><h2>Estado y calendario</h2><p><span class="role-badge">{{ stateLabel(data.convocation.state) }}</span></p><p>Proceso institucional: <strong>{{ data.convocation.process.name }}</strong> · {{ data.convocation.process.state }}</p><p>Inicio: {{ asDate(data.convocation.start_date) }} · Entrega: {{ asDate(data.convocation.draft_deadline) }}</p><p>Plantilla: {{ data.convocation.template }}</p><p>Fuentes: {{ data.convocation.sources.join(', ') || 'Sin fuentes' }}</p><div v-if="data.convocation.state === 'abierta'" class="process-actions"><input v-model="pauseReason" placeholder="Motivo para pausar" aria-label="Motivo de la pausa" /><button :disabled="processing" @click="transition('pausar')">Pausar convocatoria</button></div><button v-if="data.convocation.state === 'pausada'" :disabled="processing" @click="transition('reanudar')">Reanudar convocatoria</button></section>
-      <section class="metrics" aria-label="Estado de los sílabos"><article v-for="(count, key) in data.convocation.counts" :key="key" class="metric-card"><p>{{ metricLabel(key) }}</p><strong>{{ count }}</strong></article></section>
-      <section class="detail-card"><h2>Sílabos generados</h2><div class="table-wrap"><table><thead><tr><th>Asignatura</th><th>Paralelo</th><th>Docente</th><th>Estado</th><th>Completitud</th></tr></thead><tbody><tr v-for="syllabus in data.convocation.syllabi" :key="syllabus.id"><td><strong>{{ syllabus.subject }}</strong><small>{{ syllabus.code }}</small></td><td>{{ syllabus.parallels.join(', ') }}</td><td>{{ syllabus.teachers.join(', ') || 'Sin docente asignado' }}</td><td>{{ stateLabel(syllabus.state) }}</td><td>{{ syllabus.completion }}%</td></tr><tr v-if="!data.convocation.syllabi.length"><td colspan="5" class="empty-state">Esta convocatoria todavía no tiene sílabos generados.</td></tr></tbody></table></div></section>
-    </template><p v-else-if="!error">Cargando convocatoria…</p>
-  </main>
+  <PageFrame :title="data?.convocation.name ?? 'Convocatoria'" :description="data ? `${data.convocation.period} · ${data.convocation.template}` : 'Cargando convocatoria…'">
+    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink to="/coordinacion/convocatorias">← Volver a convocatorias</RouterLink></Button></template>
+    <template v-if="data" #meta><Badge :variant="data.convocation.state === 'abierta' ? 'secondary' : 'outline'">{{ convocationStateLabel(data.convocation.state) }}</Badge><Badge variant="outline">{{ data.convocation.process.name }}</Badge></template>
+    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert><p v-if="!data && !error" class="text-sm text-muted-foreground" role="status">Cargando convocatoria…</p>
+    <template v-if="data">
+      <Alert v-if="data.convocation.state === 'preparacion'"><AlertTitle>Revise antes de abrir</AlertTitle><AlertDescription>La apertura fija la plantilla del proceso y estas fuentes, valida que cada paralelo tenga docente vigente y genera todos los expedientes en una sola transacción. Si algo falta, no se crea ninguno.{{ data.convocation.process.state !== 'abierto' ? ' Solo podrá abrir cuando Administración abra el proceso institucional.' : '' }}</AlertDescription></Alert>
+      <Alert v-else-if="data.convocation.state === 'pausada'"><AlertTitle>Convocatoria en pausa</AlertTitle><AlertDescription>Los docentes de su carrera no editan ni envían hasta que la reanude. Mientras tanto puede corregir la malla y las fuentes.</AlertDescription></Alert>
+      <Alert v-else-if="data.convocation.process.state === 'pausado'"><AlertTitle>Proceso institucional en pausa</AlertTitle><AlertDescription>Administración pausó «{{ data.convocation.process.name }}». Nadie envía hasta que lo reanude; su convocatoria seguirá abierta cuando eso ocurra.</AlertDescription></Alert>
+      <Alert v-else-if="data.convocation.process.state === 'cerrado'"><AlertTitle>Proceso institucional cerrado</AlertTitle><AlertDescription>Administración cerró «{{ data.convocation.process.name }}». Los expedientes se conservan, pero ya no admiten envíos.</AlertDescription></Alert>
+      <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
+        <Card><CardHeader><CardTitle>Seguimiento por expediente</CardTitle><CardDescription>Elaboración desde {{ formatDate(data.convocation.start_date) }} hasta {{ formatDate(data.convocation.draft_deadline) }}. Vencido el plazo, el envío se bloquea hasta que conceda una prórroga.</CardDescription></CardHeader><CardContent class="flex flex-col gap-4">
+          <ClientFilterBar :filter="syllabusFilter" input-id="convocation-syllabi-search" label="Buscar expediente" placeholder="Buscar por asignatura o código"><template #filters><Field><FieldLabel for="convocation-syllabi-search-state" class="sr-only">Estado</FieldLabel><Select v-model="syllabusFilter.values.estado.value"><SelectTrigger id="convocation-syllabi-search-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="sin_iniciar">Sin iniciar</SelectItem><SelectItem value="borrador">Borrador</SelectItem><SelectItem value="en_revision">En revisión</SelectItem><SelectItem value="aprobado">Aprobado</SelectItem></SelectGroup></SelectContent></Select></Field></template></ClientFilterBar>
+          <Table><TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos y docentes</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Completitud</TableHead></TableRow></TableHeader><TableBody><TableEmpty v-if="data.convocation.syllabi.length === 0" :colspan="4">Los expedientes aparecerán después de abrir la convocatoria.</TableEmpty><TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id"><TableCell><div>{{ syllabus.subject }}</div><div class="text-sm text-muted-foreground">{{ syllabus.code }}</div></TableCell><TableCell><div>Paralelos {{ syllabus.parallels.join(', ') }}</div><div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div></TableCell><TableCell>{{ stateLabel(syllabus.state) }}</TableCell><TableCell class="text-right">{{ syllabus.completion.toFixed(0) }} %</TableCell></TableRow></TableBody></Table>
+          <TablePagination :meta="syllabusMeta" label="Paginación del seguimiento de convocatoria" @update:page="setSyllabusPage" />
+        </CardContent></Card>
+        <Card class="h-fit"><CardHeader><CardTitle>Configuración fijada</CardTitle><CardDescription>No cambia los expedientes después de abrir.</CardDescription></CardHeader><CardContent class="flex flex-col gap-4 text-sm"><div><div class="font-medium">Proceso institucional</div><div class="text-muted-foreground">{{ data.convocation.process.name }}</div></div><div><div class="font-medium">Plantilla</div><div class="text-muted-foreground">{{ data.convocation.template }}</div></div><div><div class="font-medium">Fuentes</div><ul class="mt-1 flex list-disc flex-col gap-1 pl-5 text-muted-foreground"><li v-for="source in data.convocation.sources" :key="source">{{ source }}</li></ul></div></CardContent></Card>
+      </div>
+    </template>
+  </PageFrame>
 </template>

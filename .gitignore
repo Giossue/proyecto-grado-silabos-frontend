@@ -2,6 +2,8 @@ node_modules/
 dist/
 playwright-report/
 test-results/
+tests/visual/baseline/
+tests/visual/current/
 .env
 .env.*
 !.env.example

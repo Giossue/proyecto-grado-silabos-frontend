@@ -1,129 +1,84 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { BookOpenCheck, Building2, CalendarRange, CircleAlert, ClipboardCheck, FileStack, ListRestart, PencilLine, UsersRound } from '@lucide/vue';
+import type { Component } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
-import { getSession, logout, type Session } from '@/api/session';
 import { sessionState } from '@/state/session';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import FacultyLogoDialog from '@/components/domain/configuration/FacultyLogoDialog.vue';
+import SetupChecklist from '@/components/domain/SetupChecklist.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import StatTile from '@/components/domain/StatTile.vue';
 
 const router = useRouter();
-const session = ref<Session | null>(null);
 const dashboard = ref<Dashboard | null>(null);
 const error = ref<string | null>(null);
+const message = ref<string | null>(null);
+const facultyLogoOpen = ref(false);
+const role = computed(() => sessionState.current.value?.active_role);
+const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, completion: ListRestart, correction_requested: CircleAlert, teachers_pending: UsersRound };
+const setupRoutes: Record<string, string> = {
+  faculties: '/administracion/estructura-academica',
+  campuses: '/administracion/estructura-academica',
+  careers: '/administracion/estructura-academica',
+  coordinators: '/administracion/coordinaciones',
+  template: '/administracion/plantilla',
+  process: '/administracion/procesos',
+  curriculum: '/coordinacion/malla',
+  scheduled_subjects: '/coordinacion/materias-paralelos',
+  parallels: '/coordinacion/materias-paralelos',
+  teachers: '/coordinacion/asignaciones-docentes',
+  sources: '/coordinacion/fuentes',
+  convocation: '/coordinacion/convocatorias',
+};
+const setup = computed(() => dashboard.value?.setup ? {
+  ...dashboard.value.setup,
+  steps: dashboard.value.setup.steps.map((step) => ({
+    ...step,
+    href: setupRoutes[step.key] ?? '/panel',
+  })),
+} : null);
+const handleSetupAction = (action: string) => {
+  if (action === 'faculty_logo') facultyLogoOpen.value = true;
+};
+const handleLogoSaved = async (notice: string) => {
+  message.value = notice;
+  dashboard.value = await getDashboard();
+};
 
-const load = async (): Promise<void> => {
+onMounted(async () => {
   try {
-    session.value = await getSession();
-
-    if (session.value.user.must_change_password || !session.value.active_role) {
-      await router.replace('/');
-      return;
-    }
-
+    const session = await sessionState.load();
+    if (!session?.active_role || session.user.must_change_password) { await router.replace('/'); return; }
     dashboard.value = await getDashboard();
   } catch (reason) {
-    if (reason instanceof ApiError && [401, 409].includes(reason.status)) {
-      await router.replace('/');
-      return;
-    }
-
+    if (reason instanceof ApiError && [401, 409].includes(reason.status)) { await router.replace('/'); return; }
     error.value = 'No se pudo cargar el panel de trabajo.';
   }
-};
-
-const closeSession = async (): Promise<void> => {
-  try {
-    await logout();
-    sessionState.clear();
-    await router.replace('/ingresar');
-  } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cerrar la sesión.';
-  }
-};
-
-onMounted(load);
+});
 </script>
-
 <template>
-  <main class="app-page">
-    <template v-if="session && dashboard">
-      <header class="app-header">
-        <div>
-          <p class="eyebrow">Sílabos UEB</p>
-          <h1>Panel de trabajo</h1>
-          <p>{{ session.active_role?.career_name ?? 'Gestión institucional de Sílabos UEB' }}</p>
-        </div>
-        <div class="header-actions">
-          <span class="role-badge">{{ session.active_role?.code }}</span>
-          <RouterLink class="back-link" to="/notificaciones">Notificaciones</RouterLink>
-          <button type="button" @click="closeSession">Cerrar sesión</button>
-        </div>
-      </header>
-
-      <section v-if="dashboard.setup" class="setup-card" aria-labelledby="setup-title">
-        <div class="setup-heading">
-          <div>
-            <h2 id="setup-title">{{ dashboard.setup.title }}</h2>
-            <p>{{ dashboard.setup.intro }}</p>
-          </div>
-          <strong>{{ dashboard.setup.done }}/{{ dashboard.setup.total }}</strong>
-        </div>
-        <ol class="setup-list">
-          <li v-for="step in dashboard.setup.steps" :key="step.key">
-            <span :aria-label="step.done ? 'Completado' : 'Pendiente'">{{ step.done ? '✓' : '○' }}</span>
-            <div>
-              <strong>{{ step.label }}</strong>
-              <p>{{ step.hint }}</p>
-            </div>
-          </li>
-        </ol>
-      </section>
-
-      <section class="metrics" aria-label="Indicadores del panel">
-        <article v-for="metric in dashboard.metrics" :key="metric.key" class="metric-card">
-          <p>{{ metric.label }}</p>
-          <strong>{{ metric.value }}<small v-if="metric.suffix"> {{ metric.suffix }}</small></strong>
-          <span>{{ metric.hint }}</span>
-        </article>
-      </section>
-      <RouterLink v-if="session.active_role?.code === 'docente'" class="primary-link" to="/mis-silabos">
-        Ver mis sílabos
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'coordinador'" class="primary-link" to="/coordinacion/convocatorias">
-        Gestionar convocatorias
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'coordinador'" class="primary-link" to="/coordinacion/revisiones">
-        Revisar sílabos
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'coordinador'" class="primary-link" to="/coordinacion/fuentes">
-        Gestionar fuentes académicas
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'coordinador'" class="primary-link" to="/coordinacion/estructura-academica">
-        Gestionar estructura académica
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'coordinador'" class="primary-link" to="/coordinacion/informes">
-        Ver seguimiento operativo
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/usuarios">
-        Administrar usuarios
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/estructura-academica">
-        Gestionar estructura académica
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/procesos">
-        Gestionar proceso institucional
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/plantilla">
-        Gestionar plantilla institucional
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/auditoria">
-        Consultar auditoría
-      </RouterLink>
-      <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/trabajos">
-        Supervisar trabajos
-      </RouterLink>
+  <PageFrame class="h-full flex-1" title="Panel de trabajo" :description="role?.career_name ?? 'Gestión institucional de Sílabos UEB'">
+    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
+    <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
+    <template v-else-if="dashboard">
+      <SetupChecklist v-if="setup" :setup="setup" @action="handleSetupAction" />
+      <div v-if="dashboard.metrics.length > 0" class="grid grid-cols-2 gap-4 xl:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 xl:[&>*:last-child:nth-child(odd)]:col-span-1">
+        <StatTile v-for="metric in dashboard.metrics" :key="metric.key" :label="metric.label" :value="metric.value" :suffix="metric.suffix ?? undefined" :hint="metric.hint" :icon="icons[metric.key]" />
+      </div>
+      <p v-else class="text-sm text-muted-foreground">No hay indicadores disponibles para este rol.</p>
     </template>
-    <p v-else-if="error" role="alert">{{ error }}</p>
-    <p v-else>Cargando panel…</p>
-  </main>
+    <p v-else class="text-sm text-muted-foreground" role="status">Cargando panel…</p>
+  </PageFrame>
+  <FacultyLogoDialog
+    v-if="dashboard?.faculty_logo"
+    v-model:open="facultyLogoOpen"
+    :faculty-name="dashboard.faculty_logo.name"
+    :current-url="dashboard.faculty_logo.current_url"
+    :configured="dashboard.faculty_logo.configured"
+    :size="dashboard.faculty_logo.size"
+    @saved="handleLogoSaved"
+  />
 </template>

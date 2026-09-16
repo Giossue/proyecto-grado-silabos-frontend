@@ -7,6 +7,13 @@ import {
   saveCareerAiConfiguration,
   type CareerAiConfiguration,
 } from "@/api/ai-configuration";
+import PageFrame from '@/components/domain/PageFrame.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Spinner } from '@/components/ui/spinner';
 
 const data = ref<CareerAiConfiguration | null>(null);
 const values = ref<Record<string, boolean>>({});
@@ -17,6 +24,10 @@ const error = ref<string | null>(null);
 const sections = computed(() => [
   ...new Set(data.value?.fields.map((field) => field.section) ?? []),
 ]);
+
+const updateValue = (fieldId: string, value: boolean | 'indeterminate'): void => {
+  values.value[fieldId] = value === true;
+};
 
 const load = async (): Promise<void> => {
   loading.value = true;
@@ -80,53 +91,45 @@ onMounted(() =>
 </script>
 
 <template>
-  <main class="app-page">
-    <header class="app-header">
-      <div>
-        <p class="eyebrow">Coordinación</p>
-        <h1>Configuración de IA</h1>
-        <p>Decida qué campos puede consultar la IA para esta carrera.</p>
-      </div>
-    </header>
-    <p v-if="message" class="feedback success">{{ message }}</p>
-    <p v-if="error" class="feedback error" role="alert">{{ error }}</p>
-    <p v-if="loading && !data" role="status">Cargando configuración de IA…</p>
-    <form v-if="data" class="ai-config-form" @submit.prevent="save">
-      <p v-if="!data.fields.length" class="empty-state">
-        La plantilla no tiene campos configurables para IA.
-      </p>
-      <section v-for="section in sections" :key="section" class="detail-card">
-        <h2>{{ section }}</h2>
-        <label
-          v-for="field in data.fields.filter(
-            (item) => item.section === section,
-          )"
-          :key="field.id"
-          class="ai-config-field"
-        >
-          <span
-            ><strong>{{ field.label }}</strong
-            ><small v-if="!field.coordinator_configurable"
-              >Definido y bloqueado por Administración</small
-            ><small v-else
-              >Valor institucional:
-              {{ field.admin_default ? "Usar IA" : "No usar IA" }}</small
-            ></span
+  <PageFrame
+    title="Configuración de IA"
+    description="Decida qué campos puede consultar la IA para esta carrera. Administración define el valor inicial y cuáles permanecen bloqueados."
+  >
+    <template #actions>
+      <Button v-if="data?.fields.length" type="button" variant="outline" :disabled="saving" @click="reset">Restablecer valores</Button>
+      <Button v-if="data?.fields.length" type="submit" form="ai-configuration-form" :disabled="saving"><Spinner v-if="saving" />Guardar configuración</Button>
+    </template>
+
+    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
+    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <p v-if="loading && !data" class="text-sm text-muted-foreground" role="status">Cargando configuración de IA…</p>
+
+    <form v-if="data" id="ai-configuration-form" class="flex flex-col gap-6" @submit.prevent="save">
+      <Card v-if="!data.fields.length"><CardContent class="py-10 text-center text-sm text-muted-foreground">La plantilla no tiene campos configurables para IA.</CardContent></Card>
+      <Card v-for="section in sections" v-else :key="section">
+        <CardHeader><CardTitle>{{ section }}</CardTitle><CardDescription>Campos que la IA puede usar como contexto o revisar dentro de esta sección.</CardDescription></CardHeader>
+        <CardContent class="divide-y p-0">
+          <Field
+            v-for="field in data.fields.filter((item) => item.section === section)"
+            :key="field.id"
+            orientation="horizontal"
+            class="justify-between gap-4 px-6 py-4"
           >
-          <input
-            v-model="values[field.id]"
-            type="checkbox"
-            :disabled="!field.coordinator_configurable"
-          />
-        </label>
-      </section>
-      <div class="ai-config-actions">
-        <button type="button" :disabled="saving" @click="reset">
-          Restablecer valores de Administración</button
-        ><button class="primary-action" :disabled="saving">
-          {{ saving ? "Guardando…" : "Guardar configuración" }}
-        </button>
-      </div>
+            <div class="flex min-w-0 flex-col gap-1">
+              <FieldLabel :for="`ai-field-${field.id}`">{{ field.label }}</FieldLabel>
+              <p class="text-sm text-muted-foreground">
+                {{ field.coordinator_configurable ? `Valor institucional: ${field.admin_default ? 'Usar IA' : 'No usar IA'}` : 'Definido y bloqueado por Administración' }}
+              </p>
+            </div>
+            <Checkbox
+              :id="`ai-field-${field.id}`"
+              :model-value="values[field.id]"
+              :disabled="!field.coordinator_configurable"
+              @update:model-value="updateValue(field.id, $event)"
+            />
+          </Field>
+        </CardContent>
+      </Card>
     </form>
-  </main>
+  </PageFrame>
 </template>

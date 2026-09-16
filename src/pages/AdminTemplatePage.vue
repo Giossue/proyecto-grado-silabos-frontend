@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, defineAsyncComponent, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
+import { Palette, Pencil, Plus, Trash2, X } from "@lucide/vue";
 import { ApiError } from "@/api/client";
 import {
   createTemplate,
@@ -12,6 +13,7 @@ import {
   reorderTemplateBlocks,
   reorderTemplateSections,
   updateTemplateAppearance,
+  updateTemplateDocument,
   updateTemplateField,
   updateTemplateSection,
   updateTemplateTable,
@@ -27,6 +29,13 @@ import {
 import { getSession } from "@/api/session";
 import TemplateFieldForm from "@/components/TemplateFieldForm.vue";
 import TemplateTableDesigner from "@/components/TemplateTableDesigner.vue";
+import TemplateVisualBuilder from "@/components/domain/configuration/TemplateVisualBuilder.vue";
+import ProcessLockAlert from "@/components/domain/ProcessLockAlert.vue";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { defaultDocument, type DocumentNode } from "@/lib/templateDocument";
 
 type Panel = "appearance" | "new-section" | "new-field" | "selection" | null;
 type Selection =
@@ -34,6 +43,14 @@ type Selection =
   | { kind: "section"; sectionId: string }
   | { kind: "field"; sectionId: string; blockId: string; fieldId: string }
   | null;
+type PurgeOperation = (confirmPurge: boolean) => Promise<{ message: string }>;
+type PendingPurge = { operation: PurgeOperation; onSaved?: () => void };
+type DeleteTarget =
+  | { kind: "section"; id: string }
+  | { kind: "field"; id: string };
+const TemplateDocumentEditor = defineAsyncComponent(
+  () => import("@/components/domain/configuration/TemplateDocumentEditor.vue"),
+);
 
 const router = useRouter();
 const data = ref<TemplatePayload | null>(null);
@@ -68,6 +85,12 @@ const newSection = reactive<{
   fields: TemplateFieldDraft[];
 }>({ title: "", key: makeKey("bloque"), fields: [emptyField()] });
 const newField = ref<TemplateFieldDraft>(emptyField());
+const purgeOpen = ref(false);
+const pendingPurge = ref<PendingPurge | null>(null);
+const deleteOpen = ref(false);
+const deleteTarget = ref<DeleteTarget | null>(null);
+const designOpen = ref(false);
+const documentEditor = ref<{ save: () => void } | null>(null);
 
 const template = computed(() => data.value?.template ?? null);
 const locked = computed(() => Boolean(data.value?.processLock));
@@ -97,6 +120,47 @@ const selectedField = computed(() => {
     (field) => field.id === current.fieldId,
   ) ?? null;
 });
+const blockContext = (blockId: string) => {
+  const current = template.value;
+  const section = current?.sections.find((item) => item.blocks.some((block) => block.id === blockId));
+  const block = section?.blocks.find((item) => item.id === blockId);
+  return section && block ? { section, block } : null;
+};
+const handleBuilderSelectField = (sectionId: string, blockId: string): void => {
+  const field = template.value?.sections.find((section) => section.id === sectionId)?.blocks.find((block) => block.id === blockId)?.fields[0];
+  if (field) selectField(sectionId, blockId, field.id);
+};
+const handleBuilderEditField = (blockId: string): void => {
+  const context = blockContext(blockId);
+  const field = context?.block.fields[0];
+  if (context && field) selectField(context.section.id, blockId, field.id);
+};
+const handleBuilderDeleteSection = (sectionId: string): void => {
+  selection.value = { kind: "section", sectionId };
+  removeSelected();
+};
+const handleBuilderDeleteField = (blockId: string): void => {
+  const context = blockContext(blockId);
+  const field = context?.block.fields[0];
+  if (context && field) {
+    selection.value = { kind: "field", sectionId: context.section.id, blockId, fieldId: field.id };
+    removeSelected();
+  }
+};
+const handleBuilderEditTable = (blockId: string): void => {
+  const context = blockContext(blockId);
+  const field = context?.block.fields[0];
+  if (context && field) {
+    selection.value = { kind: "field", sectionId: context.section.id, blockId, fieldId: field.id };
+    panel.value = "selection";
+    syncSelection();
+  }
+};
+const documentFor = (block: TemplateBlock) =>
+  block.document ?? defaultDocument(
+    block as Parameters<typeof defaultDocument>[0],
+    data.value?.identificationDesign ?? { type: "doc", content: [] },
+  );
 
 const fieldContentTypes = computed(() => {
   const current = selectedField.value?.content_type;
@@ -151,7 +215,8 @@ const load = async (): Promise<void> => {
 };
 
 const run = async (
-  operation: (confirmPurge: boolean) => Promise<{ message: string }>,
+  operation: PurgeOperation,
+  onSaved?: () => void,
 ): Promise<boolean> => {
   try {
     saving.value = true;
@@ -162,18 +227,16 @@ const run = async (
     } catch (reason) {
       const purgeRequired =
         reason instanceof ApiError && "purge_required" in reason.errors;
-      if (
-        !purgeRequired ||
-        !window.confirm(
-          "Este cambio descartará borradores no enviados afectados. Las revisiones enviadas se conservarán. ¿Desea continuar?",
-        )
-      ) {
+      if (!purgeRequired) {
         throw reason;
       }
-      result = await operation(true);
+      pendingPurge.value = { operation, onSaved };
+      purgeOpen.value = true;
+      return false;
     }
     message.value = result.message;
     await load();
+    onSaved?.();
     return true;
   } catch (reason) {
     error.value =
@@ -183,6 +246,29 @@ const run = async (
           ? reason.message
           : "No se pudo guardar la plantilla.";
     return false;
+  } finally {
+    saving.value = false;
+  }
+};
+const confirmPurge = async (): Promise<void> => {
+  const pending = pendingPurge.value;
+  if (!pending) return;
+  saving.value = true;
+  error.value = null;
+  try {
+    const result = await pending.operation(true);
+    message.value = result.message;
+    purgeOpen.value = false;
+    pendingPurge.value = null;
+    await load();
+    pending.onSaved?.();
+  } catch (reason) {
+    error.value =
+      reason instanceof ApiError
+        ? Object.values(reason.errors)[0]?.[0] ?? reason.message
+        : reason instanceof Error
+          ? reason.message
+          : "No se pudo guardar la plantilla.";
   } finally {
     saving.value = false;
   }
@@ -378,34 +464,34 @@ const removeSelected = (): void => {
   if (!template.value || !selection.value) return;
   if (
     selection.value.kind === "section" &&
-    selectedSection.value &&
-    window.confirm("Se eliminará el bloque y todos sus campos. ¿Desea continuar?")
+    selectedSection.value
   ) {
-    const sectionId = selectedSection.value.id;
-    void run((confirmPurge) =>
-      deleteTemplateSection(template.value!.id, sectionId, confirmPurge),
-    ).then((removed) => {
-      if (removed) {
-        selection.value = null;
-        closePanel();
-      }
-    });
+    deleteTarget.value = { kind: "section", id: selectedSection.value.id };
+    deleteOpen.value = true;
   }
   if (
     selection.value.kind === "field" &&
-    selectedBlock.value &&
-    window.confirm("Se eliminará este campo de la plantilla. ¿Desea continuar?")
+    selectedBlock.value
   ) {
-    const blockId = selectedBlock.value.id;
-    void run((confirmPurge) =>
-      deleteTemplateBlock(template.value!.id, blockId, confirmPurge),
-    ).then((removed) => {
-      if (removed) {
-        selection.value = null;
-        closePanel();
-      }
-    });
+    deleteTarget.value = { kind: "field", id: selectedBlock.value.id };
+    deleteOpen.value = true;
   }
+};
+const confirmDelete = (): void => {
+  if (!template.value || !deleteTarget.value) return;
+  const target = deleteTarget.value;
+  void run(
+    (confirmPurge) =>
+      target.kind === "section"
+        ? deleteTemplateSection(template.value!.id, target.id, confirmPurge)
+        : deleteTemplateBlock(template.value!.id, target.id, confirmPurge),
+    () => {
+      deleteOpen.value = false;
+      deleteTarget.value = null;
+      selection.value = null;
+      closePanel();
+    },
+  );
 };
 const saveTable = (
   block: TemplateBlock,
@@ -417,6 +503,26 @@ const saveTable = (
       ...layout,
       confirm_purge: confirmPurge,
     }),
+  );
+};
+const openDocumentDesign = (): void => {
+  if (selectedBlock.value) {
+    designOpen.value = true;
+  }
+};
+const saveDocument = (document: DocumentNode): void => {
+  if (!template.value || !selectedBlock.value) return;
+  const block = selectedBlock.value;
+  void run(
+    (confirmPurge) =>
+      updateTemplateDocument(template.value!.id, block.id, {
+        document,
+        fingerprint: block.fingerprint,
+        confirm_purge: confirmPurge,
+      }),
+    () => {
+      designOpen.value = false;
+    },
   );
 };
 const saveAppearance = (): void => {
@@ -437,76 +543,107 @@ onMounted(() => void load());
 </script>
 
 <template>
-  <main class="app-page template-page" :class="{ 'is-editing': editing }">
-    <header v-if="!editing" class="app-header">
+  <main :class="editing ? 'min-h-dvh min-w-0 bg-muted/30' : 'flex min-w-0 flex-col gap-6 overflow-x-clip p-4 sm:p-6'">
+    <header v-if="!editing" class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <p class="eyebrow">Administración</p>
-        <h1>Plantilla institucional</h1>
-        <p>Vista del documento que usarán todos los sílabos.</p>
+        <p class="max-w-3xl text-muted-foreground">Hoja base que usarán todos los sílabos. Los cambios conservan las revisiones ya enviadas.</p>
       </div>
-      <div class="header-actions">
-        <button
+      <div class="flex flex-wrap gap-2">
+        <Button
           v-if="template"
           type="button"
           :disabled="locked"
           @click="startEditing"
         >
+          <Pencil aria-hidden="true" />
           Editar plantilla
-        </button>
-        <RouterLink class="back-link" to="/panel">Volver al panel</RouterLink>
+        </Button>
       </div>
     </header>
 
-    <header v-else class="template-ribbon">
-      <button type="button" @click="stopEditing">Salir de edición</button>
-      <strong>Editar plantilla</strong>
-      <div>
-        <button type="button" @click="openNewSection">Agregar bloque</button>
-        <button
+    <header v-else class="sticky top-0 z-30 grid min-h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b bg-background/95 px-3 py-2 shadow-sm backdrop-blur sm:px-5" aria-label="Herramientas del editor de plantilla">
+      <Button class="justify-self-start" type="button" size="sm" variant="outline" @click="stopEditing">Salir de edición</Button>
+      <strong class="truncate text-sm">Editar plantilla</strong>
+      <div class="flex flex-wrap justify-self-end gap-2">
+        <Button type="button" size="sm" variant="outline" @click="openNewSection"><Plus aria-hidden="true" />Agregar bloque</Button>
+        <Button
           type="button"
+          size="sm"
+          variant="outline"
           :disabled="!template?.sections.length"
           @click="openNewField()"
         >
-          Agregar campo
-        </button>
-        <button type="button" @click="panel = 'appearance'">
-          Personalizar
-        </button>
-        <button
+          <Plus aria-hidden="true" />Agregar campo
+        </Button>
+        <Button type="button" size="sm" variant="outline" @click="panel = 'appearance'"><Palette aria-hidden="true" />Personalizar</Button>
+        <Button
           v-if="selection?.kind === 'section' || selection?.kind === 'field'"
           type="button"
-          class="danger-button"
+          size="sm"
+          variant="destructive"
           @click="removeSelected"
         >
-          Eliminar
-        </button>
+          <Trash2 aria-hidden="true" />Eliminar
+        </Button>
       </div>
     </header>
 
-    <p v-if="data?.processLock" class="feedback error" role="alert">
-      {{ data.processLock }}
-    </p>
-    <p v-if="message" class="save-status">{{ message }}</p>
-    <p v-if="error" class="feedback error" role="alert">{{ error }}</p>
+    <ProcessLockAlert
+      v-if="data?.processLock"
+      title="Plantilla protegida durante la convocatoria"
+      :reason="data.processLock"
+    />
+    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
+    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
-    <section v-if="data && !template" class="detail-card">
-      <h2>No existe una plantilla</h2>
-      <p>Créela para cargar la estructura institucional base.</p>
-      <button
+    <Empty v-if="data && !template" class="min-h-60 border-0">
+      <EmptyHeader><EmptyMedia variant="icon"><Plus aria-hidden="true" /></EmptyMedia><EmptyTitle>No existe una plantilla</EmptyTitle><EmptyDescription>Créela para cargar la estructura institucional base.</EmptyDescription></EmptyHeader>
+      <Button
         :disabled="saving || locked"
         @click="run(() => createTemplate())"
       >
         Crear plantilla institucional
-      </button>
-    </section>
+      </Button>
+    </Empty>
 
     <section
       v-else-if="template"
-      class="template-workspace"
-      :class="{ 'with-inspector': panel }"
+      class="grid min-w-0 gap-5 px-4 py-5 sm:px-6"
+      :class="panel ? 'xl:grid-cols-[minmax(0,1fr)_24rem]' : ''"
     >
+      <TemplateVisualBuilder
+        v-if="appearance && template"
+        :template="template"
+        :appearance="appearance"
+        :variables="data?.variables ?? []"
+        :logos="data?.logos"
+        :identification-design="data?.identificationDesign"
+        :readonly="!editing"
+        :ribbon="editing"
+        :fixed-ribbon="editing"
+        @personalize="panel = 'appearance'"
+        @select-title="selectTitle"
+        @select-section="selectSection"
+        @select-field="handleBuilderSelectField"
+        @edit-title="selectTitle"
+        @edit-section="selectSection"
+        @edit-field="handleBuilderEditField"
+        @delete-section="handleBuilderDeleteSection"
+        @delete-field="handleBuilderDeleteField"
+        @edit-table="handleBuilderEditTable"
+        @add-field="openNewField"
+        @add-block="openNewSection"
+        @move-section="(sectionId, direction) => moveSection(template?.sections.findIndex((item) => item.id === sectionId) ?? -1, direction)"
+        @move-field="(sectionId, blockId, direction) => {
+          const section = template?.sections.find((item) => item.id === sectionId);
+          if (section) moveBlock(sectionId, section.blocks, section.blocks.findIndex((item) => item.id === blockId), direction);
+        }"
+      />
+      <!-- The previous bespoke renderer remains documented in history; the canonical
+           paginated builder above is now the only active template surface. -->
+      <!--
       <article
-        class="template-paper"
+        class="mx-auto min-h-[70rem] max-w-full overflow-hidden bg-white shadow-surface ring-1 ring-black/10"
         :style="{
           fontFamily: appearance?.font_family,
           fontSize: `${appearance?.body_font_size ?? 11}pt`,
@@ -516,12 +653,12 @@ onMounted(() => void load());
           padding: `${appearance?.margin_cm ?? 2.5}cm`,
         }"
       >
-        <header class="document-heading">
-          <img v-if="data?.logos" :src="data.logos.institution" alt="Logo institucional" />
+        <header class="grid grid-cols-[7rem_minmax(0,1fr)_7rem] items-center gap-6 pb-10">
+          <img v-if="data?.logos" class="max-h-16 max-w-28 object-contain" :src="data.logos.institution" alt="Logo institucional" />
           <button
             type="button"
-            class="template-title"
-            :class="{ selected: selection?.kind === 'title' }"
+            class="min-w-0 rounded px-3 py-2 text-center outline-none transition hover:bg-muted/20 disabled:pointer-events-none"
+            :class="{ 'ring-2 ring-primary': selection?.kind === 'title' }"
             :disabled="!editing"
             :style="{
               color: appearance?.accent_color,
@@ -534,16 +671,16 @@ onMounted(() => void load());
           >
             {{ title }}
           </button>
-          <img v-if="data?.logos" :src="data.logos.faculty" alt="Logo de facultad" />
+          <img v-if="data?.logos" class="max-h-16 max-w-28 object-contain" :src="data.logos.faculty" alt="Logo de facultad" />
         </header>
 
         <article
           v-for="(item, sectionIndex) in template.sections"
           :key="item.id"
-          class="document-section"
-          :class="{ selected: selection?.kind === 'section' && selection.sectionId === item.id }"
+          class="relative mt-7 space-y-4 rounded-md outline-none ring-primary/40 transition"
+          :class="{ 'ring-2 ring-primary': selection?.kind === 'section' && selection.sectionId === item.id }"
         >
-          <header class="document-section-heading">
+          <header class="flex items-start justify-between gap-3">
             <button
               type="button"
               :disabled="!editing"
@@ -558,46 +695,91 @@ onMounted(() => void load());
             >
               {{ sectionIndex + 1 }}. {{ item.title }}
             </button>
-            <span v-if="editing" class="document-order-actions">
+            <span v-if="editing" class="flex shrink-0 gap-1 rounded-md border bg-white p-1 shadow-sm">
               <button
+                class="inline-flex size-7 items-center justify-center rounded hover:bg-muted disabled:opacity-40"
                 type="button"
                 aria-label="Mover bloque hacia arriba"
                 :disabled="sectionIndex === 0 || saving"
                 @click="moveSection(sectionIndex, -1)"
               >
-                ↑
+                <ArrowUp class="size-4" aria-hidden="true" />
               </button>
               <button
+                class="inline-flex size-7 items-center justify-center rounded hover:bg-muted disabled:opacity-40"
                 type="button"
                 aria-label="Mover bloque hacia abajo"
                 :disabled="sectionIndex === template.sections.length - 1 || saving"
                 @click="moveSection(sectionIndex, 1)"
               >
-                ↓
+                <ArrowDown class="size-4" aria-hidden="true" />
               </button>
-              <button type="button" @click="openNewField(item.id)">＋</button>
+              <button class="inline-flex size-7 items-center justify-center rounded hover:bg-muted" type="button" aria-label="Agregar campo" @click="openNewField(item.id)"><Plus class="size-4" aria-hidden="true" /></button>
             </span>
           </header>
 
           <article
             v-for="(block, blockIndex) in item.blocks"
             :key="block.id"
-            class="document-block"
+            class="relative space-y-3"
           >
             <div
+              v-if="data?.identificationDesign"
+              class="relative rounded-md p-2 outline-none ring-primary/40 transition"
+              :class="{
+                'ring-2 ring-primary':
+                  selection?.kind === 'field' && selection.blockId === block.id,
+              }"
+              :style="{ fontSize: `${appearance?.field_font_size ?? 11}pt` }"
+              role="button"
+              tabindex="0"
+              @click="block.fields[0] && selectField(item.id, block.id, block.fields[0].id)"
+              @keydown.enter.prevent="block.fields[0] && selectField(item.id, block.id, block.fields[0].id)"
+              @keydown.space.prevent="block.fields[0] && selectField(item.id, block.id, block.fields[0].id)"
+            >
+              <TemplateDocumentView
+                :document="documentFor(block)"
+                :fields="block.fields"
+                :variables="documentVariables"
+                :layout="block.table"
+                preview
+              />
+              <span v-if="editing" class="absolute top-1 right-1 flex gap-1 rounded-md border bg-white p-1 shadow-sm">
+                <button
+                  class="inline-flex size-7 items-center justify-center rounded hover:bg-muted disabled:opacity-40"
+                  type="button"
+                  aria-label="Mover campo hacia arriba"
+                  :disabled="blockIndex === 0 || saving"
+                  @click.stop="moveBlock(item.id, item.blocks, blockIndex, -1)"
+                >
+                  <ArrowUp class="size-4" aria-hidden="true" />
+                </button>
+                <button
+                  class="inline-flex size-7 items-center justify-center rounded hover:bg-muted disabled:opacity-40"
+                  type="button"
+                  aria-label="Mover campo hacia abajo"
+                  :disabled="blockIndex === item.blocks.length - 1 || saving"
+                  @click.stop="moveBlock(item.id, item.blocks, blockIndex, 1)"
+                >
+                  <ArrowDown class="size-4" aria-hidden="true" />
+                </button>
+              </span>
+            </div>
+            <div
+              v-else
               v-for="itemField in block.fields"
               :key="itemField.id"
-              class="template-field-preview"
+              class="relative space-y-3 rounded-md p-2 outline-none ring-primary/40 transition"
               :style="{ fontSize: `${appearance?.field_font_size ?? 11}pt` }"
               :class="{
-                selected:
+                'ring-2 ring-primary':
                   selection?.kind === 'field' &&
                   selection.fieldId === itemField.id,
               }"
             >
               <button
                 type="button"
-                class="template-field-select"
+                class="grid w-full gap-1 rounded p-1 text-left outline-none hover:bg-muted/30 disabled:pointer-events-none"
                 :disabled="!editing"
                 @click="selectField(item.id, block.id, itemField.id)"
               >
@@ -606,12 +788,12 @@ onMounted(() => void load());
                 </strong>
                 <span v-if="itemField.help">{{ itemField.help }}</span>
               </button>
-              <div v-if="itemField.content_type === 'boolean'" class="boolean-preview">
+              <div v-if="itemField.content_type === 'boolean'" class="flex gap-5 rounded border border-dashed p-3 text-muted-foreground">
                 <span>□ Sí</span><span>□ No</span>
               </div>
               <div
                 v-else-if="itemField.content_type === 'multiple_choice'"
-                class="choice-preview"
+                class="flex flex-wrap gap-5 rounded border border-dashed p-3 text-muted-foreground"
               >
                 <span v-for="option in itemField.options" :key="option.value">
                   □ {{ option.label }}
@@ -619,7 +801,7 @@ onMounted(() => void load());
               </div>
               <table
                 v-else-if="itemField.content_type === 'table' && block.table"
-                class="template-table-preview"
+                class="w-full border-collapse text-left [&_td]:border [&_td]:border-neutral-400 [&_td]:p-2 [&_th]:border [&_th]:border-neutral-400 [&_th]:p-2"
               >
                 <thead>
                   <tr>
@@ -649,23 +831,25 @@ onMounted(() => void load());
               <ol v-else-if="itemField.content_type === 'numbered_list'">
                 <li>Elemento que completará el docente</li>
               </ol>
-              <div v-else class="text-preview">Texto que completará el docente.</div>
-              <span v-if="editing" class="document-order-actions field-order">
+              <div v-else class="min-h-10 rounded border border-dashed p-3 text-muted-foreground">Texto que completará el docente.</div>
+              <span v-if="editing" class="absolute top-1 right-1 flex gap-1 rounded-md border bg-white p-1 shadow-sm">
                 <button
+                  class="inline-flex size-7 items-center justify-center rounded hover:bg-muted disabled:opacity-40"
                   type="button"
                   aria-label="Mover campo hacia arriba"
                   :disabled="blockIndex === 0 || saving"
                   @click="moveBlock(item.id, item.blocks, blockIndex, -1)"
                 >
-                  ↑
+                  <ArrowUp class="size-4" aria-hidden="true" />
                 </button>
                 <button
+                  class="inline-flex size-7 items-center justify-center rounded hover:bg-muted disabled:opacity-40"
                   type="button"
                   aria-label="Mover campo hacia abajo"
                   :disabled="blockIndex === item.blocks.length - 1 || saving"
                   @click="moveBlock(item.id, item.blocks, blockIndex, 1)"
                 >
-                  ↓
+                  <ArrowDown class="size-4" aria-hidden="true" />
                 </button>
               </span>
             </div>
@@ -673,9 +857,14 @@ onMounted(() => void load());
         </article>
       </article>
 
-      <aside v-if="panel" class="template-inspector" aria-label="Propiedades de plantilla">
-        <header>
-          <div>
+      -->
+      <aside
+        v-if="panel"
+        class="sticky top-20 h-[calc(100dvh-6rem)] overflow-hidden rounded-xl bg-card shadow-menu ring-1 ring-surface-ring [&_form>label]:grid [&_form>label]:gap-2 [&_form>label]:text-sm [&_form>label]:font-medium [&_form>label>input]:h-9 [&_form>label>input]:w-full [&_form>label>input]:rounded-md [&_form>label>input]:border [&_form>label>input]:border-input [&_form>label>input]:bg-transparent [&_form>label>input]:px-3 [&_form>label>input]:text-sm [&_form>label>select]:h-9 [&_form>label>select]:w-full [&_form>label>select]:rounded-md [&_form>label>select]:border [&_form>label>select]:border-input [&_form>label>select]:bg-transparent [&_form>label>select]:px-3"
+        aria-label="Propiedades de plantilla"
+      >
+        <header class="flex items-start justify-between gap-3 border-b p-5">
+          <div class="grid gap-1">
             <strong>
               {{
                 panel === 'appearance'
@@ -687,16 +876,14 @@ onMounted(() => void load());
                       : 'Propiedades'
               }}
             </strong>
-            <small>Los cambios afectan únicamente borradores no enviados.</small>
+            <small class="text-muted-foreground">Los cambios afectan únicamente borradores no enviados.</small>
           </div>
-          <button type="button" aria-label="Cerrar propiedades" @click="closePanel">
-            ×
-          </button>
+          <Button type="button" size="icon-sm" variant="ghost" aria-label="Cerrar propiedades" @click="closePanel"><X aria-hidden="true" /></Button>
         </header>
 
         <form
           v-if="panel === 'new-section'"
-          class="template-inspector-body"
+          class="relative grid max-h-[calc(100dvh-11rem)] gap-5 overflow-y-auto p-5 pb-24"
           @submit.prevent="createSection"
         >
           <label>
@@ -710,31 +897,33 @@ onMounted(() => void load());
           <fieldset
             v-for="(draft, index) in newSection.fields"
             :key="index"
-            class="new-section-field"
+            class="new-section-field grid gap-4 rounded-lg border p-4"
           >
             <legend>Campo {{ index + 1 }}</legend>
             <TemplateFieldForm
               v-model="newSection.fields[index]!"
               :content-types="contentTypes"
             />
-            <button
+            <Button
               v-if="newSection.fields.length > 1"
               type="button"
+              size="sm"
+              variant="ghost"
               @click="newSection.fields.splice(index, 1)"
             >
               Quitar campo
-            </button>
+            </Button>
           </fieldset>
-          <button type="button" @click="addSectionField">Agregar otro campo</button>
-          <footer>
-            <button type="button" @click="closePanel">Cancelar</button>
-            <button :disabled="saving">Crear bloque</button>
+          <Button class="w-fit" type="button" variant="outline" @click="addSectionField"><Plus aria-hidden="true" />Agregar otro campo</Button>
+          <footer class="absolute inset-x-0 bottom-0 flex justify-end gap-2 border-t bg-card p-4">
+            <Button type="button" variant="outline" @click="closePanel">Cancelar</Button>
+            <Button :disabled="saving">Crear bloque</Button>
           </footer>
         </form>
 
         <form
           v-else-if="panel === 'new-field'"
-          class="template-inspector-body"
+          class="relative grid max-h-[calc(100dvh-11rem)] gap-5 overflow-y-auto p-5 pb-24"
           @submit.prevent="createField"
         >
           <label>
@@ -747,15 +936,15 @@ onMounted(() => void load());
             </select>
           </label>
           <TemplateFieldForm v-model="newField" :content-types="contentTypes" />
-          <footer>
-            <button type="button" @click="closePanel">Cancelar</button>
-            <button :disabled="saving">Agregar campo</button>
+          <footer class="absolute inset-x-0 bottom-0 flex justify-end gap-2 border-t bg-card p-4">
+            <Button type="button" variant="outline" @click="closePanel">Cancelar</Button>
+            <Button :disabled="saving">Agregar campo</Button>
           </footer>
         </form>
 
         <form
           v-else-if="panel === 'appearance' && appearance && data?.appearanceOptions"
-          class="template-inspector-body"
+          class="relative grid max-h-[calc(100dvh-11rem)] gap-5 overflow-y-auto p-5 pb-24"
           @submit.prevent="saveAppearance"
         >
           <label>
@@ -838,51 +1027,51 @@ onMounted(() => void load());
               @change="logo = ($event.target as HTMLInputElement).files?.[0] ?? null"
             />
           </label>
-          <button type="button" :disabled="!logo || saving" @click="uploadLogo">
+          <Button class="w-fit" type="button" variant="outline" :disabled="!logo || saving" @click="uploadLogo">
             Subir logo
-          </button>
-          <footer>
-            <button type="button" @click="closePanel">Cancelar</button>
-            <button :disabled="saving">Guardar apariencia</button>
+          </Button>
+          <footer class="absolute inset-x-0 bottom-0 flex justify-end gap-2 border-t bg-card p-4">
+            <Button type="button" variant="outline" @click="closePanel">Cancelar</Button>
+            <Button :disabled="saving">Guardar apariencia</Button>
           </footer>
         </form>
 
         <form
           v-else-if="panel === 'selection' && selection?.kind === 'title'"
-          class="template-inspector-body"
+          class="relative grid max-h-[calc(100dvh-11rem)] gap-5 overflow-y-auto p-5 pb-24"
           @submit.prevent="saveSelection"
         >
           <label>
             Título institucional <span aria-label="obligatorio">*</span>
             <input v-model="titleDraft" required maxlength="180" />
           </label>
-          <footer>
-            <button type="button" @click="closePanel">Cancelar</button>
-            <button :disabled="saving">Guardar título</button>
+          <footer class="absolute inset-x-0 bottom-0 flex justify-end gap-2 border-t bg-card p-4">
+            <Button type="button" variant="outline" @click="closePanel">Cancelar</Button>
+            <Button :disabled="saving">Guardar título</Button>
           </footer>
         </form>
 
         <form
           v-else-if="panel === 'selection' && selection?.kind === 'section'"
-          class="template-inspector-body"
+          class="relative grid max-h-[calc(100dvh-11rem)] gap-5 overflow-y-auto p-5 pb-24"
           @submit.prevent="saveSelection"
         >
           <label>
             Nombre del bloque <span aria-label="obligatorio">*</span>
             <input v-model="sectionTitleDraft" required maxlength="180" />
           </label>
-          <footer>
-            <button type="button" @click="closePanel">Cancelar</button>
-            <button :disabled="saving">Guardar bloque</button>
+          <footer class="absolute inset-x-0 bottom-0 flex justify-end gap-2 border-t bg-card p-4">
+            <Button type="button" variant="outline" @click="closePanel">Cancelar</Button>
+            <Button :disabled="saving">Guardar bloque</Button>
           </footer>
         </form>
 
         <form
           v-else-if="panel === 'selection' && selectedField && fieldDraft"
-          class="template-inspector-body"
+          class="relative grid max-h-[calc(100dvh-11rem)] gap-5 overflow-y-auto p-5 pb-24"
           @submit.prevent="saveSelection"
         >
-          <p class="save-status">
+          <p class="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
             Campo obligatorio{{ selectedField.inherited ? ' · institucional' : '' }}
           </p>
           <TemplateFieldForm
@@ -891,6 +1080,9 @@ onMounted(() => void load());
             :type-locked="selectedField.inherited"
             :ai-available="!selectedField.inherited"
           />
+          <Button type="button" variant="outline" :disabled="saving" @click="openDocumentDesign">
+            Editar diseño del documento
+          </Button>
           <TemplateTableDesigner
             v-if="selectedBlock?.content_type === 'table' && selectedBlock.table"
             :layout="selectedBlock.table"
@@ -898,13 +1090,76 @@ onMounted(() => void load());
             :saving="saving"
             @save="saveTable(selectedBlock!, $event)"
           />
-          <footer>
-            <button type="button" @click="closePanel">Cancelar</button>
-            <button :disabled="saving">Guardar campo</button>
+          <footer class="absolute inset-x-0 bottom-0 flex justify-end gap-2 border-t bg-card p-4">
+            <Button type="button" variant="outline" @click="closePanel">Cancelar</Button>
+            <Button :disabled="saving">Guardar campo</Button>
           </footer>
         </form>
       </aside>
     </section>
     <p v-else-if="!error">Cargando plantilla…</p>
+
+    <Dialog v-model:open="deleteOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{{ deleteTarget?.kind === 'section' ? 'Eliminar bloque' : 'Eliminar campo' }}</DialogTitle>
+          <DialogDescription>
+            {{ deleteTarget?.kind === 'section'
+              ? 'Se eliminará el bloque y todos sus campos de la plantilla.'
+              : 'Se eliminará este campo de la plantilla.' }}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
+          <Button type="button" variant="destructive" :disabled="saving" @click="confirmDelete">Eliminar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog v-model:open="purgeOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Confirmar actualización de la plantilla</DialogTitle>
+          <DialogDescription>
+            Este cambio descartará los borradores no enviados que resulten afectados. Las revisiones enviadas se conservarán.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose as-child><Button type="button" variant="outline" :disabled="saving">Cancelar</Button></DialogClose>
+          <Button type="button" variant="destructive" :disabled="saving" @click="confirmPurge">Continuar y descartar borradores</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <section
+      v-if="designOpen"
+      class="fixed inset-0 z-50 flex min-w-0 flex-col bg-muted/30"
+      aria-label="Editor de diseño de plantilla"
+    >
+      <header class="sticky top-0 z-10 grid min-h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b bg-background/95 px-3 py-2 shadow-sm backdrop-blur sm:px-5">
+        <Button class="justify-self-start" type="button" size="sm" variant="outline" :disabled="saving" @click="designOpen = false">Salir del diseño</Button>
+        <strong class="truncate text-sm">{{ selectedBlock?.title }}</strong>
+        <div class="flex justify-self-end gap-2">
+          <Button type="button" size="sm" :disabled="saving" @click="documentEditor?.save()">Guardar diseño</Button>
+        </div>
+      </header>
+      <div class="min-h-0 flex-1 overflow-auto p-4 sm:p-6">
+        <article class="mx-auto min-h-[70rem] w-full max-w-[52rem] bg-white p-8 shadow-surface ring-1 ring-black/10 sm:p-12">
+          <p class="mb-5 text-sm text-muted-foreground">
+            Use clic derecho para insertar campos del docente, datos automáticos y tablas; el menú también ofrece formato y propiedades de celda.
+          </p>
+          <TemplateDocumentEditor
+            v-if="selectedBlock"
+            :key="`${selectedBlock.id}-${selectedBlock.fingerprint}`"
+            ref="documentEditor"
+            :document="documentFor(selectedBlock)"
+            :variables="data?.variables ?? []"
+            :field-keys="selectedBlock.fields.map((field) => field.key)"
+            :pending="saving"
+            @save="saveDocument"
+          />
+        </article>
+      </div>
+    </section>
   </main>
 </template>

@@ -3,6 +3,13 @@ import type {
   TemplateContentType,
   TemplateFieldDraft,
 } from "@/api/template";
+import { Plus, Trash2 } from "@lucide/vue";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 
 const props = defineProps<{
   modelValue: TemplateFieldDraft;
@@ -63,20 +70,20 @@ const changeType = (value: string): void => {
 </script>
 
 <template>
-  <div class="template-field-form">
-    <label>
-      Nombre <span aria-label="obligatorio">*</span>
-      <input
+  <FieldGroup class="grid gap-5">
+    <Field>
+      <FieldLabel required>Nombre</FieldLabel>
+      <Input
         :value="modelValue.label"
         required
         maxlength="180"
         :disabled="disabled"
         @input="update('label', ($event.target as HTMLInputElement).value)"
       />
-    </label>
-    <label v-if="showKey !== false">
-      Clave <span aria-label="obligatorio">*</span>
-      <input
+    </Field>
+    <Field v-if="showKey !== false">
+      <FieldLabel required>Clave</FieldLabel>
+      <Input
         :value="modelValue.key"
         required
         maxlength="100"
@@ -84,40 +91,39 @@ const changeType = (value: string): void => {
         :disabled="disabled || typeLocked"
         @input="update('key', ($event.target as HTMLInputElement).value)"
       />
-    </label>
-    <label>
-      Tipo de contenido <span aria-label="obligatorio">*</span>
-      <select
-        :value="modelValue.content_type"
+    </Field>
+    <Field>
+      <FieldLabel required>Tipo de contenido</FieldLabel>
+      <NativeSelect
+        :model-value="modelValue.content_type"
+        class="w-full"
         :disabled="disabled || typeLocked"
-        @change="changeType(($event.target as HTMLSelectElement).value)"
+        @update:model-value="changeType(String($event))"
       >
-        <option
+        <NativeSelectOption
           v-for="type in contentTypes"
           :key="type.value"
           :value="type.value"
-        >
-          {{ type.label }}
-        </option>
-      </select>
-    </label>
-    <label>
-      Ayuda para el docente
-      <textarea
+        >{{ type.label }}</NativeSelectOption>
+      </NativeSelect>
+    </Field>
+    <Field>
+      <FieldLabel>Ayuda para el docente</FieldLabel>
+      <Textarea
         :value="modelValue.help"
         maxlength="2000"
         :disabled="disabled"
         @input="update('help', ($event.target as HTMLTextAreaElement).value)"
       />
-    </label>
-    <fieldset v-if="modelValue.content_type === 'multiple_choice'">
-      <legend>Opciones de respuesta</legend>
+    </Field>
+    <fieldset v-if="modelValue.content_type === 'multiple_choice'" class="grid gap-3 rounded-lg border p-4">
+      <legend class="px-1 text-sm font-medium">Opciones de respuesta</legend>
       <div
         v-for="(option, index) in modelValue.options"
         :key="index"
-        class="template-choice-row"
+        class="template-choice-row grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
       >
-        <input
+        <Input
           :value="option.label"
           aria-label="Etiqueta de la opción"
           required
@@ -126,7 +132,7 @@ const changeType = (value: string): void => {
             updateOption(index, 'label', ($event.target as HTMLInputElement).value)
           "
         />
-        <input
+        <Input
           :value="option.value"
           aria-label="Valor de la opción"
           required
@@ -136,40 +142,34 @@ const changeType = (value: string): void => {
             updateOption(index, 'value', ($event.target as HTMLInputElement).value)
           "
         />
-        <button
+        <Button
           type="button"
+          size="icon"
+          variant="ghost"
+          aria-label="Quitar opción"
           :disabled="disabled || modelValue.options.length <= 2"
           @click="removeOption(index)"
-        >
-          Quitar
-        </button>
+        ><Trash2 aria-hidden="true" /></Button>
       </div>
-      <button type="button" :disabled="disabled" @click="addOption">
-        Agregar opción
-      </button>
+      <Button class="w-fit" type="button" variant="outline" :disabled="disabled" @click="addOption"><Plus aria-hidden="true" />Agregar opción</Button>
     </fieldset>
-    <label v-if="aiAvailable !== false" class="checkbox-row">
-      <input
-        :checked="modelValue.ai_enabled"
-        type="checkbox"
+    <Field v-if="aiAvailable !== false" orientation="horizontal" class="checkbox-row items-center">
+      <Checkbox
+        :model-value="modelValue.ai_enabled"
+        id="field-ai-enabled"
         :disabled="disabled"
-        @change="update('ai_enabled', ($event.target as HTMLInputElement).checked)"
+        @update:model-value="update('ai_enabled', Boolean($event))"
       />
-      Usar este campo como contexto de IA
-    </label>
-    <label v-if="aiAvailable !== false" class="checkbox-row">
-      <input
-        :checked="modelValue.ai_coordinator_configurable"
-        type="checkbox"
+      <FieldLabel for="field-ai-enabled">Usar este campo como contexto de IA</FieldLabel>
+    </Field>
+    <Field v-if="aiAvailable !== false" orientation="horizontal" class="checkbox-row items-center">
+      <Checkbox
+        :model-value="modelValue.ai_coordinator_configurable"
+        id="field-ai-coordinator-configurable"
         :disabled="disabled"
-        @change="
-          update(
-            'ai_coordinator_configurable',
-            ($event.target as HTMLInputElement).checked,
-          )
-        "
+        @update:model-value="update('ai_coordinator_configurable', Boolean($event))"
       />
-      Permitir que Coordinación cambie el uso de IA
-    </label>
-  </div>
+      <FieldLabel for="field-ai-coordinator-configurable">Permitir que Coordinación cambie el uso de IA</FieldLabel>
+    </Field>
+  </FieldGroup>
 </template>

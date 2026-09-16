@@ -6,13 +6,28 @@ import {
   createProcess,
   extendProcessDeadline,
   getProcesses,
-  transitionProcess,
   updateProcess,
   type ProcessPayload,
   type Processes,
   type SyllabusProcess,
 } from '@/api/processes';
 import { getSession } from '@/api/session';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
+import FormSheet from '@/components/domain/FormSheet.vue';
+import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import SyllabusProcessActions from '@/components/domain/syllabus/SyllabusProcessActions.vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
+import { useClientFilter } from '@/composables/useClientFilter';
+import { useClientPagination } from '@/composables/useClientPagination';
 
 const router = useRouter();
 const data = ref<Processes | null>(null);
@@ -24,9 +39,17 @@ const mode = ref<'create' | 'edit' | 'deadline' | null>(null);
 const processing = ref(false);
 const form = reactive<ProcessPayload>({ period_id: '', starts_at: '', due_at: '' });
 const deadline = reactive({ stage: 'entrega', due_at: '', reason: '' });
-const pauseReason = ref('');
+
+const processes = computed(() => data.value?.processes ?? []);
+const filter = useClientFilter(
+  processes,
+  (item) => [item.name, item.period_name, item.template],
+  { estado: { matches: (item, value) => item.state === value } },
+);
+const { items: processPage, meta: processMeta, setPage: setProcessPage } = useClientPagination(() => filter.items.value);
 
 const asDate = (value: string) => value.slice(0, 10);
+const formatDate = (value: string): string => new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(new Date(value));
 const stateLabel = (state: SyllabusProcess['state']) => ({
   preparacion: 'En preparación', abierto: 'Abierto', pausado: 'Pausado', cerrado: 'Cerrado',
 }[state]);
@@ -34,6 +57,7 @@ const stateLabel = (state: SyllabusProcess['state']) => ({
 const modalTitle = computed(() => mode.value === 'create' ? 'Preparar proceso institucional'
   : mode.value === 'edit' ? `Editar ${selectedProcess.value?.name ?? 'proceso'}`
     : 'Prorrogar plazo institucional');
+const sheetOpen = computed({ get: () => mode.value !== null, set: (open: boolean) => { if (!open) mode.value = null; } });
 
 const load = async (): Promise<void> => {
   loading.value = true;
@@ -107,101 +131,107 @@ const saveDeadline = async (): Promise<void> => {
   }
 };
 
-const transition = async (process: SyllabusProcess, action: 'abrir' | 'pausar' | 'reanudar' | 'cerrar'): Promise<void> => {
-  const reason = action === 'pausar' ? pauseReason.value.trim() : undefined;
-  if (action === 'pausar' && pauseReason.value.trim().length < 10) {
-    error.value = 'Indique un motivo de al menos 10 caracteres para pausar el proceso.';
-    return;
-  }
-  try {
-    processing.value = true;
-    error.value = null;
-    message.value = (await transitionProcess(process.id, action, reason)).message;
-    pauseReason.value = '';
-    await load();
-  } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cambiar el estado del proceso.';
-  } finally {
-    processing.value = false;
-  }
+const transitionCompleted = async (status: string): Promise<void> => {
+  message.value = status;
+  await load();
 };
 
 onMounted(() => { void load(); });
 </script>
 
 <template>
-  <main class="app-page">
-    <header class="app-header">
-      <div>
-        <p class="eyebrow">Administración</p>
-        <h1>Proceso institucional</h1>
-        <p>Define el período y calendario que regirán las convocatorias de sílabos.</p>
-      </div>
-      <div class="header-actions">
-        <RouterLink class="back-link" to="/panel">Volver al panel</RouterLink>
-        <button type="button" @click="openCreate">Preparar proceso</button>
-      </div>
-    </header>
+  <PageFrame
+    title="Convocatorias de sílabos"
+    description="El proceso institucional que obliga a todas las carreras: con qué plantilla se elaboran los sílabos y entre qué fechas. Cada coordinación convoca a su carrera dentro de él."
+  >
+    <template #actions>
+      <Button v-if="data && data.active_process === null" type="button" @click="openCreate">Preparar proceso</Button>
+    </template>
 
-    <p v-if="data?.template" class="detail-card">Plantilla institucional vigente: <strong>{{ data.template }}</strong></p>
-    <p v-if="data?.active_process" class="save-status">Proceso vigente: {{ data.active_process.name }} · {{ stateLabel(data.active_process.state as SyllabusProcess['state']) }}</p>
-    <p v-if="message" class="save-status" role="status">{{ message }}</p>
-    <p v-if="error" role="alert">{{ error }}</p>
-    <p v-if="loading && !data" role="status">Cargando procesos…</p>
+    <Alert v-if="data?.active_process">
+      <AlertTitle>No se puede preparar otro proceso</AlertTitle>
+      <AlertDescription>
+        El proceso «{{ data.active_process.name }}» del período {{ data.active_process.period }} está
+        {{ data.active_process.state === 'abierto' ? 'abierto' : 'en pausa' }}. Ciérrelo antes de crear otro.
+      </AlertDescription>
+    </Alert>
+    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
+    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <p v-if="loading && !data" class="text-sm text-muted-foreground" role="status">Cargando procesos…</p>
 
-    <section v-if="data" class="detail-card">
-      <h2>Historial de procesos</h2>
-      <div v-if="data.processes.length" class="table-wrap">
-        <table>
-          <thead><tr><th>Período</th><th>Calendario</th><th>Estado</th><th>Convocatorias</th><th>Acciones</th></tr></thead>
-          <tbody>
-            <tr v-for="process in data.processes" :key="process.id">
-              <td><strong>{{ process.name }}</strong><small>{{ process.template }}</small></td>
-              <td>{{ asDate(process.starts_at) }} — {{ asDate(process.due_at) }}</td>
-              <td><span class="role-badge">{{ stateLabel(process.state) }}</span></td>
-              <td>{{ process.convocations_count }}</td>
-              <td class="process-actions">
-                <button v-if="process.configurable" type="button" @click="openEdit(process)">Editar</button>
-                <button v-if="process.state === 'preparacion'" type="button" :disabled="processing" @click="transition(process, 'abrir')">Abrir</button>
-                <template v-if="process.state === 'abierto'">
-                  <button type="button" :disabled="processing" @click="openDeadline(process)">Prorrogar</button>
-                  <input v-model="pauseReason" aria-label="Motivo de la pausa" placeholder="Motivo para pausar" />
-                  <button type="button" :disabled="processing" @click="transition(process, 'pausar')">Pausar</button>
-                  <button type="button" :disabled="processing" @click="transition(process, 'cerrar')">Cerrar</button>
-                </template>
-                <template v-if="process.state === 'pausado'">
-                  <button type="button" :disabled="processing" @click="transition(process, 'reanudar')">Reanudar</button>
-                  <button type="button" :disabled="processing" @click="transition(process, 'cerrar')">Cerrar</button>
-                </template>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p v-else class="empty-state">Aún no existe un proceso institucional preparado.</p>
-    </section>
+    <Card v-if="data">
+      <CardContent class="flex flex-col gap-4">
+        <ClientFilterBar
+          :filter="filter"
+          input-id="processes-search"
+          label="Buscar proceso"
+          placeholder="Buscar por nombre o plantilla"
+        >
+          <template #filters>
+            <Field>
+              <FieldLabel for="processes-search-state" class="sr-only">Estado</FieldLabel>
+              <Select v-model="filter.values.estado.value">
+                <SelectTrigger id="processes-search-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger>
+                <SelectContent><SelectGroup>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="preparacion">En preparación</SelectItem>
+                  <SelectItem value="abierto">Abiertos</SelectItem>
+                  <SelectItem value="pausado">En pausa</SelectItem>
+                  <SelectItem value="cerrado">Cerrados</SelectItem>
+                </SelectGroup></SelectContent>
+              </Select>
+            </Field>
+          </template>
+        </ClientFilterBar>
 
-    <section v-if="mode" class="detail-card" aria-live="polite">
-      <header class="setup-heading"><h2>{{ modalTitle }}</h2><button type="button" @click="mode = null">Cancelar</button></header>
-      <form v-if="mode !== 'deadline'" class="editor-form" @submit.prevent="save">
-        <label>Período académico
-          <select v-model="form.period_id" :disabled="mode === 'edit' && !selectedProcess?.configurable" required>
-            <option value="">Seleccione un período</option>
-            <option v-for="period in data?.periods" :key="period.id" :value="period.id">{{ period.codigo }}</option>
-          </select>
-        </label>
-        <label>Inicio<input v-model="form.starts_at" type="date" required /></label>
-        <label>Fecha límite de entrega<input v-model="form.due_at" type="date" required /></label>
-        <button :disabled="processing">{{ processing ? 'Guardando…' : 'Guardar proceso' }}</button>
-      </form>
-      <form v-else class="editor-form" @submit.prevent="saveDeadline">
-        <label>Etapa
-          <select v-model="deadline.stage"><option value="inicio">Inicio</option><option value="borrador">Borrador</option><option value="entrega">Entrega</option></select>
-        </label>
-        <label>Nueva fecha límite<input v-model="deadline.due_at" type="date" required /></label>
-        <label>Motivo de la prórroga<textarea v-model="deadline.reason" required minlength="10" maxlength="500" /></label>
-        <button :disabled="processing">{{ processing ? 'Guardando…' : 'Guardar prórroga' }}</button>
-      </form>
-    </section>
-  </main>
+        <Table data-cards="true">
+          <TableHeader><TableRow>
+            <TableHead>Proceso</TableHead><TableHead>Estado</TableHead><TableHead>Periodo</TableHead>
+            <TableHead>Plantilla</TableHead><TableHead>Inicio</TableHead><TableHead>Entrega</TableHead>
+            <TableHead class="text-right">Convocatorias</TableHead><TableHead class="text-right">Acciones</TableHead>
+          </TableRow></TableHeader>
+          <TableBody>
+            <TableEmpty v-if="processPage.length === 0" :colspan="8">
+              {{ filter.active.value ? 'Ningún proceso coincide con la búsqueda.' : 'No hay procesos de sílabos. Prepare el primero con la plantilla y las fechas del calendario institucional.' }}
+            </TableEmpty>
+            <TableRow v-for="process in processPage" v-else :key="process.id">
+              <TableCell>{{ process.name }}</TableCell>
+              <TableCell>{{ stateLabel(process.state) }}</TableCell>
+              <TableCell>{{ process.period_name }}</TableCell>
+              <TableCell>{{ process.template }}</TableCell>
+              <TableCell>{{ formatDate(process.starts_at) }}</TableCell>
+              <TableCell>{{ formatDate(process.due_at) }}</TableCell>
+              <TableCell class="text-right">{{ process.convocations_count }}</TableCell>
+              <TableCell class="text-right">
+                <SyllabusProcessActions
+                  :process="process"
+                  @edit="openEdit"
+                  @deadline="openDeadline"
+                  @completed="transitionCompleted"
+                />
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+        <TablePagination :meta="processMeta" label="Paginación de procesos de sílabos" @update:page="setProcessPage" />
+      </CardContent>
+    </Card>
+
+    <FormSheet v-model:open="sheetOpen" :show-trigger="false" trigger-label="Preparar proceso" :title="modalTitle" description="Configure el período y las fechas institucionales.">
+      <template #default="{ close }">
+        <form v-if="mode !== 'deadline'" class="space-y-5" @submit.prevent="save">
+          <Field><FieldLabel for="process-period" required>Período académico</FieldLabel><Select v-model="form.period_id" :disabled="mode === 'edit' && !selectedProcess?.configurable"><SelectTrigger id="process-period"><SelectValue placeholder="Seleccione un período" /></SelectTrigger><SelectContent><SelectItem v-for="period in data?.periods" :key="period.id" :value="period.id">{{ period.codigo }}</SelectItem></SelectContent></Select></Field>
+          <Field><FieldLabel for="process-start" required>Inicio</FieldLabel><Input id="process-start" v-model="form.starts_at" type="date" required /></Field>
+          <Field><FieldLabel for="process-due" required>Fecha límite de entrega</FieldLabel><Input id="process-due" v-model="form.due_at" type="date" required /></Field>
+          <FormSheetActions label="Guardar proceso" :close="close" :processing="processing" />
+        </form>
+        <form v-else class="space-y-5" @submit.prevent="saveDeadline">
+          <Field><FieldLabel for="deadline-stage" required>Etapa</FieldLabel><Select v-model="deadline.stage"><SelectTrigger id="deadline-stage"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="inicio">Inicio</SelectItem><SelectItem value="borrador">Borrador</SelectItem><SelectItem value="entrega">Entrega</SelectItem></SelectContent></Select></Field>
+          <Field><FieldLabel for="deadline-date" required>Nueva fecha límite</FieldLabel><Input id="deadline-date" v-model="deadline.due_at" type="date" required /></Field>
+          <Field><FieldLabel for="deadline-reason" required>Motivo de la prórroga</FieldLabel><Textarea id="deadline-reason" v-model="deadline.reason" required minlength="10" maxlength="500" /></Field>
+          <FormSheetActions label="Guardar prórroga" :close="close" :processing="processing" />
+        </form>
+      </template>
+    </FormSheet>
+  </PageFrame>
 </template>

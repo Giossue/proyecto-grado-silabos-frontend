@@ -34,6 +34,10 @@ const mountShell = async () => {
       { path: '/notificaciones', component: { template: '<div />' } },
       { path: '/seguridad', component: { template: '<div />' } },
       { path: '/administracion/usuarios', component: { template: '<div />' } },
+      { path: '/administracion/procesos', component: { template: '<div />' } },
+      { path: '/administracion/estructura-academica', component: { template: '<div />' } },
+      { path: '/administracion/plantilla', component: { template: '<div />' } },
+      { path: '/administracion/auditoria', component: { template: '<div />' } },
     ],
   });
   await router.push('/panel');
@@ -57,28 +61,32 @@ describe('AppShell', () => {
 
     expect(wrapper.text()).toContain('Usuarios');
     expect(wrapper.text()).not.toContain('Mis sílabos');
-    expect(wrapper.get('.notification-link').text()).toContain('3');
+    expect(wrapper.get('[aria-label="Notificaciones"]').text()).toContain('3');
   });
 
   it('permite alternar el tema y conserva la preferencia', async () => {
     const wrapper = await mountShell();
-    await wrapper.get('[aria-label="Activar tema oscuro"]').trigger('click');
+    await wrapper.get('[aria-label="Tema visual: Claro. Cambiar a Oscuro"]').trigger('click');
 
-    expect(document.documentElement.dataset.theme).toBe('dark');
-    expect(localStorage.getItem('silabos-theme')).toBe('dark');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(localStorage.getItem('appearance')).toBe('dark');
   });
 
-  it('contiene el foco del selector de ámbito y lo devuelve al cerrar', async () => {
+  it('expone el cambio de ámbito desde el menú de la cuenta', async () => {
     const wrapper = await mountShell();
-    await wrapper.get('.scope-button').trigger('click');
+    const accountButton = wrapper.findAll('button').find((button) => button.text().includes('Ada Admin'));
+    expect(accountButton).toBeDefined();
+    await accountButton!.trigger('click');
+    await flushPromises();
+    expect(document.body.textContent).toContain('Cerrar sesión');
+
+    const switchScope = Array.from(
+      document.body.querySelectorAll<HTMLElement>('[data-slot="dropdown-menu-item"]'),
+    ).find((item) => item.textContent?.includes('Cambiar carrera o rol'));
+    expect(switchScope).toBeDefined();
+    switchScope?.click();
     await flushPromises();
 
-    const close = wrapper.get('.scope-sheet [aria-label="Cerrar"]');
-    expect(document.activeElement).toBe(close.element);
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    await flushPromises();
-
-    expect(wrapper.find('.scope-sheet').exists()).toBe(false);
-    expect(document.activeElement).toBe(wrapper.get('.scope-button').element);
+    expect(document.body.textContent).toContain('Software');
   });
 });

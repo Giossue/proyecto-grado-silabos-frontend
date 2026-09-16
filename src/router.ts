@@ -1,34 +1,37 @@
 import { createRouter, createWebHistory } from "vue-router";
-import LoginPage from "@/pages/LoginPage.vue";
-import WorkspacePage from "@/pages/WorkspacePage.vue";
-import DashboardPage from "@/pages/DashboardPage.vue";
-import TeacherSyllabiPage from "@/pages/TeacherSyllabiPage.vue";
-import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
-import PasswordRecoveryPage from "@/pages/PasswordRecoveryPage.vue";
-import ResetPasswordPage from "@/pages/ResetPasswordPage.vue";
-import VerifyEmailPage from "@/pages/VerifyEmailPage.vue";
-import TwoFactorChallengePage from "@/pages/TwoFactorChallengePage.vue";
-import SecurityPage from "@/pages/SecurityPage.vue";
-import NotificationsPage from "@/pages/NotificationsPage.vue";
-import AdminUsersPage from "@/pages/AdminUsersPage.vue";
-import AdminUserDetailPage from "@/pages/AdminUserDetailPage.vue";
-import AcademicGovernancePage from "@/pages/AcademicGovernancePage.vue";
-import AdminProcessesPage from "@/pages/AdminProcessesPage.vue";
-import CoordinationConvocationsPage from "@/pages/CoordinationConvocationsPage.vue";
-import CoordinationConvocationDetailPage from "@/pages/CoordinationConvocationDetailPage.vue";
-import CoordinationReviewsPage from "@/pages/CoordinationReviewsPage.vue";
-import CoordinationReviewDetailPage from "@/pages/CoordinationReviewDetailPage.vue";
-import CoordinationReviewComparisonPage from "@/pages/CoordinationReviewComparisonPage.vue";
-import CoordinationSourcesPage from "@/pages/CoordinationSourcesPage.vue";
-import CoordinationSourceDetailPage from "@/pages/CoordinationSourceDetailPage.vue";
-import CoordinationAcademicStructurePage from "@/pages/CoordinationAcademicStructurePage.vue";
-import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
-import DocumentsPage from "@/pages/DocumentsPage.vue";
-import AdminAuditPage from "@/pages/AdminAuditPage.vue";
-import AdminJobsPage from "@/pages/AdminJobsPage.vue";
-import CoordinationReportsPage from "@/pages/CoordinationReportsPage.vue";
-import CoordinationAiConfigurationPage from "@/pages/CoordinationAiConfigurationPage.vue";
 import { sessionState } from "@/state/session";
+
+const LoginPage = () => import("@/pages/LoginPage.vue");
+const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
+const DashboardPage = () => import("@/pages/DashboardPage.vue");
+const TeacherSyllabiPage = () => import("@/pages/TeacherSyllabiPage.vue");
+const TeacherSyllabusDetailPage = () => import("@/pages/TeacherSyllabusDetailPage.vue");
+const PasswordRecoveryPage = () => import("@/pages/PasswordRecoveryPage.vue");
+const ResetPasswordPage = () => import("@/pages/ResetPasswordPage.vue");
+const VerifyEmailPage = () => import("@/pages/VerifyEmailPage.vue");
+const TwoFactorChallengePage = () => import("@/pages/TwoFactorChallengePage.vue");
+const SecurityPage = () => import("@/pages/SecurityPage.vue");
+const ProfilePage = () => import("@/pages/ProfilePage.vue");
+const AppearancePage = () => import("@/pages/AppearancePage.vue");
+const NotificationsPage = () => import("@/pages/NotificationsPage.vue");
+const AdminUsersPage = () => import("@/pages/AdminUsersPage.vue");
+const AdminUserDetailPage = () => import("@/pages/AdminUserDetailPage.vue");
+const AcademicGovernancePage = () => import("@/pages/AcademicGovernancePage.vue");
+const AdminProcessesPage = () => import("@/pages/AdminProcessesPage.vue");
+const AdminTemplatePage = () => import("@/pages/AdminTemplatePage.vue");
+const AdminAuditPage = () => import("@/pages/AdminAuditPage.vue");
+const AdminJobsPage = () => import("@/pages/AdminJobsPage.vue");
+const CoordinationConvocationsPage = () => import("@/pages/CoordinationConvocationsPage.vue");
+const CoordinationConvocationDetailPage = () => import("@/pages/CoordinationConvocationDetailPage.vue");
+const CoordinationReviewsPage = () => import("@/pages/CoordinationReviewsPage.vue");
+const CoordinationReviewDetailPage = () => import("@/pages/CoordinationReviewDetailPage.vue");
+const CoordinationReviewComparisonPage = () => import("@/pages/CoordinationReviewComparisonPage.vue");
+const CoordinationSourcesPage = () => import("@/pages/CoordinationSourcesPage.vue");
+const CoordinationSourceDetailPage = () => import("@/pages/CoordinationSourceDetailPage.vue");
+const CoordinationAiConfigurationPage = () => import("@/pages/CoordinationAiConfigurationPage.vue");
+const CoordinationAcademicStructurePage = () => import("@/pages/CoordinationAcademicStructurePage.vue");
+const CoordinationReportsPage = () => import("@/pages/CoordinationReportsPage.vue");
+const DocumentsPage = () => import("@/pages/DocumentsPage.vue");
 
 type RoleCode = "administrador" | "coordinador" | "docente";
 
@@ -59,118 +62,151 @@ export const router = createRouter({
     {
       path: "/",
       component: WorkspacePage,
-      meta: { requiresAuth: true, shell: false },
+      meta: { requiresAuth: true },
     },
-    { path: "/panel", component: DashboardPage, meta: { requiresAuth: true } },
+    { path: "/panel", component: DashboardPage, meta: { requiresAuth: true, title: "Panel" } },
     {
       path: "/seguridad",
+      redirect: "/configuracion/seguridad",
+      meta: { requiresAuth: true, title: "Seguridad" },
+    },
+    {
+      path: "/configuracion/perfil",
+      component: ProfilePage,
+      meta: { requiresAuth: true, title: "Perfil" },
+    },
+    {
+      path: "/configuracion/seguridad",
       component: SecurityPage,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, title: "Seguridad" },
+    },
+    {
+      path: "/configuracion/apariencia",
+      component: AppearancePage,
+      meta: { requiresAuth: true, title: "Apariencia" },
     },
     {
       path: "/notificaciones",
       component: NotificationsPage,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, title: "Notificaciones" },
     },
     {
       path: "/administracion/usuarios",
       component: AdminUsersPage,
-      meta: { requiresAuth: true, roles: ["administrador"] },
+      meta: { requiresAuth: true, roles: ["administrador"], title: "Usuarios y roles" },
     },
     {
       path: "/administracion/usuarios/:user",
       component: AdminUserDetailPage,
-      meta: { requiresAuth: true, roles: ["administrador"] },
+      meta: { requiresAuth: true, roles: ["administrador"], title: "Detalle de usuario" },
     },
     {
       path: "/administracion/estructura-academica",
       component: AcademicGovernancePage,
-      meta: { requiresAuth: true, roles: ["administrador"] },
+      meta: { requiresAuth: true, roles: ["administrador"], title: "Estructura académica" },
     },
     {
       path: "/administracion/procesos",
       component: AdminProcessesPage,
-      meta: { requiresAuth: true, roles: ["administrador"] },
+      meta: { requiresAuth: true, roles: ["administrador"], title: "Convocatorias" },
     },
     {
       path: "/administracion/plantilla",
       component: AdminTemplatePage,
-      meta: { requiresAuth: true, roles: ["administrador"] },
+      meta: { requiresAuth: true, roles: ["administrador"], title: "Plantilla" },
     },
     {
       path: "/administracion/auditoria",
       component: AdminAuditPage,
-      meta: { requiresAuth: true, roles: ["administrador"] },
+      meta: { requiresAuth: true, roles: ["administrador"], title: "Auditoría" },
     },
     {
       path: "/administracion/trabajos",
       component: AdminJobsPage,
-      meta: { requiresAuth: true, roles: ["administrador"] },
+      meta: { requiresAuth: true, roles: ["administrador"], title: "Trabajos asíncronos" },
     },
     {
       path: "/coordinacion/convocatorias",
       component: CoordinationConvocationsPage,
-      meta: { requiresAuth: true, roles: ["coordinador"] },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Convocatorias" },
     },
     {
       path: "/coordinacion/convocatorias/:convocation",
       component: CoordinationConvocationDetailPage,
-      meta: { requiresAuth: true, roles: ["coordinador"] },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de convocatoria" },
     },
     {
       path: "/coordinacion/revisiones",
       component: CoordinationReviewsPage,
-      meta: { requiresAuth: true, roles: ["coordinador"] },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Revisión" },
     },
     {
       path: "/coordinacion/revisiones/:revision",
       component: CoordinationReviewDetailPage,
-      meta: { requiresAuth: true, roles: ["coordinador"] },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión" },
     },
     {
       path: "/coordinacion/revisiones/:before/comparar/:after",
       component: CoordinationReviewComparisonPage,
-      meta: { requiresAuth: true, roles: ["coordinador"] },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Comparar revisiones" },
     },
     {
       path: "/coordinacion/fuentes",
       component: CoordinationSourcesPage,
-      meta: { requiresAuth: true, roles: ["coordinador"] },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Fuentes académicas" },
     },
     {
       path: "/coordinacion/fuentes/:source",
       component: CoordinationSourceDetailPage,
-      meta: { requiresAuth: true, roles: ["coordinador"] },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Fuente académica" },
     },
     {
       path: "/coordinacion/configuracion-ia",
       component: CoordinationAiConfigurationPage,
-      meta: { requiresAuth: true, roles: ["coordinador"] },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Configuración IA" },
     },
     {
       path: "/coordinacion/estructura-academica",
-      component: CoordinationAcademicStructurePage,
+      redirect: "/coordinacion/malla",
       meta: { requiresAuth: true, roles: ["coordinador"] },
+    },
+    {
+      path: "/coordinacion/malla",
+      component: CoordinationAcademicStructurePage,
+      props: { mode: "curriculum" },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" },
+    },
+    {
+      path: "/coordinacion/materias-paralelos",
+      component: CoordinationAcademicStructurePage,
+      props: { mode: "schedule" },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y paralelos" },
+    },
+    {
+      path: "/coordinacion/asignaciones-docentes",
+      component: CoordinationAcademicStructurePage,
+      props: { mode: "teachers" },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Asignación docente" },
     },
     {
       path: "/coordinacion/informes",
       component: CoordinationReportsPage,
-      meta: { requiresAuth: true, roles: ["coordinador"] },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Informes" },
     },
     {
       path: "/revisiones/:revision/documentos",
       component: DocumentsPage,
-      meta: { requiresAuth: true },
+      meta: { requiresAuth: true, title: "Documentos" },
     },
     {
       path: "/mis-silabos",
       component: TeacherSyllabiPage,
-      meta: { requiresAuth: true, roles: ["docente"] },
+      meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" },
     },
     {
       path: "/mis-silabos/:syllabus",
       component: TeacherSyllabusDetailPage,
-      meta: { requiresAuth: true, roles: ["docente"] },
+      meta: { requiresAuth: true, roles: ["docente"], title: "Sílabo" },
     },
   ],
 });

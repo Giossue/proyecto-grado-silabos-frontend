@@ -4,6 +4,16 @@ import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getSession, logout, resendEmailVerification, selectActiveRole, updatePassword, type Session } from '@/api/session';
 import { sessionState } from '@/state/session';
+import { ArrowRight, CheckCircle2, LogOut, Save } from '@lucide/vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardAction, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 
 const router = useRouter();
 const session = ref<Session | null>(null);
@@ -87,46 +97,34 @@ onMounted(load);
 </script>
 
 <template>
-  <main class="workspace-page">
-    <p v-if="error" role="alert">{{ error }}</p>
+  <PageFrame v-if="session" :title="`Bienvenida, ${session.user.name}`" :description="session.available_roles.some((role) => role.code === 'coordinador') ? 'Seleccione la carrera y el ámbito con el que trabajará en esta sesión.' : 'Seleccione el ámbito con el que trabajará en esta sesión.'" size="wide">
+    <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
     <template v-else-if="session">
-      <header class="workspace-header">
-        <h1>Bienvenida, {{ session.user.name }}</h1>
-        <div class="header-actions"><RouterLink class="back-link" to="/seguridad">Seguridad</RouterLink><button type="button" @click="closeSession">Cerrar sesión</button></div>
-      </header>
-      <section v-if="!session.user.email_verified" class="password-card">
-        <h2>Verifique su correo institucional</h2>
-        <p>Necesitamos confirmar {{ session.user.email }} para completar su acceso.</p>
-        <p v-if="verificationMessage" class="save-status" role="status">{{ verificationMessage }}</p>
-        <button type="button" @click="resendVerification">Reenviar enlace</button>
-      </section>
-      <form v-if="session.user.must_change_password" class="password-card" @submit.prevent="savePassword">
-        <h2>Cambie su contraseña temporal</h2>
-        <p>Defina una contraseña nueva para continuar.</p>
-        <label>
-          Contraseña nueva
-          <input v-model="password" type="password" autocomplete="new-password" required />
-        </label>
-        <label>
-          Confirmar contraseña nueva
-          <input v-model="passwordConfirmation" type="password" autocomplete="new-password" required />
-        </label>
-        <p v-if="passwordError" role="alert">{{ passwordError }}</p>
-        <button :disabled="changingPassword" type="submit">
-          {{ changingPassword ? 'Guardando…' : 'Guardar y continuar' }}
-        </button>
-      </form>
-      <section v-else-if="!session.active_role">
-        <h2>Seleccione su ámbito de trabajo</h2>
-        <button v-for="role in session.available_roles" :key="role.id" @click="selectRole(role.id)">
-          {{ role.code }}<span v-if="role.career_name"> · {{ role.career_name }}</span>
-        </button>
-      </section>
-      <section v-else>
-        <h2>{{ session.active_role.code }}</h2>
-        <p>{{ session.active_role.career_name ?? 'Ámbito institucional' }}</p>
-      </section>
+      <Alert v-if="!session.user.email_verified"><AlertTitle>Verifique su correo institucional</AlertTitle><AlertDescription class="space-y-3"><p>Necesitamos confirmar {{ session.user.email }} para completar su acceso.</p><p v-if="verificationMessage" role="status">{{ verificationMessage }}</p><Button type="button" size="sm" @click="resendVerification">Reenviar enlace</Button></AlertDescription></Alert>
+      <Alert v-else-if="session.available_roles.length === 0"><AlertTitle>No tiene asignaciones vigentes</AlertTitle><AlertDescription>Contáctese con el coordinador de la carrera.</AlertDescription></Alert>
+      <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <Card v-for="role in session.available_roles" :key="role.id" class="h-full">
+          <CardHeader><CardTitle>{{ role.career_name ?? role.code }}</CardTitle><CardAction><Badge v-if="session.active_role?.id === role.id" variant="secondary"><CheckCircle2 />Activo</Badge><Badge v-else variant="outline">{{ role.code }}</Badge></CardAction></CardHeader>
+          <CardFooter class="mt-auto"><Button class="w-full" type="button" @click="selectRole(role.id)"><ArrowRight />{{ session.active_role?.id === role.id ? 'Continuar aquí' : role.code === 'coordinador' ? 'Entrar a esta carrera' : `Entrar como ${role.code}` }}</Button></CardFooter>
+        </Card>
+      </div>
+      <Dialog :open="session.user.must_change_password"><DialogContent class="sm:max-w-md"><DialogHeader><DialogTitle>Cambie su contraseña temporal</DialogTitle><DialogDescription>La contraseña con la que entró la generó quien creó su cuenta. Defina una propia para continuar.</DialogDescription></DialogHeader>
+        <form class="space-y-4" @submit.prevent="savePassword">
+          <div class="grid gap-2">
+            <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -- PasswordInput transmite el id al input -->
+            <Label for="temporary-new-password" required>Contraseña nueva</Label>
+            <PasswordInput id="temporary-new-password" v-model="password" autocomplete="new-password" required />
+          </div>
+          <div class="grid gap-2">
+            <!-- eslint-disable-next-line vuejs-accessibility/label-has-for -- PasswordInput transmite el id al input -->
+            <Label for="temporary-password-confirmation" required>Confirmar contraseña nueva</Label>
+            <PasswordInput id="temporary-password-confirmation" v-model="passwordConfirmation" autocomplete="new-password" required />
+          </div>
+          <p v-if="passwordError" class="text-sm text-destructive" role="alert">{{ passwordError }}</p>
+          <div class="flex items-center justify-between gap-4 pt-2"><Button type="button" variant="ghost" @click="closeSession"><LogOut />Cerrar sesión</Button><Button type="submit" :disabled="changingPassword"><Spinner v-if="changingPassword" /><Save v-else />Guardar y continuar</Button></div>
+        </form>
+      </DialogContent></Dialog>
     </template>
-    <p v-else>Cargando…</p>
-  </main>
+  </PageFrame>
+  <p v-else class="p-6 text-sm text-muted-foreground" role="status">Cargando…</p>
 </template>

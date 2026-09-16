@@ -16,7 +16,7 @@ export type ConvocationItem = {
 export type ConvocationsPage = {
   filters: { q: string | null; state: ConvocationState | null };
   available_sources: Array<{ id: string; name: string }>;
-  convocations: { data: ConvocationItem[]; current_page: number; last_page: number; total: number };
+  convocations: { data: ConvocationItem[]; current_page: number; last_page: number; per_page: number; from: number | null; to: number | null; total: number };
 };
 
 export type ConvocationDetail = {
@@ -48,6 +48,9 @@ export const createConvocation = (processId: string, sourceIds: string[]) =>
   api<{ message: string; convocation_id: string }>('/coordination/convocations', { method: 'POST', body: JSON.stringify({ process_id: processId, source_ids: sourceIds }) });
 
 export const getConvocation = (convocationId: string) => api<ConvocationDetail>(`/coordination/convocations/${convocationId}`);
+
+export const openConvocation = (convocationId: string) =>
+  api<{ message: string }>(`/coordination/convocations/${convocationId}/open`, { method: 'POST' });
 
 export const transitionConvocation = (convocationId: string, transition: 'pausar' | 'reanudar', reason?: string) =>
   api<{ message: string }>(`/coordination/convocations/${convocationId}/${transition}`, {

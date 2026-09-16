@@ -1,0 +1,1062 @@
+<script setup lang="ts">
+import { defineComponent, h, useId, useSlots } from 'vue';
+import { computed } from 'vue';
+import type { VNodeChild, CSSProperties } from 'vue';
+import PlanningSummary from '@/components/domain/syllabus/PlanningSummary.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import {
+    groupByUnit,
+    sumColumn,
+    formatSum,
+    planningColumns,
+} from '@/lib/tableLayout';
+import type {
+    PlanningExpectations,
+    TableLayout,
+    TableRowData,
+} from '@/lib/tableLayout';
+import { displayDocumentValue } from '@/lib/templateDocument';
+import type { DocumentNode, DocumentField } from '@/lib/templateDocument';
+
+type Row = { id: string | null; data: TableRowData };
+type Context = {
+    field?: DocumentField;
+    row?: Row;
+    unit?: number;
+    role?: string;
+    totals?: TableRowData;
+    insideCell?: boolean;
+    cellTextAlign?: string;
+};
+const props = withDefaults(
+    defineProps<{
+        document: DocumentNode;
+        fields: DocumentField[];
+        variables: Record<string, string>;
+        layout?: TableLayout | null;
+        editable?: boolean;
+        preview?: boolean;
+        presentation?: 'document' | 'form';
+        fontFamily?: string;
+        fontSize?: number;
+        textColor?: string;
+        textAlign?: 'left' | 'center' | 'right' | 'justify';
+        tableHeaderBackground?: string;
+        tableHeaderColor?: string;
+        planningExpectations?: PlanningExpectations | null;
+    }>(),
+    {
+        layout: null,
+        editable: false,
+        preview: false,
+        presentation: 'document',
+        fontFamily: 'Arial',
+        fontSize: 11,
+        textColor: '#000000',
+        textAlign: 'left',
+        tableHeaderBackground: '#4F81BD',
+        tableHeaderColor: '#FFFFFF',
+    },
+);
+const emit = defineEmits<{
+    value: [key: string, value: string | number | boolean];
+    rows: [key: string, rows: Row[]];
+}>();
+const slots = useSlots();
+const prefix = useId();
+const documentStyle = computed((): CSSProperties & Record<string, string> =>
+    props.presentation === 'form'
+        ? {}
+        : {
+              fontFamily: props.fontFamily,
+              fontSize: `${props.fontSize}pt`,
+              color: props.textColor,
+              '--document-text-align': props.textAlign,
+              '--document-table-header-background': props.tableHeaderBackground,
+              '--document-table-header-color': props.tableHeaderColor,
+          },
+);
+const textFragments = (
+    text: string,
+    attributes: Record<string, unknown> = {},
+): VNodeChild[] =>
+    (text.match(/\S+[ \t]*|[ \t]+|(?:\r\n|\r|\n)/g) ?? [text]).map(
+        (fragment, index) =>
+            /^(?:\r\n|\r|\n)$/.test(fragment)
+                ? h('br', {
+                      ...attributes,
+                      key: index,
+                      'data-page-fragment': '',
+                  })
+                : h(
+                      'span',
+                      {
+                          ...attributes,
+                          key: index,
+                          'data-page-fragment': '',
+                      },
+                      fragment,
+                  ),
+    );
+const columnGroup = (table: DocumentNode): VNodeChild => {
+    const occupied: boolean[][] = [];
+    const widths: number[] = [];
+
+    for (const [y, row] of (table.content ?? []).entries()) {
+        let x = 0;
+
+        for (const cell of row.content ?? []) {
+            while (occupied[y]?.[x]) {
+                x++;
+            }
+
+            const span = Number(cell.attrs?.colspan ?? 1);
+            const height = Number(cell.attrs?.rowspan ?? 1);
+            const values = Array.isArray(cell.attrs?.colwidth)
+                ? cell.attrs.colwidth
+                : [];
+
+            for (let column = 0; column < span; column++) {
+                if (values[column]) {
+                    widths[x + column] = Number(values[column]);
+                } else {
+                    widths[x + column] ??= 0;
+                }
+
+                for (let r = y; r < y + height; r++) {
+                    occupied[r] ??= [];
+                    occupied[r][x + column] = true;
+                }
+            }
+
+            x += span;
+        }
+    }
+
+    const resolved = widths.map(
+        (width) => width || 600 / Math.max(1, widths.length),
+    );
+    const total = resolved.reduce((sum, width) => sum + width, 0);
+
+    return h(
+        'colgroup',
+        {},
+        resolved.map((width) =>
+            h('col', { style: { width: `${(width / total) * 100}%` } }),
+        ),
+    );
+};
+const tableWithAction = (
+    table: DocumentNode,
+    content: VNodeChild[],
+): VNodeChild => {
+    const tableAction = slots['table-action'];
+    const columnCount = Math.max(
+        0,
+        ...(table.content ?? []).map((row) =>
+            (row.content ?? []).reduce(
+                (count, cell) => count + Number(cell.attrs?.colspan ?? 1),
+                0,
+            ),
+        ),
+    );
+    const repeatsHeader =
+        table.content?.[0]?.content?.every(
+            (cell) => cell.type === 'tableHeader',
+        ) === true;
+    const rendered = h(
+        'table',
+        {
+            class: 'document-table',
+            'data-wide': columnCount > 3 ? '' : undefined,
+            'data-page-repeat-header': repeatsHeader ? '' : undefined,
+        },
+        [columnGroup(table), h('tbody', {}, content)],
+    );
+
+    if (!tableAction && props.presentation !== 'form') {
+        return rendered;
+    }
+
+    return h('div', { class: 'document-table-container' }, [
+        rendered,
+        tableAction
+            ? h('div', { class: 'document-table-action' }, tableAction())
+            : null,
+    ]);
+};
+const markStyle = (
+    node: DocumentNode,
+    inheritTableTypography = false,
+): CSSProperties => {
+    const style: CSSProperties = {};
+
+    for (const mark of node.marks ?? []) {
+        if (mark.type === 'bold') {
+            style.fontWeight = 'bold';
+        }
+
+        if (mark.type === 'italic') {
+            style.fontStyle = 'italic';
+        }
+
+        if (mark.type === 'underline') {
+            style.textDecoration = 'underline';
+        }
+
+        if (mark.type === 'textStyle') {
+            const attrs = mark.attrs ?? {};
+
+            if (attrs.fontFamily && !inheritTableTypography) {
+                style.fontFamily = attrs.fontFamily;
+            }
+
+            if (attrs.fontSize && !inheritTableTypography) {
+                style.fontSize = attrs.fontSize;
+            }
+
+            if (attrs.color) {
+                style.color = attrs.color;
+            }
+        }
+    }
+
+    return style;
+};
+const cellBorder = (value: unknown): string | undefined => {
+    if (value === 'none') {
+        return '0';
+    }
+
+    if (value === 'thick') {
+        return '2px solid #7F7F7F';
+    }
+
+    return value === 'thin' ? '1px solid #7F7F7F' : undefined;
+};
+const setColumn = (context: Context, key: string, value: string | number) => {
+    const field = context.field;
+
+    if (!field) {
+        return;
+    }
+
+    const rows = (field.rows ?? []).map((row) => ({
+        id: row.id,
+        data: { ...row.data },
+    }));
+    let index = (field.rows ?? []).indexOf(context.row!);
+
+    if (index < 0) {
+        rows.push({
+            id: null,
+            data: {
+                _unit: context.unit ?? 1,
+                ...(context.role === 'unit' ? { _kind: 'unit' } : {}),
+            },
+        });
+        index = rows.length - 1;
+    }
+
+    rows[index].data[key] = value;
+    emit('rows', field.key, rows);
+};
+const addRecord = (field: DocumentField, unit: number) => {
+    const data: TableRowData = { _unit: unit };
+    const weekKey = props.layout ? planningColumns(props.layout).week : null;
+
+    if (weekKey) {
+        const used = new Set(
+            (field.rows ?? [])
+                .map((row) => Number(row.data[weekKey]))
+                .filter((week) => Number.isInteger(week) && week > 0),
+        );
+        const maximum = props.planningExpectations?.teaching_weeks ?? 52;
+        data[weekKey] =
+            Array.from({ length: maximum }, (_, index) => index + 1).find(
+                (week) => !used.has(week),
+            ) ?? '';
+    }
+
+    emit('rows', field.key, [...(field.rows ?? []), { id: null, data }]);
+};
+const addUnit = (field: DocumentField, number: number) => {
+    const data: TableRowData = { _unit: number, _kind: 'unit' };
+
+    for (const header of props.layout?.header_fields ?? []) {
+        data[header.key] = '';
+    }
+
+    emit('rows', field.key, [...(field.rows ?? []), { id: null, data }]);
+};
+const removeUnit = (field: DocumentField, number: number) =>
+    emit(
+        'rows',
+        field.key,
+        (field.rows ?? [])
+            .filter((row) => Number(row.data._unit ?? 1) !== number)
+            .map((row) => {
+                const current = Number(row.data._unit ?? 1);
+
+                return current > number
+                    ? { ...row, data: { ...row.data, _unit: current - 1 } }
+                    : row;
+            }),
+    );
+const removeRecord = (field: DocumentField, row: Row) =>
+    emit(
+        'rows',
+        field.key,
+        (field.rows ?? []).filter((item) => item !== row),
+    );
+
+const input = (
+    node: DocumentNode,
+    context: Context,
+    path: string,
+): VNodeChild => {
+    const attrs = node.attrs ?? {};
+    const key = String(attrs.key);
+    const field =
+        node.type === 'column'
+            ? context.field
+            : props.fields.find((item) => item.key === key);
+    const choice = attrs.choice;
+    const isColumn = node.type === 'column';
+    const value = isColumn
+        ? context.role === 'total'
+            ? context.totals?.[key]
+            : context.row?.data[key]
+        : field?.value;
+    const canEdit =
+        props.editable &&
+        field &&
+        !field.inherited &&
+        field.teacher_editable !== false &&
+        context.role !== 'total';
+    const label = String(attrs.label ?? field?.label ?? 'Contenido');
+    const kind = isColumn
+        ? String(attrs.kind)
+        : (field?.type ?? String(attrs.kind));
+    const change = (value: string | number | boolean) => {
+        if (!canEdit) {
+            return;
+        }
+
+        if (isColumn) {
+            setColumn(
+                context,
+                key,
+                value === ''
+                    ? ''
+                    : kind === 'numero'
+                      ? Number(value)
+                      : String(value),
+            );
+        } else {
+            emit('value', key, value);
+        }
+    };
+    const style = markStyle(node, context.insideCell === true);
+    const text = displayDocumentValue(value);
+
+    if (!canEdit) {
+        if (attrs.listStyle) {
+            const items =
+                field?.type === 'repetible' && !isColumn
+                    ? (field.rows ?? []).map((row) =>
+                          displayDocumentValue(row.data.texto),
+                      )
+                    : text.split(/\r?\n/).filter((line) => line.trim());
+
+            return h(
+                attrs.listStyle === 'number' ? 'ol' : 'ul',
+                { style },
+                (items.length || !props.preview ? items : [label]).map((item) =>
+                    h('li', {}, item),
+                ),
+            );
+        }
+
+        const content = choice
+            ? text === choice
+                ? 'X'
+                : ''
+            : field?.type === 'repetible' && !isColumn
+              ? (field.rows ?? [])
+                    .map((row) => displayDocumentValue(row.data.texto))
+                    .join('\n')
+              : text;
+
+        return h(
+            'span',
+            { class: 'contents' },
+            textFragments(content || (props.preview && !choice ? label : ''), {
+                style,
+                class: 'document-value',
+            }),
+        );
+    }
+
+    const attributes = {
+        id: `${prefix}-${path}`,
+        'aria-label': label,
+        'aria-required': field.required ?? true,
+        class: 'document-input',
+        style,
+    };
+
+    if (choice) {
+        return h(
+            Button,
+            {
+                type: 'button',
+                variant: 'ghost',
+                size: 'sm',
+                'aria-label': `${label}: ${choice}`,
+                'aria-pressed': text === choice,
+                onClick: () => change(String(choice)),
+            },
+            () => (text === choice ? 'X' : '□'),
+        );
+    }
+
+    if (!isColumn && kind === 'repetible') {
+        const rows = field.rows ?? [];
+
+        return h('div', { class: 'flex flex-col gap-2', style }, [
+            ...rows.map((row, index) =>
+                h(
+                    'div',
+                    { class: 'flex items-start gap-1', key: row.id ?? index },
+                    [
+                        h(Textarea, {
+                            ...attributes,
+                            id: `${prefix}-${path}-${index}`,
+                            modelValue: String(row.data.texto ?? ''),
+                            placeholder: `Ej. ${label}`,
+                            'onUpdate:modelValue': (value: string | number) =>
+                                emit(
+                                    'rows',
+                                    key,
+                                    rows.map((item, i) =>
+                                        i === index
+                                            ? {
+                                                  ...item,
+                                                  data: {
+                                                      ...item.data,
+                                                      texto: String(value),
+                                                  },
+                                              }
+                                            : item,
+                                    ),
+                                ),
+                        }),
+                        h(
+                            Button,
+                            {
+                                variant: 'ghost',
+                                type: 'button',
+                                'aria-label': `Quitar elemento ${index + 1}`,
+                                onClick: () => removeRecord(field, row),
+                            },
+                            () => 'Quitar',
+                        ),
+                    ],
+                ),
+            ),
+            h(
+                Button,
+                {
+                    variant: 'outline',
+                    type: 'button',
+                    class: 'self-start',
+                    onClick: () =>
+                        emit('rows', key, [
+                            ...rows,
+                            { id: null, data: { texto: '' } },
+                        ]),
+                },
+                () => 'Agregar elemento',
+            ),
+        ]);
+    }
+
+    if (kind === 'seleccion_unica') {
+        return h(
+            Select,
+            {
+                modelValue: text,
+                'onUpdate:modelValue': (value) => change(String(value)),
+            },
+            () => [
+                h(SelectTrigger, attributes, () =>
+                    h(SelectValue, { placeholder: 'Seleccione' }),
+                ),
+                h(SelectContent, {}, () =>
+                    h(SelectGroup, {}, () =>
+                        (field.options ?? []).map((option) =>
+                            h(
+                                SelectItem,
+                                { value: option.value, key: option.value },
+                                () => option.label,
+                            ),
+                        ),
+                    ),
+                ),
+            ],
+        );
+    }
+
+    const control =
+        !attrs.listStyle && ['numero', 'fecha', 'texto_corto'].includes(kind)
+            ? Input
+            : Textarea;
+    const columnRole = isColumn
+        ? props.layout?.columns.find((column) => column.key === key)?.role
+        : null;
+
+    return h(control, {
+        ...attributes,
+        modelValue: text,
+        type: kind === 'numero' ? 'number' : kind === 'fecha' ? 'date' : 'text',
+        step:
+            columnRole === 'week'
+                ? 1
+                : columnRole?.startsWith('hours_')
+                  ? 0.01
+                  : undefined,
+        min: columnRole ? 0 : undefined,
+        max:
+            columnRole === 'week'
+                ? (props.planningExpectations?.teaching_weeks ?? 52)
+                : undefined,
+        placeholder: attrs.listStyle
+            ? `Ej. ${label}: un elemento por línea`
+            : `Ej. ${label}`,
+        'onUpdate:modelValue': change,
+    });
+};
+
+const draw = (
+    node: DocumentNode,
+    context: Context = {},
+    path = 'doc',
+): VNodeChild => {
+    const attrs = node.attrs ?? {};
+    const children = () =>
+        (node.content ?? []).map((child, index) =>
+            draw(child, context, `${path}-${index}`),
+        );
+
+    if (node.type === 'text') {
+        return textFragments(node.text ?? '', {
+            style: markStyle(node, context.insideCell === true),
+        });
+    }
+
+    if (node.type === 'hardBreak') {
+        return h('br');
+    }
+
+    if (node.type === 'variable') {
+        return h(
+            'span',
+            {
+                style: markStyle(node, context.insideCell === true),
+                'data-variable': String(attrs.id),
+                'data-page-fragment': '',
+                class: 'document-variable',
+            },
+            props.variables[String(attrs.id)] ??
+                (props.preview ? `@${attrs.id}` : ''),
+        );
+    }
+
+    if (['field', 'column'].includes(node.type)) {
+        return input(node, context, path);
+    }
+
+    if (node.type === 'paragraph') {
+        return h(
+            'div',
+            {
+                class: 'document-paragraph',
+                style: {
+                    textAlign: String(
+                        context.cellTextAlign ??
+                            attrs.textAlign ??
+                            (context.insideCell ? 'left' : props.textAlign),
+                    ),
+                },
+                'data-page-unit': '',
+                'data-page-flow-through':
+                    !props.editable && !context.insideCell ? '' : undefined,
+            },
+            children(),
+        );
+    }
+
+    if (node.type === 'table' && attrs.repeatKey && props.layout) {
+        const field = props.fields.find(
+            (field) => field.key === attrs.repeatKey,
+        );
+
+        if (!field) {
+            return null;
+        }
+
+        const layout = props.layout;
+        const grouped = groupByUnit(field.rows ?? [], layout.repeat.enabled);
+        const units = grouped.length
+            ? grouped
+            : [{ number: 1, header: null, rows: [] }];
+        const tables = units.map((unit) => {
+            const totals: TableRowData = {};
+
+            for (const column of layout.columns) {
+                if (column.type === 'number' && column.sum !== false) {
+                    totals[column.key] = formatSum(
+                        sumColumn(
+                            unit.rows.map((row) => row.data),
+                            column.key,
+                        ),
+                    );
+                }
+            }
+
+            const content: VNodeChild[] = [];
+            const designRows = node.content ?? [];
+
+            for (let index = 0; index < designRows.length; index++) {
+                const source = designRows[index];
+                const role = String(source.attrs?.rowRole ?? 'fixed');
+
+                if (role === 'record') {
+                    const group = [source];
+
+                    while (designRows[index + 1]?.attrs?.rowRole === 'record') {
+                        group.push(designRows[++index]);
+                    }
+
+                    for (const [rowIndex, record] of (unit.rows.length
+                        ? unit.rows
+                        : [null]
+                    ).entries()) {
+                        group.forEach((row, offset) =>
+                            content.push(
+                                draw(
+                                    row,
+                                    {
+                                        field,
+                                        row: record ?? undefined,
+                                        role,
+                                        unit: unit.number,
+                                    },
+                                    `${path}-u${unit.number}-r${rowIndex}-${offset}`,
+                                ),
+                            ),
+                        );
+                    }
+                } else {
+                    content.push(
+                        draw(
+                            source,
+                            {
+                                field,
+                                row: unit.header ?? undefined,
+                                role,
+                                unit: unit.number,
+                                totals,
+                            },
+                            `${path}-u${unit.number}-${index}`,
+                        ),
+                    );
+                }
+            }
+
+            return h(
+                'div',
+                { class: 'document-repeat-unit', key: unit.number },
+                [
+                    layout.repeat.enabled
+                        ? h(
+                              'p',
+                              { class: 'font-bold', 'data-page-keep-next': '' },
+                              `${layout.repeat.label} ${unit.number}`,
+                          )
+                        : null,
+                    tableWithAction(node, content),
+                    props.editable
+                        ? h('div', { class: 'flex flex-wrap gap-2 py-2' }, [
+                              h(
+                                  Button,
+                                  {
+                                      type: 'button',
+                                      variant: 'outline',
+                                      onClick: () =>
+                                          addRecord(field, unit.number),
+                                  },
+                                  () => 'Agregar fila de datos',
+                              ),
+                              ...(layout.repeat.enabled && units.length > 1
+                                  ? [
+                                        h(
+                                            Button,
+                                            {
+                                                type: 'button',
+                                                variant: 'ghost',
+                                                onClick: () =>
+                                                    removeUnit(
+                                                        field,
+                                                        unit.number,
+                                                    ),
+                                            },
+                                            () =>
+                                                `Quitar ${layout.repeat.label.toLowerCase()}`,
+                                        ),
+                                    ]
+                                  : []),
+                              ...unit.rows.map((row, i) =>
+                                  h(
+                                      Button,
+                                      {
+                                          type: 'button',
+                                          variant: 'ghost',
+                                          onClick: () =>
+                                              removeRecord(field, row),
+                                      },
+                                      () => `Quitar fila ${i + 1}`,
+                                  ),
+                              ),
+                          ])
+                        : null,
+                ],
+            );
+        });
+
+        tables.push(
+            h(PlanningSummary, {
+                layout,
+                rows: (field.rows ?? []).map((row) => row.data),
+                expectations: props.planningExpectations,
+            }),
+        );
+
+        if (props.editable && layout.repeat.enabled) {
+            tables.push(
+                h(
+                    Button,
+                    {
+                        type: 'button',
+                        variant: 'outline',
+                        onClick: () =>
+                            addUnit(
+                                field,
+                                Math.max(...units.map((unit) => unit.number)) +
+                                    1,
+                            ),
+                    },
+                    () => 'Agregar unidad',
+                ),
+            );
+        }
+
+        return h('div', { class: 'flex flex-col gap-3' }, tables);
+    }
+
+    if (node.type === 'table') {
+        return tableWithAction(node, children());
+    }
+
+    if (node.type === 'tableRow') {
+        return h(
+            'tr',
+            attrs.rowRole ? { 'data-row-role': String(attrs.rowRole) } : {},
+            children(),
+        );
+    }
+
+    if (node.type === 'tableCell' || node.type === 'tableHeader') {
+        const textColor =
+            typeof attrs.textColor === 'string' ? attrs.textColor : undefined;
+        const textAlign =
+            typeof attrs.textAlign === 'string' ? attrs.textAlign : undefined;
+        const fontSize =
+            typeof attrs.fontSize === 'string' &&
+            /^(?:[7-9]|[12][0-9]|3[0-6])pt$/.test(attrs.fontSize)
+                ? attrs.fontSize
+                : undefined;
+
+        const cellContext = {
+            ...context,
+            insideCell: true,
+            cellTextAlign: textAlign,
+        };
+
+        return h(
+            node.type === 'tableCell' ? 'td' : 'th',
+            {
+                colspan: Number(attrs.colspan ?? 1),
+                rowspan: Number(attrs.rowspan ?? 1),
+                'data-cell-text-color': textColor ? '' : undefined,
+                'data-cell-text-align': textAlign ? '' : undefined,
+                'data-cell-font-size': fontSize ? '' : undefined,
+                'data-cell-bold':
+                    typeof attrs.bold === 'boolean'
+                        ? String(attrs.bold)
+                        : undefined,
+                'data-cell-italic':
+                    typeof attrs.italic === 'boolean'
+                        ? String(attrs.italic)
+                        : undefined,
+                style: {
+                    backgroundColor:
+                        props.presentation === 'document'
+                            ? attrs.backgroundColor || undefined
+                            : undefined,
+                    color:
+                        props.presentation === 'document'
+                            ? textColor
+                            : undefined,
+                    textAlign,
+                    fontSize:
+                        props.presentation === 'document'
+                            ? fontSize
+                            : undefined,
+                    fontWeight:
+                        props.presentation === 'document' &&
+                        typeof attrs.bold === 'boolean'
+                            ? attrs.bold
+                                ? '700'
+                                : '400'
+                            : undefined,
+                    fontStyle:
+                        props.presentation === 'document' &&
+                        typeof attrs.italic === 'boolean'
+                            ? attrs.italic
+                                ? 'italic'
+                                : 'normal'
+                            : undefined,
+                    border:
+                        props.presentation === 'document'
+                            ? cellBorder(attrs.borderStyle)
+                            : undefined,
+                },
+            },
+            (node.content ?? []).map((child, index) =>
+                draw(child, cellContext, `${path}-${index}`),
+            ),
+        );
+    }
+
+    const tag =
+        { bulletList: 'ul', orderedList: 'ol', listItem: 'li' }[node.type] ??
+        'div';
+
+    return h(tag, {}, children());
+};
+const Content = defineComponent({ setup: () => () => draw(props.document) });
+</script>
+
+<template>
+    <div
+        class="template-document-view"
+        :data-preview="preview || undefined"
+        :data-themed="preview || undefined"
+        :data-presentation="presentation"
+        :style="documentStyle"
+    >
+        <Content />
+    </div>
+</template>
+
+<style scoped>
+.template-document-view {
+    color: #000;
+    background: #fff;
+    overflow-wrap: anywhere;
+}
+.template-document-view[data-preview] {
+    /* The page surfaces supply white; the space between them stays transparent. */
+    background: transparent;
+}
+.template-document-view :deep(.document-paragraph) {
+    margin: 0 0 8px;
+    min-height: 1em;
+    white-space: pre-wrap;
+}
+.template-document-view[data-themed] :deep(.document-paragraph) {
+    text-align: var(--document-text-align) !important;
+}
+.template-document-view[data-themed]
+    :deep([data-cell-text-align] .document-paragraph) {
+    text-align: inherit !important;
+}
+.template-document-view :deep(.document-table) {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    margin: 8px 0;
+}
+.template-document-view :deep(.document-table-container) {
+    position: relative;
+}
+.template-document-view :deep(.document-table-action) {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 150ms ease;
+}
+.template-document-view
+    :deep(.document-table-container:hover .document-table-action),
+.template-document-view
+    :deep(.document-table-container:focus-within .document-table-action) {
+    pointer-events: auto;
+    opacity: 1;
+}
+.template-document-view :deep(td),
+.template-document-view :deep(th) {
+    border: 1px solid #7f7f7f;
+    padding: 2px 4px;
+    vertical-align: middle;
+    font-weight: normal;
+}
+.template-document-view :deep(.document-table td *),
+.template-document-view :deep(.document-table th *) {
+    font-family: inherit !important;
+    font-size: inherit !important;
+}
+.template-document-view :deep(td .document-paragraph),
+.template-document-view :deep(th .document-paragraph) {
+    margin: 0;
+}
+.template-document-view[data-themed]
+    :deep(.document-table > tbody > tr[data-row-role='unit'] > *),
+.template-document-view[data-themed] :deep(.document-table th) {
+    color: var(--document-table-header-color);
+    background-color: var(--document-table-header-background);
+}
+.template-document-view[data-themed]
+    :deep(
+        .document-table
+            > tbody
+            > tr[data-row-role='unit']
+            > :not([data-cell-text-color])
+            *,
+        .document-table th:not([data-cell-text-color]) *
+    ) {
+    color: var(--document-table-header-color) !important;
+}
+.template-document-view :deep([data-cell-text-color] *) {
+    color: inherit !important;
+}
+.template-document-view :deep([data-cell-bold='true'] *) {
+    font-weight: 700 !important;
+}
+.template-document-view :deep([data-cell-bold='false'] *) {
+    font-weight: 400 !important;
+}
+.template-document-view :deep([data-cell-italic='true'] *) {
+    font-style: italic !important;
+}
+.template-document-view :deep([data-cell-italic='false'] *) {
+    font-style: normal !important;
+}
+.template-document-view :deep(.document-input) {
+    font: inherit;
+    color: inherit;
+    min-height: 1.5em;
+    height: auto;
+    padding: 2px;
+    background: transparent;
+    width: 100%;
+}
+.template-document-view :deep(ul) {
+    list-style: disc;
+    padding-left: 24px;
+}
+.template-document-view :deep(ol) {
+    list-style: decimal;
+    padding-left: 24px;
+}
+.template-document-view[data-presentation='form'] {
+    color: var(--foreground);
+    background: transparent;
+    font-family: inherit;
+    font-size: 0.875rem;
+}
+.template-document-view[data-presentation='form']
+    :deep(.document-table-container) {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    scrollbar-color: var(--border) transparent;
+    scrollbar-width: thin;
+}
+.template-document-view[data-presentation='form'] :deep(.document-table) {
+    margin: 0;
+}
+.template-document-view[data-presentation='form']
+    :deep(.document-table[data-wide]) {
+    min-width: 64rem;
+}
+.template-document-view[data-presentation='form'] :deep(td),
+.template-document-view[data-presentation='form'] :deep(th) {
+    padding: 0.5rem;
+    border: 0 !important;
+    border-right: 1px solid var(--border) !important;
+    border-bottom: 1px solid var(--border) !important;
+    color: var(--foreground) !important;
+    background: var(--card) !important;
+    font-family: inherit !important;
+    font-size: 0.875rem !important;
+}
+.template-document-view[data-presentation='form'] :deep(tr:last-child > *) {
+    border-bottom: 0 !important;
+}
+.template-document-view[data-presentation='form'] :deep(tr > :last-child) {
+    border-right: 0 !important;
+}
+.template-document-view[data-presentation='form'] :deep(.document-table th),
+.template-document-view[data-presentation='form']
+    :deep(.document-table > tbody > tr[data-row-role='unit'] > *),
+.template-document-view[data-presentation='form']
+    :deep(.document-table > tbody > tr[data-row-role='total'] > *) {
+    color: var(--foreground) !important;
+    background: var(--muted) !important;
+    font-weight: 600 !important;
+}
+.template-document-view[data-presentation='form']
+    :deep(.document-table :is(td, th) *) {
+    color: inherit !important;
+    font-family: inherit !important;
+    font-size: inherit !important;
+}
+.template-document-view[data-presentation='form'] :deep(.document-input) {
+    min-height: 2.25rem;
+    padding: 0.5rem 0.75rem;
+    color: var(--foreground);
+    background: var(--background);
+}
+.template-document-view[data-presentation='form']
+    :deep(textarea.document-input) {
+    min-height: 4rem;
+}
+</style>
+

@@ -1,8 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { closeDeviceSession, closeOtherDeviceSessions, confirmTwoFactor, disableTwoFactor, enableTwoFactor, getDeviceSessions, getTwoFactorStatus, regenerateRecoveryCodes, updatePassword, type DeviceSession, type TwoFactorStatus } from '@/api/session';
 import { sessionState } from '@/state/session';
+import Heading from '@/components/Heading.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import SettingsLayout from '@/layouts/SettingsLayout.vue';
 
 const status = ref<TwoFactorStatus | null>(null);
 const sessions = ref<DeviceSession[]>([]);
@@ -18,8 +26,6 @@ const error = ref<string | null>(null);
 const message = ref<string | null>(null);
 const loading = ref(true);
 const pending = ref(false);
-const user = computed(() => sessionState.current.value?.user);
-const activeRole = computed(() => sessionState.current.value?.active_role);
 const formatDate = (value: string): string => new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 const report = (reason: unknown, fallback: string): void => { error.value = reason instanceof ApiError ? reason.message : fallback; };
 const loadSessions = async (): Promise<void> => { sessions.value = (await getDeviceSessions()).sessions; };
@@ -73,12 +79,25 @@ onMounted(load);
 </script>
 
 <template>
-  <main class="app-page settings-page">
-    <header class="app-header"><div><p class="eyebrow">Configuración</p><h1>Cuenta y seguridad</h1></div></header>
-    <p v-if="message" class="feedback success" role="status">{{ message }}</p><p v-if="error" class="feedback error" role="alert">{{ error }}</p><p v-if="loading" role="status">Cargando configuración de seguridad…</p>
-    <section class="settings-section"><header><h2>Perfil institucional</h2><p>Su identidad solo puede ser modificada por Administración.</p></header><dl class="profile-details"><div><dt>Nombre</dt><dd>{{ user?.name }}</dd></div><div><dt>Correo</dt><dd>{{ user?.email }}</dd></div><div><dt>Ámbito activo</dt><dd>{{ activeRole?.career_name ?? activeRole?.code }}</dd></div></dl></section>
-    <section class="settings-section"><header><h2>Contraseña</h2><p>Use una contraseña distinta a la actual.</p></header><form class="editor-form settings-form" @submit.prevent="changePassword"><label>Contraseña actual <input v-model="currentPassword" type="password" autocomplete="current-password" required /></label><label>Contraseña nueva <input v-model="newPassword" type="password" autocomplete="new-password" required /></label><label>Confirmar contraseña nueva <input v-model="passwordConfirmation" type="password" autocomplete="new-password" required /></label><button :disabled="pending" type="submit">Actualizar contraseña</button></form></section>
-    <section class="settings-section"><header><h2>Verificación en dos pasos</h2><p>{{ status?.enabled ? 'Está activa.' : 'Proteja su cuenta con una aplicación autenticadora.' }}</p></header><button v-if="status && !status.enabled && !status.confirmation_required" :disabled="pending" type="button" @click="enable">Configurar segundo factor</button><div v-if="status?.confirmation_required" class="settings-form"><div v-if="qrCodeSvg" class="qr-code" v-html="qrCodeSvg"></div><label>Código de confirmación <input v-model="confirmationCode" inputmode="numeric" autocomplete="one-time-code" /></label><button :disabled="pending" type="button" @click="confirm">Confirmar segundo factor</button></div><div v-if="status?.enabled" class="settings-form"><label>Contraseña actual para generar códigos nuevos <input v-model="recoveryPassword" type="password" autocomplete="current-password" /></label><div class="header-actions"><button :disabled="pending || !recoveryPassword" type="button" @click="regenerate">Regenerar códigos</button><button :disabled="pending" type="button" @click="disable">Desactivar segundo factor</button></div></div><div v-if="recoveryCodes.length" class="recovery-codes"><h3>Códigos de recuperación nuevos</h3><p>Guárdelos ahora; no volverán a mostrarse.</p><code v-for="code in recoveryCodes" :key="code">{{ code }}</code></div></section>
-    <section class="settings-section"><header><h2>Sesiones abiertas</h2><p>Revise dónde está abierta su cuenta y cierre accesos que no reconozca.</p></header><div class="session-list"><article v-for="deviceSession in sessions" :key="deviceSession.id"><div><strong>{{ deviceSession.device }}</strong><p>{{ deviceSession.ip_address ?? 'IP no disponible' }} · {{ formatDate(deviceSession.last_activity) }}</p></div><span v-if="deviceSession.current" class="role-badge">Esta sesión</span><button v-else type="button" @click="closeSession(deviceSession.id)">Cerrar</button></article></div><form v-if="sessions.some((item) => !item.current)" class="editor-form settings-form" @submit.prevent="closeOthers"><label>Contraseña actual <input v-model="sessionsPassword" type="password" autocomplete="current-password" required /></label><button :disabled="pending" type="submit">Cerrar las demás sesiones</button></form></section>
-  </main>
+  <SettingsLayout>
+    <p v-if="message" class="text-sm text-foreground" role="status">{{ message }}</p><p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p><p v-if="loading" class="text-sm text-muted-foreground" role="status">Cargando configuración de seguridad…</p>
+    <div class="space-y-6"><Heading variant="small" title="Actualizar contraseña" description="Use una contraseña larga y única para proteger su cuenta" />
+      <form class="space-y-6" @submit.prevent="changePassword">
+        <div class="grid gap-2"><Label for="current-password" required>Contraseña actual</Label><PasswordInput id="current-password" v-model="currentPassword" autocomplete="current-password" required /></div>
+        <div class="grid gap-2"><Label for="new-password-security" required>Contraseña nueva</Label><PasswordInput id="new-password-security" v-model="newPassword" autocomplete="new-password" required /></div>
+        <div class="grid gap-2"><Label for="confirm-password-security" required>Confirmar contraseña</Label><PasswordInput id="confirm-password-security" v-model="passwordConfirmation" autocomplete="new-password" required /></div>
+        <Button :disabled="pending" type="submit">Guardar</Button>
+      </form>
+    </div>
+    <div class="space-y-6"><Heading variant="small" title="Verificación en dos pasos" :description="status?.enabled ? 'Está activa.' : 'Proteja su cuenta con una aplicación autenticadora.'" />
+      <Button v-if="status && !status.enabled && !status.confirmation_required" :disabled="pending" type="button" @click="enable">Configurar segundo factor</Button>
+      <div v-if="status?.confirmation_required" class="space-y-4"><div v-if="qrCodeSvg" class="w-fit rounded-lg border bg-white p-4" v-html="qrCodeSvg"></div><div class="grid gap-2"><Label for="confirmation-code">Código de confirmación</Label><Input id="confirmation-code" v-model="confirmationCode" inputmode="numeric" autocomplete="one-time-code" /></div><Button :disabled="pending" type="button" @click="confirm">Confirmar segundo factor</Button></div>
+      <div v-if="status?.enabled" class="space-y-4"><div class="grid gap-2"><Label for="recovery-password">Contraseña actual para generar códigos nuevos</Label><PasswordInput id="recovery-password" v-model="recoveryPassword" autocomplete="current-password" /></div><div class="flex flex-wrap gap-2"><Button :disabled="pending || !recoveryPassword" type="button" @click="regenerate">Regenerar códigos</Button><Button :disabled="pending" type="button" variant="destructive" @click="disable">Desactivar segundo factor</Button></div></div>
+      <Card v-if="recoveryCodes.length"><CardContent class="space-y-3"><h3 class="font-medium">Códigos de recuperación nuevos</h3><p class="text-sm text-muted-foreground">Guárdelos ahora; no volverán a mostrarse.</p><div class="grid gap-1 font-mono text-sm"><code v-for="code in recoveryCodes" :key="code">{{ code }}</code></div></CardContent></Card>
+    </div>
+    <div class="space-y-6"><Heading variant="small" title="Sesiones abiertas" description="Revise dónde está abierta su cuenta y cierre accesos que no reconozca." />
+      <div class="space-y-3"><article v-for="deviceSession in sessions" :key="deviceSession.id" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4"><div><strong class="text-sm">{{ deviceSession.device }}</strong><p class="text-xs text-muted-foreground">{{ deviceSession.ip_address ?? 'IP no disponible' }} · {{ formatDate(deviceSession.last_activity) }}</p></div><Badge v-if="deviceSession.current" variant="secondary">Esta sesión</Badge><Button v-else type="button" size="sm" variant="outline" @click="closeSession(deviceSession.id)">Cerrar</Button></article></div>
+      <form v-if="sessions.some((item) => !item.current)" class="space-y-4" @submit.prevent="closeOthers"><div class="grid gap-2"><Label for="sessions-password">Contraseña actual</Label><PasswordInput id="sessions-password" v-model="sessionsPassword" autocomplete="current-password" required /></div><Button :disabled="pending" type="submit" variant="outline">Cerrar las demás sesiones</Button></form>
+    </div>
+  </SettingsLayout>
 </template>

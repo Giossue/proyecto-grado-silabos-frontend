@@ -5,9 +5,15 @@ import TwoFactorChallengePage from '@/pages/TwoFactorChallengePage.vue';
 import { completeTwoFactorLogin, getSession, login } from '@/api/session';
 import { sessionState } from '@/state/session';
 
-const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
+const { replace, route } = vi.hoisted(() => ({
+  replace: vi.fn(),
+  route: { query: {} },
+}));
 
-vi.mock('vue-router', () => ({ useRouter: () => ({ replace }) }));
+vi.mock('vue-router', () => ({
+  useRoute: () => route,
+  useRouter: () => ({ replace }),
+}));
 vi.mock('@/api/session', () => ({
   login: vi.fn(),
   completeTwoFactorLogin: vi.fn(),

@@ -1,10 +1,16 @@
 <script setup lang="ts">
 import { reactive, watch } from "vue";
+import { ArrowLeft, ArrowRight, Plus, Trash2 } from "@lucide/vue";
 import type {
   TemplateNamedItem,
   TemplateTableColumn,
   TemplateTableLayout,
 } from "@/api/template";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 
 const props = defineProps<{
   layout: TemplateTableLayout;
@@ -84,60 +90,60 @@ const save = (): void => {
 </script>
 
 <template>
-  <section class="table-designer" aria-label="Diseño de tabla">
-    <header>
-      <div>
-        <h4>Estructura de la tabla</h4>
-        <p>Configure lo que verá y completará el docente, sin editar código.</p>
+  <section class="grid gap-5 border-t pt-5" aria-label="Diseño de tabla">
+    <header class="flex flex-wrap items-start justify-between gap-3">
+      <div class="grid gap-1">
+        <h4 class="font-medium">Estructura de la tabla</h4>
+        <p class="text-sm text-muted-foreground">Configure lo que verá y completará el docente, sin editar código.</p>
       </div>
-      <button type="button" :disabled="disabled" @click="addColumn">Agregar columna</button>
+      <Button type="button" size="sm" variant="outline" :disabled="disabled" @click="addColumn"><Plus aria-hidden="true" />Agregar columna</Button>
     </header>
 
-    <div class="table-designer-list">
-      <article v-for="(column, index) in form.columns" :key="`${column.key}-${index}`" class="table-column-card">
-        <div class="table-column-order">
+    <div class="grid gap-4">
+      <article v-for="(column, index) in form.columns" :key="`${column.key}-${index}`" class="table-column-card grid gap-4 rounded-lg border p-4">
+        <div class="table-column-order flex flex-wrap items-center gap-2">
           <strong>Columna {{ index + 1 }}</strong>
-          <button type="button" aria-label="Mover columna a la izquierda" :disabled="disabled || index === 0" @click="moveColumn(index, -1)">←</button>
-          <button type="button" aria-label="Mover columna a la derecha" :disabled="disabled || index === form.columns.length - 1" @click="moveColumn(index, 1)">→</button>
-          <button type="button" :disabled="disabled || form.columns.length === 1" @click="form.columns.splice(index, 1)">Eliminar</button>
+          <Button class="ml-auto" type="button" size="icon-sm" variant="ghost" aria-label="Mover columna a la izquierda" :disabled="disabled || index === 0" @click="moveColumn(index, -1)"><ArrowLeft aria-hidden="true" /></Button>
+          <Button type="button" size="icon-sm" variant="ghost" aria-label="Mover columna a la derecha" :disabled="disabled || index === form.columns.length - 1" @click="moveColumn(index, 1)"><ArrowRight aria-hidden="true" /></Button>
+          <Button type="button" size="icon-sm" variant="ghost" aria-label="Eliminar columna" :disabled="disabled || form.columns.length === 1" @click="form.columns.splice(index, 1)"><Trash2 aria-hidden="true" /></Button>
         </div>
-        <div class="form-grid">
-          <label>Nombre<input v-model="column.label" required maxlength="180" :disabled="disabled" /></label>
-          <label>Clave<input v-model="column.key" required maxlength="60" pattern="[a-z][a-z0-9_]*" :disabled="disabled" /></label>
-          <label>Tipo<select v-model="column.type" :disabled="disabled"><option value="text">Texto</option><option value="number">Número</option></select></label>
-          <label>Grupo<select v-model="column.group" :disabled="disabled"><option :value="null">Sin grupo</option><option v-for="group in form.groups" :key="group.key" :value="group.key">{{ group.label }}</option></select></label>
-          <label>Banda superior<select v-model="column.band" :disabled="disabled"><option :value="null">Sin banda</option><option v-for="band in form.bands" :key="band.key" :value="band.key">{{ band.label }}</option></select></label>
-          <label>Función<select v-model="column.role" :disabled="disabled || column.type !== 'number'"><option :value="null">Normal</option><option value="week">Semana</option><option value="hours_acd">Horas ACD</option><option value="hours_ape">Horas APE</option><option value="hours_aa">Horas AA</option></select></label>
-          <label>Ancho relativo<input v-model.number="column.width" type="number" min="1" max="10000" placeholder="Automático" :disabled="disabled" /></label>
-          <label v-if="column.type === 'number'" class="checkbox-row"><input v-model="column.sum" type="checkbox" :disabled="disabled" /> Sumar en totales</label>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <Field><FieldLabel required>Nombre</FieldLabel><Input v-model="column.label" required maxlength="180" :disabled="disabled" /></Field>
+          <Field><FieldLabel required>Clave</FieldLabel><Input v-model="column.key" required maxlength="60" pattern="[a-z][a-z0-9_]*" :disabled="disabled" /></Field>
+          <Field><FieldLabel>Tipo</FieldLabel><NativeSelect v-model="column.type" class="w-full" :disabled="disabled"><NativeSelectOption value="text">Texto</NativeSelectOption><NativeSelectOption value="number">Número</NativeSelectOption></NativeSelect></Field>
+          <Field><FieldLabel>Grupo</FieldLabel><NativeSelect v-model="column.group" class="w-full" :disabled="disabled"><NativeSelectOption :value="null">Sin grupo</NativeSelectOption><NativeSelectOption v-for="group in form.groups" :key="group.key" :value="group.key">{{ group.label }}</NativeSelectOption></NativeSelect></Field>
+          <Field><FieldLabel>Banda superior</FieldLabel><NativeSelect v-model="column.band" class="w-full" :disabled="disabled"><NativeSelectOption :value="null">Sin banda</NativeSelectOption><NativeSelectOption v-for="band in form.bands" :key="band.key" :value="band.key">{{ band.label }}</NativeSelectOption></NativeSelect></Field>
+          <Field><FieldLabel>Función</FieldLabel><NativeSelect v-model="column.role" class="w-full" :disabled="disabled || column.type !== 'number'"><NativeSelectOption :value="null">Normal</NativeSelectOption><NativeSelectOption value="week">Semana</NativeSelectOption><NativeSelectOption value="hours_acd">Horas ACD</NativeSelectOption><NativeSelectOption value="hours_ape">Horas APE</NativeSelectOption><NativeSelectOption value="hours_aa">Horas AA</NativeSelectOption></NativeSelect></Field>
+          <Field><FieldLabel>Ancho relativo</FieldLabel><Input :model-value="column.width ?? undefined" type="number" min="1" max="10000" placeholder="Automático" :disabled="disabled" @update:model-value="column.width = $event === '' || $event === undefined ? null : Number($event)" /></Field>
+          <Field v-if="column.type === 'number'" orientation="horizontal" class="checkbox-row items-center"><Checkbox v-model="column.sum" :disabled="disabled" /><FieldLabel>Sumar en totales</FieldLabel></Field>
         </div>
       </article>
     </div>
 
-    <div class="table-designer-options">
-      <fieldset>
-        <legend>Grupos de columnas</legend>
-        <div v-for="(group, index) in form.groups" :key="`${group.key}-${index}`" class="inline-editor"><input v-model="group.label" aria-label="Nombre del grupo" :disabled="disabled" /><input v-model="group.key" aria-label="Clave del grupo" pattern="[a-z][a-z0-9_]*" :disabled="disabled" /><button type="button" :disabled="disabled" @click="removeNamed(form.groups, index, 'group')">Quitar</button></div>
-        <button type="button" :disabled="disabled" @click="addNamed(form.groups, 'grupo', 'Nuevo grupo')">Agregar grupo</button>
+    <div class="grid gap-4 lg:grid-cols-3">
+      <fieldset class="grid content-start gap-3 rounded-lg border p-4">
+        <legend class="px-1 text-sm font-medium">Grupos de columnas</legend>
+        <div v-for="(group, index) in form.groups" :key="`${group.key}-${index}`" class="grid gap-2"><Input v-model="group.label" aria-label="Nombre del grupo" :disabled="disabled" /><Input v-model="group.key" aria-label="Clave del grupo" pattern="[a-z][a-z0-9_]*" :disabled="disabled" /><Button type="button" size="sm" variant="ghost" :disabled="disabled" @click="removeNamed(form.groups, index, 'group')">Quitar</Button></div>
+        <Button type="button" size="sm" variant="outline" :disabled="disabled" @click="addNamed(form.groups, 'grupo', 'Nuevo grupo')"><Plus aria-hidden="true" />Agregar grupo</Button>
       </fieldset>
-      <fieldset>
-        <legend>Bandas superiores</legend>
-        <div v-for="(band, index) in form.bands" :key="`${band.key}-${index}`" class="inline-editor"><input v-model="band.label" aria-label="Nombre de la banda" :disabled="disabled" /><input v-model="band.key" aria-label="Clave de la banda" pattern="[a-z][a-z0-9_]*" :disabled="disabled" /><button type="button" :disabled="disabled" @click="removeNamed(form.bands, index, 'band')">Quitar</button></div>
-        <button type="button" :disabled="disabled" @click="addNamed(form.bands, 'banda', 'Nueva banda')">Agregar banda</button>
+      <fieldset class="grid content-start gap-3 rounded-lg border p-4">
+        <legend class="px-1 text-sm font-medium">Bandas superiores</legend>
+        <div v-for="(band, index) in form.bands" :key="`${band.key}-${index}`" class="grid gap-2"><Input v-model="band.label" aria-label="Nombre de la banda" :disabled="disabled" /><Input v-model="band.key" aria-label="Clave de la banda" pattern="[a-z][a-z0-9_]*" :disabled="disabled" /><Button type="button" size="sm" variant="ghost" :disabled="disabled" @click="removeNamed(form.bands, index, 'band')">Quitar</Button></div>
+        <Button type="button" size="sm" variant="outline" :disabled="disabled" @click="addNamed(form.bands, 'banda', 'Nueva banda')"><Plus aria-hidden="true" />Agregar banda</Button>
       </fieldset>
-      <fieldset>
-        <legend>Datos de cabecera</legend>
-        <div v-for="(item, index) in form.header_fields" :key="`${item.key}-${index}`" class="inline-editor"><input v-model="item.label" aria-label="Nombre del dato" :disabled="disabled" /><input v-model="item.key" aria-label="Clave del dato" pattern="[a-z][a-z0-9_]*" :disabled="disabled" /><button type="button" :disabled="disabled" @click="form.header_fields.splice(index, 1)">Quitar</button></div>
-        <button type="button" :disabled="disabled" @click="addNamed(form.header_fields, 'cabecera', 'Nuevo dato')">Agregar dato</button>
+      <fieldset class="grid content-start gap-3 rounded-lg border p-4">
+        <legend class="px-1 text-sm font-medium">Datos de cabecera</legend>
+        <div v-for="(item, index) in form.header_fields" :key="`${item.key}-${index}`" class="grid gap-2"><Input v-model="item.label" aria-label="Nombre del dato" :disabled="disabled" /><Input v-model="item.key" aria-label="Clave del dato" pattern="[a-z][a-z0-9_]*" :disabled="disabled" /><Button type="button" size="sm" variant="ghost" :disabled="disabled" @click="form.header_fields.splice(index, 1)">Quitar</Button></div>
+        <Button type="button" size="sm" variant="outline" :disabled="disabled" @click="addNamed(form.header_fields, 'cabecera', 'Nuevo dato')"><Plus aria-hidden="true" />Agregar dato</Button>
       </fieldset>
     </div>
 
-    <div class="table-designer-flags">
-      <label class="checkbox-row"><input v-model="form.totals.enabled" type="checkbox" :disabled="disabled" /> Mostrar fila de totales</label>
-      <label v-if="form.totals.enabled">Etiqueta del total<input v-model="form.totals.label" maxlength="180" :disabled="disabled" /></label>
-      <label class="checkbox-row"><input v-model="form.repeat.enabled" type="checkbox" :disabled="disabled" /> Repetir por unidad</label>
-      <label v-if="form.repeat.enabled">Nombre de cada unidad<input v-model="form.repeat.label" maxlength="180" :disabled="disabled" /></label>
+    <div class="grid gap-4 rounded-lg bg-muted/40 p-4 sm:grid-cols-2">
+      <Field orientation="horizontal" class="checkbox-row items-center"><Checkbox v-model="form.totals.enabled" :disabled="disabled" /><FieldLabel>Mostrar fila de totales</FieldLabel></Field>
+      <Field v-if="form.totals.enabled"><FieldLabel>Etiqueta del total</FieldLabel><Input v-model="form.totals.label" maxlength="180" :disabled="disabled" /></Field>
+      <Field orientation="horizontal" class="checkbox-row items-center"><Checkbox v-model="form.repeat.enabled" :disabled="disabled" /><FieldLabel>Repetir por unidad</FieldLabel></Field>
+      <Field v-if="form.repeat.enabled"><FieldLabel>Nombre de cada unidad</FieldLabel><Input v-model="form.repeat.label" maxlength="180" :disabled="disabled" /></Field>
     </div>
-    <button type="button" :disabled="disabled || saving" @click="save">{{ saving ? "Guardando…" : "Guardar estructura de tabla" }}</button>
+    <Button class="w-fit" type="button" :disabled="disabled || saving" @click="save">{{ saving ? "Guardando…" : "Guardar estructura de tabla" }}</Button>
   </section>
 </template>

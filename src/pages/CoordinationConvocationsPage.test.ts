@@ -8,11 +8,14 @@ const push = vi.fn();
 
 vi.mock("vue-router", () => ({
   useRouter: () => ({ push, replace: vi.fn() }),
+  useRoute: () => ({ fullPath: "/coordinacion/convocatorias" }),
 }));
 
 vi.mock("@/api/convocations", () => ({
   getConvocations: vi.fn(),
   createConvocation: vi.fn(),
+  openConvocation: vi.fn(),
+  transitionConvocation: vi.fn(),
 }));
 
 vi.mock("@/api/session", () => ({ getSession: vi.fn() }));
@@ -48,6 +51,9 @@ describe("CoordinationConvocationsPage", () => {
         }],
         current_page: 1,
         last_page: 1,
+        per_page: 15,
+        from: 1,
+        to: 1,
         total: 1,
       },
     });
@@ -65,10 +71,16 @@ describe("CoordinationConvocationsPage", () => {
     await flushPromises();
 
     await wrapper.get("table tbody button").trigger("click");
-    const submit = document.body.querySelector<HTMLButtonElement>('button[type="submit"]');
+    await flushPromises();
+    const startItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'))
+      .find((item) => item.textContent?.includes('Iniciar'));
+    startItem?.click();
+    await flushPromises();
+    const submit = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'))
+      .find((button) => button.textContent?.includes('Iniciar convocatoria'));
     expect(submit?.disabled).toBe(true);
 
-    const source = document.body.querySelector<HTMLInputElement>('input[value="source-1"]');
+    const source = document.body.querySelector<HTMLElement>('[role="dialog"] [role="checkbox"]');
     source?.click();
     await flushPromises();
     expect(submit?.disabled).toBe(false);

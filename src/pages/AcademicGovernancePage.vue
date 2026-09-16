@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { Trash2 } from '@lucide/vue';
 import { useRouter } from 'vue-router';
 import {
   createAcademicRecord,
@@ -13,7 +14,26 @@ import {
 } from '@/api/academic';
 import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
-import FormSheet from '@/components/FormSheet.vue';
+import FormSheet from '@/components/domain/FormSheet.vue';
+import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
+import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
+import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { useClientFilter } from '@/composables/useClientFilter';
+import { useClientPagination } from '@/composables/useClientPagination';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Spinner } from '@/components/ui/spinner';
 
 type EditableRecord = {
   id: string;
@@ -36,25 +56,77 @@ const message = ref<string | null>(null);
 const createOpen = ref(false);
 const editOpen = ref(false);
 const coordinatorOpen = ref(false);
+const deleteOpen = ref(false);
+const deleteTarget = ref<{ id: string; name: string } | null>(null);
+const deleting = ref(false);
 const editing = ref<EditableRecord | null>(null);
 const selectedCareer = ref<AcademicGovernance['catalogs']['careers'][number] | null>(null);
 const coordinatorForm = ref({ incoming_user_id: '', deactivate_outgoing: false });
-const form = ref<Record<string, unknown>>({});
+const form = ref<Record<string, string | number>>({});
+const sections: Array<{ value: AcademicEntity; label: string }> = [
+  { value: 'facultad', label: 'Facultades' },
+  { value: 'campus', label: 'Campus' },
+  { value: 'carrera', label: 'Carreras' },
+  { value: 'periodo', label: 'Períodos' },
+];
+
+const sectionContent = computed(() => ({
+  facultad: {
+    title: 'Facultades',
+    description: 'Las facultades de la universidad y cuántas carreras tiene cada una.',
+  },
+  carrera: {
+    title: 'Carreras',
+    description: 'Las carreras y a qué facultad pertenece cada una.',
+  },
+  campus: {
+    title: 'Campus',
+    description: 'Las sedes donde se dictan clases.',
+  },
+  periodo: {
+    title: 'Periodos académicos',
+    description: 'Los periodos lectivos y sus fechas. El ciclo de una materia no va aquí, va en la malla.',
+  },
+})[section.value]);
+
+const facultyFilter = useClientFilter(
+  () => data.value?.catalogs.faculties ?? [],
+  (item) => [item.nombre, item.codigo_facultad],
+  { estado: { matches: (item, value) => item.activo === (value === 'active') } },
+);
+const campusFilter = useClientFilter(
+  () => data.value?.catalogs.campuses ?? [],
+  (item) => [item.nombre, item.codigo_campus],
+  { estado: { matches: (item, value) => item.activo === (value === 'active') } },
+);
+const careerFilter = useClientFilter(
+  () => data.value?.catalogs.careers ?? [],
+  (item) => [item.name, item.code, item.campus_name, item.coordinator?.name],
+  { estado: { matches: (item, value) => item.active === (value === 'active') } },
+);
+const periodFilter = useClientFilter(
+  () => data.value?.catalogs.periods ?? [],
+  (item) => [item.code],
+);
+const { items: facultyPage, meta: facultyMeta, setPage: setFacultyPage } = useClientPagination(() => facultyFilter.items.value);
+const { items: campusPage, meta: campusMeta, setPage: setCampusPage } = useClientPagination(() => campusFilter.items.value);
+const { items: careerPage, meta: careerMeta, setPage: setCareerPage } = useClientPagination(() => careerFilter.items.value);
+const { items: periodPage, meta: periodMeta, setPage: setPeriodPage } = useClientPagination(() => periodFilter.items.value);
+const facultyNames = computed(() => new Map((data.value?.catalogs.faculties ?? []).map((faculty) => [faculty.id, faculty.nombre])));
+const careerCount = (facultyId: string): number =>
+  (data.value?.catalogs.careers ?? []).filter((career) => career.faculty_id === facultyId).length;
 
 const sectionLabel = computed(() => ({
   facultad: 'facultad', campus: 'campus', carrera: 'carrera', periodo: 'período académico',
 })[section.value]);
-const currentRecordsCount = computed(() => {
-  if (!data.value) return 0;
-  return {
-    facultad: data.value.catalogs.faculties.length,
-    campus: data.value.catalogs.campuses.length,
-    carrera: data.value.catalogs.careers.length,
-    periodo: data.value.catalogs.periods.length,
-  }[section.value];
+const catalogSheetOpen = computed({
+  get: () => createOpen.value || editOpen.value,
+  set: (open: boolean) => {
+    if (!open) { createOpen.value = false; editOpen.value = false; }
+  },
 });
 
-const emptyForm = (entity: AcademicEntity): Record<string, unknown> => entity === 'carrera'
+const emptyForm = (entity: AcademicEntity): Record<string, string | number> => entity === 'carrera'
   ? { code: '', nombre: '', faculty_id: '', campus_id: '', modality: 'presencial', curriculum_code: '', cycle_count: 1 }
   : entity === 'periodo'
     ? { code: '', starts_on: '', ends_on: '', teaching_weeks: 16 }
@@ -109,10 +181,22 @@ const changeStatus = async (entity: Exclude<AcademicEntity, 'periodo'>, id: stri
   catch (reason) { showError(reason, 'No se pudo cambiar el estado.'); }
 };
 
-const remove = async (id: string): Promise<void> => {
-  if (!window.confirm('¿Eliminar este registro? Esta acción sólo se permite cuando no tiene dependencias.')) return;
-  try { message.value = (await deleteAcademicRecord(section.value, id)).message; await load(); }
-  catch (reason) { showError(reason, 'No se pudo eliminar el registro.'); }
+const openDelete = (id: string, name: string): void => {
+  deleteTarget.value = { id, name };
+  deleteOpen.value = true;
+};
+
+const remove = async (): Promise<void> => {
+  if (!deleteTarget.value) return;
+  deleting.value = true;
+  error.value = null;
+  try {
+    message.value = (await deleteAcademicRecord(section.value, deleteTarget.value.id)).message;
+    deleteOpen.value = false;
+    deleteTarget.value = null;
+    await load();
+  } catch (reason) { showError(reason, 'No se pudo eliminar el registro.'); }
+  finally { deleting.value = false; }
 };
 
 const openCoordinator = (career: AcademicGovernance['catalogs']['careers'][number]): void => {
@@ -134,41 +218,194 @@ onMounted(load);
 </script>
 
 <template>
-  <main class="app-page">
-    <header class="app-header">
-      <div><p class="eyebrow">Administración</p><h1>Estructura académica</h1></div>
-      <div class="header-actions"><RouterLink class="back-link" to="/panel">Volver al panel</RouterLink><button class="primary-action" type="button" :disabled="loading || !data" @click="openCreate">Crear {{ sectionLabel }}</button></div>
-    </header>
-    <p v-if="data?.lock_reason" class="error-box" role="alert">{{ data.lock_reason }}</p>
-    <p v-if="message" class="save-status">{{ message }}</p><p v-if="error" role="alert">{{ error }}</p><p v-if="loading && !data" role="status">Cargando estructura académica…</p>
+  <PageFrame
+    :title="sectionContent.title"
+    :description="sectionContent.description"
+  >
+    <template #actions>
+      <Button :disabled="loading || !data || Boolean(data?.lock_reason)" @click="openCreate">
+        Crear {{ sectionLabel }}
+      </Button>
+    </template>
 
-    <nav class="header-actions" aria-label="Catálogos académicos">
-      <button :aria-current="section === 'facultad'" @click="select('facultad')">Facultades</button>
-      <button :aria-current="section === 'campus'" @click="select('campus')">Campus</button>
-      <button :aria-current="section === 'carrera'" @click="select('carrera')">Carreras</button>
-      <button :aria-current="section === 'periodo'" @click="select('periodo')">Períodos</button>
+    <ProcessLockAlert
+      v-if="data?.lock_reason"
+      title="Estructura institucional bloqueada"
+      :reason="data.lock_reason"
+    />
+    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
+    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <p v-if="loading && !data" class="text-sm text-muted-foreground" role="status">
+      Cargando estructura académica…
+    </p>
+
+    <nav class="flex flex-wrap gap-2" aria-label="Catálogos académicos">
+      <Button
+        v-for="item in sections"
+        :key="item.value"
+        type="button"
+        :variant="section === item.value ? 'default' : 'outline'"
+        :aria-current="section === item.value ? 'page' : undefined"
+        @click="select(item.value)"
+      >
+        {{ item.label }}
+      </Button>
     </nav>
 
-    <section v-if="data" class="detail-card"><div class="section-heading"><div><p class="eyebrow">Catálogo</p><h2>{{ sectionLabel }}</h2></div></div>
-      <div class="table-wrap"><table><thead><tr><th>Nombre / código</th><th v-if="section === 'carrera'">Contexto</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>
-        <template v-if="section === 'facultad'"><tr v-for="item in data.catalogs.faculties" :key="item.id"><td>{{ item.nombre }}<small>{{ item.codigo_facultad || 'Sin código' }}</small></td><td>{{ item.activo ? 'Activa' : 'Inactiva' }}</td><td class="header-actions"><button @click="openEdit({ id: item.id, code: item.codigo_facultad || '', nombre: item.nombre })">Editar</button><button @click="changeStatus('facultad', item.id, !item.activo)">{{ item.activo ? 'Desactivar' : 'Activar' }}</button><button @click="remove(item.id)">Eliminar</button></td></tr></template>
-        <template v-else-if="section === 'campus'"><tr v-for="item in data.catalogs.campuses" :key="item.id"><td>{{ item.nombre }}<small>{{ item.codigo_campus || 'Sin código' }}</small></td><td>{{ item.activo ? 'Activo' : 'Inactivo' }}</td><td class="header-actions"><button @click="openEdit({ id: item.id, code: item.codigo_campus || '', nombre: item.nombre })">Editar</button><button @click="changeStatus('campus', item.id, !item.activo)">{{ item.activo ? 'Desactivar' : 'Activar' }}</button><button @click="remove(item.id)">Eliminar</button></td></tr></template>
-        <template v-else-if="section === 'carrera'"><tr v-for="item in data.catalogs.careers" :key="item.id"><td>{{ item.name }}<small>{{ item.code || 'Sin código' }} · {{ item.modality_label || item.modality }}</small></td><td><small>{{ item.campus_name || 'Sin campus' }}</small>{{ item.coordinator?.name || 'Sin coordinación' }}</td><td>{{ item.active ? 'Activa' : 'Inactiva' }}</td><td class="header-actions"><button @click="openEdit({ id: item.id, code: item.code || '', nombre: item.name, faculty_id: item.faculty_id, campus_id: item.campus_id, modality: item.modality })">Editar</button><button @click="openCoordinator(item)">Coordinación</button><button @click="changeStatus('carrera', item.id, !item.active)">{{ item.active ? 'Desactivar' : 'Activar' }}</button><button @click="remove(item.id)">Eliminar</button></td></tr></template>
-        <template v-else><tr v-for="item in data.catalogs.periods" :key="item.id"><td>{{ item.code }}<small>{{ item.starts_on }} — {{ item.ends_on }} · {{ item.teaching_weeks }} semanas</small></td><td>{{ item.status_label }}</td><td class="header-actions"><button @click="openEdit({ id: item.id, code: item.code, starts_on: item.starts_on, ends_on: item.ends_on, teaching_weeks: item.teaching_weeks })">Editar</button><button @click="remove(item.id)">Eliminar</button></td></tr></template>
-        <tr v-if="currentRecordsCount === 0"><td :colspan="section === 'carrera' ? 4 : 3" class="empty-state">No hay registros en este catálogo.</td></tr>
-      </tbody></table></div>
-    </section>
+    <Card v-if="data">
+      <CardContent class="flex flex-col gap-4">
+        <ClientFilterBar
+          v-if="section === 'facultad'"
+          :filter="facultyFilter"
+          input-id="faculties-search"
+          label="Buscar facultad"
+          placeholder="Buscar por nombre o código"
+        >
+          <template #filters>
+            <Field><FieldLabel for="faculties-search-state" class="sr-only">Estado</FieldLabel><Select v-model="facultyFilter.values.estado.value"><SelectTrigger id="faculties-search-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="inactive">Inactivas</SelectItem></SelectGroup></SelectContent></Select></Field>
+          </template>
+        </ClientFilterBar>
+        <ClientFilterBar
+          v-else-if="section === 'campus'"
+          :filter="campusFilter"
+          input-id="campuses-search"
+          label="Buscar campus"
+          placeholder="Buscar por nombre o código"
+        >
+          <template #filters>
+            <Field><FieldLabel for="campuses-search-state" class="sr-only">Estado</FieldLabel><Select v-model="campusFilter.values.estado.value"><SelectTrigger id="campuses-search-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activos</SelectItem><SelectItem value="inactive">Inactivos</SelectItem></SelectGroup></SelectContent></Select></Field>
+          </template>
+        </ClientFilterBar>
+        <ClientFilterBar
+          v-else-if="section === 'carrera'"
+          :filter="careerFilter"
+          input-id="careers-search"
+          label="Buscar carrera"
+          placeholder="Buscar por nombre o código"
+        >
+          <template #filters>
+            <Field><FieldLabel for="careers-search-state" class="sr-only">Estado</FieldLabel><Select v-model="careerFilter.values.estado.value"><SelectTrigger id="careers-search-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="inactive">Inactivas</SelectItem></SelectGroup></SelectContent></Select></Field>
+          </template>
+        </ClientFilterBar>
+        <ClientFilterBar
+          v-else
+          :filter="periodFilter"
+          input-id="periods-search"
+          label="Buscar periodo académico"
+          placeholder="Buscar por código"
+        />
+        <Table v-if="section === 'facultad'">
+          <TableHeader><TableRow><TableHead>Facultad</TableHead><TableHead>Código de facultad</TableHead><TableHead>Carreras relacionadas</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+          <TableBody><TableEmpty v-if="facultyPage.length === 0" :colspan="5">No existen facultades registradas.</TableEmpty><TableRow v-for="item in facultyPage" v-else :key="item.id"><TableCell>{{ item.nombre }}</TableCell><TableCell>{{ item.codigo_facultad || 'Sin código de facultad' }}</TableCell><TableCell>{{ careerCount(item.id) }}</TableCell><TableCell>{{ item.activo ? 'Activa' : 'Inactiva' }}</TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${item.nombre}`"><DropdownMenuItem @select="openEdit({ id: item.id, code: item.codigo_facultad || '', nombre: item.nombre })">Editar</DropdownMenuItem><DropdownMenuItem @select="changeStatus('facultad', item.id, !item.activo)">{{ item.activo ? 'Desactivar' : 'Activar' }}</DropdownMenuItem><DropdownMenuItem variant="destructive" @select="openDelete(item.id, item.nombre)">Eliminar</DropdownMenuItem></TableActionsMenu></TableCell></TableRow></TableBody>
+        </Table>
+        <Table v-else-if="section === 'campus'">
+          <TableHeader><TableRow><TableHead>Campus</TableHead><TableHead>Código de campus</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+          <TableBody><TableEmpty v-if="campusPage.length === 0" :colspan="4">No existen campus registrados.</TableEmpty><TableRow v-for="item in campusPage" v-else :key="item.id"><TableCell>{{ item.nombre }}</TableCell><TableCell>{{ item.codigo_campus || 'Sin código de campus' }}</TableCell><TableCell>{{ item.activo ? 'Activo' : 'Inactivo' }}</TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${item.nombre}`"><DropdownMenuItem @select="openEdit({ id: item.id, code: item.codigo_campus || '', nombre: item.nombre })">Editar</DropdownMenuItem><DropdownMenuItem @select="changeStatus('campus', item.id, !item.activo)">{{ item.activo ? 'Desactivar' : 'Activar' }}</DropdownMenuItem><DropdownMenuItem variant="destructive" @select="openDelete(item.id, item.nombre)">Eliminar</DropdownMenuItem></TableActionsMenu></TableCell></TableRow></TableBody>
+        </Table>
+        <Table v-else-if="section === 'carrera'">
+          <TableHeader><TableRow><TableHead>Carrera</TableHead><TableHead>Facultad</TableHead><TableHead>Modalidad</TableHead><TableHead>Campus</TableHead><TableHead>Coordinación</TableHead><TableHead>Código de carrera</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+          <TableBody><TableEmpty v-if="careerPage.length === 0" :colspan="8">No existen carreras registradas.</TableEmpty><TableRow v-for="item in careerPage" v-else :key="item.id"><TableCell>{{ item.name }}</TableCell><TableCell>{{ facultyNames.get(item.faculty_id) ?? 'Facultad no disponible' }}</TableCell><TableCell>{{ item.modality_label ?? 'Sin modalidad' }}</TableCell><TableCell>{{ item.campus_name ?? 'Sin campus' }}</TableCell><TableCell>{{ item.coordinator?.name ?? 'Sin coordinador' }}</TableCell><TableCell>{{ item.code || 'Sin código de carrera' }}</TableCell><TableCell>{{ item.active ? 'Activa' : 'Inactiva' }}</TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${item.name}`"><DropdownMenuItem @select="openEdit({ id: item.id, code: item.code || '', nombre: item.name, faculty_id: item.faculty_id, campus_id: item.campus_id, modality: item.modality })">Editar</DropdownMenuItem><DropdownMenuItem @select="openCoordinator(item)">Cambiar coordinación</DropdownMenuItem><DropdownMenuItem @select="changeStatus('carrera', item.id, !item.active)">{{ item.active ? 'Desactivar' : 'Activar' }}</DropdownMenuItem><DropdownMenuItem variant="destructive" @select="openDelete(item.id, item.name)">Eliminar</DropdownMenuItem></TableActionsMenu></TableCell></TableRow></TableBody>
+        </Table>
+        <Table v-else>
+          <TableHeader><TableRow><TableHead>Período</TableHead><TableHead>Fechas</TableHead><TableHead>Semanas lectivas</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+          <TableBody><TableEmpty v-if="periodPage.length === 0" :colspan="5">No existen periodos académicos registrados.</TableEmpty><TableRow v-for="item in periodPage" v-else :key="item.id"><TableCell>{{ item.code }}</TableCell><TableCell><time :datetime="item.starts_on">{{ item.starts_on }}</time> → <time :datetime="item.ends_on">{{ item.ends_on }}</time></TableCell><TableCell>{{ item.teaching_weeks }}</TableCell><TableCell>{{ item.status_label }}</TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${item.code}`"><DropdownMenuItem @select="openEdit({ id: item.id, code: item.code, starts_on: item.starts_on, ends_on: item.ends_on, teaching_weeks: item.teaching_weeks })">Editar</DropdownMenuItem><DropdownMenuItem variant="destructive" @select="openDelete(item.id, item.code)">Eliminar</DropdownMenuItem></TableActionsMenu></TableCell></TableRow></TableBody>
+        </Table>
+        <TablePagination v-if="section === 'facultad'" :meta="facultyMeta" label="Paginación de facultades" @update:page="setFacultyPage" />
+        <TablePagination v-else-if="section === 'campus'" :meta="campusMeta" label="Paginación de campus" @update:page="setCampusPage" />
+        <TablePagination v-else-if="section === 'carrera'" :meta="careerMeta" label="Paginación de carreras" @update:page="setCareerPage" />
+        <TablePagination v-else :meta="periodMeta" label="Paginación de periodos académicos" @update:page="setPeriodPage" />
+      </CardContent>
+    </Card>
 
-    <FormSheet :open="createOpen || editOpen" :title="`${editOpen ? 'Editar' : 'Crear'} ${sectionLabel}`" description="Los cambios quedan auditados y se aplican al catálogo institucional." @close="createOpen = false; editOpen = false">
-      <form class="editor-form" @submit.prevent="editOpen ? saveEdit() : create()">
-        <template v-if="section === 'periodo'"><label>Código<input v-model="form.code" required /></label><label>Inicio<input v-model="form.starts_on" type="date" required /></label><label>Fin<input v-model="form.ends_on" type="date" required /></label><label>Semanas lectivas<input v-model="form.teaching_weeks" type="number" min="1" max="52" required /></label></template>
-        <template v-else><label>Código<input v-model="form.code" /></label><label>Nombre<input v-model="form.nombre" required /></label><template v-if="section === 'carrera'"><label>Facultad<select v-model="form.faculty_id" required><option value="">Seleccione</option><option v-for="faculty in data?.options.faculties" :key="faculty.id" :value="faculty.id">{{ faculty.nombre }}</option></select></label><label>Campus<select v-model="form.campus_id" required><option value="">Seleccione</option><option v-for="campus in data?.options.campuses" :key="campus.id" :value="campus.id">{{ campus.nombre }}</option></select></label><label>Modalidad<select v-model="form.modality"><option value="presencial">Presencial</option><option value="semipresencial">Semipresencial</option><option value="en_linea">En línea</option><option value="a_distancia">A distancia</option><option value="hibrida">Híbrida</option></select></label><template v-if="createOpen"><label>Código de malla<input v-model="form.curriculum_code" required /></label><label>Ciclos<input v-model="form.cycle_count" type="number" min="1" max="30" required /></label></template></template></template>
-        <div class="form-sheet-actions"><button type="button" @click="createOpen = false; editOpen = false">Cancelar</button><button type="submit">Guardar</button></div>
-      </form>
+    <Dialog v-model:open="deleteOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Eliminar registro institucional</DialogTitle>
+          <DialogDescription>Se eliminará «{{ deleteTarget?.name }}». La operación se rechazará si tiene carreras, materias programadas, procesos u otro historial relacionado.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose as-child><Button type="button" variant="outline" :disabled="deleting">Cancelar</Button></DialogClose>
+          <Button type="button" variant="destructive" :disabled="deleting" @click="remove"><Spinner v-if="deleting" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Eliminar registro</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <FormSheet
+      v-model:open="catalogSheetOpen"
+      :show-trigger="false"
+      trigger-label="Crear registro"
+      :title="`${editOpen ? 'Editar' : 'Crear'} ${sectionLabel}`"
+      description="Los cambios quedan auditados y se aplican al catálogo institucional."
+    >
+      <template #default="{ close }">
+        <form class="flex flex-col gap-6" @submit.prevent="editOpen ? saveEdit() : create()">
+          <template v-if="section === 'periodo'">
+            <Field><FieldLabel for="catalog-code" required>Código estable</FieldLabel><Input id="catalog-code" v-model="form.code" required /></Field>
+            <Field><FieldLabel for="catalog-start" required>Fecha de inicio</FieldLabel><Input id="catalog-start" v-model="form.starts_on" type="date" required /></Field>
+            <Field><FieldLabel for="catalog-end" required>Fecha de fin</FieldLabel><Input id="catalog-end" v-model="form.ends_on" type="date" required /></Field>
+            <Field><FieldLabel for="catalog-weeks" required>Semanas lectivas</FieldLabel><Input id="catalog-weeks" v-model="form.teaching_weeks" type="number" min="1" max="52" required /></Field>
+          </template>
+          <template v-else>
+            <Field><FieldLabel for="catalog-code">Código</FieldLabel><Input id="catalog-code" v-model="form.code" /></Field>
+            <Field><FieldLabel for="catalog-name" required>Nombre</FieldLabel><Input id="catalog-name" v-model="form.nombre" required /></Field>
+            <template v-if="section === 'carrera'">
+              <Field>
+                <FieldLabel for="catalog-faculty" required>Facultad</FieldLabel>
+                <Select v-model="form.faculty_id" required>
+                  <SelectTrigger id="catalog-faculty"><SelectValue placeholder="Seleccione una facultad" /></SelectTrigger>
+                  <SelectContent><SelectItem v-for="faculty in data?.options.faculties" :key="faculty.id" :value="faculty.id">{{ faculty.nombre }}</SelectItem></SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel for="catalog-campus" required>Campus</FieldLabel>
+                <Select v-model="form.campus_id" required>
+                  <SelectTrigger id="catalog-campus"><SelectValue placeholder="Seleccione un campus" /></SelectTrigger>
+                  <SelectContent><SelectItem v-for="campus in data?.options.campuses" :key="campus.id" :value="campus.id">{{ campus.nombre }}</SelectItem></SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel for="catalog-modality" required>Modalidad</FieldLabel>
+                <Select v-model="form.modality" required>
+                  <SelectTrigger id="catalog-modality"><SelectValue placeholder="Seleccione una modalidad" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="presencial">Presencial</SelectItem><SelectItem value="semipresencial">Semipresencial</SelectItem><SelectItem value="en_linea">En línea</SelectItem><SelectItem value="a_distancia">A distancia</SelectItem><SelectItem value="hibrida">Híbrida</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <template v-if="createOpen">
+                <Field><FieldLabel for="catalog-curriculum" required>Código de malla</FieldLabel><Input id="catalog-curriculum" v-model="form.curriculum_code" required /></Field>
+                <Field><FieldLabel for="catalog-cycles" required>Ciclos</FieldLabel><Input id="catalog-cycles" v-model="form.cycle_count" type="number" min="1" max="30" required /></Field>
+              </template>
+            </template>
+          </template>
+          <FormSheetActions :close="close" :label="editOpen ? 'Guardar cambios' : `Crear ${sectionLabel}`" />
+        </form>
+      </template>
     </FormSheet>
 
-    <FormSheet :open="coordinatorOpen" :title="`Coordinación de ${selectedCareer?.name || ''}`" description="La persona elegida recibirá el rol de coordinación para esta carrera." @close="coordinatorOpen = false">
-      <form class="editor-form" @submit.prevent="saveCoordinator"><label>Nueva persona coordinadora<select v-model="coordinatorForm.incoming_user_id" required><option value="">Seleccione</option><option v-for="user in data?.options.coordinatorUsers" :key="user.id" :value="user.id">{{ user.nombre }} · {{ user.correo_electronico }}</option></select></label><label class="checkbox-row"><input v-model="coordinatorForm.deactivate_outgoing" type="checkbox" /> Desactivar la cuenta saliente si ya no conserva otro rol</label><div class="form-sheet-actions"><button type="button" @click="coordinatorOpen = false">Cancelar</button><button type="submit">Asignar coordinación</button></div></form>
+    <FormSheet
+      v-model:open="coordinatorOpen"
+      :show-trigger="false"
+      trigger-label="Cambiar coordinación"
+      :title="`Coordinación de ${selectedCareer?.name || ''}`"
+      description="La persona elegida recibirá el rol de coordinación para esta carrera."
+    >
+      <template #default="{ close }">
+        <form class="flex flex-col gap-6" @submit.prevent="saveCoordinator">
+          <Field>
+            <FieldLabel for="coordinator-user" required>Nueva persona coordinadora</FieldLabel>
+            <Select v-model="coordinatorForm.incoming_user_id" required>
+              <SelectTrigger id="coordinator-user"><SelectValue placeholder="Seleccione una persona" /></SelectTrigger>
+              <SelectContent><SelectItem v-for="user in data?.options.coordinatorUsers" :key="user.id" :value="user.id">{{ user.nombre }} · {{ user.correo_electronico }}</SelectItem></SelectContent>
+            </Select>
+          </Field>
+          <Field orientation="horizontal">
+            <Checkbox id="deactivate-outgoing" v-model="coordinatorForm.deactivate_outgoing" />
+            <FieldLabel for="deactivate-outgoing">Desactivar la cuenta saliente si ya no conserva otro rol</FieldLabel>
+          </Field>
+          <FormSheetActions :close="close" label="Asignar coordinación" />
+        </form>
+      </template>
     </FormSheet>
-  </main>
+  </PageFrame>
 </template>

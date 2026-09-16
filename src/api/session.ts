@@ -18,8 +18,11 @@ export type DeviceSession = { id: string; ip_address: string | null; device: str
 export type LoginResult = Session | { two_factor_required: true; message: string };
 
 export const getSession = () => api<Session>('/session');
-export const login = (email: string, password: string): Promise<LoginResult> =>
-  api<LoginResult>('/authentication/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+export const login = (email: string, password: string, remember = false): Promise<LoginResult> =>
+  api<LoginResult>('/authentication/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, remember }),
+  });
 export const completeTwoFactorLogin = (code: string, recoveryCode: string): Promise<{ message: string }> =>
   api<{ message: string }>('/authentication/two-factor/challenge', {
     method: 'POST',

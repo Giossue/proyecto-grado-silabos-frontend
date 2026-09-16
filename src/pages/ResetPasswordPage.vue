@@ -1,16 +1,24 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { resetForgottenPassword } from '@/api/session';
+import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
+import PasswordInput from '@/components/PasswordInput.vue';
+import InputError from '@/components/InputError.vue';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 
 const route = useRoute();
+const router = useRouter();
 const email = computed(() => typeof route.query.email === 'string' ? route.query.email : '');
 const token = computed(() => typeof route.query.token === 'string' ? route.query.token : '');
 const password = ref('');
 const passwordConfirmation = ref('');
-const message = ref<string | null>(null);
 const error = ref<string | null>(null);
+const errors = ref<Record<string, string[]>>({});
 const pending = ref(false);
 
 const submit = async (): Promise<void> => {
@@ -20,12 +28,19 @@ const submit = async (): Promise<void> => {
   }
   pending.value = true;
   error.value = null;
+  errors.value = {};
   try {
-    message.value = (await resetForgottenPassword(email.value, token.value, password.value, passwordConfirmation.value)).message;
+    const result = await resetForgottenPassword(email.value, token.value, password.value, passwordConfirmation.value);
     password.value = '';
     passwordConfirmation.value = '';
+    await router.replace({ path: '/ingresar', query: { status: result.message } });
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo restablecer la contraseña.';
+    if (reason instanceof ApiError) {
+      errors.value = reason.errors;
+      error.value = reason.message;
+    } else {
+      error.value = 'No se pudo restablecer la contraseña.';
+    }
   } finally {
     pending.value = false;
   }
@@ -33,22 +48,15 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-  <main class="auth-page">
-    <form class="auth-card" @submit.prevent="submit">
-      <h1>Definir contraseña nueva</h1>
-      <p>{{ email || 'Enlace de recuperación inválido.' }}</p>
-      <label>
-        Contraseña nueva
-        <input v-model="password" type="password" autocomplete="new-password" required />
-      </label>
-      <label>
-        Confirmar contraseña nueva
-        <input v-model="passwordConfirmation" type="password" autocomplete="new-password" required />
-      </label>
-      <p v-if="message" class="save-status" role="status">{{ message }}</p>
-      <p v-if="error" role="alert">{{ error }}</p>
-      <button :disabled="pending || !email || !token" type="submit">{{ pending ? 'Guardando…' : 'Restablecer contraseña' }}</button>
-      <RouterLink v-if="message" class="back-link" to="/ingresar">Ingresar</RouterLink>
+  <AuthSimpleLayout title="Restablecer contraseña" description="Ingrese su nueva contraseña">
+    <form @submit.prevent="submit">
+      <div class="grid gap-6">
+        <div class="grid gap-2"><Label for="reset-email" required>Correo electrónico</Label><Input id="reset-email" type="email" :model-value="email" autocomplete="email" class="mt-1 block w-full" placeholder="Ej. nombre@ueb.edu.ec" readonly required /><InputError :message="errors.email?.[0]" class="mt-2" /></div>
+        <div class="grid gap-2"><Label for="new-password" required>Contraseña nueva</Label><PasswordInput id="new-password" v-model="password" required autocomplete="new-password" class="mt-1 block w-full" placeholder="Contraseña nueva" :aria-invalid="Boolean(errors.password)" /><InputError :message="errors.password?.[0]" /></div>
+        <div class="grid gap-2"><Label for="new-password-confirmation" required>Confirmar contraseña</Label><PasswordInput id="new-password-confirmation" v-model="passwordConfirmation" required autocomplete="new-password" class="mt-1 block w-full" placeholder="Confirmar contraseña" :aria-invalid="Boolean(errors.password_confirmation)" /><InputError :message="errors.password_confirmation?.[0]" /></div>
+        <p v-if="error && Object.keys(errors).length === 0" class="text-sm text-destructive" role="alert">{{ error }}</p>
+        <Button type="submit" class="mt-4 w-full" :disabled="pending || !email || !token" data-test="reset-password-button"><Spinner v-if="pending" />Restablecer contraseña</Button>
+      </div>
     </form>
-  </main>
+  </AuthSimpleLayout>
 </template>

@@ -1,13 +1,60 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { Eye } from '@lucide/vue';
+import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getReviews, type ReviewsPage } from '@/api/reviews';
 import { getSession } from '@/api/session';
-import PaginationControls from '@/components/PaginationControls.vue';
-const router = useRouter(); const data = ref<ReviewsPage | null>(null); const loading = ref(true); const search = ref(''); const state = ref(''); const error = ref<string | null>(null);
-const label = (value: string) => ({ en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado' }[value] ?? value);
-const load = async (page = 1) => { loading.value = true; error.value = null; try { const session = await getSession(); if (session.active_role?.code !== 'coordinador') { await router.replace('/panel'); return; } data.value = await getReviews({ search: search.value, state: state.value, page }); } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la cola de revisión.'; } finally { loading.value = false; } };
+import FilterToolbar from '@/components/domain/FilterToolbar.vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
+const router = useRouter();
+const data = ref<ReviewsPage | null>(null);
+const loading = ref(true);
+const filters = reactive({ search: '', state: 'all' });
+const error = ref<string | null>(null);
+const stateLabel = (value: string): string => ({ en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado' })[value] ?? 'Estado no disponible';
+const load = async (page = 1): Promise<void> => {
+  loading.value = true;
+  error.value = null;
+  try {
+    const session = await getSession();
+    if (session.active_role?.code !== 'coordinador') {
+      await router.replace('/panel');
+      return;
+    }
+    data.value = await getReviews({ search: filters.search, state: filters.state === 'all' ? '' : filters.state, page });
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la cola de revisión.';
+  } finally { loading.value = false; }
+};
+const clearFilters = (): void => {
+  Object.assign(filters, { search: '', state: 'all' });
+  void load();
+};
+
 onMounted(() => { void load(); });
 </script>
-<template><main class="app-page"><header class="app-header"><div><p class="eyebrow">Coordinación</p><h1>Cola de revisión</h1><p>Revise el contenido exacto que envió cada docente.</p></div><RouterLink class="back-link" to="/panel">Volver al panel</RouterLink></header><form class="filter-form" @submit.prevent="load()"><label>Buscar<input v-model="search" placeholder="Asignatura o código" /></label><label>Estado<select v-model="state"><option value="">Todos</option><option value="en_revision">En revisión</option><option value="correccion_solicitada">Corrección solicitada</option><option value="aprobado">Aprobado</option></select></label><button :disabled="loading">Buscar</button></form><p v-if="error" role="alert">{{ error }}</p><p v-if="loading && !data" role="status">Cargando revisiones…</p><section v-if="data" class="detail-card"><div v-if="data.syllabi.data.length" class="table-wrap"><table><thead><tr><th>Asignatura</th><th>Docentes</th><th>Revisión</th><th>Estado</th><th>Pendientes</th><th></th></tr></thead><tbody><tr v-for="item in data.syllabi.data" :key="item.id"><td><strong>{{ item.subject }}</strong><small>{{ item.code }} · {{ item.period }}</small></td><td>{{ item.teachers.join(', ') }}</td><td>N.º {{ item.revision_number }}</td><td><span class="role-badge">{{ label(item.state) }}</span></td><td>{{ item.unresolved_observations }}</td><td><RouterLink class="back-link" :to="`/coordinacion/revisiones/${item.revision_id}`">Abrir</RouterLink></td></tr></tbody></table></div><p v-else class="empty-state">No hay expedientes para los filtros seleccionados.</p><PaginationControls :current-page="data.syllabi.current_page" :last-page="data.syllabi.last_page" :total="data.syllabi.total" @change="load" /></section></main></template>
+
+<template>
+  <PageFrame title="Cola de revisión" description="Sílabos que los docentes ya enviaron y esperan revisión.">
+    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert><p v-if="loading && !data" class="text-sm text-muted-foreground" role="status">Cargando revisiones…</p>
+    <Card v-if="data"><CardContent class="flex flex-col gap-4">
+      <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters"><template #search><Field><FieldLabel for="review-search" class="sr-only">Buscar por asignatura o código</FieldLabel><Input id="review-search" v-model="filters.search" type="search" placeholder="Buscar asignatura o código" /></Field></template><template #filters><Field><FieldLabel for="review-state" class="sr-only">Estado</FieldLabel><Select v-model="filters.state"><SelectTrigger id="review-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="en_revision">En revisión</SelectItem><SelectItem value="correccion_solicitada">Corrección solicitada</SelectItem><SelectItem value="aprobado">Aprobado</SelectItem></SelectGroup></SelectContent></Select></Field></template></FilterToolbar></form>
+      <Table><TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Docente(s)</TableHead><TableHead>Revisión</TableHead><TableHead>Estado</TableHead><TableHead>Pendientes</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
+        <TableRow v-for="item in data.syllabi.data" :key="item.id"><TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }} · {{ item.period }}</div></TableCell><TableCell>{{ item.teachers.join(', ') }}</TableCell><TableCell>N.º {{ item.revision_number }}</TableCell><TableCell>{{ stateLabel(item.state) }}</TableCell><TableCell><span :class="item.unresolved_observations > 0 ? 'text-destructive' : ''">{{ item.unresolved_observations }}</span></TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${item.subject}`"><DropdownMenuItem as-child><RouterLink :to="`/coordinacion/revisiones/${item.revision_id}`"><Eye aria-hidden="true" />Abrir revisión</RouterLink></DropdownMenuItem></TableActionsMenu></TableCell></TableRow>
+        <TableEmpty v-if="data.syllabi.data.length === 0" :colspan="6">No hay expedientes para los filtros seleccionados.</TableEmpty>
+      </TableBody></Table>
+      <TablePagination :meta="data.syllabi" label="Paginación de expedientes en revisión" @update:page="load" />
+    </CardContent></Card>
+  </PageFrame>
+</template>

@@ -1,99 +1,66 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { Eye } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
-import PaginationControls from '@/components/PaginationControls.vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import FilterToolbar from '@/components/domain/FilterToolbar.vue';
+import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent } from '@/components/ui/card';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const router = useRouter();
 const result = ref<SyllabiResponse | null>(null);
 const query = ref('');
 const state = ref('all');
 const error = ref<string | null>(null);
-
-const states: Record<string, string> = {
-  sin_iniciar: 'Sin iniciar',
-  borrador: 'Borrador',
-  en_revision: 'En revisión',
-  correccion_solicitada: 'Corrección solicitada',
-  aprobado: 'Aprobado',
-};
+const states: Record<string, string> = { sin_iniciar: 'Sin iniciar', borrador: 'Borrador', en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado' };
 
 const load = async (page = 1): Promise<void> => {
   error.value = null;
-  try {
-    result.value = await getTeacherSyllabi({ q: query.value, state: state.value, page });
-  } catch (reason) {
-    if (reason instanceof ApiError && [401, 403, 409].includes(reason.status)) {
-      await router.replace('/');
-      return;
-    }
+  try { result.value = await getTeacherSyllabi({ q: query.value, state: state.value, page }); }
+  catch (reason) {
+    if (reason instanceof ApiError && [401, 403, 409].includes(reason.status)) { await router.replace('/'); return; }
     error.value = 'No se pudieron cargar sus sílabos.';
   }
 };
-
-const formatSavedAt = (value: string | null): string =>
-  value
-    ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value))
-    : 'Sin guardados';
-
+const formatSavedAt = (value: string | null): string => value ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Sin guardados';
+const clearFilters = (): void => {
+  query.value = '';
+  state.value = 'all';
+  void load();
+};
 onMounted(load);
 </script>
 
 <template>
-  <main class="app-page">
-    <header class="app-header">
-      <div>
-        <p class="eyebrow">Sílabos UEB</p>
-        <h1>Mis sílabos</h1>
-        <p>Los sílabos de las materias que usted dicta.</p>
-      </div>
-      <RouterLink class="back-link" to="/panel">Volver al panel</RouterLink>
-    </header>
-
-    <form class="filter-form" @submit.prevent="load()">
-      <label>
-        Buscar
-        <input v-model="query" type="search" placeholder="Ej. Desarrollo de software" />
-      </label>
-      <label>
-        Estado
-        <select v-model="state">
-          <option value="all">Todos los estados</option>
-          <option v-for="(label, value) in states" :key="value" :value="value">{{ label }}</option>
-        </select>
-      </label>
-      <button type="submit">Aplicar filtros</button>
-    </form>
-
-    <p v-if="error" role="alert">{{ error }}</p>
-    <template v-else-if="result">
-      <div v-if="result.syllabi.data.length === 0" class="empty-state">
-        No tiene sílabos asignados con estos filtros.
-      </div>
-      <div v-else class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Asignatura</th><th>Convocatoria</th><th>Estado</th><th>Último guardado</th><th>Avance</th></tr>
-          </thead>
-          <tbody>
-            <tr v-for="syllabus in result.syllabi.data" :key="syllabus.id">
-              <td><RouterLink class="subject-link" :to="`/mis-silabos/${syllabus.id}`">{{ syllabus.subject }}</RouterLink><small>{{ syllabus.code }} · Paralelo(s) {{ syllabus.parallels.join(', ') }}</small></td>
-              <td>{{ syllabus.convocation }}<small>{{ syllabus.period }}</small></td>
-              <td>{{ states[syllabus.state] }}</td>
-              <td>{{ formatSavedAt(syllabus.guardado_en) }}</td>
-              <td>{{ syllabus.completion.toFixed(0) }} %</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <PaginationControls
-        :current-page="result.syllabi.current_page"
-        :last-page="result.syllabi.last_page"
-        :total="result.syllabi.total"
-        @change="load"
-      />
-    </template>
-    <p v-else>Cargando sílabos…</p>
-  </main>
+  <PageFrame title="Mis sílabos" description="Los sílabos de las materias que usted dicta.">
+    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <Card>
+      <CardContent class="flex flex-col gap-4">
+        <form @submit.prevent="load()">
+          <FilterToolbar @clear="clearFilters">
+            <template #search><Field><FieldLabel for="syllabi-search" class="sr-only">Buscar</FieldLabel><Input id="syllabi-search" v-model="query" type="search" placeholder="Buscar por asignatura, código o convocatoria" /></Field></template>
+            <template #filters><Field><FieldLabel for="syllabi-state" class="sr-only">Estado</FieldLabel><Select v-model="state"><SelectTrigger id="syllabi-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="(itemLabel, value) in states" :key="value" :value="value">{{ itemLabel }}</SelectItem></SelectContent></Select></Field></template>
+          </FilterToolbar>
+        </form>
+        <p v-if="!result && !error" class="text-sm text-muted-foreground" role="status">Cargando sílabos…</p>
+        <Table v-if="result">
+          <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Convocatoria</TableHead><TableHead>Estado</TableHead><TableHead>Último guardado</TableHead><TableHead class="text-right">Avance</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+          <TableBody>
+            <TableEmpty v-if="result.syllabi.data.length === 0" :colspan="6">No tiene sílabos asignados con estos filtros.</TableEmpty>
+            <TableRow v-for="syllabus in result.syllabi.data" v-else :key="syllabus.id"><TableCell><div>{{ syllabus.subject }}</div><div class="text-sm text-muted-foreground">{{ syllabus.code }} · Paralelo(s) {{ syllabus.parallels.join(', ') }}</div></TableCell><TableCell><div>{{ syllabus.convocation }}</div><div class="text-sm text-muted-foreground">{{ syllabus.period }}</div></TableCell><TableCell>{{ states[syllabus.state] ?? syllabus.state }}</TableCell><TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell><TableCell class="text-right">{{ syllabus.completion.toFixed(0) }} %</TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${syllabus.subject}`"><DropdownMenuItem as-child><RouterLink :to="`/mis-silabos/${syllabus.id}`"><Eye aria-hidden="true" />Abrir sílabo</RouterLink></DropdownMenuItem></TableActionsMenu></TableCell></TableRow>
+          </TableBody>
+        </Table>
+        <TablePagination v-if="result" :meta="result.syllabi" label="Paginación de sílabos asignados" @update:page="load" />
+      </CardContent>
+    </Card>
+  </PageFrame>
 </template>

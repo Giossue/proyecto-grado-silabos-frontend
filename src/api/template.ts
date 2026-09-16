@@ -1,4 +1,5 @@
 import { api } from '@/api/client';
+import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 
 export type TemplateContentType = "text" | "table" | "bulleted_list" | "numbered_list" | "boolean" | "multiple_choice" | "institutional" | "flow";
 export type TemplateChoice = { value: string; label: string };
@@ -23,10 +24,10 @@ export type TemplateTableLayout = {
   totals: { enabled: boolean; label: string };
   repeat: { enabled: boolean; label: string };
 };
-export type TemplateBlock = { id: string; key: string; title: string; type: string; content_type: TemplateContentType; table: TemplateTableLayout | null; document: unknown; fingerprint: string; fields: TemplateField[] };
+export type TemplateBlock = { id: string; key: string; title: string; type: string; content_type: TemplateContentType; table: TemplateTableLayout | null; document: DocumentNode | null; fingerprint: string; fields: TemplateField[] };
 export type TemplateAppearance = { font_family: string; body_font_size: number; title_font_size: number; section_font_size: number; field_font_size: number; text_color: string; accent_color: string; table_header_background: string; table_header_color: string; margin_cm: number; orientation: string; title_bold: boolean; title_italic: boolean; title_alignment: string; section_bold: boolean; section_italic: boolean; section_alignment: string; body_alignment: string };
 export type TemplateOption = { value: string | number; label: string };
-export type TemplatePayload = { processLock: string | null; template: null | { id: string; name: string; description: string | null; appearance: TemplateAppearance; titleBlock: { text: string }; sections: Array<{ id: string; key: string; title: string; description: string | null; blocks: TemplateBlock[] }> }; blockTypes?: Array<{ value: TemplateContentType; label: string }>; appearanceOptions?: { fonts: TemplateOption[]; body_sizes: TemplateOption[]; title_sizes: TemplateOption[]; section_sizes: TemplateOption[]; field_sizes: TemplateOption[]; margins: TemplateOption[]; colors: TemplateOption[]; alignments: TemplateOption[]; orientations: TemplateOption[] }; logos?: { institution: string; faculty: string } };
+export type TemplatePayload = { processLock: string | null; template: null | { id: string; name: string; description: string | null; appearance: TemplateAppearance; titleBlock: { text: string }; sections: Array<{ id: string; key: string; title: string; description: string | null; blocks: TemplateBlock[] }> }; blockTypes?: Array<{ value: TemplateContentType; label: string }>; appearanceOptions?: { fonts: TemplateOption[]; body_sizes: TemplateOption[]; title_sizes: TemplateOption[]; section_sizes: TemplateOption[]; field_sizes: TemplateOption[]; margins: TemplateOption[]; colors: TemplateOption[]; alignments: TemplateOption[]; orientations: TemplateOption[] }; variables?: TemplateVariable[]; identificationDesign?: DocumentNode; logos?: { institution: string; faculty: string } };
 export const getTemplate = () => api<TemplatePayload>('/admin/template');
 export const createTemplate = () => api<{ message: string; template_id: string }>('/admin/template', { method: 'POST', body: JSON.stringify({}) });
 export const updateTemplateTitle = (id: string, title: string, confirm_purge = false) => api<{ message: string }>(`/admin/template/${id}/title`, { method: 'PATCH', body: JSON.stringify({ title, confirm_purge }) });
