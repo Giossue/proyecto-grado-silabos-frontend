@@ -160,3 +160,11 @@ td small { display: block; margin-top: .25rem; color: #53657b; }
 .profile-details div { display: grid; gap: .25rem; }.profile-details dt { color: #64748b; font-size: .875rem; }.profile-details dd { margin: 0; font-weight: 700; }
 .feedback { padding: .75rem 1rem; border-radius: .45rem; }.feedback.success { background: #e8f7ef; color: #17643b; }.feedback.error { background: #fff0f0; color: #a51d2d; }
 .session-list { display: grid; border-top: 1px solid #dbe3ef; }.session-list article { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .9rem 0; border-bottom: 1px solid #dbe3ef; }.session-list p { margin: .25rem 0 0; color: #64748b; }.session-list button { padding: .5rem .7rem; border: 1px solid #b8c4d5; border-radius: .4rem; background: white; cursor: pointer; }
+.primary-action { padding: .7rem .9rem; border: 0; border-radius: .4rem; background: #075da9; color: white; cursor: pointer; }
+.form-sheet { display: grid; width: min(32rem, 100%); height: 100%; grid-template-rows: auto minmax(0, 1fr); background: white; box-shadow: -12px 0 36px rgb(15 23 42 / 16%); }
+.form-sheet > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.25rem; border-bottom: 1px solid #dbe3ef; }
+.form-sheet > header h2, .form-sheet > header p { margin: 0; }.form-sheet > header p { margin-top: .35rem; color: #64748b; }
+.form-sheet-content { overflow-y: auto; padding: 1.25rem; }.form-sheet-content form { min-height: 100%; padding-bottom: 5rem; }
+.form-sheet-actions { position: sticky; bottom: -1.25rem; display: flex; justify-content: flex-end; gap: .65rem; margin: auto -1.25rem -1.25rem; padding: 1rem 1.25rem; border-top: 1px solid #dbe3ef; background: white; }
+.form-sheet-actions button { padding: .65rem .85rem; border: 1px solid #b8c4d5; border-radius: .4rem; background: white; cursor: pointer; }.form-sheet-actions button[type='submit'] { border-color: #075da9; background: #075da9; color: white; }
+:root[data-theme='dark'] .form-sheet, :root[data-theme='dark'] .form-sheet-actions { border-color: #334155; background: #172033; color: #e5edf7; }

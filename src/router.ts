@@ -11,6 +11,7 @@ import TwoFactorChallengePage from '@/pages/TwoFactorChallengePage.vue';
 import SecurityPage from '@/pages/SecurityPage.vue';
 import NotificationsPage from '@/pages/NotificationsPage.vue';
 import AdminUsersPage from '@/pages/AdminUsersPage.vue';
+import AdminUserDetailPage from '@/pages/AdminUserDetailPage.vue';
 import AcademicGovernancePage from '@/pages/AcademicGovernancePage.vue';
 import AdminProcessesPage from '@/pages/AdminProcessesPage.vue';
 import CoordinationConvocationsPage from '@/pages/CoordinationConvocationsPage.vue';
@@ -42,6 +43,7 @@ export const router = createRouter({
     { path: '/seguridad', component: SecurityPage, meta: { requiresAuth: true } },
     { path: '/notificaciones', component: NotificationsPage, meta: { requiresAuth: true } },
     { path: '/administracion/usuarios', component: AdminUsersPage, meta: { requiresAuth: true, roles: ['administrador'] } },
+    { path: '/administracion/usuarios/:user', component: AdminUserDetailPage, meta: { requiresAuth: true, roles: ['administrador'] } },
     { path: '/administracion/estructura-academica', component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ['administrador'] } },
     { path: '/administracion/procesos', component: AdminProcessesPage, meta: { requiresAuth: true, roles: ['administrador'] } },
     { path: '/administracion/plantilla', component: AdminTemplatePage, meta: { requiresAuth: true, roles: ['administrador'] } },
