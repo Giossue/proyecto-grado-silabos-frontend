@@ -13,6 +13,8 @@ import NotificationsPage from '@/pages/NotificationsPage.vue';
 import AdminUsersPage from '@/pages/AdminUsersPage.vue';
 import AcademicGovernancePage from '@/pages/AcademicGovernancePage.vue';
 import AdminProcessesPage from '@/pages/AdminProcessesPage.vue';
+import CoordinationConvocationsPage from '@/pages/CoordinationConvocationsPage.vue';
+import CoordinationConvocationDetailPage from '@/pages/CoordinationConvocationDetailPage.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -29,6 +31,8 @@ export const router = createRouter({
     { path: '/administracion/usuarios', component: AdminUsersPage, meta: { requiresAuth: true } },
     { path: '/administracion/estructura-academica', component: AcademicGovernancePage, meta: { requiresAuth: true } },
     { path: '/administracion/procesos', component: AdminProcessesPage, meta: { requiresAuth: true } },
+    { path: '/coordinacion/convocatorias', component: CoordinationConvocationsPage, meta: { requiresAuth: true } },
+    { path: '/coordinacion/convocatorias/:convocation', component: CoordinationConvocationDetailPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos', component: TeacherSyllabiPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos/:syllabus', component: TeacherSyllabusDetailPage, meta: { requiresAuth: true } },
   ],
