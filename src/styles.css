@@ -47,3 +47,7 @@ td small { display: block; margin-top: .25rem; color: #53657b; }
 .pagination { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; margin-top: 1rem; }
 .pagination button { padding: .55rem .7rem; border: 0; border-radius: .4rem; }
 .pagination button:disabled { cursor: not-allowed; opacity: .5; }
+.subject-link { color: #075da9; font-weight: 700; text-decoration: none; }
+.detail-card { display: grid; gap: .75rem; margin-bottom: 1rem; padding: 1.5rem; border: 1px solid #dbe3ef; border-radius: .75rem; background: white; }
+.detail-card h2, .detail-card p { margin: 0; }
+.detail-card button { justify-self: start; padding: .7rem .9rem; border: 0; border-radius: .4rem; background: #075da9; color: white; cursor: pointer; }

@@ -77,7 +77,7 @@ onMounted(load);
           </thead>
           <tbody>
             <tr v-for="syllabus in result.syllabi.data" :key="syllabus.id">
-              <td><strong>{{ syllabus.subject }}</strong><small>{{ syllabus.code }} · Paralelo(s) {{ syllabus.parallels.join(', ') }}</small></td>
+              <td><RouterLink class="subject-link" :to="`/mis-silabos/${syllabus.id}`">{{ syllabus.subject }}</RouterLink><small>{{ syllabus.code }} · Paralelo(s) {{ syllabus.parallels.join(', ') }}</small></td>
               <td>{{ syllabus.convocation }}<small>{{ syllabus.period }}</small></td>
               <td>{{ states[syllabus.state] }}</td>
               <td>{{ formatSavedAt(syllabus.guardado_en) }}</td>

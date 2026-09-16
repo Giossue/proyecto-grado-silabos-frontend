@@ -25,6 +25,20 @@ export type SyllabiResponse = {
   syllabi: SyllabusPage;
 };
 
+export type SyllabusDetail = {
+  id: string;
+  subject: string;
+  code: string;
+  convocation: string;
+  period: string;
+  state: SyllabusRow['state'];
+  version_bloqueo: number;
+  completion: number;
+  parallels: string[];
+  teachers: string[];
+  sections: Array<{ id: string; title: string; blocks: unknown[] }>;
+};
+
 export const getTeacherSyllabi = (filters: { q?: string; state?: string; page?: number } = {}) => {
   const query = new URLSearchParams();
   if (filters.q) query.set('q', filters.q);
@@ -34,3 +48,7 @@ export const getTeacherSyllabi = (filters: { q?: string; state?: string; page?: 
 
   return api<SyllabiResponse>(`/teacher/syllabi${suffix}`);
 };
+
+export const getTeacherSyllabus = (syllabusId: string) => api<{ syllabus: SyllabusDetail }>(`/teacher/syllabi/${syllabusId}`);
+export const startTeacherSyllabus = (syllabusId: string) =>
+  api<{ message: string; syllabus: SyllabusDetail }>(`/teacher/syllabi/${syllabusId}/start`, { method: 'POST' });
