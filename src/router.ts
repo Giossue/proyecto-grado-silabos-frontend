@@ -20,6 +20,7 @@ import CoordinationReviewDetailPage from '@/pages/CoordinationReviewDetailPage.v
 import CoordinationSourcesPage from '@/pages/CoordinationSourcesPage.vue';
 import CoordinationSourceDetailPage from '@/pages/CoordinationSourceDetailPage.vue';
 import CoordinationAcademicStructurePage from '@/pages/CoordinationAcademicStructurePage.vue';
+import AdminTemplatePage from '@/pages/AdminTemplatePage.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -36,6 +37,7 @@ export const router = createRouter({
     { path: '/administracion/usuarios', component: AdminUsersPage, meta: { requiresAuth: true } },
     { path: '/administracion/estructura-academica', component: AcademicGovernancePage, meta: { requiresAuth: true } },
     { path: '/administracion/procesos', component: AdminProcessesPage, meta: { requiresAuth: true } },
+    { path: '/administracion/plantilla', component: AdminTemplatePage, meta: { requiresAuth: true } },
     { path: '/coordinacion/convocatorias', component: CoordinationConvocationsPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/convocatorias/:convocation', component: CoordinationConvocationDetailPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/revisiones', component: CoordinationReviewsPage, meta: { requiresAuth: true } },

@@ -31,11 +31,12 @@ export async function initializeCsrfProtection(): Promise<void> {
 export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   const method = (init.method ?? 'GET').toUpperCase();
   const csrfToken = method === 'GET' || method === 'HEAD' ? null : readCookie('XSRF-TOKEN');
+  const isFormData = init.body instanceof FormData;
   const response = await fetch(`${baseUrl}/api/v1${path}`, {
     credentials: 'include',
     headers: {
       Accept: 'application/json',
-      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init.body && !isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...(csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {}),
       ...init.headers,
     },
