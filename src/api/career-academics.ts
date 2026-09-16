@@ -24,6 +24,7 @@ export type Curriculum = {
     credits: number | string;
     total_hours: number | string;
     active: boolean;
+    system_values: Record<string, number | string | null>;
     display_fields: Array<{
       id: string;
       label: string;
@@ -62,6 +63,12 @@ export type ScheduledSubjects = {
       codigo_asignatura: string;
       nombre: string;
       ciclo: number;
+    }>;
+    scheduledSubjects: Array<{
+      id: string;
+      label: string;
+      subject_id: string;
+      period_id: string;
     }>;
   };
 };
@@ -127,6 +134,44 @@ export const updateCurriculumConfiguration = (
     `/coordination/academic/curriculum/${careerId}/configuration`,
     { method: "PATCH", body: JSON.stringify(payload) },
   );
+export const updateCareerRecord = (
+  entity: string,
+  id: string,
+  payload: Record<string, unknown>,
+) =>
+  api<{ message: string }>(`/coordination/academic/${entity}/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+export const createSubjectRequirement = (
+  curriculumId: string,
+  payload: { subject_id: string; requirement_id: string; type: string },
+) =>
+  api<{ message: string }>(
+    `/coordination/academic/curriculum/${curriculumId}/requirements`,
+    { method: "POST", body: JSON.stringify(payload) },
+  );
+export const deleteSubjectRequirement = (
+  curriculumId: string,
+  requirementId: string,
+) =>
+  api<{ message: string }>(
+    `/coordination/academic/curriculum/${curriculumId}/requirements/${requirementId}`,
+    { method: "DELETE" },
+  );
+export const createParallels = (payload: {
+  scheduled_subject_id: string;
+  codes: string[];
+  shift: string | null;
+}) =>
+  api<{ message: string }>("/coordination/academic/parallels", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+export const deleteScheduledSubject = (id: string) =>
+  api<{ message: string }>(`/coordination/academic/scheduled-subjects/${id}`, {
+    method: "DELETE",
+  });
 export const createCareerTeacher = (payload: {
   nombre: string;
   correo_electronico: string;
