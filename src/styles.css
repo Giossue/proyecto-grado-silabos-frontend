@@ -8,3 +8,7 @@ button, input { font: inherit; }
 .auth-card input, .auth-card button, .workspace-page button { padding: .75rem; border-radius: .4rem; border: 1px solid #b8c4d5; }
 .auth-card button, .workspace-page button { border: 0; background: #075da9; color: white; cursor: pointer; }
 .workspace-page { place-content: start center; gap: 1rem; }
+.workspace-header { display: flex; width: min(100%, 60rem); align-items: center; justify-content: space-between; gap: 1rem; }
+.password-card { display: grid; width: min(100%, 32rem); gap: 1rem; padding: 1.5rem; background: white; border: 1px solid #dbe3ef; border-radius: .75rem; }
+.password-card label { display: grid; gap: .5rem; }
+.password-card input, .password-card button { padding: .75rem; border: 1px solid #b8c4d5; border-radius: .4rem; }

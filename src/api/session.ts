@@ -22,3 +22,8 @@ export const login = async (email: string, password: string): Promise<Session> =
 export const logout = () => api<void>('/authentication/logout', { method: 'POST' });
 export const selectActiveRole = (roleAssignmentId: string) =>
   api<Session>('/active-role', { method: 'PUT', body: JSON.stringify({ role_assignment_id: roleAssignmentId }) });
+export const updatePassword = (password: string, passwordConfirmation: string) =>
+  api<Session>('/authentication/password', {
+    method: 'PUT',
+    body: JSON.stringify({ password, password_confirmation: passwordConfirmation }),
+  });
