@@ -18,6 +18,7 @@ import CoordinationConvocationsPage from '@/pages/CoordinationConvocationsPage.v
 import CoordinationConvocationDetailPage from '@/pages/CoordinationConvocationDetailPage.vue';
 import CoordinationReviewsPage from '@/pages/CoordinationReviewsPage.vue';
 import CoordinationReviewDetailPage from '@/pages/CoordinationReviewDetailPage.vue';
+import CoordinationReviewComparisonPage from '@/pages/CoordinationReviewComparisonPage.vue';
 import CoordinationSourcesPage from '@/pages/CoordinationSourcesPage.vue';
 import CoordinationSourceDetailPage from '@/pages/CoordinationSourceDetailPage.vue';
 import CoordinationAcademicStructurePage from '@/pages/CoordinationAcademicStructurePage.vue';
@@ -53,6 +54,7 @@ export const router = createRouter({
     { path: '/coordinacion/convocatorias/:convocation', component: CoordinationConvocationDetailPage, meta: { requiresAuth: true, roles: ['coordinador'] } },
     { path: '/coordinacion/revisiones', component: CoordinationReviewsPage, meta: { requiresAuth: true, roles: ['coordinador'] } },
     { path: '/coordinacion/revisiones/:revision', component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ['coordinador'] } },
+    { path: '/coordinacion/revisiones/:before/comparar/:after', component: CoordinationReviewComparisonPage, meta: { requiresAuth: true, roles: ['coordinador'] } },
     { path: '/coordinacion/fuentes', component: CoordinationSourcesPage, meta: { requiresAuth: true, roles: ['coordinador'] } },
     { path: '/coordinacion/fuentes/:source', component: CoordinationSourceDetailPage, meta: { requiresAuth: true, roles: ['coordinador'] } },
     { path: '/coordinacion/estructura-academica', component: CoordinationAcademicStructurePage, meta: { requiresAuth: true, roles: ['coordinador'] } },
