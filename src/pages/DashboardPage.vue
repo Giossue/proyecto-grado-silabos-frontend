@@ -95,6 +95,9 @@ onMounted(load);
       <RouterLink v-if="session.active_role?.code === 'coordinador'" class="primary-link" to="/coordinacion/estructura-academica">
         Gestionar estructura académica
       </RouterLink>
+      <RouterLink v-if="session.active_role?.code === 'coordinador'" class="primary-link" to="/coordinacion/informes">
+        Ver seguimiento operativo
+      </RouterLink>
       <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/usuarios">
         Administrar usuarios
       </RouterLink>
@@ -106,6 +109,12 @@ onMounted(load);
       </RouterLink>
       <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/plantilla">
         Gestionar plantilla institucional
+      </RouterLink>
+      <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/auditoria">
+        Consultar auditoría
+      </RouterLink>
+      <RouterLink v-if="session.active_role?.code === 'administrador'" class="primary-link" to="/administracion/trabajos">
+        Supervisar trabajos
       </RouterLink>
     </template>
     <p v-else-if="error" role="alert">{{ error }}</p>

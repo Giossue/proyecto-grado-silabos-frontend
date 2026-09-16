@@ -22,6 +22,9 @@ import CoordinationSourceDetailPage from '@/pages/CoordinationSourceDetailPage.v
 import CoordinationAcademicStructurePage from '@/pages/CoordinationAcademicStructurePage.vue';
 import AdminTemplatePage from '@/pages/AdminTemplatePage.vue';
 import DocumentsPage from '@/pages/DocumentsPage.vue';
+import AdminAuditPage from '@/pages/AdminAuditPage.vue';
+import AdminJobsPage from '@/pages/AdminJobsPage.vue';
+import CoordinationReportsPage from '@/pages/CoordinationReportsPage.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -39,6 +42,8 @@ export const router = createRouter({
     { path: '/administracion/estructura-academica', component: AcademicGovernancePage, meta: { requiresAuth: true } },
     { path: '/administracion/procesos', component: AdminProcessesPage, meta: { requiresAuth: true } },
     { path: '/administracion/plantilla', component: AdminTemplatePage, meta: { requiresAuth: true } },
+    { path: '/administracion/auditoria', component: AdminAuditPage, meta: { requiresAuth: true } },
+    { path: '/administracion/trabajos', component: AdminJobsPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/convocatorias', component: CoordinationConvocationsPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/convocatorias/:convocation', component: CoordinationConvocationDetailPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/revisiones', component: CoordinationReviewsPage, meta: { requiresAuth: true } },
@@ -46,6 +51,7 @@ export const router = createRouter({
     { path: '/coordinacion/fuentes', component: CoordinationSourcesPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/fuentes/:source', component: CoordinationSourceDetailPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/estructura-academica', component: CoordinationAcademicStructurePage, meta: { requiresAuth: true } },
+    { path: '/coordinacion/informes', component: CoordinationReportsPage, meta: { requiresAuth: true } },
     { path: '/revisiones/:revision/documentos', component: DocumentsPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos', component: TeacherSyllabiPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos/:syllabus', component: TeacherSyllabusDetailPage, meta: { requiresAuth: true } },
