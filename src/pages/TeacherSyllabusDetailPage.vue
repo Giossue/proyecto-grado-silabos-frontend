@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { getTeacherSyllabus, requestAiReview, respondObservation, saveTeacherField, startTeacherSyllabus, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField } from '@/api/syllabi';
+import { getTeacherSyllabus, requestAiReview, respondObservation, saveTeacherField, saveTeacherRows, startTeacherSyllabus, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField } from '@/api/syllabi';
 
 const route = useRoute();
 const router = useRouter();
@@ -80,6 +80,8 @@ const toggleBoolean = (field: SyllabusField, checked: boolean): void => {
 };
 
 const isChecked = (field: SyllabusField): boolean => (field as unknown as { value: boolean }).value === true;
+const addRow = (field: SyllabusField): void => { field.rows.push({ id: '', position: field.rows.length + 1, data: Object.fromEntries((field.table?.columns ?? []).map((column) => [column.key, null])) }); };
+const saveRows = async (field: SyllabusField): Promise<void> => { if (!syllabus.value) return; const saved = await saveTeacherRows(syllabus.value.id, field.id, syllabus.value.version_bloqueo, field.rows.map((row) => ({ ...row, id: row.id || undefined })) as SyllabusField['rows']); field.rows = saved.rows; syllabus.value.version_bloqueo = saved.version_bloqueo; syllabus.value.completion = saved.completion; };
 
 const validate = async (): Promise<void> => {
   if (!syllabus.value) return;
@@ -145,6 +147,7 @@ onMounted(load);
               <label v-else-if="field.teacher_editable && !field.inherited && field.type === 'booleano'">
                 <input type="checkbox" :checked="isChecked(field)" @change="toggleBoolean(field, ($event.target as HTMLInputElement).checked)" /> {{ field.label }}<span v-if="field.required"> *</span>
               </label>
+              <div v-else-if="field.teacher_editable && !field.inherited && field.type === 'repetible'" class="table-wrap"><table><thead><tr><th v-for="column in field.table?.columns" :key="column.key">{{ column.label }}</th></tr></thead><tbody><tr v-for="row in field.rows" :key="row.id || row.position"><td v-for="column in field.table?.columns" :key="column.key"><input v-model="row.data[column.key]" :type="column.type === 'number' ? 'number' : 'text'" /></td></tr></tbody></table><button type="button" @click="addRow(field)">Agregar fila</button><button type="button" @click="saveRows(field)">Guardar filas</button></div>
               <p v-else-if="field.inherited">{{ field.label }}: {{ field.value ?? 'Dato institucional' }}</p>
             </template>
           </template>

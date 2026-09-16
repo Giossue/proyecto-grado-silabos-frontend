@@ -50,6 +50,8 @@ export type SyllabusField = {
   inherited: boolean;
   teacher_editable: boolean;
   value: string | number | null;
+  rows: Array<{ id: string; data: Record<string, string | number | null>; position: number }>;
+  table?: { columns: Array<{ key: string; label: string; type: 'text' | 'number' }>; totals: { enabled: boolean; label: string } } | null;
 };
 
 export type SyllabusBlock = { id: string; title: string | null; fields: SyllabusField[] };
@@ -72,6 +74,7 @@ export const saveTeacherField = (syllabusId: string, fieldId: string, version: n
     method: 'PATCH',
     body: JSON.stringify({ version_bloqueo: version, value }),
   });
+export const saveTeacherRows = (syllabusId: string, fieldId: string, version: number, rows: SyllabusField['rows']) => api<{ version_bloqueo: number; completion: number; rows: SyllabusField['rows'] }>(`/teacher/syllabi/${syllabusId}/fields/${fieldId}`, { method: 'PATCH', body: JSON.stringify({ version_bloqueo: version, rows }) });
 export const validateTeacherSyllabus = (syllabusId: string) =>
   api<{ message: string; validation: { blocking_errors: number; warnings: number; results: Array<{ message: string }> } }>(`/teacher/syllabi/${syllabusId}/validate`, { method: 'POST' });
 export const submitTeacherSyllabus = (syllabusId: string, version: number) =>
