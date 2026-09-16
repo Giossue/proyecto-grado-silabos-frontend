@@ -15,6 +15,9 @@ import {
 } from "@/api/reviews";
 import { getSession } from "@/api/session";
 import SnapshotValue from "@/components/SnapshotValue.vue";
+import SyllabusDocumentHeader from "@/components/SyllabusDocumentHeader.vue";
+import SyllabusIdentificationTable from "@/components/SyllabusIdentificationTable.vue";
+import SyllabusTableView from "@/components/SyllabusTableView.vue";
 const route = useRoute();
 const router = useRouter();
 const data = ref<ReviewDetail | null>(null);
@@ -167,32 +170,66 @@ onMounted(() => {
           </li>
         </ol>
       </section>
-      <section
-        v-for="section in data.revision.snapshot.sections"
-        :key="section.key"
-        class="detail-card"
-      >
-        <h2>{{ section.title }}</h2>
-        <article v-for="block in section.blocks" :key="block.key">
-          <h3>{{ block.title }}</h3>
-          <dl class="review-fields">
-            <template v-for="field in block.fields" :key="field.key"
-              ><dt>{{ field.label }}</dt>
-              <dd>
-                <SnapshotValue :value="field.value" :rows="field.rows" /><button
-                  v-if="
-                    data.revision.is_current &&
-                    data.syllabus.state === 'en_revision'
-                  "
-                  class="inline-action"
-                  type="button"
-                  @click="startObservation(section.key, field.key)"
-                >
-                  Observar este campo
-                </button>
-              </dd></template
-            >
-          </dl>
+      <section class="syllabus-document-workspace review-document-workspace">
+        <article
+          class="syllabus-document-paper"
+          :style="{
+            fontFamily: data.presentation.appearance.font_family,
+            fontSize: `${data.presentation.appearance.body_font_size}pt`,
+            color: data.presentation.appearance.text_color,
+            textAlign: data.presentation.appearance.body_alignment as 'left' | 'center' | 'right' | 'justify',
+            width: data.presentation.appearance.orientation === 'landscape' ? '70rem' : '52rem',
+            padding: `${data.presentation.appearance.margin_cm}cm`,
+          }"
+        >
+          <SyllabusDocumentHeader :presentation="data.presentation" />
+          <section
+            v-for="(section, sectionIndex) in data.revision.snapshot.sections"
+            :key="section.key"
+            class="syllabus-document-section"
+          >
+            <h2
+              :style="{
+                color: data.presentation.appearance.accent_color,
+                fontSize: `${data.presentation.appearance.section_font_size}pt`,
+              }"
+            >{{ sectionIndex + 1 }}. {{ section.title }}</h2>
+            <SyllabusIdentificationTable
+              v-if="sectionIndex === 0 && data.revision.identification"
+              :rows="data.revision.identification"
+            />
+            <article v-for="block in section.blocks" :key="block.key">
+              <h3 v-if="block.title && block.title !== section.title">{{ block.title }}</h3>
+              <dl class="review-fields">
+                <template v-for="field in block.fields" :key="field.key">
+                  <dt>{{ field.label }}</dt>
+                  <dd>
+                    <SyllabusTableView
+                      v-if="field.type === 'repetible' && block.table"
+                      :layout="block.table"
+                      :rows="field.rows"
+                    />
+                    <SnapshotValue
+                      v-else
+                      :value="field.value"
+                      :rows="field.rows"
+                    />
+                    <button
+                      v-if="
+                        data.revision.is_current &&
+                        data.syllabus.state === 'en_revision'
+                      "
+                      class="inline-action"
+                      type="button"
+                      @click="startObservation(section.key, field.key)"
+                    >
+                      Observar este campo
+                    </button>
+                  </dd>
+                </template>
+              </dl>
+            </article>
+          </section>
         </article>
       </section>
       <section class="detail-card">

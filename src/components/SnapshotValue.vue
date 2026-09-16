@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from "vue";
+import type { TableColumn } from "@/api/syllabi";
 
 const props = defineProps<{
   value?: unknown;
   rows?: Array<{ id?: string; position?: number; data: unknown }>;
+  columns?: TableColumn[] | null;
 }>();
 const rowObjects = computed(() =>
   (props.rows ?? [])
@@ -13,9 +15,14 @@ const rowObjects = computed(() =>
         typeof value === "object" && value !== null && !Array.isArray(value),
     ),
 );
-const columns = computed(() =>
-  Array.from(new Set(rowObjects.value.flatMap((row) => Object.keys(row)))),
-);
+const displayColumns = computed(() => {
+  if (props.columns?.length) {
+    return props.columns.map((column) => ({ key: column.key, label: column.label }));
+  }
+
+  return Array.from(new Set(rowObjects.value.flatMap((row) => Object.keys(row))))
+    .map((key) => ({ key, label: key }));
+});
 const text = (value: unknown): string =>
   value === null || value === undefined || value === ""
     ? "Sin contenido"
@@ -28,16 +35,16 @@ const text = (value: unknown): string =>
 
 <template>
   <div v-if="rows?.length" class="snapshot-table-wrap">
-    <table v-if="columns.length">
+    <table v-if="displayColumns.length">
       <thead>
         <tr>
-          <th v-for="column in columns" :key="column">{{ column }}</th>
+          <th v-for="column in displayColumns" :key="column.key">{{ column.label }}</th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(row, index) in rowObjects" :key="rows[index]?.id ?? index">
-          <td v-for="column in columns" :key="column">
-            {{ text(row[column]) }}
+          <td v-for="column in displayColumns" :key="column.key">
+            {{ text(row[column.key]) }}
           </td>
         </tr>
       </tbody>

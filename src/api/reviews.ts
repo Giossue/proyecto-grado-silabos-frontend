@@ -1,4 +1,9 @@
 import { api } from "@/api/client";
+import type {
+  DocumentPresentation,
+  IdentificationCell,
+  TableLayout,
+} from "@/api/syllabi";
 
 export type ReviewQueueItem = {
   id: string;
@@ -45,7 +50,11 @@ export type SnapshotField = {
   type: string;
   inherited: boolean;
   value: unknown;
-  rows: Array<{ id: string; position: number; data: unknown }>;
+  rows: Array<{
+    id: string;
+    position: number;
+    data: Record<string, string | number | null>;
+  }>;
 };
 export type ReviewDetail = {
   syllabus: {
@@ -56,6 +65,7 @@ export type ReviewDetail = {
     state: string;
     teachers: string[];
   };
+  presentation: DocumentPresentation;
   revision: {
     id: string;
     number: number;
@@ -65,12 +75,16 @@ export type ReviewDetail = {
       sections: Array<{
         key: string;
         title: string;
-        blocks: Array<{ key: string; title: string; fields: SnapshotField[] }>;
+        blocks: Array<{
+          key: string;
+          title: string;
+          content_type: string;
+          table: TableLayout | null;
+          fields: SnapshotField[];
+        }>;
       }>;
     };
-    identification: Array<
-      Array<{ label: string; value: string }> | unknown
-    > | null;
+    identification: IdentificationCell[][] | null;
     is_current: boolean;
   };
   history: Array<{

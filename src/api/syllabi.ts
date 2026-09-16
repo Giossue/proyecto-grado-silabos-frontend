@@ -1,4 +1,21 @@
 import { api } from "@/api/client";
+import type { TemplateAppearance } from "@/api/template";
+
+export type DocumentPresentation = {
+  appearance: TemplateAppearance;
+  title: string;
+  logos: { institution: string; faculty: string };
+};
+
+export type IdentificationCell = {
+  text: string;
+  span: number;
+  rows: number;
+  style: "blue" | "shade" | "plain";
+  bold: boolean;
+  small: boolean;
+  center: boolean;
+};
 
 export type SyllabusRow = {
   id: string;
@@ -41,6 +58,8 @@ export type SyllabusDetail = {
   completion: number;
   parallels: string[];
   teachers: string[];
+  presentation: DocumentPresentation;
+  identification: IdentificationCell[][];
   sections: Array<{
     id: string;
     title: string;
@@ -84,6 +103,7 @@ export type TableLayout = {
 
 export type SyllabusField = {
   id: string;
+  key: string;
   label: string;
   help: string | null;
   type: string;
@@ -92,7 +112,7 @@ export type SyllabusField = {
   inherited: boolean;
   teacher_editable: boolean;
   ai_enabled: boolean;
-  value: string | number | null;
+  value: string | number | boolean | string[] | null;
   rows: RepeatableRow[];
 };
 
@@ -203,6 +223,8 @@ export type SyllabusBlock = {
   title: string | null;
   content_type: string;
   table: TableLayout | null;
+  page_orientation?: string;
+  document?: unknown;
   fields: SyllabusField[];
 };
 
