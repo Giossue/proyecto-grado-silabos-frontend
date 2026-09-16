@@ -36,8 +36,22 @@ export type SyllabusDetail = {
   completion: number;
   parallels: string[];
   teachers: string[];
-  sections: Array<{ id: string; title: string; blocks: unknown[] }>;
+  sections: Array<{ id: string; title: string; description: string | null; blocks: SyllabusBlock[] }>;
 };
+
+export type SyllabusField = {
+  id: string;
+  label: string;
+  help: string | null;
+  type: string;
+  options: Array<{ value: string; label: string }>;
+  required: boolean;
+  inherited: boolean;
+  teacher_editable: boolean;
+  value: string | number | null;
+};
+
+export type SyllabusBlock = { id: string; title: string | null; fields: SyllabusField[] };
 
 export const getTeacherSyllabi = (filters: { q?: string; state?: string; page?: number } = {}) => {
   const query = new URLSearchParams();
@@ -52,3 +66,8 @@ export const getTeacherSyllabi = (filters: { q?: string; state?: string; page?: 
 export const getTeacherSyllabus = (syllabusId: string) => api<{ syllabus: SyllabusDetail }>(`/teacher/syllabi/${syllabusId}`);
 export const startTeacherSyllabus = (syllabusId: string) =>
   api<{ message: string; syllabus: SyllabusDetail }>(`/teacher/syllabi/${syllabusId}/start`, { method: 'POST' });
+export const saveTeacherField = (syllabusId: string, fieldId: string, version: number, value: unknown) =>
+  api<{ version_bloqueo: number; completion: number }>(`/teacher/syllabi/${syllabusId}/fields/${fieldId}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ version_bloqueo: version, value }),
+  });
