@@ -14,7 +14,11 @@ const submit = async (): Promise<void> => {
   pending.value = true;
   error.value = null;
   try {
-    await login(email.value, password.value);
+    const result = await login(email.value, password.value);
+    if ('two_factor_required' in result) {
+      await router.replace('/verificar-dos-factores');
+      return;
+    }
     await router.replace('/');
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo iniciar sesión.';

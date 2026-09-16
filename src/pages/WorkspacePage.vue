@@ -72,7 +72,7 @@ onMounted(load);
     <template v-else-if="session">
       <header class="workspace-header">
         <h1>Bienvenida, {{ session.user.name }}</h1>
-        <button type="button" @click="closeSession">Cerrar sesión</button>
+        <div class="header-actions"><RouterLink class="back-link" to="/seguridad">Seguridad</RouterLink><button type="button" @click="closeSession">Cerrar sesión</button></div>
       </header>
       <section v-if="!session.user.email_verified" class="password-card">
         <h2>Verifique su correo institucional</h2>

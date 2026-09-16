@@ -73,4 +73,8 @@ td small { display: block; margin-top: .25rem; color: #53657b; }
 .ai-recommendation textarea { width: 100%; min-height: 5rem; padding: .6rem; border: 1px solid #b8c4d5; border-radius: .4rem; resize: vertical; }
 .ai-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
 .ai-evidence article { display: grid; gap: .25rem; padding-top: .65rem; border-top: 1px solid #e6ebf1; }
+.qr-code { width: max-content; padding: .75rem; border: 1px solid #dbe3ef; border-radius: .5rem; background: white; }
+.recovery-codes { display: grid; gap: .5rem; }
+.recovery-codes h3 { margin: 0; }
+.recovery-codes code { width: max-content; padding: .35rem .5rem; border-radius: .25rem; background: #edf2f7; }
 @media (max-width: 40rem) { .ai-panel { top: .5rem; right: .5rem; width: calc(100vw - 1rem); max-height: calc(100vh - 1rem); } }

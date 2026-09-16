@@ -13,11 +13,22 @@ export type Session = {
   available_roles: ActiveRole[];
 };
 
+export type TwoFactorStatus = { enabled: boolean; confirmation_required: boolean };
+export type LoginResult = Session | { two_factor_required: true; message: string };
+
 export const getSession = () => api<Session>('/session');
-export const login = async (email: string, password: string): Promise<Session> => {
+export const login = async (email: string, password: string): Promise<LoginResult> => {
   await initializeCsrfProtection();
 
-  return api<Session>('/authentication/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+  return api<LoginResult>('/authentication/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+};
+export const completeTwoFactorLogin = async (code: string, recoveryCode: string): Promise<{ message: string }> => {
+  await initializeCsrfProtection();
+
+  return api<{ message: string }>('/authentication/two-factor/challenge', {
+    method: 'POST',
+    body: JSON.stringify({ code: code || undefined, recovery_code: recoveryCode || undefined }),
+  });
 };
 export const requestPasswordRecovery = async (email: string): Promise<{ message: string }> => {
   await initializeCsrfProtection();
@@ -41,6 +52,10 @@ export const verifyEmail = async (userId: string, hash: string, query: URLSearch
   return api<{ message: string }>(`/authentication/email-verification/${userId}/${hash}?${query.toString()}`, { method: 'POST' });
 };
 export const resendEmailVerification = () => api<{ message: string }>('/authentication/email-verification/resend', { method: 'POST' });
+export const getTwoFactorStatus = () => api<TwoFactorStatus>('/authentication/two-factor');
+export const enableTwoFactor = () => api<TwoFactorStatus & { qr_code_svg: string }>('/authentication/two-factor', { method: 'POST' });
+export const confirmTwoFactor = (code: string) => api<TwoFactorStatus & { recovery_codes: string[] }>('/authentication/two-factor/confirm', { method: 'POST', body: JSON.stringify({ code }) });
+export const disableTwoFactor = () => api<TwoFactorStatus>('/authentication/two-factor', { method: 'DELETE' });
 export const logout = () => api<void>('/authentication/logout', { method: 'POST' });
 export const selectActiveRole = (roleAssignmentId: string) =>
   api<Session>('/active-role', { method: 'PUT', body: JSON.stringify({ role_assignment_id: roleAssignmentId }) });
