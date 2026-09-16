@@ -12,3 +12,23 @@ button, input { font: inherit; }
 .password-card { display: grid; width: min(100%, 32rem); gap: 1rem; padding: 1.5rem; background: white; border: 1px solid #dbe3ef; border-radius: .75rem; }
 .password-card label { display: grid; gap: .5rem; }
 .password-card input, .password-card button { padding: .75rem; border: 1px solid #b8c4d5; border-radius: .4rem; }
+.app-page { width: min(100%, 72rem); margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.app-header, .setup-heading, .header-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.app-header { margin-bottom: 2rem; }
+.app-header h1, .app-header p, .setup-card h2, .setup-card p { margin: 0; }
+.eyebrow { color: #53657b; font-size: .875rem; font-weight: 700; }
+.header-actions button, .workspace-header button { padding: .6rem .85rem; border: 1px solid #b8c4d5; border-radius: .4rem; background: white; color: #172033; cursor: pointer; }
+.role-badge { padding: .35rem .6rem; border-radius: 999px; background: #e7eef8; color: #075da9; font-size: .875rem; font-weight: 700; }
+.setup-card, .metric-card { background: white; border: 1px solid #dbe3ef; border-radius: .75rem; }
+.setup-card { padding: 1.5rem; }
+.setup-heading strong { font-size: 1.25rem; }
+.setup-list { display: grid; gap: .8rem; margin: 1.5rem 0 0; padding: 0; list-style: none; }
+.setup-list li { display: flex; gap: .75rem; align-items: flex-start; }
+.setup-list li > span { color: #075da9; font-weight: 700; }
+.setup-list p { margin-top: .2rem; color: #53657b; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+.metric-card { display: grid; gap: .45rem; padding: 1.25rem; }
+.metric-card p, .metric-card span { margin: 0; color: #53657b; }
+.metric-card strong { font-size: 2rem; }
+.metric-card small { font-size: 1rem; }
+@media (max-width: 40rem) { .app-header, .setup-heading { align-items: flex-start; flex-direction: column; } .header-actions { width: 100%; justify-content: space-between; } }

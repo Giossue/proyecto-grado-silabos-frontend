@@ -15,6 +15,10 @@ const changingPassword = ref(false);
 const load = async (): Promise<void> => {
   try {
     session.value = await getSession();
+    if (session.value.active_role && !session.value.user.must_change_password) {
+      await router.replace('/panel');
+      return;
+    }
   } catch (reason) {
     if (reason instanceof ApiError && reason.status === 401) {
       await router.replace('/ingresar');
@@ -26,6 +30,7 @@ const load = async (): Promise<void> => {
 
 const selectRole = async (roleAssignmentId: string): Promise<void> => {
   session.value = await selectActiveRole(roleAssignmentId);
+  await router.replace('/panel');
 };
 
 const savePassword = async (): Promise<void> => {
