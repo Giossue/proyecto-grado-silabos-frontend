@@ -6,6 +6,7 @@ import TeacherSyllabiPage from '@/pages/TeacherSyllabiPage.vue';
 import TeacherSyllabusDetailPage from '@/pages/TeacherSyllabusDetailPage.vue';
 import PasswordRecoveryPage from '@/pages/PasswordRecoveryPage.vue';
 import ResetPasswordPage from '@/pages/ResetPasswordPage.vue';
+import VerifyEmailPage from '@/pages/VerifyEmailPage.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -13,6 +14,7 @@ export const router = createRouter({
     { path: '/ingresar', component: LoginPage, meta: { guest: true } },
     { path: '/recuperar-contrasena', component: PasswordRecoveryPage, meta: { guest: true } },
     { path: '/restablecer-contrasena', component: ResetPasswordPage, meta: { guest: true } },
+    { path: '/api/v1/authentication/email-verification/:user/:hash', component: VerifyEmailPage, meta: { guest: true } },
     { path: '/', component: WorkspacePage, meta: { requiresAuth: true } },
     { path: '/panel', component: DashboardPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos', component: TeacherSyllabiPage, meta: { requiresAuth: true } },

@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { getSession, logout, selectActiveRole, updatePassword, type Session } from '@/api/session';
+import { getSession, logout, resendEmailVerification, selectActiveRole, updatePassword, type Session } from '@/api/session';
 
 const router = useRouter();
 const session = ref<Session | null>(null);
@@ -11,6 +11,7 @@ const password = ref('');
 const passwordConfirmation = ref('');
 const passwordError = ref<string | null>(null);
 const changingPassword = ref(false);
+const verificationMessage = ref<string | null>(null);
 
 const load = async (): Promise<void> => {
   try {
@@ -58,6 +59,10 @@ const closeSession = async (): Promise<void> => {
   await router.replace('/ingresar');
 };
 
+const resendVerification = async (): Promise<void> => {
+  verificationMessage.value = (await resendEmailVerification()).message;
+};
+
 onMounted(load);
 </script>
 
@@ -69,6 +74,12 @@ onMounted(load);
         <h1>Bienvenida, {{ session.user.name }}</h1>
         <button type="button" @click="closeSession">Cerrar sesión</button>
       </header>
+      <section v-if="!session.user.email_verified" class="password-card">
+        <h2>Verifique su correo institucional</h2>
+        <p>Necesitamos confirmar {{ session.user.email }} para completar su acceso.</p>
+        <p v-if="verificationMessage" class="save-status" role="status">{{ verificationMessage }}</p>
+        <button type="button" @click="resendVerification">Reenviar enlace</button>
+      </section>
       <form v-if="session.user.must_change_password" class="password-card" @submit.prevent="savePassword">
         <h2>Cambie su contraseña temporal</h2>
         <p>Defina una contraseña nueva para continuar.</p>

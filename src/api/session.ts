@@ -8,7 +8,7 @@ export type ActiveRole = {
 };
 
 export type Session = {
-  user: { id: string; name: string; email: string; must_change_password: boolean };
+  user: { id: string; name: string; email: string; email_verified: boolean; must_change_password: boolean };
   active_role: ActiveRole | null;
   available_roles: ActiveRole[];
 };
@@ -35,6 +35,12 @@ export const resetForgottenPassword = async (email: string, token: string, passw
     body: JSON.stringify({ email, token, password, password_confirmation: passwordConfirmation }),
   });
 };
+export const verifyEmail = async (userId: string, hash: string, query: URLSearchParams): Promise<{ message: string }> => {
+  await initializeCsrfProtection();
+
+  return api<{ message: string }>(`/authentication/email-verification/${userId}/${hash}?${query.toString()}`, { method: 'POST' });
+};
+export const resendEmailVerification = () => api<{ message: string }>('/authentication/email-verification/resend', { method: 'POST' });
 export const logout = () => api<void>('/authentication/logout', { method: 'POST' });
 export const selectActiveRole = (roleAssignmentId: string) =>
   api<Session>('/active-role', { method: 'PUT', body: JSON.stringify({ role_assignment_id: roleAssignmentId }) });
