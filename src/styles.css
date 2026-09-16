@@ -1418,6 +1418,52 @@ td small {
   border: 1px solid #e6ebf1;
   border-radius: 0.5rem;
 }
+.ai-config-form {
+  display: grid;
+  gap: 1rem;
+}
+.ai-config-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid #e6ebf1;
+}
+.ai-config-field span {
+  display: grid;
+  gap: 0.25rem;
+}
+.ai-config-field small {
+  color: #64748b;
+}
+.ai-config-field input {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+.ai-config-actions {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #dbe3ef;
+  border-radius: 0.6rem;
+  background: white;
+}
+.ai-config-actions button {
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #b8c4d5;
+  border-radius: 0.4rem;
+  background: white;
+  cursor: pointer;
+}
+.ai-config-actions .primary-action {
+  border-color: #075da9;
+  background: #075da9;
+  color: white;
+}
 .comparison-columns h3 {
   margin-top: 0;
 }
