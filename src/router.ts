@@ -9,6 +9,7 @@ import ResetPasswordPage from '@/pages/ResetPasswordPage.vue';
 import VerifyEmailPage from '@/pages/VerifyEmailPage.vue';
 import TwoFactorChallengePage from '@/pages/TwoFactorChallengePage.vue';
 import SecurityPage from '@/pages/SecurityPage.vue';
+import NotificationsPage from '@/pages/NotificationsPage.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -21,6 +22,7 @@ export const router = createRouter({
     { path: '/', component: WorkspacePage, meta: { requiresAuth: true } },
     { path: '/panel', component: DashboardPage, meta: { requiresAuth: true } },
     { path: '/seguridad', component: SecurityPage, meta: { requiresAuth: true } },
+    { path: '/notificaciones', component: NotificationsPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos', component: TeacherSyllabiPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos/:syllabus', component: TeacherSyllabusDetailPage, meta: { requiresAuth: true } },
   ],

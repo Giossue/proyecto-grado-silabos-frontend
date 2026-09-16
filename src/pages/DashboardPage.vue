@@ -49,6 +49,7 @@ onMounted(load);
         </div>
         <div class="header-actions">
           <span class="role-badge">{{ session.active_role?.code }}</span>
+          <RouterLink class="back-link" to="/notificaciones">Notificaciones</RouterLink>
           <button type="button" @click="closeSession">Cerrar sesión</button>
         </div>
       </header>
