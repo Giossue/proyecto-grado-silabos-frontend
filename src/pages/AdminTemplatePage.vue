@@ -4,11 +4,12 @@ import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import {
   createTemplate, createTemplateField, createTemplateSection, deleteTemplateBlock, deleteTemplateSection,
-  getTemplate, reorderTemplateBlocks, reorderTemplateSections, updateTemplateAppearance, updateTemplateDocument,
+  getTemplate, reorderTemplateBlocks, reorderTemplateSections, updateTemplateAppearance,
   updateTemplateField, updateTemplateSection, updateTemplateTable, updateTemplateTitle, uploadInstitutionLogo,
-  type TemplateAppearance, type TemplateBlock, type TemplateField, type TemplatePayload,
+  type TemplateAppearance, type TemplateBlock, type TemplateField, type TemplatePayload, type TemplateTableLayout,
 } from '@/api/template';
 import { getSession } from '@/api/session';
+import TemplateTableDesigner from '@/components/TemplateTableDesigner.vue';
 
 const router = useRouter();
 const data = ref<TemplatePayload | null>(null);
@@ -18,8 +19,6 @@ const saving = ref(false);
 const title = ref('PROGRAMA DE ASIGNATURA (SÍLABO)');
 const logo = ref<File | null>(null);
 const appearance = ref<TemplateAppearance | null>(null);
-const designEditors = reactive<Record<string, string>>({});
-const tableEditors = reactive<Record<string, string>>({});
 const section = reactive({ title: '', key: '', first_field_label: '', first_field_key: '', first_field_content_type: 'text' });
 const field = reactive({ section_id: '', key: '', label: '', help: '', content_type: 'text', required: true, inherited: false, master_source: '', teacher_editable: true, ai_enabled: false, ai_coordinator_configurable: true });
 
@@ -30,12 +29,6 @@ const load = async (): Promise<void> => {
     data.value = await getTemplate();
     title.value = data.value.template?.titleBlock.title ?? title.value;
     appearance.value = data.value.template ? { ...data.value.template.appearance } : null;
-    for (const currentSection of data.value.template?.sections ?? []) {
-      for (const block of currentSection.blocks) {
-        designEditors[block.id] = JSON.stringify(block.document, null, 2);
-        tableEditors[block.id] = JSON.stringify(block.table, null, 2);
-      }
-    }
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la plantilla.';
   }
@@ -63,13 +56,8 @@ const moveBlock = (sectionId: string, blocks: TemplateBlock[], index: number, of
   const ids = blocks.map((item) => item.id); [ids[index], ids[target]] = [ids[target]!, ids[index]!];
   void run(() => reorderTemplateBlocks(data.value!.template!.id, sectionId, ids));
 };
-const parseObject = (text: string, label: string): Record<string, unknown> | null => {
-  const parsed: unknown = JSON.parse(text); if (parsed === null) return null;
-  if (typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error(`${label} debe ser un objeto JSON.`);
-  return parsed as Record<string, unknown>;
-};
-const saveTable = (block: TemplateBlock) => run(() => updateTemplateTable(data.value!.template!.id, block.id, { ...parseObject(tableEditors[block.id] ?? '{}', 'La tabla'), fingerprint: block.fingerprint }));
-const saveDocument = (block: TemplateBlock) => run(() => updateTemplateDocument(data.value!.template!.id, block.id, { document: parseObject(designEditors[block.id] ?? '{}', 'El diseño'), fingerprint: block.fingerprint }));
+const saveTable = (block: TemplateBlock, layout: TemplateTableLayout & { fingerprint: string }) =>
+  run(() => updateTemplateTable(data.value!.template!.id, block.id, layout));
 
 onMounted(() => { void load(); });
 </script>
@@ -86,8 +74,7 @@ onMounted(() => { void load(); });
           <header><button :disabled="sectionIndex === 0" @click="moveSection(sectionIndex, -1)">Subir</button><button :disabled="sectionIndex === data.template.sections.length - 1" @click="moveSection(sectionIndex, 1)">Bajar</button><input v-model="item.title" :disabled="Boolean(data.processLock)" /><button :disabled="saving || Boolean(data.processLock)" @click="run(() => updateTemplateSection(data!.template!.id, item.id, { title: item.title }))">Guardar sección</button><button :disabled="saving || Boolean(data.processLock)" @click="run(() => deleteTemplateSection(data!.template!.id, item.id))">Eliminar</button></header>
           <section v-for="(block, blockIndex) in item.blocks" :key="block.id" class="document-block"><div class="block-heading"><h3>{{ block.title }}</h3><button :disabled="blockIndex === 0" @click="moveBlock(item.id, item.blocks, blockIndex, -1)">Subir</button><button :disabled="blockIndex === item.blocks.length - 1" @click="moveBlock(item.id, item.blocks, blockIndex, 1)">Bajar</button></div>
             <div v-for="itemField in block.fields" :key="itemField.id" class="template-field"><input v-model="itemField.label" :disabled="Boolean(data.processLock)" /><label><input v-model="itemField.required" type="checkbox" :disabled="Boolean(data.processLock)" /> Obligatorio</label><label><input v-model="itemField.ai_enabled" type="checkbox" :disabled="Boolean(data.processLock)" /> Usa IA</label><label><input v-model="itemField.ai_coordinator_configurable" type="checkbox" :disabled="Boolean(data.processLock)" /> Coordinación decide IA</label><button :disabled="saving || Boolean(data.processLock)" @click="saveField(itemField)">Guardar campo</button></div>
-            <details v-if="block.content_type === 'table'"><summary>Diseño avanzado de tabla</summary><textarea v-model="tableEditors[block.id]" class="json-editor" /><button :disabled="saving || Boolean(data.processLock)" @click="saveTable(block)">Guardar tabla</button></details>
-            <details><summary>Diseño avanzado del bloque</summary><textarea v-model="designEditors[block.id]" class="json-editor" /><button :disabled="saving || Boolean(data.processLock)" @click="saveDocument(block)">Guardar diseño</button></details>
+            <TemplateTableDesigner v-if="block.content_type === 'table' && block.table" :layout="block.table" :fingerprint="block.fingerprint" :disabled="Boolean(data.processLock)" :saving="saving" @save="saveTable(block, $event)" />
             <button :disabled="saving || Boolean(data.processLock)" @click="run(() => deleteTemplateBlock(data!.template!.id, block.id))">Eliminar bloque</button>
           </section>
         </article>

@@ -1,7 +1,26 @@
 import { api } from '@/api/client';
 
 export type TemplateField = { id: string; block_id: string; key: string; label: string; help: string | null; type: string; required: boolean; inherited: boolean; master_source: string | null; teacher_editable: boolean; ai_enabled: boolean; ai_coordinator_configurable: boolean; content_type: string };
-export type TemplateBlock = { id: string; key: string; title: string; type: string; content_type: string; table: unknown; document: unknown; fingerprint: string; fields: TemplateField[] };
+export type TemplateNamedItem = { key: string; label: string };
+export type TemplateTableColumn = {
+  key: string;
+  label: string;
+  type: 'text' | 'number';
+  group: string | null;
+  band: string | null;
+  role: 'week' | 'hours_acd' | 'hours_ape' | 'hours_aa' | null;
+  sum: boolean;
+  width: number | null;
+};
+export type TemplateTableLayout = {
+  columns: TemplateTableColumn[];
+  groups: TemplateNamedItem[];
+  bands: TemplateNamedItem[];
+  header_fields: TemplateNamedItem[];
+  totals: { enabled: boolean; label: string };
+  repeat: { enabled: boolean; label: string };
+};
+export type TemplateBlock = { id: string; key: string; title: string; type: string; content_type: string; table: TemplateTableLayout | null; document: unknown; fingerprint: string; fields: TemplateField[] };
 export type TemplateAppearance = { font_family: string; body_font_size: number; title_font_size: number; section_font_size: number; field_font_size: number; text_color: string; accent_color: string; table_header_background: string; table_header_color: string; margin_cm: number; orientation: string; title_bold: boolean; title_italic: boolean; title_alignment: string; section_bold: boolean; section_italic: boolean; section_alignment: string; body_alignment: string };
 export type TemplateOption = { value: string | number; label: string };
 export type TemplatePayload = { processLock: string | null; template: null | { id: string; name: string; description: string | null; appearance: TemplateAppearance; titleBlock: { title?: string } & Record<string, unknown>; sections: Array<{ id: string; key: string; title: string; description: string | null; blocks: TemplateBlock[] }> }; blockTypes?: Array<{ value: string; label: string }>; appearanceOptions?: { fonts: TemplateOption[]; body_sizes: TemplateOption[]; title_sizes: TemplateOption[]; section_sizes: TemplateOption[]; field_sizes: TemplateOption[]; margins: TemplateOption[]; colors: TemplateOption[]; alignments: TemplateOption[]; orientations: TemplateOption[] }; logos?: { institution: string; faculty: string } };
@@ -17,6 +36,6 @@ export const deleteTemplateBlock = (templateId: string, blockId: string) => api<
 export const updateTemplateAppearance = (id: string, payload: TemplateAppearance) => api<{ message: string }>(`/admin/template/${id}/appearance`, { method: 'PATCH', body: JSON.stringify(payload) });
 export const reorderTemplateSections = (id: string, section_ids: string[]) => api<{ message: string }>(`/admin/template/${id}/sections/order`, { method: 'PATCH', body: JSON.stringify({ section_ids }) });
 export const reorderTemplateBlocks = (id: string, section_id: string, block_ids: string[]) => api<{ message: string }>(`/admin/template/${id}/blocks/order`, { method: 'PATCH', body: JSON.stringify({ section_id, block_ids }) });
-export const updateTemplateTable = (templateId: string, blockId: string, payload: Record<string, unknown>) => api<{ message: string }>(`/admin/template/${templateId}/blocks/${blockId}/table`, { method: 'PATCH', body: JSON.stringify(payload) });
+export const updateTemplateTable = (templateId: string, blockId: string, payload: TemplateTableLayout & { fingerprint: string }) => api<{ message: string }>(`/admin/template/${templateId}/blocks/${blockId}/table`, { method: 'PATCH', body: JSON.stringify(payload) });
 export const updateTemplateDocument = (templateId: string, blockId: string, payload: Record<string, unknown>) => api<{ message: string }>(`/admin/template/${templateId}/blocks/${blockId}/document`, { method: 'PATCH', body: JSON.stringify(payload) });
 export const uploadInstitutionLogo = (logo: File) => { const body = new FormData(); body.append('logo', logo); return api<{ message: string }>('/admin/template/logo', { method: 'POST', body }); };

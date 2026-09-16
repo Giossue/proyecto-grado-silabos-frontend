@@ -807,14 +807,74 @@ td small {
 .block-heading h3 {
   flex: 1;
 }
-.json-editor {
+.table-designer {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.65rem;
+  background: #f8fafc;
+}
+.table-designer > header,
+.table-column-order,
+.inline-editor,
+.table-designer-flags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem;
+}
+.table-designer > header {
+  justify-content: space-between;
+}
+.table-designer h4,
+.table-designer p {
+  margin: 0;
+}
+.table-designer-list,
+.table-designer-options {
+  display: grid;
+  gap: 0.75rem;
+}
+.table-column-card,
+.table-designer fieldset {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+  padding: 0.8rem;
+  border: 1px solid #dbe3ef;
+  border-radius: 0.5rem;
+  background: white;
+}
+.table-designer .form-grid {
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+.table-designer label {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+}
+.table-designer input,
+.table-designer select {
   width: 100%;
-  min-height: 12rem;
-  margin: 0.75rem 0;
-  padding: 0.65rem;
+  padding: 0.5rem;
   border: 1px solid #b8c4d5;
-  border-radius: 0.4rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  border-radius: 0.35rem;
+  background: white;
+}
+.table-designer .checkbox-row {
+  display: flex;
+  align-items: center;
+}
+.table-designer .checkbox-row input {
+  width: auto;
+}
+.inline-editor input {
+  flex: 1 1 8rem;
+}
+.table-designer-flags > label:not(.checkbox-row) {
+  flex: 1 1 12rem;
 }
 @media (max-width: 50rem) {
   .document-sheet {
