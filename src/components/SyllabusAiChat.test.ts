@@ -1,0 +1,90 @@
+import { flushPromises, mount } from "@vue/test-utils";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import SyllabusAiChat from "@/components/SyllabusAiChat.vue";
+import { clearAiChat, getAiChat, sendAiChatMessage } from "@/api/syllabi";
+
+vi.mock("@/api/syllabi", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/api/syllabi")>();
+
+  return {
+    ...actual,
+    getAiChat: vi.fn(),
+    sendAiChatMessage: vi.fn(),
+    clearAiChat: vi.fn(),
+    decideAiRecommendation: vi.fn(),
+    applyAiRecommendation: vi.fn(),
+  };
+});
+
+const emptyChat = {
+  conversation: null,
+  suggested_questions: ["¿Qué debo revisar?"],
+  available: true,
+  review_results: [],
+};
+
+describe("SyllabusAiChat", () => {
+  beforeEach(() => {
+    vi.mocked(getAiChat).mockResolvedValue(emptyChat);
+    vi.mocked(sendAiChatMessage).mockResolvedValue({
+      message: "Registrada",
+      assistant_message_id: "answer-1",
+    });
+    vi.mocked(clearAiChat).mockResolvedValue({ message: "Oculta" });
+  });
+
+  it("envía una pregunta sugerida y vuelve a consultar la conversación", async () => {
+    const wrapper = mount(SyllabusAiChat, {
+      props: { syllabusId: "syllabus-1", draftVersion: 2 },
+    });
+    await flushPromises();
+
+    await wrapper.get(".ai-chat-suggestion").trigger("click");
+    await flushPromises();
+
+    expect(sendAiChatMessage).toHaveBeenCalledWith(
+      "syllabus-1",
+      "¿Qué debo revisar?",
+    );
+    expect(getAiChat).toHaveBeenCalledTimes(2);
+  });
+
+  it("emite navegación al seleccionar una cita de una sección", async () => {
+    vi.mocked(getAiChat).mockResolvedValue({
+      ...emptyChat,
+      conversation: {
+        id: "conversation-1",
+        hidden: false,
+        messages: [
+          {
+            id: "message-1",
+            role: "asistente",
+            status: "completado",
+            content: "Revisa el objetivo.",
+            draft_version: 2,
+            error: null,
+            created_at: "2026-09-16T00:00:00Z",
+            citations: [
+              {
+                id: "evidence-1",
+                type: "seccion_silabo",
+                field_id: "field-1",
+                source_id: null,
+                label: "Objetivos",
+                excerpt: "Contenido",
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const wrapper = mount(SyllabusAiChat, {
+      props: { syllabusId: "syllabus-1", draftVersion: 2 },
+    });
+    await flushPromises();
+
+    await wrapper.get(".ai-chat-message details button").trigger("click");
+
+    expect(wrapper.emitted("navigateToField")).toEqual([["field-1"]]);
+  });
+});
