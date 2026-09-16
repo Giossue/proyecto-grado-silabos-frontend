@@ -6,6 +6,7 @@ import { compareReviews, type ReviewComparison } from "@/api/reviews";
 import SnapshotValue from "@/components/SnapshotValue.vue";
 const route = useRoute();
 const data = ref<ReviewComparison | null>(null);
+const loading = ref(true);
 const error = ref<string | null>(null);
 onMounted(async () => {
   try {
@@ -18,6 +19,8 @@ onMounted(async () => {
       reason instanceof ApiError
         ? reason.message
         : "No se pudo comparar las revisiones.";
+  } finally {
+    loading.value = false;
   }
 });
 </script>
@@ -39,6 +42,7 @@ onMounted(async () => {
       >
     </header>
     <p v-if="error" class="feedback error" role="alert">{{ error }}</p>
+    <p v-if="loading" role="status">Comparando revisiones…</p>
     <template v-if="data"
       ><p class="comparison-summary">
         {{ data.comparison.changed_fields }} campo(s) cambiaron.

@@ -10,6 +10,7 @@ import {
 
 const data = ref<CareerAiConfiguration | null>(null);
 const values = ref<Record<string, boolean>>({});
+const loading = ref(true);
 const saving = ref(false);
 const message = ref<string | null>(null);
 const error = ref<string | null>(null);
@@ -18,10 +19,15 @@ const sections = computed(() => [
 ]);
 
 const load = async (): Promise<void> => {
-  data.value = await getCareerAiConfiguration();
-  values.value = Object.fromEntries(
-    data.value.fields.map((field) => [field.id, field.effective]),
-  );
+  loading.value = true;
+  try {
+    data.value = await getCareerAiConfiguration();
+    values.value = Object.fromEntries(
+      data.value.fields.map((field) => [field.id, field.effective]),
+    );
+  } finally {
+    loading.value = false;
+  }
 };
 
 const save = async (): Promise<void> => {
@@ -50,9 +56,20 @@ const save = async (): Promise<void> => {
 };
 
 const reset = async (): Promise<void> => {
-  const result = await resetCareerAiConfiguration();
-  message.value = result.message;
-  await load();
+  saving.value = true;
+  error.value = null;
+  try {
+    const result = await resetCareerAiConfiguration();
+    message.value = result.message;
+    await load();
+  } catch (reason) {
+    error.value =
+      reason instanceof ApiError
+        ? reason.message
+        : "No se pudo restablecer la configuración.";
+  } finally {
+    saving.value = false;
+  }
 };
 
 onMounted(() =>
@@ -73,7 +90,11 @@ onMounted(() =>
     </header>
     <p v-if="message" class="feedback success">{{ message }}</p>
     <p v-if="error" class="feedback error" role="alert">{{ error }}</p>
+    <p v-if="loading && !data" role="status">Cargando configuración de IA…</p>
     <form v-if="data" class="ai-config-form" @submit.prevent="save">
+      <p v-if="!data.fields.length" class="empty-state">
+        La plantilla no tiene campos configurables para IA.
+      </p>
       <section v-for="section in sections" :key="section" class="detail-card">
         <h2>{{ section }}</h2>
         <label
@@ -100,7 +121,7 @@ onMounted(() =>
         </label>
       </section>
       <div class="ai-config-actions">
-        <button type="button" @click="reset">
+        <button type="button" :disabled="saving" @click="reset">
           Restablecer valores de Administración</button
         ><button class="primary-action" :disabled="saving">
           {{ saving ? "Guardando…" : "Guardar configuración" }}

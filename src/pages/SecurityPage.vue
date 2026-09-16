@@ -16,6 +16,7 @@ const passwordConfirmation = ref('');
 const sessionsPassword = ref('');
 const error = ref<string | null>(null);
 const message = ref<string | null>(null);
+const loading = ref(true);
 const pending = ref(false);
 const user = computed(() => sessionState.current.value?.user);
 const activeRole = computed(() => sessionState.current.value?.active_role);
@@ -24,8 +25,10 @@ const report = (reason: unknown, fallback: string): void => { error.value = reas
 const loadSessions = async (): Promise<void> => { sessions.value = (await getDeviceSessions()).sessions; };
 
 const load = async (): Promise<void> => {
+  loading.value = true; error.value = null;
   try { await sessionState.load(); [status.value] = await Promise.all([getTwoFactorStatus(), loadSessions()]); }
   catch (reason) { report(reason, 'No se pudo cargar la configuración de la cuenta.'); }
+  finally { loading.value = false; }
 };
 const changePassword = async (): Promise<void> => {
   error.value = null; message.value = null;
@@ -72,7 +75,7 @@ onMounted(load);
 <template>
   <main class="app-page settings-page">
     <header class="app-header"><div><p class="eyebrow">Configuración</p><h1>Cuenta y seguridad</h1></div></header>
-    <p v-if="message" class="feedback success" role="status">{{ message }}</p><p v-if="error" class="feedback error" role="alert">{{ error }}</p>
+    <p v-if="message" class="feedback success" role="status">{{ message }}</p><p v-if="error" class="feedback error" role="alert">{{ error }}</p><p v-if="loading" role="status">Cargando configuración de seguridad…</p>
     <section class="settings-section"><header><h2>Perfil institucional</h2><p>Su identidad solo puede ser modificada por Administración.</p></header><dl class="profile-details"><div><dt>Nombre</dt><dd>{{ user?.name }}</dd></div><div><dt>Correo</dt><dd>{{ user?.email }}</dd></div><div><dt>Ámbito activo</dt><dd>{{ activeRole?.career_name ?? activeRole?.code }}</dd></div></dl></section>
     <section class="settings-section"><header><h2>Contraseña</h2><p>Use una contraseña distinta a la actual.</p></header><form class="editor-form settings-form" @submit.prevent="changePassword"><label>Contraseña actual <input v-model="currentPassword" type="password" autocomplete="current-password" required /></label><label>Contraseña nueva <input v-model="newPassword" type="password" autocomplete="new-password" required /></label><label>Confirmar contraseña nueva <input v-model="passwordConfirmation" type="password" autocomplete="new-password" required /></label><button :disabled="pending" type="submit">Actualizar contraseña</button></form></section>
     <section class="settings-section"><header><h2>Verificación en dos pasos</h2><p>{{ status?.enabled ? 'Está activa.' : 'Proteja su cuenta con una aplicación autenticadora.' }}</p></header><button v-if="status && !status.enabled && !status.confirmation_required" :disabled="pending" type="button" @click="enable">Configurar segundo factor</button><div v-if="status?.confirmation_required" class="settings-form"><div v-if="qrCodeSvg" class="qr-code" v-html="qrCodeSvg"></div><label>Código de confirmación <input v-model="confirmationCode" inputmode="numeric" autocomplete="one-time-code" /></label><button :disabled="pending" type="button" @click="confirm">Confirmar segundo factor</button></div><div v-if="status?.enabled" class="settings-form"><label>Contraseña actual para generar códigos nuevos <input v-model="recoveryPassword" type="password" autocomplete="current-password" /></label><div class="header-actions"><button :disabled="pending || !recoveryPassword" type="button" @click="regenerate">Regenerar códigos</button><button :disabled="pending" type="button" @click="disable">Desactivar segundo factor</button></div></div><div v-if="recoveryCodes.length" class="recovery-codes"><h3>Códigos de recuperación nuevos</h3><p>Guárdelos ahora; no volverán a mostrarse.</p><code v-for="code in recoveryCodes" :key="code">{{ code }}</code></div></section>

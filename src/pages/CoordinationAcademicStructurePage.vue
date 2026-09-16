@@ -440,6 +440,9 @@ onMounted(() => {
               </button>
             </li>
           </ul>
+          <p v-if="!curriculum.requirements.length" class="empty-state">
+            La malla todavía no tiene prerrequisitos ni correquisitos.
+          </p>
           <form
             class="editor-form compact-form"
             @submit.prevent="addRequirement"
@@ -519,6 +522,9 @@ onMounted(() => {
                     Eliminar
                   </button>
                 </td>
+              </tr>
+              <tr v-if="!schedule.scheduledSubjects.length">
+                <td colspan="6" class="empty-state">No hay materias programadas.</td>
               </tr>
             </tbody>
           </table>
@@ -641,6 +647,9 @@ onMounted(() => {
                     Relevar
                   </button>
                 </td>
+              </tr>
+              <tr v-if="!assignments.teacherAssignments.length">
+                <td colspan="5" class="empty-state">No hay asignaciones docentes.</td>
               </tr>
             </tbody>
           </table>

@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "contract:check": "node scripts/check-openapi-contract.mjs",
+    "lint": "eslint .",
+    "test:e2e": "playwright test",
     "typecheck": "vue-tsc --noEmit",
     "test": "vitest run"
   },
@@ -16,8 +19,14 @@
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "@vitejs/plugin-vue": "^6.0.0",
+    "@vue/eslint-config-typescript": "^14.9.0",
     "@vue/test-utils": "^2.5.0",
+    "eslint": "^10.10.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-vue": "^10.11.0",
+    "eslint-plugin-vuejs-accessibility": "^2.6.0",
     "jsdom": "^30.0.1",
     "typescript": "^5.2.2",
     "vite": "^8.0.0",

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { getNotifications } from "@/api/notifications";
 import { logout, selectActiveRole } from "@/api/session";
+import { ApiError } from "@/api/client";
 import { sessionState } from "@/state/session";
 
 type NavigationItem = { label: string; to: string };
@@ -12,6 +13,10 @@ const unreadCount = ref(0);
 const scopeOpen = ref(false);
 const menuOpen = ref(false);
 const theme = ref<"light" | "dark">("light");
+const actionError = ref<string | null>(null);
+const actionPending = ref(false);
+const scopeTrigger = ref<HTMLButtonElement | null>(null);
+const scopeDialog = ref<HTMLElement | null>(null);
 
 const navigation = computed<NavigationItem[]>(() => {
   switch (sessionState.current.value?.active_role?.code) {
@@ -71,19 +76,75 @@ const applyTheme = (value: "light" | "dark"): void => {
 const toggleTheme = (): void =>
   applyTheme(theme.value === "light" ? "dark" : "light");
 
-const switchScope = async (assignmentId: string): Promise<void> => {
-  sessionState.replace(await selectActiveRole(assignmentId));
+const scopeFocusable = (): HTMLElement[] =>
+  Array.from(
+    scopeDialog.value?.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+    ) ?? [],
+  );
+
+const openScope = async (): Promise<void> => {
+  scopeOpen.value = true;
+  await nextTick();
+  (scopeFocusable()[0] ?? scopeDialog.value)?.focus();
+};
+
+const closeScope = (): void => {
   scopeOpen.value = false;
-  await router.push("/panel");
+  void nextTick(() => scopeTrigger.value?.focus());
+};
+
+const handleDialogKeydown = (event: KeyboardEvent): void => {
+  if (!scopeOpen.value) return;
+  if (event.key === "Escape") {
+    event.preventDefault();
+    closeScope();
+    return;
+  }
+  if (event.key !== "Tab") return;
+  const focusable = scopeFocusable();
+  const first = focusable[0];
+  const last = focusable.at(-1);
+  if (!first || !last) return;
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+};
+
+const switchScope = async (assignmentId: string): Promise<void> => {
+  actionPending.value = true;
+  actionError.value = null;
+  try {
+    sessionState.replace(await selectActiveRole(assignmentId));
+    closeScope();
+    await router.push("/panel");
+  } catch (reason) {
+    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo cambiar el ámbito de trabajo.";
+  } finally {
+    actionPending.value = false;
+  }
 };
 
 const closeSession = async (): Promise<void> => {
-  await logout();
-  sessionState.clear();
-  await router.replace("/ingresar");
+  actionPending.value = true;
+  actionError.value = null;
+  try {
+    await logout();
+    sessionState.clear();
+    await router.replace("/ingresar");
+  } catch (reason) {
+    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo cerrar la sesión.";
+  } finally {
+    actionPending.value = false;
+  }
 };
 
 onMounted(async () => {
+  document.addEventListener("keydown", handleDialogKeydown);
   applyTheme(
     localStorage.getItem("silabos-theme") === "dark" ? "dark" : "light",
   );
@@ -93,6 +154,7 @@ onMounted(async () => {
     unreadCount.value = 0;
   }
 });
+onBeforeUnmount(() => document.removeEventListener("keydown", handleDialogKeydown));
 </script>
 
 <template>
@@ -123,7 +185,7 @@ onMounted(async () => {
         >
           ☰
         </button>
-        <button class="scope-button" type="button" @click="scopeOpen = true">
+        <button ref="scopeTrigger" class="scope-button" type="button" @click="openScope">
           <span>{{ sessionState.current.value?.user.name }}</span
           ><small>{{ roleLabel }}</small>
         </button>
@@ -148,6 +210,7 @@ onMounted(async () => {
         </div>
       </header>
 
+      <p v-if="actionError" class="global-error" role="alert">{{ actionError }}</p>
       <div class="shell-content"><slot /></div>
     </div>
 
@@ -158,16 +221,14 @@ onMounted(async () => {
       aria-label="Cerrar navegación"
       @click="menuOpen = false"
     />
-    <div
-      v-if="scopeOpen"
-      class="sheet-backdrop"
-      @click.self="scopeOpen = false"
-    >
+    <div v-if="scopeOpen" class="sheet-backdrop">
       <aside
+        ref="scopeDialog"
         class="scope-sheet"
         aria-modal="true"
         role="dialog"
         aria-labelledby="scope-title"
+        tabindex="-1"
       >
         <header>
           <div>
@@ -178,7 +239,7 @@ onMounted(async () => {
             class="icon-button"
             type="button"
             aria-label="Cerrar"
-            @click="scopeOpen = false"
+            @click="closeScope"
           >
             ×
           </button>
@@ -191,15 +252,16 @@ onMounted(async () => {
             active: role.id === sessionState.current.value?.active_role?.id,
           }"
           type="button"
+          :disabled="actionPending"
           @click="switchScope(role.id)"
         >
           <strong>{{ role.code }}</strong
           ><span>{{ role.career_name ?? "Ámbito institucional" }}</span>
         </button>
         <footer>
-          <RouterLink to="/seguridad" @click="scopeOpen = false"
+          <RouterLink to="/seguridad" @click="closeScope"
             >Seguridad</RouterLink
-          ><button type="button" @click="closeSession">Cerrar sesión</button>
+          ><button type="button" :disabled="actionPending" @click="closeSession">Cerrar sesión</button>
         </footer>
       </aside>
     </div>

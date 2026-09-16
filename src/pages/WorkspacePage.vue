@@ -32,9 +32,14 @@ const load = async (): Promise<void> => {
 };
 
 const selectRole = async (roleAssignmentId: string): Promise<void> => {
-  session.value = await selectActiveRole(roleAssignmentId);
-  sessionState.replace(session.value);
-  await router.replace('/panel');
+  error.value = null;
+  try {
+    session.value = await selectActiveRole(roleAssignmentId);
+    sessionState.replace(session.value);
+    await router.replace('/panel');
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo seleccionar el ámbito de trabajo.';
+  }
 };
 
 const savePassword = async (): Promise<void> => {
@@ -59,13 +64,23 @@ const savePassword = async (): Promise<void> => {
 };
 
 const closeSession = async (): Promise<void> => {
-  await logout();
-  sessionState.clear();
-  await router.replace('/ingresar');
+  error.value = null;
+  try {
+    await logout();
+    sessionState.clear();
+    await router.replace('/ingresar');
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cerrar la sesión.';
+  }
 };
 
 const resendVerification = async (): Promise<void> => {
-  verificationMessage.value = (await resendEmailVerification()).message;
+  error.value = null;
+  try {
+    verificationMessage.value = (await resendEmailVerification()).message;
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo reenviar el enlace de verificación.';
+  }
 };
 
 onMounted(load);

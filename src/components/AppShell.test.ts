@@ -39,11 +39,12 @@ const mountShell = async () => {
   await router.push('/panel');
   await router.isReady();
 
-  return mount(AppShell, { global: { plugins: [router] }, slots: { default: '<p>Contenido</p>' } });
+  return mount(AppShell, { attachTo: document.body, global: { plugins: [router] }, slots: { default: '<p>Contenido</p>' } });
 };
 
 describe('AppShell', () => {
   beforeEach(() => {
+    document.body.innerHTML = '';
     sessionState.replace(administratorSession);
     getNotifications.mockResolvedValue({ unread_count: 3, filters: { status: 'unread' }, notifications: { data: [], current_page: 1, last_page: 1, total: 0 } });
     logout.mockResolvedValue(undefined);
@@ -65,5 +66,19 @@ describe('AppShell', () => {
 
     expect(document.documentElement.dataset.theme).toBe('dark');
     expect(localStorage.getItem('silabos-theme')).toBe('dark');
+  });
+
+  it('contiene el foco del selector de ámbito y lo devuelve al cerrar', async () => {
+    const wrapper = await mountShell();
+    await wrapper.get('.scope-button').trigger('click');
+    await flushPromises();
+
+    const close = wrapper.get('.scope-sheet [aria-label="Cerrar"]');
+    expect(document.activeElement).toBe(close.element);
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await flushPromises();
+
+    expect(wrapper.find('.scope-sheet').exists()).toBe(false);
+    expect(document.activeElement).toBe(wrapper.get('.scope-button').element);
   });
 });

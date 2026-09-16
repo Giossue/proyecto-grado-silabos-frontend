@@ -29,6 +29,7 @@ type EditableRecord = {
 
 const router = useRouter();
 const data = ref<AcademicGovernance | null>(null);
+const loading = ref(true);
 const section = ref<AcademicEntity>('facultad');
 const error = ref<string | null>(null);
 const message = ref<string | null>(null);
@@ -43,6 +44,15 @@ const form = ref<Record<string, unknown>>({});
 const sectionLabel = computed(() => ({
   facultad: 'facultad', campus: 'campus', carrera: 'carrera', periodo: 'período académico',
 })[section.value]);
+const currentRecordsCount = computed(() => {
+  if (!data.value) return 0;
+  return {
+    facultad: data.value.catalogs.faculties.length,
+    campus: data.value.catalogs.campuses.length,
+    carrera: data.value.catalogs.careers.length,
+    periodo: data.value.catalogs.periods.length,
+  }[section.value];
+});
 
 const emptyForm = (entity: AcademicEntity): Record<string, unknown> => entity === 'carrera'
   ? { code: '', nombre: '', faculty_id: '', campus_id: '', modality: 'presencial', curriculum_code: '', cycle_count: 1 }
@@ -55,12 +65,14 @@ const showError = (reason: unknown, fallback: string): void => {
 };
 
 const load = async (): Promise<void> => {
+  loading.value = true;
   error.value = null;
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'administrador') { await router.replace('/panel'); return; }
     data.value = await getAcademicGovernance();
   } catch (reason) { showError(reason, 'No se pudo cargar la estructura académica.'); }
+  finally { loading.value = false; }
 };
 
 const select = (value: AcademicEntity): void => { section.value = value; };
@@ -125,10 +137,10 @@ onMounted(load);
   <main class="app-page">
     <header class="app-header">
       <div><p class="eyebrow">Administración</p><h1>Estructura académica</h1></div>
-      <div class="header-actions"><RouterLink class="back-link" to="/panel">Volver al panel</RouterLink><button class="primary-action" type="button" @click="openCreate">Crear {{ sectionLabel }}</button></div>
+      <div class="header-actions"><RouterLink class="back-link" to="/panel">Volver al panel</RouterLink><button class="primary-action" type="button" :disabled="loading || !data" @click="openCreate">Crear {{ sectionLabel }}</button></div>
     </header>
     <p v-if="data?.lock_reason" class="error-box" role="alert">{{ data.lock_reason }}</p>
-    <p v-if="message" class="save-status">{{ message }}</p><p v-if="error" role="alert">{{ error }}</p>
+    <p v-if="message" class="save-status">{{ message }}</p><p v-if="error" role="alert">{{ error }}</p><p v-if="loading && !data" role="status">Cargando estructura académica…</p>
 
     <nav class="header-actions" aria-label="Catálogos académicos">
       <button :aria-current="section === 'facultad'" @click="select('facultad')">Facultades</button>
@@ -143,6 +155,7 @@ onMounted(load);
         <template v-else-if="section === 'campus'"><tr v-for="item in data.catalogs.campuses" :key="item.id"><td>{{ item.nombre }}<small>{{ item.codigo_campus || 'Sin código' }}</small></td><td>{{ item.activo ? 'Activo' : 'Inactivo' }}</td><td class="header-actions"><button @click="openEdit({ id: item.id, code: item.codigo_campus || '', nombre: item.nombre })">Editar</button><button @click="changeStatus('campus', item.id, !item.activo)">{{ item.activo ? 'Desactivar' : 'Activar' }}</button><button @click="remove(item.id)">Eliminar</button></td></tr></template>
         <template v-else-if="section === 'carrera'"><tr v-for="item in data.catalogs.careers" :key="item.id"><td>{{ item.name }}<small>{{ item.code || 'Sin código' }} · {{ item.modality_label || item.modality }}</small></td><td><small>{{ item.campus_name || 'Sin campus' }}</small>{{ item.coordinator?.name || 'Sin coordinación' }}</td><td>{{ item.active ? 'Activa' : 'Inactiva' }}</td><td class="header-actions"><button @click="openEdit({ id: item.id, code: item.code || '', nombre: item.name, faculty_id: item.faculty_id, campus_id: item.campus_id, modality: item.modality })">Editar</button><button @click="openCoordinator(item)">Coordinación</button><button @click="changeStatus('carrera', item.id, !item.active)">{{ item.active ? 'Desactivar' : 'Activar' }}</button><button @click="remove(item.id)">Eliminar</button></td></tr></template>
         <template v-else><tr v-for="item in data.catalogs.periods" :key="item.id"><td>{{ item.code }}<small>{{ item.starts_on }} — {{ item.ends_on }} · {{ item.teaching_weeks }} semanas</small></td><td>{{ item.status_label }}</td><td class="header-actions"><button @click="openEdit({ id: item.id, code: item.code, starts_on: item.starts_on, ends_on: item.ends_on, teaching_weeks: item.teaching_weeks })">Editar</button><button @click="remove(item.id)">Eliminar</button></td></tr></template>
+        <tr v-if="currentRecordsCount === 0"><td :colspan="section === 'carrera' ? 4 : 3" class="empty-state">No hay registros en este catálogo.</td></tr>
       </tbody></table></div>
     </section>
 

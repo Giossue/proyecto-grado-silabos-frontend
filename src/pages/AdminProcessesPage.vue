@@ -16,6 +16,7 @@ import { getSession } from '@/api/session';
 
 const router = useRouter();
 const data = ref<Processes | null>(null);
+const loading = ref(true);
 const error = ref<string | null>(null);
 const message = ref<string | null>(null);
 const selectedProcess = ref<SyllabusProcess | null>(null);
@@ -35,6 +36,8 @@ const modalTitle = computed(() => mode.value === 'create' ? 'Preparar proceso in
     : 'Prorrogar plazo institucional');
 
 const load = async (): Promise<void> => {
+  loading.value = true;
+  error.value = null;
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'administrador') {
@@ -44,6 +47,8 @@ const load = async (): Promise<void> => {
     data.value = await getProcesses();
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los procesos institucionales.';
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -142,6 +147,7 @@ onMounted(() => { void load(); });
     <p v-if="data?.active_process" class="save-status">Proceso vigente: {{ data.active_process.name }} · {{ stateLabel(data.active_process.state as SyllabusProcess['state']) }}</p>
     <p v-if="message" class="save-status" role="status">{{ message }}</p>
     <p v-if="error" role="alert">{{ error }}</p>
+    <p v-if="loading && !data" role="status">Cargando procesos…</p>
 
     <section v-if="data" class="detail-card">
       <h2>Historial de procesos</h2>

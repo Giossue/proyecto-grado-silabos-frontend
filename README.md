@@ -32,7 +32,8 @@ docker run --rm -p 8080:8080 \
 
 El backend debe incluir el origen del frontend en `FRONTEND_URL` y su host en
 `SANCTUM_STATEFUL_DOMAINS`; ambos deben compartir el dominio raíz para que la cookie de
-sesión `HttpOnly` funcione con `SESSION_DOMAIN`.
+sesión `HttpOnly` funcione con `SESSION_DOMAIN`. `PUBLIC_API_URL` es obligatorio al
+arrancar la imagen y debe contener solo el origen (`https://host[:puerto]`), sin ruta.
 
 ## Superficie disponible
 
@@ -49,10 +50,25 @@ guardas de Vue y los controles ocultos no sustituyen la autorización del servid
 ## Verificación
 
 ```bash
-npm test -- --run
+npm run lint
+npm run contract:check
+npm test
 npm run typecheck
 npm run build
 ```
+
+El recorrido distribuido real se ejecuta aparte contra una base **de pruebas** recién
+migrada y sembrada. Requiere que la API Laravel de pruebas esté escuchando en loopback;
+el comando rechaza deliberadamente cualquier URL remota:
+
+```bash
+VITE_API_URL=http://127.0.0.1:8000 npm run test:e2e
+```
+
+Playwright comprueba ingreso y sesión por cookie, CSRF y creación administrativa,
+plantilla, proceso, fuentes, logo, apertura de convocatoria, módulos de Coordinación,
+borrador docente, autoguardado, persistencia después de recargar, carga de imágenes,
+ausencia de respuestas 5xx y ausencia de desbordamiento global a 360 px.
 
 El cliente prepara CSRF antes de cada mutación cuando hace falta, renueva una cookie CSRF
 caducada una sola vez y, si la sesión deja de ser válida, limpia el estado local y vuelve

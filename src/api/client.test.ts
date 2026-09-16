@@ -14,7 +14,8 @@ describe('cliente API', () => {
   });
 
   it('prepara CSRF antes de una mutación y envía la cookie decodificada', async () => {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      void init;
       if (String(input).endsWith('/sanctum/csrf-cookie')) {
         document.cookie = 'XSRF-TOKEN=token%20seguro; path=/';
         return new Response(null, { status: 204 });
@@ -33,7 +34,8 @@ describe('cliente API', () => {
   it('renueva CSRF y reintenta una sola vez ante 419', async () => {
     document.cookie = 'XSRF-TOKEN=anterior; path=/';
     let apiAttempts = 0;
-    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      void init;
       if (String(input).endsWith('/sanctum/csrf-cookie')) {
         document.cookie = 'XSRF-TOKEN=nuevo; path=/';
         return new Response(null, { status: 204 });

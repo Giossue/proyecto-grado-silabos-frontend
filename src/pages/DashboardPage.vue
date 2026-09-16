@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getSession, logout, type Session } from '@/api/session';
+import { sessionState } from '@/state/session';
 
 const router = useRouter();
 const session = ref<Session | null>(null);
@@ -31,8 +32,13 @@ const load = async (): Promise<void> => {
 };
 
 const closeSession = async (): Promise<void> => {
-  await logout();
-  await router.replace('/ingresar');
+  try {
+    await logout();
+    sessionState.clear();
+    await router.replace('/ingresar');
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cerrar la sesión.';
+  }
 };
 
 onMounted(load);

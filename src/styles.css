@@ -2096,6 +2096,11 @@ td small {
 .teacher-syllabus-page {
   padding-inline: clamp(0.75rem, 2vw, 2rem);
 }
+@media (min-width: 64rem) {
+  .teacher-syllabus-page:has(> .ai-chat-panel) {
+    padding-right: 27rem;
+  }
+}
 .syllabus-editor-status {
   position: sticky;
   top: 0;

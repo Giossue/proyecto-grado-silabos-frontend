@@ -11,6 +11,7 @@ RUN npm run build
 FROM docker.io/library/nginx:1.27-alpine
 
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY docker/security-headers.conf /etc/nginx/snippets/silabos-security-headers.conf
 COPY docker/config.js.template /opt/silabos/config.js.template
 COPY docker/runtime-config.sh /docker-entrypoint.d/40-silabos-runtime-config.sh
 COPY --from=build /app/dist /usr/share/nginx/html

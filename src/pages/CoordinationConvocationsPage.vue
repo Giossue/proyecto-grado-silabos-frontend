@@ -9,6 +9,7 @@ import PaginationControls from '@/components/PaginationControls.vue';
 
 const router = useRouter();
 const data = ref<ConvocationsPage | null>(null);
+const loading = ref(true);
 const search = ref('');
 const state = ref('');
 const error = ref<string | null>(null);
@@ -22,6 +23,8 @@ const stateLabel = (value: ConvocationItem['state']) => ({
 }[value]);
 
 const load = async (page = 1): Promise<void> => {
+  loading.value = true;
+  error.value = null;
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'coordinador') {
@@ -31,6 +34,8 @@ const load = async (page = 1): Promise<void> => {
     data.value = await getConvocations({ q: search.value, state: state.value, page });
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las convocatorias.';
+  } finally {
+    loading.value = false;
   }
 };
 
@@ -68,9 +73,10 @@ onMounted(() => { void load(); });
     <form class="filter-form" @submit.prevent="load()">
       <label>Buscar período<input v-model="search" placeholder="Ej. 2026-2" /></label>
       <label>Estado<select v-model="state"><option value="">Todos</option><option value="sin_iniciar">Sin iniciar</option><option value="abierta">Abierta</option><option value="pausada">Pausada</option><option value="cerrada">Cerrada</option></select></label>
-      <button>Buscar</button>
+      <button :disabled="loading">Buscar</button>
     </form>
     <p v-if="message" class="save-status" role="status">{{ message }}</p><p v-if="error" role="alert">{{ error }}</p>
+    <p v-if="loading && !data" role="status">Cargando convocatorias…</p>
 
     <section v-if="data" class="detail-card">
       <h2>Procesos disponibles</h2>

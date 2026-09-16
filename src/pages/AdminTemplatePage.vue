@@ -20,7 +20,6 @@ import {
   type TemplateAppearance,
   type TemplateBlock,
   type TemplateContentType,
-  type TemplateField,
   type TemplateFieldDraft,
   type TemplatePayload,
   type TemplateTableLayout,
