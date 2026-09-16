@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { createConvocation, getConvocations, type ConvocationItem, type ConvocationsPage } from '@/api/convocations';
 import { getSession } from '@/api/session';
+import FormSheet from '@/components/FormSheet.vue';
 
 const router = useRouter();
 const data = ref<ConvocationsPage | null>(null);
@@ -12,6 +13,8 @@ const state = ref('');
 const error = ref<string | null>(null);
 const message = ref<string | null>(null);
 const openingProcess = ref<string | null>(null);
+const selectedProcess = ref<ConvocationItem | null>(null);
+const selectedSources = ref<string[]>([]);
 
 const stateLabel = (value: ConvocationItem['state']) => ({
   sin_iniciar: 'Sin iniciar', preparacion: 'En preparación', abierta: 'Abierta', pausada: 'Pausada', cerrada: 'Cerrada',
@@ -30,12 +33,19 @@ const load = async (): Promise<void> => {
   }
 };
 
-const start = async (item: ConvocationItem): Promise<void> => {
+const prepareStart = (item: ConvocationItem): void => {
+  selectedProcess.value = item;
+  selectedSources.value = [];
+};
+
+const start = async (): Promise<void> => {
+  if (!selectedProcess.value) return;
   try {
-    openingProcess.value = item.process_id;
+    openingProcess.value = selectedProcess.value.process_id;
     error.value = null;
-    const response = await createConvocation(item.process_id);
+    const response = await createConvocation(selectedProcess.value.process_id, selectedSources.value);
     message.value = response.message;
+    selectedProcess.value = null;
     await router.push(`/coordinacion/convocatorias/${response.convocation_id}`);
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo iniciar la convocatoria.';
@@ -68,11 +78,17 @@ onMounted(() => { void load(); });
           <tr v-for="item in data.convocations.data" :key="item.process_id">
             <td><strong>{{ item.period }}</strong><small>{{ item.template }}</small></td>
             <td>{{ item.process_state }}</td><td><span class="role-badge">{{ stateLabel(item.state) }}</span></td><td>{{ item.syllabi_count }}</td>
-            <td><button v-if="item.state === 'sin_iniciar' && item.process_state === 'abierto'" :disabled="openingProcess === item.process_id" @click="start(item)">{{ openingProcess === item.process_id ? 'Abriendo…' : 'Abrir convocatoria' }}</button><RouterLink v-else-if="item.id" class="back-link" :to="`/coordinacion/convocatorias/${item.id}`">Ver detalle</RouterLink><span v-else>Proceso no disponible</span></td>
+            <td><button v-if="item.state === 'sin_iniciar' && item.process_state === 'abierto'" :disabled="openingProcess === item.process_id" @click="prepareStart(item)">{{ openingProcess === item.process_id ? 'Abriendo…' : 'Abrir convocatoria' }}</button><RouterLink v-else-if="item.id" class="back-link" :to="`/coordinacion/convocatorias/${item.id}`">Ver detalle</RouterLink><span v-else>Proceso no disponible</span></td>
           </tr>
         </tbody></table>
       </div>
       <p v-else class="empty-state">No hay procesos institucionales que coincidan con la búsqueda.</p>
     </section>
+    <FormSheet v-if="selectedProcess" :open="true" title="Abrir convocatoria" description="Seleccione las fuentes que podrá consultar la IA durante este período." @close="selectedProcess = null">
+      <form class="editor-form" @submit.prevent="start">
+        <fieldset><legend>Fuentes académicas *</legend><label v-for="source in data?.available_sources ?? []" :key="source.id" class="checkbox-row"><input v-model="selectedSources" type="checkbox" :value="source.id" /> {{ source.name }}</label><p v-if="!data?.available_sources.length">Cree al menos una fuente activa antes de abrir la convocatoria.</p></fieldset>
+        <div class="form-sheet-actions"><button type="button" @click="selectedProcess = null">Cancelar</button><button type="submit" :disabled="!selectedSources.length || openingProcess === selectedProcess.process_id">Abrir convocatoria</button></div>
+      </form>
+    </FormSheet>
   </main>
 </template>
