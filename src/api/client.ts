@@ -58,3 +58,17 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   return payload as T;
 }
+
+export async function apiBlob(path: string): Promise<Blob> {
+  const response = await fetch(`${baseUrl}/api/v1${path}`, {
+    credentials: 'include',
+    headers: { Accept: 'application/octet-stream' },
+  });
+
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => ({}))) as { message?: string };
+    throw new ApiError(payload.message ?? 'No se pudo descargar el archivo.', response.status);
+  }
+
+  return response.blob();
+}

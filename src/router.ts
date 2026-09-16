@@ -21,6 +21,7 @@ import CoordinationSourcesPage from '@/pages/CoordinationSourcesPage.vue';
 import CoordinationSourceDetailPage from '@/pages/CoordinationSourceDetailPage.vue';
 import CoordinationAcademicStructurePage from '@/pages/CoordinationAcademicStructurePage.vue';
 import AdminTemplatePage from '@/pages/AdminTemplatePage.vue';
+import DocumentsPage from '@/pages/DocumentsPage.vue';
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -45,6 +46,7 @@ export const router = createRouter({
     { path: '/coordinacion/fuentes', component: CoordinationSourcesPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/fuentes/:source', component: CoordinationSourceDetailPage, meta: { requiresAuth: true } },
     { path: '/coordinacion/estructura-academica', component: CoordinationAcademicStructurePage, meta: { requiresAuth: true } },
+    { path: '/revisiones/:revision/documentos', component: DocumentsPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos', component: TeacherSyllabiPage, meta: { requiresAuth: true } },
     { path: '/mis-silabos/:syllabus', component: TeacherSyllabusDetailPage, meta: { requiresAuth: true } },
   ],
