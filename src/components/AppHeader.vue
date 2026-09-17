@@ -31,6 +31,10 @@ const user = computed<User>(() => ({
 }));
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 const activeItemStyles = 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
+const trail = computed<BreadcrumbItem[]>(() => {
+    const last = props.breadcrumbs.at(-1);
+    return last ? [last] : [];
+});
 const mainNavItems: NavItem[] = [{ title: 'Panel', href: paths.dashboard, icon: LayoutGrid }];
 const rightNavItems: NavItem[] = [
     { title: 'Repositorio', href: 'https://github.com/Giossue/proyecto-grado-silabos', icon: Folder },
@@ -90,6 +94,6 @@ const rightNavItems: NavItem[] = [
                 </div>
             </div>
         </div>
-        <div v-if="props.breadcrumbs.length > 1" class="flex w-full border-b border-sidebar-border/70"><div class="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl"><Breadcrumbs :breadcrumbs="breadcrumbs" /></div></div>
+        <div v-if="trail.length > 0" class="flex w-full border-b border-sidebar-border/70"><div class="mx-auto flex h-12 w-full items-center justify-start px-4 text-neutral-500 md:max-w-7xl"><Breadcrumbs :breadcrumbs="trail" /></div></div>
     </div>
 </template>

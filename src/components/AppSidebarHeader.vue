@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getNotifications } from '@/api/notifications';
-import { saysTheSame } from '@/composables/usePageBreadcrumbs';
 import { paths } from '@/lib/routes';
 import type { BreadcrumbItem } from '@/types';
 
@@ -21,10 +20,11 @@ const props = withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTit
 const route = useRoute();
 const unreadCount = ref(0);
 const trail = computed<BreadcrumbItem[]>(() => {
-    const last = props.breadcrumbs.at(-1)?.title ?? '';
-    return props.pageTitle === '' || saysTheSame(last, props.pageTitle)
-        ? props.breadcrumbs
-        : [...props.breadcrumbs, { title: props.pageTitle }];
+    // La miga representa únicamente la pantalla actual. No se construye una
+    // cadena padre > detalle, aunque la ruta aporte un contexto anterior.
+    if (props.pageTitle.trim() !== '') return [{ title: props.pageTitle }];
+    const last = props.breadcrumbs.at(-1);
+    return last ? [last] : [];
 });
 const isNotificationsPage = computed(() => route.path.endsWith('/notificaciones') || route.path === paths.notifications);
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -9,15 +10,19 @@ import {
 import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 
-defineProps<{ breadcrumbs: BreadcrumbItemType[] }>();
+const props = defineProps<{ breadcrumbs: BreadcrumbItemType[] }>();
+const currentBreadcrumb = computed<BreadcrumbItemType[]>(() => {
+    const last = props.breadcrumbs.at(-1);
+    return last ? [last] : [];
+});
 </script>
 
 <template>
     <Breadcrumb>
         <BreadcrumbList>
-            <template v-for="(item, index) in breadcrumbs" :key="index">
+            <template v-for="(item, index) in currentBreadcrumb" :key="index">
                 <BreadcrumbItem>
-                    <template v-if="index === breadcrumbs.length - 1 || item.href === undefined">
+                    <template v-if="index === currentBreadcrumb.length - 1 || item.href === undefined">
                         <h1
                             data-slot="breadcrumb-page"
                             aria-current="page"
@@ -32,7 +37,7 @@ defineProps<{ breadcrumbs: BreadcrumbItemType[] }>();
                         </BreadcrumbLink>
                     </template>
                 </BreadcrumbItem>
-                <BreadcrumbSeparator v-if="index !== breadcrumbs.length - 1" />
+                <BreadcrumbSeparator v-if="index !== currentBreadcrumb.length - 1" />
             </template>
         </BreadcrumbList>
     </Breadcrumb>
