@@ -55,8 +55,8 @@ onMounted(async () => {
     if (!session?.active_role || session.user.must_change_password) { await router.replace('/'); return; }
     dashboard.value = await getDashboard();
   } catch (reason) {
-    if (reason instanceof ApiError && [401, 409].includes(reason.status)) { await router.replace('/'); return; }
-    error.value = 'No se pudo cargar el panel de trabajo.';
+    if (reason instanceof ApiError && reason.status === 401) { await router.replace('/login'); return; }
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el panel de trabajo.';
   }
 });
 </script>

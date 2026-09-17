@@ -56,6 +56,7 @@ describe('authentication pages', () => {
 
     expect(sessionState.current.value).toEqual(authenticatedSession);
     expect(replace).toHaveBeenCalledWith('/dashboard');
+    wrapper.unmount();
   });
 
   it('reloads the authenticated session after completing the second factor', async () => {
@@ -72,5 +73,6 @@ describe('authentication pages', () => {
     expect(getSession).toHaveBeenCalledOnce();
     expect(sessionState.current.value).toEqual(authenticatedSession);
     expect(replace).toHaveBeenCalledWith('/dashboard');
+    wrapper.unmount();
   });
 });

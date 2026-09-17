@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "audit:reference": "node scripts/analyze-reference-parity.mjs",
     "audit:visual-parity": "node scripts/audit-reference-parity.mjs",
     "contract:check": "node scripts/check-openapi-contract.mjs",
     "lint": "eslint .",

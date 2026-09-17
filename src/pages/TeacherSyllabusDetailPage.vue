@@ -90,14 +90,15 @@ const load = async (): Promise<void> => {
     conflict.value = false;
     error.value = null;
   } catch (reason) {
-    if (
-      reason instanceof ApiError &&
-      [401, 403, 404, 409].includes(reason.status)
-    ) {
+    if (reason instanceof ApiError && reason.status === 401) {
+      await router.replace("/login");
+      return;
+    }
+    if (reason instanceof ApiError && reason.status === 404) {
       await router.replace("/docente/mis-silabos");
       return;
     }
-    error.value = "No se pudo cargar el sílabo.";
+    error.value = reason instanceof ApiError ? reason.message : "No se pudo cargar el sílabo.";
   }
 };
 

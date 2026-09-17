@@ -28,8 +28,8 @@ const load = async (page = 1): Promise<void> => {
   error.value = null;
   try { result.value = await getTeacherSyllabi({ q: query.value, state: state.value, page }); }
   catch (reason) {
-    if (reason instanceof ApiError && [401, 403, 409].includes(reason.status)) { await router.replace('/'); return; }
-    error.value = 'No se pudieron cargar sus sílabos.';
+    if (reason instanceof ApiError && reason.status === 401) { await router.replace('/login'); return; }
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar sus sílabos.';
   }
 };
 const formatSavedAt = (value: string | null): string => value ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Sin guardados';

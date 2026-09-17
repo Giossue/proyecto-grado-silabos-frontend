@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { api } from '@/api/client';
+import { api, ApiError } from '@/api/client';
 
 const jsonResponse = (status: number, payload: unknown = {}): Response =>
   new Response(JSON.stringify(payload), {
@@ -58,5 +58,30 @@ describe('cliente API', () => {
 
     await expect(api('/session')).rejects.toMatchObject({ status: 401 });
     expect(listener).toHaveBeenCalledOnce();
+  });
+
+  it('conserva el 403 como denegación y no como pérdida de sesión', async () => {
+    const listener = vi.fn();
+    window.addEventListener('silabos:unauthorized', listener);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(403, { message: 'No autorizado.' })));
+
+    await expect(api('/admin/usuarios')).rejects.toMatchObject({
+      status: 403,
+      message: 'No autorizado.',
+    } satisfies Partial<ApiError>);
+    expect(listener).not.toHaveBeenCalled();
+    window.removeEventListener('silabos:unauthorized', listener);
+  });
+
+  it('expone un 419 persistente después de un solo reintento', async () => {
+    document.cookie = 'XSRF-TOKEN=anterior; path=/';
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).endsWith('/sanctum/csrf-cookie')) return new Response(null, { status: 204 });
+      return jsonResponse(419, { message: 'CSRF expirado' });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(api('/resource', { method: 'POST', body: '{}' })).rejects.toMatchObject({ status: 419 });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
   });
 });

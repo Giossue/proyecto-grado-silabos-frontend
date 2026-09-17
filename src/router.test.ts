@@ -60,6 +60,13 @@ describe('navegación por ámbito activo', () => {
     expect(router.currentRoute.value.fullPath).toBe('/coordinacion/fuentes');
   });
 
+  it('resuelve la configuración genérica del monolito al área activa', async () => {
+    sessionState.replace(session('docente'));
+    await router.push('/settings/profile');
+
+    expect(router.currentRoute.value.fullPath).toBe('/docente/configuracion/perfil');
+  });
+
   it('recupera una URL administrativa del historial según el rol real', async () => {
     sessionState.replace(session('docente'));
     await router.push('/admin/usuarios');
