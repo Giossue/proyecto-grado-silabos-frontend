@@ -1,12 +1,14 @@
+# syntax=docker/dockerfile:1.7
 FROM docker.io/library/node:22-alpine AS build
 
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN --mount=type=cache,id=silabos-frontend-npm,target=/root/.npm \
+    npm ci --prefer-offline --no-audit
 COPY . .
 ARG VITE_API_URL=""
 ENV VITE_API_URL=$VITE_API_URL
-RUN npm run build
+RUN npm run build:deploy
 
 FROM docker.io/library/nginx:1.27-alpine
 
