@@ -5,6 +5,8 @@ import { dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   allowedAliasRoutes,
+  allowedExtraComponents,
+  componentAdaptationRules,
   pages,
   reference,
 } from './reference-parity-manifest.mjs';
@@ -48,9 +50,35 @@ const templateOf = (source) => {
 const stylesOf = (source) => [...source.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)]
   .map((match) => match[1])
   .join('\n');
-const componentImports = (source) => [...source.matchAll(/from\s+['"]@\/components\/([^'"]+)['"]/g)]
-  .map((match) => `components/${match[1].replace(/\.vue$/, '')}.vue`)
-  .sort();
+const componentImportSpecifiers = (source) => [...source.matchAll(/from\s+['"]@\/components\/([^'"]+)['"]/g)]
+  .map((match) => match[1]);
+const componentPath = (specifier) => `components/${specifier.replace(/\.vue$/, '')}.vue`;
+const componentImports = (source) => componentImportSpecifiers(source).map(componentPath).sort();
+const resolveComponentImport = (specifier) => {
+  const candidates = specifier.endsWith('.vue')
+    ? [join(destinationRoot, 'components', specifier)]
+    : [
+        join(destinationRoot, 'components', `${specifier}.vue`),
+        join(destinationRoot, 'components', specifier, 'index.ts'),
+        join(destinationRoot, 'components', specifier, 'index.vue'),
+      ];
+  return candidates.find(existsSync) ?? null;
+};
+const transitiveComponentImports = (entryPath) => {
+  const imports = new Set();
+  const visited = new Set();
+  const visit = (path) => {
+    if (!path || visited.has(path)) return;
+    visited.add(path);
+    const source = readFileSync(path, 'utf8');
+    for (const specifier of componentImportSpecifiers(source)) {
+      imports.add(componentPath(specifier));
+      visit(resolveComponentImport(specifier));
+    }
+  };
+  visit(entryPath);
+  return imports;
+};
 
 const canonicalPages = referenceFiles
   .filter((path) => path.startsWith('pages/') && extname(path) === '.vue')
@@ -83,30 +111,72 @@ const pageRows = pages.map((page) => {
   }
   const source = referenceFile(page.source);
   const target = readFileSync(targetPath, 'utf8');
-  const targetImports = new Set(componentImports(target));
+  const targetImports = transitiveComponentImports(targetPath);
+  const replacements = new Set(page.componentReplacements ?? []);
   return {
     ...page,
     targetExists: true,
     template: digest(templateOf(source)) === digest(templateOf(target)) ? 'identico' : 'distinto',
     styles: digest(stylesOf(source)) === digest(stylesOf(target)) ? 'identico' : 'distinto',
-    missingComponents: componentImports(source).filter((path) => !targetImports.has(path)),
+    missingComponents: componentImports(source).filter((path) =>
+      !targetImports.has(path) && !replacements.has(path)),
   };
 });
 
-const canonicalSurfaceFiles = referenceFiles.filter((path) =>
-  (path.startsWith('components/domain/') || path.startsWith('layouts/'))
-  && extname(path) === '.vue',
+const canonicalComponentFiles = referenceFiles.filter((path) =>
+  path.startsWith('components/') && extname(path) === '.vue',
 );
-const missingSurfaceFiles = canonicalSurfaceFiles.filter((path) =>
+const missingComponentFiles = canonicalComponentFiles.filter((path) =>
   !existsSync(join(destinationRoot, path)),
 );
-const destinationSurfaceFiles = walk(destinationRoot)
+const destinationComponentFiles = walk(join(destinationRoot, 'components'))
   .filter((path) => extname(path) === '.vue')
-  .map((path) => relative(destinationRoot, path))
-  .filter((path) => path.startsWith('components/domain/') || path.startsWith('layouts/'));
-const extraSurfaceFiles = destinationSurfaceFiles.filter((path) =>
-  !canonicalSurfaceFiles.includes(path),
-);
+  .map((path) => relative(destinationRoot, path));
+const allowedExtraPaths = new Set(allowedExtraComponents.map(({ path }) => path));
+const extraComponentFiles = destinationComponentFiles.filter((path) =>
+  !canonicalComponentFiles.includes(path) && !allowedExtraPaths.has(path));
+const missingAllowedExtraComponents = allowedExtraComponents
+  .filter(({ path }) => !destinationComponentFiles.includes(path))
+  .map(({ path }) => path);
+
+const adaptationFor = (path) => componentAdaptationRules.find((rule) =>
+  (rule.prefix && path.startsWith(rule.prefix)) || rule.files?.includes(path));
+const componentRows = canonicalComponentFiles.map((path) => {
+  const targetPath = join(destinationRoot, path);
+  if (!existsSync(targetPath)) return { path, state: 'faltante', justification: null };
+  if (normalize(referenceFile(path)) === normalize(readFileSync(targetPath, 'utf8'))) {
+    return { path, state: 'identico', justification: null };
+  }
+  const adaptation = adaptationFor(path);
+  return {
+    path,
+    state: adaptation ? 'adaptado_api' : 'alterado',
+    justification: adaptation?.justification ?? null,
+  };
+});
+const unclassifiedComponents = componentRows
+  .filter(({ state }) => ['faltante', 'alterado'].includes(state))
+  .map(({ path }) => path);
+
+const canonicalLayoutFiles = referenceFiles.filter((path) =>
+  path.startsWith('layouts/') && extname(path) === '.vue');
+const destinationLayoutFiles = walk(join(destinationRoot, 'layouts'))
+  .filter((path) => extname(path) === '.vue')
+  .map((path) => relative(destinationRoot, path));
+const missingLayoutFiles = canonicalLayoutFiles.filter((path) =>
+  !destinationLayoutFiles.includes(path));
+const extraLayoutFiles = destinationLayoutFiles.filter((path) =>
+  !canonicalLayoutFiles.includes(path));
+const layoutRows = canonicalLayoutFiles.map((path) => {
+  const targetPath = join(destinationRoot, path);
+  if (!existsSync(targetPath)) return { path, state: 'faltante' };
+  return {
+    path,
+    state: normalize(referenceFile(path)) === normalize(readFileSync(targetPath, 'utf8'))
+      ? 'identico'
+      : 'adaptado_api',
+  };
+});
 
 const canonicalUiFiles = referenceFiles.filter((path) =>
   path.startsWith('components/ui/') && ['.vue', '.ts'].includes(extname(path)),
@@ -161,9 +231,30 @@ list('Páginas declaradas que no existen en la referencia', unknownDeclaredPages
 list('Páginas adicionales de la SPA', extraTargetPages);
 list('Rutas faltantes', missingRoutes);
 list('Rutas adicionales', extraRoutes);
-list('Componentes de dominio/layout canónicos faltantes', missingSurfaceFiles);
-list('Componentes de dominio/layout adicionales', extraSurfaceFiles);
+list('Componentes canónicos faltantes', missingComponentFiles);
+list('Componentes adicionales no autorizados', extraComponentFiles);
+list('Adaptadores declarados que faltan', missingAllowedExtraComponents);
+list('Layouts canónicos faltantes', missingLayoutFiles);
+list('Layouts adicionales', extraLayoutFiles);
 list('Dependencias prohibidas', forbiddenImports);
+
+console.log('');
+console.log('## Clasificación de componentes');
+console.log('');
+console.log(`- Idénticos: ${count(componentRows.map(({ state }) => state), 'identico')}`);
+console.log(`- Adaptados a API: ${count(componentRows.map(({ state }) => state), 'adaptado_api')}`);
+console.log(`- Alterados sin justificar: ${count(componentRows.map(({ state }) => state), 'alterado')}`);
+console.log(`- Faltantes: ${count(componentRows.map(({ state }) => state), 'faltante')}`);
+for (const extra of allowedExtraComponents) {
+  console.log(`- \`${extra.path}\`: adaptador permitido — ${extra.justification}`);
+}
+
+console.log('');
+console.log('## Clasificación de layouts');
+console.log('');
+console.log(`- Idénticos: ${count(layoutRows.map(({ state }) => state), 'identico')}`);
+console.log(`- Adaptados a Vue Router/estado SPA: ${count(layoutRows.map(({ state }) => state), 'adaptado_api')}`);
+console.log(`- Faltantes: ${count(layoutRows.map(({ state }) => state), 'faltante')}`);
 
 console.log('');
 console.log('## Componentes UI');
@@ -181,7 +272,15 @@ const unresolved = [
   ...extraTargetPages,
   ...missingRoutes,
   ...extraRoutes,
+  ...pageRows.flatMap(({ missingComponents }) => missingComponents),
+  ...missingComponentFiles,
+  ...extraComponentFiles,
+  ...missingAllowedExtraComponents,
+  ...unclassifiedComponents,
+  ...missingLayoutFiles,
+  ...extraLayoutFiles,
   ...forbiddenImports,
   ...pages.filter(({ status }) => status === 'pendiente').map(({ source }) => source),
+  ...pages.filter(({ status, justification }) => status === 'adaptado_api' && !justification).map(({ source }) => source),
 ];
 if (unresolved.length > 0) process.exitCode = 1;

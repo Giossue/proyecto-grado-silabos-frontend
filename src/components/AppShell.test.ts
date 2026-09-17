@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import AppShell from '@/components/AppShell.vue';
+import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
 import { sessionState } from '@/state/session';
 
 const { getNotifications, logout, selectActiveRole } = vi.hoisted(() => ({
@@ -32,7 +32,7 @@ const mountShell = async () => {
     routes: [
       { path: '/panel', component: { template: '<div />' } },
       { path: '/notificaciones', component: { template: '<div />' } },
-      { path: '/seguridad', component: { template: '<div />' } },
+      { path: '/configuracion/seguridad', component: { template: '<div />' } },
       { path: '/administracion/usuarios', component: { template: '<div />' } },
       { path: '/administracion/procesos', component: { template: '<div />' } },
       { path: '/administracion/estructura-academica', component: { template: '<div />' } },
@@ -43,10 +43,10 @@ const mountShell = async () => {
   await router.push('/panel');
   await router.isReady();
 
-  return mount(AppShell, { attachTo: document.body, global: { plugins: [router] }, slots: { default: '<p>Contenido</p>' } });
+  return mount(AppSidebarLayout, { attachTo: document.body, global: { plugins: [router] }, slots: { default: '<p>Contenido</p>' } });
 };
 
-describe('AppShell', () => {
+describe('AppSidebarLayout', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     sessionState.replace(administratorSession);

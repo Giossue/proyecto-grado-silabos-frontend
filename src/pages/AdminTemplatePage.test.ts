@@ -1,11 +1,14 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { getSession } from "@/api/session";
 import { getTemplate, type TemplatePayload } from "@/api/template";
 
-vi.mock("vue-router", () => ({
+vi.mock("vue-router", async (importOriginal) => ({
+  ...(await importOriginal<typeof import('vue-router')>()),
   useRouter: () => ({ replace: vi.fn() }),
+  useRoute: () => ({ fullPath: '/administracion/plantilla' }),
 }));
 
 vi.mock("@/api/session", () => ({ getSession: vi.fn() }));
@@ -31,8 +34,25 @@ vi.mock("@/api/template", async (importOriginal) => ({
 
 const payload: TemplatePayload = {
   processLock: null,
+  identificationSample: [],
   variables: [{ key: "nombre_asignatura", label: "Asignatura", sample: "Inteligencia Artificial" }],
   identificationDesign: { type: "doc", content: [] },
+  logos: {
+    institution: '/logo.png', faculty: '/faculty.png',
+    institution_size: { width: 120, height: 40 }, faculty_size: { width: 120, height: 40 },
+  },
+  blockTypes: [{ value: 'text', label: 'Texto' }],
+  appearanceOptions: {
+    fonts: [{ value: 'Arial', label: 'Arial' }],
+    body_sizes: [{ value: 11, label: '11' }],
+    title_sizes: [{ value: 16, label: '16' }],
+    section_sizes: [{ value: 13, label: '13' }],
+    field_sizes: [{ value: 11, label: '11' }],
+    margins: [{ value: 2.5, label: '2.5' }],
+    colors: [{ value: '#075da9', label: 'Azul' }],
+    alignments: [{ value: 'left', label: 'Izquierda' }],
+    orientations: [{ value: 'portrait', label: 'Vertical' }],
+  },
   template: {
     id: "template-1",
     name: "Plantilla institucional",
@@ -72,19 +92,22 @@ describe("AdminTemplatePage", () => {
     vi.mocked(getTemplate).mockResolvedValue(payload);
   });
 
-  it("muestra el documento estructurado y abre el diseño dedicado", async () => {
-    const wrapper = mount(AdminTemplatePage);
+  it("muestra el documento estructurado y activa el editor canónico", async () => {
+    const wrapper = mount({
+      components: { AdminTemplatePage, TooltipProvider },
+      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
+    }, { attachTo: document.body });
     await flushPromises();
 
     expect(wrapper.get(".template-document-view").text()).toContain("Fundamentos de la asignatura.");
-    await wrapper.get('button').trigger("click");
+    const edit = wrapper.findAll('button').find((button) => button.text().trim() === 'Editar');
+    expect(edit).toBeDefined();
+    await edit!.trigger("click");
+    await flushPromises();
     await wrapper.get('[aria-label="Campo Descripción"]').trigger("pointerdown");
-    await wrapper.findAll("button").find((button) =>
-      button.text().includes("Editar diseño del documento"),
-    )?.trigger("click");
     await flushPromises();
 
-    expect(wrapper.get('[aria-label="Editor de diseño de plantilla"]').text()).toContain("Descripción");
-    expect(wrapper.get('[aria-label="Editor de diseño de plantilla"]').text()).toContain("Salir del diseño");
+    expect(document.body.textContent).toContain('Campo · Descripción');
+    expect(document.body.textContent).toContain('Editar campo');
   });
 });

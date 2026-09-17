@@ -24,7 +24,6 @@ function handleInputGroupAddonClick(e: MouseEvent) {
 </script>
 
 <template>
-  <!-- eslint-disable-next-line vuejs-accessibility/click-events-have-key-events, vuejs-accessibility/no-static-element-interactions -->
   <div
     role="group"
     data-slot="input-group-addon"

@@ -43,7 +43,89 @@ export const pages = [
   { id: 'UI-04', source: 'pages/settings/Appearance.vue', target: 'pages/AppearancePage.vue', routes: ['/configuracion/apariencia'] },
   { id: 'UI-04', source: 'pages/settings/Profile.vue', target: 'pages/ProfilePage.vue', routes: ['/configuracion/perfil'] },
   { id: 'UI-04', source: 'pages/settings/Security.vue', target: 'pages/SecurityPage.vue', routes: ['/configuracion/seguridad'] },
-].map((page) => ({ ...page, status: 'pendiente' }));
+].map((page) => ({
+  ...page,
+  status: 'adaptado_api',
+  justification: {
+    'AcademicGovernancePage.vue': 'Conserva las cuatro vistas canónicas y sustituye props/Inertia por carga y mutaciones de /api/v1/admin/academic.',
+    'AdminAuditPage.vue': 'Conserva pestañas, filtros y tabla; obtiene la paginación desde la API JSON.',
+    'AdminJobsPage.vue': 'Conserva estados, acciones y diálogos; reintentos y filtros se ejecutan por API JSON.',
+    'AdminProcessesPage.vue': 'Conserva la superficie de procesos y sus hojas; reemplaza Form/router de Inertia por clientes tipados.',
+    'AdminTemplatePage.vue': 'Reúne los estados índice, lectura y edición del monolito en una ruta SPA sin cambiar el constructor documental.',
+    'AdminUsersPage.vue': 'Conserva listado, filtros y hojas de usuarios; carga y muta mediante la API.',
+    'AdminUserDetailPage.vue': 'Conserva expediente y acciones de cuenta; obtiene el usuario por ruta Vue y API.',
+    'CoordinationAcademicStructurePage.vue': 'Reúne las tres páginas académicas canónicas según la ruta activa y conserva sus componentes originales.',
+    'CoordinationConvocationsPage.vue': 'Conserva listado, filtros y creación de convocatorias con frontera API.',
+    'CoordinationConvocationDetailPage.vue': 'Conserva detalle, acciones y estados de convocatoria con carga API.',
+    'CoordinationReportsPage.vue': 'Conserva filtros, métricas y exportaciones; las descargas usan endpoints autorizados.',
+    'CoordinationReviewsPage.vue': 'Conserva la cola de revisión y sus filtros, cargada desde la API.',
+    'CoordinationReviewDetailPage.vue': 'Conserva documento, observaciones y decisiones; las mutaciones usan casos de uso API.',
+    'DashboardPage.vue': 'Conserva los tres estados por rol; el contexto procede de la sesión y del endpoint de panel.',
+    'NotificationsPage.vue': 'Conserva listado y acciones; reemplaza la paginación Inertia por datos JSON.',
+    'WorkspacePage.vue': 'Conserva la selección de ámbito; activa rol y carrera mediante Sanctum/API.',
+    'CoordinationSourcesPage.vue': 'Conserva listado y hojas de fuentes; carga y muta mediante API.',
+    'CoordinationSourceDetailPage.vue': 'Conserva el editor Markdown canónico con persistencia API.',
+    'CoordinationReviewComparisonPage.vue': 'Conserva el comparador canónico y obtiene ambas revisiones por parámetros de Vue Router.',
+    'DocumentsPage.vue': 'Conserva estados y descargas de documentos; usa URLs temporales entregadas por la API.',
+    'TeacherSyllabusDetailPage.vue': 'Integra resumen, edición, envío e IA canónicos según estado del expediente; autoguarda y transiciona por API.',
+    'TeacherSyllabiPage.vue': 'Conserva el listado docente y sus estados; obtiene expedientes desde la API.',
+    'SecurityPage.vue': 'Integra confirmación, contraseña y 2FA canónicos con endpoints JSON; no muestra sesiones inventadas.',
+    'PasswordRecoveryPage.vue': 'Conserva el formulario canónico y sustituye Form/TextLink por form nativo y RouterLink equivalentes.',
+    'LoginPage.vue': 'Conserva la pantalla canónica y autentica mediante Sanctum/API.',
+    'ResetPasswordPage.vue': 'Conserva la pantalla canónica y envía el token mediante API.',
+    'TwoFactorChallengePage.vue': 'Conserva el reto TOTP/recuperación y verifica mediante API.',
+    'VerifyEmailPage.vue': 'Conserva el estado de verificación y reenvío mediante API.',
+    'AppearancePage.vue': 'Conserva los controles locales de apariencia; no requiere adaptación de dominio.',
+    'ProfilePage.vue': 'Conserva la variante canónica de identidad de solo lectura definida para usuarios no administrables.',
+  }[page.target.split('/').at(-1)] ?? 'Sustituye únicamente navegación y transporte Inertia por Vue Router y la API JSON.',
+  componentReplacements: page.source === 'pages/auth/ForgotPassword.vue'
+    ? ['components/TextLink.vue']
+    : page.source === 'pages/settings/Profile.vue'
+      ? ['components/InputError.vue', 'components/ui/button.vue']
+      : [],
+}));
+
+export const allowedExtraComponents = [
+  {
+    path: 'components/ApiForm.vue',
+    justification: 'Adaptador interno de la frontera API que conserva el contrato de slots de los formularios canónicos sin introducir una superficie visible.',
+  },
+];
+
+export const componentAdaptationRules = [
+  {
+    prefix: 'components/domain/',
+    justification: 'El template canónico se conserva; carga, navegación y mutaciones se conectan a clientes API tipados.',
+  },
+  {
+    prefix: 'components/ai-elements/',
+    justification: 'Ajuste de tipos TypeScript sin cambio de estructura, estilo ni comportamiento visible.',
+  },
+  {
+    files: [
+      'components/AppHeader.vue',
+      'components/AppLogo.vue',
+      'components/AppLogoIcon.vue',
+      'components/AppShell.vue',
+      'components/AppSidebar.vue',
+      'components/AppSidebarHeader.vue',
+      'components/AppearanceToggle.vue',
+      'components/Breadcrumbs.vue',
+      'components/DatePicker.vue',
+      'components/ManageTwoFactor.vue',
+      'components/NavMain.vue',
+      'components/NavUser.vue',
+      'components/PasswordInput.vue',
+      'components/SetupProgress.vue',
+      'components/TemporaryPasswordDialog.vue',
+      'components/TextLink.vue',
+      'components/TwoFactorRecoveryCodes.vue',
+      'components/TwoFactorSetupModal.vue',
+      'components/UserMenuContent.vue',
+    ],
+    justification: 'Sustituye Inertia/usePage/Wayfinder por Vue Router y el estado explícito de sesión, manteniendo la composición canónica.',
+  },
+];
 
 export const allowedAliasRoutes = [
   '/seguridad',

@@ -5,7 +5,8 @@ import vue from 'eslint-plugin-vue';
 import vueAccessibility from 'eslint-plugin-vuejs-accessibility';
 
 export default defineConfigWithVueTs(
-  globalIgnores(['dist/**', 'node_modules/**', 'coverage/**']),
+  // shadcn-vue primitives are copied verbatim from the canonical monolith.
+  globalIgnores(['dist/**', 'node_modules/**', 'coverage/**', 'src/components/ui/**']),
   vue.configs['flat/essential'],
   ...vueAccessibility.configs['flat/recommended'],
   vueTsConfigs.recommended,

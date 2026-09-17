@@ -385,6 +385,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         <Teleport
                             :to="selectionTarget ?? 'body'"
                             :disabled="!selectionTarget"
+                            defer
                         >
                             <div
                                 class="flex min-w-0 items-center justify-center"

@@ -40,7 +40,6 @@ function onKeyDown(event: KeyboardEvent) {
 </script>
 
 <template>
-  <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
   <div
     data-slot="carousel"
     :class="cn('relative', props.class)"

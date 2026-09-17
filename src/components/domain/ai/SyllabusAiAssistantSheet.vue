@@ -224,7 +224,6 @@ const schedulePoll = (): void => {
 const load = async (): Promise<void> => {
     try {
         chat.value = await getAiChat(props.syllabusId);
-        schedulePoll();
     } catch (reason) {
         toast.error(reason instanceof ApiError ? reason.message : 'No se pudo cargar la asistencia de IA');
     } finally {

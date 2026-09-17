@@ -41,7 +41,10 @@ const templatePath = (expression) => {
   return path;
 };
 
-const methodFrom = (argument) => {
+const methodFrom = (argument, call, source) => {
+  const leadingSource = source.text.slice(Math.max(0, call.getFullStart() - 240), call.getStart());
+  const documentedOverride = leadingSource.match(/@openapi-method\s+(GET|POST|PUT|PATCH|DELETE)/i);
+  if (documentedOverride) return documentedOverride[1].toUpperCase();
   if (!argument || !ts.isObjectLiteralExpression(argument)) return "GET";
   const property = argument.properties.find(
     (candidate) => ts.isPropertyAssignment(candidate)
@@ -74,7 +77,7 @@ for (const filename of sourceFiles) {
         consumers.push({
           filename,
           line: source.getLineAndCharacterOfPosition(node.pos).line + 1,
-          method: node.expression.text === "apiBlob" ? "GET" : methodFrom(node.arguments[1]),
+          method: node.expression.text === "apiBlob" ? "GET" : methodFrom(node.arguments[1], node, source),
           path: `/api/v1${rawPath.split("?")[0]}`,
         });
       }

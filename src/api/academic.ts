@@ -9,7 +9,9 @@ export type AcademicGovernance = Pick<AcademicStructureProps, 'lock_reason' | 'c
 export type AcademicEntity = 'facultad' | 'campus' | 'carrera' | 'periodo';
 
 export const getAcademicGovernance = (section?: string) =>
-  api<AcademicGovernance>(`/admin/academic${section ? `/${section}` : ''}`);
+  section
+    ? api<AcademicGovernance>(`/admin/academic/${section}`)
+    : api<AcademicGovernance>('/admin/academic');
 export const createAcademicRecord = (entity: AcademicEntity, payload: Record<string, unknown> | FormData) =>
   api<{ message: string }>(`/admin/academic/${entity}`, {
     method: 'POST',
@@ -18,6 +20,7 @@ export const createAcademicRecord = (entity: AcademicEntity, payload: Record<str
 export const updateAcademicRecord = (entity: AcademicEntity, id: string, payload: Record<string, unknown> | FormData) => {
   if (payload instanceof FormData) {
     payload.set('_method', 'PATCH');
+    // @openapi-method PATCH: Laravel method spoofing preserves multipart uploads.
     return api<{ message: string }>(`/admin/academic/${entity}/${id}`, { method: 'POST', body: payload });
   }
   return api<{ message: string }>(`/admin/academic/${entity}/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });

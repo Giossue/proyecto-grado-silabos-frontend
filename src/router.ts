@@ -205,7 +205,7 @@ export const router = createRouter({
     {
       path: "/mis-silabos/:syllabus",
       component: TeacherSyllabusDetailPage,
-      meta: { requiresAuth: true, roles: ["docente"], title: "Sílabo" },
+      meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" },
     },
   ],
 });

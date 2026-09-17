@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronRight } from '@lucide/vue';
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import {
     Collapsible,
     CollapsibleContent,
@@ -32,6 +33,7 @@ import type { NavItem } from '@/types';
 defineProps<{ items: NavItem[] }>();
 
 const { isCurrentOrParentUrl } = useCurrentUrl();
+const router = useRouter();
 const { state, isMobile } = useSidebar();
 const showsFlyout = computed(() => state.value === 'collapsed' && !isMobile.value);
 const isItemActive = (item: NavItem): boolean =>
@@ -66,8 +68,8 @@ const isItemActive = (item: NavItem): boolean =>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent side="right" align="start" class="w-56">
                         <DropdownMenuGroup>
-                            <DropdownMenuItem v-for="child in item.items" :key="child.title" as-child>
-                                <RouterLink :to="toUrl(child.href)">{{ child.title }}</RouterLink>
+                            <DropdownMenuItem v-for="child in item.items" :key="child.title" @select="router.push(toUrl(child.href))">
+                                {{ child.title }}
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                     </DropdownMenuContent>

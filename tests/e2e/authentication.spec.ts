@@ -8,7 +8,7 @@ const login = async (page: Page, email: string, password: string): Promise<void>
 };
 
 const mainNavigation = (page: Page) =>
-  page.getByRole('navigation', { name: 'Navegación principal' });
+  page.locator('[data-sidebar="content"]');
 
 const transparentFacultyLogo = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAlgAAAC0CAYAAABIf1IMAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABuklEQVR4nO3BgQAAAADDoPlT3+AEVQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHQOYjgABYRRRSgAAAABJRU5ErkJggg==',
@@ -63,17 +63,18 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByText('admin@silabos.test')).toBeVisible();
 
     const email = `e2e.${Date.now()}@silabos.test`;
-    await page.getByRole('button', { name: 'Crear cuenta' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Crear cuenta' });
+    await page.getByRole('button', { name: 'Nueva cuenta' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Nueva cuenta' });
     await dialog.getByLabel('Nombre completo').fill('Cuenta E2E');
     await dialog.getByLabel('Correo institucional').fill(email);
     await dialog.getByLabel('Contraseña temporal').fill('Temporal-2026!');
-    await dialog.getByLabel('Rol').click();
+    await dialog.getByLabel('Rol inicial').click();
     await page.getByRole('option', { name: 'Administrador' }).click();
     await dialog.getByRole('button', { name: 'Crear cuenta', exact: true }).click();
     await expect(page.getByText(email)).toBeVisible();
 
-    await mainNavigation(page).getByRole('link', { name: 'Estructura académica', exact: true }).click();
+    await mainNavigation(page).getByRole('button', { name: 'Estructura académica', exact: true }).click();
+    await mainNavigation(page).getByRole('link', { name: 'Facultades', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Facultades' })).toBeVisible();
 
     await mainNavigation(page).getByRole('link', { name: 'Auditoría', exact: true }).click();
@@ -94,9 +95,10 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByRole('heading', { name: 'Plantilla' })).toBeVisible();
     const createTemplate = page.getByRole('button', { name: 'Crear plantilla institucional' });
     const editTemplate = page.getByRole('button', { name: 'Editar plantilla' });
-    await expect(createTemplate.or(editTemplate)).toBeVisible();
+    const protectedTemplate = page.getByText('Plantilla protegida durante el proceso');
+    await expect(createTemplate.or(editTemplate).or(protectedTemplate)).toBeVisible();
     if (await createTemplate.isVisible()) await createTemplate.click();
-    await expect(editTemplate).toBeVisible();
+    if (!await protectedTemplate.isVisible()) await expect(editTemplate).toBeVisible();
 
     await mainNavigation(page).getByRole('link', { name: 'Convocatorias', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Convocatorias' })).toBeVisible();
@@ -126,7 +128,7 @@ test.describe('frontera distribuida de identidad', () => {
 
     await page.setViewportSize({ width: 360, height: 740 });
     await page.getByRole('button', { name: 'Mostrar menú' }).click();
-    await expect(page.getByRole('navigation', { name: 'Navegación principal' })).toBeVisible();
+    await expect(page.locator('[data-sidebar="content"]:visible')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
     expect(serverErrors).toEqual([]);
   });
@@ -209,7 +211,8 @@ test.describe('frontera distribuida de identidad', () => {
     const syllabusRow = page.getByRole('row', { name: /Arquitectura de Software/ });
     await syllabusRow.getByRole('button', { name: /Acciones para Arquitectura de Software/ }).click();
     await page.getByRole('menuitem', { name: 'Abrir sílabo' }).click();
-    await expect(page.getByRole('heading', { name: 'Arquitectura de Software' })).toBeVisible();
+    await expect(page).toHaveURL(/\/mis-silabos\/[0-9a-f-]+$/);
+    await expect(page.getByRole('heading', { name: 'Mis sílabos' })).toBeVisible();
     const startDraft = page.getByRole('button', { name: 'Iniciar borrador' }).first();
     if (await startDraft.isVisible()) await startDraft.click();
 

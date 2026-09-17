@@ -15,7 +15,6 @@ import {
   type SyllabusField,
 } from "@/api/syllabi";
 import SyllabusAiAssistantSheet from '@/components/domain/ai/SyllabusAiAssistantSheet.vue';
-import SnapshotValue from "@/components/SnapshotValue.vue";
 import SyllabusTableEditor from '@/components/domain/syllabus/SyllabusTableEditor.vue';
 import SyllabusTableView from '@/components/domain/syllabus/SyllabusTableView.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -25,10 +24,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Spinner } from '@/components/ui/spinner';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
 import type { TableRowData } from '@/lib/tableLayout';
@@ -68,10 +69,6 @@ const canReviewWithAi = computed(() =>
   validationRan.value &&
   validationBlockingErrors.value === 0,
 );
-const stateLabel = (value: string): string => ({
-  sin_iniciar: 'Sin iniciar', borrador: 'Borrador', en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado', abierta: 'Abierta', respondida: 'Respondida', verificada: 'Verificada',
-}[value] ?? value);
-
 const validationFor = (fieldId: string) =>
   validationResults.value.filter((result) => result.field_id === fieldId);
 
@@ -204,6 +201,15 @@ const scalarValue = (field: SyllabusField): string | number =>
   typeof field.value === "string" || typeof field.value === "number"
     ? field.value
     : "";
+
+const masterValue = (value: unknown): string => {
+  if (value === null || value === undefined || value === '') return 'Dato no disponible';
+  if (typeof value !== 'object') return typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value);
+  if (Array.isArray(value)) return value.map(String).join(', ');
+  return Object.entries(value)
+    .map(([key, item]) => `${key.replaceAll('_', ' ')}: ${String(item ?? '—')}`)
+    .join(' · ');
+};
 
 const updateScalar = (field: SyllabusField, value: string): void => {
   field.value = field.type === "numero" && value !== "" ? Number(value) : value;
@@ -384,15 +390,13 @@ onBeforeUnmount(() => {
 
 <template>
   <PageFrame
-    :title="syllabus?.subject ?? 'Mi sílabo'"
+    title=""
     :description="syllabus ? `${syllabus.code} · ${syllabus.convocation} · Paralelo(s) ${syllabus.parallels.join(', ')}` : 'Cargando sílabo…'"
   >
-    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink to="/mis-silabos">← Volver a mis sílabos</RouterLink></Button></template>
-    <template v-if="syllabus" #meta><Badge variant="outline">{{ stateLabel(syllabus.state) }}</Badge><span class="text-sm text-muted-foreground">Avance {{ syllabus.completion.toFixed(0) }} %</span><span v-if="canEdit" class="text-sm text-muted-foreground">Los cambios se guardan automáticamente.</span></template>
     <template #actions>
-      <Button v-if="syllabus?.state === 'sin_iniciar'" :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button>
-      <Button v-else-if="syllabus && canEdit && syllabus.completion === 100 && !(validationRan && validationBlockingErrors === 0)" :disabled="processingAction || conflict" @click="validate">Validar sílabo</Button>
-      <Button v-else-if="syllabus && canEdit && validationRan && validationBlockingErrors === 0 && syllabus.completion === 100" :disabled="processingAction || conflict" @click="submit">Enviar a revisión</Button>
+      <Button v-if="syllabus?.state === 'sin_iniciar'" :disabled="starting" @click="start"><Spinner v-if="starting" />{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button>
+      <Button v-else-if="syllabus && canEdit && syllabus.completion === 100 && !(validationRan && validationBlockingErrors === 0)" :disabled="processingAction || conflict" @click="validate"><Spinner v-if="processingAction" />Validar sílabo</Button>
+      <Button v-else-if="syllabus && canEdit && validationRan && validationBlockingErrors === 0 && syllabus.completion === 100" :disabled="processingAction || conflict" @click="submit"><Spinner v-if="processingAction" />Enviar sílabo</Button>
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
@@ -424,7 +428,7 @@ onBeforeUnmount(() => {
           </Card>
 
           <section v-for="(section, sectionIndex) in syllabus.sections" :id="`section-${section.id}`" :key="section.id" class="flex scroll-mt-6 flex-col gap-6 border-t pt-8 first:border-t-0 first:pt-0">
-            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionIndex + 1 }}. {{ section.title }}</h2><p class="text-sm text-muted-foreground">{{ section.description ?? 'Complete los campos aplicables.' }}</p></header>
+            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p class="text-sm text-muted-foreground">{{ section.description ?? 'Complete los campos aplicables.' }}</p></header>
             <IdentificationCard v-if="sectionIndex === 0 && syllabus.identification.length" :grid="syllabus.identification" />
 
             <FieldSet v-for="block in section.blocks" :key="block.id" class="gap-5">
@@ -446,13 +450,13 @@ onBeforeUnmount(() => {
                   <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><Select :model-value="String(scalarValue(field))" @update:model-value="updateScalar(field, String($event))"><SelectTrigger :id="`input-${field.id}`"><SelectValue placeholder="Seleccione una opción" /></SelectTrigger><SelectContent><SelectItem v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select>
                 </Field>
 
-                <fieldset v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'seleccion_multiple'" :id="`field-${field.id}`" class="space-y-3"><legend class="text-sm font-medium">{{ field.label }}<span v-if="field.required" class="text-destructive"> *</span></legend><label v-for="option in field.options" :key="option.value" class="flex items-center gap-2 text-sm"><input type="checkbox" class="size-4 rounded border-input accent-primary" :checked="selectedValues(field).includes(option.value)" @change="toggleChoice(field, option.value, ($event.target as HTMLInputElement).checked)" />{{ option.label }}</label></fieldset>
+                <FieldSet v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'seleccion_multiple'" :id="`field-${field.id}`" :aria-required="field.required"><FieldLegend class="text-sm" :required="field.required">{{ field.label }}</FieldLegend><Field v-for="option in field.options" :key="option.value" orientation="horizontal"><Checkbox :id="`field-${field.id}-${option.value}`" :model-value="selectedValues(field).includes(option.value)" @update:model-value="toggleChoice(field, option.value, Boolean($event))" /><FieldLabel :for="`field-${field.id}-${option.value}`">{{ option.label }}</FieldLabel></Field></FieldSet>
 
-                <fieldset v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" class="space-y-3" :aria-invalid="validationFor(field.id).length > 0"><legend class="text-sm font-medium">{{ field.label }}<span v-if="field.required" class="text-destructive"> *</span></legend><span class="boolean-options flex items-center gap-5"><label class="flex items-center gap-2 text-sm"><input type="radio" :name="`boolean-${field.id}`" :checked="field.value === true" @change="toggleBoolean(field, true)" /> Sí</label><label class="flex items-center gap-2 text-sm"><input type="radio" :name="`boolean-${field.id}`" :checked="field.value === false" @change="toggleBoolean(field, false)" /> No</label></span></fieldset>
+                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required">{{ field.label }}</FieldLabel><div class="boolean-options flex gap-2" role="radiogroup" :aria-label="field.label"><Button type="button" size="sm" :variant="field.value === true ? 'default' : 'outline'" role="radio" :aria-checked="field.value === true" @click="toggleBoolean(field, true)">Sí</Button><Button type="button" size="sm" :variant="field.value === false ? 'default' : 'outline'" role="radio" :aria-checked="field.value === false" @click="toggleBoolean(field, false)">No</Button></div><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
 
                 <div v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'repetible'" :id="`field-${field.id}`" class="space-y-2"><p v-if="!block.table" class="text-sm text-muted-foreground">Esta tabla no tiene una estructura configurada.</p><template v-else><SyllabusTableEditor :field-id="field.id" :label="field.label" :layout="block.table" :rows="tableRows(field)" :required="field.required" :invalid="validationFor(field.id).length > 0" :planning-expectations="syllabus.planning_expectations ?? null" @update:rows="updateRows(field, $event)" /><span v-if="savingFieldId === field.id" class="text-xs text-muted-foreground">Guardando…</span></template></div>
 
-                <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Institucional · solo lectura</Badge></div><SyllabusTableView v-if="field.type === 'repetible' && block.table" :layout="block.table" :rows="tableRows(field)" :planning-expectations="syllabus.planning_expectations ?? null" /><SnapshotValue v-else :value="field.value" :rows="field.rows" /></div>
+                <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Institucional · solo lectura</Badge></div><SyllabusTableView v-if="field.type === 'repetible' && block.table" :layout="block.table" :rows="tableRows(field)" :planning-expectations="syllabus.planning_expectations ?? null" /><span v-else>{{ masterValue(field.value) }}</span></div>
                 <FieldError :errors="validationFor(field.id).map((result) => result.message)" />
                 </template>
                 </FieldGroup>

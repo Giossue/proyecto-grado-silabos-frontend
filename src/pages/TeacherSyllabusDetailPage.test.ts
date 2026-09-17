@@ -130,12 +130,12 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const options = wrapper.findAll('.boolean-options input[type="radio"]');
+    const options = wrapper.findAll('.boolean-options [role="radio"]');
     expect(options).toHaveLength(2);
     expect(
-      options.every((option) => !(option.element as HTMLInputElement).checked),
+      options.every((option) => option.attributes('aria-checked') === 'false'),
     ).toBe(true);
-    await options[1]!.setValue(true);
+    await options[1]!.trigger('click');
     await vi.advanceTimersByTimeAsync(700);
     await flushPromises();
 
@@ -161,7 +161,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.findAll('input[type="checkbox"]')[1]!.setValue(true);
+    await wrapper.findAll('[role="checkbox"]')[1]!.trigger('click');
     await vi.advanceTimersByTimeAsync(700);
     await flushPromises();
 
