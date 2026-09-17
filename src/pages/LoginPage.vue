@@ -47,7 +47,7 @@ const submit = async (): Promise<void> => {
         <Field :data-invalid="Boolean(errors.email || errors.correo_electronico)">
           <FieldLabel for="email" required>Correo institucional</FieldLabel>
           <Input id="email" v-model="email" type="email" name="email" required autocomplete="email" placeholder="Ej. nombre@ueb.edu.ec" :aria-invalid="Boolean(errors.email || errors.correo_electronico)" />
-          <FieldError :errors="errors.email ?? errors.correo_electronico" />
+          <FieldError :errors="errors.email ?? errors.correo_electronico ?? [undefined]" />
         </Field>
         <Field :data-invalid="Boolean(errors.password)">
           <div class="flex items-center justify-between">
@@ -55,7 +55,7 @@ const submit = async (): Promise<void> => {
             <TextLink href="/recuperar-contrasena" class="text-sm">¿Olvidó su contraseña?</TextLink>
           </div>
           <PasswordInput id="password" v-model="password" name="password" required autocomplete="current-password" placeholder="Contraseña" :aria-invalid="Boolean(errors.password)" />
-          <FieldError :errors="errors.password" />
+          <FieldError :errors="errors.password ?? [undefined]" />
         </Field>
         <Field orientation="horizontal"><Checkbox id="remember" v-model="remember" /><FieldLabel for="remember" class="font-normal">Mantener la sesión iniciada</FieldLabel></Field>
         <Button type="submit" class="mt-4 w-full" :disabled="processing" data-test="login-button"><Spinner v-if="processing" />Ingresar</Button>

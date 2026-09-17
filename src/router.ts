@@ -102,7 +102,7 @@ export const router = createRouter({
     {
       path: "/administracion/usuarios/:user",
       component: AdminUserDetailPage,
-      meta: { requiresAuth: true, roles: ["administrador"], title: "Detalle de usuario" },
+      meta: { requiresAuth: true, roles: ["administrador"], title: "Detalle de usuario", breadcrumbTitle: "Usuarios", breadcrumbHref: "/administracion/usuarios" },
     },
     {
       path: "/administracion/estructura-academica",
@@ -127,7 +127,7 @@ export const router = createRouter({
     {
       path: "/administracion/trabajos",
       component: AdminJobsPage,
-      meta: { requiresAuth: true, roles: ["administrador"], title: "Trabajos asíncronos" },
+      meta: { requiresAuth: true, roles: ["administrador"], title: "Auditoría" },
     },
     {
       path: "/coordinacion/convocatorias",
@@ -137,7 +137,7 @@ export const router = createRouter({
     {
       path: "/coordinacion/convocatorias/:convocation",
       component: CoordinationConvocationDetailPage,
-      meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de convocatoria" },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de convocatoria", breadcrumbTitle: "Convocatorias", breadcrumbHref: "/coordinacion/convocatorias" },
     },
     {
       path: "/coordinacion/revisiones",
@@ -147,12 +147,12 @@ export const router = createRouter({
     {
       path: "/coordinacion/revisiones/:revision",
       component: CoordinationReviewDetailPage,
-      meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión" },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión", breadcrumbTitle: "Revisión", breadcrumbHref: "/coordinacion/revisiones" },
     },
     {
       path: "/coordinacion/revisiones/:before/comparar/:after",
       component: CoordinationReviewComparisonPage,
-      meta: { requiresAuth: true, roles: ["coordinador"], title: "Comparar revisiones" },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Comparar revisiones", breadcrumbTitle: "Revisión", breadcrumbHref: "/coordinacion/revisiones" },
     },
     {
       path: "/coordinacion/fuentes",
@@ -162,7 +162,7 @@ export const router = createRouter({
     {
       path: "/coordinacion/fuentes/:source",
       component: CoordinationSourceDetailPage,
-      meta: { requiresAuth: true, roles: ["coordinador"], title: "Fuente académica" },
+      meta: { requiresAuth: true, roles: ["coordinador"], title: "Fuente académica", breadcrumbTitle: "Fuentes académicas", breadcrumbHref: "/coordinacion/fuentes" },
     },
     {
       path: "/coordinacion/estructura-academica",
@@ -200,12 +200,12 @@ export const router = createRouter({
     {
       path: "/mis-silabos",
       component: TeacherSyllabiPage,
-      meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" },
+      meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", breadcrumbTitle: "Mis sílabos", breadcrumbHref: "/mis-silabos" },
     },
     {
       path: "/mis-silabos/:syllabus",
       component: TeacherSyllabusDetailPage,
-      meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" },
+      meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", breadcrumbTitle: "Mis sílabos", breadcrumbHref: "/mis-silabos" },
     },
   ],
 });

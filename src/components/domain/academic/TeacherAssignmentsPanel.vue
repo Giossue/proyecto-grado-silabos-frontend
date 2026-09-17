@@ -36,7 +36,7 @@ const parallelCount = (teacherId: string) => props.data.teacherAssignments.filte
       <TableBody>
         <TableEmpty v-if="!items.length" :colspan="6">{{ filter.active.value ? "Ninguna asignación coincide con la búsqueda." : "No existen asignaciones docentes en esta carrera." }}</TableEmpty>
         <TableRow v-for="item in items" v-else :key="item.id">
-          <TableCell><div class="flex flex-col"><span>{{ item.user_name }}</span><span class="text-xs text-muted-foreground">{{ item.user_email }}</span></div></TableCell>
+          <TableCell>{{ item.user_name }}</TableCell>
           <TableCell>{{ item.subject_name }}</TableCell><TableCell>{{ item.period_name }}</TableCell><TableCell>{{ item.parallel_code }}</TableCell><TableCell>{{ item.active ? "Activa" : "Finalizada" }}</TableCell>
           <TableCell class="text-right"><CareerAcademicActions entity="asignacion_docente" :record="item" :record-label="`la asignación de ${item.user_name}`" :editable="item.editable" :active="item.active" :delete-supported="!data.career.lock_reason && item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? (item.period_status === 'finalizado' ? 'Período finalizado: disponible solo para consulta' : 'Período inactivo: disponible solo para consulta') : data.career.lock_reason ?? undefined" :options="data.options" @changed="emit('changed', $event)"><DropdownMenuItem v-if="!data.career.lock_reason && item.active && item.period_planning_enabled" @select="openRelief(item)"><UserRoundCog aria-hidden="true" />Relevar docente</DropdownMenuItem></CareerAcademicActions></TableCell>
         </TableRow>

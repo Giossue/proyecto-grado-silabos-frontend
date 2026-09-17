@@ -47,6 +47,6 @@ onMounted(load);
       <article v-for="notification in result.notifications.data" :key="notification.id" class="rounded-lg border p-4" :class="notification.leido_en === null ? 'bg-muted/40' : ''"><div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><h2 class="font-medium">{{ notification.titulo }}</h2><Badge v-if="notification.leido_en === null" variant="secondary">Nueva</Badge></div><p class="mt-1 text-sm">{{ notification.mensaje }}</p><p class="mt-2 text-xs text-muted-foreground">{{ formatDate(notification.notificado_en) }}</p></div><div class="flex shrink-0 flex-wrap gap-2"><Button v-if="!notification.leido_en" type="button" size="sm" variant="outline" :disabled="pending" @click="read(notification.id)">Marcar leída</Button><Button v-if="notification.resource_path" as-child size="sm"><RouterLink :to="notification.resource_path"><ExternalLink />Abrir expediente</RouterLink></Button></div></div></article>
       <div v-if="result.notifications.data.length === 0" class="py-12 text-center text-sm text-muted-foreground">No existen notificaciones.</div>
     </CardContent></Card>
-    <TablePagination v-if="result" :meta="result.notifications" label="Paginación de notificaciones" @update:page="load" />
+    <TablePagination v-if="result && result.notifications.last_page > 1" :meta="result.notifications" label="Paginación de notificaciones" @update:page="load" />
   </PageFrame>
 </template>

@@ -80,6 +80,11 @@ const pixelDifference = (baseline, current) => {
   return (result.stderr || result.stdout || '').trim() || '0';
 };
 
+const normalizedDifference = (value) => {
+  const match = value?.match(/\(([^)]+)\)$/);
+  return match ? Number(match[1]) : Number(value ?? 0);
+};
+
 const currentImages = (await collectPngs(currentRoot)).map(parseImage).filter(Boolean);
 const baselineImages = (await collectPngs(baselineRoot));
 const baselineByKey = new Map();
@@ -113,7 +118,7 @@ for (const image of currentImages) {
   const [currentSize, baselineSize] = await Promise.all([dimensions(image.file), dimensions(baseline)]);
   if (currentSize !== baselineSize) dimensionsMismatch.push(`${currentRelative} (${currentSize}) != ${baselineRelative} (${baselineSize})`);
   pairs.push({ currentRelative, baselineRelative, difference: pixelDifference(baseline, image.file) });
-  if (pairs.at(-1).difference && pairs.at(-1).difference !== '0') differences.push(pairs.at(-1));
+  if (normalizedDifference(pairs.at(-1).difference) > 0) differences.push(pairs.at(-1));
 }
 
 const routeSet = (items) => [...items].sort().join(', ') || 'ninguna';
@@ -126,10 +131,6 @@ if (dimensionsMismatch.length > 0) {
   if (strict) process.exitCode = 1;
 }
 
-const normalizedDifference = (value) => {
-  const match = value?.match(/\(([^)]+)\)$/);
-  return match ? Number(match[1]) : Number(value ?? 0);
-};
 const changedPreview = [...differences]
   .sort((left, right) => normalizedDifference(right.difference) - normalizedDifference(left.difference))
   .slice(0, 12)

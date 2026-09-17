@@ -13,11 +13,11 @@ test.describe('accesibilidad transversal de la SPA', () => {
     await loginAsAdministrator(page);
     await page.goto('/administracion/usuarios');
 
-    const trigger = page.getByRole('button', { name: 'Nueva cuenta', exact: true });
+    const trigger = page.getByRole('button', { name: 'Crear cuenta', exact: true });
     await expect(trigger).toBeVisible();
     await trigger.click();
 
-    const sheet = page.getByRole('dialog', { name: 'Nueva cuenta' });
+    const sheet = page.getByRole('dialog', { name: 'Crear cuenta institucional' });
     await expect(sheet).toBeVisible();
     await expect.poll(() => sheet.evaluate((element) => element.contains(document.activeElement))).toBe(true);
 

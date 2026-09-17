@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ShieldCheck } from '@lucide/vue';
 import { onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import {
@@ -107,7 +106,7 @@ onMounted(() => void load());
                 Al activarla, el inicio de sesión solicitará un código seguro generado por una aplicación TOTP en su dispositivo.
             </p>
             <Button type="button" :disabled="processing" @click="enable">
-                <Spinner v-if="processing" /><ShieldCheck v-else />Activar 2FA
+                <Spinner v-if="processing" />Activar 2FA
             </Button>
         </div>
 

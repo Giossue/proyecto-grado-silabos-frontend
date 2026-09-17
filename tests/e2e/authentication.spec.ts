@@ -74,8 +74,8 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByText('admin@silabos.test')).toBeVisible();
 
     const email = `e2e.${Date.now()}@silabos.test`;
-    await page.getByRole('button', { name: 'Nueva cuenta' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Nueva cuenta' });
+    await page.getByRole('button', { name: 'Crear cuenta' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Crear cuenta institucional' });
     await dialog.getByLabel('Nombre completo').fill('Cuenta E2E');
     await dialog.getByLabel('Correo institucional').fill(email);
     await dialog.getByLabel('Contraseña temporal').fill('Temporal-2026!');
