@@ -480,7 +480,7 @@ const gridColumns = (): string =>
                 </div>
                 <div v-for="card in 2" :key="`report-card-${card}`" class="rounded-xl border bg-card p-5">
                     <div class="flex flex-col gap-2"><Skeleton class="h-6 w-56" /><Skeleton class="h-4 w-80 max-w-full" /></div>
-                    <div class="mt-5 overflow-hidden rounded-lg border"><Skeleton class="h-10 w-full rounded-none" /><div class="flex flex-col gap-px bg-border"><Skeleton v-for="row in 4" :key="`report-row-${card}-${row}`" class="h-14 w-full rounded-none bg-background" /></div></div>
+                    <div class="mt-5 overflow-hidden rounded-lg border"><Skeleton class="h-10 w-full rounded-none" /><div class="flex flex-col gap-px bg-border"><Skeleton v-for="row in 4" :key="`report-row-${card}-${row}`" class="h-14 w-full rounded-none" /></div></div>
                 </div>
             </template>
 
