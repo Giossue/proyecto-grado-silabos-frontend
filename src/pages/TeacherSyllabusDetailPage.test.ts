@@ -98,7 +98,7 @@ const mountPage = () => mount(TeacherSyllabusDetailPage, {
   global: {
     stubs: {
       RouterLink: { template: "<a><slot /></a>" },
-      SyllabusAiChat: { template: "<div />" },
+      SyllabusAiAssistantSheet: { template: "<div />" },
     },
   },
 });

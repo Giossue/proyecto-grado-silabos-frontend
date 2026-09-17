@@ -8,7 +8,14 @@ import {
     FileText,
     Sparkles,
 } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import {
+    applyAiRecommendation,
+    decideAiRecommendation,
+    getAiChat,
+    requestAiReview,
+    type AiChat,
+} from '@/api/syllabi';
 import {
     Conversation,
     ConversationContent,
@@ -59,7 +66,8 @@ import {
 } from '@/components/ui/empty';
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
-import { apiRouter as router } from '@/lib/apiVisit';
+import { ApiError } from '@/api/client';
+import { toast } from '@/lib/toast';
 
 type Evidence = {
     id: string;
@@ -75,18 +83,11 @@ type Recommendation = {
     evidence_ids: string[];
     my_decisions: string[];
     applied: boolean;
-    feedback_url: string;
-    apply_url: string;
 };
 
 type Execution = {
     id: string;
-    status:
-        | 'pendiente'
-        | 'en_ejecucion'
-        | 'completada'
-        | 'no_concluyente'
-        | 'fallida';
+    status: 'pendiente' | 'en_ejecucion' | 'completada' | 'no_concluyente' | 'parcial' | 'fallida';
     requested_at: string;
     completed_at: string | null;
     stale: boolean;
@@ -102,18 +103,27 @@ type Execution = {
 export type SyllabusAiAssistance = {
     available: boolean;
     is_provisional_simulator: boolean;
-    review_url: string;
     sources: string[];
     executions: Execution[];
 };
 
 const props = defineProps<{
-    assistance: SyllabusAiAssistance;
+    syllabusId: string;
     syllabusVersion: number;
     canReview: boolean;
     saving: boolean;
 }>();
 
+const emit = defineEmits<{
+    recommendationApplied: [payload: {
+        fieldId: string;
+        value: string;
+        version: number;
+        completion: number;
+    }];
+}>();
+
+const chat = ref<AiChat | null>(null);
 const requestingReview = ref(false);
 const decidingId = ref<string | null>(null);
 const applyOpen = ref(false);
@@ -121,159 +131,187 @@ const activeRecommendation = ref<{
     execution: Execution;
     recommendation: Recommendation;
 } | null>(null);
-const reviewKey = ref(crypto.randomUUID());
-let polling: ReturnType<typeof setInterval> | null = null;
+let polling: ReturnType<typeof setTimeout> | null = null;
+
+const assistance = computed<SyllabusAiAssistance>(() => {
+    const results = chat.value?.review_results ?? [];
+    const executions = results.map<Execution>((result) => {
+        const evidenceById = new Map<string, Evidence>();
+        for (const recommendation of result.recommendations) {
+            for (const citation of recommendation.citations) {
+                evidenceById.set(citation.id, {
+                    id: citation.id,
+                    source: citation.label,
+                    excerpt: citation.excerpt,
+                });
+            }
+        }
+
+        return {
+            id: result.id,
+            status: result.status as Execution['status'],
+            requested_at: chat.value?.review?.requested_at ?? '',
+            completed_at: chat.value?.review?.completed_at ?? null,
+            stale: result.stale,
+            section: result.section,
+            field: { id: result.field_id, label: result.field_label },
+            input_content: '',
+            reason: result.reason,
+            error_message: result.error,
+            evidence: [...evidenceById.values()],
+            recommendations: result.recommendations.map((recommendation) => ({
+                id: recommendation.id,
+                title: recommendation.title,
+                explanation: recommendation.explanation,
+                suggested_text: recommendation.suggested_text,
+                evidence_ids: recommendation.citations.map((citation) => citation.id),
+                my_decisions: recommendation.decisions,
+                applied: recommendation.applied,
+            })),
+        };
+    });
+
+    return {
+        available: chat.value?.available ?? false,
+        is_provisional_simulator: false,
+        sources: Array.from(new Set(
+            executions.flatMap((execution) => execution.evidence.map((evidence) => evidence.source)),
+        )),
+        executions,
+    };
+});
 
 const hasProcessing = computed(() =>
-    props.assistance.executions.some((execution) =>
+    ['pendiente', 'en_ejecucion'].includes(chat.value?.review?.status ?? '') ||
+    assistance.value.executions.some((execution) =>
         ['pendiente', 'en_ejecucion'].includes(execution.status),
     ),
 );
-
-const hasResults = computed(() => props.assistance.executions.length > 0);
+const hasResults = computed(() => assistance.value.executions.length > 0);
 
 const statusLabel = (execution: Execution): string => {
-    if (execution.stale) {
-        return 'Desactualizado';
-    }
-
+    if (execution.stale) return 'Desactualizado';
     return {
         pendiente: 'Pendiente',
         en_ejecucion: 'Revisando',
         completada: 'Revisado',
         no_concluyente: 'Sin conclusión',
+        parcial: 'Parcial',
         fallida: 'No disponible',
     }[execution.status];
 };
 
 const statusVariant = (execution: Execution) => {
-    if (execution.status === 'fallida') {
-        return 'destructive' as const;
-    }
-
-    if (execution.status === 'completada' && !execution.stale) {
-        return 'default' as const;
-    }
-
+    if (execution.status === 'fallida') return 'destructive' as const;
+    if (execution.status === 'completada' && !execution.stale) return 'default' as const;
     return 'secondary' as const;
 };
 
-const citedEvidence = (
-    execution: Execution,
-    recommendation: Recommendation,
-): Evidence[] =>
+const citedEvidence = (execution: Execution, recommendation: Recommendation): Evidence[] =>
     execution.evidence.filter((evidence) =>
         recommendation.evidence_ids.includes(evidence.id),
     );
 
-const requestReview = (): void => {
-    if (!props.canReview || props.saving || requestingReview.value) {
-        return;
+const schedulePoll = (): void => {
+    if (polling) clearTimeout(polling);
+    if (hasProcessing.value) {
+        polling = setTimeout(() => {
+            void load();
+        }, 4000);
     }
+};
 
+const load = async (): Promise<void> => {
+    try {
+        chat.value = await getAiChat(props.syllabusId);
+        schedulePoll();
+    } catch (reason) {
+        toast.error(reason instanceof ApiError ? reason.message : 'No se pudo cargar la asistencia de IA');
+    } finally {
+        schedulePoll();
+    }
+};
+
+const requestReview = async (): Promise<void> => {
+    if (!props.canReview || props.saving || requestingReview.value) return;
     requestingReview.value = true;
-    router.post(
-        props.assistance.review_url,
-        {
-            idempotency_key: reviewKey.value,
-            version_bloqueo: props.syllabusVersion,
-        },
-        {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => {
-                reviewKey.value = crypto.randomUUID();
-            },
-            onFinish: () => {
-                requestingReview.value = false;
-            },
-        },
-    );
+    try {
+        await requestAiReview(props.syllabusId, props.syllabusVersion);
+        await load();
+    } catch (reason) {
+        toast.error(reason instanceof ApiError ? reason.message : 'No se pudo iniciar la revisión');
+    } finally {
+        requestingReview.value = false;
+    }
 };
 
-const recordDecision = (
-    recommendation: Recommendation,
-    decision: 'aceptada' | 'ignorada' | 'no_util',
-): void => {
-    decidingId.value = recommendation.id;
-    router.post(
-        recommendation.feedback_url,
-        { decision },
-        {
-            preserveScroll: true,
-            preserveState: true,
-            onFinish: () => {
-                decidingId.value = null;
-            },
-        },
-    );
-};
-
-const reviewChange = (
+const recordDecision = async (
     execution: Execution,
     recommendation: Recommendation,
-): void => {
+    decision: 'aceptada' | 'ignorada' | 'no_util',
+): Promise<void> => {
+    decidingId.value = recommendation.id;
+    try {
+        await decideAiRecommendation(
+            props.syllabusId,
+            execution.field.id,
+            recommendation.id,
+            decision,
+        );
+        await load();
+    } catch (reason) {
+        toast.error(reason instanceof ApiError ? reason.message : 'No se pudo registrar la decisión');
+    } finally {
+        decidingId.value = null;
+    }
+};
+
+const reviewChange = (execution: Execution, recommendation: Recommendation): void => {
     activeRecommendation.value = { execution, recommendation };
     applyOpen.value = true;
 };
 
-const applyRecommendation = (): void => {
-    if (!activeRecommendation.value || decidingId.value !== null) {
-        return;
-    }
+const applyRecommendation = async (): Promise<void> => {
+    const active = activeRecommendation.value;
+    if (!active || decidingId.value !== null) return;
 
-    const recommendation = activeRecommendation.value.recommendation;
-    decidingId.value = recommendation.id;
-    router.post(
-        recommendation.apply_url,
-        {
-            version_bloqueo: props.syllabusVersion,
-            return_to_editor: true,
-        },
-        {
-            preserveScroll: true,
-            onSuccess: () => {
-                applyOpen.value = false;
-            },
-            onFinish: () => {
-                decidingId.value = null;
-            },
-        },
-    );
+    decidingId.value = active.recommendation.id;
+    try {
+        const result = await applyAiRecommendation(
+            props.syllabusId,
+            active.execution.field.id,
+            active.recommendation.id,
+            props.syllabusVersion,
+        );
+        emit('recommendationApplied', {
+            fieldId: active.execution.field.id,
+            value: result.value,
+            version: result.version_bloqueo,
+            completion: result.completion,
+        });
+        applyOpen.value = false;
+        await load();
+    } catch (reason) {
+        toast.error(reason instanceof ApiError ? reason.message : 'No se pudo aplicar la recomendación');
+    } finally {
+        decidingId.value = null;
+    }
 };
 
 const goToSection = (sectionId: string): void => {
     window.setTimeout(() => {
-        document
-            .getElementById(`section-${sectionId}`)
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById(`section-${sectionId}`)?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start',
+        });
     }, 200);
 };
 
-const stopPolling = (): void => {
-    if (polling !== null) {
-        clearInterval(polling);
-        polling = null;
-    }
-};
-
-watch(
-    hasProcessing,
-    (processing) => {
-        stopPolling();
-
-        if (processing) {
-            polling = setInterval(() => {
-                router.reload({
-                    only: ['ai_assistance'],
-                });
-            }, 4000);
-        }
-    },
-    { immediate: true },
-);
-
-onBeforeUnmount(stopPolling);
+onMounted(() => void load());
+defineExpose({ reload: load });
+onBeforeUnmount(() => {
+    if (polling) clearTimeout(polling);
+});
 </script>
 
 <template>
@@ -611,6 +649,7 @@ onBeforeUnmount(stopPolling);
                                             "
                                             @click="
                                                 recordDecision(
+                                                    execution,
                                                     recommendation,
                                                     'ignorada',
                                                 )
@@ -631,6 +670,7 @@ onBeforeUnmount(stopPolling);
                                             "
                                             @click="
                                                 recordDecision(
+                                                    execution,
                                                     recommendation,
                                                     'no_util',
                                                 )

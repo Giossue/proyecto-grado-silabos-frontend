@@ -14,7 +14,7 @@ import {
   type SyllabusDetail,
   type SyllabusField,
 } from "@/api/syllabi";
-import SyllabusAiChat from "@/components/SyllabusAiChat.vue";
+import SyllabusAiAssistantSheet from '@/components/domain/ai/SyllabusAiAssistantSheet.vue';
 import SnapshotValue from "@/components/SnapshotValue.vue";
 import SyllabusTableEditor from '@/components/domain/syllabus/SyllabusTableEditor.vue';
 import SyllabusTableView from '@/components/domain/syllabus/SyllabusTableView.vue';
@@ -55,12 +55,18 @@ const validationBlockingErrors = ref<number | null>(null);
 const responseDrafts = ref<Record<string, string>>({});
 const answeringObservationId = ref<string | null>(null);
 const aiMessage = ref<string | null>(null);
-const aiChat = ref<InstanceType<typeof SyllabusAiChat> | null>(null);
+const aiAssistant = ref<InstanceType<typeof SyllabusAiAssistantSheet> | null>(null);
 const conflict = ref(false);
 const processingAction = ref(false);
 
 const canEdit = computed(() =>
   ["borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? ""),
+);
+const canReviewWithAi = computed(() =>
+  canEdit.value &&
+  syllabus.value?.completion === 100 &&
+  validationRan.value &&
+  validationBlockingErrors.value === 0,
 );
 const stateLabel = (value: string): string => ({
   sin_iniciar: 'Sin iniciar', borrador: 'Borrador', en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado', abierta: 'Abierta', respondida: 'Respondida', verificada: 'Verificada',
@@ -290,7 +296,7 @@ const validate = async (): Promise<void> => {
           syllabus.value.version_bloqueo,
         );
         aiMessage.value = review.message;
-        await aiChat.value?.reload();
+        await aiAssistant.value?.reload();
       } catch (reason) {
         aiMessage.value =
           reason instanceof ApiError
@@ -346,9 +352,10 @@ const answer = async (observationId: string): Promise<void> => {
 };
 
 const navigateToField = (fieldId: string): void => {
-  document
-    .getElementById(`field-${fieldId}`)
-    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+  document.getElementById(`field-${fieldId}`)?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'center',
+  });
 };
 
 const recommendationApplied = (payload: {
@@ -459,7 +466,14 @@ onBeforeUnmount(() => {
         </main>
 
         <aside class="min-w-0 self-start xl:sticky xl:top-6" aria-label="Asistente IA">
-          <SyllabusAiChat ref="aiChat" :syllabus-id="syllabus.id" :draft-version="syllabus.version_bloqueo" @navigate-to-field="navigateToField" @recommendation-applied="recommendationApplied" />
+          <SyllabusAiAssistantSheet
+            ref="aiAssistant"
+            :syllabus-id="syllabus.id"
+            :syllabus-version="syllabus.version_bloqueo"
+            :can-review="canReviewWithAi"
+            :saving="processingAction || savingFieldId !== null"
+            @recommendation-applied="recommendationApplied"
+          />
         </aside>
       </div>
     </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Check } from '@lucide/vue';
 import TemplateController from '@/api/template-routes';
-import Form from '@/components/domain/ApiForm.vue';
+import Form from '@/components/ApiForm.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import {
