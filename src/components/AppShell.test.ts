@@ -80,6 +80,10 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
     expect(document.body.textContent).toContain('Cerrar sesión');
 
+    const logoutItem = document.body.querySelector<HTMLElement>('[data-test="logout-button"]');
+    expect(logoutItem?.classList.contains('block')).toBe(false);
+    expect(logoutItem?.classList.contains('flex')).toBe(true);
+
     const switchScope = Array.from(
       document.body.querySelectorAll<HTMLElement>('[data-slot="dropdown-menu-item"]'),
     ).find((item) => item.textContent?.includes('Cambiar carrera o rol'));

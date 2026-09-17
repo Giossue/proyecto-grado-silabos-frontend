@@ -49,7 +49,7 @@ const handleLogout = async (): Promise<void> => {
     </DropdownMenuGroup>
     <DropdownMenuSeparator />
     <DropdownMenuItem
-        class="block w-full cursor-pointer"
+        class="w-full"
         data-test="logout-button"
         @select="handleLogout"
     >
