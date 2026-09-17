@@ -49,7 +49,7 @@ const submit = async (): Promise<void> => {
           <Button class="w-full" :disabled="pending" type="submit" data-test="email-password-reset-link-button"><Spinner v-if="pending" />Enviar enlace de restablecimiento</Button>
         </div>
       </form>
-      <div class="space-x-1 text-center text-sm text-muted-foreground"><span>O vuelva a</span><RouterLink to="/ingresar" class="text-foreground underline decoration-neutral-300 underline-offset-4 hover:decoration-current dark:decoration-neutral-500">iniciar sesión</RouterLink></div>
+      <div class="space-x-1 text-center text-sm text-muted-foreground"><span>O vuelva a</span><RouterLink to="/login" class="text-foreground underline decoration-neutral-300 underline-offset-4 hover:decoration-current dark:decoration-neutral-500">iniciar sesión</RouterLink></div>
     </div>
   </AuthSimpleLayout>
 </template>

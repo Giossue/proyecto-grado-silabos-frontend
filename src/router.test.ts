@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { router } from '@/router';
 import { sessionState } from '@/state/session';
+import { clearIntendedRoute, consumeIntendedRoute } from '@/lib/intended-route';
 
 const session = (code: 'administrador' | 'coordinador' | 'docente') => ({
   user: {
@@ -19,7 +20,8 @@ describe('navegación por ámbito activo', () => {
   beforeEach(() => sessionState.replace(session('administrador')));
   afterEach(async () => {
     sessionState.clear();
-    await router.replace('/ingresar');
+    clearIntendedRoute();
+    await router.replace('/login');
   });
 
   it('reconoce la URL canónica de Administración', async () => {
@@ -28,11 +30,34 @@ describe('navegación por ámbito activo', () => {
     expect(router.currentRoute.value.fullPath).toBe('/admin/usuarios');
   });
 
+  it('normaliza el acceso histórico de la SPA al login canónico', async () => {
+    sessionState.clear();
+    await router.push('/ingresar?redirect=/admin/usuarios');
+
+    expect(router.currentRoute.value.path).toBe('/login');
+    expect(router.currentRoute.value.query.redirect).toBeUndefined();
+    expect(consumeIntendedRoute()).toBe('/admin/usuarios');
+  });
+
+  it('envía la raíz pública al login canónico', async () => {
+    sessionState.clear();
+    await router.push('/');
+
+    expect(router.currentRoute.value.path).toBe('/login');
+  });
+
   it('resuelve la dirección corta del panel al área activa', async () => {
     sessionState.replace(session('coordinador'));
     await router.push('/dashboard');
 
     expect(router.currentRoute.value.fullPath).toBe('/coordinacion/panel');
+  });
+
+  it('conserva las entradas canónicas del monolito', async () => {
+    sessionState.replace(session('coordinador'));
+    await router.push('/fuentes');
+
+    expect(router.currentRoute.value.fullPath).toBe('/coordinacion/fuentes');
   });
 
   it('recupera una URL administrativa del historial según el rol real', async () => {
@@ -58,7 +83,8 @@ describe('navegación por ámbito activo', () => {
     sessionState.clear();
     await router.push('/admin/usuarios');
 
-    expect(router.currentRoute.value.path).toBe('/ingresar');
-    expect(router.currentRoute.value.query.redirect).toBe('/admin/usuarios');
+    expect(router.currentRoute.value.path).toBe('/login');
+    expect(router.currentRoute.value.query.redirect).toBeUndefined();
+    expect(consumeIntendedRoute()).toBe('/admin/usuarios');
   });
 });

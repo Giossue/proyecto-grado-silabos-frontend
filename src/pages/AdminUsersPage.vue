@@ -10,6 +10,7 @@ import ManagedUserEditSheet from '@/components/domain/identity/ManagedUserEditSh
 import ManagedUserPendingActions from '@/components/domain/identity/ManagedUserPendingActions.vue';
 import ManagedUserSheet from '@/components/domain/identity/ManagedUserSheet.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -33,7 +34,7 @@ const load = async (page = 1): Promise<void> => {
     loading.value = true; error.value = null;
     try {
         const session = await getSession();
-        if (session.active_role?.code !== 'administrador') { await router.replace('/panel'); return; }
+        if (session.active_role?.code !== 'administrador') { await router.replace('/dashboard'); return; }
         result.value = await getManagedUsers({ q: q.value, status: status.value, role: role.value, career: career.value, page });
     } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los usuarios.'; }
     finally { loading.value = false; }
@@ -48,7 +49,7 @@ onMounted(load);
         <template #actions><ManagedUserSheet v-if="result" :roles="result.roles" :careers="result.careers" @saved="changed" /></template>
         <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <p v-if="loading && !result" class="text-sm text-muted-foreground" role="status">Cargando usuarios…</p>
+        <LoadingSkeleton v-if="loading && !result" />
 
         <Card v-if="result"><CardContent class="flex flex-col gap-4">
             <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters">

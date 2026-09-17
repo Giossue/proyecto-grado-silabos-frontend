@@ -24,7 +24,7 @@ export const pages = [
   { id: 'COR-06', source: 'pages/Coordination/Reviews/Show.vue', target: 'pages/CoordinationReviewDetailPage.vue', routes: ['/coordinacion/revisiones/:revision'] },
   { id: 'ADM-01/COR-01/DOC-01', source: 'pages/Dashboard.vue', target: 'pages/DashboardPage.vue', routes: ['/admin/panel'] },
   { id: 'UI-03', source: 'pages/Notifications/Index.vue', target: 'pages/NotificationsPage.vue', routes: ['/notificaciones'] },
-  { id: 'UI-02', source: 'pages/Role/Select.vue', target: 'pages/WorkspacePage.vue', routes: ['/'] },
+  { id: 'UI-02', source: 'pages/Role/Select.vue', target: 'pages/WorkspacePage.vue', routes: ['/rol'] },
   { id: 'COR-11', source: 'pages/Sources/Index.vue', target: 'pages/CoordinationSourcesPage.vue', routes: ['/coordinacion/fuentes'] },
   { id: 'COR-11', source: 'pages/Sources/Show.vue', target: 'pages/CoordinationSourceDetailPage.vue', routes: ['/coordinacion/fuentes/:source'] },
   { id: 'COR-09/DOC-09', source: 'pages/Syllabi/Compare.vue', target: 'pages/CoordinationReviewComparisonPage.vue', routes: ['/coordinacion/revisiones/:before/comparar/:after'] },
@@ -90,6 +90,10 @@ export const allowedExtraComponents = [
     path: 'components/ApiForm.vue',
     justification: 'Adaptador interno de la frontera API que conserva el contrato de slots de los formularios canónicos sin introducir una superficie visible.',
   },
+  {
+    path: 'components/domain/LoadingSkeleton.vue',
+    justification: 'Estado técnico de carga para la frontera API; conserva la geometría de cada superficie sin inventar contenido de producto.',
+  },
 ];
 
 export const allowedExtraPages = [
@@ -146,6 +150,8 @@ export const allowedAliasRoutes = [
   '/administracion/auditoria',
   '/mis-silabos',
   '/mis-silabos/:syllabus',
+  '/ingresar',
+  '/',
   // Callback técnico firmado: no representa una pantalla de producto adicional.
   '/api/v1/authentication/email-verification/:user/:hash',
 ];
@@ -153,6 +159,10 @@ export const allowedAliasRoutes = [
 // Rutas de área generadas por la SPA. Se declaran aquí para que la auditoría no las
 // confunda con páginas adicionales: cada una reutiliza una pantalla canónica.
 export const allowedCanonicalRoutes = [
+  '/login',
+  '/rol',
+  '/fuentes',
+  '/fuentes/:source',
   '/panel',
   '/dashboard',
   '/admin/estructura-academica/:section',

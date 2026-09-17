@@ -7,6 +7,7 @@ import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import RoleAssignmentSheet from '@/components/domain/identity/RoleAssignmentSheet.vue';
 import UserProfileSheet from '@/components/domain/identity/UserProfileSheet.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +33,7 @@ const toggleStatus = async (): Promise<void> => { if (!result.value) return; pen
 onMounted(load);
 </script>
 
-<template><PageFrame :title="result?.managedUser.nombre ?? 'Detalle de cuenta'" :description="result?.managedUser.correo_electronico ?? 'Cargando información de la cuenta…'">
+<template><PageFrame :title="result?.managedUser.nombre ?? 'Detalle de cuenta'" :description="result?.managedUser.correo_electronico ?? 'Información de la cuenta y sus asignaciones.'">
     <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink to="/admin/usuarios">← Volver a usuarios</RouterLink></Button></template>
     <template v-if="result" #meta><Badge :variant="result.managedUser.active ? 'secondary' : 'outline'">{{ result.managedUser.active ? 'Cuenta activa' : 'Cuenta inactiva' }}</Badge></template>
     <template v-if="result" #actions>
@@ -40,7 +41,7 @@ onMounted(load);
         <RoleAssignmentSheet :managed-user-id="result.managedUser.id" :roles="result.roles" :careers="result.careers" @saved="changed" />
         <Button v-if="sessionState.current.value?.user.id !== result.managedUser.id" type="button" variant="outline" :disabled="pending" @click="toggleStatus"><Spinner v-if="pending" />{{ result.managedUser.active ? 'Desactivar y revocar sesiones' : 'Activar cuenta' }}</Button>
     </template>
-    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert><Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert><p v-if="loading && !result" class="text-sm text-muted-foreground" role="status">Cargando cuenta…</p>
+    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert><Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert><LoadingSkeleton v-if="loading && !result" variant="detail" />
     <Card v-if="result"><CardHeader><CardTitle>Historial de roles</CardTitle><CardDescription>Las asignaciones anteriores se conservan para trazabilidad.</CardDescription></CardHeader><CardContent class="flex flex-col gap-4">
         <ClientFilterBar :filter="assignmentFilter" input-id="assignments-search" label="Buscar rol o carrera" placeholder="Buscar por rol o carrera"><template #filters><Field><FieldLabel for="assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="assignmentFilter.values.estado.value"><SelectTrigger id="assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Vigentes</SelectItem><SelectItem value="inactive">Finalizadas</SelectItem></SelectGroup></SelectContent></Select></Field></template></ClientFilterBar>
         <Table><TableHeader><TableRow><TableHead>Rol</TableHead><TableHead>Alcance</TableHead><TableHead>Estado efectivo</TableHead></TableRow></TableHeader><TableBody><TableEmpty v-if="assignmentPage.length === 0" :colspan="3">No existen asignaciones con este filtro.</TableEmpty><TableRow v-for="assignment in assignmentPage" v-else :key="assignment.id"><TableCell>{{ assignment.role_name }}</TableCell><TableCell>{{ assignment.career_name ?? 'Institucional' }}</TableCell><TableCell>{{ assignment.active ? 'Activo' : 'Finalizada' }}</TableCell></TableRow></TableBody></Table>

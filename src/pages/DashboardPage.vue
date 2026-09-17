@@ -7,6 +7,7 @@ import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { sessionState } from '@/state/session';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import FacultyLogoDialog from '@/components/domain/configuration/FacultyLogoDialog.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -37,7 +38,7 @@ const setup = computed(() => dashboard.value?.setup ? {
   ...dashboard.value.setup,
   steps: dashboard.value.setup.steps.map((step) => ({
     ...step,
-    href: setupRoutes[step.key] ?? '/panel',
+    href: setupRoutes[step.key] ?? '/dashboard',
   })),
 } : null);
 const handleSetupAction = (action: string) => {
@@ -70,7 +71,7 @@ onMounted(async () => {
       </div>
       <p v-else class="text-sm text-muted-foreground">No hay indicadores disponibles para este rol.</p>
     </template>
-    <p v-else class="text-sm text-muted-foreground" role="status">Cargando panel…</p>
+    <LoadingSkeleton v-else variant="dashboard" />
   </PageFrame>
   <FacultyLogoDialog
     v-if="dashboard?.faculty_logo"

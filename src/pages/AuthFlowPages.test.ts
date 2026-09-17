@@ -42,6 +42,7 @@ describe('authentication pages', () => {
     sessionState.clear();
   });
 
+
   it('replaces a cached guest state after logging in again in the same tab', async () => {
     vi.mocked(login).mockResolvedValue(authenticatedSession);
     const wrapper = mount(LoginPage, {
@@ -54,7 +55,7 @@ describe('authentication pages', () => {
     await flushPromises();
 
     expect(sessionState.current.value).toEqual(authenticatedSession);
-    expect(replace).toHaveBeenCalledWith('/');
+    expect(replace).toHaveBeenCalledWith('/dashboard');
   });
 
   it('reloads the authenticated session after completing the second factor', async () => {
@@ -70,6 +71,6 @@ describe('authentication pages', () => {
 
     expect(getSession).toHaveBeenCalledOnce();
     expect(sessionState.current.value).toEqual(authenticatedSession);
-    expect(replace).toHaveBeenCalledWith('/');
+    expect(replace).toHaveBeenCalledWith('/dashboard');
   });
 });

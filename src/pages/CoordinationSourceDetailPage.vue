@@ -7,6 +7,7 @@ import { getSource, updateSourceContent, type SourceDetail } from '@/api/sources
 import { getSession } from '@/api/session';
 import MarkdownEditor from '@/components/domain/MarkdownEditor.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import AcademicSourceEditSheet from '@/components/domain/configuration/AcademicSourceEditSheet.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -34,7 +35,7 @@ const load = async (): Promise<void> => {
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'coordinador') {
-      await router.replace('/panel');
+      await router.replace('/dashboard');
       return;
     }
     data.value = await getSource(id());
@@ -74,7 +75,7 @@ onMounted(() => { void load(); });
       <ProcessLockAlert v-if="data?.processLock" title="Fuente protegida durante la convocatoria" :reason="data.processLock" />
       <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
       <Alert v-if="error && Object.keys(fieldErrors).length === 0" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-      <p v-if="loading && !data" class="text-sm text-muted-foreground" role="status">Cargando fuente…</p>
+      <LoadingSkeleton v-if="loading && !data" variant="document" />
       <Card v-if="data"><CardHeader><CardTitle>Contenido del documento</CardTitle><CardDescription>Redáctelo con la cinta de opciones, como en un procesador de textos. El formato se ve directamente mientras escribe.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3">
         <MarkdownEditor v-model="content" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
         <FieldError :errors="fieldErrors.content" />

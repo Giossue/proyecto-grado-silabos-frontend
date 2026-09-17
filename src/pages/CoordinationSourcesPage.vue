@@ -6,6 +6,7 @@ import { getSources, type Source } from '@/api/sources';
 import { getSession } from '@/api/session';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import AcademicSourceActions from '@/components/domain/configuration/AcademicSourceActions.vue';
@@ -33,7 +34,7 @@ const load = async (): Promise<void> => {
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'coordinador') {
-      await router.replace('/panel');
+      await router.replace('/dashboard');
       return;
     }
     const response = await getSources();
@@ -60,7 +61,7 @@ onMounted(() => { void load(); });
     <ProcessLockAlert v-if="lock" title="Fuentes protegidas durante la convocatoria" :reason="lock" />
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-    <p v-if="loading && sources.length === 0" class="text-sm text-muted-foreground" role="status">Cargando fuentes…</p>
+    <LoadingSkeleton v-if="loading && sources.length === 0" />
     <Card v-else><CardContent class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="sources-search" label="Buscar fuente" placeholder="Buscar por nombre o descripción" />
       <Table><TableHeader><TableRow><TableHead>Fuente</TableHead><TableHead>Contenido</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>

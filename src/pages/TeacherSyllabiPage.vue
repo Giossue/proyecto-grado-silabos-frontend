@@ -5,6 +5,7 @@ import { Eye } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
@@ -51,7 +52,7 @@ onMounted(load);
             <template #filters><Field><FieldLabel for="syllabi-state" class="sr-only">Estado</FieldLabel><Select v-model="state"><SelectTrigger id="syllabi-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="(itemLabel, value) in states" :key="value" :value="value">{{ itemLabel }}</SelectItem></SelectContent></Select></Field></template>
           </FilterToolbar>
         </form>
-        <p v-if="!result && !error" class="text-sm text-muted-foreground" role="status">Cargando sílabos…</p>
+        <LoadingSkeleton v-if="!result && !error" />
         <Table v-if="result">
           <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Convocatoria</TableHead><TableHead>Estado</TableHead><TableHead>Último guardado</TableHead><TableHead class="text-right">Avance</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
           <TableBody>

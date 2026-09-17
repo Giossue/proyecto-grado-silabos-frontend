@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
       <h1 class="text-2xl font-semibold tracking-tight">Página no encontrada</h1>
       <p class="text-sm text-muted-foreground">La dirección solicitada no corresponde a una pantalla disponible.</p>
       <Button as-child>
-        <RouterLink to="/panel">Volver al panel</RouterLink>
+        <RouterLink to="/dashboard">Volver al panel</RouterLink>
       </Button>
     </section>
   </main>

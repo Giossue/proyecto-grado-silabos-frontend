@@ -6,6 +6,7 @@ import { getConvocation, type ConvocationDetail } from '@/api/convocations';
 import { getSession } from '@/api/session';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -36,7 +37,7 @@ const load = async (): Promise<void> => {
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'coordinador') {
-      await router.replace('/panel');
+      await router.replace('/dashboard');
       return;
     }
     data.value = await getConvocation(convocationId());
@@ -49,10 +50,10 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame :title="data?.convocation.name ?? 'Convocatoria'" :description="data ? `${data.convocation.period} · ${data.convocation.template}` : 'Cargando convocatoria…'">
+  <PageFrame :title="data?.convocation.name ?? 'Convocatoria'" :description="data ? `${data.convocation.period} · ${data.convocation.template}` : 'Detalle de la convocatoria.'">
     <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink to="/coordinacion/convocatorias">← Volver a convocatorias</RouterLink></Button></template>
     <template v-if="data" #meta><Badge :variant="data.convocation.state === 'abierta' ? 'secondary' : 'outline'">{{ convocationStateLabel(data.convocation.state) }}</Badge><Badge variant="outline">{{ data.convocation.process.name }}</Badge></template>
-    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert><p v-if="!data && !error" class="text-sm text-muted-foreground" role="status">Cargando convocatoria…</p>
+    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert><LoadingSkeleton v-if="!data && !error" variant="detail" />
     <template v-if="data">
       <Alert v-if="data.convocation.state === 'preparacion'"><AlertTitle>Revise antes de abrir</AlertTitle><AlertDescription>La apertura fija la plantilla del proceso y estas fuentes, valida que cada paralelo tenga docente vigente y genera todos los expedientes en una sola transacción. Si algo falta, no se crea ninguno.{{ data.convocation.process.state !== 'abierto' ? ' Solo podrá abrir cuando Administración abra el proceso institucional.' : '' }}</AlertDescription></Alert>
       <Alert v-else-if="data.convocation.state === 'pausada'"><AlertTitle>Convocatoria en pausa</AlertTitle><AlertDescription>Los docentes de su carrera no editan ni envían hasta que la reanude. Mientras tanto puede corregir la malla y las fuentes.</AlertDescription></Alert>

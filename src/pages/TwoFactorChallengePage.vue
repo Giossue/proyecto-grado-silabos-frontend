@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { completeTwoFactorLogin } from '@/api/session';
 import { sessionState } from '@/state/session';
+import { consumeIntendedRoute } from '@/lib/intended-route';
 import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,7 @@ const submit = async (): Promise<void> => {
       showRecoveryInput.value ? code.value : '',
     );
     await sessionState.load(true);
-    await router.replace('/');
+    await router.replace(consumeIntendedRoute() ?? '/dashboard');
   } catch (reason) {
     if (reason instanceof ApiError) {
       errors.value = reason.errors;

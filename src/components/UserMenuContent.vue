@@ -11,6 +11,7 @@ import UserInfo from '@/components/UserInfo.vue';
 import { logout } from '@/api/session';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
+import { clearIntendedRoute } from '@/lib/intended-route';
 
 withDefaults(defineProps<{ user: User; canSwitchScope?: boolean }>(), {
     canSwitchScope: false,
@@ -21,7 +22,8 @@ const router = useRouter();
 const handleLogout = async (): Promise<void> => {
     await logout();
     sessionState.clear();
-    await router.replace('/ingresar');
+    clearIntendedRoute();
+    await router.replace('/login');
 };
 </script>
 

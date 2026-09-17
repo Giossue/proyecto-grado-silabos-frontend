@@ -7,6 +7,7 @@ import { getOperationalReports, type ReportsPayload } from '@/api/operations';
 import { getSession } from '@/api/session';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -32,7 +33,7 @@ const load = async (page = 1): Promise<void> => {
   loading.value = true; error.value = null;
   try {
     const session = await getSession();
-    if (session.active_role?.code !== 'coordinador') { await router.replace('/panel'); return; }
+    if (session.active_role?.code !== 'coordinador') { await router.replace('/dashboard'); return; }
     data.value = await getOperationalReports({ search: filters.search, state: filters.state === 'all' ? '' : filters.state, convocation: filters.convocation === 'all' ? '' : filters.convocation, page: String(page) });
   } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el informe.'; }
   finally { loading.value = false; }
@@ -43,7 +44,7 @@ onMounted(() => { void load(); });
 <template>
   <PageFrame title="Informes de avance" description="Cómo va su carrera: cuántos sílabos faltan, cuántos están en revisión y cuántos aprobados.">
     <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-    <p v-if="loading && !data" class="text-sm text-muted-foreground" role="status">Cargando seguimiento…</p>
+    <LoadingSkeleton v-if="loading && !data" />
     <template v-if="data">
       <Card><CardHeader><CardTitle>Alcance del informe</CardTitle><CardDescription>Los filtros se conservan en la URL y se aplican tanto a los indicadores como al detalle.</CardDescription></CardHeader><CardContent><form @submit.prevent="load()"><FilterToolbar><template #search><Field><FieldLabel for="report-search" class="sr-only">Buscar asignatura o código</FieldLabel><Input id="report-search" v-model="filters.search" type="search" placeholder="Buscar asignatura o código" /></Field></template><template #filters><Field><FieldLabel for="report-convocation" class="sr-only">Convocatoria</FieldLabel><Select v-model="filters.convocation"><SelectTrigger id="report-convocation"><SelectValue placeholder="Todas las convocatorias" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todas las convocatorias</SelectItem><SelectItem v-for="item in data.convocations" :key="item.id" :value="item.id">{{ item.name }} · {{ item.period }}</SelectItem></SelectGroup></SelectContent></Select></Field><Field><FieldLabel for="report-state" class="sr-only">Estado</FieldLabel><Select v-model="filters.state"><SelectTrigger id="report-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="sin_iniciar">Sin iniciar</SelectItem><SelectItem value="borrador">Borrador</SelectItem><SelectItem value="en_revision">En revisión</SelectItem><SelectItem value="correccion_solicitada">Corrección solicitada</SelectItem><SelectItem value="aprobado">Aprobado</SelectItem></SelectGroup></SelectContent></Select></Field></template><template #action><Button type="submit" variant="outline" :disabled="loading">Aplicar</Button></template></FilterToolbar></form></CardContent></Card>
 

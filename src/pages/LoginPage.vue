@@ -12,6 +12,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { ApiError } from '@/api/client';
 import { login } from '@/api/session';
 import { sessionState } from '@/state/session';
+import { consumeIntendedRoute } from '@/lib/intended-route';
 
 const router = useRouter();
 const route = useRoute();
@@ -30,7 +31,7 @@ const submit = async (): Promise<void> => {
     const result = await login(email.value, password.value, remember.value);
     if ('two_factor_required' in result) { await router.replace('/verificar-dos-factores'); return; }
     sessionState.replace(result);
-    await router.replace('/');
+    await router.replace(consumeIntendedRoute() ?? '/dashboard');
   } catch (reason) {
     if (reason instanceof ApiError) { errors.value = reason.errors; error.value = reason.message; }
     else { error.value = 'No se pudo iniciar sesión.'; }

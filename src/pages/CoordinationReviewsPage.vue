@@ -7,6 +7,7 @@ import { getReviews, type ReviewsPage } from '@/api/reviews';
 import { getSession } from '@/api/session';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -29,7 +30,7 @@ const load = async (page = 1): Promise<void> => {
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'coordinador') {
-      await router.replace('/panel');
+      await router.replace('/dashboard');
       return;
     }
     data.value = await getReviews({ search: filters.search, state: filters.state === 'all' ? '' : filters.state, page });
@@ -47,7 +48,7 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Cola de revisión" description="Sílabos que los docentes ya enviaron y esperan revisión.">
-    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert><p v-if="loading && !data" class="text-sm text-muted-foreground" role="status">Cargando revisiones…</p>
+    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert><LoadingSkeleton v-if="loading && !data" />
     <Card v-if="data"><CardContent class="flex flex-col gap-4">
       <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters"><template #search><Field><FieldLabel for="review-search" class="sr-only">Buscar por asignatura o código</FieldLabel><Input id="review-search" v-model="filters.search" type="search" placeholder="Buscar asignatura o código" /></Field></template><template #filters><Field><FieldLabel for="review-state" class="sr-only">Estado</FieldLabel><Select v-model="filters.state"><SelectTrigger id="review-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="en_revision">En revisión</SelectItem><SelectItem value="correccion_solicitada">Corrección solicitada</SelectItem><SelectItem value="aprobado">Aprobado</SelectItem></SelectGroup></SelectContent></Select></Field></template></FilterToolbar></form>
       <Table><TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Docente(s)</TableHead><TableHead>Revisión</TableHead><TableHead>Estado</TableHead><TableHead>Pendientes</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>

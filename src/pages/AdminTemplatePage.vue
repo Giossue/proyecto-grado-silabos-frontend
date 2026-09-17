@@ -8,6 +8,7 @@ import { getSession } from '@/api/session';
 import TemplateAppearanceSheet from '@/components/domain/configuration/TemplateAppearanceSheet.vue';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -58,7 +59,7 @@ const load = async (): Promise<void> => {
     try {
         const session = await getSession();
         if (session.active_role?.code !== 'administrador') {
-            await router.replace('/panel');
+            await router.replace('/dashboard');
             return;
         }
         payload.value = await getTemplate();
@@ -102,7 +103,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div v-if="loading" class="p-6 text-sm text-muted-foreground">Cargando plantilla…</div>
+    <LoadingSkeleton v-if="loading" variant="document" />
 
     <PageFrame
         v-else-if="!payload?.template"

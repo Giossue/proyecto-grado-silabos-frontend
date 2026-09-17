@@ -408,3 +408,9 @@
 .vue-flow .vue-flow__pane.dragging {
     cursor: move;
 }
+
+@media (prefers-reduced-motion: reduce) {
+    [data-slot='skeleton'] {
+        animation: none !important;
+    }
+}

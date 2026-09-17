@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from "vue-router";
 import { sessionState } from "@/state/session";
+import { rememberIntendedRoute } from "@/lib/intended-route";
 
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
@@ -54,18 +55,22 @@ const canonicalFromAlias = (route: RouteLocationNormalized, target: string) => (
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/ingresar", component: LoginPage, meta: { guest: true } },
+    { path: "/login", component: LoginPage, meta: { guest: true } },
+    { path: "/ingresar", component: LoginPage, meta: { guest: true, aliasTarget: "/login" } },
     { path: "/recuperar-contrasena", component: PasswordRecoveryPage, meta: { guest: true } },
     { path: "/restablecer-contrasena", component: ResetPasswordPage, meta: { guest: true } },
     { path: "/api/v1/authentication/email-verification/:user/:hash", component: VerifyEmailPage, meta: { guest: true } },
     { path: "/verificar-correo", component: VerifyEmailPage, meta: { requiresAuth: true, shell: false } },
     { path: "/verificar-dos-factores", component: TwoFactorChallengePage, meta: { guest: true } },
-    { path: "/", component: WorkspacePage, meta: { requiresAuth: true } },
+    { path: "/", redirect: "/login" },
+    { path: "/rol", component: WorkspacePage, meta: { requiresAuth: true, title: "Seleccionar ámbito de trabajo" } },
 
     // Direcciones cortas compartidas: el guard las resuelve al área activa.
-    { path: "/panel", component: DashboardPage, meta: { requiresAuth: true, shortcut: "panel", title: "Panel" } },
+    { path: "/panel", component: DashboardPage, meta: { requiresAuth: true, aliasTarget: "/dashboard", title: "Panel" } },
     { path: "/dashboard", component: DashboardPage, meta: { requiresAuth: true, shortcut: "panel", title: "Panel" } },
     { path: "/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, shortcut: "notifications", title: "Notificaciones" } },
+    { path: "/fuentes", component: CoordinationSourcesPage, meta: { requiresAuth: true, shortcut: "sources", title: "Fuentes académicas" } },
+    { path: "/fuentes/:source", component: CoordinationSourceDetailPage, meta: { requiresAuth: true, shortcut: "source", title: "Fuente académica" } },
     { path: "/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, shortcut: "profile", title: "Perfil" } },
     { path: "/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },
     { path: "/configuracion/apariencia", component: AppearancePage, meta: { requiresAuth: true, shortcut: "appearance", title: "Apariencia" } },
@@ -137,21 +142,37 @@ router.beforeEach(async (to) => {
   const session = needsSession ? await sessionState.load() : null;
 
   if (to.meta.guest === true) {
-    if (!session) return true;
+    if (!session && typeof to.query.redirect === "string") {
+      const intended = router.resolve(to.query.redirect);
+      rememberIntendedRoute(to.query.redirect, intended.matched.some((record) => record.meta.requiresAuth === true));
+    }
+    if (!session) {
+      if (typeof to.meta.aliasTarget === "string") {
+        const query = { ...to.query };
+        delete query.redirect;
+        return { path: replaceParams(to.meta.aliasTarget, to), query };
+      }
+      return true;
+    }
     if (!session.user.email_verified) return "/verificar-correo";
-    if (session.user.must_change_password || !session.active_role) return "/";
+    if (session.user.must_change_password || !session.active_role) return "/rol";
     return roleHome(session.active_role.code);
   }
 
   if (to.meta.requiresAuth !== true) return true;
-  if (!session) return { path: "/ingresar", query: { redirect: to.fullPath } };
+  if (!session) {
+    rememberIntendedRoute(to.fullPath);
+    return "/login";
+  }
   if (!session.user.email_verified && to.path !== "/verificar-correo") return "/verificar-correo";
-  if (session.user.email_verified && to.path === "/verificar-correo") return "/";
-  if (session.user.must_change_password && to.path !== "/") return "/";
+  if (session.user.email_verified && to.path === "/verificar-correo") return "/dashboard";
+  if (session.user.must_change_password && to.path !== "/rol") return "/rol";
   if (to.path === "/") return true;
-  if (!session.active_role) return "/";
+  if (!session.active_role) return "/rol";
 
   const code = session.active_role.code;
+  if (typeof to.meta.aliasTarget === "string") return canonicalFromAlias(to, to.meta.aliasTarget);
+
   if (typeof to.meta.shortcut === "string") {
     const prefix = code === "administrador" ? "admin" : code;
     const destination = {
@@ -161,6 +182,8 @@ router.beforeEach(async (to) => {
       security: `/${prefix}/configuracion/seguridad`,
       appearance: `/${prefix}/configuracion/apariencia`,
       documents: code === "administrador" ? "/admin/panel" : `/${prefix}/revisiones/${String(to.params.revision)}/documentos`,
+      sources: code === "coordinador" ? "/coordinacion/fuentes" : roleHome(code),
+      source: code === "coordinador" ? `/coordinacion/fuentes/${String(to.params.source)}` : roleHome(code),
     }[to.meta.shortcut];
     if (destination) return { path: destination, query: to.query };
   }
@@ -168,6 +191,5 @@ router.beforeEach(async (to) => {
   const allowedRoles = to.meta.roles as RoleCode[] | undefined;
   if (allowedRoles && !allowedRoles.includes(code)) return roleHome(code);
 
-  if (typeof to.meta.aliasTarget === "string") return canonicalFromAlias(to, to.meta.aliasTarget);
   return true;
 });

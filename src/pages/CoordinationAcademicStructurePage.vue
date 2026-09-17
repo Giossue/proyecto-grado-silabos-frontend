@@ -13,6 +13,7 @@ import {
 } from "@/api/career-academics";
 import { getSession } from "@/api/session";
 import PageFrame from "@/components/domain/PageFrame.vue";
+import LoadingSkeleton from "@/components/domain/LoadingSkeleton.vue";
 import ManagedUserSheet from "@/components/domain/identity/ManagedUserSheet.vue";
 import CurriculumActions from "@/components/domain/academic/CurriculumActions.vue";
 import CurriculumCanvas from "@/components/domain/academic/curriculum/CurriculumCanvas.vue";
@@ -78,7 +79,7 @@ const load = async () => {
       session.active_role?.code !== "coordinador" ||
       !session.active_role.career_id
     ) {
-      await router.replace("/panel");
+      await router.replace("/dashboard");
       return;
     }
     const [nextCurriculum, nextSchedule, nextAssignments] = await Promise.all([
@@ -202,7 +203,7 @@ onMounted(() => {
       <TeacherAssignmentsPanel v-if="mode === 'teachers'" :data="assignments" @changed="handleAssignmentChanged" />
       </template
     >
-    <p v-else-if="!error">Cargando estructura académica…</p>
+    <LoadingSkeleton v-else-if="!error" variant="academic" />
     <ManagedUserSheet
       v-if="mode === 'teachers'"
       v-model:open="teacherOpen"

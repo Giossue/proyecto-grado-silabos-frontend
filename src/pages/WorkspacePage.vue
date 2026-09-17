@@ -5,12 +5,14 @@ import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getSession, selectActiveRole, type ActiveRole, type Session } from '@/api/session';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 import { sessionState } from '@/state/session';
+import { consumeIntendedRoute } from '@/lib/intended-route';
 
 const router = useRouter();
 const session = ref<Session | null>(null);
@@ -42,11 +44,11 @@ const load = async (): Promise<void> => {
             return;
         }
         if (session.value.active_role && !session.value.user.must_change_password) {
-            await router.replace('/panel');
+            await router.replace(consumeIntendedRoute() ?? '/dashboard');
         }
     } catch (reason) {
         if (reason instanceof ApiError && reason.status === 401) {
-            await router.replace('/ingresar');
+            await router.replace('/login');
             return;
         }
         error.value = 'No se pudo cargar su sesión.';
@@ -59,7 +61,7 @@ const selectRole = async (roleAssignmentId: string): Promise<void> => {
     try {
         session.value = await selectActiveRole(roleAssignmentId);
         sessionState.replace(session.value);
-        await router.replace('/panel');
+        await router.replace(consumeIntendedRoute() ?? '/dashboard');
     } catch (reason) {
         error.value = reason instanceof ApiError
             ? reason.message
@@ -115,8 +117,6 @@ onMounted(load);
             </Card>
         </div>
     </PageFrame>
-    <p v-else-if="!error" class="p-6 text-sm text-muted-foreground" role="status">
-        Cargando…
-    </p>
+    <LoadingSkeleton v-else-if="!error" variant="detail" />
     <p v-else class="p-6 text-sm text-destructive" role="alert">{{ error }}</p>
 </template>

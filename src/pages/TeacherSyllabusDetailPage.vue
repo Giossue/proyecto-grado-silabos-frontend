@@ -18,6 +18,7 @@ import SyllabusAiAssistantSheet from '@/components/domain/ai/SyllabusAiAssistant
 import SyllabusTableEditor from '@/components/domain/syllabus/SyllabusTableEditor.vue';
 import SyllabusTableView from '@/components/domain/syllabus/SyllabusTableView.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import IdentificationCard from '@/components/domain/syllabus/IdentificationCard.vue';
 import SyllabusAcademicContext from '@/components/domain/syllabus/SyllabusAcademicContext.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -391,7 +392,7 @@ onBeforeUnmount(() => {
 <template>
   <PageFrame
     title=""
-    :description="syllabus ? `${syllabus.code} · ${syllabus.convocation} · Paralelo(s) ${syllabus.parallels.join(', ')}` : 'Cargando sílabo…'"
+    :description="syllabus ? `${syllabus.code} · ${syllabus.convocation} · Paralelo(s) ${syllabus.parallels.join(', ')}` : 'Complete los campos del sílabo institucional.'"
   >
     <template #actions>
       <Button v-if="syllabus?.state === 'sin_iniciar'" :disabled="starting" @click="start"><Spinner v-if="starting" />{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button>
@@ -400,7 +401,7 @@ onBeforeUnmount(() => {
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
-    <p v-if="!syllabus && !error" class="text-sm text-muted-foreground" role="status">Cargando sílabo…</p>
+    <LoadingSkeleton v-if="!syllabus && !error" variant="document" />
 
     <template v-if="syllabus">
       <Card v-if="syllabus.state === 'sin_iniciar'"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar los campos de la plantilla institucional.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>

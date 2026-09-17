@@ -7,6 +7,7 @@ import { downloadDocument, getDocuments, requestDocuments, type DocumentsPayload
 import { getSession, type Session } from '@/api/session';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -40,7 +41,7 @@ const formatDate = (value: string | null): string => value === null ? '—' : ne
 const formatBytes = (value: number | null): string => value === null ? '—' : value < 1024 ? `${value} B` : value < 1024 * 1024 ? `${(value / 1024).toFixed(1)} KB` : `${(value / (1024 * 1024)).toFixed(1)} MB`;
 const load = async (): Promise<void> => {
   try { session.value = await getSession(); data.value = await getDocuments(revisionId()); }
-  catch (reason) { if (reason instanceof ApiError && reason.status === 401) { await router.replace('/ingresar'); return; } error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los documentos.'; }
+  catch (reason) { if (reason instanceof ApiError && reason.status === 401) { await router.replace('/login'); return; } error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los documentos.'; }
 };
 const requestExport = async (): Promise<void> => {
   try { working.value = true; message.value = (await requestDocuments(revisionId())).message; await load(); }
@@ -57,12 +58,12 @@ onBeforeUnmount(() => { if (timer !== null) clearInterval(timer); });
 </script>
 
 <template>
-  <PageFrame title="Documentos aprobados" :description="data ? `${data.syllabus.subject} · ${data.syllabus.code} · revisión ${data.revision.number}` : 'Cargando documentos…'">
+  <PageFrame title="Documentos aprobados" :description="data ? `${data.syllabus.subject} · ${data.syllabus.code} · revisión ${data.revision.number}` : 'Archivos de la revisión aprobada.'">
     <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="backHref"><ArrowLeft aria-hidden="true" />Volver al expediente</RouterLink></Button></template>
     <template #actions><Button class="max-sm:size-14 max-sm:rounded-full max-sm:p-0" :disabled="working || !data" aria-label="Generar DOCX y PDF" @click="requestExport"><Spinner v-if="working" data-icon="inline-start" /><FileArchive v-else data-icon="inline-start" aria-hidden="true" /><span class="max-sm:hidden">Generar DOCX y PDF</span></Button></template>
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-    <p v-if="!data && !error" class="text-sm text-muted-foreground" role="status">Cargando documentos…</p>
+    <LoadingSkeleton v-if="!data && !error" variant="document" />
     <template v-if="data">
       <Alert><ShieldCheck aria-hidden="true" /><AlertTitle>Revisión aprobada</AlertTitle><AlertDescription>Ambos archivos se generan desde la revisión {{ data.revision.number }} aprobada por {{ data.revision.approved_by }} el {{ formatDate(data.revision.approved_at) }}. La descarga vuelve a comprobar su autorización.</AlertDescription></Alert>
       <Alert variant="destructive"><FileText aria-hidden="true" /><AlertTitle>Formato institucional en revisión</AlertTitle><AlertDescription>Esta exportación está disponible para revisión. La validación del formato institucional continúa en curso.</AlertDescription></Alert>

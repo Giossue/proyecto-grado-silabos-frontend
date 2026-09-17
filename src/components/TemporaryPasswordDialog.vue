@@ -17,6 +17,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { sessionState } from '@/state/session';
+import { clearIntendedRoute, consumeIntendedRoute } from '@/lib/intended-route';
 
 const router = useRouter();
 const password = ref('');
@@ -32,6 +33,7 @@ const save = async (): Promise<void> => {
         sessionState.replace(await updatePassword(password.value, passwordConfirmation.value));
         password.value = '';
         passwordConfirmation.value = '';
+        await router.replace(consumeIntendedRoute() ?? '/dashboard');
     } catch (reason) {
         errors.value = reason instanceof ApiError ? reason.errors : {};
     } finally {
@@ -42,7 +44,8 @@ const save = async (): Promise<void> => {
 const closeSession = async (): Promise<void> => {
     await logout();
     sessionState.clear();
-    await router.replace('/ingresar');
+    clearIntendedRoute();
+    await router.replace('/login');
 };
 </script>
 

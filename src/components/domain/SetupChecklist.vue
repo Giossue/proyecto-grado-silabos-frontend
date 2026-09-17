@@ -129,7 +129,7 @@ const percent = computed(() =>
                         size="sm"
                         class="shrink-0"
                     >
-                        <RouterLink :to="step.href ?? '/panel'">
+                        <RouterLink :to="step.href ?? '/dashboard'">
                             Ir
                             <ArrowRight
                                 data-icon="inline-end"
@@ -147,4 +147,3 @@ const percent = computed(() =>
         </CardContent>
     </Card>
 </template>
-

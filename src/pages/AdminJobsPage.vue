@@ -8,6 +8,7 @@ import { getSession } from '@/api/session';
 import AuditTabs from '@/components/domain/AuditTabs.vue';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Button } from '@/components/ui/button';
@@ -36,7 +37,7 @@ const load = async (page = 1): Promise<void> => {
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'administrador') {
-      await router.replace('/panel');
+      await router.replace('/dashboard');
       return;
     }
     data.value = await getJobExecutions({
@@ -79,7 +80,7 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Auditoría" description="Lo que el sistema hace por detrás: correos, documentos y análisis. Aquí se ve qué terminó y qué falló.">
-    <p v-if="message" class="text-sm" role="status">{{ message }}</p><p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p><p v-if="loading && !data" class="text-sm text-muted-foreground" role="status">Cargando trabajos…</p>
+    <p v-if="message" class="text-sm" role="status">{{ message }}</p><p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p><LoadingSkeleton v-if="loading && !data" />
     <AuditTabs active="jobs"><Card><CardContent class="flex flex-col gap-4">
       <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters"><template #search><Field><FieldLabel for="jobs-search" class="sr-only">Buscar procesos</FieldLabel><Input id="jobs-search" v-model="filters.q" type="search" placeholder="Buscar por proceso o cola" /></Field></template><template #filters>
         <Field><FieldLabel for="jobs-status" class="sr-only">Estado</FieldLabel><Select v-model="filters.status"><SelectTrigger id="jobs-status"><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="pendiente">En cola</SelectItem><SelectItem value="en_ejecucion">En ejecución</SelectItem><SelectItem value="completada">Completado</SelectItem><SelectItem value="fallida">Fallido</SelectItem></SelectGroup></SelectContent></Select></Field>
