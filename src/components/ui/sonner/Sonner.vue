@@ -45,3 +45,18 @@ const props = withDefaults(defineProps<ToasterProps>(), {
   </Sonner>
 </template>
 
+<style>
+/* Cada aviso ocupa el espacio de su contenido y solo crece hasta el ancho disponible. */
+.toaster[data-sonner-toaster] [data-sonner-toast] {
+  width: max-content;
+  max-width: min(32rem, calc(100vw - 2rem));
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  .toaster[data-sonner-toaster] [data-sonner-toast] {
+    width: fit-content;
+    max-width: calc(100vw - 2rem);
+  }
+}
+</style>
