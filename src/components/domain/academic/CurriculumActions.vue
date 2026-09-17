@@ -9,7 +9,6 @@ const emit = defineEmits<{ configure: [] }>();
 <template>
     <Button
         type="button"
-        variant="outline"
         :disabled="Boolean(curriculum.lock_reason)"
         @click="emit('configure')"
     >
