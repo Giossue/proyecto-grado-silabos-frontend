@@ -28,6 +28,13 @@ describe('navegación por ámbito activo', () => {
     expect(router.currentRoute.value.fullPath).toBe('/admin/usuarios');
   });
 
+  it('resuelve la dirección corta del panel al área activa', async () => {
+    sessionState.replace(session('coordinador'));
+    await router.push('/dashboard');
+
+    expect(router.currentRoute.value.fullPath).toBe('/coordinacion/panel');
+  });
+
   it('recupera una URL administrativa del historial según el rol real', async () => {
     sessionState.replace(session('docente'));
     await router.push('/admin/usuarios');

@@ -64,6 +64,7 @@ export const router = createRouter({
 
     // Direcciones cortas compartidas: el guard las resuelve al área activa.
     { path: "/panel", component: DashboardPage, meta: { requiresAuth: true, shortcut: "panel", title: "Panel" } },
+    { path: "/dashboard", component: DashboardPage, meta: { requiresAuth: true, shortcut: "panel", title: "Panel" } },
     { path: "/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, shortcut: "notifications", title: "Notificaciones" } },
     { path: "/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, shortcut: "profile", title: "Perfil" } },
     { path: "/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },

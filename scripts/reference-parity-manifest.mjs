@@ -154,6 +154,7 @@ export const allowedAliasRoutes = [
 // confunda con páginas adicionales: cada una reutiliza una pantalla canónica.
 export const allowedCanonicalRoutes = [
   '/panel',
+  '/dashboard',
   '/admin/estructura-academica/:section',
   '/admin/configuracion/perfil',
   '/admin/configuracion/seguridad',
