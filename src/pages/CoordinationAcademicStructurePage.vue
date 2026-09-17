@@ -162,7 +162,7 @@ onMounted(() => {
         @saved="handleScheduleChanged"
       />
       <DropdownMenu v-if="mode === 'teachers' && assignments && (assignments.canCreateTeacher || !assignments.career.lock_reason)">
-        <DropdownMenuTrigger as-child><Button><UserPlus data-icon="inline-start" aria-hidden="true" />Gestionar docente<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button></DropdownMenuTrigger>
+        <DropdownMenuTrigger as-child><Button :disabled="Boolean(assignments.career.lock_reason)"><UserPlus data-icon="inline-start" aria-hidden="true" />Gestionar docente<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end"><DropdownMenuGroup>
           <DropdownMenuItem v-if="assignments.canCreateTeacher" @select="teacherOpen = true">Crear docente</DropdownMenuItem>
           <DropdownMenuItem :disabled="Boolean(assignments.career.lock_reason)" @select="assignmentOpen = true">Asignar docente</DropdownMenuItem>
