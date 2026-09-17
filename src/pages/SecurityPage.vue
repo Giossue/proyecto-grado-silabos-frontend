@@ -59,17 +59,17 @@ const submit = async (): Promise<void> => {
             <form class="space-y-6" @submit.prevent="submit">
                 <div class="grid gap-2">
                     <Label for="current_password" required>Contraseña actual</Label>
-                    <PasswordInput id="current_password" v-model="currentPassword" required autocomplete="current-password" placeholder="Contraseña actual" />
+                    <PasswordInput id="current_password" v-model="currentPassword" required class="mt-1 block w-full" autocomplete="current-password" placeholder="Contraseña actual" />
                     <InputError :message="errors.current_password" />
                 </div>
                 <div class="grid gap-2">
                     <Label for="password" required>Contraseña nueva</Label>
-                    <PasswordInput id="password" v-model="password" required autocomplete="new-password" placeholder="Contraseña nueva" />
+                    <PasswordInput id="password" v-model="password" required class="mt-1 block w-full" autocomplete="new-password" placeholder="Contraseña nueva" />
                     <InputError :message="errors.password" />
                 </div>
                 <div class="grid gap-2">
                     <Label for="password_confirmation" required>Confirmar contraseña</Label>
-                    <PasswordInput id="password_confirmation" v-model="passwordConfirmation" required autocomplete="new-password" placeholder="Confirmar contraseña" />
+                    <PasswordInput id="password_confirmation" v-model="passwordConfirmation" required class="mt-1 block w-full" autocomplete="new-password" placeholder="Confirmar contraseña" />
                     <InputError :message="errors.password_confirmation" />
                 </div>
                 <div class="flex items-center gap-4">

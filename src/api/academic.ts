@@ -8,10 +8,8 @@ export type AcademicGovernance = Pick<AcademicStructureProps, 'lock_reason' | 'c
 
 export type AcademicEntity = 'facultad' | 'campus' | 'carrera' | 'periodo';
 
-export const getAcademicGovernance = (section?: string) =>
-  section
-    ? api<AcademicGovernance>(`/admin/academic/${section}`)
-    : api<AcademicGovernance>('/admin/academic');
+export const getAcademicGovernance = () =>
+  api<AcademicGovernance>('/admin/academic');
 export const createAcademicRecord = (entity: AcademicEntity, payload: Record<string, unknown> | FormData) =>
   api<{ message: string }>(`/admin/academic/${entity}`, {
     method: 'POST',

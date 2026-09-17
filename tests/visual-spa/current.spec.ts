@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const outputRoot = resolve('tests/visual/current');
@@ -9,7 +9,10 @@ const routes = {
     '/panel',
     '/administracion/procesos',
     '/administracion/usuarios',
-    '/administracion/estructura-academica',
+    '/administracion/estructura-academica?seccion=facultad',
+    '/administracion/estructura-academica?seccion=campus',
+    '/administracion/estructura-academica?seccion=carrera',
+    '/administracion/estructura-academica?seccion=periodo',
     '/administracion/plantilla',
     '/administracion/auditoria',
     '/administracion/trabajos',
@@ -48,10 +51,16 @@ const credentials = {
   docente: 'docente@silabos.test',
 } as const;
 
-const slug = (path: string): string => path
-  .replace(/^\//, '')
-  .replaceAll(/[^a-z0-9]+/gi, '-')
-  .replace(/-$/, '') || 'inicio';
+const slug = (path: string): string => {
+  const url = new URL(path, 'http://localhost');
+  const section = url.searchParams.get('seccion');
+  const suffix = section ? `-${section}` : '';
+
+  return `${url.pathname}${suffix}`
+    .replace(/^\//, '')
+    .replaceAll(/[^a-z0-9]+/gi, '-')
+    .replace(/-$/, '') || 'inicio';
+};
 
 const setTheme = async (page: Page, theme: 'light' | 'dark'): Promise<void> => {
   await page.evaluate((value) => {
@@ -103,6 +112,7 @@ const capture = async (page: Page, role: string, path: string): Promise<void> =>
 };
 
 test.beforeAll(async () => {
+  await rm(outputRoot, { recursive: true, force: true });
   await mkdir(outputRoot, { recursive: true });
 });
 

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 const outputRoot = resolve('tests/visual/baseline');
@@ -107,6 +107,7 @@ const login = async (
 };
 
 test.beforeAll(async () => {
+  await rm(outputRoot, { recursive: true, force: true });
   await mkdir(outputRoot, { recursive: true });
 });
 
