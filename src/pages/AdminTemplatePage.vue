@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { Palette, Pencil, Plus, Trash2, X } from "@lucide/vue";
+import { Pencil, Plus, X } from "@lucide/vue";
 import { ApiError } from "@/api/client";
 import {
   createTemplate,
@@ -564,27 +564,8 @@ onMounted(() => void load());
     <header v-else class="sticky top-0 z-30 grid min-h-12 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 border-b bg-background/95 px-3 py-2 shadow-sm backdrop-blur sm:px-5" aria-label="Herramientas del editor de plantilla">
       <Button class="justify-self-start" type="button" size="sm" variant="outline" @click="stopEditing">Salir de edición</Button>
       <strong class="truncate text-sm">Editar plantilla</strong>
-      <div class="flex flex-wrap justify-self-end gap-2">
-        <Button type="button" size="sm" variant="outline" @click="openNewSection"><Plus aria-hidden="true" />Agregar bloque</Button>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          :disabled="!template?.sections.length"
-          @click="openNewField()"
-        >
-          <Plus aria-hidden="true" />Agregar campo
-        </Button>
-        <Button type="button" size="sm" variant="outline" @click="panel = 'appearance'"><Palette aria-hidden="true" />Personalizar</Button>
-        <Button
-          v-if="selection?.kind === 'section' || selection?.kind === 'field'"
-          type="button"
-          size="sm"
-          variant="destructive"
-          @click="removeSelected"
-        >
-          <Trash2 aria-hidden="true" />Eliminar
-        </Button>
+      <div class="flex justify-self-end gap-2">
+        <Button v-if="!template?.sections.length" type="button" size="sm" variant="outline" @click="openNewSection"><Plus aria-hidden="true" />Agregar bloque</Button>
       </div>
     </header>
 

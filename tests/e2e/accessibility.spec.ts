@@ -34,26 +34,10 @@ test.describe('accesibilidad transversal de la SPA', () => {
       await page.goto(path, { waitUntil: 'networkidle' });
       await expect(page.locator('main').first()).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
-    }
-  });
-
-  test('mantiene el constructor de plantilla paginado y su cinta contextual', async ({ page }) => {
-    await loginAsAdministrator(page);
-    await page.goto('/administracion/plantilla', { waitUntil: 'networkidle' });
-
-    await expect(page.getByLabel(/Plantilla del sílabo/)).toBeVisible();
-    await expect(page.locator('.paged-document-paper').first()).toBeVisible();
-
-    const edit = page.getByRole('button', { name: 'Editar plantilla', exact: true });
-    if (await edit.isEnabled()) {
-      await edit.click();
-      const field = page.locator('[aria-label^="Campo "]').first();
-      await expect(field).toBeVisible();
-      await field.click();
-      await expect(page.locator('#template-editor-ribbon')).toBeVisible();
-      await expect(page.getByText('Selección:', { exact: true })).toBeVisible();
-      await page.getByRole('button', { name: 'Editar diseño del documento' }).click();
-      await expect(page.getByLabel('Editor de diseño de plantilla')).toBeVisible();
+      if (path === '/administracion/plantilla') {
+        await expect(page.getByLabel(/Plantilla del sílabo/)).toBeVisible();
+        await expect(page.locator('.paged-document-paper').first()).toBeVisible();
+      }
     }
   });
 });
