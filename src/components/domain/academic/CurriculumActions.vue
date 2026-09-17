@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Settings2 } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import type { CurriculumBuilderProps } from '@/types/academic';
 
@@ -12,6 +13,7 @@ const emit = defineEmits<{ configure: [] }>();
         :disabled="Boolean(curriculum.lock_reason)"
         @click="emit('configure')"
     >
+        <Settings2 data-icon="inline-start" aria-hidden="true" />
         Configurar malla
     </Button>
 </template>
