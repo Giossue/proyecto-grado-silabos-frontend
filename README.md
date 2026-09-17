@@ -30,11 +30,10 @@ docker run --rm -p 8080:8080 \
   silabos-frontend
 ```
 
-El Dockerfile usa la caché de BuildKit para el registro de npm y compila solo con Vite:
-la comprobación de TypeScript queda en la puerta de CI. En Dokploy use el tipo de build
-**Dockerfile**, la ruta `Dockerfile`, el contexto `.` y el puerto interno `8080`; no
-seleccione la etapa `build`, pues la imagen final es la que contiene Nginx y el chequeo de
-salud.
+El Dockerfile usa la caché de BuildKit para el registro de npm y compila solo con Vite.
+En Dokploy use el tipo de build **Dockerfile**, la ruta `Dockerfile`, el contexto `.` y el
+puerto interno `8080`; no seleccione la etapa `build`, pues la imagen final es la que
+contiene Nginx y el chequeo de salud.
 
 El backend debe incluir el origen del frontend en `FRONTEND_URL` y su host en
 `SANCTUM_STATEFUL_DOMAINS`; ambos deben compartir el dominio raíz para que la cookie de
@@ -62,10 +61,6 @@ npm test
 npm run typecheck
 npm run build
 ```
-
-GitHub Actions ejecuta estas comprobaciones en cada cambio antes del despliegue. Para
-desplegar desde Dokploy en un servidor con recursos limitados, publique la imagen desde
-CI o un Build Server en un registry y configure Dokploy para consumir esa imagen.
 
 El recorrido distribuido real se ejecuta aparte contra una base **de pruebas** recién
 migrada y sembrada. Requiere que la API Laravel de pruebas esté escuchando en loopback;
