@@ -109,4 +109,17 @@ describe("CoordinationConvocationsPage", () => {
     expect(getConvocations).toHaveBeenLastCalledWith({ q: "", state: "pausada", page: 1 });
     wrapper.unmount();
   });
+
+  it("muestra solo los estados operativos y no el conteo de expedientes", async () => {
+    const wrapper = mount(CoordinationConvocationsPage, {
+      attachTo: document.body,
+      global: { stubs: { RouterLink: { template: "<a><slot /></a>" } } },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain("Expedientes");
+    expect(wrapper.findAll("th")).toHaveLength(5);
+
+    wrapper.unmount();
+  });
 });
