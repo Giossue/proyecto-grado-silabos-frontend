@@ -7,8 +7,12 @@ const emit = defineEmits<{ configure: [] }>();
 </script>
 
 <template>
-    <Button type="button" variant="outline" @click="emit('configure')">
+    <Button
+        type="button"
+        variant="outline"
+        :disabled="Boolean(curriculum.lock_reason)"
+        @click="emit('configure')"
+    >
         Configurar malla
     </Button>
 </template>
-

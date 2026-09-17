@@ -197,9 +197,7 @@ onMounted(() => {
         <CurriculumRequirementSheet v-model:open="requirementOpen" :curriculum="curriculum.curriculum" :subjects="curriculum.subjects" @saved="handleCurriculumChanged" />
         <CurriculumConfigurationSheet v-model:open="configurationOpen" :curriculum="curriculum.curriculum" @saved="handleCurriculumChanged" />
       </template>
-      <Alert v-if="mode === 'schedule' && schedule.career.lock_reason">
-        <AlertDescription>{{ schedule.career.lock_reason }}</AlertDescription>
-      </Alert>
+      <ProcessLockAlert v-if="mode === 'schedule' && schedule.career.lock_reason" />
       <ScheduledSubjectsTab
         v-if="mode === 'schedule'"
         :data="schedule"
@@ -207,7 +205,7 @@ onMounted(() => {
         @changed="handleScheduleChanged"
         @failed="actionError = $event"
       />
-      <Alert v-if="mode === 'teachers' && assignments.career.lock_reason"><AlertDescription>{{ assignments.career.lock_reason }}</AlertDescription></Alert>
+      <ProcessLockAlert v-if="mode === 'teachers' && assignments.career.lock_reason" />
       <TeacherAssignmentsPanel v-if="mode === 'teachers'" :data="assignments" @changed="handleAssignmentChanged" />
       </template
     >
