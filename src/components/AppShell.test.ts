@@ -60,6 +60,7 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Usuarios');
+    expect(wrapper.text()).toContain('Configuración');
     expect(wrapper.text()).not.toContain('Mis sílabos');
     expect(wrapper.get('[aria-label="Notificaciones"]').text()).toContain('3');
   });

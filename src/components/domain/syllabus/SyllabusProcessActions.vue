@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CalendarClock, Lock, Pause, Pencil, Play, Square } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { transitionProcess, type SyllabusProcess } from '@/api/processes';
 import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
@@ -35,6 +35,7 @@ const processing = ref(false);
 const error = ref<string | null>(null);
 const editOpen = ref(false);
 const deadlineOpen = ref(false);
+const reasonCharacters = computed(() => reason.value.trim().length);
 
 const dialogs: Record<Transition, { title: string; description: string; label: string; destructive?: boolean }> = {
   abrir: {
@@ -63,7 +64,7 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
 const confirm = async (): Promise<void> => {
   if (!pending.value) return;
   if (pending.value === 'pausar' && reason.value.trim().length < 10) {
-    error.value = 'Indique un motivo de al menos 10 caracteres.';
+    error.value = 'Escriba al menos 10 caracteres para explicar la pausa.';
     return;
   }
   processing.value = true;
@@ -103,9 +104,9 @@ const confirm = async (): Promise<void> => {
     <DialogContent v-if="pending">
       <DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader>
       <form class="flex flex-col gap-4" @submit.prevent="confirm">
-        <Field v-if="pending === 'pausar'"><FieldLabel for="process-pause-reason" required>Motivo</FieldLabel><Textarea id="process-pause-reason" v-model="reason" rows="3" required minlength="10" placeholder="Corrección de la sección de evaluación en la plantilla." /></Field>
+        <Field v-if="pending === 'pausar'"><FieldLabel for="process-pause-reason" required>Motivo</FieldLabel><Textarea id="process-pause-reason" v-model="reason" rows="3" required minlength="10" placeholder="Corrección de la sección de evaluación en la plantilla." /><p class="text-sm text-muted-foreground" :class="{ 'text-destructive': reasonCharacters < 10 }">{{ reasonCharacters }}/10 caracteres mínimos</p></Field>
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing"><Spinner v-if="processing" />{{ dialogs[pending].label }}</Button></DialogFooter>
+        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing || (pending === 'pausar' && reasonCharacters < 10)"><Spinner v-if="processing" />{{ dialogs[pending].label }}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>

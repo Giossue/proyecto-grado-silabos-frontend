@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
     SidebarGroup,
-    SidebarGroupLabel,
     SidebarMenu,
     SidebarMenuBadge,
     SidebarMenuButton,
@@ -44,7 +43,6 @@ const isItemActive = (item: NavItem): boolean =>
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarGroupLabel>Trabajo</SidebarGroupLabel>
         <SidebarMenu>
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <template v-if="!item.items?.length">

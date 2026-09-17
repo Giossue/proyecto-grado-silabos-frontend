@@ -9,6 +9,7 @@ import {
     LayoutGrid,
     LibraryBig,
     ScrollText,
+    Settings,
     UsersRound,
 } from '@lucide/vue';
 import { computed, watch } from 'vue';
@@ -28,7 +29,7 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { sessionState } from '@/state/session';
-import { paths } from '@/lib/routes';
+import { paths, roleSetting } from '@/lib/routes';
 import type { NavItem } from '@/types';
 
 const route = useRoute();
@@ -72,6 +73,9 @@ const mainNavItems = computed<NavItem[]>(() => [
         : []),
     ...(activeRole.value?.code === 'docente'
         ? [{ title: 'Mis sílabos', href: paths.teacher.syllabi, icon: BookOpenCheck }]
+        : []),
+    ...(activeRole.value
+        ? [{ title: 'Configuración', href: roleSetting(activeRole.value.code, 'profile'), icon: Settings }]
         : []),
 ]);
 const footerNavItems: NavItem[] = [];

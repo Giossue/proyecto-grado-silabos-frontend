@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Building2, LogOut, Settings } from '@lucide/vue';
+import { Building2, LogOut } from '@lucide/vue';
 import { useRouter } from 'vue-router';
 import {
     DropdownMenuGroup,
@@ -35,19 +35,13 @@ const handleLogout = async (): Promise<void> => {
         </div>
     </DropdownMenuLabel>
     <DropdownMenuSeparator />
-    <DropdownMenuGroup>
-        <DropdownMenuItem v-if="canSwitchScope" @select="$emit('switch-scope')">
+    <DropdownMenuGroup v-if="canSwitchScope">
+        <DropdownMenuItem @select="$emit('switch-scope')">
             <Building2 data-icon="inline-start" aria-hidden="true" />
             Cambiar carrera o rol
         </DropdownMenuItem>
-        <DropdownMenuItem :as-child="true">
-            <RouterLink class="block w-full cursor-pointer" :to="paths.configuration.profile">
-                <Settings data-icon="inline-start" aria-hidden="true" />
-                Configuración
-            </RouterLink>
-        </DropdownMenuItem>
     </DropdownMenuGroup>
-    <DropdownMenuSeparator />
+    <DropdownMenuSeparator v-if="canSwitchScope" />
     <DropdownMenuItem
         class="w-full"
         data-test="logout-button"

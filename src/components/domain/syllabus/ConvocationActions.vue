@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Eye, Lock, Pause, Play } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { createConvocation, openConvocation, transitionConvocation, type ConvocationItem } from '@/api/convocations';
@@ -24,6 +24,7 @@ const reason = ref('');
 const sourceIds = ref<string[]>([]);
 const error = ref<string | null>(null);
 const fieldErrors = ref<Record<string, string[]>>({});
+const reasonCharacters = computed(() => reason.value.trim().length);
 const dialogs: Record<Transition, { title: string; description: string; label: string }> = {
   iniciar: { title: 'Iniciar convocatoria de la carrera', description: 'Se comprobarán la malla, las materias programadas, la asignación docente y las fuentes académicas de su carrera. Se generará un sílabo por paralelo usando la plantilla y las fechas institucionales. Si falta algún requisito, no se iniciará la convocatoria.', label: 'Iniciar convocatoria' },
   abrir: { title: 'Abrir la convocatoria', description: 'Se fijan la plantilla del proceso y las fuentes, se valida que cada paralelo tenga docente vigente y se generan todos los expedientes en una sola transacción. Si algo falta, no se crea ninguno.', label: 'Abrir y generar expedientes' },
@@ -79,8 +80,8 @@ const submit = async (): Promise<void> => {
   </TableActionsMenu>
   <Dialog :open="pending !== null" @update:open="(open) => { if (!open && !processing) pending = null; }"><DialogContent v-if="pending"><DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader><form class="flex flex-col gap-4" @submit.prevent="submit">
     <fieldset v-if="pending === 'iniciar'" class="flex flex-col gap-3"><legend class="text-sm font-medium">Fuentes académicas</legend><Field v-for="source in availableSources" :key="source.id" orientation="horizontal"><Checkbox :id="`source-${convocation.process_id}-${source.id}`" :model-value="sourceIds.includes(source.id)" @update:model-value="toggleSource(source.id, $event)" /><FieldLabel :for="`source-${convocation.process_id}-${source.id}`">{{ source.name }}</FieldLabel></Field><p v-if="availableSources.length === 0" class="text-sm text-muted-foreground">Cree al menos una fuente activa antes de iniciar.</p><FieldError :errors="fieldErrors.source_ids" /></fieldset>
-    <Field v-if="pending === 'pausar'" :data-invalid="Boolean(fieldErrors.reason)"><FieldLabel :for="`convocation-pause-reason-${convocation.id}`" required>Motivo</FieldLabel><Textarea :id="`convocation-pause-reason-${convocation.id}`" v-model="reason" rows="3" :aria-invalid="Boolean(fieldErrors.reason)" placeholder="Corrección de las horas de dos materias de la malla antes de continuar." required /><FieldError :errors="fieldErrors.reason" /></Field>
+    <Field v-if="pending === 'pausar'" :data-invalid="Boolean(fieldErrors.reason)"><FieldLabel :for="`convocation-pause-reason-${convocation.id}`" required>Motivo</FieldLabel><Textarea :id="`convocation-pause-reason-${convocation.id}`" v-model="reason" rows="3" :aria-invalid="Boolean(fieldErrors.reason)" placeholder="Corrección de las horas de dos materias de la malla antes de continuar." required @update:model-value="fieldErrors.reason = []" /><p class="text-sm text-muted-foreground" :class="{ 'text-destructive': reasonCharacters < 10 }">{{ reasonCharacters }}/10 caracteres mínimos</p><FieldError :errors="fieldErrors.reason" /></Field>
     <p v-if="error && Object.keys(fieldErrors).length === 0" class="text-sm text-destructive" role="alert">{{ error }}</p>
-    <DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose><Button type="button" :disabled="processing || (pending === 'iniciar' && sourceIds.length === 0)" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><Pause v-else-if="pending === 'pausar'" data-icon="inline-start" aria-hidden="true" /><Play v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[pending].label }}</Button></DialogFooter>
+    <DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose><Button type="button" :disabled="processing || (pending === 'iniciar' && sourceIds.length === 0) || (pending === 'pausar' && reasonCharacters < 10)" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><Pause v-else-if="pending === 'pausar'" data-icon="inline-start" aria-hidden="true" /><Play v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[pending].label }}</Button></DialogFooter>
   </form></DialogContent></Dialog>
 </template>
