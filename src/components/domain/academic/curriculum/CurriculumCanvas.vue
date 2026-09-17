@@ -27,6 +27,7 @@ import {
 import CurriculumAddSubjectNode from '@/components/domain/academic/curriculum/CurriculumAddSubjectNode.vue';
 import CurriculumCycleNode from '@/components/domain/academic/curriculum/CurriculumCycleNode.vue';
 import CurriculumLegend from '@/components/domain/academic/curriculum/CurriculumLegend.vue';
+import CurriculumLegendPanel from '@/components/domain/academic/curriculum/CurriculumLegendPanel.vue';
 import CurriculumRequirementEdge from '@/components/domain/academic/curriculum/CurriculumRequirementEdge.vue';
 import CurriculumSubjectNode from '@/components/domain/academic/curriculum/CurriculumSubjectNode.vue';
 import { Button } from '@/components/ui/button';
@@ -729,10 +730,11 @@ const onNodeDragStop = async ({ node }: NodeDragEvent): Promise<void> => {
             totales de la malla completa. En móvil taparía media malla, así que
             ahí se repliega tras un botón y se consulta cuando hace falta.
         -->
-        <div
-            class="absolute top-3 right-3 z-10 max-w-56 rounded-md bg-card/90 px-3 py-2 text-card-foreground shadow-surface ring-1 ring-surface-ring max-sm:hidden"
-        >
-            <CurriculumLegend :units="legendUnits" :rows="summaryRows" />
+        <div class="absolute top-3 right-3 z-10 max-sm:hidden">
+            <CurriculumLegendPanel
+                :units="legendUnits"
+                :rows="summaryRows"
+            />
         </div>
         <Popover>
             <PopoverTrigger as-child>
