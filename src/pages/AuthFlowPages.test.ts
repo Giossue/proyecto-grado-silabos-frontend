@@ -27,6 +27,7 @@ const authenticatedSession = {
     email: 'docente@example.test',
     email_verified: true,
     must_change_password: false,
+    can_edit_identity: false,
   },
   active_role: { id: 'role-1', code: 'docente' as const, career_id: 'career-1', career_name: 'Software' },
   available_roles: [],

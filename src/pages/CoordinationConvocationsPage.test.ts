@@ -31,6 +31,7 @@ describe("CoordinationConvocationsPage", () => {
         email: "coord@test.local",
         email_verified: true,
         must_change_password: false,
+        can_edit_identity: false,
       },
       active_role: { id: "role-1", code: "coordinador", career_id: "career-1", career_name: "Software" },
       available_roles: [],

@@ -152,6 +152,7 @@ describe("CoordinationReviewDetailPage", () => {
         email: "coordinator@example.test",
         email_verified: true,
         must_change_password: false,
+        can_edit_identity: false,
       },
       active_role: {
         id: "role-1",
