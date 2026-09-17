@@ -14,7 +14,6 @@ const VerifyEmailPage = () => import("@/pages/VerifyEmailPage.vue");
 const TwoFactorChallengePage = () => import("@/pages/TwoFactorChallengePage.vue");
 const SecurityPage = () => import("@/pages/SecurityPage.vue");
 const ProfilePage = () => import("@/pages/ProfilePage.vue");
-const AppearancePage = () => import("@/pages/AppearancePage.vue");
 const NotificationsPage = () => import("@/pages/NotificationsPage.vue");
 const AdminUsersPage = () => import("@/pages/AdminUsersPage.vue");
 const AdminUserDetailPage = () => import("@/pages/AdminUserDetailPage.vue");
@@ -73,10 +72,8 @@ export const router = createRouter({
     { path: "/settings", redirect: "/settings/profile", meta: { requiresAuth: true } },
     { path: "/settings/profile", component: ProfilePage, meta: { requiresAuth: true, shortcut: "profile", title: "Perfil" } },
     { path: "/settings/security", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },
-    { path: "/settings/appearance", component: AppearancePage, meta: { requiresAuth: true, shortcut: "appearance", title: "Apariencia" } },
     { path: "/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, shortcut: "profile", title: "Perfil" } },
     { path: "/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },
-    { path: "/configuracion/apariencia", component: AppearancePage, meta: { requiresAuth: true, shortcut: "appearance", title: "Apariencia" } },
     { path: "/seguridad", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },
     { path: "/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, shortcut: "documents", title: "Documentos" } },
 
@@ -92,7 +89,6 @@ export const router = createRouter({
     { path: "/admin/procesos", component: AdminJobsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Auditoría" } },
     { path: "/admin/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Perfil" } },
     { path: "/admin/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Seguridad" } },
-    { path: "/admin/configuracion/apariencia", component: AppearancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Apariencia" } },
     { path: "/admin/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Notificaciones" } },
 
     // Coordinación.
@@ -100,7 +96,6 @@ export const router = createRouter({
     { path: "/coordinacion/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Notificaciones" } },
     { path: "/coordinacion/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Perfil" } },
     { path: "/coordinacion/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Seguridad" } },
-    { path: "/coordinacion/configuracion/apariencia", component: AppearancePage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Apariencia" } },
     { path: "/coordinacion/convocatorias", component: CoordinationConvocationsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Convocatorias" } },
     { path: "/coordinacion/convocatorias/:convocation", component: CoordinationConvocationDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de convocatoria", breadcrumbTitle: "Convocatorias", breadcrumbHref: "/coordinacion/convocatorias" } },
     { path: "/coordinacion/revisiones", component: CoordinationReviewsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Revisión" } },
@@ -120,7 +115,6 @@ export const router = createRouter({
     { path: "/docente/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Notificaciones" } },
     { path: "/docente/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["docente"], title: "Perfil" } },
     { path: "/docente/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["docente"], title: "Seguridad" } },
-    { path: "/docente/configuracion/apariencia", component: AppearancePage, meta: { requiresAuth: true, roles: ["docente"], title: "Apariencia" } },
     { path: "/docente/mis-silabos", component: TeacherSyllabiPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", breadcrumbTitle: "Mis sílabos", breadcrumbHref: "/docente/mis-silabos" } },
     { path: "/docente/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", breadcrumbTitle: "Mis sílabos", breadcrumbHref: "/docente/mis-silabos" } },
     { path: "/docente/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos" } },
@@ -192,7 +186,6 @@ router.beforeEach(async (to) => {
       notifications: code === "administrador" ? paths.admin.notifications : code === "coordinador" ? paths.coordination.notifications : paths.teacher.notifications,
       profile: roleSetting(code, 'profile'),
       security: roleSetting(code, 'security'),
-      appearance: roleSetting(code, 'appearance'),
       documents: code === "administrador" ? paths.admin.panel : code === "coordinador" ? paths.coordination.documents(String(to.params.revision)) : paths.teacher.documents(String(to.params.revision)),
       sources: code === "coordinador" ? paths.coordination.sources : resolveRoleHome(code),
       source: code === "coordinador" ? paths.coordination.source(String(to.params.source)) : resolveRoleHome(code),

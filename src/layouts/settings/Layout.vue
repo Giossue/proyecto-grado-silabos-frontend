@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Palette, ShieldCheck, UserRound } from '@lucide/vue';
+import { ShieldCheck, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -17,7 +17,6 @@ const role = computed<RoleCode | null>(() => {
 const sidebarNavItems = computed(() => [
     { title: 'Perfil', href: role.value ? roleSetting(role.value, 'profile') : paths.configuration.profile, icon: UserRound },
     { title: 'Seguridad', href: role.value ? roleSetting(role.value, 'security') : paths.configuration.security, icon: ShieldCheck },
-    { title: 'Apariencia', href: role.value ? roleSetting(role.value, 'appearance') : paths.configuration.appearance, icon: Palette },
 ]);
 </script>
 

@@ -29,12 +29,10 @@ export const paths = {
     root: '/settings',
     profile: '/settings/profile',
     security: '/settings/security',
-    appearance: '/settings/appearance',
   },
   configuration: {
     profile: '/configuracion/perfil',
     security: '/configuracion/seguridad',
-    appearance: '/configuracion/apariencia',
   },
   security: '/seguridad',
   documents: (revision: string): string =>
@@ -55,7 +53,6 @@ export const paths = {
     processes: '/admin/procesos',
     profile: '/admin/configuracion/perfil',
     security: '/admin/configuracion/seguridad',
-    appearance: '/admin/configuracion/apariencia',
     notifications: '/admin/notificaciones',
   },
   coordination: {
@@ -64,7 +61,6 @@ export const paths = {
     notifications: '/coordinacion/notificaciones',
     profile: '/coordinacion/configuracion/perfil',
     security: '/coordinacion/configuracion/seguridad',
-    appearance: '/coordinacion/configuracion/apariencia',
     convocations: '/coordinacion/convocatorias',
     convocation: (convocation: string): string =>
       `/coordinacion/convocatorias/${segment(convocation)}`,
@@ -88,7 +84,6 @@ export const paths = {
     notifications: '/docente/notificaciones',
     profile: '/docente/configuracion/perfil',
     security: '/docente/configuracion/seguridad',
-    appearance: '/docente/configuracion/apariencia',
     syllabi: '/docente/mis-silabos',
     syllabus: (syllabus: string): string => `/docente/mis-silabos/${segment(syllabus)}`,
     documents: (revision: string): string =>
@@ -122,11 +117,11 @@ export const roleHome = (role: RoleCode | undefined): string => {
       : paths.teacher.panel;
 };
 
-export type RoleScopedSetting = 'profile' | 'security' | 'appearance';
+export type RoleScopedSetting = 'profile' | 'security';
 
 export const roleSetting = (role: RoleCode, setting: RoleScopedSetting): string => {
   if (role === 'administrador') {
-    return setting === 'profile' ? paths.admin.profile : setting === 'security' ? paths.admin.security : paths.admin.appearance;
+    return setting === 'profile' ? paths.admin.profile : paths.admin.security;
   }
   const area = rolePrefix(role);
   const prefix = area === 'admin'
@@ -134,7 +129,7 @@ export const roleSetting = (role: RoleCode, setting: RoleScopedSetting): string 
     : area === 'coordination'
       ? paths.coordination.root
       : paths.teacher.root;
-  return `${prefix}/configuracion/${setting === 'profile' ? 'perfil' : setting === 'security' ? 'seguridad' : 'apariencia'}`;
+  return `${prefix}/configuracion/${setting === 'profile' ? 'perfil' : 'seguridad'}`;
 };
 
 /** Metadatos mínimos compartidos por auditorías y guards. */
@@ -145,7 +140,7 @@ export type RouteDefinition = {
   /** Estados lógicos que comparte una ruta física consolidada. */
   states?: readonly string[];
   breadcrumb?: string;
-  shortcut?: 'panel' | 'notifications' | 'sources' | 'source' | 'profile' | 'security' | 'appearance' | 'documents';
+  shortcut?: 'panel' | 'notifications' | 'sources' | 'source' | 'profile' | 'security' | 'documents';
   roles?: readonly RoleCode[];
   guest?: boolean;
   requiresAuth?: boolean;
@@ -174,11 +169,9 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'source', path: '/fuentes/:source', component: 'CoordinationSourceDetailPage', shortcut: 'source', ...authenticated },
   { name: 'settings-profile', path: paths.settings.profile, component: 'ProfilePage', shortcut: 'profile', ...authenticated },
   { name: 'settings-security', path: paths.settings.security, component: 'SecurityPage', shortcut: 'security', ...authenticated },
-  { name: 'settings-appearance', path: paths.settings.appearance, component: 'AppearancePage', shortcut: 'appearance', ...authenticated },
   { name: 'settings-root', path: paths.settings.root, aliasOf: paths.settings.profile, ...authenticated },
   { name: 'profile', path: paths.configuration.profile, component: 'ProfilePage', shortcut: 'profile', ...authenticated },
   { name: 'security', path: paths.configuration.security, component: 'SecurityPage', shortcut: 'security', ...authenticated },
-  { name: 'appearance', path: paths.configuration.appearance, component: 'AppearancePage', shortcut: 'appearance', ...authenticated },
   { name: 'documents', path: '/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...authenticated },
 
   { name: 'admin-panel', path: paths.admin.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...admin },
@@ -192,14 +185,12 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'admin-processes', path: paths.admin.processes, component: 'AdminJobsPage', breadcrumb: 'Procesos', ...admin },
   { name: 'admin-profile', path: paths.admin.profile, component: 'ProfilePage', shortcut: 'profile', ...admin },
   { name: 'admin-security', path: paths.admin.security, component: 'SecurityPage', shortcut: 'security', ...admin },
-  { name: 'admin-appearance', path: paths.admin.appearance, component: 'AppearancePage', shortcut: 'appearance', ...admin },
   { name: 'admin-notifications', path: paths.admin.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...admin },
 
   { name: 'coordination-panel', path: paths.coordination.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...coordinator },
   { name: 'coordination-notifications', path: paths.coordination.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...coordinator },
   { name: 'coordination-profile', path: paths.coordination.profile, component: 'ProfilePage', shortcut: 'profile', ...coordinator },
   { name: 'coordination-security', path: paths.coordination.security, component: 'SecurityPage', shortcut: 'security', ...coordinator },
-  { name: 'coordination-appearance', path: paths.coordination.appearance, component: 'AppearancePage', shortcut: 'appearance', ...coordinator },
   { name: 'coordination-convocations', path: paths.coordination.convocations, component: 'CoordinationConvocationsPage', breadcrumb: 'Convocatorias', ...coordinator },
   { name: 'coordination-convocation', path: '/coordinacion/convocatorias/:convocation', component: 'CoordinationConvocationDetailPage', breadcrumb: 'Convocatorias', ...coordinator },
   { name: 'coordination-reviews', path: paths.coordination.reviews, component: 'CoordinationReviewsPage', breadcrumb: 'Revisión', ...coordinator },
@@ -217,7 +208,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'teacher-notifications', path: paths.teacher.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...teacher },
   { name: 'teacher-profile', path: paths.teacher.profile, component: 'ProfilePage', shortcut: 'profile', ...teacher },
   { name: 'teacher-security', path: paths.teacher.security, component: 'SecurityPage', shortcut: 'security', ...teacher },
-  { name: 'teacher-appearance', path: paths.teacher.appearance, component: 'AppearancePage', shortcut: 'appearance', ...teacher },
   { name: 'teacher-syllabi', path: paths.teacher.syllabi, component: 'TeacherSyllabiPage', breadcrumb: 'Mis sílabos', ...teacher },
   { name: 'teacher-syllabus', path: '/docente/mis-silabos/:syllabus', component: 'TeacherSyllabusDetailPage', states: ['resumen', 'edicion', 'ia', 'envio'], breadcrumb: 'Mis sílabos', ...teacher },
   { name: 'teacher-documents', path: '/docente/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...teacher },
