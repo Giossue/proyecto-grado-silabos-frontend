@@ -5,18 +5,19 @@ import { useRoute } from 'vue-router';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { paths, roleSetting, type RoleCode } from '@/lib/routes';
 
 const route = useRoute();
-const prefix = computed(() => {
-    if (route.path.startsWith('/admin/')) return '/admin';
-    if (route.path.startsWith('/coordinacion/')) return '/coordinacion';
-    if (route.path.startsWith('/docente/')) return '/docente';
-    return '/configuracion';
+const role = computed<RoleCode | null>(() => {
+    if (route.path.startsWith(`${paths.admin.root}/`)) return 'administrador';
+    if (route.path.startsWith(`${paths.coordination.root}/`)) return 'coordinador';
+    if (route.path.startsWith(`${paths.teacher.root}/`)) return 'docente';
+    return null;
 });
 const sidebarNavItems = computed(() => [
-    { title: 'Perfil', href: `${prefix.value}/configuracion/perfil`, icon: UserRound },
-    { title: 'Seguridad', href: `${prefix.value}/configuracion/seguridad`, icon: ShieldCheck },
-    { title: 'Apariencia', href: `${prefix.value}/configuracion/apariencia`, icon: Palette },
+    { title: 'Perfil', href: role.value ? roleSetting(role.value, 'profile') : paths.configuration.profile, icon: UserRound },
+    { title: 'Seguridad', href: role.value ? roleSetting(role.value, 'security') : paths.configuration.security, icon: ShieldCheck },
+    { title: 'Apariencia', href: role.value ? roleSetting(role.value, 'appearance') : paths.configuration.appearance, icon: Palette },
 ]);
 </script>
 

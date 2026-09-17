@@ -13,6 +13,7 @@ import { ApiError } from '@/api/client';
 import { login } from '@/api/session';
 import { sessionState } from '@/state/session';
 import { consumeIntendedRoute } from '@/lib/intended-route';
+import { paths } from '@/lib/routes';
 
 const router = useRouter();
 const route = useRoute();
@@ -29,9 +30,9 @@ const submit = async (): Promise<void> => {
   errors.value = {};
   try {
     const result = await login(email.value, password.value, remember.value);
-    if ('two_factor_required' in result) { await router.replace('/verificar-dos-factores'); return; }
+    if ('two_factor_required' in result) { await router.replace(paths.twoFactorChallenge); return; }
     sessionState.replace(result);
-    await router.replace(consumeIntendedRoute() ?? '/dashboard');
+    await router.replace(consumeIntendedRoute() ?? paths.dashboard);
   } catch (reason) {
     if (reason instanceof ApiError) { errors.value = reason.errors; error.value = reason.message; }
     else { error.value = 'No se pudo iniciar sesión.'; }
@@ -53,7 +54,7 @@ const submit = async (): Promise<void> => {
         <Field :data-invalid="Boolean(errors.password)">
           <div class="flex items-center justify-between">
             <FieldLabel for="password" required>Contraseña</FieldLabel>
-            <TextLink href="/recuperar-contrasena" class="text-sm">¿Olvidó su contraseña?</TextLink>
+            <TextLink :href="paths.passwordRecovery" class="text-sm">¿Olvidó su contraseña?</TextLink>
           </div>
           <PasswordInput id="password" v-model="password" name="password" required autocomplete="current-password" placeholder="Contraseña" :aria-invalid="Boolean(errors.password)" />
           <FieldError :errors="errors.password ?? [undefined]" />

@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client';
 import { getSession, selectActiveRole, type ActiveRole, type Session } from '@/api/session';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,10 +14,13 @@ import { Card, CardAction, CardFooter, CardHeader, CardTitle } from '@/component
 import { Spinner } from '@/components/ui/spinner';
 import { sessionState } from '@/state/session';
 import { consumeIntendedRoute } from '@/lib/intended-route';
+import { paths } from '@/lib/routes';
 
 const router = useRouter();
 const session = ref<Session | null>(null);
-const error = ref<string | null>(null);
+const loading = ref(true);
+const loadError = ref<string | null>(null);
+const actionError = ref<string | null>(null);
 const selectingRoleId = ref<string | null>(null);
 
 const hasCoordinatorScope = computed(() =>
@@ -36,34 +40,38 @@ const actionLabel = (role: ActiveRole): string => {
 };
 
 const load = async (): Promise<void> => {
+    loading.value = true;
+    loadError.value = null;
     try {
         session.value = await getSession();
         sessionState.replace(session.value);
         if (!session.value.user.email_verified) {
-            await router.replace('/verificar-correo');
+            await router.replace(paths.emailVerificationRequired);
             return;
         }
         if (session.value.active_role && !session.value.user.must_change_password) {
-            await router.replace(consumeIntendedRoute() ?? '/dashboard');
+            await router.replace(consumeIntendedRoute() ?? paths.dashboard);
         }
     } catch (reason) {
         if (reason instanceof ApiError && reason.status === 401) {
-            await router.replace('/login');
+            await router.replace(paths.login);
             return;
         }
-        error.value = 'No se pudo cargar su sesión.';
+        loadError.value = 'No se pudo cargar su sesión.';
+    } finally {
+        loading.value = false;
     }
 };
 
 const selectRole = async (roleAssignmentId: string): Promise<void> => {
-    error.value = null;
+    actionError.value = null;
     selectingRoleId.value = roleAssignmentId;
     try {
         session.value = await selectActiveRole(roleAssignmentId);
         sessionState.replace(session.value);
-        await router.replace(consumeIntendedRoute() ?? '/dashboard');
+        await router.replace(consumeIntendedRoute() ?? paths.dashboard);
     } catch (reason) {
-        error.value = reason instanceof ApiError
+        actionError.value = reason instanceof ApiError
             ? reason.message
             : 'No se pudo seleccionar el ámbito de trabajo.';
     } finally {
@@ -81,7 +89,7 @@ onMounted(load);
         :description="selectionDescription"
         size="wide"
     >
-        <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
+        <p v-if="actionError" class="text-sm text-destructive" role="alert">{{ actionError }}</p>
 
         <Alert v-if="session.available_roles.length === 0">
             <AlertTitle>No tiene asignaciones vigentes</AlertTitle>
@@ -117,6 +125,6 @@ onMounted(load);
             </Card>
         </div>
     </PageFrame>
-    <LoadingSkeleton v-else-if="!error" variant="detail" />
-    <p v-else class="p-6 text-sm text-destructive" role="alert">{{ error }}</p>
+    <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
+    <LoadingSkeleton v-else-if="loading" variant="detail" />
 </template>

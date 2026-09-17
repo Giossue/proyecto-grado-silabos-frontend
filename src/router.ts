@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from "vue-router";
 import { sessionState } from "@/state/session";
 import { rememberIntendedRoute } from "@/lib/intended-route";
+import { paths, roleHome as resolveRoleHome, roleSetting, type RoleCode } from "@/lib/routes";
 
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
@@ -34,16 +35,6 @@ const CoordinationReportsPage = () => import("@/pages/CoordinationReportsPage.vu
 const DocumentsPage = () => import("@/pages/DocumentsPage.vue");
 const NotFoundPage = () => import("@/pages/NotFoundPage.vue");
 
-type RoleCode = "administrador" | "coordinador" | "docente";
-
-const roleHomes: Record<RoleCode, string> = {
-  administrador: "/admin/panel",
-  coordinador: "/coordinacion/panel",
-  docente: "/docente/panel",
-};
-
-const roleHome = (code: RoleCode | undefined): string => code ? roleHomes[code] : "/";
-
 const replaceParams = (target: string, route: RouteLocationNormalized): string =>
   target.replace(/:([A-Za-z0-9_]+)/g, (_, key: string) => String(route.params[key] ?? ""));
 
@@ -51,6 +42,14 @@ const canonicalFromAlias = (route: RouteLocationNormalized, target: string) => (
   path: replaceParams(target, route),
   query: route.query,
 });
+
+const rememberProtectedDestination = (route: RouteLocationNormalized): void => {
+  if (route.path === paths.roleSelection || route.path === paths.emailVerificationRequired) return;
+  rememberIntendedRoute(
+    route.fullPath,
+    route.matched.some((record) => record.meta.requiresAuth === true),
+  );
+};
 
 export const router = createRouter({
   history: createWebHistory(),
@@ -158,42 +157,51 @@ router.beforeEach(async (to) => {
       }
       return true;
     }
-    if (!session.user.email_verified) return "/verificar-correo";
-    if (session.user.must_change_password || !session.active_role) return "/rol";
-    return roleHome(session.active_role.code);
+    if (!session.user.email_verified) return paths.emailVerificationRequired;
+    if (session.user.must_change_password || !session.active_role) return paths.roleSelection;
+    return resolveRoleHome(session.active_role.code);
   }
 
   if (to.meta.requiresAuth !== true) return true;
   if (!session) {
     rememberIntendedRoute(to.fullPath);
-    return "/login";
+    return paths.login;
   }
-  if (!session.user.email_verified && to.path !== "/verificar-correo") return "/verificar-correo";
-  if (session.user.email_verified && to.path === "/verificar-correo") return "/dashboard";
-  if (session.user.must_change_password && to.path !== "/rol") return "/rol";
+  if (!session.user.email_verified && to.path !== paths.emailVerificationRequired) {
+    rememberProtectedDestination(to);
+    return paths.emailVerificationRequired;
+  }
+  if (session.user.email_verified && to.path === paths.emailVerificationRequired) return paths.dashboard;
+  if (session.user.must_change_password && to.path !== paths.roleSelection) {
+    rememberProtectedDestination(to);
+    return paths.roleSelection;
+  }
   if (to.path === "/") return true;
-  if (!session.active_role) return "/rol";
+  if (!session.active_role) {
+    if (to.path === paths.roleSelection) return true;
+    rememberProtectedDestination(to);
+    return paths.roleSelection;
+  }
 
   const code = session.active_role.code;
   if (typeof to.meta.aliasTarget === "string") return canonicalFromAlias(to, to.meta.aliasTarget);
 
   if (typeof to.meta.shortcut === "string") {
-    const prefix = code === "administrador" ? "admin" : code;
     const destination = {
-      panel: roleHome(code),
-      notifications: `/${prefix}/notificaciones`,
-      profile: `/${prefix}/configuracion/perfil`,
-      security: `/${prefix}/configuracion/seguridad`,
-      appearance: `/${prefix}/configuracion/apariencia`,
-      documents: code === "administrador" ? "/admin/panel" : `/${prefix}/revisiones/${String(to.params.revision)}/documentos`,
-      sources: code === "coordinador" ? "/coordinacion/fuentes" : roleHome(code),
-      source: code === "coordinador" ? `/coordinacion/fuentes/${String(to.params.source)}` : roleHome(code),
+      panel: resolveRoleHome(code),
+      notifications: code === "administrador" ? paths.admin.notifications : code === "coordinador" ? paths.coordination.notifications : paths.teacher.notifications,
+      profile: roleSetting(code, 'profile'),
+      security: roleSetting(code, 'security'),
+      appearance: roleSetting(code, 'appearance'),
+      documents: code === "administrador" ? paths.admin.panel : code === "coordinador" ? paths.coordination.documents(String(to.params.revision)) : paths.teacher.documents(String(to.params.revision)),
+      sources: code === "coordinador" ? paths.coordination.sources : resolveRoleHome(code),
+      source: code === "coordinador" ? paths.coordination.source(String(to.params.source)) : resolveRoleHome(code),
     }[to.meta.shortcut];
     if (destination) return { path: destination, query: to.query };
   }
 
   const allowedRoles = to.meta.roles as RoleCode[] | undefined;
-  if (allowedRoles && !allowedRoles.includes(code)) return roleHome(code);
+  if (allowedRoles && !allowedRoles.includes(code)) return resolveRoleHome(code);
 
   return true;
 });

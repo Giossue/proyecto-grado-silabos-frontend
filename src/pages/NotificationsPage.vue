@@ -7,10 +7,12 @@ import TablePagination from '@/components/domain/TablePagination.vue';
 import { ExternalLink } from '@lucide/vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
+import { paths } from '@/lib/routes';
 
 const router = useRouter();
 const result = ref<NotificationsResponse | null>(null);
@@ -22,7 +24,7 @@ const pending = ref(false);
 const load = async (page = 1): Promise<void> => {
   loading.value = true; error.value = null;
   try { result.value = await getNotifications(status.value, page); } catch (reason) {
-    if (reason instanceof ApiError && reason.status === 401) { await router.replace('/login'); return; }
+    if (reason instanceof ApiError && reason.status === 401) { await router.replace(paths.login); return; }
     error.value = 'No se pudieron cargar las notificaciones.';
   } finally { loading.value = false; }
 };
@@ -42,7 +44,7 @@ onMounted(load);
   <PageFrame title="Notificaciones" description="Avisos de lo que va pasando con sus sílabos y sus documentos.">
     <template #actions><Button v-if="result?.unread_count" type="button" variant="outline" :disabled="pending" @click="readAll"><Spinner v-if="pending" />Marcar todas como leídas</Button></template>
     <nav class="flex gap-2" aria-label="Filtrar notificaciones"><Button :variant="status === 'all' ? 'default' : 'outline'" :disabled="pending" @click="status = 'all'; load()">Todas</Button><Button :variant="status === 'unread' ? 'default' : 'outline'" :disabled="pending" @click="status = 'unread'; load()">No leídas</Button></nav>
-    <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
+    <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-if="loading && !result" variant="detail" />
     <Card v-else-if="result"><CardContent class="space-y-3" aria-live="polite">
       <article v-for="notification in result.notifications.data" :key="notification.id" class="rounded-lg border p-4" :class="notification.leido_en === null ? 'bg-muted/40' : ''"><div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><h2 class="font-medium">{{ notification.titulo }}</h2><Badge v-if="notification.leido_en === null" variant="secondary">Nueva</Badge></div><p class="mt-1 text-sm">{{ notification.mensaje }}</p><p class="mt-2 text-xs text-muted-foreground">{{ formatDate(notification.notificado_en) }}</p></div><div class="flex shrink-0 flex-wrap gap-2"><Button v-if="!notification.leido_en" type="button" size="sm" variant="outline" :disabled="pending" @click="read(notification.id)">Marcar leída</Button><Button v-if="notification.resource_path" as-child size="sm"><RouterLink :to="notification.resource_path"><ExternalLink />Abrir expediente</RouterLink></Button></div></div></article>

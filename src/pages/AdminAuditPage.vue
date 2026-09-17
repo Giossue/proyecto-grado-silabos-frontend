@@ -9,12 +9,14 @@ import AuditTabs from '@/components/domain/AuditTabs.vue';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { paths } from '@/lib/routes';
 
 const router = useRouter();
 const data = ref<AuditPayload | null>(null);
@@ -28,7 +30,7 @@ const load = async (page = 1): Promise<void> => {
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'administrador') {
-      await router.replace('/dashboard');
+      await router.replace(paths.dashboard);
       return;
     }
     data.value = await getAuditEvents({
@@ -71,8 +73,8 @@ onMounted(() => { void load(); });
               </template>
             </FilterToolbar>
           </form>
-          <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
-          <LoadingSkeleton v-if="loading && !data" />
+          <LoadErrorState v-if="error" :message="error" @retry="load" />
+          <LoadingSkeleton v-else-if="loading && !data" />
           <template v-if="data">
             <Table><TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Actor y rol</TableHead><TableHead>Acción</TableHead><TableHead>Recurso</TableHead><TableHead>Resultado</TableHead><TableHead>Detalles seguros</TableHead></TableRow></TableHeader><TableBody>
               <TableRow v-for="event in data.events.data" :key="event.id"><TableCell class="text-xs whitespace-nowrap">{{ formatDate(event.occurred_at) }}</TableCell><TableCell><div>{{ event.actor }}</div><div class="text-xs text-muted-foreground">{{ [event.role, event.career].filter(Boolean).join(' · ') || 'Proceso del sistema' }}</div></TableCell><TableCell>{{ event.action }}</TableCell><TableCell>{{ event.resource }}</TableCell><TableCell><span :class="event.result === 'fallido' ? 'text-destructive' : ''">{{ event.result === 'fallido' ? 'Fallido' : 'Correcto' }}</span></TableCell><TableCell class="max-w-md"><dl v-if="event.details.length" class="flex flex-col gap-1 text-xs"><div v-for="detail in event.details" :key="detail.label" class="flex gap-1"><dt class="font-medium">{{ detail.label }}:</dt><dd class="break-words">{{ detailValue(detail.value) }}</dd></div></dl><span v-else class="text-xs text-muted-foreground">Sin detalles adicionales</span></TableCell></TableRow>

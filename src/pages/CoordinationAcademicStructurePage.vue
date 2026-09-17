@@ -14,6 +14,7 @@ import {
 import { getSession } from "@/api/session";
 import PageFrame from "@/components/domain/PageFrame.vue";
 import LoadingSkeleton from "@/components/domain/LoadingSkeleton.vue";
+import LoadErrorState from "@/components/domain/LoadErrorState.vue";
 import ManagedUserSheet from "@/components/domain/identity/ManagedUserSheet.vue";
 import CurriculumActions from "@/components/domain/academic/CurriculumActions.vue";
 import CurriculumCanvas from "@/components/domain/academic/curriculum/CurriculumCanvas.vue";
@@ -36,6 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { paths } from "@/lib/routes";
 
 const router = useRouter();
 const props = defineProps<{ mode: 'curriculum' | 'schedule' | 'teachers' }>();
@@ -55,7 +57,9 @@ const pageDescription = computed(() => {
 const curriculum = ref<Curriculum | null>(null);
 const schedule = ref<ScheduledSubjects | null>(null);
 const assignments = ref<TeacherAssignments | null>(null);
-const error = ref<string | null>(null);
+const loading = ref(true);
+const loadError = ref<string | null>(null);
+const actionError = ref<string | null>(null);
 const message = ref<string | null>(null);
 const teacherOpen = ref(false);
 const assignmentOpen = ref(false);
@@ -73,13 +77,15 @@ watch(activeMode, (mode) => {
 const openNewSubject = () => { selectedSubject.value = null; subjectOpen.value = true; };
 const openSubject = (subject: Curriculum['subjects'][number]) => { selectedSubject.value = subject; subjectOpen.value = true; };
 const load = async () => {
+  loading.value = true;
+  loadError.value = null;
   try {
     const session = await getSession();
     if (
       session.active_role?.code !== "coordinador" ||
       !session.active_role.career_id
     ) {
-      await router.replace("/dashboard");
+      await router.replace(paths.dashboard);
       return;
     }
     const [nextCurriculum, nextSchedule, nextAssignments] = await Promise.all([
@@ -91,18 +97,20 @@ const load = async () => {
     schedule.value = nextSchedule;
     assignments.value = nextAssignments;
   } catch (reason) {
-    error.value =
+    loadError.value =
       reason instanceof ApiError
         ? reason.message
         : "No se pudo cargar la estructura académica.";
+  } finally {
+    loading.value = false;
   }
 };
 const reloadSchedule = async (periodId?: string) => {
   try {
-    error.value = null;
+    actionError.value = null;
     schedule.value = await getScheduledSubjects(periodId);
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : "No se pudo actualizar la programación académica.";
+    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo actualizar la programación académica.";
   }
 };
 const handleScheduleChanged = async (notice: string) => {
@@ -111,10 +119,10 @@ const handleScheduleChanged = async (notice: string) => {
 };
 const reloadAssignments = async () => {
   try {
-    error.value = null;
+    actionError.value = null;
     assignments.value = await getTeacherAssignments();
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : "No se pudieron actualizar las asignaciones docentes.";
+    actionError.value = reason instanceof ApiError ? reason.message : "No se pudieron actualizar las asignaciones docentes.";
   }
 };
 const handleAssignmentChanged = async (notice: string) => {
@@ -125,10 +133,10 @@ const reloadCurriculum = async () => {
   try {
     const careerId = curriculum.value?.career.id;
     if (!careerId) return;
-    error.value = null;
+    actionError.value = null;
     curriculum.value = await getCurriculum(careerId);
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : "No se pudo actualizar la malla.";
+    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo actualizar la malla.";
   }
 };
 const handleCurriculumChanged = async (notice: string) => {
@@ -168,7 +176,7 @@ onMounted(() => {
       />
     </template>
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
-    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <template v-if="curriculum && schedule && assignments"
       >
       <template v-if="mode === 'curriculum'">
@@ -182,7 +190,7 @@ onMounted(() => {
             <Button v-if="curriculum.curriculum.editable && curriculum.subjects.length > 1" type="button" variant="outline" @click="requirementOpen = true"><Link2 data-icon="inline-start" aria-hidden="true" />Agregar relación</Button>
             <Button v-if="curriculum.curriculum.editable" type="button" @click="openNewSubject"><Plus data-icon="inline-start" aria-hidden="true" />Agregar materia</Button>
           </div>
-          <TabsContent value="breakdown" class="flex flex-col gap-6"><CurriculumFormView :data="curriculum" @edit="openSubject" @changed="handleCurriculumChanged" @failed="error = $event" /></TabsContent>
+          <TabsContent value="breakdown" class="flex flex-col gap-6"><CurriculumFormView :data="curriculum" @edit="openSubject" @changed="handleCurriculumChanged" @failed="actionError = $event" /></TabsContent>
           <TabsContent value="builder"><CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="organizationUnits" @changed="handleCurriculumChanged" /></TabsContent>
         </Tabs>
         <CurriculumSubjectSheet v-model:open="subjectOpen" :career="curriculum.career" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :subject="selectedSubject" :organization-units="organizationUnits" :modality-options="curriculum.modalityOptions" @saved="handleCurriculumChanged" />
@@ -197,13 +205,14 @@ onMounted(() => {
         :data="schedule"
         @period="reloadSchedule"
         @changed="handleScheduleChanged"
-        @failed="error = $event"
+        @failed="actionError = $event"
       />
       <Alert v-if="mode === 'teachers' && assignments.career.lock_reason"><AlertDescription>{{ assignments.career.lock_reason }}</AlertDescription></Alert>
       <TeacherAssignmentsPanel v-if="mode === 'teachers'" :data="assignments" @changed="handleAssignmentChanged" />
       </template
     >
-    <LoadingSkeleton v-else-if="!error" variant="academic" />
+    <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
+    <LoadingSkeleton v-else-if="loading" variant="academic" />
     <ManagedUserSheet
       v-if="mode === 'teachers'"
       v-model:open="teacherOpen"

@@ -3,11 +3,12 @@ import { Lock } from '@lucide/vue';
 import { computed } from 'vue';
 import { sessionState } from '@/state/session';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { paths } from '@/lib/routes';
 
 const props = defineProps<{ title: string; reason: string }>();
 const href = computed(() => sessionState.current.value?.active_role?.code === 'administrador'
-  ? '/admin/convocatorias'
-  : '/coordinacion/convocatorias');
+  ? paths.admin.convocations
+  : paths.coordination.convocations);
 const parts = computed(() => {
   const index = props.reason.indexOf('Convocatorias');
   return index === -1

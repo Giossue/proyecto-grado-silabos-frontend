@@ -10,6 +10,7 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
+import { paths } from '@/lib/routes';
 
 export type SetupStep = {
     key: string;
@@ -129,7 +130,7 @@ const percent = computed(() =>
                         size="sm"
                         class="shrink-0"
                     >
-                        <RouterLink :to="step.href ?? '/dashboard'">
+                        <RouterLink :to="step.href ?? paths.dashboard">
                             Ir
                             <ArrowRight
                                 data-icon="inline-end"

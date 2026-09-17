@@ -12,6 +12,7 @@ import { logout } from '@/api/session';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
 import { clearIntendedRoute } from '@/lib/intended-route';
+import { paths } from '@/lib/routes';
 
 withDefaults(defineProps<{ user: User; canSwitchScope?: boolean }>(), {
     canSwitchScope: false,
@@ -23,7 +24,7 @@ const handleLogout = async (): Promise<void> => {
     await logout();
     sessionState.clear();
     clearIntendedRoute();
-    await router.replace('/login');
+    await router.replace(paths.login);
 };
 </script>
 
@@ -40,7 +41,7 @@ const handleLogout = async (): Promise<void> => {
             Cambiar carrera o rol
         </DropdownMenuItem>
         <DropdownMenuItem :as-child="true">
-            <RouterLink class="block w-full cursor-pointer" to="/configuracion/perfil">
+            <RouterLink class="block w-full cursor-pointer" :to="paths.configuration.profile">
                 <Settings data-icon="inline-start" aria-hidden="true" />
                 Configuración
             </RouterLink>

@@ -8,10 +8,12 @@ import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { sessionState } from '@/state/session';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import FacultyLogoDialog from '@/components/domain/configuration/FacultyLogoDialog.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import StatTile from '@/components/domain/StatTile.vue';
+import { paths } from '@/lib/routes';
 
 const router = useRouter();
 const dashboard = ref<Dashboard | null>(null);
@@ -21,24 +23,24 @@ const facultyLogoOpen = ref(false);
 const role = computed(() => sessionState.current.value?.active_role);
 const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, completion: ListRestart, correction_requested: CircleAlert, teachers_pending: UsersRound };
 const setupRoutes: Record<string, string> = {
-  faculties: '/admin/estructura-academica',
-  campuses: '/admin/estructura-academica',
-  careers: '/admin/estructura-academica',
-  coordinators: '/admin/usuarios',
-  template: '/admin/plantilla',
-  process: '/admin/convocatorias',
-  curriculum: '/coordinacion/malla',
-  scheduled_subjects: '/coordinacion/materias-paralelos',
-  parallels: '/coordinacion/materias-paralelos',
-  teachers: '/coordinacion/asignaciones-docentes',
-  sources: '/coordinacion/fuentes',
-  convocation: '/coordinacion/convocatorias',
+  faculties: paths.admin.academic,
+  campuses: paths.admin.academic,
+  careers: paths.admin.academic,
+  coordinators: paths.admin.users,
+  template: paths.admin.template,
+  process: paths.admin.convocations,
+  curriculum: paths.coordination.curriculum,
+  scheduled_subjects: paths.coordination.scheduledSubjects,
+  parallels: paths.coordination.scheduledSubjects,
+  teachers: paths.coordination.teacherAssignments,
+  sources: paths.coordination.sources,
+  convocation: paths.coordination.convocations,
 };
 const setup = computed(() => dashboard.value?.setup ? {
   ...dashboard.value.setup,
   steps: dashboard.value.setup.steps.map((step) => ({
     ...step,
-    href: setupRoutes[step.key] ?? '/dashboard',
+    href: setupRoutes[step.key] ?? paths.dashboard,
   })),
 } : null);
 const handleSetupAction = (action: string) => {
@@ -46,24 +48,31 @@ const handleSetupAction = (action: string) => {
 };
 const handleLogoSaved = async (notice: string) => {
   message.value = notice;
-  dashboard.value = await getDashboard();
-};
-
-onMounted(async () => {
   try {
-    const session = await sessionState.load();
-    if (!session?.active_role || session.user.must_change_password) { await router.replace('/'); return; }
     dashboard.value = await getDashboard();
   } catch (reason) {
-    if (reason instanceof ApiError && reason.status === 401) { await router.replace('/login'); return; }
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo actualizar el panel de trabajo.';
+  }
+};
+
+const load = async (): Promise<void> => {
+  error.value = null;
+  try {
+    const session = await sessionState.load();
+    if (!session?.active_role || session.user.must_change_password) { await router.replace(paths.root); return; }
+    dashboard.value = await getDashboard();
+  } catch (reason) {
+    if (reason instanceof ApiError && reason.status === 401) { await router.replace(paths.login); return; }
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el panel de trabajo.';
   }
-});
+};
+
+onMounted(() => { void load(); });
 </script>
 <template>
   <PageFrame class="h-full flex-1" title="Panel de trabajo" :description="role?.career_name ?? 'Gestión institucional de Sílabos UEB'">
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
-    <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
+    <LoadErrorState v-if="error" :message="error" @retry="load" />
     <template v-else-if="dashboard">
       <SetupChecklist v-if="setup" :setup="setup" @action="handleSetupAction" />
       <div v-if="dashboard.metrics.length > 0" class="grid grid-cols-2 gap-4 xl:grid-cols-4 [&>*:last-child:nth-child(odd)]:col-span-2 xl:[&>*:last-child:nth-child(odd)]:col-span-1">

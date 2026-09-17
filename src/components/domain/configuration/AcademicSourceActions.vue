@@ -6,6 +6,7 @@ import type { Source } from '@/api/sources';
 import AcademicSourceEditSheet from '@/components/domain/configuration/AcademicSourceEditSheet.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { paths } from '@/lib/routes';
 
 defineProps<{ source: Source; locked: boolean }>();
 const router = useRouter();
@@ -15,7 +16,7 @@ const editOpen = ref(false);
 
 <template>
   <TableActionsMenu :label="`Acciones para ${source.name}`">
-    <DropdownMenuItem @select="router.push(`/coordinacion/fuentes/${source.id}`)"><Eye aria-hidden="true" />Ver fuente</DropdownMenuItem>
+    <DropdownMenuItem @select="router.push(paths.coordination.source(source.id))"><Eye aria-hidden="true" />Ver fuente</DropdownMenuItem>
     <DropdownMenuItem v-if="!locked" @select="editOpen = true"><Pencil aria-hidden="true" />Editar</DropdownMenuItem>
     <DropdownMenuItem v-else disabled><Lock aria-hidden="true" />Protegida durante la convocatoria</DropdownMenuItem>
   </TableActionsMenu>

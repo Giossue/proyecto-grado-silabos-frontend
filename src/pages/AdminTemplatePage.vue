@@ -9,11 +9,13 @@ import TemplateAppearanceSheet from '@/components/domain/configuration/TemplateA
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import type { TemplateAppearance, TemplateBuilderProps } from '@/types/configuration';
+import { paths } from '@/lib/routes';
 
 const router = useRouter();
 const payload = ref<TemplatePayload | null>(null);
@@ -21,7 +23,8 @@ const loading = ref(true);
 const creating = ref(false);
 const editing = ref(false);
 const appearanceOpen = ref(false);
-const error = ref<string | null>(null);
+const loadError = ref<string | null>(null);
+const actionError = ref<string | null>(null);
 const previewAppearance = ref<TemplateAppearance | null>(null);
 
 const builder = computed<TemplateBuilderProps | null>(() => {
@@ -56,16 +59,17 @@ watch(
 );
 
 const load = async (): Promise<void> => {
+    loading.value = true;
+    loadError.value = null;
     try {
         const session = await getSession();
         if (session.active_role?.code !== 'administrador') {
-            await router.replace('/dashboard');
+            await router.replace(paths.dashboard);
             return;
         }
         payload.value = await getTemplate();
-        error.value = null;
     } catch (reason) {
-        error.value = reason instanceof ApiError
+        loadError.value = reason instanceof ApiError
             ? reason.message
             : 'No se pudo cargar la plantilla.';
     } finally {
@@ -76,12 +80,12 @@ const load = async (): Promise<void> => {
 const create = async (): Promise<void> => {
     if (creating.value) return;
     creating.value = true;
-    error.value = null;
+    actionError.value = null;
     try {
         await createTemplate();
         await load();
     } catch (reason) {
-        error.value = reason instanceof ApiError
+        actionError.value = reason instanceof ApiError
             ? reason.message
             : 'No se pudo crear la plantilla.';
     } finally {
@@ -106,6 +110,14 @@ onBeforeUnmount(() => {
     <LoadingSkeleton v-if="loading" variant="document" />
 
     <PageFrame
+        v-else-if="loadError"
+        title="Plantilla de sílabo"
+        description="Hoja base de la plantilla institucional."
+    >
+        <LoadErrorState :message="loadError" @retry="load" />
+    </PageFrame>
+
+    <PageFrame
         v-else-if="!payload?.template"
         title="Plantilla de sílabo"
         description="El formato del sílabo: qué campos tiene y en qué orden. Se edita en el sitio; cada sílabo entregado conserva su propia copia."
@@ -118,7 +130,7 @@ onBeforeUnmount(() => {
             </Button>
         </template>
 
-        <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+        <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
         <Empty class="min-h-60 gap-3 border-0 p-6 md:p-10">
             <EmptyHeader class="gap-3">
                 <EmptyMedia variant="icon" class="text-muted-foreground"><Inbox aria-hidden="true" /></EmptyMedia>
@@ -178,7 +190,7 @@ onBeforeUnmount(() => {
             </Button>
         </template>
 
-        <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+        <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
         <ProcessLockAlert v-if="builder.processLock" title="Plantilla protegida durante el proceso" :reason="builder.processLock" />
         <TemplateVisualBuilder
             :template="builder.template"

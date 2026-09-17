@@ -34,6 +34,7 @@ import { Spinner } from '@/components/ui/spinner';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
 import type { TableRowData } from '@/lib/tableLayout';
+import { paths } from '@/lib/routes';
 
 const route = useRoute();
 const router = useRouter();
@@ -91,11 +92,11 @@ const load = async (): Promise<void> => {
     error.value = null;
   } catch (reason) {
     if (reason instanceof ApiError && reason.status === 401) {
-      await router.replace("/login");
+      await router.replace(paths.login);
       return;
     }
     if (reason instanceof ApiError && reason.status === 404) {
-      await router.replace("/docente/mis-silabos");
+      await router.replace(paths.teacher.syllabi);
       return;
     }
     error.value = reason instanceof ApiError ? reason.message : "No se pudo cargar el sílabo.";

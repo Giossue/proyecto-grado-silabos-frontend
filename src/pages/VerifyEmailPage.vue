@@ -9,6 +9,7 @@ import { Spinner } from '@/components/ui/spinner';
 import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
 import { sessionState } from '@/state/session';
 import { clearIntendedRoute } from '@/lib/intended-route';
+import { paths } from '@/lib/routes';
 
 const route = useRoute();
 const router = useRouter();
@@ -56,7 +57,7 @@ const closeSession = async (): Promise<void> => {
     await logout();
     sessionState.clear();
     clearIntendedRoute();
-    await router.replace('/login');
+    await router.replace(paths.login);
 };
 
 onMounted(() => {
@@ -79,7 +80,7 @@ onMounted(() => {
                     <Spinner />
                     Verificando correo…
                 </p>
-                <Button as-child><RouterLink to="/login">Iniciar sesión</RouterLink></Button>
+                <Button as-child><RouterLink :to="paths.login">Iniciar sesión</RouterLink></Button>
             </div>
         </template>
 

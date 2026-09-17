@@ -21,6 +21,8 @@ describe('ruta intended', () => {
     expect(isValidIntendedRoute('//example.com')).toBe(false);
     expect(isValidIntendedRoute('/ingresar')).toBe(false);
     expect(isValidIntendedRoute('/admin/usuarios')).toBe(true);
+    expect(isValidIntendedRoute('/ruta-desconocida')).toBe(false);
+    expect(isValidIntendedRoute('/')).toBe(false);
     rememberIntendedRoute('/ruta-desconocida', false);
     expect(consumeIntendedRoute()).toBeNull();
   });

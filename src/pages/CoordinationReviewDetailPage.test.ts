@@ -1,5 +1,6 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ApiError } from "@/api/client";
 import {
   addObservation,
   approveReview,
@@ -201,6 +202,23 @@ describe("CoordinationReviewDetailPage", () => {
       observation_ids: ["observation-1"],
       justification: "Debe precisar el resultado observado.",
     });
+    wrapper.unmount();
+  });
+
+  it("distingue un fallo inicial de carga y permite reintentar", async () => {
+    vi.mocked(getReview).mockRejectedValueOnce(new ApiError("Revisión no disponible.", 503));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Revisión no disponible.");
+    expect(wrapper.text()).toContain("Reintentar");
+
+    vi.mocked(getReview).mockResolvedValueOnce(detail());
+    await wrapper.get("button").trigger("click");
+    await flushPromises();
+
+    expect(getReview).toHaveBeenCalledTimes(2);
+    expect(wrapper.text()).toContain("Contenido enviado");
     wrapper.unmount();
   });
 });

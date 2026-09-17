@@ -12,6 +12,7 @@ import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { paths } from '@/lib/routes';
 
 type Transition = 'iniciar' | 'abrir' | 'pausar' | 'reanudar';
 const props = defineProps<{ convocation: ConvocationItem; availableSources: Array<{ id: string; name: string }> }>();
@@ -69,7 +70,7 @@ const submit = async (): Promise<void> => {
 <template>
   <TableActionsMenu :label="`Acciones para ${convocation.name}`">
     <DropdownMenuItem v-if="convocation.id === null" :disabled="convocation.process_state !== 'abierto'" @select="select('iniciar')"><Play aria-hidden="true" />Iniciar</DropdownMenuItem>
-    <DropdownMenuItem v-if="convocation.id !== null" @select="router.push(`/coordinacion/convocatorias/${convocation.id}`)"><Eye aria-hidden="true" />Ver seguimiento</DropdownMenuItem>
+    <DropdownMenuItem v-if="convocation.id !== null" @select="router.push(paths.coordination.convocation(convocation.id))"><Eye aria-hidden="true" />Ver seguimiento</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'preparacion'" :disabled="convocation.process_state !== 'abierto'" @select="select('abrir')"><Play aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'abierta'" @select="select('pausar')"><Pause aria-hidden="true" />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'pausada'" :disabled="convocation.process_state !== 'abierto'" @select="select('reanudar')"><Play aria-hidden="true" />Reanudar</DropdownMenuItem>

@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { paths } from '@/lib/routes';
 
 const props = defineProps<{ active: 'jobs' | 'activity' }>();
 const router = useRouter();
 
 const navigate = (value: string | number): void => {
   if (value === props.active) return;
-  void router.push(value === 'jobs' ? '/admin/procesos' : '/admin/auditoria');
+  void router.push(value === 'jobs' ? paths.admin.processes : paths.admin.audit);
 };
 </script>
 

@@ -14,6 +14,8 @@ import {
 } from '@/api/reviews';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import IdentificationCard from '@/components/domain/syllabus/IdentificationCard.vue';
 import ReviewObservationSheet from '@/components/domain/syllabus/ReviewObservationSheet.vue';
 import SyllabusResetDialog from '@/components/domain/syllabus/SyllabusResetDialog.vue';
@@ -29,13 +31,15 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { PlanningExpectations, TableRowData } from '@/lib/tableLayout';
 import type { DocumentField } from '@/lib/templateDocument';
+import { paths } from '@/lib/routes';
 
 const route = useRoute();
 const data = ref<ReviewDetail | null>(null);
 const loading = ref(true);
 const processing = ref(false);
 const message = ref('');
-const error = ref('');
+const loadError = ref('');
+const actionError = ref('');
 const errors = ref<Record<string, string[]>>({});
 const selectedObservationIds = ref<string[]>([]);
 const correctionJustification = ref('');
@@ -43,11 +47,11 @@ const reopeningCause = ref('');
 
 const load = async (): Promise<void> => {
   loading.value = true;
-  error.value = '';
+  loadError.value = '';
   try {
     data.value = await getReview(String(route.params.revision));
   } catch (failure) {
-    error.value = failure instanceof ApiError ? failure.message : 'No se pudo cargar la revisión.';
+    loadError.value = failure instanceof ApiError ? failure.message : 'No se pudo cargar la revisión.';
   } finally {
     loading.value = false;
   }
@@ -60,7 +64,7 @@ const changed = async (value: string): Promise<void> => {
 
 const run = async (action: () => Promise<{ message: string }>): Promise<void> => {
   processing.value = true;
-  error.value = '';
+  actionError.value = '';
   errors.value = {};
   try {
     const result = await action();
@@ -68,10 +72,10 @@ const run = async (action: () => Promise<{ message: string }>): Promise<void> =>
     await load();
   } catch (failure) {
     if (failure instanceof ApiError) {
-      error.value = failure.message;
+      actionError.value = failure.message;
       errors.value = failure.errors;
     } else {
-      error.value = 'No se pudo completar la acción.';
+      actionError.value = 'No se pudo completar la acción.';
     }
   } finally {
     processing.value = false;
@@ -120,8 +124,8 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame v-if="data" :title="data.syllabus.subject" :description="`${data.syllabus.code} · ${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
-    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink to="/coordinacion/revisiones">← Volver a la cola</RouterLink></Button></template>
+  <PageFrame v-if="data && !loadError" :title="data.syllabus.subject" :description="`${data.syllabus.code} · ${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
+    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.coordination.reviews">← Volver a la cola</RouterLink></Button></template>
     <template #meta>
       <Badge variant="secondary">Revisión {{ data.revision.number }}</Badge>
       <Badge variant="outline">{{ stateLabel(data.syllabus.state) }}</Badge>
@@ -133,7 +137,7 @@ onMounted(load);
     </template>
 
     <Alert v-if="message"><AlertTitle>Acción completada</AlertTitle><AlertDescription>{{ message }}</AlertDescription></Alert>
-    <Alert v-if="error" variant="destructive"><AlertTitle>No se pudo completar la operación</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo completar la operación</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <Alert v-if="!data.revision.is_current"><LockKeyhole aria-hidden="true" /><AlertTitle>Está consultando una revisión histórica</AlertTitle><AlertDescription>Esta revisión se conserva tal como fue enviada. Las acciones del flujo solo están disponibles en la revisión vigente.</AlertDescription></Alert>
     <Alert v-if="data.correction_request"><Undo2 aria-hidden="true" /><AlertTitle>Corrección solicitada en esta revisión</AlertTitle><AlertDescription>{{ data.correction_request.justification }}</AlertDescription></Alert>
     <Alert v-if="data.reopening"><RotateCcw aria-hidden="true" /><AlertTitle>El expediente tuvo una reapertura</AlertTitle><AlertDescription>{{ data.reopening.cause }} · {{ data.reopening.reopened_by }} · {{ new Date(data.reopening.reopened_at).toLocaleString('es-EC') }}. La aprobación anterior se conserva.</AlertDescription></Alert>
@@ -191,9 +195,10 @@ onMounted(load);
 
         <Card v-if="data.revision.is_current && data.syllabus.state === 'aprobado'"><CardHeader><CardTitle>Reabrir aprobado</CardTitle><CardDescription>Conserva esta aprobación y crea una nueva línea de corrección para el docente.</CardDescription></CardHeader><CardContent><form class="space-y-4" @submit.prevent="run(() => reopenSyllabus(data!.syllabus.id, reopeningCause))"><Field><FieldLabel for="reopening-cause" required>Causa de reapertura</FieldLabel><Textarea id="reopening-cause" v-model="reopeningCause" rows="4" required /><FieldError :errors="errors.cause" /></Field><Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><RotateCcw v-else aria-hidden="true" />Reabrir conservando la aprobación</Button></form></CardContent></Card>
 
-        <Card><CardHeader><CardTitle>Historial de revisiones</CardTitle><CardDescription>Consulte o compare revisiones enviadas.</CardDescription></CardHeader><CardContent><ol class="space-y-3"><li v-for="(item, index) in data.history" :key="item.id" class="rounded-md border p-3 text-sm"><div class="flex items-center justify-between gap-3"><Button as-child variant="link" class="h-auto p-0"><RouterLink :to="`/coordinacion/revisiones/${item.id}`">Revisión {{ item.number }}</RouterLink></Button><Badge v-if="item.approved_at" variant="secondary">Aprobada</Badge></div><div class="text-muted-foreground">{{ item.submitted_by }} · {{ new Date(item.submitted_at).toLocaleDateString('es-EC') }}</div><div class="mt-2 flex flex-wrap gap-2"><Button v-if="item.approved_at" as-child size="sm" variant="outline"><RouterLink :to="`/revisiones/${item.id}/documentos`">Documentos</RouterLink></Button><Button v-if="index > 0" as-child size="sm" variant="outline"><RouterLink :to="`/coordinacion/revisiones/${data.history[index - 1]!.id}/comparar/${item.id}`">Comparar con la anterior</RouterLink></Button></div></li></ol></CardContent></Card>
+        <Card><CardHeader><CardTitle>Historial de revisiones</CardTitle><CardDescription>Consulte o compare revisiones enviadas.</CardDescription></CardHeader><CardContent><ol class="space-y-3"><li v-for="(item, index) in data.history" :key="item.id" class="rounded-md border p-3 text-sm"><div class="flex items-center justify-between gap-3"><Button as-child variant="link" class="h-auto p-0"><RouterLink :to="paths.coordination.review(item.id)">Revisión {{ item.number }}</RouterLink></Button><Badge v-if="item.approved_at" variant="secondary">Aprobada</Badge></div><div class="text-muted-foreground">{{ item.submitted_by }} · {{ new Date(item.submitted_at).toLocaleDateString('es-EC') }}</div><div class="mt-2 flex flex-wrap gap-2"><Button v-if="item.approved_at" as-child size="sm" variant="outline"><RouterLink :to="paths.documents(item.id)">Documentos</RouterLink></Button><Button v-if="index > 0" as-child size="sm" variant="outline"><RouterLink :to="paths.coordination.comparison(data.history[index - 1]!.id, item.id)">Comparar con la anterior</RouterLink></Button></div></li></ol></CardContent></Card>
       </aside>
     </div>
   </PageFrame>
-  <div v-else class="p-6"><Spinner v-if="loading" /><Alert v-else variant="destructive"><AlertTitle>No se pudo cargar la revisión</AlertTitle><AlertDescription>{{ error }}</AlertDescription></Alert></div>
+  <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
+  <LoadingSkeleton v-else-if="loading" variant="document" />
 </template>

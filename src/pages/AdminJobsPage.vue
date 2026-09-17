@@ -9,6 +9,7 @@ import AuditTabs from '@/components/domain/AuditTabs.vue';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { paths } from '@/lib/routes';
 
 type Execution = JobsPayload['executions']['data'][number];
 const router = useRouter();
@@ -27,17 +29,18 @@ const data = ref<JobsPayload | null>(null);
 const loading = ref(true);
 const retryingId = ref<string | null>(null);
 const retryCandidate = ref<Execution | null>(null);
-const error = ref<string | null>(null);
+const loadError = ref<string | null>(null);
+const actionError = ref<string | null>(null);
 const message = ref<string | null>(null);
 const filters = reactive({ q: '', status: 'all', type: 'all', queue: 'all' });
 
 const load = async (page = 1): Promise<void> => {
   loading.value = true;
-  error.value = null;
+  loadError.value = null;
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'administrador') {
-      await router.replace('/dashboard');
+      await router.replace(paths.dashboard);
       return;
     }
     data.value = await getJobExecutions({
@@ -48,7 +51,7 @@ const load = async (page = 1): Promise<void> => {
       page: String(page),
     });
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los trabajos.';
+    loadError.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los trabajos.';
   } finally {
     loading.value = false;
   }
@@ -61,13 +64,13 @@ const retry = async (): Promise<void> => {
   if (!retryCandidate.value) return;
   const id = retryCandidate.value.id;
   retryingId.value = id;
-  error.value = null;
+  actionError.value = null;
   try {
     message.value = (await retryJobExecution(id)).message;
     retryCandidate.value = null;
     await load();
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo reintentar el trabajo.';
+    actionError.value = reason instanceof ApiError ? reason.message : 'No se pudo reintentar el trabajo.';
   } finally {
     retryingId.value = null;
   }
@@ -80,8 +83,10 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Auditoría" description="Lo que el sistema hace por detrás: correos, documentos y análisis. Aquí se ve qué terminó y qué falló.">
-    <p v-if="message" class="text-sm" role="status">{{ message }}</p><p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p><LoadingSkeleton v-if="loading && !data" />
-    <AuditTabs active="jobs"><Card><CardContent class="flex flex-col gap-4">
+    <p v-if="message" class="text-sm" role="status">{{ message }}</p><p v-if="actionError" class="text-sm text-destructive" role="alert">{{ actionError }}</p>
+    <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
+    <LoadingSkeleton v-else-if="loading && !data" />
+    <AuditTabs v-else-if="data" active="jobs"><Card><CardContent class="flex flex-col gap-4">
       <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters"><template #search><Field><FieldLabel for="jobs-search" class="sr-only">Buscar procesos</FieldLabel><Input id="jobs-search" v-model="filters.q" type="search" placeholder="Buscar por proceso o cola" /></Field></template><template #filters>
         <Field><FieldLabel for="jobs-status" class="sr-only">Estado</FieldLabel><Select v-model="filters.status"><SelectTrigger id="jobs-status"><SelectValue /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="pendiente">En cola</SelectItem><SelectItem value="en_ejecucion">En ejecución</SelectItem><SelectItem value="completada">Completado</SelectItem><SelectItem value="fallida">Fallido</SelectItem></SelectGroup></SelectContent></Select></Field>
         <Field><FieldLabel for="jobs-type" class="sr-only">Tipo</FieldLabel><Select v-model="filters.type"><SelectTrigger id="jobs-type"><SelectValue placeholder="Todos los tipos" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los tipos</SelectItem><SelectItem v-for="option in data?.type_options" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent></Select></Field>

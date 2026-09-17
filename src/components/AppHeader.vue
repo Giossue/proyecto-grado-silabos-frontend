@@ -14,6 +14,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
 import { getInitials } from '@/composables/useInitials';
 import { toUrl } from '@/lib/utils';
+import { paths } from '@/lib/routes';
 import { sessionState } from '@/state/session';
 import type { BreadcrumbItem, NavItem, User } from '@/types';
 
@@ -30,7 +31,7 @@ const user = computed<User>(() => ({
 }));
 const { isCurrentUrl, whenCurrentUrl } = useCurrentUrl();
 const activeItemStyles = 'text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100';
-const mainNavItems: NavItem[] = [{ title: 'Panel', href: '/dashboard', icon: LayoutGrid }];
+const mainNavItems: NavItem[] = [{ title: 'Panel', href: paths.dashboard, icon: LayoutGrid }];
 const rightNavItems: NavItem[] = [
     { title: 'Repositorio', href: 'https://github.com/Giossue/proyecto-grado-silabos', icon: Folder },
     { title: 'Documentación', href: 'https://laravel.com/docs', icon: BookOpen },
@@ -61,7 +62,7 @@ const rightNavItems: NavItem[] = [
                     </Sheet>
                 </div>
 
-                <RouterLink to="/dashboard" class="flex items-center gap-x-2"><AppLogo /></RouterLink>
+                <RouterLink :to="paths.dashboard" class="flex items-center gap-x-2"><AppLogo /></RouterLink>
                 <div class="hidden h-full lg:flex lg:flex-1">
                     <NavigationMenu class="ml-10 flex h-full items-stretch">
                         <NavigationMenuList class="flex h-full items-stretch space-x-2">

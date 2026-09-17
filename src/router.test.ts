@@ -39,6 +39,15 @@ describe('navegación por ámbito activo', () => {
     expect(consumeIntendedRoute()).toBe('/admin/usuarios');
   });
 
+  it('no conserva redirecciones externas ni rutas desconocidas', async () => {
+    sessionState.clear();
+    await router.push('/ingresar?redirect=https://example.com');
+    expect(consumeIntendedRoute()).toBeNull();
+
+    await router.push('/ingresar?redirect=/ruta-desconocida');
+    expect(consumeIntendedRoute()).toBeNull();
+  });
+
   it('envía la raíz pública al login canónico', async () => {
     sessionState.clear();
     await router.push('/');
@@ -67,6 +76,14 @@ describe('navegación por ámbito activo', () => {
     expect(router.currentRoute.value.fullPath).toBe('/docente/configuracion/perfil');
   });
 
+  it('conserva el destino hasta que se elige un ámbito', async () => {
+    sessionState.replace({ ...session('docente'), active_role: null });
+    await router.push('/coordinacion/revisiones/revision-1');
+
+    expect(router.currentRoute.value.fullPath).toBe('/rol');
+    expect(consumeIntendedRoute()).toBe('/coordinacion/revisiones/revision-1');
+  });
+
   it('recupera una URL administrativa del historial según el rol real', async () => {
     sessionState.replace(session('docente'));
     await router.push('/admin/usuarios');
@@ -93,5 +110,31 @@ describe('navegación por ámbito activo', () => {
     expect(router.currentRoute.value.path).toBe('/login');
     expect(router.currentRoute.value.query.redirect).toBeUndefined();
     expect(consumeIntendedRoute()).toBe('/admin/usuarios');
+  });
+
+  it.each([
+    ['administrador', '/admin/usuarios', '/admin/usuarios'],
+    ['coordinador', '/coordinacion/fuentes', '/coordinacion/fuentes'],
+    ['docente', '/docente/mis-silabos', '/docente/mis-silabos'],
+  ] as const)('permite la ruta propia de %s y conserva sus parámetros', async (code, target, expected) => {
+    sessionState.replace(session(code));
+    await router.push(`${target}?pagina=2&orden=asc`);
+
+    expect(router.currentRoute.value.fullPath).toBe(`${expected}?pagina=2&orden=asc`);
+  });
+
+  it.each([
+    ['administrador', '/coordinacion/fuentes'],
+    ['coordinador', '/admin/usuarios'],
+    ['docente', '/admin/plantilla'],
+  ] as const)('redirige una ruta de otro rol al panel de %s', async (code, target) => {
+    sessionState.replace(session(code));
+    await router.push(target);
+
+    expect(router.currentRoute.value.fullPath).toBe(code === 'administrador'
+      ? '/admin/panel'
+      : code === 'coordinador'
+        ? '/coordinacion/panel'
+        : '/docente/panel');
   });
 });

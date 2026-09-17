@@ -11,6 +11,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { getNotifications } from '@/api/notifications';
 import { saysTheSame } from '@/composables/usePageBreadcrumbs';
+import { paths } from '@/lib/routes';
 import type { BreadcrumbItem } from '@/types';
 
 const props = withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTitle?: string }>(), {
@@ -25,7 +26,7 @@ const trail = computed<BreadcrumbItem[]>(() => {
         ? props.breadcrumbs
         : [...props.breadcrumbs, { title: props.pageTitle }];
 });
-const isNotificationsPage = computed(() => route.path.endsWith('/notificaciones') || route.path === '/notificaciones');
+const isNotificationsPage = computed(() => route.path.endsWith('/notificaciones') || route.path === paths.notifications);
 
 onMounted(async () => {
     try {
@@ -56,7 +57,7 @@ onMounted(async () => {
                         aria-label="Notificaciones"
                         :aria-current="isNotificationsPage ? 'page' : undefined"
                     >
-                        <RouterLink to="/notificaciones">
+                        <RouterLink :to="paths.notifications">
                             <Bell data-icon="inline-start" aria-hidden="true" />
                             <Badge v-if="unreadCount > 0" as="span" class="absolute -top-1 -right-1 min-w-5 px-1" aria-hidden="true">
                                 {{ unreadCount > 99 ? '99+' : unreadCount }}

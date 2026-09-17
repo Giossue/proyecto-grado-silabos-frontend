@@ -28,49 +28,50 @@ import {
     useSidebar,
 } from '@/components/ui/sidebar';
 import { sessionState } from '@/state/session';
+import { paths } from '@/lib/routes';
 import type { NavItem } from '@/types';
 
 const route = useRoute();
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
 const mainNavItems = computed<NavItem[]>(() => [
-    { title: 'Panel', href: '/dashboard', icon: LayoutGrid },
+    { title: 'Panel', href: paths.dashboard, icon: LayoutGrid },
     ...(activeRole.value?.code === 'administrador'
         ? [
-              { title: 'Convocatorias', href: '/admin/convocatorias', icon: CalendarRange },
-              { title: 'Usuarios y roles', href: '/admin/usuarios', icon: UsersRound },
+              { title: 'Convocatorias', href: paths.admin.convocations, icon: CalendarRange },
+              { title: 'Usuarios y roles', href: paths.admin.users, icon: UsersRound },
               {
                   title: 'Estructura académica',
-                  href: '/admin/estructura-academica',
+                  href: paths.admin.academic,
                   icon: Building2,
                   items: [
-                      { title: 'Facultades', href: '/admin/estructura-academica?seccion=facultad' },
-                      { title: 'Campus', href: '/admin/estructura-academica?seccion=campus' },
-                      { title: 'Carreras', href: '/admin/estructura-academica?seccion=carrera' },
-                      { title: 'Periodos académicos', href: '/admin/estructura-academica?seccion=periodo' },
+                      { title: 'Facultades', href: paths.admin.academicWithSection('facultad') },
+                      { title: 'Campus', href: paths.admin.academicWithSection('campus') },
+                      { title: 'Carreras', href: paths.admin.academicWithSection('carrera') },
+                      { title: 'Periodos académicos', href: paths.admin.academicWithSection('periodo') },
                   ],
               },
-              { title: 'Plantilla', href: '/admin/plantilla', icon: FileStack },
+              { title: 'Plantilla', href: paths.admin.template, icon: FileStack },
               {
                   title: 'Auditoría',
-                  href: '/admin/auditoria',
+                  href: paths.admin.audit,
                   icon: ScrollText,
-                  isActive: route.path === '/admin/procesos',
+                  isActive: route.path === paths.admin.processes,
               },
           ]
         : []),
     ...(activeRole.value?.code === 'coordinador'
         ? [
-              { title: 'Convocatorias', href: '/coordinacion/convocatorias', icon: CalendarRange },
-              { title: 'Revisión', href: '/coordinacion/revisiones', icon: ClipboardCheck },
-              { title: 'Asignación docente', href: '/coordinacion/asignaciones-docentes', icon: UsersRound },
-              { title: 'Materias y paralelos', href: '/coordinacion/materias-paralelos', icon: Building2 },
-              { title: 'Malla', href: '/coordinacion/malla', icon: BookOpenCheck },
-              { title: 'Fuentes académicas', href: '/coordinacion/fuentes', icon: LibraryBig },
-              { title: 'Informes', href: '/coordinacion/informes', icon: ChartNoAxesCombined },
+              { title: 'Convocatorias', href: paths.coordination.convocations, icon: CalendarRange },
+              { title: 'Revisión', href: paths.coordination.reviews, icon: ClipboardCheck },
+              { title: 'Asignación docente', href: paths.coordination.teacherAssignments, icon: UsersRound },
+              { title: 'Materias y paralelos', href: paths.coordination.scheduledSubjects, icon: Building2 },
+              { title: 'Malla', href: paths.coordination.curriculum, icon: BookOpenCheck },
+              { title: 'Fuentes académicas', href: paths.coordination.sources, icon: LibraryBig },
+              { title: 'Informes', href: paths.coordination.reports, icon: ChartNoAxesCombined },
           ]
         : []),
     ...(activeRole.value?.code === 'docente'
-        ? [{ title: 'Mis sílabos', href: '/docente/mis-silabos', icon: BookOpenCheck }]
+        ? [{ title: 'Mis sílabos', href: paths.teacher.syllabi, icon: BookOpenCheck }]
         : []),
 ]);
 const footerNavItems: NavItem[] = [];
@@ -87,7 +88,7 @@ watch(() => route.fullPath, () => {
             <SidebarMenu>
                 <SidebarMenuItem>
                     <SidebarMenuButton size="lg" as-child>
-                        <RouterLink to="/dashboard"><AppLogo /></RouterLink>
+                        <RouterLink :to="paths.dashboard"><AppLogo /></RouterLink>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>

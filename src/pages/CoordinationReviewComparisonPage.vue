@@ -4,10 +4,12 @@ import { useRoute } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { compareReviews, type ReviewComparison } from '@/api/reviews';
 import PageFrame from '@/components/domain/PageFrame.vue';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { paths } from '@/lib/routes';
 
 const route = useRoute();
 const data = ref<ReviewComparison | null>(null);
@@ -24,11 +26,15 @@ const formatSide = (side: ChangeSide): string => {
   return String(side.value);
 };
 
-onMounted(async () => {
+const load = async (): Promise<void> => {
+  loading.value = true;
+  error.value = null;
   try { data.value = await compareReviews(String(route.params.before), String(route.params.after)); }
   catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo comparar las revisiones.'; }
   finally { loading.value = false; }
-});
+};
+
+onMounted(() => { void load(); });
 </script>
 
 <template>
@@ -36,11 +42,11 @@ onMounted(async () => {
     title="Comparar revisiones"
     :description="data ? `${data.syllabus.subject} · ${data.syllabus.code} · ${data.syllabus.period}` : 'Contenido enviado en dos revisiones del expediente.'"
   >
-    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="`/coordinacion/revisiones/${String(route.params.after)}`">← Volver al expediente</RouterLink></Button></template>
+    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.coordination.review(String(route.params.after))">← Volver al expediente</RouterLink></Button></template>
     <template v-if="data" #meta><Badge variant="secondary">{{ data.comparison.changed_fields }} campo(s) con cambios</Badge></template>
 
-    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-    <p v-if="loading" class="text-sm text-muted-foreground" role="status">Comparando revisiones…</p>
+    <LoadErrorState v-if="error" :message="error" @retry="load" />
+    <LoadingSkeleton v-if="loading && !data" variant="detail" />
 
     <template v-if="data">
       <Card><CardHeader><CardTitle>Revisión {{ data.comparison.before_revision }} → revisión {{ data.comparison.after_revision }}</CardTitle><CardDescription>La comparación muestra el contenido enviado en dos revisiones del mismo expediente.</CardDescription></CardHeader></Card>

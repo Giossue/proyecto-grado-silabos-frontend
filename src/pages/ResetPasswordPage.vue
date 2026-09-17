@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
+import { paths } from '@/lib/routes';
 
 const route = useRoute();
 const router = useRouter();
@@ -33,7 +34,7 @@ const submit = async (): Promise<void> => {
     const result = await resetForgottenPassword(email.value, token.value, password.value, passwordConfirmation.value);
     password.value = '';
     passwordConfirmation.value = '';
-    await router.replace({ path: '/login', query: { status: result.message } });
+    await router.replace({ path: paths.login, query: { status: result.message } });
   } catch (reason) {
     if (reason instanceof ApiError) {
       errors.value = reason.errors;

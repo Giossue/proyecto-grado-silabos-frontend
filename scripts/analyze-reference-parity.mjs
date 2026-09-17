@@ -62,6 +62,10 @@ const visibleLoadingReferences = spaPageFiles.filter((file) => {
 });
 const loadingStateReferences = spaPageFiles.filter((file) =>
   /loading\.value|loading\s*=\s*ref/.test(read(join(projectRoot, 'src/pages', file))));
+const loadErrorStateReferences = spaPageFiles.filter((file) =>
+  /LoadErrorState/.test(read(join(projectRoot, 'src/pages', file))));
+const asyncPagesWithoutLoadError = loadingStateReferences.filter((file) =>
+  !loadErrorStateReferences.includes(file));
 const monolithHasVisibleLoading = />\s*Cargando(?:…|\.\.\.)?\s*</i.test(
   monolithPageFiles.map(referencePageFile).join('\n'),
 );
@@ -112,6 +116,8 @@ lines.push(section('Carga', [
   `- El monolito contiene texto visible de carga: **${monolithHasVisibleLoading ? 'sí' : 'no'}**.`,
   `- Páginas SPA con texto visible “Cargando…”: **${visibleLoadingReferences.length}**.`,
   `- Páginas SPA con estado asíncrono de carga: **${loadingStateReferences.length}** (esto no implica que muestren texto suelto).`,
+  `- Páginas SPA con estado reutilizable de error: **${loadErrorStateReferences.length}**.`,
+  `- Páginas asíncronas sin estado reutilizable de error: **${asyncPagesWithoutLoadError.length}**${asyncPagesWithoutLoadError.length ? ` (${asyncPagesWithoutLoadError.join(', ')})` : ''}.`,
   '- El skeleton técnico puede conservarse como diferencia permitida de transporte; vacío, error y reintento deben permanecer diferenciados.',
 ].join('\n')));
 
@@ -148,5 +154,6 @@ const hardFailures = [
   ...missingPageMappings,
   ...missingCanonicalRoutes,
   ...undeclaredSpaRoutes,
+  ...asyncPagesWithoutLoadError.map((file) => `${file}: página asíncrona sin LoadErrorState`),
 ];
 if (hardFailures.length > 0) process.exitCode = 1;

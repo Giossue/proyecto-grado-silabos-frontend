@@ -94,6 +94,10 @@ export const allowedExtraComponents = [
     path: 'components/domain/LoadingSkeleton.vue',
     justification: 'Estado técnico de carga para la frontera API; conserva la geometría de cada superficie sin inventar contenido de producto.',
   },
+  {
+    path: 'components/domain/LoadErrorState.vue',
+    justification: 'Estado técnico de error de carga con reintento seguro; diferencia fallo de transporte del vacío de negocio sin inventar una pantalla de producto.',
+  },
 ];
 
 export const allowedExtraPages = [

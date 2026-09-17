@@ -7,6 +7,7 @@ import { getSession } from '@/api/session';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import AcademicSourceActions from '@/components/domain/configuration/AcademicSourceActions.vue';
@@ -16,6 +17,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
+import { paths } from '@/lib/routes';
 
 const router = useRouter();
 const sources = ref<Source[]>([]);
@@ -34,7 +36,7 @@ const load = async (): Promise<void> => {
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'coordinador') {
-      await router.replace('/dashboard');
+      await router.replace(paths.dashboard);
       return;
     }
     const response = await getSources();
@@ -45,7 +47,7 @@ const load = async (): Promise<void> => {
   } finally { loading.value = false; }
 };
 const created = async (sourceId: string): Promise<void> => {
-  await router.push(`/coordinacion/fuentes/${sourceId}`);
+  await router.push(paths.coordination.source(sourceId));
 };
 const changed = async (value: string): Promise<void> => {
   message.value = value;
@@ -60,7 +62,7 @@ onMounted(() => { void load(); });
     <template #actions><AcademicSourceCreationSheet v-if="!lock" @created="created" /></template>
     <ProcessLockAlert v-if="lock" title="Fuentes protegidas durante la convocatoria" :reason="lock" />
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
-    <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-if="loading && sources.length === 0" />
     <Card v-else><CardContent class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="sources-search" label="Buscar fuente" placeholder="Buscar por nombre o descripción" />

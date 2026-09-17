@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { getDashboard, type SetupChecklist } from '@/api/dashboard';
+import { paths } from '@/lib/routes';
 import {
     Tooltip,
     TooltipContent,
@@ -37,7 +38,7 @@ onMounted(async () => {
     <Tooltip v-if="visible && progress">
         <TooltipTrigger as-child>
             <RouterLink
-                to="/dashboard"
+                :to="paths.dashboard"
                 class="flex h-8 items-center gap-2 rounded-md px-2 text-xs text-muted-foreground tabular-nums hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
                 <span class="h-1.5 w-20 overflow-hidden rounded-full bg-muted" aria-hidden="true">

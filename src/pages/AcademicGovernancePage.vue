@@ -8,9 +8,11 @@ import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.
 import CatalogSection from '@/components/domain/academic/CatalogSection.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { GovernanceSection } from '@/types/academic';
+import { paths } from '@/lib/routes';
 
 const router = useRouter();
 const route = useRoute();
@@ -46,7 +48,7 @@ const load = async (): Promise<void> => {
     loading.value = true; error.value = null;
     try {
         const session = await getSession();
-        if (session.active_role?.code !== 'administrador') { await router.replace('/dashboard'); return; }
+        if (session.active_role?.code !== 'administrador') { await router.replace(paths.dashboard); return; }
         data.value = await getAcademicGovernance();
     } catch (reason) {
         error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la estructura académica.';
@@ -65,7 +67,7 @@ onMounted(load);
 
         <ProcessLockAlert v-if="data?.lock_reason" title="Estructura institucional bloqueada" :reason="data.lock_reason" />
         <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
-        <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+    <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !data" variant="academic" />
 
         <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" :lock-reason="data.lock_reason" @changed="changed" />
