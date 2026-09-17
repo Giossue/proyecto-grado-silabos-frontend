@@ -75,7 +75,7 @@ onMounted(() => { void load(); });
     <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.coordination.sources">← Volver a fuentes</RouterLink></Button></template>
     <template #actions><AcademicSourceEditSheet v-if="data && !data.processLock" :source="data.source" @saved="metadataSaved" /></template>
     <div class="flex flex-col gap-4">
-      <ProcessLockAlert v-if="data?.processLock" title="Fuente protegida durante la convocatoria" :reason="data.processLock" />
+      <ProcessLockAlert v-if="data?.processLock" />
       <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
       <Alert v-if="actionError && Object.keys(fieldErrors).length === 0" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
       <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />

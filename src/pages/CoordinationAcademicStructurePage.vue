@@ -180,7 +180,7 @@ onMounted(() => {
     <template v-if="curriculum && schedule && assignments"
       >
       <template v-if="mode === 'curriculum'">
-        <ProcessLockAlert v-if="curriculum.curriculum.lock_reason" title="Malla protegida durante la convocatoria" :reason="curriculum.curriculum.lock_reason" />
+        <ProcessLockAlert v-if="curriculum.curriculum.lock_reason" />
         <Tabs v-model="activeMode" class="flex flex-col gap-4">
           <div class="flex items-center justify-between gap-2">
             <TabsList aria-label="Modo de trabajo de la malla"><TabsTrigger value="builder"><Workflow aria-hidden="true" />Interactivo</TabsTrigger><TabsTrigger value="breakdown"><ListTree aria-hidden="true" />Desglose académico</TabsTrigger></TabsList>

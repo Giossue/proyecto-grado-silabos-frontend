@@ -191,7 +191,7 @@ onBeforeUnmount(() => {
         </template>
 
         <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
-        <ProcessLockAlert v-if="builder.processLock" title="Plantilla protegida durante el proceso" :reason="builder.processLock" />
+        <ProcessLockAlert v-if="builder.processLock" />
         <TemplateVisualBuilder
             :template="builder.template"
             :appearance="builder.template.appearance"

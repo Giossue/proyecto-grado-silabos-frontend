@@ -65,7 +65,7 @@ onMounted(load);
             <CatalogRecordSheet v-if="data && !data.lock_reason" :entity="entity" :options="data.options" @saved="changed" />
         </template>
 
-        <ProcessLockAlert v-if="data?.lock_reason" title="Estructura institucional bloqueada" :reason="data.lock_reason" />
+        <ProcessLockAlert v-if="data?.lock_reason" />
         <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 8 : entity === 'periodo' ? 6 : 5" />
