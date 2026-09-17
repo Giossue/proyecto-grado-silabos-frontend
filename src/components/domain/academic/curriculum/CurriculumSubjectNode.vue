@@ -125,12 +125,11 @@ const totalFields = computed(
             :aria-label="`${data.subject.code}: ${data.subject.name}`"
         >
             <div
-                v-if="data.editable"
                 class="nodrag nopan absolute top-1 right-1"
                 @click.stop
                 @mousedown.stop
             >
-                <TableActionsMenu :label="`Acciones para ${data.subject.name}`">
+                <TableActionsMenu :label="`Acciones para ${data.subject.name}`" :disabled="!data.editable">
                     <DropdownMenuItem @select="data.onEdit">
                         <Pencil aria-hidden="true" />
                         Editar

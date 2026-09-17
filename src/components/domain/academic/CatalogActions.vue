@@ -38,7 +38,7 @@ const remove = async (): Promise<void> => {
 
 <template>
     <div class="flex justify-end">
-        <TableActionsMenu :label="`Acciones para ${recordName}`">
+        <TableActionsMenu :label="`Acciones para ${recordName}`" :disabled="Boolean(lockReason)">
             <DropdownMenuItem v-if="!lockReason" @select="editOpen = true"><Pencil aria-hidden="true" />Editar</DropdownMenuItem>
             <DropdownMenuItem v-else disabled><LockKeyhole aria-hidden="true" />{{ lockReason }}</DropdownMenuItem>
             <DropdownMenuItem v-if="entity === 'carrera' && active && !lockReason" @select="coordinatorOpen = true"><UserRoundCog aria-hidden="true" />{{ coordinator ? 'Reemplazar coordinador' : 'Asignar coordinador' }}</DropdownMenuItem>
