@@ -1,16 +1,23 @@
 <script setup lang="ts">
 import { Palette, ShieldCheck, UserRound } from '@lucide/vue';
+import { computed } from 'vue';
 import { useRoute } from 'vue-router';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 const route = useRoute();
-const sidebarNavItems = [
-    { title: 'Perfil', href: '/configuracion/perfil', icon: UserRound },
-    { title: 'Seguridad', href: '/configuracion/seguridad', icon: ShieldCheck },
-    { title: 'Apariencia', href: '/configuracion/apariencia', icon: Palette },
-];
+const prefix = computed(() => {
+    if (route.path.startsWith('/admin/')) return '/admin';
+    if (route.path.startsWith('/coordinacion/')) return '/coordinacion';
+    if (route.path.startsWith('/docente/')) return '/docente';
+    return '/configuracion';
+});
+const sidebarNavItems = computed(() => [
+    { title: 'Perfil', href: `${prefix.value}/configuracion/perfil`, icon: UserRound },
+    { title: 'Seguridad', href: `${prefix.value}/configuracion/seguridad`, icon: ShieldCheck },
+    { title: 'Apariencia', href: `${prefix.value}/configuracion/apariencia`, icon: Palette },
+]);
 </script>
 
 <template>

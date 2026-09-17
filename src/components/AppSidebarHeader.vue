@@ -25,7 +25,7 @@ const trail = computed<BreadcrumbItem[]>(() => {
         ? props.breadcrumbs
         : [...props.breadcrumbs, { title: props.pageTitle }];
 });
-const isNotificationsPage = computed(() => route.path === '/notificaciones');
+const isNotificationsPage = computed(() => route.path.endsWith('/notificaciones') || route.path === '/notificaciones');
 
 onMounted(async () => {
     try {

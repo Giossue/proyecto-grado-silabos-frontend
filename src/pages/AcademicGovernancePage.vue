@@ -25,10 +25,13 @@ const routeSections: Array<{ value: AcademicEntity; label: string }> = [
     { value: 'facultad', label: 'Facultades' }, { value: 'campus', label: 'Campus' },
     { value: 'carrera', label: 'Carreras' }, { value: 'periodo', label: 'Períodos' },
 ];
+const routeParamSections: Record<string, AcademicEntity> = {
+    facultades: 'facultad', campus: 'campus', carreras: 'carrera', 'periodos-academicos': 'periodo',
+};
 const entity = computed<AcademicEntity>(() =>
     typeof route.query.seccion === 'string' && routeSections.some((item) => item.value === route.query.seccion)
         ? route.query.seccion as AcademicEntity
-        : 'facultad',
+        : routeParamSections[String(route.params.section)] ?? 'facultad',
 );
 const section = computed(() => sectionMap[entity.value]);
 const sectionContent = computed(() => ({
@@ -49,7 +52,7 @@ const load = async (): Promise<void> => {
     } finally { loading.value = false; }
 };
 const changed = async (notice: string): Promise<void> => { message.value = notice; await load(); };
-watch(() => route.query.seccion, () => { message.value = null; });
+watch(() => [route.query.seccion, route.params.section], () => { message.value = null; });
 onMounted(load);
 </script>
 

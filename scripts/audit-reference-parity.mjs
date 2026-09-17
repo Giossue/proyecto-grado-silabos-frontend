@@ -5,7 +5,9 @@ import { dirname, extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   allowedAliasRoutes,
+  allowedCanonicalRoutes,
   allowedExtraComponents,
+  allowedExtraPages,
   componentAdaptationRules,
   pages,
   reference,
@@ -93,16 +95,49 @@ const actualRoutes = [...routerSource.matchAll(/\bpath:\s*["']([^"']+)["']/g)]
 const expectedRoutes = [...new Set([
   ...pages.flatMap(({ routes }) => routes),
   ...allowedAliasRoutes,
+  ...allowedCanonicalRoutes,
 ])];
 const missingRoutes = expectedRoutes.filter((path) => !actualRoutes.includes(path));
 const extraRoutes = actualRoutes.filter((path) => !expectedRoutes.includes(path));
+
+const routeDeclarations = routerSource.split('\n')
+  .filter((line) => line.includes('{ path:'))
+  .map((line) => {
+    const path = line.match(/\{ path:\s*["']([^"']+)["']/)?.[1];
+    const roles = line.match(/roles:\s*\["([^"]+)"\]/)?.[1] ?? null;
+    const requiresAuth = line.includes('requiresAuth: true');
+    const aliasTarget = line.match(/aliasTarget:\s*["']([^"']+)["']/)?.[1] ?? null;
+    return { path, roles, requiresAuth, aliasTarget };
+  })
+  .filter(({ path }) => path);
+const routeDeclaration = (path) => routeDeclarations.find((route) => route.path === path);
+const expectedRoleFor = (path) => path.startsWith('/admin/')
+  ? 'administrador'
+  : path.startsWith('/coordinacion/')
+    ? 'coordinador'
+    : path.startsWith('/docente/')
+      ? 'docente'
+      : null;
+const routePolicyMismatches = expectedRoutes.flatMap((path) => {
+  const expectedRole = expectedRoleFor(path);
+  if (!expectedRole) return [];
+  const declaration = routeDeclaration(path);
+  return !declaration || declaration.roles !== expectedRole || declaration.requiresAuth !== true
+    ? [`${path} (rol esperado: ${expectedRole}, declaración: ${declaration?.roles ?? 'sin rol'})`]
+    : [];
+});
 
 const targetPages = new Set(pages.map(({ target }) => target));
 const actualTargetPages = walk(join(destinationRoot, 'pages'))
   .filter((path) => extname(path) === '.vue')
   .map((path) => relative(destinationRoot, path))
   .sort();
-const extraTargetPages = actualTargetPages.filter((path) => !targetPages.has(path));
+const allowedExtraPagePaths = new Set(allowedExtraPages.map(({ path }) => path));
+const extraTargetPages = actualTargetPages.filter((path) =>
+  !targetPages.has(path) && !allowedExtraPagePaths.has(path));
+const missingAllowedExtraPages = allowedExtraPages
+  .filter(({ path }) => !actualTargetPages.includes(path))
+  .map(({ path }) => path);
 
 const pageRows = pages.map((page) => {
   const targetPath = join(destinationRoot, page.target);
@@ -229,8 +264,10 @@ const list = (title, values) => {
 list('Páginas canónicas no declaradas', undeclaredReferencePages);
 list('Páginas declaradas que no existen en la referencia', unknownDeclaredPages);
 list('Páginas adicionales de la SPA', extraTargetPages);
+list('Adaptadores de página declarados que faltan', missingAllowedExtraPages);
 list('Rutas faltantes', missingRoutes);
 list('Rutas adicionales', extraRoutes);
+list('Rutas con política de rol inconsistente', routePolicyMismatches);
 list('Componentes canónicos faltantes', missingComponentFiles);
 list('Componentes adicionales no autorizados', extraComponentFiles);
 list('Adaptadores declarados que faltan', missingAllowedExtraComponents);
@@ -270,8 +307,10 @@ const unresolved = [
   ...undeclaredReferencePages,
   ...unknownDeclaredPages,
   ...extraTargetPages,
+  ...missingAllowedExtraPages,
   ...missingRoutes,
   ...extraRoutes,
+  ...routePolicyMismatches,
   ...pageRows.flatMap(({ missingComponents }) => missingComponents),
   ...missingComponentFiles,
   ...extraComponentFiles,

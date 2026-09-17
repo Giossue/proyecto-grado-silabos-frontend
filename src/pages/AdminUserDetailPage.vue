@@ -33,7 +33,7 @@ onMounted(load);
 </script>
 
 <template><PageFrame :title="result?.managedUser.nombre ?? 'Detalle de cuenta'" :description="result?.managedUser.correo_electronico ?? 'Cargando información de la cuenta…'">
-    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink to="/administracion/usuarios">← Volver a usuarios</RouterLink></Button></template>
+    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink to="/admin/usuarios">← Volver a usuarios</RouterLink></Button></template>
     <template v-if="result" #meta><Badge :variant="result.managedUser.active ? 'secondary' : 'outline'">{{ result.managedUser.active ? 'Cuenta activa' : 'Cuenta inactiva' }}</Badge></template>
     <template v-if="result" #actions>
         <UserProfileSheet :user-id="result.managedUser.id" :nombre="result.managedUser.nombre" :correo_electronico="result.managedUser.correo_electronico" @saved="changed" />

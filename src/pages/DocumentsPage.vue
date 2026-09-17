@@ -34,7 +34,7 @@ const filter = useClientFilter(() => data.value?.artifacts ?? [], (item) => [ite
 });
 const { items: artifactPage, meta: artifactMeta, setPage: setArtifactPage } = useClientPagination(() => filter.items.value);
 const hasPending = computed(() => data.value?.artifacts.some((item) => ['pendiente', 'en_ejecucion', 'procesando'].includes(item.estado)) ?? false);
-const backHref = computed(() => session.value?.active_role?.code === 'coordinador' ? `/coordinacion/revisiones/${revisionId()}` : `/mis-silabos/${data.value?.syllabus.id ?? ''}`);
+const backHref = computed(() => session.value?.active_role?.code === 'coordinador' ? `/coordinacion/revisiones/${revisionId()}` : `/docente/mis-silabos/${data.value?.syllabus.id ?? ''}`);
 const statusLabel = (status: string): string => ({ pendiente: 'En cola', en_ejecucion: 'Generando', procesando: 'Generando', completado: 'Disponible', fallido: 'Fallida' }[status] ?? 'Estado no disponible');
 const formatDate = (value: string | null): string => value === null ? '—' : new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 const formatBytes = (value: number | null): string => value === null ? '—' : value < 1024 ? `${value} B` : value < 1024 * 1024 ? `${(value / 1024).toFixed(1)} KB` : `${(value / (1024 * 1024)).toFixed(1)} MB`;

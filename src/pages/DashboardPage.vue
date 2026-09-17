@@ -20,12 +20,12 @@ const facultyLogoOpen = ref(false);
 const role = computed(() => sessionState.current.value?.active_role);
 const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, completion: ListRestart, correction_requested: CircleAlert, teachers_pending: UsersRound };
 const setupRoutes: Record<string, string> = {
-  faculties: '/administracion/estructura-academica',
-  campuses: '/administracion/estructura-academica',
-  careers: '/administracion/estructura-academica',
-  coordinators: '/administracion/coordinaciones',
-  template: '/administracion/plantilla',
-  process: '/administracion/procesos',
+  faculties: '/admin/estructura-academica',
+  campuses: '/admin/estructura-academica',
+  careers: '/admin/estructura-academica',
+  coordinators: '/admin/usuarios',
+  template: '/admin/plantilla',
+  process: '/admin/convocatorias',
   curriculum: '/coordinacion/malla',
   scheduled_subjects: '/coordinacion/materias-paralelos',
   parallels: '/coordinacion/materias-paralelos',

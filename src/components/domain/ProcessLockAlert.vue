@@ -6,7 +6,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const props = defineProps<{ title: string; reason: string }>();
 const href = computed(() => sessionState.current.value?.active_role?.code === 'administrador'
-  ? '/administracion/procesos'
+  ? '/admin/convocatorias'
   : '/coordinacion/convocatorias');
 const parts = computed(() => {
   const index = props.reason.indexOf('Convocatorias');

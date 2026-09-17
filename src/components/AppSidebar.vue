@@ -36,25 +36,25 @@ const mainNavItems = computed<NavItem[]>(() => [
     { title: 'Panel', href: '/panel', icon: LayoutGrid },
     ...(activeRole.value?.code === 'administrador'
         ? [
-              { title: 'Convocatorias', href: '/administracion/procesos', icon: CalendarRange },
-              { title: 'Usuarios y roles', href: '/administracion/usuarios', icon: UsersRound },
+              { title: 'Convocatorias', href: '/admin/convocatorias', icon: CalendarRange },
+              { title: 'Usuarios y roles', href: '/admin/usuarios', icon: UsersRound },
               {
                   title: 'Estructura académica',
-                  href: '/administracion/estructura-academica',
+                  href: '/admin/estructura-academica',
                   icon: Building2,
                   items: [
-                      { title: 'Facultades', href: '/administracion/estructura-academica?seccion=facultad' },
-                      { title: 'Campus', href: '/administracion/estructura-academica?seccion=campus' },
-                      { title: 'Carreras', href: '/administracion/estructura-academica?seccion=carrera' },
-                      { title: 'Periodos académicos', href: '/administracion/estructura-academica?seccion=periodo' },
+                      { title: 'Facultades', href: '/admin/estructura-academica?seccion=facultad' },
+                      { title: 'Campus', href: '/admin/estructura-academica?seccion=campus' },
+                      { title: 'Carreras', href: '/admin/estructura-academica?seccion=carrera' },
+                      { title: 'Periodos académicos', href: '/admin/estructura-academica?seccion=periodo' },
                   ],
               },
-              { title: 'Plantilla', href: '/administracion/plantilla', icon: FileStack },
+              { title: 'Plantilla', href: '/admin/plantilla', icon: FileStack },
               {
                   title: 'Auditoría',
-                  href: '/administracion/auditoria',
+                  href: '/admin/auditoria',
                   icon: ScrollText,
-                  isActive: route.path === '/administracion/trabajos',
+                  isActive: route.path === '/admin/procesos',
               },
           ]
         : []),
@@ -70,7 +70,7 @@ const mainNavItems = computed<NavItem[]>(() => [
           ]
         : []),
     ...(activeRole.value?.code === 'docente'
-        ? [{ title: 'Mis sílabos', href: '/mis-silabos', icon: BookOpenCheck }]
+        ? [{ title: 'Mis sílabos', href: '/docente/mis-silabos', icon: BookOpenCheck }]
         : []),
 ]);
 const footerNavItems: NavItem[] = [];

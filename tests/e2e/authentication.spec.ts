@@ -7,6 +7,10 @@ const login = async (page: Page, email: string, password: string): Promise<void>
   await page.getByRole('button', { name: 'Ingresar' }).click();
 };
 
+const expectPanel = async (page: Page, area: 'admin' | 'coordinacion' | 'docente'): Promise<void> => {
+  await expect(page).toHaveURL(new RegExp(`/${area}/panel$`));
+};
+
 const mainNavigation = (page: Page) =>
   page.locator('[data-sidebar="content"]');
 
@@ -66,7 +70,7 @@ test.describe('frontera distribuida de identidad', () => {
   test('mantiene sesión, CSRF y navegación administrativa', async ({ page }) => {
     const serverErrors = captureServerErrors(page);
     await login(page, 'admin@silabos.test', 'Demo-2026!');
-    await expect(page).toHaveURL(/\/panel$/);
+    await expectPanel(page, 'admin');
     await expect(page.getByText('Gestión institucional de Sílabos UEB')).toBeVisible();
 
     await mainNavigation(page).getByRole('link', { name: 'Usuarios y roles', exact: true }).click();
@@ -91,7 +95,7 @@ test.describe('frontera distribuida de identidad', () => {
     await mainNavigation(page).getByRole('link', { name: 'Auditoría', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Auditoría' })).toBeVisible();
 
-    await page.goto('/administracion/trabajos');
+    await page.goto('/admin/procesos');
     await expect(page.getByRole('tab', { name: 'Procesos' })).toBeVisible();
 
     await page.getByRole('button', { name: /ADMINISTRADOR DEMO/ }).click();
@@ -222,7 +226,7 @@ test.describe('frontera distribuida de identidad', () => {
     const syllabusRow = page.getByRole('row', { name: /Arquitectura de Software/ });
     await syllabusRow.getByRole('button', { name: /Acciones para Arquitectura de Software/ }).click();
     await page.getByRole('menuitem', { name: 'Abrir sílabo' }).click();
-    await expect(page).toHaveURL(/\/mis-silabos\/[0-9a-f-]+$/);
+    await expect(page).toHaveURL(/\/docente\/mis-silabos\/[0-9a-f-]+$/);
     await expect(page.getByRole('heading', { name: 'Mis sílabos' })).toBeVisible();
     const startDraft = page.getByRole('button', { name: 'Iniciar borrador' }).first();
     if (await startDraft.isVisible()) await startDraft.click();

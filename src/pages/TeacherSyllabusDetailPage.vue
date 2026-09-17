@@ -93,7 +93,7 @@ const load = async (): Promise<void> => {
       reason instanceof ApiError &&
       [401, 403, 404, 409].includes(reason.status)
     ) {
-      await router.replace("/mis-silabos");
+      await router.replace("/docente/mis-silabos");
       return;
     }
     error.value = "No se pudo cargar el sílabo.";

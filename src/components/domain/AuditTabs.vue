@@ -7,7 +7,7 @@ const router = useRouter();
 
 const navigate = (value: string | number): void => {
   if (value === props.active) return;
-  void router.push(value === 'jobs' ? '/administracion/trabajos' : '/administracion/auditoria');
+  void router.push(value === 'jobs' ? '/admin/procesos' : '/admin/auditoria');
 };
 </script>
 

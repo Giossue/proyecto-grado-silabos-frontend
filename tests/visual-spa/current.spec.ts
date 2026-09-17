@@ -6,23 +6,23 @@ const outputRoot = resolve('tests/visual/current');
 
 const routes = {
   administrador: [
-    '/panel',
-    '/administracion/procesos',
-    '/administracion/usuarios',
-    '/administracion/estructura-academica?seccion=facultad',
-    '/administracion/estructura-academica?seccion=campus',
-    '/administracion/estructura-academica?seccion=carrera',
-    '/administracion/estructura-academica?seccion=periodo',
-    '/administracion/plantilla',
-    '/administracion/auditoria',
-    '/administracion/trabajos',
-    '/configuracion/perfil',
-    '/configuracion/seguridad',
-    '/configuracion/apariencia',
-    '/notificaciones',
+    '/admin/panel',
+    '/admin/convocatorias',
+    '/admin/usuarios',
+    '/admin/estructura-academica/facultades',
+    '/admin/estructura-academica/campus',
+    '/admin/estructura-academica/carreras',
+    '/admin/estructura-academica/periodos-academicos',
+    '/admin/plantilla',
+    '/admin/auditoria',
+    '/admin/procesos',
+    '/admin/configuracion/perfil',
+    '/admin/configuracion/seguridad',
+    '/admin/configuracion/apariencia',
+    '/admin/notificaciones',
   ],
   coordinador: [
-    '/panel',
+    '/coordinacion/panel',
     '/coordinacion/convocatorias',
     '/coordinacion/revisiones',
     '/coordinacion/asignaciones-docentes',
@@ -30,18 +30,18 @@ const routes = {
     '/coordinacion/malla',
     '/coordinacion/fuentes',
     '/coordinacion/informes',
-    '/configuracion/perfil',
-    '/configuracion/seguridad',
-    '/configuracion/apariencia',
-    '/notificaciones',
+    '/coordinacion/configuracion/perfil',
+    '/coordinacion/configuracion/seguridad',
+    '/coordinacion/configuracion/apariencia',
+    '/coordinacion/notificaciones',
   ],
   docente: [
-    '/panel',
-    '/mis-silabos',
-    '/configuracion/perfil',
-    '/configuracion/seguridad',
-    '/configuracion/apariencia',
-    '/notificaciones',
+    '/docente/panel',
+    '/docente/mis-silabos',
+    '/docente/configuracion/perfil',
+    '/docente/configuracion/seguridad',
+    '/docente/configuracion/apariencia',
+    '/docente/notificaciones',
   ],
 } as const;
 
@@ -80,7 +80,8 @@ const login = async (page: Page, role: keyof typeof routes): Promise<void> => {
     await page.getByRole('button', { name: 'Entrar a esta carrera' }).click();
   }
 
-  await expect(page).toHaveURL(/\/panel$/);
+  const area = role === 'administrador' ? 'admin' : role === 'coordinador' ? 'coordinacion' : 'docente';
+  await expect(page).toHaveURL(new RegExp(`/${area}/panel$`));
 };
 
 const capture = async (page: Page, role: string, path: string): Promise<void> => {

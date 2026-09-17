@@ -5,13 +5,13 @@ const loginAsAdministrator = async (page: Page): Promise<void> => {
   await page.getByLabel('Correo institucional').fill('admin@silabos.test');
   await page.locator('input[type="password"]').fill('Demo-2026!');
   await page.getByRole('button', { name: 'Ingresar' }).click();
-  await expect(page).toHaveURL(/\/panel$/);
+  await expect(page).toHaveURL(/\/admin\/panel$/);
 };
 
 test.describe('accesibilidad transversal de la SPA', () => {
   test('mantiene el foco dentro de una hoja y lo devuelve al disparador', async ({ page }) => {
     await loginAsAdministrator(page);
-    await page.goto('/administracion/usuarios');
+    await page.goto('/admin/usuarios');
 
     const trigger = page.getByRole('button', { name: 'Crear cuenta', exact: true });
     await expect(trigger).toBeVisible();
@@ -30,11 +30,11 @@ test.describe('accesibilidad transversal de la SPA', () => {
     await loginAsAdministrator(page);
     await page.setViewportSize({ width: 360, height: 740 });
 
-    for (const path of ['/panel', '/administracion/usuarios', '/administracion/auditoria', '/administracion/plantilla']) {
+    for (const path of ['/admin/panel', '/admin/usuarios', '/admin/auditoria', '/admin/plantilla']) {
       await page.goto(path, { waitUntil: 'networkidle' });
       await expect(page.locator('main').first()).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
-      if (path === '/administracion/plantilla') {
+      if (path === '/admin/plantilla') {
         const createTemplate = page.getByRole('button', { name: 'Nueva plantilla' });
         if (await createTemplate.isVisible()) await createTemplate.click();
         await expect(page.getByLabel(/Plantilla del sílabo/)).toBeVisible();
