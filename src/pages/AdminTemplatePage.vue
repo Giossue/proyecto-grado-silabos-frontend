@@ -107,7 +107,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <LoadingSkeleton v-if="loading" variant="document" />
+    <LoadingSkeleton v-if="loading" variant="template" />
 
     <PageFrame
         v-else-if="loadError"

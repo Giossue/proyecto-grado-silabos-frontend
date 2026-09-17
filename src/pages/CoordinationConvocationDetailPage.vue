@@ -55,7 +55,7 @@ onMounted(() => { void load(); });
   <PageFrame :title="data?.convocation.name ?? 'Convocatoria'" :description="data ? `${data.convocation.period} · ${data.convocation.template}` : 'Detalle de la convocatoria.'">
     <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.coordination.convocations">← Volver a convocatorias</RouterLink></Button></template>
     <template v-if="data" #meta><Badge :variant="data.convocation.state === 'abierta' ? 'secondary' : 'outline'">{{ convocationStateLabel(data.convocation.state) }}</Badge><Badge variant="outline">{{ data.convocation.process.name }}</Badge></template>
-    <LoadErrorState v-if="error" :message="error" @retry="load" /><LoadingSkeleton v-else-if="!data" variant="detail" />
+    <LoadErrorState v-if="error" :message="error" @retry="load" /><LoadingSkeleton v-else-if="!data" variant="convocation" />
     <template v-if="data">
       <Alert v-if="data.convocation.state === 'preparacion'"><AlertTitle>Revise antes de abrir</AlertTitle><AlertDescription>La apertura fija la plantilla del proceso y estas fuentes, valida que cada paralelo tenga docente vigente y genera todos los expedientes en una sola transacción. Si algo falta, no se crea ninguno.{{ data.convocation.process.state !== 'abierto' ? ' Solo podrá abrir cuando Administración abra el proceso institucional.' : '' }}</AlertDescription></Alert>
       <Alert v-else-if="data.convocation.state === 'pausada'"><AlertTitle>Convocatoria en pausa</AlertTitle><AlertDescription>Los docentes de su carrera no editan ni envían hasta que la reanude. Mientras tanto puede corregir la malla y las fuentes.</AlertDescription></Alert>

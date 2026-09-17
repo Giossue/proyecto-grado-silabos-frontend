@@ -63,7 +63,7 @@ onMounted(() => { void load(); });
     <ProcessLockAlert v-if="lock" title="Fuentes protegidas durante la convocatoria" :reason="lock" />
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-if="loading && sources.length === 0" />
+    <LoadingSkeleton v-if="loading && sources.length === 0" variant="table" :columns="3" />
     <Card v-else><CardContent class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="sources-search" label="Buscar fuente" placeholder="Buscar por nombre o descripción" />
       <Table><TableHeader><TableRow><TableHead>Fuente</TableHead><TableHead>Contenido</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>

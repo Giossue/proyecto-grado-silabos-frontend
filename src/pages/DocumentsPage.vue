@@ -71,7 +71,7 @@ onBeforeUnmount(() => { if (timer !== null) clearInterval(timer); });
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="document" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="documents" />
     <template v-else-if="data">
       <Alert><ShieldCheck aria-hidden="true" /><AlertTitle>Revisión aprobada</AlertTitle><AlertDescription>Ambos archivos se generan desde la revisión {{ data.revision.number }} aprobada por {{ data.revision.approved_by }} el {{ formatDate(data.revision.approved_at) }}. La descarga vuelve a comprobar su autorización.</AlertDescription></Alert>
       <Alert variant="destructive"><FileText aria-hidden="true" /><AlertTitle>Formato institucional en revisión</AlertTitle><AlertDescription>Esta exportación está disponible para revisión. La validación del formato institucional continúa en curso.</AlertDescription></Alert>

@@ -53,7 +53,7 @@ onMounted(load);
             <template #filters><Field><FieldLabel for="syllabi-state" class="sr-only">Estado</FieldLabel><Select v-model="state"><SelectTrigger id="syllabi-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="(itemLabel, value) in states" :key="value" :value="value">{{ itemLabel }}</SelectItem></SelectContent></Select></Field></template>
           </FilterToolbar>
         </form>
-        <LoadingSkeleton v-if="!result && !error" />
+        <LoadingSkeleton v-if="!result && !error" variant="table-body" :columns="6" />
         <Table v-if="result">
           <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Convocatoria</TableHead><TableHead>Estado</TableHead><TableHead>Último guardado</TableHead><TableHead class="text-right">Avance</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
           <TableBody>

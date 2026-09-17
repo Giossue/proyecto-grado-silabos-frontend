@@ -51,7 +51,7 @@ onMounted(load);
         <template #actions><ManagedUserSheet v-if="result" :roles="result.roles" :careers="result.careers" @saved="changed" /></template>
         <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-if="loading && !result" />
+        <LoadingSkeleton v-if="loading && !result" variant="table" :columns="5" />
 
         <Card v-if="result"><CardContent class="flex flex-col gap-4">
             <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters">

@@ -68,7 +68,7 @@ onMounted(load);
         <ProcessLockAlert v-if="data?.lock_reason" title="Estructura institucional bloqueada" :reason="data.lock_reason" />
         <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-if="loading && !data" variant="academic" />
+        <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 8 : entity === 'periodo' ? 6 : 5" />
 
         <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" :lock-reason="data.lock_reason" @changed="changed" />
     </PageFrame>

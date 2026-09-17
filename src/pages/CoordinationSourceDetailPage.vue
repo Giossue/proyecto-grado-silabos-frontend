@@ -79,7 +79,7 @@ onMounted(() => { void load(); });
       <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
       <Alert v-if="actionError && Object.keys(fieldErrors).length === 0" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
       <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
-      <LoadingSkeleton v-else-if="loading && !data" variant="document" />
+      <LoadingSkeleton v-else-if="loading && !data" variant="source" />
       <Card v-else-if="data"><CardHeader><CardTitle>Contenido del documento</CardTitle><CardDescription>Redáctelo con la cinta de opciones, como en un procesador de textos. El formato se ve directamente mientras escribe.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3">
         <MarkdownEditor v-model="content" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
         <FieldError :errors="fieldErrors.content" />

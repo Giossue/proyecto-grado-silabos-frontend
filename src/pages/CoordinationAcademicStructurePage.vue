@@ -212,7 +212,7 @@ onMounted(() => {
       </template
     >
     <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading" variant="academic" />
+    <LoadingSkeleton v-else-if="loading" variant="academic-structure" :mode="mode" :columns="mode === 'teachers' ? 6 : 5" />
     <ManagedUserSheet
       v-if="mode === 'teachers'"
       v-model:open="teacherOpen"

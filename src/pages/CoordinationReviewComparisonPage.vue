@@ -46,7 +46,7 @@ onMounted(() => { void load(); });
     <template v-if="data" #meta><Badge variant="secondary">{{ data.comparison.changed_fields }} campo(s) con cambios</Badge></template>
 
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-if="loading && !data" variant="detail" />
+    <LoadingSkeleton v-if="loading && !data" variant="comparison" />
 
     <template v-if="data">
       <Card><CardHeader><CardTitle>Revisión {{ data.comparison.before_revision }} → revisión {{ data.comparison.after_revision }}</CardTitle><CardDescription>La comparación muestra el contenido enviado en dos revisiones del mismo expediente.</CardDescription></CardHeader></Card>

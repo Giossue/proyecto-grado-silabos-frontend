@@ -200,5 +200,5 @@ onMounted(load);
     </div>
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-  <LoadingSkeleton v-else-if="loading" variant="document" />
+  <LoadingSkeleton v-else-if="loading" variant="review" />
 </template>

@@ -74,7 +74,7 @@ onMounted(() => { void load(); });
             </FilterToolbar>
           </form>
           <LoadErrorState v-if="error" :message="error" @retry="load" />
-          <LoadingSkeleton v-else-if="loading && !data" />
+          <LoadingSkeleton v-else-if="loading && !data" variant="table-body" :columns="6" />
           <template v-if="data">
             <Table><TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Actor y rol</TableHead><TableHead>Acción</TableHead><TableHead>Recurso</TableHead><TableHead>Resultado</TableHead><TableHead>Detalles seguros</TableHead></TableRow></TableHeader><TableBody>
               <TableRow v-for="event in data.events.data" :key="event.id"><TableCell class="text-xs whitespace-nowrap">{{ formatDate(event.occurred_at) }}</TableCell><TableCell><div>{{ event.actor }}</div><div class="text-xs text-muted-foreground">{{ [event.role, event.career].filter(Boolean).join(' · ') || 'Proceso del sistema' }}</div></TableCell><TableCell>{{ event.action }}</TableCell><TableCell>{{ event.resource }}</TableCell><TableCell><span :class="event.result === 'fallido' ? 'text-destructive' : ''">{{ event.result === 'fallido' ? 'Fallido' : 'Correcto' }}</span></TableCell><TableCell class="max-w-md"><dl v-if="event.details.length" class="flex flex-col gap-1 text-xs"><div v-for="detail in event.details" :key="detail.label" class="flex gap-1"><dt class="font-medium">{{ detail.label }}:</dt><dd class="break-words">{{ detailValue(detail.value) }}</dd></div></dl><span v-else class="text-xs text-muted-foreground">Sin detalles adicionales</span></TableCell></TableRow>

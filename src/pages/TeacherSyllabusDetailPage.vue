@@ -403,7 +403,7 @@ onBeforeUnmount(() => {
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
-    <LoadingSkeleton v-if="!syllabus && !error" variant="document" />
+    <LoadingSkeleton v-if="!syllabus && !error" variant="syllabus" />
 
     <template v-if="syllabus">
       <Card v-if="syllabus.state === 'sin_iniciar'"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar los campos de la plantilla institucional.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>
