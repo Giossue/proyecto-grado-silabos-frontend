@@ -35,6 +35,8 @@ test.describe('accesibilidad transversal de la SPA', () => {
       await expect(page.locator('main').first()).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
       if (path === '/administracion/plantilla') {
+        const createTemplate = page.getByRole('button', { name: 'Nueva plantilla' });
+        if (await createTemplate.isVisible()) await createTemplate.click();
         await expect(page.getByLabel(/Plantilla del sílabo/)).toBeVisible();
         await expect(page.locator('.paged-document-paper').first()).toBeVisible();
       }

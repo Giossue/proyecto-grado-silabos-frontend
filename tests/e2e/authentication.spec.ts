@@ -49,6 +49,17 @@ const isoDate = (offsetDays: number): string => {
   return date.toISOString().slice(0, 10);
 };
 
+const pickDate = async (page: Page, label: string, value: string): Promise<void> => {
+  const trigger = page.getByLabel(label);
+  await trigger.click();
+  const popoverId = await trigger.getAttribute('aria-controls');
+  expect(popoverId).not.toBeNull();
+  await page
+    .locator(`[id="${popoverId}"]`)
+    .locator(`[data-slot="calendar-cell-trigger"][data-value="${value}"]`)
+    .click();
+};
+
 test.describe('frontera distribuida de identidad', () => {
   test.describe.configure({ mode: 'serial', timeout: 60_000 });
 
@@ -93,8 +104,8 @@ test.describe('frontera distribuida de identidad', () => {
 
     await mainNavigation(page).getByRole('link', { name: 'Plantilla', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Plantilla' })).toBeVisible();
-    const createTemplate = page.getByRole('button', { name: 'Crear plantilla institucional' });
-    const editTemplate = page.getByRole('button', { name: 'Editar plantilla' });
+    const createTemplate = page.getByRole('button', { name: 'Nueva plantilla' });
+    const editTemplate = page.getByRole('button', { name: 'Editar', exact: true });
     const protectedTemplate = page.getByText('Plantilla protegida durante el proceso');
     await expect(createTemplate.or(editTemplate).or(protectedTemplate)).toBeVisible();
     if (await createTemplate.isVisible()) await createTemplate.click();
@@ -107,12 +118,12 @@ test.describe('frontera distribuida de identidad', () => {
     if (!await activeProcess.isVisible()) {
       let processActions = page.getByRole('button', { name: /Acciones para/ }).first();
       if (!await processActions.isVisible()) {
-        await page.getByRole('button', { name: 'Preparar proceso' }).click();
-        await page.getByLabel('Período académico').click();
+        await page.getByRole('button', { name: 'Nuevo proceso' }).click();
+        await page.getByLabel('Periodo académico').click();
         await page.getByRole('option').first().click();
-        await page.getByLabel('Inicio').fill(isoDate(1));
-        await page.getByLabel('Fecha límite de entrega').fill(isoDate(5));
-        await page.getByRole('button', { name: 'Guardar proceso' }).click();
+        await pickDate(page, 'Inicio', isoDate(1));
+        await pickDate(page, 'Fecha límite de entrega', isoDate(5));
+        await page.getByRole('button', { name: 'Preparar proceso' }).click();
         processActions = page.getByRole('button', { name: /Acciones para/ }).first();
         await expect(processActions).toBeVisible();
       }
