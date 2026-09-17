@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
+import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -51,7 +52,7 @@ const submit = async (): Promise<void> => {
         <Field :data-invalid="Boolean(errors.password)">
           <div class="flex items-center justify-between">
             <FieldLabel for="password" required>Contraseña</FieldLabel>
-            <RouterLink to="/recuperar-contrasena" class="text-sm text-foreground underline decoration-neutral-300 underline-offset-4 hover:decoration-current dark:decoration-neutral-500">¿Olvidó su contraseña?</RouterLink>
+            <TextLink href="/recuperar-contrasena" class="text-sm">¿Olvidó su contraseña?</TextLink>
           </div>
           <PasswordInput id="password" v-model="password" name="password" required autocomplete="current-password" placeholder="Contraseña" :aria-invalid="Boolean(errors.password)" />
           <FieldError :errors="errors.password" />

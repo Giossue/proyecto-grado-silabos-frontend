@@ -26,7 +26,6 @@ const routes = {
     '/coordinacion/materias-paralelos',
     '/coordinacion/malla',
     '/coordinacion/fuentes',
-    '/coordinacion/configuracion-ia',
     '/coordinacion/informes',
     '/configuracion/perfil',
     '/configuracion/seguridad',

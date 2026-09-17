@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import { ChevronDown, UserPlus } from "@lucide/vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { ChevronDown, Link2, ListTree, Plus, UserPlus, Workflow } from "@lucide/vue";
 import { useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
 import {
@@ -13,12 +13,18 @@ import {
 } from "@/api/career-academics";
 import { getSession } from "@/api/session";
 import PageFrame from "@/components/domain/PageFrame.vue";
-import ManagedTeacherSheet from "@/components/domain/academic/ManagedTeacherSheet.vue";
-import CurriculumWorkspace from "@/components/domain/academic/curriculum/CurriculumWorkspace.vue";
+import ManagedUserSheet from "@/components/domain/identity/ManagedUserSheet.vue";
+import CurriculumActions from "@/components/domain/academic/CurriculumActions.vue";
+import CurriculumCanvas from "@/components/domain/academic/curriculum/CurriculumCanvas.vue";
+import CurriculumConfigurationSheet from "@/components/domain/academic/curriculum/CurriculumConfigurationSheet.vue";
+import CurriculumFormView from "@/components/domain/academic/curriculum/CurriculumFormView.vue";
+import CurriculumRequirementSheet from "@/components/domain/academic/curriculum/CurriculumRequirementSheet.vue";
+import CurriculumSubjectSheet from "@/components/domain/academic/curriculum/CurriculumSubjectSheet.vue";
 import PeriodPreparationSheet from "@/components/domain/academic/PeriodPreparationSheet.vue";
 import ScheduledSubjectsTab from "@/components/domain/academic/ScheduledSubjectsTab.vue";
 import TeacherAssignmentSheet from "@/components/domain/academic/TeacherAssignmentSheet.vue";
 import TeacherAssignmentsPanel from "@/components/domain/academic/TeacherAssignmentsPanel.vue";
+import ProcessLockAlert from "@/components/domain/ProcessLockAlert.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const router = useRouter();
 const props = defineProps<{ mode: 'curriculum' | 'schedule' | 'teachers' }>();
@@ -51,6 +58,19 @@ const error = ref<string | null>(null);
 const message = ref<string | null>(null);
 const teacherOpen = ref(false);
 const assignmentOpen = ref(false);
+const activeMode = ref<'breakdown' | 'builder'>(new URL(window.location.href).searchParams.get('modo') === 'desglose' ? 'breakdown' : 'builder');
+const subjectOpen = ref(false);
+const requirementOpen = ref(false);
+const configurationOpen = ref(false);
+const selectedSubject = ref<Curriculum['subjects'][number] | null>(null);
+const organizationUnits = computed(() => Array.from(new Set((curriculum.value?.subjects ?? []).map((item) => item.organization_unit?.trim()).filter((item): item is string => Boolean(item)))).sort((a, b) => a.localeCompare(b, 'es')));
+watch(activeMode, (mode) => {
+  const url = new URL(window.location.href);
+  if (mode === 'breakdown') url.searchParams.set('modo', 'desglose'); else url.searchParams.delete('modo');
+  window.history.replaceState(window.history.state, '', url);
+});
+const openNewSubject = () => { selectedSubject.value = null; subjectOpen.value = true; };
+const openSubject = (subject: Curriculum['subjects'][number]) => { selectedSubject.value = subject; subjectOpen.value = true; };
 const load = async () => {
   try {
     const session = await getSession();
@@ -150,12 +170,24 @@ onMounted(() => {
     <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
     <template v-if="curriculum && schedule && assignments"
       >
-      <CurriculumWorkspace
-        v-if="mode === 'curriculum'"
-        :data="curriculum"
-        @changed="handleCurriculumChanged"
-        @failed="error = $event"
-      />
+      <template v-if="mode === 'curriculum'">
+        <ProcessLockAlert v-if="curriculum.curriculum.lock_reason" title="Malla protegida durante la convocatoria" :reason="curriculum.curriculum.lock_reason" />
+        <Tabs v-model="activeMode" class="flex flex-col gap-4">
+          <div class="flex items-center justify-between gap-2">
+            <TabsList aria-label="Modo de trabajo de la malla"><TabsTrigger value="builder"><Workflow aria-hidden="true" />Interactivo</TabsTrigger><TabsTrigger value="breakdown"><ListTree aria-hidden="true" />Desglose académico</TabsTrigger></TabsList>
+            <CurriculumActions :curriculum="curriculum.curriculum" @configure="configurationOpen = true" />
+          </div>
+          <div v-if="activeMode === 'breakdown'" class="flex flex-wrap justify-end gap-2">
+            <Button v-if="curriculum.curriculum.editable && curriculum.subjects.length > 1" type="button" variant="outline" @click="requirementOpen = true"><Link2 data-icon="inline-start" aria-hidden="true" />Agregar relación</Button>
+            <Button v-if="curriculum.curriculum.editable" type="button" @click="openNewSubject"><Plus data-icon="inline-start" aria-hidden="true" />Agregar materia</Button>
+          </div>
+          <TabsContent value="breakdown" class="flex flex-col gap-6"><CurriculumFormView :data="curriculum" @edit="openSubject" @changed="handleCurriculumChanged" @failed="error = $event" /></TabsContent>
+          <TabsContent value="builder"><CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="organizationUnits" @changed="handleCurriculumChanged" /></TabsContent>
+        </Tabs>
+        <CurriculumSubjectSheet v-model:open="subjectOpen" :career="curriculum.career" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :subject="selectedSubject" :organization-units="organizationUnits" :modality-options="curriculum.modalityOptions" @saved="handleCurriculumChanged" />
+        <CurriculumRequirementSheet v-model:open="requirementOpen" :curriculum="curriculum.curriculum" :subjects="curriculum.subjects" @saved="handleCurriculumChanged" />
+        <CurriculumConfigurationSheet v-model:open="configurationOpen" :curriculum="curriculum.curriculum" @saved="handleCurriculumChanged" />
+      </template>
       <Alert v-if="mode === 'schedule' && schedule.career.lock_reason">
         <AlertDescription>{{ schedule.career.lock_reason }}</AlertDescription>
       </Alert>
@@ -171,9 +203,11 @@ onMounted(() => {
       </template
     >
     <p v-else-if="!error">Cargando estructura académica…</p>
-    <ManagedTeacherSheet
+    <ManagedUserSheet
       v-if="mode === 'teachers'"
       v-model:open="teacherOpen"
+      :teacher-career="assignments?.career ?? null"
+      :show-trigger="false"
       @saved="handleAssignmentChanged"
     />
   </PageFrame>

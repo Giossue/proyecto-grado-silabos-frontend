@@ -28,7 +28,6 @@ const CoordinationReviewDetailPage = () => import("@/pages/CoordinationReviewDet
 const CoordinationReviewComparisonPage = () => import("@/pages/CoordinationReviewComparisonPage.vue");
 const CoordinationSourcesPage = () => import("@/pages/CoordinationSourcesPage.vue");
 const CoordinationSourceDetailPage = () => import("@/pages/CoordinationSourceDetailPage.vue");
-const CoordinationAiConfigurationPage = () => import("@/pages/CoordinationAiConfigurationPage.vue");
 const CoordinationAcademicStructurePage = () => import("@/pages/CoordinationAcademicStructurePage.vue");
 const CoordinationReportsPage = () => import("@/pages/CoordinationReportsPage.vue");
 const DocumentsPage = () => import("@/pages/DocumentsPage.vue");
@@ -53,6 +52,11 @@ export const router = createRouter({
       path: "/api/v1/authentication/email-verification/:user/:hash",
       component: VerifyEmailPage,
       meta: { guest: true },
+    },
+    {
+      path: "/verificar-correo",
+      component: VerifyEmailPage,
+      meta: { requiresAuth: true, shell: false },
     },
     {
       path: "/verificar-dos-factores",
@@ -161,11 +165,6 @@ export const router = createRouter({
       meta: { requiresAuth: true, roles: ["coordinador"], title: "Fuente académica" },
     },
     {
-      path: "/coordinacion/configuracion-ia",
-      component: CoordinationAiConfigurationPage,
-      meta: { requiresAuth: true, roles: ["coordinador"], title: "Configuración IA" },
-    },
-    {
       path: "/coordinacion/estructura-academica",
       redirect: "/coordinacion/malla",
       meta: { requiresAuth: true, roles: ["coordinador"] },
@@ -216,11 +215,10 @@ router.beforeEach(async (to) => {
 
   const session = await sessionState.load();
   if (!session) return { path: "/ingresar", query: { redirect: to.fullPath } };
-  if (
-    (session.user.must_change_password || !session.user.email_verified) &&
-    to.path !== "/"
-  )
-    return "/";
+  if (!session.user.email_verified && to.path !== "/verificar-correo")
+    return "/verificar-correo";
+  if (session.user.email_verified && to.path === "/verificar-correo") return "/";
+  if (session.user.must_change_password && to.path !== "/") return "/";
   if (to.path === "/") return true;
   if (!session.active_role) return "/";
 

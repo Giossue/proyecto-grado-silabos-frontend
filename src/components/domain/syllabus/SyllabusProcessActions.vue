@@ -3,6 +3,8 @@ import { CalendarClock, Lock, Pause, Pencil, Play, Square } from '@lucide/vue';
 import { ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { transitionProcess, type SyllabusProcess } from '@/api/processes';
+import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
+import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -22,10 +24,8 @@ import { Textarea } from '@/components/ui/textarea';
 
 type Transition = 'abrir' | 'pausar' | 'reanudar' | 'cerrar';
 
-const props = defineProps<{ process: SyllabusProcess }>();
+const props = defineProps<{ process: SyllabusProcess; template: string | null; periods: { id: string; codigo: string }[] }>();
 const emit = defineEmits<{
-  edit: [process: SyllabusProcess];
-  deadline: [process: SyllabusProcess];
   completed: [message: string];
 }>();
 
@@ -33,6 +33,8 @@ const pending = ref<Transition | null>(null);
 const reason = ref('');
 const processing = ref(false);
 const error = ref<string | null>(null);
+const editOpen = ref(false);
+const deadlineOpen = ref(false);
 
 const dialogs: Record<Transition, { title: string; description: string; label: string; destructive?: boolean }> = {
   abrir: {
@@ -85,11 +87,11 @@ const confirm = async (): Promise<void> => {
 
 <template>
   <TableActionsMenu :label="`Acciones para ${process.name}`">
-    <DropdownMenuItem v-if="process.configurable" @select="emit('edit', process)"><Pencil />Editar</DropdownMenuItem>
+    <DropdownMenuItem v-if="process.configurable" @select="editOpen = true"><Pencil />Editar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'preparacion'" @select="pending = 'abrir'"><Play />Abrir</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'abierto'" @select="pending = 'pausar'"><Pause />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'pausado'" @select="pending = 'reanudar'"><Play />Reanudar</DropdownMenuItem>
-    <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" @select="emit('deadline', process)"><CalendarClock />Prorrogar plazo</DropdownMenuItem>
+    <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" @select="deadlineOpen = true"><CalendarClock />Prorrogar plazo</DropdownMenuItem>
     <template v-if="process.state === 'abierto' || process.state === 'pausado'">
       <DropdownMenuSeparator />
       <DropdownMenuItem variant="destructive" @select="pending = 'cerrar'"><Square />Cerrar</DropdownMenuItem>
@@ -107,4 +109,6 @@ const confirm = async (): Promise<void> => {
       </form>
     </DialogContent>
   </Dialog>
+  <SyllabusProcessSheet v-model:open="editOpen" :template="template" :periods="periods" :process="process" display="menu" @saved="emit('completed', $event)" />
+  <DeadlineExtensionSheet v-model:open="deadlineOpen" :process-id="process.id" display="menu" @saved="emit('completed', $event)" />
 </template>

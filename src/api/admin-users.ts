@@ -8,6 +8,8 @@ export type ManagedUser = {
   pending_first_login: boolean;
   two_factor_enabled: boolean;
   roles: Array<{ name: string; career_name: string | null }>;
+  careers: Array<string | null>;
+  assignments: Array<{ id: string; role_name: string; career_name: string | null; active: boolean }>;
 };
 
 export type ManagedUsersResponse = {
@@ -40,7 +42,7 @@ export const resendManagedUserAccess = (userId: string) =>
   api<{ message: string }>(`/admin/users/${userId}/resend-access`, { method: 'POST' });
 export const deleteManagedUser = (userId: string) => api<{ message: string }>(`/admin/users/${userId}`, { method: 'DELETE' });
 export const getManagedUser = (userId: string) => api<ManagedUserDetailResponse>(`/admin/users/${userId}`);
-export const updateManagedUser = (userId: string, payload: { nombre: string; correo_electronico: string; active: boolean }) =>
+export const updateManagedUser = (userId: string, payload: { nombre: string; correo_electronico: string; active?: boolean; role_code?: string; career_id?: string | null }) =>
   api<{ message: string }>(`/admin/users/${userId}`, { method: 'PATCH', body: JSON.stringify(payload) });
 export const assignManagedUserRole = (userId: string, payload: { role_code: string; career_id: string | null }) =>
   api<{ message: string }>(`/admin/users/${userId}/roles`, { method: 'POST', body: JSON.stringify(payload) });

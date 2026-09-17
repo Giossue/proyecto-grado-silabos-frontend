@@ -10,6 +10,8 @@ export type TemplateContentType =
     | 'table'
     | 'bulleted_list'
     | 'numbered_list'
+    | 'boolean'
+    | 'multiple_choice'
     | 'institutional'
     | 'flow';
 
@@ -108,4 +110,3 @@ export type TemplateBuilderProps = {
     }[];
     appearanceOptions: TemplateAppearanceOptions;
 };
-

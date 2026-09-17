@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import SettingsLayout from '@/layouts/SettingsLayout.vue';
+import SettingsLayout from '@/layouts/settings/Layout.vue';
 
 const status = ref<TwoFactorStatus | null>(null);
 const sessions = ref<DeviceSession[]>([]);

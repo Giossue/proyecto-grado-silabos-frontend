@@ -13,7 +13,7 @@ import {
 import { useRoute } from 'vue-router';
 import { Button } from '@/components/ui/button';
 import { useScrollDirection } from '@/composables/useScrollDirection';
-import { usePageTitle } from '@/composables/usePageTitle';
+import { usePageTitle } from '@/composables/usePageBreadcrumbs';
 import { cn } from '@/lib/utils';
 
 const props = withDefaults(

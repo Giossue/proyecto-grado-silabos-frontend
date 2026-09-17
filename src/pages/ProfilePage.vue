@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import SettingsLayout from '@/layouts/SettingsLayout.vue';
+import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { sessionState } from '@/state/session';
 const user = computed(() => sessionState.current.value?.user);
 </script>
