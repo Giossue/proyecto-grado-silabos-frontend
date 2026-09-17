@@ -157,10 +157,10 @@ const {
                 </TableHeader>
                 <TableBody>
                     <TableEmpty
-                        v-if="catalogs.faculties.length === 0"
+                        v-if="facultyPage.length === 0"
                         :colspan="5"
                     >
-                        No existen facultades registradas.
+                        {{ facultyFilter.active.value ? 'Ninguna facultad coincide con los filtros.' : 'No existen facultades registradas.' }}
                     </TableEmpty>
                     <TableRow
                         v-for="faculty in facultyPage"
@@ -256,10 +256,10 @@ const {
                 </TableHeader>
                 <TableBody>
                     <TableEmpty
-                        v-if="catalogs.careers.length === 0"
+                        v-if="careerPage.length === 0"
                         :colspan="8"
                     >
-                        No existen carreras registradas.
+                        {{ careerFilter.active.value ? 'Ninguna carrera coincide con los filtros.' : 'No existen carreras registradas.' }}
                     </TableEmpty>
                     <TableRow
                         v-for="career in careerPage"
@@ -362,10 +362,10 @@ const {
                 </TableHeader>
                 <TableBody>
                     <TableEmpty
-                        v-if="catalogs.campuses.length === 0"
+                        v-if="campusPage.length === 0"
                         :colspan="4"
                     >
-                        No existen campus registrados.
+                        {{ campusFilter.active.value ? 'Ningún campus coincide con los filtros.' : 'No existen campus registrados.' }}
                     </TableEmpty>
                     <TableRow
                         v-for="campus in campusPage"
@@ -425,10 +425,10 @@ const {
                 </TableHeader>
                 <TableBody>
                     <TableEmpty
-                        v-if="catalogs.periods.length === 0"
+                        v-if="periodPage.length === 0"
                         :colspan="5"
                     >
-                        No existen periodos académicos registrados.
+                        {{ periodFilter.active.value ? 'Ningún período coincide con los filtros.' : 'No existen periodos académicos registrados.' }}
                     </TableEmpty>
                     <TableRow
                         v-for="period in periodPage"

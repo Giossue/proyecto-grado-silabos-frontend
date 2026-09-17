@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import CoordinationConvocationsPage from "@/pages/CoordinationConvocationsPage.vue";
 import { createConvocation, getConvocations } from "@/api/convocations";
 import { getSession } from "@/api/session";
+import { Select } from "@/components/ui/select";
 
 const push = vi.fn();
 
@@ -90,6 +91,22 @@ describe("CoordinationConvocationsPage", () => {
 
     expect(createConvocation).toHaveBeenCalledWith("process-1", ["source-1"]);
     expect(push).toHaveBeenCalledWith("/coordinacion/convocatorias/convocation-1");
+    wrapper.unmount();
+  });
+
+  it("aplica el filtro de estado al cambiar el Select", async () => {
+    const wrapper = mount(CoordinationConvocationsPage, {
+      attachTo: document.body,
+      global: { stubs: { RouterLink: { template: "<a><slot /></a>" } } },
+    });
+    await flushPromises();
+
+    const stateSelect = wrapper.find('form select[name="state"]');
+    expect(stateSelect.exists()).toBe(true);
+    await wrapper.findComponent(Select).vm.$emit("update:modelValue", "pausada");
+    await flushPromises();
+
+    expect(getConvocations).toHaveBeenLastCalledWith({ q: "", state: "pausada", page: 1 });
     wrapper.unmount();
   });
 });

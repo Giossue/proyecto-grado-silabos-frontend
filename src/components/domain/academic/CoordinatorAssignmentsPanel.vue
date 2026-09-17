@@ -98,11 +98,8 @@ const {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableEmpty
-                            v-if="coordinatorAssignments.length === 0"
-                            :colspan="4"
-                        >
-                            No existen asignaciones de coordinación.
+                        <TableEmpty v-if="assignmentPage.length === 0" :colspan="4">
+                            {{ filter.active.value ? 'Ninguna asignación coincide con los filtros.' : 'No existen asignaciones de coordinación.' }}
                         </TableEmpty>
                         <TableRow
                             v-for="item in assignmentPage"

@@ -67,7 +67,7 @@ onMounted(() => { void load(); });
     <Card v-else><CardContent class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="sources-search" label="Buscar fuente" placeholder="Buscar por nombre o descripción" />
       <Table><TableHeader><TableRow><TableHead>Fuente</TableHead><TableHead>Contenido</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
-        <TableEmpty v-if="sourcePage.length === 0" :colspan="3">No existen fuentes.</TableEmpty>
+        <TableEmpty v-if="sourcePage.length === 0" :colspan="3">{{ filter.active.value ? 'Ninguna fuente coincide con la búsqueda.' : 'No existen fuentes.' }}</TableEmpty>
         <TableRow v-for="source in sourcePage" v-else :key="source.id"><TableCell><div>{{ source.name }}</div><div v-if="source.description" class="max-w-md truncate text-sm text-muted-foreground">{{ source.description }}</div></TableCell><TableCell>{{ source.has_content ? 'Redactado' : 'Sin contenido' }}</TableCell><TableCell class="text-right"><AcademicSourceActions :source="source" :locked="Boolean(lock)" @changed="changed" /></TableCell></TableRow>
       </TableBody></Table>
       <TablePagination :meta="sourceMeta" label="Paginación de fuentes académicas" @update:page="setSourcePage" />
