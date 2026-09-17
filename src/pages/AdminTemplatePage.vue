@@ -123,7 +123,7 @@ onBeforeUnmount(() => {
         description="El formato del sílabo: qué campos tiene y en qué orden. Se edita en el sitio; cada sílabo entregado conserva su propia copia."
     >
         <template #actions>
-            <Button v-if="!payload?.processLock" :disabled="creating" @click="create">
+            <Button :disabled="creating || Boolean(payload?.processLock)" @click="create">
                 <LoaderCircle v-if="creating" class="animate-spin" aria-hidden="true" />
                 <Plus v-else aria-hidden="true" />
                 {{ creating ? 'Creando plantilla…' : 'Nueva plantilla' }}
@@ -185,7 +185,7 @@ onBeforeUnmount(() => {
         size="wide"
     >
         <template #actions>
-            <Button v-if="!builder.processLock" @click="editing = true">
+            <Button :disabled="Boolean(builder.processLock)" @click="editing = true">
                 <Pencil data-icon="inline-start" aria-hidden="true" />Editar
             </Button>
         </template>

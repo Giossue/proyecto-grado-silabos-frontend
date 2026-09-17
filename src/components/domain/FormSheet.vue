@@ -18,11 +18,13 @@ withDefaults(
         title: string;
         description: string;
         showTrigger?: boolean;
+        disabled?: boolean;
         fullScreen?: boolean;
         wide?: boolean;
     }>(),
     {
         showTrigger: true,
+        disabled: false,
         fullScreen: false,
         wide: false,
     },
@@ -53,6 +55,7 @@ const close = (): void => {
                 <Button
                     class="w-full max-sm:size-14 max-sm:rounded-full max-sm:p-0 sm:w-auto"
                     :aria-label="triggerLabel"
+                    :disabled="disabled"
                 >
                     <Plus data-icon="inline-start" aria-hidden="true" />
                     <span class="max-sm:hidden">{{ triggerLabel }}</span>
@@ -83,4 +86,3 @@ const close = (): void => {
         </SheetContent>
     </Sheet>
 </template>
-

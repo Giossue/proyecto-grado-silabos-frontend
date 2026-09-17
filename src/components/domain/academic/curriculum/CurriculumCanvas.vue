@@ -193,6 +193,9 @@ const draftCycle = ref<number | null>(null);
 const hasOpenEditor = computed(
     () => editingSubjectId.value !== null || draftCycle.value !== null,
 );
+const editable = computed(
+    () => props.curriculum.editable && !props.curriculum.lock_reason,
+);
 
 const subjectsForCycle = (cycle: number): CurriculumBuilderSubject[] =>
     props.subjects
@@ -216,7 +219,7 @@ const laneWidth = computed(() => {
                         : subjectStep),
                 laneStart,
             );
-            const creationWidth = props.curriculum.editable
+            const creationWidth = editable.value
                 ? draftCycle.value === cycle
                     ? editorStep
                     : subjectStep
@@ -253,11 +256,13 @@ const subjectById = computed(
 );
 
 const beginSubjectEdit = (subjectId: string): void => {
+    if (!editable.value) return;
     draftCycle.value = null;
     editingSubjectId.value = subjectId;
 };
 
 const beginSubjectCreation = (cycle: number): void => {
+    if (!editable.value) return;
     editingSubjectId.value = null;
     draftCycle.value = cycle;
 };
@@ -318,9 +323,9 @@ const buildNodes = (): Node[] => {
                     unitStyle: unitStyleFor(subject.organization_unit),
                     cycle,
                     position: subject.position,
-                    editable: props.curriculum.editable,
+                    editable: editable.value,
                     draggable:
-                        props.curriculum.editable && !hasOpenEditor.value,
+                        editable.value && !hasOpenEditor.value,
                     editing,
                     onEdit: () => beginSubjectEdit(subject.id),
                     onCancel: closeEditor,
@@ -329,8 +334,8 @@ const buildNodes = (): Node[] => {
                         if (message) emit('changed', message);
                     },
                 },
-                draggable: props.curriculum.editable && !hasOpenEditor.value,
-                connectable: props.curriculum.editable && !hasOpenEditor.value,
+                draggable: editable.value && !hasOpenEditor.value,
+                connectable: editable.value && !hasOpenEditor.value,
                 selectable: false,
                 // El formulario en línea es más alto que la tarjeta e invade la fila de
                 // abajo: el nodo en edición se pinta por encima de todos los demás.
@@ -339,7 +344,7 @@ const buildNodes = (): Node[] => {
             x += editing ? editorStep : subjectStep;
         });
 
-        if (!props.curriculum.editable) {
+        if (!editable.value) {
             continue;
         }
 
@@ -595,7 +600,7 @@ const subjectName = (id: string | null | undefined): string =>
 
 const onConnect = (connection: Connection): void => {
     if (
-        !props.curriculum.editable ||
+        !editable.value ||
         hasOpenEditor.value ||
         connection.source === null ||
         connection.target === null
@@ -612,7 +617,7 @@ const onConnect = (connection: Connection): void => {
 const createRequirement = async (type: 'prerrequisito' | 'correquisito'): Promise<void> => {
     const pending = pendingConnection.value;
 
-    if (!pending) {
+    if (!editable.value || !pending) {
         return;
     }
 
@@ -640,7 +645,7 @@ const selectedRequirement = ref<(typeof props.requirements)[number] | null>(
 const deletingRequirement = ref(false);
 
 const onEdgeClick = ({ edge }: EdgeMouseEvent): void => {
-    if (!props.curriculum.editable || hasOpenEditor.value) {
+    if (!editable.value || hasOpenEditor.value) {
         return;
     }
 
@@ -652,7 +657,7 @@ const onEdgeClick = ({ edge }: EdgeMouseEvent): void => {
 const deleteRequirement = async (): Promise<void> => {
     const requirement = selectedRequirement.value;
 
-    if (!requirement) {
+    if (!editable.value || !requirement) {
         return;
     }
 
@@ -671,7 +676,7 @@ const deleteRequirement = async (): Promise<void> => {
 
 const onNodeDragStop = async ({ node }: NodeDragEvent): Promise<void> => {
     if (
-        !props.curriculum.editable ||
+        !editable.value ||
         node.type !== 'subject' ||
         !subjectById.value.has(node.id)
     ) {
@@ -754,8 +759,8 @@ const onNodeDragStop = async ({ node }: NodeDragEvent): Promise<void> => {
             :max-zoom="1.5"
             :translate-extent="navigationExtent"
             :connection-mode="ConnectionMode.Loose"
-            :nodes-draggable="curriculum.editable && !hasOpenEditor"
-            :nodes-connectable="curriculum.editable && !hasOpenEditor"
+            :nodes-draggable="editable && !hasOpenEditor"
+            :nodes-connectable="editable && !hasOpenEditor"
             :elements-selectable="true"
             @connect="onConnect"
             @edge-click="onEdgeClick"

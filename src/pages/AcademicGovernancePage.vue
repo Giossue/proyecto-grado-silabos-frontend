@@ -62,7 +62,7 @@ onMounted(load);
 <template>
     <PageFrame :title="sectionContent.title" :description="sectionContent.description">
         <template #actions>
-            <CatalogRecordSheet v-if="data && !data.lock_reason" :entity="entity" :options="data.options" @saved="changed" />
+        <CatalogRecordSheet v-if="data" :entity="entity" :options="data.options" :disabled="Boolean(data.lock_reason)" @saved="changed" />
         </template>
 
         <ProcessLockAlert v-if="data?.lock_reason" />

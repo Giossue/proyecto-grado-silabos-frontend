@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { STUDY_MODALITIES } from '@/lib/studyModalities';
 import type { AcademicStructureProps, GovernanceCatalogEntity } from '@/types/academic';
 
-const props = defineProps<Pick<AcademicStructureProps, 'options'> & { entity: GovernanceCatalogEntity }>();
+const props = withDefaults(defineProps<Pick<AcademicStructureProps, 'options'> & { entity: GovernanceCatalogEntity; disabled?: boolean }>(), { disabled: false });
 const emit = defineEmits<{ saved: [message: string] }>();
 
 const processing = ref(false);
@@ -41,6 +41,7 @@ const reset = (): void => {
     logo.value = null;
 };
 const submit = async (): Promise<void> => {
+    if (props.disabled) return;
     processing.value = true;
     errors.value = {};
     const payload = new FormData();
@@ -60,7 +61,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" :trigger-label="labels.trigger" :title="labels.title" :description="labels.description">
+    <FormSheet v-model:open="open" :disabled="props.disabled" :trigger-label="labels.trigger" :title="labels.title" :description="labels.description">
         <template #default="{ close }">
             <form @submit.prevent="submit">
                 <FieldGroup>

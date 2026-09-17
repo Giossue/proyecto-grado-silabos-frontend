@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const props = withDefaults(defineProps<{ options: TeacherAssignments["options"]; showTrigger?: boolean }>(), { showTrigger: true });
+const props = withDefaults(defineProps<{ options: TeacherAssignments["options"]; showTrigger?: boolean; disabled?: boolean }>(), { showTrigger: true, disabled: false });
 const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>("open", { default: false });
 const userId = ref("");
@@ -18,6 +18,7 @@ const saving = ref(false);
 const error = ref<string | null>(null);
 const reset = () => { userId.value = ""; parallelId.value = ""; error.value = null; };
 const submit = async (close: () => void) => {
+  if (props.disabled) return;
   if (!userId.value || !parallelId.value) return;
   saving.value = true;
   error.value = null;
@@ -33,7 +34,7 @@ watch(open, (value) => value && reset());
 </script>
 
 <template>
-  <FormSheet v-model:open="open" trigger-label="Asignar docente" title="Asignar docente" description="Seleccione una cuenta activa con rol Docente y un paralelo perteneciente a esta carrera." :show-trigger="showTrigger">
+  <FormSheet v-model:open="open" :disabled="props.disabled" trigger-label="Asignar docente" title="Asignar docente" description="Seleccione una cuenta activa con rol Docente y un paralelo perteneciente a esta carrera." :show-trigger="showTrigger">
     <template #default="{ close }"><form class="contents" @submit.prevent="submit(close)"><FieldGroup>
       <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
       <Field><FieldLabel for="teacher-user" required>Docente</FieldLabel><Select v-model="userId" required><SelectTrigger id="teacher-user"><SelectValue placeholder="Seleccione un docente" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="teacher in props.options.teacherUsers" :key="teacher.id" :value="teacher.id">{{ teacher.name }} · {{ teacher.email }}</SelectItem></SelectGroup></SelectContent></Select></Field>

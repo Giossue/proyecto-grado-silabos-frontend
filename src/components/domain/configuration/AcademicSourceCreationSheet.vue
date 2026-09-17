@@ -9,6 +9,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+const props = withDefaults(defineProps<{ disabled?: boolean }>(), { disabled: false });
 const emit = defineEmits<{ created: [sourceId: string, message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const form = reactive({ nombre: '', description: '' });
@@ -16,6 +17,7 @@ const errors = ref<Record<string, string[]>>({});
 const processing = ref(false);
 watch(open, (value) => { if (value) { Object.assign(form, { nombre: '', description: '' }); errors.value = {}; } });
 const submit = async (close: () => void): Promise<void> => {
+  if (props.disabled) return;
   processing.value = true;
   errors.value = {};
   try {
@@ -29,7 +31,7 @@ const submit = async (close: () => void): Promise<void> => {
 </script>
 
 <template>
-  <FormSheet v-model:open="open" trigger-label="Nueva fuente" title="Nueva fuente académica" description="Identifique el documento. Su contenido se redacta después, en la página de la fuente.">
+  <FormSheet v-model:open="open" :disabled="props.disabled" trigger-label="Nueva fuente" title="Nueva fuente académica" description="Identifique el documento. Su contenido se redacta después, en la página de la fuente.">
     <template #default="{ close }"><form @submit.prevent="submit(close)"><FieldGroup>
       <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel for="source-name" required>Nombre</FieldLabel><Input id="source-name" v-model="form.nombre" placeholder="Ej. Reglamento de régimen académico" required :aria-invalid="Boolean(errors.nombre)" /><FieldError :errors="errors.nombre" /></Field>
       <Field :data-invalid="Boolean(errors.description)"><FieldLabel for="source-description">Descripción</FieldLabel><Textarea id="source-description" v-model="form.description" :aria-invalid="Boolean(errors.description)" /><FieldError :errors="errors.description" /></Field>

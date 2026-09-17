@@ -154,24 +154,26 @@ onMounted(() => {
   >
     <template #actions>
       <PeriodPreparationSheet
-        v-if="mode === 'schedule' && schedule && !schedule.career.lock_reason && schedule.options.periods.some((item) => item.planning_enabled)"
+        v-if="mode === 'schedule' && schedule && schedule.options.periods.some((item) => item.planning_enabled)"
         :scheduled-subjects="schedule.scheduledSubjects"
         :options="schedule.options"
         :initial-period-id="schedule.selectedPeriodId"
+        :disabled="Boolean(schedule.career.lock_reason)"
         @saved="handleScheduleChanged"
       />
       <DropdownMenu v-if="mode === 'teachers' && assignments && (assignments.canCreateTeacher || !assignments.career.lock_reason)">
         <DropdownMenuTrigger as-child><Button><UserPlus data-icon="inline-start" aria-hidden="true" />Gestionar docente<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end"><DropdownMenuGroup>
           <DropdownMenuItem v-if="assignments.canCreateTeacher" @select="teacherOpen = true">Crear docente</DropdownMenuItem>
-          <DropdownMenuItem v-if="!assignments.career.lock_reason" @select="assignmentOpen = true">Asignar docente</DropdownMenuItem>
+          <DropdownMenuItem :disabled="Boolean(assignments.career.lock_reason)" @select="assignmentOpen = true">Asignar docente</DropdownMenuItem>
         </DropdownMenuGroup></DropdownMenuContent>
       </DropdownMenu>
       <TeacherAssignmentSheet
-        v-if="mode === 'teachers' && assignments && !assignments.career.lock_reason"
+        v-if="mode === 'teachers' && assignments"
         v-model:open="assignmentOpen"
         :options="assignments.options"
         :show-trigger="false"
+        :disabled="Boolean(assignments.career.lock_reason)"
         @saved="handleAssignmentChanged"
       />
     </template>
@@ -187,8 +189,8 @@ onMounted(() => {
             <CurriculumActions :curriculum="curriculum.curriculum" @configure="configurationOpen = true" />
           </div>
           <div v-if="activeMode === 'breakdown'" class="flex flex-wrap justify-end gap-2">
-            <Button v-if="curriculum.curriculum.editable && curriculum.subjects.length > 1" type="button" variant="outline" @click="requirementOpen = true"><Link2 data-icon="inline-start" aria-hidden="true" />Agregar relación</Button>
-            <Button v-if="curriculum.curriculum.editable" type="button" @click="openNewSubject"><Plus data-icon="inline-start" aria-hidden="true" />Agregar materia</Button>
+            <Button v-if="curriculum.curriculum.editable && curriculum.subjects.length > 1" type="button" variant="outline" :disabled="Boolean(curriculum.curriculum.lock_reason)" @click="requirementOpen = true"><Link2 data-icon="inline-start" aria-hidden="true" />Agregar relación</Button>
+            <Button v-if="curriculum.curriculum.editable" type="button" :disabled="Boolean(curriculum.curriculum.lock_reason)" @click="openNewSubject"><Plus data-icon="inline-start" aria-hidden="true" />Agregar materia</Button>
           </div>
           <TabsContent value="breakdown" class="flex flex-col gap-6"><CurriculumFormView :data="curriculum" @edit="openSubject" @changed="handleCurriculumChanged" @failed="actionError = $event" /></TabsContent>
           <TabsContent value="builder"><CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="organizationUnits" @changed="handleCurriculumChanged" /></TabsContent>

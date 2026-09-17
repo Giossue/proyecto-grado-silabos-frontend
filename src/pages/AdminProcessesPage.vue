@@ -34,7 +34,7 @@ onMounted(load);
 </script>
 
 <template><PageFrame title="Convocatorias de sílabos" description="El proceso institucional que obliga a todas las carreras: con qué plantilla se elaboran los sílabos y entre qué fechas. Cada coordinación convoca a su carrera dentro de él.">
-    <template #actions><SyllabusProcessSheet v-if="data && data.active_process === null" :template="data.template" :periods="data.periods" @saved="changed" /></template>
+    <template #actions><SyllabusProcessSheet v-if="data" :template="data.template" :periods="data.periods" :disabled="data.active_process !== null" @saved="changed" /></template>
     <ProcessLockAlert v-if="data?.active_process" />
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert><LoadErrorState v-if="error" :message="error" @retry="load" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="8" />
     <Card v-if="data"><CardContent class="flex flex-col gap-4"><ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar proceso" placeholder="Buscar por nombre o plantilla"><template #filters><Field><FieldLabel for="processes-search-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="processes-search-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="preparacion">En preparación</SelectItem><SelectItem value="abierto">Abiertos</SelectItem><SelectItem value="pausado">En pausa</SelectItem><SelectItem value="cerrado">Cerrados</SelectItem></SelectGroup></SelectContent></Select></Field></template></ClientFilterBar>

@@ -42,6 +42,7 @@ const props = defineProps<{
   scheduledSubjects: ScheduledSubjects["scheduledSubjects"];
   options: ScheduledSubjects["options"];
   initialPeriodId?: string | null;
+  disabled?: boolean;
 }>();
 const emit = defineEmits<{ saved: [message: string] }>();
 const open = ref(false);
@@ -83,6 +84,7 @@ const applyToSelected = () => {
 const addParallel = (row: PreparationRow) => row.parallels.push({ code: "", shift: "" });
 const removeParallel = (row: PreparationRow, index: number) => row.parallels.length > 1 && row.parallels.splice(index, 1);
 const submit = async (close: () => void) => {
+  if (props.disabled) return;
   if (!periodId.value || selectedRows.value.length === 0 || invalidRows.value) return;
   saving.value = true;
   error.value = null;
@@ -108,13 +110,14 @@ watch(open, (value) => value && reset());
 <template>
   <FormSheet
     v-model:open="open"
+    :disabled="props.disabled"
     wide
     trigger-label="Preparar período"
     title="Preparar período académico"
     description="Seleccione materias aún no programadas y configure sus paralelos. Campus y modalidad se heredan de la carrera."
   >
     <template #trigger>
-      <Button><CalendarCheck data-icon="inline-start" aria-hidden="true" />Preparar período</Button>
+      <Button :disabled="props.disabled"><CalendarCheck data-icon="inline-start" aria-hidden="true" />Preparar período</Button>
     </template>
     <template #default="{ close }">
       <form class="contents" @submit.prevent="submit(close)">

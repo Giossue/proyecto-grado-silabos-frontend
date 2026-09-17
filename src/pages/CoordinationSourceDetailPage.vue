@@ -73,7 +73,7 @@ onMounted(() => { void load(); });
 <template>
   <PageFrame :title="data?.source.name ?? 'Fuente académica'" :description="data?.source.description ?? 'Documento de apoyo para los sílabos de la carrera.'">
     <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.coordination.sources">← Volver a fuentes</RouterLink></Button></template>
-    <template #actions><AcademicSourceEditSheet v-if="data && !data.processLock" :source="data.source" @saved="metadataSaved" /></template>
+    <template #actions><AcademicSourceEditSheet v-if="data" :source="data.source" :disabled="Boolean(data.processLock)" @saved="metadataSaved" /></template>
     <div class="flex flex-col gap-4">
       <ProcessLockAlert v-if="data?.processLock" />
       <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
