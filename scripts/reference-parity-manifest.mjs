@@ -76,7 +76,7 @@ export const pages = [
     'TwoFactorChallengePage.vue': 'Conserva el reto TOTP/recuperación y verifica mediante API.',
     'VerifyEmailPage.vue': 'Conserva el estado de verificación y reenvío mediante API.',
     'AppearancePage.vue': 'Conserva los controles locales de apariencia; no requiere adaptación de dominio.',
-    'ProfilePage.vue': 'Conserva la variante canónica de identidad de solo lectura definida para usuarios no administrables.',
+    'ProfilePage.vue': 'Conserva las variantes canónicas editable y de solo lectura según la política expuesta por la sesión API.',
   }[page.target.split('/').at(-1)] ?? 'Sustituye únicamente navegación y transporte Inertia por Vue Router y la API JSON.',
   componentReplacements: page.source === 'pages/auth/ForgotPassword.vue'
     ? ['components/TextLink.vue']

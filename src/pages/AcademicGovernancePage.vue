@@ -9,7 +9,6 @@ import CatalogSection from '@/components/domain/academic/CatalogSection.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import type { GovernanceSection } from '@/types/academic';
 
 const router = useRouter();
@@ -49,9 +48,6 @@ const load = async (): Promise<void> => {
         error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la estructura académica.';
     } finally { loading.value = false; }
 };
-const select = async (value: AcademicEntity): Promise<void> => {
-    await router.replace({ path: route.path, query: { ...route.query, seccion: value } });
-};
 const changed = async (notice: string): Promise<void> => { message.value = notice; await load(); };
 watch(() => route.query.seccion, () => { message.value = null; });
 onMounted(load);
@@ -67,10 +63,6 @@ onMounted(load);
         <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
         <p v-if="loading && !data" class="text-sm text-muted-foreground" role="status">Cargando estructura académica…</p>
-
-        <nav class="flex flex-wrap gap-2" aria-label="Catálogos académicos">
-            <Button v-for="item in routeSections" :key="item.value" type="button" :variant="entity === item.value ? 'default' : 'outline'" :aria-current="entity === item.value ? 'page' : undefined" @click="select(item.value)">{{ item.label }}</Button>
-        </nav>
 
         <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" :lock-reason="data.lock_reason" @changed="changed" />
     </PageFrame>

@@ -126,8 +126,16 @@ if (dimensionsMismatch.length > 0) {
   if (strict) process.exitCode = 1;
 }
 
-const changedPreview = differences.slice(0, 12).map(({ currentRelative, baselineRelative, difference }) => `- ${currentRelative} ↔ ${baselineRelative}: ${difference}`).join('\n');
-if (changedPreview) console.log(`Diferencias de píxeles (datos/estado pueden variar; revisión humana):\n${changedPreview}`);
+const normalizedDifference = (value) => {
+  const match = value?.match(/\(([^)]+)\)$/);
+  return match ? Number(match[1]) : Number(value ?? 0);
+};
+const changedPreview = [...differences]
+  .sort((left, right) => normalizedDifference(right.difference) - normalizedDifference(left.difference))
+  .slice(0, 12)
+  .map(({ currentRelative, baselineRelative, difference }) => `- ${currentRelative} ↔ ${baselineRelative}: ${difference}`)
+  .join('\n');
+if (changedPreview) console.log(`Mayores diferencias de píxeles (datos/estado pueden variar; revisión humana):\n${changedPreview}`);
 console.log('La comparación no aprueba automáticamente semejanza: los pares con datos dinámicos requieren revisión visual.');
 if (dimensionsMismatch.length > 0 && !strict) {
   console.log('Modo informativo: usa `npm run test:visual-compare -- --strict` para convertir dimensiones incompatibles en fallo.');
