@@ -111,7 +111,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                     <slot name="eyebrow" />
                 </div>
 
-                <p class="max-w-3xl text-muted-foreground">
+                <p v-if="description" class="max-w-3xl text-muted-foreground">
                     {{ description }}
                 </p>
                 <div

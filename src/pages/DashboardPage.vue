@@ -20,7 +20,7 @@ const dashboard = ref<Dashboard | null>(null);
 const error = ref<string | null>(null);
 const message = ref<string | null>(null);
 const facultyLogoOpen = ref(false);
-const role = computed(() => sessionState.current.value?.active_role);
+
 const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, completion: ListRestart, correction_requested: CircleAlert, teachers_pending: UsersRound };
 const setupRoutes: Record<string, string> = {
   faculties: paths.admin.academic,
@@ -70,7 +70,7 @@ const load = async (): Promise<void> => {
 onMounted(() => { void load(); });
 </script>
 <template>
-  <PageFrame class="h-full flex-1" title="Panel de trabajo" :description="role?.career_name ?? 'Gestión institucional de Sílabos UEB'">
+  <PageFrame class="h-full flex-1" title="Panel de trabajo" description="">
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <template v-else-if="dashboard">
