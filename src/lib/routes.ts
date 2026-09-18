@@ -62,8 +62,7 @@ export const paths = {
     profile: '/coordinacion/configuracion/perfil',
     security: '/coordinacion/configuracion/seguridad',
     convocations: '/coordinacion/convocatorias',
-    convocation: (convocation: string): string =>
-      `/coordinacion/convocatorias/${segment(convocation)}`,
+
     reviews: '/coordinacion/revisiones',
     review: (revision: string): string => `/coordinacion/revisiones/${segment(revision)}`,
     comparison: (before: string, after: string): string =>
@@ -192,7 +191,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-profile', path: paths.coordination.profile, component: 'ProfilePage', shortcut: 'profile', ...coordinator },
   { name: 'coordination-security', path: paths.coordination.security, component: 'SecurityPage', shortcut: 'security', ...coordinator },
   { name: 'coordination-convocations', path: paths.coordination.convocations, component: 'CoordinationConvocationsPage', breadcrumb: 'Convocatorias', ...coordinator },
-  { name: 'coordination-convocation', path: '/coordinacion/convocatorias/:convocation', component: 'CoordinationConvocationDetailPage', breadcrumb: 'Detalle de convocatoria', ...coordinator },
+
   { name: 'coordination-reviews', path: paths.coordination.reviews, component: 'CoordinationReviewsPage', breadcrumb: 'Revisión', ...coordinator },
   { name: 'coordination-review', path: '/coordinacion/revisiones/:revision', component: 'CoordinationReviewDetailPage', breadcrumb: 'Detalle de revisión', ...coordinator },
   { name: 'coordination-comparison', path: '/coordinacion/revisiones/:before/comparar/:after', component: 'CoordinationReviewComparisonPage', breadcrumb: 'Comparar revisiones', ...coordinator },

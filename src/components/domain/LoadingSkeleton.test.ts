@@ -22,7 +22,6 @@ const variants = [
   'source',
   'template',
   'report',
-  'convocation',
   'comparison',
 ] as const;
 

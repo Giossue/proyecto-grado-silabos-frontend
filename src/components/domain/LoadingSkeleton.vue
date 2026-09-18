@@ -21,7 +21,6 @@ type LoadingVariant =
     | 'source'
     | 'template'
     | 'report'
-    | 'convocation'
     | 'comparison';
 
 const props = withDefaults(
@@ -484,41 +483,6 @@ const gridColumns = (): string =>
                 </div>
             </template>
 
-            <!-- Detalle de una convocatoria: alerta, seguimiento y configuración fijada. -->
-            <template v-else-if="variant === 'convocation'">
-                <div class="flex items-start gap-3 rounded-lg border px-4 py-4">
-                    <Skeleton class="mt-0.5 size-5 shrink-0 rounded-full" />
-                    <div class="flex min-w-0 flex-1 flex-col gap-2">
-                        <Skeleton class="h-5 w-52" />
-                        <Skeleton class="h-4 w-full" />
-                        <Skeleton class="h-4 w-4/5" />
-                    </div>
-                </div>
-                <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
-                    <div class="rounded-xl border bg-card p-6">
-                        <div class="flex flex-col gap-2">
-                            <Skeleton class="h-6 w-56" />
-                            <Skeleton class="h-4 w-full" />
-                            <Skeleton class="h-4 w-4/5" />
-                        </div>
-                        <div class="mt-5 flex flex-col gap-4">
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-                                <Skeleton class="h-10 min-w-0 flex-1" />
-                                <Skeleton class="h-10 w-full sm:w-44" />
-                            </div>
-                            <div class="overflow-hidden rounded-lg border">
-                                <div class="grid grid-cols-4 gap-3 border-b bg-muted/40 px-3 py-3"><Skeleton v-for="column in 4" :key="`convocation-header-${column}`" class="h-4 w-3/4" /></div>
-                                <div class="flex flex-col gap-px bg-border"><div v-for="row in 4" :key="`convocation-row-${row}`" class="grid grid-cols-4 gap-3 bg-background px-3 py-4"><Skeleton v-for="column in 4" :key="`convocation-cell-${row}-${column}`" class="h-4 w-full" /></div></div>
-                            </div>
-                            <div class="flex items-center justify-between"><Skeleton class="h-4 w-40" /><Skeleton class="h-9 w-32" /></div>
-                        </div>
-                    </div>
-                    <div class="h-fit rounded-xl border bg-card p-6">
-                        <div class="flex flex-col gap-2"><Skeleton class="h-6 w-48" /><Skeleton class="h-4 w-64 max-w-full" /></div>
-                        <div class="mt-5 flex flex-col gap-5"><Skeleton v-for="field in 3" :key="`convocation-field-${field}`" class="h-12 w-full" /></div>
-                    </div>
-                </div>
-            </template>
 
             <!-- Comparación: resumen y tarjetas de cambios con dos columnas. -->
             <template v-else-if="variant === 'comparison'">

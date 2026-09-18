@@ -47,9 +47,6 @@ const changed = async (value: string): Promise<void> => {
   message.value = value;
   await load();
 };
-const navigate = async (id: string): Promise<void> => {
-  await router.push(paths.coordination.convocation(id));
-};
 
 onMounted(() => { void load(); });
 </script>
@@ -61,7 +58,7 @@ onMounted(() => { void load(); });
       <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters"><template #search><Field><FieldLabel for="convocations-search" class="sr-only">Buscar convocatoria</FieldLabel><Input id="convocations-search" v-model="filters.q" type="search" placeholder="Buscar por nombre o periodo" /></Field></template><template #filters><Field><FieldLabel for="convocations-state" class="sr-only">Estado</FieldLabel><Select v-model="filters.state" name="state"><SelectTrigger id="convocations-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="abierta">Iniciadas</SelectItem><SelectItem value="pausada">Pausadas</SelectItem><SelectItem value="cerrada">Cerradas</SelectItem></SelectGroup></SelectContent></Select></Field></template></FilterToolbar></form>
       <Table><TableHeader><TableRow><TableHead>Convocatoria</TableHead><TableHead>Periodo</TableHead><TableHead>Estado institucional</TableHead><TableHead>Estado de la carrera</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
         <TableEmpty v-if="data.convocations.data.length === 0" :colspan="5">No hay convocatorias para los filtros actuales.</TableEmpty>
-        <TableRow v-for="convocation in data.convocations.data" v-else :key="convocation.process_id"><TableCell>{{ convocation.name }}</TableCell><TableCell>{{ convocation.period }}</TableCell><TableCell>{{ stateLabel(convocation.process_state) }}</TableCell><TableCell>{{ stateLabel(convocation.state) }}</TableCell><TableCell class="text-right"><ConvocationActions :convocation="convocation" :available-sources="data.available_sources" @changed="changed" @navigate="navigate" /></TableCell></TableRow>
+        <TableRow v-for="convocation in data.convocations.data" v-else :key="convocation.process_id"><TableCell>{{ convocation.name }}</TableCell><TableCell>{{ convocation.period }}</TableCell><TableCell>{{ stateLabel(convocation.process_state) }}</TableCell><TableCell>{{ stateLabel(convocation.state) }}</TableCell><TableCell class="text-right"><ConvocationActions :convocation="convocation" :available-sources="data.available_sources" @changed="changed" /></TableCell></TableRow>
       </TableBody></Table>
       <TablePagination :meta="data.convocations" label="Paginación de convocatorias" @update:page="load" />
     </CardContent></Card>

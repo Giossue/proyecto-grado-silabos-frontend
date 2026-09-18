@@ -1,7 +1,7 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import CoordinationConvocationsPage from "@/pages/CoordinationConvocationsPage.vue";
-import { createConvocation, getConvocations } from "@/api/convocations";
+import { createConvocation, getConvocation, getConvocations } from "@/api/convocations";
 import { getSession } from "@/api/session";
 import { Select } from "@/components/ui/select";
 
@@ -13,6 +13,7 @@ vi.mock("vue-router", () => ({
 }));
 
 vi.mock("@/api/convocations", () => ({
+  getConvocation: vi.fn(),
   getConvocations: vi.fn(),
   createConvocation: vi.fn(),
   openConvocation: vi.fn(),
@@ -37,6 +38,7 @@ describe("CoordinationConvocationsPage", () => {
       active_role: { id: "role-1", code: "coordinador", career_id: "career-1", career_name: "Software" },
       available_roles: [],
     });
+    vi.mocked(getConvocation).mockReset();
     vi.mocked(getConvocations).mockResolvedValue({
       filters: { q: null, state: null },
       available_sources: [{ id: "source-1", name: "Reglamento académico" }],
@@ -90,7 +92,65 @@ describe("CoordinationConvocationsPage", () => {
     await flushPromises();
 
     expect(createConvocation).toHaveBeenCalledWith("process-1", ["source-1"]);
-    expect(push).toHaveBeenCalledWith("/coordinacion/convocatorias/convocation-1");
+    expect(getConvocations).toHaveBeenLastCalledWith({ q: "", state: "", page: 1 });
+    expect(push).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  it("abre el seguimiento en un Sheet sin configuración fijada", async () => {
+    vi.mocked(getConvocations).mockResolvedValue({
+      filters: { q: null, state: null },
+      available_sources: [],
+      convocations: {
+        data: [{
+          id: "convocation-1",
+          process_id: "process-1",
+          name: "2026-2",
+          state: "abierta",
+          process_state: "abierto",
+          period: "2026-2",
+          template: "Plantilla institucional",
+          syllabi_count: 1,
+        }],
+        current_page: 1,
+        last_page: 1,
+        per_page: 15,
+        from: 1,
+        to: 1,
+        total: 1,
+      },
+    });
+    vi.mocked(getConvocation).mockResolvedValue({
+      convocation: {
+        id: "convocation-1",
+        name: "2026-2",
+        state: "abierta",
+        process: { name: "Proceso institucional", state: "abierto" },
+        period: "2026-2",
+        template: "Plantilla institucional",
+        sources: [],
+        start_date: "2026-09-09T00:00:00Z",
+        draft_deadline: "2026-09-15T00:00:00Z",
+        counts: { total: 1, not_started: 0, draft: 1, in_review: 0, approved: 0 },
+        syllabi: [{ id: "syllabus-1", subject: "Inteligencia Artificial", code: "SW-P7-037", state: "borrador", completion: 32, parallels: ["A"], teachers: ["Patricio Carlos Landa Muñoz"] }],
+      },
+    });
+
+    const wrapper = mount(CoordinationConvocationsPage, {
+      attachTo: document.body,
+      global: { stubs: { RouterLink: { template: "<a><slot /></a>" } } },
+    });
+    await flushPromises();
+
+    await wrapper.get("table tbody button").trigger("click");
+    const trackingItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'))
+      .find((item) => item.textContent?.includes("Ver seguimiento"));
+    trackingItem?.click();
+    await flushPromises();
+
+    expect(getConvocation).toHaveBeenCalledWith("convocation-1");
+    expect(document.body.textContent).toContain("Seguimiento por expediente");
+    expect(document.body.textContent).not.toContain("Configuración fijada");
     wrapper.unmount();
   });
 

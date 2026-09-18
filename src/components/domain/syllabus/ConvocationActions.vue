@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Eye, Lock, Pause, Play } from '@lucide/vue';
 import { computed, ref } from 'vue';
-import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { createConvocation, openConvocation, transitionConvocation, type ConvocationItem } from '@/api/convocations';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
@@ -12,18 +11,18 @@ import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { paths } from '@/lib/routes';
+import ConvocationTrackingSheet from '@/components/domain/syllabus/ConvocationTrackingSheet.vue';
 
 type Transition = 'iniciar' | 'abrir' | 'pausar' | 'reanudar';
 const props = defineProps<{ convocation: ConvocationItem; availableSources: Array<{ id: string; name: string }> }>();
-const router = useRouter();
-const emit = defineEmits<{ changed: [message: string]; navigate: [id: string] }>();
+const emit = defineEmits<{ changed: [message: string] }>();
 const pending = ref<Transition | null>(null);
 const processing = ref(false);
 const reason = ref('');
 const sourceIds = ref<string[]>([]);
 const error = ref<string | null>(null);
 const fieldErrors = ref<Record<string, string[]>>({});
+const trackingOpen = ref(false);
 const reasonCharacters = computed(() => reason.value.trim().length);
 const dialogs: Record<Transition, { title: string; description: string; label: string }> = {
   iniciar: { title: 'Iniciar convocatoria de la carrera', description: 'Se comprobarán la malla, las materias programadas, la asignación docente y las fuentes académicas de su carrera. Se generará un sílabo por paralelo usando la plantilla y las fechas institucionales. Si falta algún requisito, no se iniciará la convocatoria.', label: 'Iniciar convocatoria' },
@@ -50,7 +49,7 @@ const submit = async (): Promise<void> => {
     if (pending.value === 'iniciar') {
       const result = await createConvocation(props.convocation.process_id, sourceIds.value);
       pending.value = null;
-      emit('navigate', result.convocation_id);
+      emit('changed', result.message);
       return;
     }
     if (!props.convocation.id) return;
@@ -71,7 +70,7 @@ const submit = async (): Promise<void> => {
 <template>
   <TableActionsMenu :label="`Acciones para ${convocation.name}`">
     <DropdownMenuItem v-if="convocation.id === null" :disabled="convocation.process_state !== 'abierto'" @select="select('iniciar')"><Play aria-hidden="true" />Iniciar</DropdownMenuItem>
-    <DropdownMenuItem v-if="convocation.id !== null" @select="router.push(paths.coordination.convocation(convocation.id))"><Eye aria-hidden="true" />Ver seguimiento</DropdownMenuItem>
+    <DropdownMenuItem v-if="convocation.id !== null" @select="trackingOpen = true"><Eye aria-hidden="true" />Ver seguimiento</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'preparacion'" :disabled="convocation.process_state !== 'abierto'" @select="select('abrir')"><Play aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'abierta'" @select="select('pausar')"><Pause aria-hidden="true" />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'pausada'" :disabled="convocation.process_state !== 'abierto'" @select="select('reanudar')"><Play aria-hidden="true" />Reanudar</DropdownMenuItem>
@@ -84,4 +83,9 @@ const submit = async (): Promise<void> => {
     <p v-if="error && Object.keys(fieldErrors).length === 0" class="text-sm text-destructive" role="alert">{{ error }}</p>
     <DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose><Button type="button" :disabled="processing || (pending === 'iniciar' && sourceIds.length === 0) || (pending === 'pausar' && reasonCharacters < 10)" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><Pause v-else-if="pending === 'pausar'" data-icon="inline-start" aria-hidden="true" /><Play v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[pending].label }}</Button></DialogFooter>
   </form></DialogContent></Dialog>
+  <ConvocationTrackingSheet
+    v-if="convocation.id !== null"
+    v-model:open="trackingOpen"
+    :convocation-id="convocation.id"
+  />
 </template>
