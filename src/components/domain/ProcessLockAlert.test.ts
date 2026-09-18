@@ -22,7 +22,7 @@ describe('ProcessLockAlert', () => {
     });
 
     expect(wrapper.text()).toContain('Edición bloqueada');
-    expect(wrapper.text()).toContain('Primero debe pausar la convocatoria desde Convocatorias.');
+    expect(wrapper.text()).toContain('Pause la convocatoria para editar desde Convocatorias.');
     expect(wrapper.get('a').attributes('href')).toBe(paths.coordination.convocations);
   });
 });

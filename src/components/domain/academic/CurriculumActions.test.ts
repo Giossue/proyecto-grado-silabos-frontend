@@ -11,7 +11,7 @@ describe('CurriculumActions', () => {
           code: 'SW-8C',
           cycle_count: 8,
           editable: true,
-          lock_reason: 'Edición bloqueada. Primero debe pausar la convocatoria desde Convocatorias.',
+          lock_reason: 'Convocatoria activa.',
         },
       },
     });
