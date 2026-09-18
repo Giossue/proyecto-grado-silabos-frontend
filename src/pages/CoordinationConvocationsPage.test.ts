@@ -151,6 +151,8 @@ describe("CoordinationConvocationsPage", () => {
     expect(getConvocation).toHaveBeenCalledWith("convocation-1");
     expect(document.body.textContent).toContain("Seguimiento por expediente");
     expect(document.body.textContent).not.toContain("Configuración fijada");
+    expect(document.body.querySelectorAll('[role="dialog"] th')).toHaveLength(3);
+    expect(Array.from(document.body.querySelectorAll('[role="dialog"] th')).some((cell) => cell.textContent?.includes("Estado"))).toBe(false);
     wrapper.unmount();
   });
 

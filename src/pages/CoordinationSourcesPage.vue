@@ -22,9 +22,10 @@ import { paths } from '@/lib/routes';
 const router = useRouter();
 const sources = ref<Source[]>([]);
 const loading = ref(true);
-const lock = ref<string | null>(null);
+const lock = ref<string | null | undefined>();
 const error = ref<string | null>(null);
 const message = ref<string | null>(null);
+const editingLocked = computed(() => loading.value || lock.value !== null);
 
 const filter = useClientFilter(() => sources.value, (item) => [item.name, item.description ?? '']);
 const filteredSources = computed(() => filter.items.value);
@@ -33,6 +34,7 @@ const { items: sourcePage, meta: sourceMeta, setPage: setSourcePage } = useClien
 const load = async (): Promise<void> => {
   loading.value = true;
   error.value = null;
+  lock.value = undefined;
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'coordinador') {
@@ -59,7 +61,7 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Fuentes académicas" description="Los documentos que la coordinación entrega a los docentes como apoyo para elaborar sus sílabos.">
-    <template #actions><AcademicSourceCreationSheet :disabled="Boolean(lock)" @created="created" /></template>
+    <template #actions><AcademicSourceCreationSheet :disabled="editingLocked" @created="created" /></template>
     <ProcessLockAlert v-if="lock" />
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
@@ -68,7 +70,7 @@ onMounted(() => { void load(); });
       <ClientFilterBar :filter="filter" input-id="sources-search" label="Buscar fuente" placeholder="Buscar por nombre o descripción" />
       <Table><TableHeader><TableRow><TableHead>Fuente</TableHead><TableHead>Contenido</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
         <TableEmpty v-if="sourcePage.length === 0" :colspan="3">{{ filter.active.value ? 'Ninguna fuente coincide con la búsqueda.' : 'No existen fuentes.' }}</TableEmpty>
-        <TableRow v-for="source in sourcePage" v-else :key="source.id"><TableCell><div>{{ source.name }}</div><div v-if="source.description" class="max-w-md truncate text-sm text-muted-foreground">{{ source.description }}</div></TableCell><TableCell>{{ source.has_content ? 'Redactado' : 'Sin contenido' }}</TableCell><TableCell class="text-right"><AcademicSourceActions :source="source" :locked="Boolean(lock)" @changed="changed" /></TableCell></TableRow>
+        <TableRow v-for="source in sourcePage" v-else :key="source.id"><TableCell><div>{{ source.name }}</div><div v-if="source.description" class="max-w-md truncate text-sm text-muted-foreground">{{ source.description }}</div></TableCell><TableCell>{{ source.has_content ? 'Redactado' : 'Sin contenido' }}</TableCell><TableCell class="text-right"><AcademicSourceActions :source="source" :locked="editingLocked" @changed="changed" /></TableCell></TableRow>
       </TableBody></Table>
       <TablePagination :meta="sourceMeta" label="Paginación de fuentes académicas" @update:page="setSourcePage" />
     </CardContent></Card>

@@ -18,13 +18,7 @@ const emit = defineEmits<{ 'update:open': [value: boolean] }>();
 const data = ref<ConvocationDetail | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
-const stateLabel = (value: string): string => ({
-  sin_iniciar: 'Sin iniciar',
-  borrador: 'Borrador',
-  en_revision: 'En revisión',
-  correccion_solicitada: 'Corrección solicitada',
-  aprobado: 'Aprobado',
-})[value] ?? 'Estado no disponible';
+
 const formatDate = (value: string | null): string => value
   ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'long' }).format(new Date(value))
   : 'Sin fecha';
@@ -65,7 +59,7 @@ watch(() => props.open, (open) => {
 
       <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6">
         <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" />
+        <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" />
         <div v-else-if="data" class="flex flex-col gap-4">
           <ClientFilterBar
             :filter="syllabusFilter"
@@ -100,12 +94,12 @@ watch(() => props.open, (open) => {
                 <TableRow>
                   <TableHead>Asignatura</TableHead>
                   <TableHead>Paralelos y docentes</TableHead>
-                  <TableHead>Estado</TableHead>
+
                   <TableHead class="text-right">Completitud</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableEmpty v-if="syllabusPage.length === 0" :colspan="4">
+                <TableEmpty v-if="syllabusPage.length === 0" :colspan="3">
                   {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros.' : 'Los expedientes aparecerán después de abrir la convocatoria.' }}
                 </TableEmpty>
                 <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id">
@@ -117,7 +111,7 @@ watch(() => props.open, (open) => {
                     <div>Paralelos {{ syllabus.parallels.join(', ') }}</div>
                     <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
                   </TableCell>
-                  <TableCell>{{ stateLabel(syllabus.state) }}</TableCell>
+
                   <TableCell class="text-right">{{ syllabus.completion.toFixed(0) }} %</TableCell>
                 </TableRow>
               </TableBody>
