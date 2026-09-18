@@ -291,18 +291,34 @@ const gridColumns = (): string =>
                 </div>
             </template>
 
-            <!-- Estructura académica: cambia la tabla según el modo solicitado. -->
+            <!-- Estructura académica: cambia la superficie según el modo solicitado. -->
             <template v-else-if="variant === 'academic-structure'">
                 <template v-if="props.mode === 'curriculum'">
-                    <div class="flex items-center justify-between gap-3">
-                        <div class="bg-muted inline-flex h-9 w-fit items-center gap-1 rounded-lg p-0.75">
-                            <Skeleton class="h-7 w-28 rounded-md" />
-                            <Skeleton class="h-7 w-44 rounded-md" />
+                    <div
+                        data-skeleton="curriculum-canvas"
+                        class="relative h-[72vh] min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
+                    >
+                        <div class="absolute inset-0 overflow-hidden p-6 sm:p-8">
+                            <div class="grid h-full grid-cols-2 gap-5 sm:grid-cols-4 sm:gap-8">
+                                <div v-for="cycle in 4" :key="`curriculum-cycle-${cycle}`" class="flex min-w-0 flex-col gap-4">
+                                    <Skeleton class="h-7 w-24 max-w-full rounded-md" />
+                                    <div class="flex min-w-0 flex-col gap-3">
+                                        <Skeleton v-for="subject in 3" :key="`curriculum-subject-${cycle}-${subject}`" class="h-20 w-full rounded-lg" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex gap-2"><Skeleton class="h-9 w-28" /><Skeleton class="h-9 w-32" /></div>
-                    </div>
-                    <div class="rounded-xl border bg-card p-6">
-                        <div class="flex flex-col gap-3"><Skeleton class="h-6 w-64" /><Skeleton class="h-4 w-96 max-w-full" /><Skeleton class="mt-3 h-72 w-full" /></div>
+                        <div class="absolute right-3 top-3 flex w-36 flex-col gap-3 rounded-lg border bg-card p-3">
+                            <Skeleton class="h-4 w-24" />
+                            <Skeleton class="h-3 w-full" />
+                            <Skeleton class="h-3 w-28" />
+                        </div>
+                        <div class="absolute bottom-3 left-3 flex flex-col overflow-hidden rounded-md border bg-card">
+                            <Skeleton class="h-8 w-8 rounded-none" />
+                            <Skeleton class="h-8 w-8 rounded-none" />
+                            <Skeleton class="h-8 w-8 rounded-none" />
+                        </div>
+                        <Skeleton class="absolute bottom-3 right-3 h-24 w-32 rounded-md border" />
                     </div>
                 </template>
                 <div v-else class="overflow-hidden rounded-xl border bg-card p-6">
