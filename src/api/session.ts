@@ -8,7 +8,7 @@ export type ActiveRole = {
 };
 
 export type Session = {
-  user: { id: string; name: string; email: string; email_verified: boolean; must_change_password: boolean; can_edit_identity: boolean };
+  user: { id: string; name: string; email: string; email_verified: boolean; can_edit_identity: boolean };
   active_role: ActiveRole | null;
   available_roles: ActiveRole[];
 };
@@ -37,6 +37,11 @@ export const resetForgottenPassword = (email: string, token: string, password: s
   api<{ message: string }>('/authentication/password-reset', {
     method: 'POST',
     body: JSON.stringify({ email, token, password, password_confirmation: passwordConfirmation }),
+  });
+export const activateAccount = (token: string, password: string, passwordConfirmation: string): Promise<{ message: string }> =>
+  api<{ message: string }>('/authentication/account-activation', {
+    method: 'POST',
+    body: JSON.stringify({ token, password, password_confirmation: passwordConfirmation }),
   });
 export const verifyEmail = (userId: string, hash: string, query: URLSearchParams): Promise<{ message: string }> =>
   api<{ message: string }>(`/authentication/email-verification/${userId}/${hash}?${query.toString()}`, { method: 'POST' });

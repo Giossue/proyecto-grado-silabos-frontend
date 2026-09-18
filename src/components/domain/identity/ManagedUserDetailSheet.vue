@@ -30,8 +30,8 @@ export type ManagedUserRow = {
     nombre: string;
     correo_electronico: string;
     active: boolean;
-    /** Sigue con la contraseña temporal: la cuenta se creó y nadie la ha estrenado. */
-    pending_first_login: boolean;
+    /** Aún no se ha consumido la invitación de activación. */
+    pending_activation: boolean;
     two_factor_enabled: boolean;
     roles: { name: string; career_name: string | null }[];
     /** Carreras en el mismo orden que los roles, para que ambas columnas casen fila a fila. */
@@ -55,11 +55,11 @@ const status = computed(() => {
         };
     }
 
-    if (props.user.pending_first_login) {
+    if (props.user.pending_activation) {
         return {
             label: 'Pendiente de activación',
             variant: 'default' as const,
-            hint: 'La cuenta se creó y todavía nadie ha iniciado sesión con ella. Conserva su contraseña temporal.',
+            hint: 'La cuenta espera que su titular abra la invitación y defina su contraseña.',
         };
     }
 
@@ -223,4 +223,3 @@ const completedAssignments = computed(() =>
         Ver
     </DropdownMenuItem>
 </template>
-

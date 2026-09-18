@@ -105,6 +105,7 @@ export type ScheduledSubjects = {
 export type TeacherAssignments = {
   canCreateTeacher: boolean;
   career: { id: string; name: string; lock_reason: string | null };
+  pendingTeachers: Array<{ id: string; name: string; email: string }>;
   teacherAssignments: Array<{
     id: string;
     user_id: string;
@@ -231,11 +232,14 @@ export const deleteScheduledSubject = (id: string) =>
 export const createCareerTeacher = (payload: {
   nombre: string;
   correo_electronico: string;
-  password: string;
 }) =>
   api<{ message: string }>("/coordination/academic/teachers", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+export const resendCareerTeacherInvitation = (userId: string) =>
+  api<{ message: string }>(`/coordination/academic/teachers/${userId}/resend-activation`, {
+    method: "POST",
   });
 export const relieveCareerTeacher = (payload: {
   outgoing_user_id: string;

@@ -49,7 +49,7 @@ const load = async (): Promise<void> => {
             await router.replace(paths.emailVerificationRequired);
             return;
         }
-        if (session.value.active_role && !session.value.user.must_change_password) {
+        if (session.value.active_role) {
             await router.replace(consumeIntendedRoute() ?? paths.dashboard);
         }
     } catch (reason) {

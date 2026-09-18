@@ -27,6 +27,14 @@ const route = useRoute(); const userId = String(route.params.user);
 const result = ref<ManagedUserDetailResponse | null>(null); const loading = ref(true); const pending = ref(false);
 const message = ref<string | null>(null); const loadError = ref<string | null>(null); const actionError = ref<string | null>(null);
 const assignments = computed(() => result.value?.managedUser.assignments ?? []);
+const assignableRoles = computed(() => {
+    const activeAssignments = assignments.value.filter((assignment) => assignment.active);
+    if (activeAssignments.some((assignment) => assignment.role_code === 'administrador')) return [];
+    if (activeAssignments.some((assignment) => assignment.role_code !== 'administrador')) {
+        return result.value?.roles.filter((role) => role.codigo !== 'administrador') ?? [];
+    }
+    return result.value?.roles ?? [];
+});
 const assignmentFilter = useClientFilter(() => assignments.value, (item) => [item.role_name, item.career_name], { estado: { matches: (item, value) => item.effective === (value === 'active') } });
 const { items: assignmentPage, meta: assignmentMeta, setPage: setAssignmentPage } = useClientPagination(() => assignmentFilter.items.value);
 const load = async (): Promise<void> => { loading.value = true; loadError.value = null; try { result.value = await getManagedUser(userId); } catch (reason) { loadError.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la cuenta.'; } finally { loading.value = false; } };
@@ -40,7 +48,7 @@ onMounted(load);
     <template v-if="result" #meta><Badge :variant="result.managedUser.active ? 'secondary' : 'outline'">{{ result.managedUser.active ? 'Cuenta activa' : 'Cuenta inactiva' }}</Badge></template>
     <template v-if="result" #actions>
         <UserProfileSheet :user-id="result.managedUser.id" :nombre="result.managedUser.nombre" :correo_electronico="result.managedUser.correo_electronico" @saved="changed" />
-        <RoleAssignmentSheet :managed-user-id="result.managedUser.id" :roles="result.roles" :careers="result.careers" @saved="changed" />
+        <RoleAssignmentSheet v-if="assignableRoles.length > 0" :managed-user-id="result.managedUser.id" :roles="assignableRoles" :careers="result.careers" @saved="changed" />
         <Button v-if="sessionState.current.value?.user.id !== result.managedUser.id" type="button" variant="outline" :disabled="pending" @click="toggleStatus"><Spinner v-if="pending" />{{ result.managedUser.active ? 'Desactivar y revocar sesiones' : 'Activar cuenta' }}</Button>
     </template>
     <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert><Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert><LoadErrorState v-if="loadError" :message="loadError" @retry="load" /><LoadingSkeleton v-else-if="loading && !result" variant="table-detail" :columns="3" />

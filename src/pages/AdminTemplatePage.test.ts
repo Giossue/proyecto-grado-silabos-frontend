@@ -85,7 +85,7 @@ const payload: TemplatePayload = {
 describe("AdminTemplatePage", () => {
   beforeEach(() => {
     vi.mocked(getSession).mockResolvedValue({
-      user: { id: "admin-1", name: "Administración", email: "admin@ueb.edu.ec", email_verified: true, must_change_password: false, can_edit_identity: true },
+      user: { id: "admin-1", name: "Administración", email: "admin@ueb.edu.ec", email_verified: true, can_edit_identity: true },
       active_role: { id: "role-1", code: "administrador", career_id: null, career_name: null },
       available_roles: [],
     });

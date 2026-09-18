@@ -9,7 +9,7 @@ afterEach(() => sessionState.clear());
 describe('ProcessLockAlert', () => {
   it('muestra el mensaje único y enlaza a Convocatorias de Coordinación', () => {
     sessionState.replace({
-      user: { id: 'user-1', name: 'Coordinación', email: 'coord@ueb.edu.ec', email_verified: true, must_change_password: false, can_edit_identity: false },
+      user: { id: 'user-1', name: 'Coordinación', email: 'coord@ueb.edu.ec', email_verified: true, can_edit_identity: false },
       active_role: { id: 'role-1', code: 'coordinador', career_id: 'career-1', career_name: 'Software' },
       available_roles: [],
     });

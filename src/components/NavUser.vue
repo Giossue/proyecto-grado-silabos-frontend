@@ -24,7 +24,6 @@ const user = computed<User>(() => ({
     correo_electronico: sessionState.current.value?.user.email ?? '',
     avatar: undefined,
     correo_verificado_en: sessionState.current.value?.user.email_verified ? 'verificado' : null,
-    debe_cambiar_contrasena: sessionState.current.value?.user.must_change_password ?? false,
 }));
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
 const canSwitchScope = computed(() => (sessionState.current.value?.available_roles.length ?? 0) > 1);

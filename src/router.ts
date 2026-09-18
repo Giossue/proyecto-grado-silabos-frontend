@@ -10,6 +10,7 @@ const TeacherSyllabiPage = () => import("@/pages/TeacherSyllabiPage.vue");
 const TeacherSyllabusDetailPage = () => import("@/pages/TeacherSyllabusDetailPage.vue");
 const PasswordRecoveryPage = () => import("@/pages/PasswordRecoveryPage.vue");
 const ResetPasswordPage = () => import("@/pages/ResetPasswordPage.vue");
+const ActivateAccountPage = () => import("@/pages/ActivateAccountPage.vue");
 const VerifyEmailPage = () => import("@/pages/VerifyEmailPage.vue");
 const TwoFactorChallengePage = () => import("@/pages/TwoFactorChallengePage.vue");
 const SecurityPage = () => import("@/pages/SecurityPage.vue");
@@ -57,6 +58,7 @@ export const router = createRouter({
     { path: "/ingresar", component: LoginPage, meta: { guest: true, aliasTarget: "/login" } },
     { path: "/recuperar-contrasena", component: PasswordRecoveryPage, meta: { guest: true } },
     { path: "/restablecer-contrasena", component: ResetPasswordPage, meta: { guest: true } },
+    { path: "/activar-cuenta", component: ActivateAccountPage, meta: { guest: true, shell: false } },
     { path: "/api/v1/authentication/email-verification/:user/:hash", component: VerifyEmailPage, meta: { guest: true } },
     { path: "/verificar-correo", component: VerifyEmailPage, meta: { requiresAuth: true, shell: false } },
     { path: "/verificar-dos-factores", component: TwoFactorChallengePage, meta: { guest: true } },
@@ -152,7 +154,7 @@ router.beforeEach(async (to) => {
       return true;
     }
     if (!session.user.email_verified) return paths.emailVerificationRequired;
-    if (session.user.must_change_password || !session.active_role) return paths.roleSelection;
+    if (!session.active_role) return paths.roleSelection;
     return resolveRoleHome(session.active_role.code);
   }
 
@@ -166,10 +168,6 @@ router.beforeEach(async (to) => {
     return paths.emailVerificationRequired;
   }
   if (session.user.email_verified && to.path === paths.emailVerificationRequired) return paths.dashboard;
-  if (session.user.must_change_password && to.path !== paths.roleSelection) {
-    rememberProtectedDestination(to);
-    return paths.roleSelection;
-  }
   if (to.path === "/") return true;
   if (!session.active_role) {
     if (to.path === paths.roleSelection) return true;

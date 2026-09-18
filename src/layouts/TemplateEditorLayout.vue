@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import PurgeConfirmationDialog from '@/components/domain/PurgeConfirmationDialog.vue';
-import TemporaryPasswordDialog from '@/components/TemporaryPasswordDialog.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 </script>
@@ -11,7 +10,6 @@ import { TooltipProvider } from '@/components/ui/tooltip';
             <slot />
         </div>
         <Toaster />
-        <TemporaryPasswordDialog />
         <!-- La confirmación global también protege los cambios hechos desde el editor. -->
         <PurgeConfirmationDialog />
     </TooltipProvider>

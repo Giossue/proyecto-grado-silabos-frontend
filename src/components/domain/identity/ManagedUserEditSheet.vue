@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Check, Pencil } from '@lucide/vue';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { updateManagedUser, type ManagedUser } from '@/api/admin-users';
 import { ApiError } from '@/api/client';
 import FormSheet from '@/components/domain/FormSheet.vue';
@@ -20,6 +20,15 @@ const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false); const errors = ref<Record<string, string[]>>({});
 const form = ref({ nombre: '', correo_electronico: '', active: true, role_code: '', career_id: '' });
+const assignableRoles = computed(() => {
+    const hasAdministrator = props.user.roles.some((role) => role.name === 'Administrador');
+    const hasScopedRole = props.user.roles.some((role) => role.name !== 'Administrador');
+
+    if (hasAdministrator) return [];
+    if (hasScopedRole) return props.roles.filter((role) => role.codigo !== 'administrador');
+
+    return props.roles;
+});
 const reset = (): void => { form.value = { nombre: props.user.nombre, correo_electronico: props.user.correo_electronico, active: props.user.active, role_code: '', career_id: '' }; errors.value = {}; };
 watch(open, (value) => { if (value) reset(); }, { immediate: true });
 const submit = async (): Promise<void> => {
@@ -40,7 +49,7 @@ const submit = async (): Promise<void> => {
             <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`managed-edit-name-${user.id}`" required>Nombre completo</FieldLabel><Input :id="`managed-edit-name-${user.id}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
             <Field :data-invalid="Boolean(errors.correo_electronico)"><FieldLabel :for="`managed-edit-email-${user.id}`" required>Correo institucional</FieldLabel><Input :id="`managed-edit-email-${user.id}`" v-model="form.correo_electronico" type="email" required /><FieldError :errors="errors.correo_electronico" /></Field>
             <Field orientation="horizontal" :data-invalid="Boolean(errors.active)"><Checkbox :id="`managed-edit-active-${user.id}`" v-model="form.active" /><FieldContent><FieldLabel :for="`managed-edit-active-${user.id}`">Cuenta activa</FieldLabel><FieldError :errors="errors.active" /></FieldContent></Field>
-            <Field :data-invalid="Boolean(errors.role_code)"><FieldLabel :for="`managed-edit-role-${user.id}`">Agregar otro rol (opcional)</FieldLabel><Select v-model="form.role_code"><SelectTrigger :id="`managed-edit-role-${user.id}`"><SelectValue placeholder="No agregar otro rol" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="role in roles" :key="role.codigo" :value="role.codigo">{{ role.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.role_code" /></Field>
+            <Field v-if="assignableRoles.length > 0" :data-invalid="Boolean(errors.role_code)"><FieldLabel :for="`managed-edit-role-${user.id}`">Agregar otro rol (opcional)</FieldLabel><Select v-model="form.role_code"><SelectTrigger :id="`managed-edit-role-${user.id}`"><SelectValue placeholder="No agregar otro rol" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="role in assignableRoles" :key="role.codigo" :value="role.codigo">{{ role.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.role_code" /></Field>
             <Field v-if="form.role_code && form.role_code !== 'administrador'" :data-invalid="Boolean(errors.career_id)"><FieldLabel :for="`managed-edit-career-${user.id}`" required>Carrera</FieldLabel><Select v-model="form.career_id" required><SelectTrigger :id="`managed-edit-career-${user.id}`"><SelectValue placeholder="Seleccione" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="career in careers" :key="career.id" :value="career.id">{{ career.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.career_id" /></Field>
             <FormSheetActions :close="close" :processing="processing" :icon="Check" label="Guardar cambios" />
         </FieldGroup></form></template>

@@ -18,7 +18,7 @@ vi.mock('@/api/session', async (importOriginal) => ({
 }));
 
 const administratorSession = {
-  user: { id: 'user-1', name: 'Ada Admin', email: 'ada@example.test', email_verified: true, must_change_password: false, can_edit_identity: true },
+  user: { id: 'user-1', name: 'Ada Admin', email: 'ada@example.test', email_verified: true, can_edit_identity: true },
   active_role: { id: 'role-1', code: 'administrador' as const, career_id: null, career_name: null },
   available_roles: [
     { id: 'role-1', code: 'administrador' as const, career_id: null, career_name: null },

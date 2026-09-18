@@ -9,7 +9,6 @@ const session = (code: 'administrador' | 'coordinador' | 'docente') => ({
     name: 'Persona de prueba',
     email: 'persona@example.test',
     email_verified: true,
-    must_change_password: false,
     can_edit_identity: code === 'administrador',
   },
   active_role: { id: `role-${code}`, code, career_id: code === 'administrador' ? null : 'career-1', career_name: code === 'administrador' ? null : 'Software' },

@@ -15,6 +15,7 @@ export const paths = {
   loginLegacy: '/ingresar',
   passwordRecovery: '/recuperar-contrasena',
   passwordReset: '/restablecer-contrasena',
+  accountActivation: '/activar-cuenta',
   emailVerification: (user: string, hash: string): string =>
     `/api/v1/authentication/email-verification/${segment(user)}/${segment(hash)}`,
   emailVerificationRequired: '/verificar-correo',

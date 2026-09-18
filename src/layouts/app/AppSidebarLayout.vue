@@ -4,7 +4,6 @@ import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
-import TemporaryPasswordDialog from '@/components/TemporaryPasswordDialog.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { breadcrumbsKey, pageTitleKey } from '@/composables/usePageBreadcrumbs';
 import type { BreadcrumbItem } from '@/types';
@@ -39,6 +38,5 @@ provide(pageTitleKey, pageTitle);
             <slot />
         </AppContent>
         <Toaster />
-        <TemporaryPasswordDialog />
     </AppShell>
 </template>

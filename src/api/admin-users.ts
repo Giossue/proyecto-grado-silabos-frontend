@@ -5,7 +5,7 @@ export type ManagedUser = {
   nombre: string;
   correo_electronico: string;
   active: boolean;
-  pending_first_login: boolean;
+  pending_activation: boolean;
   two_factor_enabled: boolean;
   roles: Array<{ name: string; career_name: string | null }>;
   careers: Array<string | null>;
@@ -34,12 +34,12 @@ export const getManagedUsers = (filters: { q?: string; status?: string; role?: s
   return api<ManagedUsersResponse>(`/admin/users${query.size ? `?${query}` : ''}`);
 };
 
-export const createManagedUser = (payload: { nombre: string; correo_electronico: string; password: string; role_code: string; career_id: string | null }) =>
+export const createManagedUser = (payload: { nombre: string; correo_electronico: string; role_code: string; career_id: string | null }) =>
   api<{ message: string }>('/admin/users', { method: 'POST', body: JSON.stringify(payload) });
 export const setManagedUserStatus = (userId: string, active: boolean) =>
   api<{ message: string }>(`/admin/users/${userId}/status`, { method: 'PATCH', body: JSON.stringify({ active }) });
-export const resendManagedUserAccess = (userId: string) =>
-  api<{ message: string }>(`/admin/users/${userId}/resend-access`, { method: 'POST' });
+export const resendManagedUserInvitation = (userId: string) =>
+  api<{ message: string }>(`/admin/users/${userId}/resend-activation`, { method: 'POST' });
 export const deleteManagedUser = (userId: string) => api<{ message: string }>(`/admin/users/${userId}`, { method: 'DELETE' });
 export const getManagedUser = (userId: string) => api<ManagedUserDetailResponse>(`/admin/users/${userId}`);
 export const updateManagedUser = (userId: string, payload: { nombre: string; correo_electronico: string; active?: boolean; role_code?: string; career_id?: string | null }) =>

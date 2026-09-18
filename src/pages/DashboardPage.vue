@@ -59,7 +59,7 @@ const load = async (): Promise<void> => {
   error.value = null;
   try {
     const session = await sessionState.load();
-    if (!session?.active_role || session.user.must_change_password) { await router.replace(paths.root); return; }
+    if (!session?.active_role) { await router.replace(paths.root); return; }
     dashboard.value = await getDashboard();
   } catch (reason) {
     if (reason instanceof ApiError && reason.status === 401) { await router.replace(paths.login); return; }
