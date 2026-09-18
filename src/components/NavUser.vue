@@ -33,7 +33,7 @@ const roleName = computed(() => {
         case 'administrador': return 'Administrador';
         case 'coordinador': return 'Coordinador';
         case 'docente': return 'Docente';
-        default: return 'Sin ámbito activo';
+        default: return 'Sin rol';
     }
 });
 const switcherOpen = ref(false);

@@ -103,13 +103,13 @@ describe('AppSidebarLayout', () => {
     expect(document.body.textContent).toContain('Software');
   });
 
-  it('no presenta Administración cuando todavía no hay un ámbito activo', async () => {
+  it('no presenta Administración cuando todavía no hay un rol activo', async () => {
     sessionState.replace({ ...administratorSession, active_role: null });
     const wrapper = await mountShell();
     await flushPromises();
 
     const accountButton = wrapper.find('[data-test="sidebar-menu-button"]');
-    expect(accountButton.text()).toContain('Sin ámbito activo');
+    expect(accountButton.text()).toContain('Sin rol');
     expect(accountButton.text()).not.toContain('Administrador');
   });
 });
