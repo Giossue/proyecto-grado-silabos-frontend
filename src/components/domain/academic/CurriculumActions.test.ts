@@ -11,7 +11,7 @@ describe('CurriculumActions', () => {
           code: 'SW-8C',
           cycle_count: 8,
           editable: true,
-          lock_reason: 'Convocatoria activa.',
+          lock_reason: 'Convocatoria activa',
         },
       },
     });

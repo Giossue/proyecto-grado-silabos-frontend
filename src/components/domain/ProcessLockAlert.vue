@@ -11,5 +11,5 @@ const instruction = computed(() => isAdministrator.value ? 'Pause el proceso par
 </script>
 
 <template>
-  <Alert><Lock aria-hidden="true" /><AlertTitle>Edición bloqueada</AlertTitle><AlertDescription>{{ instruction }} <RouterLink :to="href" class="font-medium text-foreground underline underline-offset-4">Convocatorias</RouterLink>.</AlertDescription></Alert>
+  <Alert><Lock aria-hidden="true" /><AlertTitle>Edición bloqueada</AlertTitle><AlertDescription>{{ instruction }} <RouterLink :to="href" class="font-medium text-foreground underline underline-offset-4">Convocatorias</RouterLink></AlertDescription></Alert>
 </template>
