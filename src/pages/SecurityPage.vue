@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Save } from '@lucide/vue';
 import { ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { updatePassword } from '@/api/session';
@@ -74,7 +75,9 @@ const submit = async (): Promise<void> => {
                 </div>
                 <div class="flex items-center gap-4">
                     <Button :disabled="processing" data-test="update-password-button">
-                        <Spinner v-if="processing" />Guardar
+                        <Spinner v-if="processing" data-icon="inline-start" />
+                        <Save v-else data-icon="inline-start" aria-hidden="true" />
+                        Guardar
                     </Button>
                 </div>
             </form>
