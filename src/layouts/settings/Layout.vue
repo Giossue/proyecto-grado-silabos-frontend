@@ -23,7 +23,7 @@ const sidebarNavItems = computed(() => [
 <template>
     <PageFrame
         title="Configuración"
-        description="Administre su perfil, seguridad y preferencias visuales."
+        description="Administre su perfil y seguridad."
     >
         <div class="flex flex-col gap-6 lg:flex-row lg:gap-12">
             <aside class="w-full max-w-xl lg:w-48">
