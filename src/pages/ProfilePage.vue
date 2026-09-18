@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Save } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { resendEmailVerification, updateProfile } from '@/api/session';
@@ -118,7 +119,9 @@ const resendVerification = async (): Promise<void> => {
 
                 <div class="flex items-center gap-4">
                     <Button :disabled="processing" data-test="update-profile-button">
-                        <Spinner v-if="processing" />Guardar
+                        <Spinner v-if="processing" data-icon="inline-start" />
+                        <Save v-else data-icon="inline-start" aria-hidden="true" />
+                        Guardar
                     </Button>
                 </div>
             </form>
