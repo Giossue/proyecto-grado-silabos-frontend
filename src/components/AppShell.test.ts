@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
 import { sessionState } from '@/state/session';
 
@@ -26,6 +26,8 @@ const administratorSession = {
   ],
 };
 
+const mountedWrappers: Array<{ unmount: () => void }> = [];
+
 const mountShell = async () => {
   const router = createRouter({
     history: createMemoryHistory(),
@@ -43,12 +45,18 @@ const mountShell = async () => {
   await router.push('/panel');
   await router.isReady();
 
-  return mount(AppSidebarLayout, { attachTo: document.body, global: { plugins: [router] }, slots: { default: '<p>Contenido</p>' } });
+  const wrapper = mount(AppSidebarLayout, { attachTo: document.body, global: { plugins: [router] }, slots: { default: '<p>Contenido</p>' } });
+  mountedWrappers.push(wrapper);
+  return wrapper;
 };
 
 describe('AppSidebarLayout', () => {
-  beforeEach(() => {
+  afterEach(() => {
+    mountedWrappers.splice(0).forEach((wrapper) => wrapper.unmount());
     document.body.innerHTML = '';
+  });
+
+  beforeEach(() => {
     sessionState.replace(administratorSession);
     getNotifications.mockResolvedValue({ unread_count: 3, filters: { status: 'unread' }, notifications: { data: [], current_page: 1, last_page: 1, total: 0 } });
     logout.mockResolvedValue(undefined);
@@ -93,5 +101,15 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     expect(document.body.textContent).toContain('Software');
+  });
+
+  it('no presenta Administración cuando todavía no hay un ámbito activo', async () => {
+    sessionState.replace({ ...administratorSession, active_role: null });
+    const wrapper = await mountShell();
+    await flushPromises();
+
+    const accountButton = wrapper.find('[data-test="sidebar-menu-button"]');
+    expect(accountButton.text()).toContain('Sin ámbito activo');
+    expect(accountButton.text()).not.toContain('Administrador');
   });
 });

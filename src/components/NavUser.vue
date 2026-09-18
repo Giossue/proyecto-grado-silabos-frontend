@@ -28,11 +28,14 @@ const user = computed<User>(() => ({
 }));
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
 const canSwitchScope = computed(() => (sessionState.current.value?.available_roles.length ?? 0) > 1);
-const roleName = computed(() => ({
-    administrador: 'Administrador',
-    coordinador: 'Coordinador',
-    docente: 'Docente',
-})[activeRole.value?.code ?? 'administrador']);
+const roleName = computed(() => {
+    switch (activeRole.value?.code) {
+        case 'administrador': return 'Administrador';
+        case 'coordinador': return 'Coordinador';
+        case 'docente': return 'Docente';
+        default: return 'Sin ámbito activo';
+    }
+});
 const switcherOpen = ref(false);
 const { isMobile, state } = useSidebar();
 </script>
