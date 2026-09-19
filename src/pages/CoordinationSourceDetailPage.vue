@@ -13,7 +13,6 @@ import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import AcademicSourceEditSheet from '@/components/domain/configuration/AcademicSourceEditSheet.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FieldError } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { paths } from '@/lib/routes';
@@ -80,11 +79,18 @@ onMounted(() => { void load(); });
       <Alert v-if="actionError && Object.keys(fieldErrors).length === 0" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
       <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
       <LoadingSkeleton v-else-if="loading && !data" variant="source" />
-      <Card v-else-if="data"><CardHeader><CardTitle>Contenido del documento</CardTitle><CardDescription>Redáctelo con la cinta de opciones, como en un procesador de textos. El formato se ve directamente mientras escribe.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3">
-        <MarkdownEditor v-model="content" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
+      <section v-else-if="data" class="flex flex-col gap-3">
+        <div class="flex flex-col gap-1">
+          <h2 class="text-lg font-semibold">Contenido del documento</h2>
+          <p class="text-sm text-muted-foreground">Redáctelo con la cinta de opciones, como en un procesador de textos. El formato se ve directamente mientras escribe.</p>
+        </div>
+        <div class="flex items-center justify-end gap-3">
+          <span v-if="isDirty" class="text-sm text-muted-foreground">Cambios sin guardar</span>
+          <Button type="button" :disabled="saving || !isDirty || Boolean(data.processLock)" @click="saveContent"><Spinner v-if="saving" /><Check v-else data-icon="inline-start" aria-hidden="true" />Guardar contenido</Button>
+        </div>
         <FieldError :errors="fieldErrors.content" />
-        <div class="flex items-center justify-end gap-3"><span v-if="isDirty" class="text-sm text-muted-foreground">Cambios sin guardar</span><Button type="button" :disabled="saving || !isDirty || Boolean(data.processLock)" @click="saveContent"><Spinner v-if="saving" /><Check v-else data-icon="inline-start" aria-hidden="true" />Guardar contenido</Button></div>
-      </CardContent></Card>
+        <MarkdownEditor v-model="content" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
+      </section>
     </div>
   </PageFrame>
 </template>

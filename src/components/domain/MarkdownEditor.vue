@@ -456,10 +456,10 @@ watch(model, (markdown) => {
 </script>
 
 <template>
-    <div class="overflow-hidden rounded-lg border bg-muted/30">
+    <div class="min-w-0">
         <TooltipProvider>
             <div
-                class="flex flex-wrap items-center justify-center gap-1 border-b bg-background/90 p-1.5"
+                class="sticky top-0 z-10 flex flex-wrap items-center justify-center gap-1 border-y bg-background/95 p-1.5 backdrop-blur-sm"
                 role="toolbar"
                 aria-label="Formato del documento"
                 @mousedown.prevent
