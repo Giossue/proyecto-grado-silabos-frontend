@@ -1,35 +1,43 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { createDocumentPaginator, LETTER_PAGE } from '@/lib/documentPagination';
+import {
+    A4_PAGE,
+    createDocumentPaginator,
+    LETTER_PAGE,
+} from '@/lib/documentPagination';
 
 const props = withDefaults(
     defineProps<{
         orientation?: 'portrait' | 'landscape';
+        paperSize?: 'a4' | 'letter';
         marginCm?: number;
         fontFamily?: string;
         fontSize?: number;
         textColor?: string;
+        showPageNumbers?: boolean;
     }>(),
     {
         orientation: 'portrait',
+        paperSize: 'letter',
         marginCm: 2.5,
         fontFamily: 'Arial',
         fontSize: 11,
         textColor: '#000000',
+        showPageNumbers: true,
     },
 );
 
 const page = computed(() => ({
     width:
         props.orientation === 'landscape'
-            ? LETTER_PAGE.height
-            : LETTER_PAGE.width,
+            ? (props.paperSize === 'a4' ? A4_PAGE.height : LETTER_PAGE.height)
+            : (props.paperSize === 'a4' ? A4_PAGE.width : LETTER_PAGE.width),
     height:
         props.orientation === 'landscape'
-            ? LETTER_PAGE.width
-            : LETTER_PAGE.height,
+            ? (props.paperSize === 'a4' ? A4_PAGE.width : LETTER_PAGE.width)
+            : (props.paperSize === 'a4' ? A4_PAGE.height : LETTER_PAGE.height),
     margin: (props.marginCm * 96) / 2.54,
-    gap: LETTER_PAGE.gap,
+    gap: (props.paperSize === 'a4' ? A4_PAGE : LETTER_PAGE).gap,
 }));
 
 const content = ref<HTMLElement | null>(null);
@@ -161,7 +169,7 @@ onBeforeUnmount(() => {
     >
         <div class="paged-document-papers" aria-hidden="true">
             <div v-for="page in pages" :key="page" class="paged-document-paper">
-                <span class="paged-document-number">{{ page }}</span>
+                <span v-if="props.showPageNumbers" class="paged-document-number">{{ page }}</span>
             </div>
         </div>
         <div ref="content" class="paged-document-content">

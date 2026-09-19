@@ -6,6 +6,13 @@ export const LETTER_PAGE = {
     gap: 24,
 };
 
+export const A4_PAGE = {
+    width: (21 * 96) / 2.54,
+    height: (29.7 * 96) / 2.54,
+    margin: (2.5 * 96) / 2.54,
+    gap: 24,
+};
+
 export type DocumentPageMetrics = typeof LETTER_PAGE;
 
 type Unit = {
@@ -99,16 +106,66 @@ function fragmentUnits(element: HTMLElement): Unit[] {
     return lines;
 }
 
+function markdownFlowThroughUnits(element: HTMLElement): Unit[] {
+    return Array.from(element.children).flatMap((child) => {
+        if (!(child instanceof HTMLElement) || child.hasAttribute('data-page-spacer')) {
+            return [];
+        }
+
+        if (child instanceof HTMLTableElement) {
+            return tableUnits(child);
+        }
+
+        if (['UL', 'OL'].includes(child.tagName)) {
+            const items = Array.from(child.children).filter(
+                (item): item is HTMLLIElement =>
+                    item instanceof HTMLLIElement &&
+                    !item.hasAttribute('data-page-spacer'),
+            );
+
+            if (items.length > 0) {
+                return items.map((item) => ({
+                    first: item,
+                    last: item,
+                    keepNext: false,
+                    flowThrough: false,
+                }));
+            }
+        }
+
+        return [
+            {
+                first: child,
+                last: child,
+                keepNext: /^H[1-6]$/.test(child.tagName),
+                flowThrough: false,
+            },
+        ];
+    });
+}
+
 function collectUnits(root: HTMLElement): Unit[] {
     return Array.from(
-        root.querySelectorAll<HTMLElement>('[data-page-unit], table'),
+        root.querySelectorAll<HTMLElement>(
+            '[data-page-unit], [data-page-markdown-flow-through], table',
+        ),
     ).flatMap((element) => {
+        if (
+            element.parentElement?.closest('[data-page-markdown-flow-through]')
+        ) {
+            return [];
+        }
+
         if (element.parentElement?.closest('table, [data-page-unit]')) {
             return [];
         }
 
         if (element instanceof HTMLTableElement) {
             return tableUnits(element);
+        }
+
+        if (element.hasAttribute('data-page-markdown-flow-through')) {
+            return markdownFlowThroughUnits(element);
         }
 
         if (element.hasAttribute('data-page-flow-through')) {
@@ -260,6 +317,7 @@ export function createDocumentPaginator(
         );
         spacer.setAttribute('data-page-spacer', '');
         spacer.setAttribute('aria-hidden', 'true');
+        spacer.setAttribute('contenteditable', 'false');
         spacer.style.cssText = `height:${height}px;pointer-events:none;margin:0;padding:0;list-style:none;counter-increment:list-item 0;`;
 
         if (isRow) {

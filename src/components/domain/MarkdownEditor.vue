@@ -23,6 +23,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover';
+import PaginatedDocument from '@/components/domain/PaginatedDocument.vue';
 import { Separator } from '@/components/ui/separator';
 import {
     Tooltip,
@@ -71,7 +72,10 @@ const nodesToMarkdown = (nodes: NodeListOf<ChildNode> | ChildNode[]): string =>
 
 const listToMarkdown = (list: HTMLElement, ordered: boolean): string => {
     const items = Array.from(list.children).filter(
-        (child): child is HTMLLIElement => child.tagName === 'LI',
+        (child): child is HTMLLIElement =>
+            child.tagName === 'LI' &&
+            !child.hasAttribute('data-page-spacer') &&
+            !child.hasAttribute('data-page-repeat-header-row'),
     );
 
     return (
@@ -109,6 +113,11 @@ const listToMarkdown = (list: HTMLElement, ordered: boolean): string => {
 
 const tableToMarkdown = (table: HTMLTableElement): string => {
     const rows = Array.from(table.rows)
+        .filter(
+            (row) =>
+                !row.hasAttribute('data-page-spacer') &&
+                !row.hasAttribute('data-page-repeat-header-row'),
+        )
         .map((row) =>
             Array.from(row.cells).map((cell) =>
                 nodesToMarkdown(cell.childNodes)
@@ -135,6 +144,14 @@ const tableToMarkdown = (table: HTMLTableElement): string => {
 };
 
 const nodeToMarkdown = (node: ChildNode): string => {
+    if (
+        node instanceof HTMLElement &&
+        (node.hasAttribute('data-page-spacer') ||
+            node.hasAttribute('data-page-repeat-header-row'))
+    ) {
+        return '';
+    }
+
     if (node.nodeType === Node.TEXT_NODE) {
         return node.textContent ?? '';
     }
@@ -552,13 +569,18 @@ watch(model, (markdown) => {
         </TooltipProvider>
 
         <div class="overflow-auto p-3 sm:p-8">
-            <div
-                class="document-page min-h-[42rem] w-full bg-background px-6 py-8 shadow-sm sm:mx-auto sm:max-w-[52rem] sm:px-12 sm:py-12"
-            >
-                <h1 class="document-title break-words">{{ props.documentTitle }}</h1>
+            <PaginatedDocument paper-size="a4" :show-page-numbers="false">
+                <h1
+                    class="document-title break-words"
+                    data-page-keep-next
+                    data-page-unit
+                >
+                    {{ props.documentTitle }}
+                </h1>
                 <div
                     ref="editorRef"
                     class="document-content min-h-[32rem] outline-none sm:min-h-[34rem]"
+                    data-page-markdown-flow-through
                     :contenteditable="!props.disabled"
                     role="textbox"
                     aria-multiline="true"
@@ -570,13 +592,13 @@ watch(model, (markdown) => {
                     @paste.prevent="pastePlainText"
                     @drop.prevent
                 />
-            </div>
+            </PaginatedDocument>
         </div>
     </div>
 </template>
 
 <style scoped>
-.document-page {
+.document-content {
     color: var(--foreground);
     font-family: Georgia, Cambria, 'Times New Roman', serif;
     font-size: 1rem;
