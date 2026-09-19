@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BookOpenCheck, Building2, CalendarRange, CircleAlert, ClipboardCheck, FileStack, ListRestart, PencilLine, UsersRound } from '@lucide/vue';
+import { BookOpenCheck, Building2, CalendarRange, CircleAlert, ClipboardCheck, FileStack, PencilLine, UsersRound } from '@lucide/vue';
 import type { Component } from 'vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -21,7 +21,7 @@ const error = ref<string | null>(null);
 const message = ref<string | null>(null);
 const facultyLogoOpen = ref(false);
 
-const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, completion: ListRestart, correction_requested: CircleAlert, teachers_pending: UsersRound };
+const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, correction_requested: CircleAlert, teachers_pending: UsersRound };
 const setupRoutes: Record<string, string> = {
   faculties: paths.admin.academic,
   campuses: paths.admin.academic,

@@ -119,7 +119,6 @@ const emit = defineEmits<{
         fieldId: string;
         value: string;
         version: number;
-        completion: number;
     }];
 }>();
 
@@ -290,7 +289,6 @@ const applyRecommendation = async (): Promise<void> => {
             fieldId: active.execution.field.id,
             value: result.value,
             version: result.version_bloqueo,
-            completion: result.completion,
         });
         applyOpen.value = false;
         await load();

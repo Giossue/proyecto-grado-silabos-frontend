@@ -57,7 +57,7 @@ const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", t
   period: "2026",
   state,
   version_bloqueo: 2,
-  completion: 50,
+  iniciado_en: "2026-09-10T00:00:00Z",
   parallels: ["A"],
   teachers: ["Docente"],
   presentation: {
@@ -126,7 +126,7 @@ describe("TeacherSyllabusDetailPage", () => {
   it("guarda No como booleano explícito y no como campo vacío", async () => {
     vi.useFakeTimers();
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador", "booleano") });
-    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, completion: 100 });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -157,7 +157,7 @@ describe("TeacherSyllabusDetailPage", () => {
     ];
     field.value = [];
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
-    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, completion: 100 });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -219,9 +219,8 @@ describe("TeacherSyllabusDetailPage", () => {
 
   it("vacía el autoguardado pendiente antes de validar", async () => {
     const draft = syllabus("borrador");
-    draft.completion = 100;
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
-    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, completion: 100 });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
     vi.mocked(validateTeacherSyllabus).mockResolvedValue({
       message: "Válido",
       validation: { blocking_errors: 0, warnings: 0, results: [] },

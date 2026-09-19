@@ -31,7 +31,7 @@ export type SyllabusRow = {
     | "en_revision"
     | "correccion_solicitada"
     | "aprobado";
-  completion: number;
+  iniciado_en: string | null;
   parallels: string[];
   guardado_en: string | null;
 };
@@ -59,7 +59,7 @@ export type SyllabusDetail = {
   period: string;
   state: SyllabusRow["state"];
   version_bloqueo: number;
-  completion: number;
+  iniciado_en: string | null;
   parallels: string[];
   teachers: string[];
   template_variables?: Record<string, string>;
@@ -276,7 +276,7 @@ export const saveTeacherField = (
   version: number,
   value: unknown,
 ) =>
-  api<{ version_bloqueo: number; completion: number }>(
+  api<{ version_bloqueo: number; guardado_en: string | null }>(
     `/teacher/syllabi/${syllabusId}/fields/${fieldId}`,
     {
       method: "PATCH",
@@ -289,7 +289,7 @@ export const saveTeacherRows = (
   version: number,
   rows: RepeatableRow[],
 ) =>
-  api<{ version_bloqueo: number; completion: number; rows: RepeatableRow[] }>(
+  api<{ version_bloqueo: number; guardado_en: string | null; rows: RepeatableRow[] }>(
     `/teacher/syllabi/${syllabusId}/fields/${fieldId}`,
     {
       method: "PATCH",
@@ -371,7 +371,6 @@ export const applyAiRecommendation = (
   api<{
     message: string;
     version_bloqueo: number;
-    completion: number;
     value: string;
   }>(
     `/teacher/syllabi/${syllabusId}/fields/${fieldId}/ai/${recommendationId}/apply`,

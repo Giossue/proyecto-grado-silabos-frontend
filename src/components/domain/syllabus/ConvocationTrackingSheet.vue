@@ -22,6 +22,16 @@ const error = ref<string | null>(null);
 const formatDate = (value: string | null): string => value
   ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'long' }).format(new Date(value))
   : 'Sin fecha';
+const formatStartedAt = (value: string | null): string => value
+  ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(new Date(value))
+  : 'Sin iniciar';
+const stateLabel = (value: string): string => ({
+  sin_iniciar: 'Sin iniciar',
+  borrador: 'Borrador',
+  en_revision: 'En revisión',
+  correccion_solicitada: 'Corrección solicitada',
+  aprobado: 'Aprobado',
+}[value] ?? 'Estado no disponible');
 const syllabusFilter = useClientFilter(
   () => data.value?.convocation.syllabi ?? [],
   (item) => [item.subject, item.code, item.state],
@@ -95,11 +105,12 @@ watch(() => props.open, (open) => {
                   <TableHead>Asignatura</TableHead>
                   <TableHead>Paralelos y docentes</TableHead>
 
-                  <TableHead class="text-right">Completitud</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Iniciado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableEmpty v-if="syllabusPage.length === 0" :colspan="3">
+                <TableEmpty v-if="syllabusPage.length === 0" :colspan="4">
                   {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros.' : 'Los expedientes aparecerán después de abrir la convocatoria.' }}
                 </TableEmpty>
                 <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id">
@@ -111,8 +122,8 @@ watch(() => props.open, (open) => {
                     <div>Paralelos {{ syllabus.parallels.join(', ') }}</div>
                     <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
                   </TableCell>
-
-                  <TableCell class="text-right">{{ syllabus.completion.toFixed(0) }} %</TableCell>
+                  <TableCell>{{ stateLabel(syllabus.state) }}</TableCell>
+                  <TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell>
                 </TableRow>
               </TableBody>
             </Table>

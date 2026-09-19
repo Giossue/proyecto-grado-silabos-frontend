@@ -131,7 +131,7 @@ describe("CoordinationConvocationsPage", () => {
         start_date: "2026-09-09T00:00:00Z",
         draft_deadline: "2026-09-15T00:00:00Z",
         counts: { total: 1, not_started: 0, draft: 1, in_review: 0, approved: 0 },
-        syllabi: [{ id: "syllabus-1", subject: "Inteligencia Artificial", code: "SW-P7-037", state: "borrador", completion: 32, parallels: ["A"], teachers: ["Patricio Carlos Landa Muñoz"] }],
+        syllabi: [{ id: "syllabus-1", subject: "Inteligencia Artificial", code: "SW-P7-037", state: "borrador", iniciado_en: "2026-09-10T00:00:00Z", parallels: ["A"], teachers: ["Patricio Carlos Landa Muñoz"] }],
       },
     });
 
@@ -150,8 +150,8 @@ describe("CoordinationConvocationsPage", () => {
     expect(getConvocation).toHaveBeenCalledWith("convocation-1");
     expect(document.body.textContent).toContain("Seguimiento por expediente");
     expect(document.body.textContent).not.toContain("Configuración fijada");
-    expect(document.body.querySelectorAll('[role="dialog"] th')).toHaveLength(3);
-    expect(Array.from(document.body.querySelectorAll('[role="dialog"] th')).some((cell) => cell.textContent?.includes("Estado"))).toBe(false);
+    expect(document.body.querySelectorAll('[role="dialog"] th')).toHaveLength(4);
+    expect(Array.from(document.body.querySelectorAll('[role="dialog"] th')).some((cell) => cell.textContent?.includes("Estado"))).toBe(true);
     wrapper.unmount();
   });
 

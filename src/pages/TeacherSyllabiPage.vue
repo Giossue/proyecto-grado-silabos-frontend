@@ -34,6 +34,7 @@ const load = async (page = 1): Promise<void> => {
   }
 };
 const formatSavedAt = (value: string | null): string => value ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Sin guardados';
+const formatStartedAt = (value: string | null): string => value ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(new Date(value)) : 'Sin iniciar';
 const clearFilters = (): void => {
   query.value = '';
   state.value = 'all';
@@ -55,10 +56,10 @@ onMounted(load);
         </form>
         <LoadingSkeleton v-if="!result && !error" variant="table-body" :columns="6" />
         <Table v-if="result">
-          <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Convocatoria</TableHead><TableHead>Estado</TableHead><TableHead>Último guardado</TableHead><TableHead class="text-right">Avance</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Convocatoria</TableHead><TableHead>Estado</TableHead><TableHead>Iniciado</TableHead><TableHead>Último guardado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
           <TableBody>
             <TableEmpty v-if="result.syllabi.data.length === 0" :colspan="6">No tiene sílabos asignados con este rol.</TableEmpty>
-            <TableRow v-for="syllabus in result.syllabi.data" v-else :key="syllabus.id"><TableCell><span>{{ syllabus.subject }}</span><div class="text-sm text-muted-foreground">{{ syllabus.code }} · Paralelo(s) {{ syllabus.parallels.join(', ') }}</div></TableCell><TableCell><div>{{ syllabus.convocation }}</div><div class="text-sm text-muted-foreground">{{ syllabus.period }}</div></TableCell><TableCell>{{ states[syllabus.state] ?? 'Estado no disponible' }}</TableCell><TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell><TableCell class="text-right">{{ syllabus.completion.toFixed(0) }} %</TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${syllabus.subject}`"><DropdownMenuItem @select="router.push(paths.teacher.syllabus(syllabus.id))"><Eye aria-hidden="true" />Abrir sílabo</DropdownMenuItem></TableActionsMenu></TableCell></TableRow>
+            <TableRow v-for="syllabus in result.syllabi.data" v-else :key="syllabus.id"><TableCell><span>{{ syllabus.subject }}</span><div class="text-sm text-muted-foreground">{{ syllabus.code }} · Paralelo(s) {{ syllabus.parallels.join(', ') }}</div></TableCell><TableCell><div>{{ syllabus.convocation }}</div><div class="text-sm text-muted-foreground">{{ syllabus.period }}</div></TableCell><TableCell>{{ states[syllabus.state] ?? 'Estado no disponible' }}</TableCell><TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell><TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${syllabus.subject}`"><DropdownMenuItem @select="router.push(paths.teacher.syllabus(syllabus.id))"><Eye aria-hidden="true" />Abrir sílabo</DropdownMenuItem></TableActionsMenu></TableCell></TableRow>
           </TableBody>
         </Table>
         <TablePagination v-if="result" :meta="result.syllabi" label="Paginación de sílabos asignados" @update:page="load" />

@@ -67,7 +67,6 @@ const canEdit = computed(() =>
 );
 const canReviewWithAi = computed(() =>
   canEdit.value &&
-  syllabus.value?.completion === 100 &&
   validationRan.value &&
   validationBlockingErrors.value === 0,
 );
@@ -157,7 +156,6 @@ const saveField = (field: SyllabusField): void => {
         field.value,
       );
       syllabus.value.version_bloqueo = saved.version_bloqueo;
-      syllabus.value.completion = saved.completion;
       invalidateValidation();
     } finally {
       savingFieldId.value = null;
@@ -258,7 +256,6 @@ const saveRows = (field: SyllabusField): void => {
       );
       field.rows = saved.rows;
       syllabus.value.version_bloqueo = saved.version_bloqueo;
-      syllabus.value.completion = saved.completion;
       invalidateValidation();
     } finally {
       savingFieldId.value = null;
@@ -296,8 +293,7 @@ const validate = async (): Promise<void> => {
     validationBlockingErrors.value = result.validation.blocking_errors;
     validationResults.value = result.validation.results;
     if (
-      result.validation.blocking_errors === 0 &&
-      syllabus.value.completion === 100
+      result.validation.blocking_errors === 0
     ) {
       try {
         const review = await requestAiReview(
@@ -371,7 +367,6 @@ const recommendationApplied = (payload: {
   fieldId: string;
   value: string;
   version: number;
-  completion: number;
 }): void => {
   if (!syllabus.value) return;
   const field = syllabus.value.sections
@@ -380,7 +375,6 @@ const recommendationApplied = (payload: {
     .find((item) => item.id === payload.fieldId);
   if (field) field.value = payload.value;
   syllabus.value.version_bloqueo = payload.version;
-  syllabus.value.completion = payload.completion;
   invalidateValidation();
 };
 
@@ -398,8 +392,8 @@ onBeforeUnmount(() => {
   >
     <template #actions>
       <Button v-if="syllabus?.state === 'sin_iniciar'" :disabled="starting" @click="start"><Spinner v-if="starting" />{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button>
-      <Button v-else-if="syllabus && canEdit && syllabus.completion === 100 && !(validationRan && validationBlockingErrors === 0)" :disabled="processingAction || conflict" @click="validate"><Spinner v-if="processingAction" />Validar sílabo</Button>
-      <Button v-else-if="syllabus && canEdit && validationRan && validationBlockingErrors === 0 && syllabus.completion === 100" :disabled="processingAction || conflict" @click="submit"><Spinner v-if="processingAction" />Enviar sílabo</Button>
+      <Button v-else-if="syllabus && canEdit && !(validationRan && validationBlockingErrors === 0)" :disabled="processingAction || conflict" @click="validate"><Spinner v-if="processingAction" />Validar sílabo</Button>
+      <Button v-else-if="syllabus && canEdit && validationRan && validationBlockingErrors === 0" :disabled="processingAction || conflict" @click="submit"><Spinner v-if="processingAction" />Enviar sílabo</Button>
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
@@ -409,7 +403,7 @@ onBeforeUnmount(() => {
       <Card v-if="syllabus.state === 'sin_iniciar'"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar los campos de la plantilla institucional.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>
 
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
-      <Alert v-if="canEdit && syllabus.completion < 100"><AlertDescription>Complete todos los campos obligatorios para habilitar la validación del sílabo.</AlertDescription></Alert>
+      <Alert v-if="canEdit && !validationRan"><AlertDescription>Valide el sílabo cuando termine de completar todos sus campos obligatorios.</AlertDescription></Alert>
       <Alert v-if="validationRan" :variant="validationBlockingErrors && validationBlockingErrors > 0 ? 'destructive' : 'default'"><AlertTitle>Validación del sílabo</AlertTitle><AlertDescription>{{ validationBlockingErrors && validationBlockingErrors > 0 ? `Se encontraron ${validationBlockingErrors} error(es) bloqueante(s).` : 'No hay errores bloqueantes. Las sugerencias de IA son opcionales.' }}</AlertDescription></Alert>
       <Alert v-if="aiMessage"><AlertDescription>{{ aiMessage }}</AlertDescription></Alert>
 
