@@ -315,7 +315,7 @@ onBeforeUnmount(() => {
 
 <template>
     <Card
-        class="min-h-[30rem] gap-0 overflow-hidden py-0 xl:max-h-[calc(100dvh-3rem)]"
+        class="min-h-[30rem] gap-0 overflow-hidden py-0 xl:h-full xl:min-h-0"
     >
         <CardHeader class="shrink-0 py-4">
             <div class="flex items-center gap-2">
