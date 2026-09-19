@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const route = useRoute();
 const router = useRouter();
@@ -28,7 +29,6 @@ const savedContent = ref('');
 const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
 const fieldErrors = ref<Record<string, string[]>>({});
-const message = ref<string | null>(null);
 const saving = ref(false);
 const selectedPdf = ref<File | null>(null);
 const uploadingPdf = ref(false);
@@ -104,7 +104,7 @@ const uploadPdf = async (): Promise<void> => {
   fieldErrors.value = {};
   try {
     const response = await ingestSourcePdf(id(), selectedPdf.value);
-    message.value = response.message;
+    toast.success(response.message);
     selectedPdf.value = null;
     await load(true);
     startPolling();
@@ -120,7 +120,7 @@ const saveContent = async (): Promise<void> => {
   actionError.value = null;
   fieldErrors.value = {};
   try {
-    message.value = (await updateSourceContent(id(), content.value)).message;
+    toast.success((await updateSourceContent(id(), content.value)).message);
     savedContent.value = content.value;
   } catch (reason) {
     if (reason instanceof ApiError) {
@@ -130,7 +130,7 @@ const saveContent = async (): Promise<void> => {
   } finally { saving.value = false; }
 };
 const metadataSaved = async (value: string): Promise<void> => {
-  message.value = value;
+  toast.success(value);
   await load();
   startPolling();
 };
@@ -151,7 +151,6 @@ onUnmounted(stopPolling);
     </template>
     <div class="flex flex-col gap-4">
       <ProcessLockAlert v-if="data?.processLock" />
-      <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
       <Alert v-if="actionError && Object.keys(fieldErrors).length === 0" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
       <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
       <LoadingSkeleton v-else-if="loading && !data" variant="source" />

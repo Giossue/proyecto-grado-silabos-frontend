@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 type Execution = JobsPayload['executions']['data'][number];
 const router = useRouter();
@@ -31,7 +32,6 @@ const retryingId = ref<string | null>(null);
 const retryCandidate = ref<Execution | null>(null);
 const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
-const message = ref<string | null>(null);
 const filters = reactive({ q: '', status: 'all', type: 'all', queue: 'all' });
 
 const load = async (page = 1): Promise<void> => {
@@ -66,7 +66,7 @@ const retry = async (): Promise<void> => {
   retryingId.value = id;
   actionError.value = null;
   try {
-    message.value = (await retryJobExecution(id)).message;
+    toast.success((await retryJobExecution(id)).message);
     retryCandidate.value = null;
     await load();
   } catch (reason) {
@@ -83,7 +83,7 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Auditoría" description="Lo que el sistema hace por detrás: correos, documentos y análisis. Aquí se ve qué terminó y qué falló.">
-    <p v-if="message" class="text-sm" role="status">{{ message }}</p><p v-if="actionError" class="text-sm text-destructive" role="alert">{{ actionError }}</p>
+    <p v-if="actionError" class="text-sm text-destructive" role="alert">{{ actionError }}</p>
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="audit" :columns="7" />
     <AuditTabs v-else-if="data" active="jobs"><Card><CardContent class="flex flex-col gap-4">

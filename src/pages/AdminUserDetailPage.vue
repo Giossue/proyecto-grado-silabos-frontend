@@ -22,10 +22,11 @@ import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
 import { sessionState } from '@/state/session';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const route = useRoute(); const userId = String(route.params.user);
 const result = ref<ManagedUserDetailResponse | null>(null); const loading = ref(true); const pending = ref(false);
-const message = ref<string | null>(null); const loadError = ref<string | null>(null); const actionError = ref<string | null>(null);
+const loadError = ref<string | null>(null); const actionError = ref<string | null>(null);
 const assignments = computed(() => result.value?.managedUser.assignments ?? []);
 const assignableRoles = computed(() => {
     const activeAssignments = assignments.value.filter((assignment) => assignment.active);
@@ -38,7 +39,7 @@ const assignableRoles = computed(() => {
 const assignmentFilter = useClientFilter(() => assignments.value, (item) => [item.role_name, item.career_name], { estado: { matches: (item, value) => item.effective === (value === 'active') } });
 const { items: assignmentPage, meta: assignmentMeta, setPage: setAssignmentPage } = useClientPagination(() => assignmentFilter.items.value);
 const load = async (): Promise<void> => { loading.value = true; loadError.value = null; try { result.value = await getManagedUser(userId); } catch (reason) { loadError.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la cuenta.'; } finally { loading.value = false; } };
-const changed = async (notice: string): Promise<void> => { message.value = notice; await load(); };
+const changed = async (notice: string): Promise<void> => { toast.success(notice); await load(); };
 const toggleStatus = async (): Promise<void> => { if (!result.value) return; pending.value = true; actionError.value = null; try { await changed((await setManagedUserStatus(userId, !result.value.managedUser.active)).message); } catch (reason) { actionError.value = reason instanceof ApiError ? reason.message : 'No se pudo cambiar el estado.'; } finally { pending.value = false; } };
 onMounted(load);
 </script>
@@ -51,7 +52,7 @@ onMounted(load);
         <RoleAssignmentSheet v-if="assignableRoles.length > 0" :managed-user-id="result.managedUser.id" :roles="assignableRoles" :careers="result.careers" @saved="changed" />
         <Button v-if="sessionState.current.value?.user.id !== result.managedUser.id" type="button" variant="outline" :disabled="pending" @click="toggleStatus"><Spinner v-if="pending" />{{ result.managedUser.active ? 'Desactivar y revocar sesiones' : 'Activar cuenta' }}</Button>
     </template>
-    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert><Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert><LoadErrorState v-if="loadError" :message="loadError" @retry="load" /><LoadingSkeleton v-else-if="loading && !result" variant="table-detail" :columns="3" />
+    <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert><LoadErrorState v-if="loadError" :message="loadError" @retry="load" /><LoadingSkeleton v-else-if="loading && !result" variant="table-detail" :columns="3" />
     <Card v-else-if="result"><CardHeader><CardTitle>Historial de roles</CardTitle><CardDescription>Las asignaciones anteriores se conservan para trazabilidad.</CardDescription></CardHeader><CardContent class="flex flex-col gap-4">
         <ClientFilterBar :filter="assignmentFilter" input-id="assignments-search" label="Buscar rol o carrera" placeholder="Buscar por rol o carrera"><template #filters><Field><FieldLabel for="assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="assignmentFilter.values.estado.value"><SelectTrigger id="assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Vigentes</SelectItem><SelectItem value="inactive">Finalizadas</SelectItem></SelectGroup></SelectContent></Select></Field></template></ClientFilterBar>
         <Table><TableHeader><TableRow><TableHead>Rol</TableHead><TableHead>Alcance</TableHead><TableHead>Estado efectivo</TableHead></TableRow></TableHeader><TableBody><TableEmpty v-if="assignmentPage.length === 0" :colspan="3">No existen asignaciones con este filtro.</TableEmpty><TableRow v-for="assignment in assignmentPage" v-else :key="assignment.id"><TableCell>{{ assignment.role_name }}</TableCell><TableCell>{{ assignment.career_name ?? 'Institucional' }}</TableCell><TableCell>{{ assignment.active ? 'Activo' : 'Finalizada' }}</TableCell></TableRow></TableBody></Table>

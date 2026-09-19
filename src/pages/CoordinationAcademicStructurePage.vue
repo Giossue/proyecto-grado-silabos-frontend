@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { paths } from "@/lib/routes";
+import { toast } from "@/lib/toast";
 
 const router = useRouter();
 const props = defineProps<{ mode: 'curriculum' | 'schedule' | 'teachers' }>();
@@ -56,7 +57,6 @@ const assignments = ref<TeacherAssignments | null>(null);
 const loading = ref(true);
 const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
-const message = ref<string | null>(null);
 const teacherOpen = ref(false);
 const assignmentOpen = ref(false);
 const configurationOpen = ref(false);
@@ -105,7 +105,7 @@ const reloadSchedule = async (periodId?: string) => {
   }
 };
 const handleScheduleChanged = async (notice: string) => {
-  message.value = notice;
+  toast.success(notice);
   await reloadSchedule(schedule.value?.selectedPeriodId ?? undefined);
 };
 const reloadAssignments = async () => {
@@ -117,7 +117,7 @@ const reloadAssignments = async () => {
   }
 };
 const handleAssignmentChanged = async (notice: string) => {
-  message.value = notice;
+  toast.success(notice);
   await reloadAssignments();
 };
 const reloadCurriculum = async () => {
@@ -131,7 +131,7 @@ const reloadCurriculum = async () => {
   }
 };
 const handleCurriculumChanged = async (notice: string) => {
-  message.value = notice;
+  toast.success(notice);
   await reloadCurriculum();
 };
 onMounted(() => {
@@ -174,7 +174,6 @@ onMounted(() => {
         @configure="configurationOpen = true"
       />
     </template>
-    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <template v-if="curriculum && schedule && assignments"
       >

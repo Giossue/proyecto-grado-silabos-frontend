@@ -22,6 +22,7 @@ import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableR
 import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const route = useRoute();
 const router = useRouter();
@@ -30,7 +31,6 @@ const session = ref<Session | null>(null);
 const loading = ref(true);
 const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
-const message = ref<string | null>(null);
 const working = ref(false);
 let timer: number | null = null;
 const revisionId = (): string => String(route.params.revision);
@@ -51,7 +51,7 @@ const load = async (): Promise<void> => {
   finally { loading.value = false; }
 };
 const requestExport = async (): Promise<void> => {
-  try { working.value = true; actionError.value = null; message.value = (await requestDocuments(revisionId())).message; await load(); }
+  try { working.value = true; actionError.value = null; toast.success((await requestDocuments(revisionId())).message); await load(); }
   catch (reason) { actionError.value = reason instanceof ApiError ? reason.message : 'No se pudo solicitar la exportación.'; }
   finally { working.value = false; }
 };
@@ -68,7 +68,6 @@ onBeforeUnmount(() => { if (timer !== null) clearInterval(timer); });
   <PageFrame title="Documentos aprobados" :description="data ? `${data.syllabus.subject} · ${data.syllabus.code} · revisión ${data.revision.number}` : 'Archivos de la revisión aprobada.'">
     <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="backHref"><ArrowLeft aria-hidden="true" />Volver al expediente</RouterLink></Button></template>
     <template #actions><Button class="max-sm:size-14 max-sm:rounded-full max-sm:p-0" :disabled="working || !data" aria-label="Generar DOCX y PDF" @click="requestExport"><Spinner v-if="working" data-icon="inline-start" /><FileArchive v-else data-icon="inline-start" aria-hidden="true" /><span class="max-sm:hidden">Generar DOCX y PDF</span></Button></template>
-    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="documents" />

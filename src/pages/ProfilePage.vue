@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
+import { toast } from '@/lib/toast';
 import { sessionState } from '@/state/session';
 
 const user = computed(() => sessionState.current.value?.user);
@@ -19,7 +20,6 @@ const email = ref('');
 const processing = ref(false);
 const resending = ref(false);
 const errors = ref<Record<string, string>>({});
-const message = ref<string | null>(null);
 
 watch(user, (value) => {
     name.value = value?.name ?? '';
@@ -29,11 +29,10 @@ watch(user, (value) => {
 const submit = async (): Promise<void> => {
     processing.value = true;
     errors.value = {};
-    message.value = null;
     try {
         const session = await updateProfile(name.value, email.value);
         sessionState.replace(session);
-        message.value = 'Perfil actualizado.';
+        toast.success('Perfil actualizado.');
     } catch (reason) {
         if (reason instanceof ApiError) {
             errors.value = Object.fromEntries(
@@ -51,10 +50,9 @@ const submit = async (): Promise<void> => {
 const resendVerification = async (): Promise<void> => {
     resending.value = true;
     errors.value = {};
-    message.value = null;
     try {
         const response = await resendEmailVerification();
-        message.value = response.message;
+        toast.success(response.message);
     } catch (reason) {
         errors.value.request = reason instanceof ApiError ? reason.message : 'No se pudo reenviar la verificación.';
     } finally {
@@ -72,7 +70,6 @@ const resendVerification = async (): Promise<void> => {
                 :description="user?.can_edit_identity ? 'Actualice su nombre y correo electrónico' : 'Consulte los datos de su cuenta'"
             />
 
-            <p v-if="message" class="text-sm font-medium text-foreground" role="status">{{ message }}</p>
             <InputError :message="errors.request" />
 
             <form v-if="user?.can_edit_identity" class="space-y-6" @submit.prevent="submit">

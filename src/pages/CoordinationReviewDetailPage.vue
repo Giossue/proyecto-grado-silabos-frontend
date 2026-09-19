@@ -32,12 +32,12 @@ import { Textarea } from '@/components/ui/textarea';
 import type { PlanningExpectations, TableRowData } from '@/lib/tableLayout';
 import type { DocumentField } from '@/lib/templateDocument';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const route = useRoute();
 const data = ref<ReviewDetail | null>(null);
 const loading = ref(true);
 const processing = ref(false);
-const message = ref('');
 const loadError = ref('');
 const actionError = ref('');
 const errors = ref<Record<string, string[]>>({});
@@ -58,7 +58,7 @@ const load = async (): Promise<void> => {
 };
 
 const changed = async (value: string): Promise<void> => {
-  message.value = value;
+  toast.success(value);
   await load();
 };
 
@@ -68,7 +68,7 @@ const run = async (action: () => Promise<{ message: string }>): Promise<void> =>
   errors.value = {};
   try {
     const result = await action();
-    message.value = result.message;
+    toast.success(result.message);
     await load();
   } catch (failure) {
     if (failure instanceof ApiError) {
@@ -136,7 +136,6 @@ onMounted(load);
       <TeacherTransferSheet v-if="data.transfer.allowed && data.transfer.current.length > 0" :syllabus-id="data.syllabus.id" :state="data.syllabus.state" :current="data.transfer.current" :candidates="data.transfer.candidates" @saved="changed" />
     </template>
 
-    <Alert v-if="message"><AlertTitle>Acción completada</AlertTitle><AlertDescription>{{ message }}</AlertDescription></Alert>
     <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo completar la operación</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <Alert v-if="!data.revision.is_current"><LockKeyhole aria-hidden="true" /><AlertTitle>Está consultando una revisión histórica</AlertTitle><AlertDescription>Esta revisión se conserva tal como fue enviada. Las acciones del flujo solo están disponibles en la revisión vigente.</AlertDescription></Alert>
     <Alert v-if="data.correction_request"><Undo2 aria-hidden="true" /><AlertTitle>Corrección solicitada en esta revisión</AlertTitle><AlertDescription>{{ data.correction_request.justification }}</AlertDescription></Alert>

@@ -9,9 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const email = ref('');
-const message = ref<string | null>(null);
 const error = ref<string | null>(null);
 const errors = ref<Record<string, string[]>>({});
 const pending = ref(false);
@@ -21,7 +21,7 @@ const submit = async (): Promise<void> => {
   error.value = null;
   errors.value = {};
   try {
-    message.value = (await requestPasswordRecovery(email.value)).message;
+    toast.success((await requestPasswordRecovery(email.value)).message);
   } catch (reason) {
     if (reason instanceof ApiError) {
       errors.value = reason.errors;
@@ -37,7 +37,6 @@ const submit = async (): Promise<void> => {
 
 <template>
   <AuthSimpleLayout title="Recuperar contraseña" description="Ingrese su correo para recibir un enlace de restablecimiento">
-    <div v-if="message" class="mb-4 text-center text-sm font-medium text-green-600" role="status">{{ message }}</div>
     <div class="space-y-6">
       <form @submit.prevent="submit">
         <div class="grid gap-2">

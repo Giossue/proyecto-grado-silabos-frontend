@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
+import { toast } from '@/lib/toast';
 import { sessionState } from '@/state/session';
 
 const currentPassword = ref('');
@@ -18,12 +19,10 @@ const password = ref('');
 const passwordConfirmation = ref('');
 const processing = ref(false);
 const errors = ref<Record<string, string>>({});
-const message = ref<string | null>(null);
 
 const submit = async (): Promise<void> => {
     processing.value = true;
     errors.value = {};
-    message.value = null;
     try {
         const session = await updatePassword(
             password.value,
@@ -34,7 +33,7 @@ const submit = async (): Promise<void> => {
         currentPassword.value = '';
         password.value = '';
         passwordConfirmation.value = '';
-        message.value = 'Contraseña actualizada.';
+        toast.success('Contraseña actualizada.');
     } catch (reason) {
         if (reason instanceof ApiError) {
             errors.value = Object.fromEntries(
@@ -54,7 +53,6 @@ const submit = async (): Promise<void> => {
     <SettingsLayout>
         <div class="space-y-6">
             <Heading variant="small" title="Actualizar contraseña" description="Use una contraseña larga y única para proteger su cuenta" />
-            <p v-if="message" class="text-sm text-foreground" role="status">{{ message }}</p>
             <InputError :message="errors.request" />
 
             <form class="space-y-6" @submit.prevent="submit">

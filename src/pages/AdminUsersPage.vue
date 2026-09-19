@@ -14,7 +14,6 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -22,10 +21,11 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const router = useRouter();
 const result = ref<ManagedUsersResponse | null>(null);
-const error = ref<string | null>(null); const message = ref<string | null>(null); const loading = ref(true);
+const error = ref<string | null>(null); const loading = ref(true);
 const q = ref(''); const status = ref('all'); const role = ref('all'); const career = ref('all');
 const statusOf = (user: ManagedUser): { label: string; hint: string } => {
     if (!user.active) return { label: 'Inactivo', hint: 'La cuenta está desactivada y no puede iniciar sesión.' };
@@ -41,7 +41,7 @@ const load = async (page = 1): Promise<void> => {
     } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los usuarios.'; }
     finally { loading.value = false; }
 };
-const changed = async (notice: string): Promise<void> => { message.value = notice; await load(); };
+const changed = async (notice: string): Promise<void> => { toast.success(notice); await load(); };
 const clearFilters = (): void => { q.value = ''; status.value = 'all'; role.value = 'all'; career.value = 'all'; void load(); };
 onMounted(load);
 </script>
@@ -49,7 +49,6 @@ onMounted(load);
 <template>
     <PageFrame title="Usuarios y roles" description="Cuentas de coordinación y docencia: crearlas y decir de qué carrera son. Al desactivar una, su sesión se cierra.">
         <template #actions><ManagedUserSheet v-if="result" :roles="result.roles" :careers="result.careers" @saved="changed" /></template>
-        <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="5" />
 

@@ -11,14 +11,13 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import FacultyLogoDialog from '@/components/domain/configuration/FacultyLogoDialog.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import StatTile from '@/components/domain/StatTile.vue';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const router = useRouter();
 const dashboard = ref<Dashboard | null>(null);
 const error = ref<string | null>(null);
-const message = ref<string | null>(null);
 const facultyLogoOpen = ref(false);
 
 const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, correction_requested: CircleAlert, teachers_pending: UsersRound };
@@ -47,7 +46,7 @@ const handleSetupAction = (action: string) => {
   if (action === 'faculty_logo') facultyLogoOpen.value = true;
 };
 const handleLogoSaved = async (notice: string) => {
-  message.value = notice;
+  toast.success(notice);
   try {
     dashboard.value = await getDashboard();
   } catch (reason) {
@@ -71,7 +70,6 @@ onMounted(() => { void load(); });
 </script>
 <template>
   <PageFrame class="h-full flex-1" title="Panel de trabajo" description="">
-    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <template v-else-if="dashboard">
       <SetupChecklist v-if="setup" :setup="setup" @action="handleSetupAction" />

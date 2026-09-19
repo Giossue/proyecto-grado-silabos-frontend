@@ -10,10 +10,10 @@ import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
 import { sessionState } from '@/state/session';
 import { clearIntendedRoute } from '@/lib/intended-route';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const route = useRoute();
 const router = useRouter();
-const message = ref<string | null>(null);
 const error = ref<string | null>(null);
 const processing = ref(false);
 const userId = computed(() => typeof route.params.user === 'string' ? route.params.user : '');
@@ -27,7 +27,7 @@ const verifySignedLink = async (): Promise<void> => {
         for (const [key, value] of Object.entries(route.query)) {
             if (typeof value === 'string') query.set(key, value);
         }
-        message.value = (await verifyEmail(userId.value, hash.value, query)).message;
+        toast.success((await verifyEmail(userId.value, hash.value, query)).message);
     } catch (reason) {
         error.value = reason instanceof ApiError
             ? reason.message
@@ -39,11 +39,9 @@ const verifySignedLink = async (): Promise<void> => {
 
 const resend = async (): Promise<void> => {
     processing.value = true;
-    message.value = null;
     error.value = null;
     try {
-        await resendEmailVerification();
-        message.value = 'Se envió un nuevo enlace de verificación al correo registrado.';
+        toast.success((await resendEmailVerification()).message);
     } catch (reason) {
         error.value = reason instanceof ApiError
             ? reason.message
@@ -74,8 +72,7 @@ onMounted(() => {
     >
         <template v-if="verifiesSignedLink">
             <div class="flex flex-col gap-5 text-center">
-                <p v-if="message" class="text-sm" role="status">{{ message }}</p>
-                <p v-else-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
+                <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
                 <p v-else class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <Spinner />
                     Verificando correo…
@@ -85,9 +82,6 @@ onMounted(() => {
         </template>
 
         <template v-else>
-            <div v-if="message" class="mb-4 text-center text-sm font-medium text-green-600" role="status">
-                {{ message }}
-            </div>
             <p v-if="error" class="mb-4 text-center text-sm text-destructive" role="alert">
                 {{ error }}
             </p>

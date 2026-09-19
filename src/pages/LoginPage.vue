@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -14,6 +14,7 @@ import { login } from '@/api/session';
 import { sessionState } from '@/state/session';
 import { consumeIntendedRoute } from '@/lib/intended-route';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const router = useRouter();
 const route = useRoute();
@@ -23,6 +24,10 @@ const remember = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const error = ref<string | null>(null);
 const processing = ref(false);
+
+onMounted(() => {
+  if (typeof route.query.status === 'string') toast.success(route.query.status);
+});
 
 const submit = async (): Promise<void> => {
   processing.value = true;
@@ -42,7 +47,6 @@ const submit = async (): Promise<void> => {
 
 <template>
   <AuthSimpleLayout title="Iniciar sesión" description="Ingrese con la cuenta asignada por la institución.">
-    <div v-if="typeof route.query.status === 'string'" class="mb-4 text-center text-sm font-medium text-foreground" role="status">{{ route.query.status }}</div>
     <p v-if="error && Object.keys(errors).length === 0" class="text-center text-sm text-destructive" role="alert">{{ error }}</p>
     <form class="flex flex-col gap-6" @submit.prevent="submit">
       <FieldGroup>

@@ -12,19 +12,18 @@ import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import AcademicSourceActions from '@/components/domain/configuration/AcademicSourceActions.vue';
 import AcademicSourceCreationSheet from '@/components/domain/configuration/AcademicSourceCreationSheet.vue';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const router = useRouter();
 const sources = ref<Source[]>([]);
 const loading = ref(true);
 const lock = ref<string | null | undefined>();
 const error = ref<string | null>(null);
-const message = ref<string | null>(null);
 const editingLocked = computed(() => loading.value || lock.value !== null);
 
 const filter = useClientFilter(() => sources.value, (item) => [item.name, item.description ?? '']);
@@ -52,7 +51,7 @@ const created = async (sourceId: string): Promise<void> => {
   await router.push(paths.coordination.source(sourceId));
 };
 const changed = async (value: string): Promise<void> => {
-  message.value = value;
+  toast.success(value);
   await load();
 };
 
@@ -63,7 +62,6 @@ onMounted(() => { void load(); });
   <PageFrame title="Fuentes académicas" description="Los documentos que la coordinación entrega a los docentes como apoyo para elaborar sus sílabos.">
     <template #actions><AcademicSourceCreationSheet :disabled="editingLocked" @created="created" /></template>
     <ProcessLockAlert v-if="lock" />
-    <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-if="loading && sources.length === 0" variant="table" :columns="3" />
     <Card v-else><CardContent class="flex flex-col gap-4">

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { Toaster } from '@/components/ui/sonner';
 defineProps<{ title?: string; description?: string }>();
 </script>
 <template>
+  <Toaster />
   <div class="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
     <div class="absolute top-4 right-4"><AppearanceToggle /></div>
     <div class="w-full max-w-sm"><div class="flex flex-col gap-8">

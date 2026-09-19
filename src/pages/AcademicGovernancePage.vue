@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getAcademicGovernance, type AcademicGovernance, type AcademicEntity } from '@/api/academic';
 import { ApiError } from '@/api/client';
@@ -10,16 +10,15 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { GovernanceSection } from '@/types/academic';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const router = useRouter();
 const route = useRoute();
 const data = ref<AcademicGovernance | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
-const message = ref<string | null>(null);
 
 const sectionMap: Record<AcademicEntity, GovernanceSection> = {
     facultad: 'faculties', carrera: 'careers', campus: 'campuses', periodo: 'academic-periods',
@@ -54,8 +53,7 @@ const load = async (): Promise<void> => {
         error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la estructura académica.';
     } finally { loading.value = false; }
 };
-const changed = async (notice: string): Promise<void> => { message.value = notice; await load(); };
-watch(() => [route.query.seccion, route.params.section], () => { message.value = null; });
+const changed = async (notice: string): Promise<void> => { toast.success(notice); await load(); };
 onMounted(load);
 </script>
 
@@ -66,7 +64,6 @@ onMounted(load);
         </template>
 
         <ProcessLockAlert v-if="data?.lock_reason" />
-        <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 8 : entity === 'periodo' ? 6 : 5" />
 
