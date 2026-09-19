@@ -83,9 +83,14 @@ onMounted(() => { void load(); });
       <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
       <LoadingSkeleton v-else-if="loading && !data" variant="source" />
       <section v-else-if="data" class="flex flex-col gap-3">
-        <div v-if="isDirty" class="text-right text-sm text-muted-foreground">Cambios sin guardar</div>
         <FieldError :errors="fieldErrors.content" />
         <MarkdownEditor v-model="content" :document-title="data.source.name" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
+        <div
+          v-if="isDirty"
+          class="pointer-events-none fixed bottom-4 right-6 z-20 text-right text-sm text-muted-foreground max-sm:bottom-24"
+        >
+          Cambios sin guardar
+        </div>
       </section>
     </div>
   </PageFrame>
