@@ -587,9 +587,6 @@ watch(model, (markdown) => {
     content: attr(data-placeholder);
     pointer-events: none;
 }
-.document-content[contenteditable='true']:focus-visible {
-    box-shadow: 0 0 0 2px var(--ring);
-}
 .document-title {
     font-family: var(--font-sans);
     font-size: 1.75rem;

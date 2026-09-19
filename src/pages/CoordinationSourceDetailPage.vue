@@ -70,9 +70,12 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame :title="data?.source.name ?? 'Fuente académica'" description="Redáctelo con la cinta de opciones, como en un procesador de textos. El formato se ve directamente mientras escribe.">
+  <PageFrame title="Fuentes académicas" description="Redáctelo con la cinta de opciones, como en un procesador de textos. El formato se ve directamente mientras escribe.">
     <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.coordination.sources">← Volver a fuentes</RouterLink></Button></template>
-    <template #actions><AcademicSourceEditSheet v-if="data" :source="data.source" :disabled="Boolean(data.processLock)" @saved="metadataSaved" /></template>
+    <template #actions>
+      <Button v-if="data" type="button" :disabled="saving || !isDirty || Boolean(data.processLock)" @click="saveContent"><Spinner v-if="saving" /><Check v-else data-icon="inline-start" aria-hidden="true" />Guardar contenido</Button>
+      <AcademicSourceEditSheet v-if="data" :source="data.source" :disabled="Boolean(data.processLock)" @saved="metadataSaved" />
+    </template>
     <div class="flex flex-col gap-4">
       <ProcessLockAlert v-if="data?.processLock" />
       <Alert v-if="message"><AlertDescription>{{ message }}</AlertDescription></Alert>
@@ -80,10 +83,7 @@ onMounted(() => { void load(); });
       <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
       <LoadingSkeleton v-else-if="loading && !data" variant="source" />
       <section v-else-if="data" class="flex flex-col gap-3">
-        <div class="flex items-center justify-end gap-3">
-          <span v-if="isDirty" class="text-sm text-muted-foreground">Cambios sin guardar</span>
-          <Button type="button" :disabled="saving || !isDirty || Boolean(data.processLock)" @click="saveContent"><Spinner v-if="saving" /><Check v-else data-icon="inline-start" aria-hidden="true" />Guardar contenido</Button>
-        </div>
+        <div v-if="isDirty" class="text-right text-sm text-muted-foreground">Cambios sin guardar</div>
         <FieldError :errors="fieldErrors.content" />
         <MarkdownEditor v-model="content" :document-title="data.source.name" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
       </section>
