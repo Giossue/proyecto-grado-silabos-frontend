@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Check, FileUp, X } from '@lucide/vue';
+import { Check, FileUp } from '@lucide/vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getSource, ingestSourcePdf, updateSourceContent, type SourceDetail, type SourceIngestionStatus } from '@/api/sources';
 import { getSession } from '@/api/session';
+import FileDropzone from '@/components/domain/FileDropzone.vue';
 import MarkdownEditor from '@/components/domain/MarkdownEditor.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -15,7 +16,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { paths } from '@/lib/routes';
 
@@ -32,7 +32,6 @@ const message = ref<string | null>(null);
 const saving = ref(false);
 const selectedPdf = ref<File | null>(null);
 const uploadingPdf = ref(false);
-const pdfInput = ref<HTMLInputElement | null>(null);
 let pollingTimer: number | null = null;
 const id = (): string => String(route.params.source);
 const isDirty = computed(() => content.value !== savedContent.value);
@@ -91,14 +90,12 @@ const startPolling = (): void => {
     }, 2500);
   }
 };
-const selectPdf = (event: Event): void => {
-  const input = event.target as HTMLInputElement;
-  selectedPdf.value = input.files?.[0] ?? null;
+const pdfValidationError = (error: string | null): void => {
+  const nextErrors = { ...fieldErrors.value };
+  if (error) nextErrors.pdf = [error];
+  else delete nextErrors.pdf;
+  fieldErrors.value = nextErrors;
   actionError.value = null;
-};
-const clearPdf = (): void => {
-  selectedPdf.value = null;
-  if (pdfInput.value) pdfInput.value.value = '';
 };
 const uploadPdf = async (): Promise<void> => {
   if (!selectedPdf.value) return;
@@ -108,7 +105,7 @@ const uploadPdf = async (): Promise<void> => {
   try {
     const response = await ingestSourcePdf(id(), selectedPdf.value);
     message.value = response.message;
-    clearPdf();
+    selectedPdf.value = null;
     await load(true);
     startPolling();
   } catch (reason) {
@@ -168,16 +165,14 @@ onUnmounted(stopPolling);
             <Badge :variant="ingestionVariant(ingestion?.status ?? 'manual')">{{ ingestionLabel(ingestion?.status ?? 'manual') }}</Badge>
           </div>
           <div class="mt-4 flex flex-col gap-3">
-            <Field>
+            <Field :data-invalid="Boolean(fieldErrors.pdf)">
               <FieldLabel for="source-pdf">PDF académico</FieldLabel>
-              <Input id="source-pdf" ref="pdfInput" type="file" accept="application/pdf,.pdf" :disabled="uploadingPdf || ingestionIsProcessing || Boolean(data.processLock) || isDirty" @change="selectPdf" />
+              <FileDropzone v-model="selectedPdf" input-id="source-pdf" :disabled="uploadingPdf || ingestionIsProcessing || Boolean(data.processLock) || isDirty" :invalid="Boolean(fieldErrors.pdf)" :state="uploadingPdf ? 'uploading' : 'idle'" @validation-error="pdfValidationError" />
               <FieldDescription>Solo PDF, máximo 50 MB. El documento original se conserva privado.</FieldDescription>
               <FieldError :errors="fieldErrors.pdf" />
             </Field>
             <div class="flex flex-wrap items-center gap-2">
-              <span v-if="selectedPdf" class="text-sm text-muted-foreground">{{ selectedPdf.name }}</span>
               <Button type="button" :disabled="!selectedPdf || uploadingPdf || ingestionIsProcessing || Boolean(data.processLock) || isDirty" @click="uploadPdf"><Spinner v-if="uploadingPdf" /><FileUp v-else data-icon="inline-start" aria-hidden="true" />{{ uploadingPdf ? 'Enviando PDF…' : 'Procesar PDF' }}</Button>
-              <Button v-if="selectedPdf" type="button" variant="ghost" :disabled="uploadingPdf" @click="clearPdf"><X data-icon="inline-start" aria-hidden="true" />Quitar archivo</Button>
             </div>
           </div>
         </div>
