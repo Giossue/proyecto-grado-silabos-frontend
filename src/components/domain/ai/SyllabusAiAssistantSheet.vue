@@ -124,6 +124,7 @@ const emit = defineEmits<{
 }>();
 
 const chat = ref<AiChat | null>(null);
+const loadError = ref<string | null>(null);
 const requestingReview = ref(false);
 const decidingId = ref<string | null>(null);
 const applyOpen = ref(false);
@@ -222,10 +223,13 @@ const schedulePoll = (): void => {
 };
 
 const load = async (): Promise<void> => {
+    loadError.value = null;
     try {
         chat.value = await getAiChat(props.syllabusId);
     } catch (reason) {
-        toast.error(reason instanceof ApiError ? reason.message : 'No se pudo cargar la asistencia de IA');
+        loadError.value = reason instanceof ApiError && reason.message
+            ? reason.message
+            : 'No se pudo cargar la asistencia de IA';
     } finally {
         schedulePoll();
     }
@@ -335,6 +339,15 @@ onBeforeUnmount(() => {
             class="min-h-0 flex-1"
         >
             <ConversationContent class="gap-4 px-4 py-4">
+                <Alert v-if="loadError" variant="destructive">
+                    <CircleAlert aria-hidden="true" />
+                    <AlertTitle>No se pudo cargar la asistencia</AlertTitle>
+                    <AlertDescription class="flex flex-wrap items-center justify-between gap-3">
+                        <span>{{ loadError }}</span>
+                        <Button type="button" variant="outline" size="sm" @click="load">Reintentar</Button>
+                    </AlertDescription>
+                </Alert>
+
                 <Alert v-if="assistance.is_provisional_simulator">
                     <Sparkles aria-hidden="true" />
                     <AlertTitle>Modo de demostración</AlertTitle>
