@@ -459,7 +459,7 @@ watch(model, (markdown) => {
     <div class="overflow-hidden rounded-lg border bg-muted/30">
         <TooltipProvider>
             <div
-                class="flex flex-wrap items-center gap-1 border-b bg-background/90 p-1.5"
+                class="flex flex-wrap items-center justify-center gap-1 border-b bg-background/90 p-1.5"
                 role="toolbar"
                 aria-label="Formato del documento"
                 @mousedown.prevent
@@ -672,4 +672,3 @@ watch(model, (markdown) => {
     margin-block: 1.75em;
 }
 </style>
-
