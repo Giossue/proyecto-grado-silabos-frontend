@@ -34,6 +34,7 @@ import {
 const props = withDefaults(
     defineProps<{
         label: string;
+        documentTitle: string;
         placeholder?: string;
         disabled?: boolean;
     }>(),
@@ -552,19 +553,24 @@ watch(model, (markdown) => {
 
         <div class="overflow-auto p-3 sm:p-8">
             <div
-                ref="editorRef"
-                class="document-page min-h-[42rem] w-full bg-background px-6 py-8 shadow-sm outline-none sm:mx-auto sm:max-w-[52rem] sm:px-12 sm:py-12"
-                :contenteditable="!props.disabled"
-                role="textbox"
-                aria-multiline="true"
-                :aria-label="label"
-                :aria-disabled="props.disabled"
-                :data-placeholder="placeholder"
-                spellcheck="true"
-                @input="syncModel"
-                @paste.prevent="pastePlainText"
-                @drop.prevent
-            />
+                class="document-page min-h-[42rem] w-full bg-background px-6 py-8 shadow-sm sm:mx-auto sm:max-w-[52rem] sm:px-12 sm:py-12"
+            >
+                <h1 class="document-title break-words">{{ props.documentTitle }}</h1>
+                <div
+                    ref="editorRef"
+                    class="document-content min-h-[32rem] outline-none sm:min-h-[34rem]"
+                    :contenteditable="!props.disabled"
+                    role="textbox"
+                    aria-multiline="true"
+                    :aria-label="label"
+                    :aria-disabled="props.disabled"
+                    :data-placeholder="placeholder"
+                    spellcheck="true"
+                    @input="syncModel"
+                    @paste.prevent="pastePlainText"
+                    @drop.prevent
+                />
+            </div>
         </div>
     </div>
 </template>
@@ -576,98 +582,106 @@ watch(model, (markdown) => {
     font-size: 1rem;
     line-height: 1.7;
 }
-.document-page:empty::before {
+.document-content:empty::before {
     color: var(--muted-foreground);
     content: attr(data-placeholder);
     pointer-events: none;
 }
-.document-page[contenteditable='true']:focus-visible {
+.document-content[contenteditable='true']:focus-visible {
     box-shadow: 0 0 0 2px var(--ring);
 }
-.document-page :deep(h1),
-.document-page :deep(h2),
-.document-page :deep(h3),
-.document-page :deep(h4),
-.document-page :deep(h5),
-.document-page :deep(h6) {
+.document-title {
+    font-family: var(--font-sans);
+    font-size: 1.75rem;
+    font-weight: 650;
+    line-height: 1.25;
+    margin: 0 0 2rem;
+    text-align: center;
+}
+.document-content :deep(h1),
+.document-content :deep(h2),
+.document-content :deep(h3),
+.document-content :deep(h4),
+.document-content :deep(h5),
+.document-content :deep(h6) {
     font-family: var(--font-sans);
     font-weight: 650;
     line-height: 1.25;
     margin-block: 1.25em 0.55em;
 }
-.document-page :deep(h1) {
+.document-content :deep(h1) {
     font-size: 1.75em;
 }
-.document-page :deep(h2) {
+.document-content :deep(h2) {
     border-bottom: 1px solid var(--border);
     font-size: 1.4em;
     padding-bottom: 0.25em;
 }
-.document-page :deep(h3) {
+.document-content :deep(h3) {
     font-size: 1.18em;
 }
-.document-page :deep(p) {
+.document-content :deep(p) {
     margin-block: 0.8em;
 }
-.document-page :deep(ul),
-.document-page :deep(ol) {
+.document-content :deep(ul),
+.document-content :deep(ol) {
     margin-block: 0.8em;
     padding-inline-start: 1.6em;
 }
-.document-page :deep(ul) {
+.document-content :deep(ul) {
     list-style: disc;
 }
-.document-page :deep(ol) {
+.document-content :deep(ol) {
     list-style: decimal;
 }
-.document-page :deep(blockquote) {
+.document-content :deep(blockquote) {
     border-inline-start: 3px solid var(--border);
     color: var(--muted-foreground);
     margin-block: 0.8em;
     padding-inline-start: 1em;
 }
-.document-page :deep(code) {
+.document-content :deep(code) {
     background: var(--muted);
     border-radius: var(--radius-sm);
     font-family: var(--font-mono);
     font-size: 0.9em;
     padding: 0.15em 0.35em;
 }
-.document-page :deep(pre) {
+.document-content :deep(pre) {
     background: var(--muted);
     border-radius: var(--radius-md);
     margin-block: 0.8em;
     overflow-x: auto;
     padding: 0.8em 1em;
 }
-.document-page :deep(pre code) {
+.document-content :deep(pre code) {
     background: transparent;
     padding: 0;
 }
-.document-page :deep(table) {
+.document-content :deep(table) {
     border-collapse: collapse;
     margin-block: 1em;
     width: 100%;
 }
-.document-page :deep(th),
-.document-page :deep(td) {
+.document-content :deep(th),
+.document-content :deep(td) {
     border: 1px solid var(--border);
     min-width: 7rem;
     padding: 0.45em 0.7em;
     text-align: start;
     vertical-align: top;
 }
-.document-page :deep(th) {
+.document-content :deep(th) {
     background: var(--muted);
     font-family: var(--font-sans);
     font-weight: 600;
 }
-.document-page :deep(a) {
+.document-content :deep(a) {
     color: var(--primary);
     text-decoration: underline;
     text-underline-offset: 4px;
 }
-.document-page :deep(hr) {
+.document-content :deep(hr) {
     border-color: var(--border);
     margin-block: 1.75em;
 }

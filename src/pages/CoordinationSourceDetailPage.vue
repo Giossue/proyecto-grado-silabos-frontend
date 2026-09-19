@@ -70,7 +70,7 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame :title="data?.source.name ?? 'Fuente académica'" :description="data?.source.description ?? 'Documento de apoyo para los sílabos de la carrera.'">
+  <PageFrame :title="data?.source.name ?? 'Fuente académica'" description="Redáctelo con la cinta de opciones, como en un procesador de textos. El formato se ve directamente mientras escribe.">
     <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.coordination.sources">← Volver a fuentes</RouterLink></Button></template>
     <template #actions><AcademicSourceEditSheet v-if="data" :source="data.source" :disabled="Boolean(data.processLock)" @saved="metadataSaved" /></template>
     <div class="flex flex-col gap-4">
@@ -80,16 +80,12 @@ onMounted(() => { void load(); });
       <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
       <LoadingSkeleton v-else-if="loading && !data" variant="source" />
       <section v-else-if="data" class="flex flex-col gap-3">
-        <div class="flex flex-col gap-1">
-          <h2 class="text-lg font-semibold">Contenido del documento</h2>
-          <p class="text-sm text-muted-foreground">Redáctelo con la cinta de opciones, como en un procesador de textos. El formato se ve directamente mientras escribe.</p>
-        </div>
         <div class="flex items-center justify-end gap-3">
           <span v-if="isDirty" class="text-sm text-muted-foreground">Cambios sin guardar</span>
           <Button type="button" :disabled="saving || !isDirty || Boolean(data.processLock)" @click="saveContent"><Spinner v-if="saving" /><Check v-else data-icon="inline-start" aria-hidden="true" />Guardar contenido</Button>
         </div>
         <FieldError :errors="fieldErrors.content" />
-        <MarkdownEditor v-model="content" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
+        <MarkdownEditor v-model="content" :document-title="data.source.name" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
       </section>
     </div>
   </PageFrame>
