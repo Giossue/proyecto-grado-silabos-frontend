@@ -403,7 +403,6 @@ onBeforeUnmount(() => {
       <Card v-if="syllabus.state === 'sin_iniciar'"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar los campos de la plantilla institucional.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>
 
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
-      <Alert v-if="canEdit && !validationRan"><AlertDescription>Valide el sílabo cuando termine de completar todos sus campos obligatorios.</AlertDescription></Alert>
       <Alert v-if="validationRan" :variant="validationBlockingErrors && validationBlockingErrors > 0 ? 'destructive' : 'default'"><AlertTitle>Validación del sílabo</AlertTitle><AlertDescription>{{ validationBlockingErrors && validationBlockingErrors > 0 ? `Se encontraron ${validationBlockingErrors} error(es) bloqueante(s).` : 'No hay errores bloqueantes. Las sugerencias de IA son opcionales.' }}</AlertDescription></Alert>
       <Alert v-if="aiMessage"><AlertDescription>{{ aiMessage }}</AlertDescription></Alert>
 
@@ -466,7 +465,7 @@ onBeforeUnmount(() => {
           </Card>
         </main>
 
-        <aside class="min-w-0 self-start xl:sticky xl:top-16 xl:h-[calc(100dvh-4rem)]" aria-label="Asistente IA">
+        <aside class="min-w-0 self-start xl:sticky xl:top-16 xl:h-[calc(100dvh-4rem)] xl:border-l xl:border-border xl:pl-6" aria-label="Asistente IA">
           <SyllabusAiAssistantSheet
             ref="aiAssistant"
             :syllabus-id="syllabus.id"

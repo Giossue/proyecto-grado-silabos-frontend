@@ -316,8 +316,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Card
-        class="min-h-[30rem] gap-0 overflow-hidden py-0 xl:h-full xl:min-h-0"
+    <section
+        class="flex min-h-[30rem] min-w-0 flex-col gap-0 overflow-hidden py-0 xl:h-full xl:min-h-0"
     >
         <CardHeader class="shrink-0 py-4">
             <div class="flex items-center gap-2">
@@ -718,7 +718,7 @@ onBeforeUnmount(() => {
                 {{ hasProcessing ? 'Revisión en curso' : 'Revisar nuevamente' }}
             </Button>
         </CardFooter>
-    </Card>
+    </section>
 
     <Dialog v-model:open="applyOpen">
         <DialogContent v-if="activeRecommendation" class="sm:max-w-2xl">

@@ -9,9 +9,7 @@ import { Toaster } from '@/components/ui/sonner';
         <div
             class="pointer-events-none fixed inset-x-0 top-0 z-20 flex justify-end p-3"
         >
-            <div
-                class="pointer-events-auto rounded-md border bg-background/95 shadow-control backdrop-blur"
-            >
+            <div class="pointer-events-auto">
                 <AppearanceToggle />
             </div>
         </div>
