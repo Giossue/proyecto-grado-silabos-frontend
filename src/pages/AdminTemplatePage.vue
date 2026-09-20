@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import type { TemplateAppearance, TemplateBuilderProps } from '@/types/configuration';
 import { paths } from '@/lib/routes';
+import { templateEditorState } from '@/state/templateEditor';
 
 const router = useRouter();
 const payload = ref<TemplatePayload | null>(null);
@@ -56,6 +57,11 @@ watch(
         if (appearance) previewAppearance.value = { ...appearance };
     },
     { deep: true, immediate: true },
+);
+watch(
+    editing,
+    (value) => templateEditorState.setOpen(value),
+    { immediate: true },
 );
 
 const load = async (): Promise<void> => {
@@ -103,6 +109,7 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
     window.removeEventListener('silabos:template-changed', reloadFromMutation);
+    templateEditorState.setOpen(false);
 });
 </script>
 

@@ -6,6 +6,7 @@ import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { breadcrumbsKey, pageTitleKey } from '@/composables/usePageBreadcrumbs';
+import { templateEditorState } from '@/state/templateEditor';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {
@@ -23,12 +24,19 @@ provide(breadcrumbsKey, toRef(props, 'breadcrumbs'));
  * aquí para que ninguna de las veintisiete pantallas tenga que declararlo dos veces.
  */
 const pageTitle = ref('');
+const templateEditorOpen = templateEditorState.open;
 
 provide(pageTitleKey, pageTitle);
 </script>
 
 <template>
-    <AppShell variant="sidebar">
+    <main
+        v-if="templateEditorOpen"
+        class="min-h-screen w-full overflow-auto bg-background text-foreground"
+    >
+        <slot />
+    </main>
+    <AppShell v-else variant="sidebar">
         <AppSidebar />
         <AppContent variant="sidebar" class="overflow-clip">
             <AppSidebarHeader
@@ -37,6 +45,6 @@ provide(pageTitleKey, pageTitle);
             />
             <slot />
         </AppContent>
-        <Toaster />
     </AppShell>
+    <Toaster />
 </template>
