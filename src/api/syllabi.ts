@@ -81,6 +81,7 @@ export type SyllabusDetail = {
   identification: IdentificationCell[][];
   sections: Array<{
     id: string;
+    key: string;
     title: string;
     description: string | null;
     blocks: SyllabusBlock[];

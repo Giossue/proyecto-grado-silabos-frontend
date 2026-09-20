@@ -68,6 +68,7 @@ const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", t
   identification: [],
   sections: [{
     id: "section-1",
+    key: "descripcion",
     title: "Descripción",
     description: null,
     blocks: [{
@@ -217,39 +218,40 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.get(".feedback.error button").text()).toBe("Recargar borrador");
   });
 
-  it("vacía el autoguardado pendiente antes de validar", async () => {
+  it("oculta la revisión final y el botón de validación", async () => {
     const draft = syllabus("borrador");
+    draft.sections.push({
+      id: "section-review",
+      key: "revision",
+      title: "Revisión y aprobación",
+      description: "Complete los campos aplicables.",
+      blocks: [{
+        id: "review-block",
+        title: "Estado de revisión",
+        content_type: "flow",
+        table: null,
+        fields: [],
+      }],
+    });
+    draft.validation = {
+      version_bloqueo: draft.version_bloqueo,
+      blocking_errors: 1,
+      warnings: 0,
+      results: [{
+        field_id: null,
+        code: "required",
+        severity: "error",
+        message: "Completa el campo obligatorio «Objetivo general».",
+      }],
+    };
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
-    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
-    vi.mocked(validateTeacherSyllabus).mockResolvedValue({
-      message: "Válido",
-      validation: { blocking_errors: 0, warnings: 0, results: [] },
-    });
-    vi.mocked(requestAiReview).mockResolvedValue({
-      message: "Revisión iniciada",
-      review: {
-        id: "review-1",
-        status: "pendiente",
-        draft_version: 3,
-        total_fields: 1,
-        completed_fields: 0,
-        progress: 0,
-      },
-    });
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get("textarea").setValue("Cambio antes de validar");
-    const validateButton = wrapper
-      .findAll("button")
-      .find((button) => button.text() === "Validar sílabo");
-    await validateButton?.trigger("click");
-    await flushPromises();
-
-    expect(saveTeacherField).toHaveBeenCalledOnce();
-    expect(validateTeacherSyllabus).toHaveBeenCalledOnce();
-    expect(
-      vi.mocked(saveTeacherField).mock.invocationCallOrder[0]!,
-    ).toBeLessThan(vi.mocked(validateTeacherSyllabus).mock.invocationCallOrder[0]!);
+    expect(wrapper.text()).toContain("Descripción");
+    expect(wrapper.text()).not.toContain("Revisión y aprobación");
+    expect(wrapper.text()).not.toContain("Resultados de validación");
+    expect(wrapper.text()).not.toContain("Completa el campo obligatorio");
+    expect(wrapper.findAll("button").some((button) => button.text() === "Validar sílabo")).toBe(false);
   });
 });

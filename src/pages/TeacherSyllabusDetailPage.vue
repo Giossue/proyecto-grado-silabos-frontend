@@ -356,12 +356,12 @@ const answer = async (observationId: string): Promise<void> => {
   }
 };
 
-const navigateToField = (fieldId: string): void => {
-  document.getElementById(`field-${fieldId}`)?.scrollIntoView({
-    behavior: 'smooth',
-    block: 'center',
-  });
-};
+const visibleSections = computed(() => {
+  const sections = syllabus.value?.sections ?? [];
+  const reviewIndex = sections.findIndex((section) => section.key === 'revision');
+
+  return reviewIndex === -1 ? sections : sections.slice(0, reviewIndex);
+});
 
 const recommendationApplied = (payload: {
   fieldId: string;
@@ -392,7 +392,6 @@ onBeforeUnmount(() => {
   >
     <template #actions>
       <Button v-if="syllabus?.state === 'sin_iniciar'" :disabled="starting" @click="start"><Spinner v-if="starting" />{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button>
-      <Button v-else-if="syllabus && canEdit && !(validationRan && validationBlockingErrors === 0)" :disabled="processingAction || conflict" @click="validate"><Spinner v-if="processingAction" />Validar sílabo</Button>
       <Button v-else-if="syllabus && canEdit && validationRan && validationBlockingErrors === 0" :disabled="processingAction || conflict" @click="submit"><Spinner v-if="processingAction" />Enviar sílabo</Button>
     </template>
 
@@ -423,7 +422,7 @@ onBeforeUnmount(() => {
             </CardContent>
           </Card>
 
-          <section v-for="(section, sectionIndex) in syllabus.sections" :id="`section-${section.id}`" :key="section.id" class="flex scroll-mt-6 flex-col gap-6 border-t pt-8 first:border-t-0 first:pt-0">
+          <section v-for="(section, sectionIndex) in visibleSections" :id="`section-${section.id}`" :key="section.id" class="flex scroll-mt-6 flex-col gap-6 border-t pt-8 first:border-t-0 first:pt-0">
             <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p class="text-sm text-muted-foreground">{{ section.description ?? 'Complete los campos aplicables.' }}</p></header>
             <IdentificationCard v-if="sectionIndex === 0 && syllabus.identification.length" :grid="syllabus.identification" />
 
@@ -460,9 +459,6 @@ onBeforeUnmount(() => {
             </FieldSet>
           </section>
 
-          <Card v-if="canEdit && validationResults.length">
-            <CardHeader><CardTitle>Resultados de validación</CardTitle></CardHeader><CardContent><ul class="flex flex-col gap-2"><li v-for="issue in validationResults" :key="`${issue.code}-${issue.field_id}`"><Button v-if="issue.field_id" class="h-auto justify-start whitespace-normal px-0 text-left" variant="link" @click="navigateToField(issue.field_id)">{{ issue.message }}</Button><span v-else class="text-sm">{{ issue.message }}</span></li></ul></CardContent>
-          </Card>
         </main>
 
         <aside class="min-w-0 self-start xl:fixed xl:right-4 xl:top-32 xl:bottom-4 xl:w-[28rem] xl:max-w-[calc(100vw-2rem)]" aria-label="Asistente IA">
