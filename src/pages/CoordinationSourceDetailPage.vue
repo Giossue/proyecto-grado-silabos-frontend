@@ -3,10 +3,10 @@ import { Check, FileUp } from '@lucide/vue';
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { getSource, ingestSourcePdf, updateSourceContent, type SourceDetail, type SourceIngestionStatus } from '@/api/sources';
+import { emptySourceDocument, getSource, ingestSourcePdf, updateSourceContent, type SourceDetail, type SourceDocument, type SourceIngestionStatus } from '@/api/sources';
 import { getSession } from '@/api/session';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
-import MarkdownEditor from '@/components/domain/MarkdownEditor.vue';
+import AcademicSourceDocumentEditor from '@/components/domain/AcademicSourceDocumentEditor.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -24,8 +24,8 @@ const route = useRoute();
 const router = useRouter();
 const data = ref<SourceDetail | null>(null);
 const loading = ref(true);
-const content = ref('');
-const savedContent = ref('');
+const content = ref<SourceDocument>(emptySourceDocument());
+const savedContent = ref<SourceDocument>(emptySourceDocument());
 const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
 const fieldErrors = ref<Record<string, string[]>>({});
@@ -34,7 +34,8 @@ const selectedPdf = ref<File | null>(null);
 const uploadingPdf = ref(false);
 let pollingTimer: number | null = null;
 const id = (): string => String(route.params.source);
-const isDirty = computed(() => content.value !== savedContent.value);
+const cloneDocument = (value: SourceDocument): SourceDocument => JSON.parse(JSON.stringify(value)) as SourceDocument;
+const isDirty = computed(() => JSON.stringify(content.value) !== JSON.stringify(savedContent.value));
 const ingestion = computed(() => data.value?.source.ingestion);
 const ingestionIsProcessing = computed(() => ingestion.value?.status === 'pendiente' || ingestion.value?.status === 'en_ejecucion');
 
@@ -67,8 +68,8 @@ const load = async (preserveEditor = false): Promise<void> => {
     }
     data.value = await getSource(id());
     if (!preserveEditor || !isDirty.value) {
-      content.value = data.value.source.content ?? '';
-      savedContent.value = content.value;
+      content.value = cloneDocument(data.value.source.document ?? emptySourceDocument());
+      savedContent.value = cloneDocument(content.value);
     }
   } catch (reason) {
     loadError.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la fuente.';
@@ -121,7 +122,7 @@ const saveContent = async (): Promise<void> => {
   fieldErrors.value = {};
   try {
     toast.success((await updateSourceContent(id(), content.value)).message);
-    savedContent.value = content.value;
+    savedContent.value = cloneDocument(content.value);
   } catch (reason) {
     if (reason instanceof ApiError) {
       fieldErrors.value = reason.errors;
@@ -143,7 +144,7 @@ onUnmounted(stopPolling);
 </script>
 
 <template>
-  <PageFrame title="Fuentes académicas" description="Redáctelo con la cinta de opciones, como en un procesador de textos. El formato se ve directamente mientras escribe.">
+  <PageFrame title="Fuentes académicas" description="Revise y ajuste el documento estructurado. Las tablas combinadas y las imágenes conservan su posición.">
     <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.coordination.sources">← Volver a fuentes</RouterLink></Button></template>
     <template #actions>
       <Button v-if="data" type="button" :disabled="saving || !isDirty || Boolean(data.processLock)" @click="saveContent"><Spinner v-if="saving" /><Check v-else data-icon="inline-start" aria-hidden="true" />Guardar contenido</Button>
@@ -159,7 +160,7 @@ onUnmounted(stopPolling);
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 class="font-medium">Cargar fuente desde PDF</h2>
-              <p class="mt-1 text-sm text-muted-foreground">Mistral OCR convertirá el documento a Markdown y actualizará el contenido al terminar.</p>
+              <p class="mt-1 text-sm text-muted-foreground">PaddleOCR organizará el texto, las tablas y las imágenes en bloques editables.</p>
             </div>
             <Badge :variant="ingestionVariant(ingestion?.status ?? 'manual')">{{ ingestionLabel(ingestion?.status ?? 'manual') }}</Badge>
           </div>
@@ -177,8 +178,8 @@ onUnmounted(stopPolling);
         </div>
         <Alert v-if="ingestion?.status === 'fallida'" variant="destructive"><AlertDescription>No se pudo extraer el contenido del PDF. El contenido anterior se conserva; puedes seleccionar el archivo y reintentarlo.</AlertDescription></Alert>
         <Alert v-else-if="ingestionIsProcessing"><AlertDescription>La extracción se está ejecutando en segundo plano. Esta pantalla se actualizará automáticamente.</AlertDescription></Alert>
-        <FieldError :errors="fieldErrors.content" />
-        <MarkdownEditor v-model="content" :document-title="data.source.name" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
+        <FieldError :errors="fieldErrors.document" />
+        <AcademicSourceDocumentEditor v-model="content" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
         <div
           v-if="isDirty"
           class="pointer-events-none fixed bottom-4 right-6 z-20 text-right text-sm text-muted-foreground max-sm:bottom-24"

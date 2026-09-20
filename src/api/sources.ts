@@ -1,16 +1,25 @@
 import { api } from '@/api/client';
 export type SourceIngestionStatus = 'manual' | 'pendiente' | 'en_ejecucion' | 'completada' | 'fallida';
-export type Source = { id: string; name: string; description: string | null; has_content: boolean; ingestion_status: SourceIngestionStatus; extraction_id: string | null };
+export type SourceDocumentNode = {
+  type: string;
+  text?: string;
+  attrs?: Record<string, string | number | boolean | null | number[] | string[]>;
+  marks?: Array<{ type: string; attrs?: Record<string, string | null> }>;
+  content?: SourceDocumentNode[];
+};
+export type SourceDocument = SourceDocumentNode & { schemaVersion: 1; type: 'doc'; content: SourceDocumentNode[] };
+export const emptySourceDocument = (): SourceDocument => ({ schemaVersion: 1, type: 'doc', content: [] });
+export type Source = { id: string; name: string; description: string | null; has_content: boolean; ingestion_status: SourceIngestionStatus; execution_id: string | null };
 export type SourceDetail = {
   processLock: string | null;
   source: {
     id: string;
     name: string;
     description: string | null;
-    content: string | null;
+    document: SourceDocument;
+    document_schema_version: number;
     ingestion: {
       status: SourceIngestionStatus;
-      extraction_id: string | null;
       execution_id: string | null;
       model: string | null;
       requested_at: string | null;
@@ -24,12 +33,12 @@ export const createSource = (payload: { nombre: string; description?: string }) 
 export const getSource = (id: string) => api<SourceDetail>(`/coordination/sources/${id}`);
 export const updateSource = (id: string, payload: { nombre: string; description?: string }) => api<{ message: string }>(`/coordination/sources/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
 export const deleteSource = (id: string) => api<{ message: string }>(`/coordination/sources/${id}`, { method: 'DELETE' });
-export const updateSourceContent = (id: string, content: string) => api<{ message: string }>(`/coordination/sources/${id}/content`, { method: 'PUT', body: JSON.stringify({ content }) });
+export const updateSourceContent = (id: string, document: SourceDocument) => api<{ message: string }>(`/coordination/sources/${id}/content`, { method: 'PUT', body: JSON.stringify({ document }) });
 export const ingestSourcePdf = (id: string, file: File) => {
   const body = new FormData();
   body.append('pdf', file);
 
-  return api<{ message: string; extraction_id: string; execution_id: string; status: SourceIngestionStatus }>(`/coordination/sources/${id}/pdf`, {
+  return api<{ message: string; execution_id: string; status: SourceIngestionStatus }>(`/coordination/sources/${id}/pdf`, {
     method: 'POST',
     body,
   });
