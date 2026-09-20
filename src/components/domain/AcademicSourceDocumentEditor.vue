@@ -21,15 +21,30 @@ import {
     Trash2,
     Undo2,
 } from '@lucide/vue';
-import { onBeforeUnmount, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { SourceDocument } from '@/api/sources';
 import PaginatedDocument from '@/components/domain/PaginatedDocument.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { sanitizeSourceDocument } from '@/lib/sourceDocument';
 
 const props = defineProps<{ modelValue: SourceDocument; disabled?: boolean; label: string }>();
 const emit = defineEmits<{ 'update:modelValue': [document: SourceDocument] }>();
 let applyingExternal = false;
+const repairedDocument = ref(false);
+const contentError = ref(false);
+const initialDocument = sanitizeSourceDocument(props.modelValue);
+repairedDocument.value = initialDocument.repaired;
+const documentNotice = computed(() => {
+    if (contentError.value) {
+        return 'El documento contiene una estructura que no puede mostrarse completa. Vuelva a procesar el PDF o contacte al administrador.';
+    }
+
+    return repairedDocument.value
+        ? 'Se recuperaron elementos vacíos incompatibles. Guarde el contenido para conservar la corrección.'
+        : null;
+});
 
 const sourceImage = Node.create({
     name: 'sourceImage',
@@ -54,8 +69,9 @@ const sourceImage = Node.create({
 });
 
 const editor = useEditor({
-    content: props.modelValue,
+    content: initialDocument.document,
     editable: !props.disabled,
+    enableContentCheck: true,
     editorProps: {
         attributes: {
             'aria-label': props.label,
@@ -76,6 +92,15 @@ const editor = useEditor({
         if (applyingExternal) return;
         emit('update:modelValue', { schemaVersion: 1, ...(current.getJSON() as Omit<SourceDocument, 'schemaVersion'>) });
     },
+    onContentError: () => {
+        contentError.value = true;
+    },
+});
+
+onMounted(() => {
+    if (initialDocument.repaired) {
+        emit('update:modelValue', initialDocument.document);
+    }
 });
 
 watch(
@@ -86,10 +111,16 @@ watch(
     () => props.modelValue,
     (document) => {
         if (!editor.value) return;
+        const sanitized = sanitizeSourceDocument(document);
+        if (sanitized.repaired) repairedDocument.value = true;
+        contentError.value = false;
+        if (sanitized.repaired) {
+            emit('update:modelValue', sanitized.document);
+        }
         const local = JSON.stringify({ schemaVersion: 1, ...editor.value.getJSON() });
-        if (local === JSON.stringify(document)) return;
+        if (local === JSON.stringify(sanitized.document)) return;
         applyingExternal = true;
-        editor.value.commands.setContent(document, { emitUpdate: false });
+        editor.value.commands.setContent(sanitized.document, { emitUpdate: false });
         applyingExternal = false;
     },
     { deep: true },
@@ -104,6 +135,9 @@ onBeforeUnmount(() => editor.value?.destroy());
 
 <template>
     <section class="source-document-editor rounded-lg border bg-muted/30" :aria-label="label">
+        <Alert v-if="documentNotice" :variant="contentError ? 'destructive' : 'default'" class="m-4 mb-0">
+            <AlertDescription>{{ documentNotice }}</AlertDescription>
+        </Alert>
         <div class="source-document-toolbar sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b bg-background/95 p-2 backdrop-blur">
             <Button type="button" variant="ghost" size="icon-sm" aria-label="Deshacer" :disabled="disabled || !editor?.can().chain().focus().undo().run()" @click="action(() => editor?.chain().focus().undo().run() ?? false)"><Undo2 aria-hidden="true" /></Button>
             <Button type="button" variant="ghost" size="icon-sm" aria-label="Rehacer" :disabled="disabled || !editor?.can().chain().focus().redo().run()" @click="action(() => editor?.chain().focus().redo().run() ?? false)"><Redo2 aria-hidden="true" /></Button>

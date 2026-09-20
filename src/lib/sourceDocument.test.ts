@@ -1,0 +1,48 @@
+import { describe, expect, it } from 'vitest';
+import type { SourceDocument } from '@/api/sources';
+import { sanitizeSourceDocument } from '@/lib/sourceDocument';
+
+describe('sanitizeSourceDocument', () => {
+    it('preserva la celda vacía y retira el nodo de texto incompatible', () => {
+        const input: SourceDocument = {
+            schemaVersion: 1,
+            type: 'doc',
+            content: [{
+                type: 'table',
+                content: [{
+                    type: 'tableRow',
+                    content: [{
+                        type: 'tableCell',
+                        content: [{
+                            type: 'paragraph',
+                            content: [{ type: 'text', text: '' }],
+                        }],
+                    }],
+                }],
+            }],
+        };
+
+        const result = sanitizeSourceDocument(input);
+
+        expect(result.repaired).toBe(true);
+        expect(result.document.content[0].content?.[0].content?.[0].content).toEqual([
+            { type: 'paragraph' },
+        ]);
+    });
+
+    it('no modifica un documento válido', () => {
+        const input: SourceDocument = {
+            schemaVersion: 1,
+            type: 'doc',
+            content: [{
+                type: 'paragraph',
+                content: [{ type: 'text', text: 'Contenido académico' }],
+            }],
+        };
+
+        expect(sanitizeSourceDocument(input)).toEqual({
+            document: input,
+            repaired: false,
+        });
+    });
+});
