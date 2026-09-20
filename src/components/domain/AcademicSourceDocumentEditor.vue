@@ -27,6 +27,12 @@ import AcademicSourceImageNodeView from '@/components/domain/AcademicSourceImage
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { sanitizeSourceDocument } from '@/lib/sourceDocument';
 
 const props = defineProps<{ modelValue: SourceDocument; disabled?: boolean; label: string }>();
@@ -128,27 +134,141 @@ onBeforeUnmount(() => editor.value?.destroy());
         <Alert v-if="contentError" variant="destructive" class="m-4 mb-0">
             <AlertDescription>El documento contiene una estructura que no puede mostrarse completa. Vuelva a procesar el PDF o contacte al administrador.</AlertDescription>
         </Alert>
-        <div class="source-document-toolbar sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b bg-background/95 p-2 backdrop-blur">
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Deshacer" :disabled="disabled || !editor?.can().chain().focus().undo().run()" @click="action(() => editor?.chain().focus().undo().run() ?? false)"><Undo2 aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Rehacer" :disabled="disabled || !editor?.can().chain().focus().redo().run()" @click="action(() => editor?.chain().focus().redo().run() ?? false)"><Redo2 aria-hidden="true" /></Button>
-            <Separator orientation="vertical" class="mx-1 h-6" />
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Título nivel 2" :data-active="editor?.isActive('heading', { level: 2 })" @click="action(() => editor?.chain().focus().toggleHeading({ level: 2 }).run() ?? false)"><Heading2 aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Título nivel 3" :data-active="editor?.isActive('heading', { level: 3 })" @click="action(() => editor?.chain().focus().toggleHeading({ level: 3 }).run() ?? false)"><Heading3 aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Negrita" :data-active="editor?.isActive('bold')" @click="action(() => editor?.chain().focus().toggleBold().run() ?? false)"><Bold aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Cursiva" :data-active="editor?.isActive('italic')" @click="action(() => editor?.chain().focus().toggleItalic().run() ?? false)"><Italic aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Tachado" :data-active="editor?.isActive('strike')" @click="action(() => editor?.chain().focus().toggleStrike().run() ?? false)"><Strikethrough aria-hidden="true" /></Button>
-            <Separator orientation="vertical" class="mx-1 h-6" />
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista con viñetas" @click="action(() => editor?.chain().focus().toggleBulletList().run() ?? false)"><List aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista numerada" @click="action(() => editor?.chain().focus().toggleOrderedList().run() ?? false)"><ListOrdered aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Separador" @click="action(() => editor?.chain().focus().setHorizontalRule().run() ?? false)"><Minus aria-hidden="true" /></Button>
-            <Separator orientation="vertical" class="mx-1 h-6" />
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" @click="action(() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() ?? false)"><Table2 aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Agregar fila" :disabled="disabled || !editor?.isActive('table')" @click="action(() => editor?.chain().focus().addRowAfter().run() ?? false)"><Rows3 aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Agregar columna" :disabled="disabled || !editor?.isActive('table')" @click="action(() => editor?.chain().focus().addColumnAfter().run() ?? false)"><Columns3 aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Combinar celdas" :disabled="disabled || !editor?.can().mergeCells()" @click="action(() => editor?.chain().focus().mergeCells().run() ?? false)"><Merge aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Separar celda" :disabled="disabled || !editor?.can().splitCell()" @click="action(() => editor?.chain().focus().splitCell().run() ?? false)"><Split aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="Eliminar tabla" :disabled="disabled || !editor?.isActive('table')" @click="action(() => editor?.chain().focus().deleteTable().run() ?? false)"><Trash2 aria-hidden="true" /></Button>
-        </div>
+        <TooltipProvider :delay-duration="150">
+            <div class="source-document-toolbar sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b bg-background/95 p-2 backdrop-blur">
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Deshacer" :disabled="disabled || !editor?.can().chain().focus().undo().run()" @click="action(() => editor?.chain().focus().undo().run() ?? false)"><Undo2 aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Deshacer</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Rehacer" :disabled="disabled || !editor?.can().chain().focus().redo().run()" @click="action(() => editor?.chain().focus().redo().run() ?? false)"><Redo2 aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Rehacer</TooltipContent>
+                </Tooltip>
+                <Separator orientation="vertical" class="mx-1 h-6" />
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Título nivel 2" :data-active="editor?.isActive('heading', { level: 2 })" @click="action(() => editor?.chain().focus().toggleHeading({ level: 2 }).run() ?? false)"><Heading2 aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Título nivel 2</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Título nivel 3" :data-active="editor?.isActive('heading', { level: 3 })" @click="action(() => editor?.chain().focus().toggleHeading({ level: 3 }).run() ?? false)"><Heading3 aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Título nivel 3</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Negrita" :data-active="editor?.isActive('bold')" @click="action(() => editor?.chain().focus().toggleBold().run() ?? false)"><Bold aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Negrita</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Cursiva" :data-active="editor?.isActive('italic')" @click="action(() => editor?.chain().focus().toggleItalic().run() ?? false)"><Italic aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Cursiva</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Tachado" :data-active="editor?.isActive('strike')" @click="action(() => editor?.chain().focus().toggleStrike().run() ?? false)"><Strikethrough aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Tachado</TooltipContent>
+                </Tooltip>
+                <Separator orientation="vertical" class="mx-1 h-6" />
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista con viñetas" @click="action(() => editor?.chain().focus().toggleBulletList().run() ?? false)"><List aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Lista con viñetas</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista numerada" @click="action(() => editor?.chain().focus().toggleOrderedList().run() ?? false)"><ListOrdered aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Lista numerada</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Separador" @click="action(() => editor?.chain().focus().setHorizontalRule().run() ?? false)"><Minus aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Separador</TooltipContent>
+                </Tooltip>
+                <Separator orientation="vertical" class="mx-1 h-6" />
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" @click="action(() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() ?? false)"><Table2 aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Insertar tabla</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Agregar fila" :disabled="disabled || !editor?.isActive('table')" @click="action(() => editor?.chain().focus().addRowAfter().run() ?? false)"><Rows3 aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Agregar fila</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Agregar columna" :disabled="disabled || !editor?.isActive('table')" @click="action(() => editor?.chain().focus().addColumnAfter().run() ?? false)"><Columns3 aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Agregar columna</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Combinar celdas" :disabled="disabled || !editor?.can().mergeCells()" @click="action(() => editor?.chain().focus().mergeCells().run() ?? false)"><Merge aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Combinar celdas</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Separar celda" :disabled="disabled || !editor?.can().splitCell()" @click="action(() => editor?.chain().focus().splitCell().run() ?? false)"><Split aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Separar celda</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex">
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Eliminar tabla" :disabled="disabled || !editor?.isActive('table')" @click="action(() => editor?.chain().focus().deleteTable().run() ?? false)"><Trash2 aria-hidden="true" /></Button>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Eliminar tabla</TooltipContent>
+                </Tooltip>
+            </div>
+        </TooltipProvider>
         <div class="source-document-content w-full min-w-0 max-w-full px-4 py-6 sm:px-6">
             <EditorContent :editor="editor" />
         </div>
