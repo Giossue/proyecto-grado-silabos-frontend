@@ -38,6 +38,7 @@ describe('contrato de rutas', () => {
     expect(routeRegistry.find((route) => route.name === 'teacher-syllabus')).toMatchObject({
       component: 'TeacherSyllabusDetailPage',
       states: ['resumen', 'edicion', 'ia', 'envio'],
+      layout: 'syllabus-editor',
       roles: ['docente'],
       requiresAuth: true,
     });

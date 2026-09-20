@@ -466,7 +466,7 @@ onBeforeUnmount(() => {
           </Card>
         </main>
 
-        <aside class="min-w-0 self-start xl:sticky xl:top-4 xl:h-[calc(100dvh-2rem)]" aria-label="Asistente IA">
+        <aside class="min-w-0 self-start xl:sticky xl:top-16 xl:h-[calc(100dvh-4rem)]" aria-label="Asistente IA">
           <SyllabusAiAssistantSheet
             ref="aiAssistant"
             :syllabus-id="syllabus.id"
