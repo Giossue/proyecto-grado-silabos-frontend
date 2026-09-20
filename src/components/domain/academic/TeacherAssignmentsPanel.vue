@@ -69,13 +69,18 @@ const rows = computed<TeacherRow[]>(() => {
     })),
   ];
 });
+const statusOf = (item: TeacherRow): { label: string; hint: string } => {
+  if (!item.active) return { label: "Finalizada", hint: "La asignación docente ya no está activa." };
+  if (item.pending_activation) return { label: "Pendiente de activación", hint: "La cuenta espera que su titular abra la invitación y defina su contraseña." };
+  return { label: "Activa", hint: "La asignación docente está vigente." };
+};
 const filter = useClientFilter(() => rows.value, (item) => [
   item.user_name,
   item.user_email,
   item.subject_name,
   item.parallel_code,
   item.period_name,
-  item.pending_activation ? "Pendiente de activación" : item.active ? "Activa" : "Finalizada",
+  statusOf(item).label,
 ], {
   estado: { matches: (item, value) => {
     if (value === "pending") return item.pending_activation;
@@ -98,11 +103,6 @@ const resendInvitation = async (userId: string): Promise<void> => {
   }
 };
 const parallelCount = (teacherId: string) => props.data.teacherAssignments.filter((item) => item.user_id === teacherId && item.active && item.period_planning_enabled).length;
-const statusOf = (item: TeacherRow): { label: string; hint: string } => {
-  if (item.pending_activation) return { label: "Pendiente de activación", hint: "La cuenta espera que su titular abra la invitación y defina su contraseña." };
-  if (!item.active) return { label: "Finalizada", hint: "La asignación docente ya no está activa." };
-  return { label: "Activa", hint: "La asignación docente está vigente." };
-};
 </script>
 
 <template>

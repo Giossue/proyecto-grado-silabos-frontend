@@ -31,6 +31,20 @@ const data: TeacherAssignments = {
     options: { parallels: [], teacherUsers: [] },
 };
 
+const inactivePendingData: TeacherAssignments = {
+    ...data,
+    pendingTeachers: [{ id: 'teacher-inactive', name: 'Docente retirado', email: 'retirado@example.test' }],
+    teacherAssignments: [{
+        ...data.teacherAssignments[0],
+        id: 'assignment-inactive',
+        user_id: 'teacher-inactive',
+        user_name: 'Docente retirado',
+        user_email: 'retirado@example.test',
+        active: false,
+        editable: false,
+    }],
+};
+
 describe('TeacherAssignmentsPanel', () => {
     it('muestra la invitación pendiente dentro de la tabla', () => {
         const wrapper = mount(TeacherAssignmentsPanel, {
@@ -74,5 +88,47 @@ describe('TeacherAssignmentsPanel', () => {
         expect(wrapper.text()).toContain('Pendiente de activación');
         expect(wrapper.text()).toContain('Reenviar invitación');
         expect(wrapper.text()).not.toContain('Invitaciones pendientes');
+    });
+
+    it('muestra como finalizada una asignación retirada aunque la cuenta siga pendiente', () => {
+        const wrapper = mount(TeacherAssignmentsPanel, {
+            props: { data: inactivePendingData },
+            global: {
+                stubs: {
+                    Card: passthrough,
+                    CardContent: passthrough,
+                    CareerAcademicActions: passthrough,
+                    ClientFilterBar: passthrough,
+                    DropdownMenuItem: passthrough,
+                    Field: passthrough,
+                    FieldLabel: passthrough,
+                    MailCheck: passthrough,
+                    Select: passthrough,
+                    SelectContent: passthrough,
+                    SelectGroup: passthrough,
+                    SelectItem: passthrough,
+                    SelectTrigger: passthrough,
+                    SelectValue: passthrough,
+                    Spinner: passthrough,
+                    Table: passthrough,
+                    TableActionsMenu: passthrough,
+                    TableBody: passthrough,
+                    TableCell: passthrough,
+                    TableEmpty: passthrough,
+                    TableHead: passthrough,
+                    TableHeader: passthrough,
+                    TablePagination: passthrough,
+                    TableRow: passthrough,
+                    TeacherReliefSheet: passthrough,
+                    Tooltip: passthrough,
+                    TooltipContent: passthrough,
+                    TooltipTrigger: passthrough,
+                    UserRoundCog: passthrough,
+                },
+            },
+        });
+
+        expect(wrapper.text()).toContain('Finalizada');
+        expect(wrapper.text()).not.toContain('Pendiente de activación');
     });
 });

@@ -43,7 +43,7 @@ describe('CoordinationSourcesPage', () => {
     });
     await flushPromises();
 
-    expect(wrapper.findAll('[data-slot="card"]')).toHaveLength(2);
+    expect(wrapper.findAll('[data-slot="card-title"]')).toHaveLength(2);
     expect(wrapper.text()).toContain('Reglamento académico');
     expect(wrapper.text()).toContain('Contenido disponible');
     expect(wrapper.find('table').exists()).toBe(false);

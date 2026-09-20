@@ -66,7 +66,8 @@ onMounted(() => { void load(); });
     <ProcessLockAlert v-if="lock" />
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-if="loading && sources.length === 0" variant="cards" />
-    <div v-else class="flex min-w-0 flex-col gap-4">
+    <Card v-else>
+      <CardContent class="flex min-w-0 flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="sources-search" label="Buscar fuente" placeholder="Buscar por nombre o descripción" />
       <div aria-live="polite">
         <Empty v-if="sourcePage.length === 0" class="min-h-52">
@@ -91,6 +92,7 @@ onMounted(() => { void load(); });
         </div>
       </div>
       <TablePagination :meta="sourceMeta" label="Paginación de fuentes académicas" @update:page="setSourcePage" />
-    </div>
+      </CardContent>
+    </Card>
   </PageFrame>
 </template>
