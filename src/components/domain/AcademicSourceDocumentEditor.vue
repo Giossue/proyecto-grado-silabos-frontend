@@ -311,7 +311,7 @@ onBeforeUnmount(() => editor.value?.destroy());
 .source-document-editor th p,
 .source-document-editor td p { margin: 0; }
 .source-document-editor th { background: var(--muted); font-weight: 700; }
-.source-document-editor .selectedCell::after { background: rgb(37 99 235 / 0.12); content: ''; inset: 0; pointer-events: none; position: absolute; }
+.source-document-editor .selectedCell::after { background: color-mix(in srgb, var(--primary) 12%, transparent); content: ''; inset: 0; pointer-events: none; position: absolute; }
 .source-document-editor figure[data-source-image] { margin: 1rem auto; max-width: 100%; text-align: center; }
 .source-document-editor figure[data-source-image] img { display: block; height: auto; margin: 0 auto; max-width: 100%; object-fit: contain; }
 .source-document-editor figure[data-source-image] figcaption { color: var(--muted-foreground); font-size: 0.85em; margin-top: 0.35rem; }

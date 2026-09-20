@@ -44,7 +44,7 @@ const updateValue = (value: unknown): void => {
                 >
                     <SelectTrigger
                         size="sm"
-                        class="relative !size-8 justify-center !gap-0 !border-0 !bg-transparent !p-0 !shadow-none hover:!bg-accent hover:text-accent-foreground dark:!bg-transparent dark:hover:!bg-accent/50 [&>svg]:hidden"
+                        class="relative !size-8 justify-center !gap-0 !border-0 !bg-transparent !p-0 !shadow-none hover:!bg-accent hover:text-accent-foreground [&>svg]:hidden"
                         :aria-label="label"
                         @focus="tooltipOpen = true"
                         @blur="tooltipOpen = false"
@@ -67,4 +67,3 @@ const updateValue = (value: unknown): void => {
         <TooltipContent>{{ tooltip }}</TooltipContent>
     </Tooltip>
 </template>
-

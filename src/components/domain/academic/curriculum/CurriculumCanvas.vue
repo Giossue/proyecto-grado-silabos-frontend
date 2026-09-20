@@ -78,11 +78,11 @@ const emit = defineEmits<{ changed: [message: string] }>();
 // curricular recibe un color que comparten su franja de nivel y los encabezados
 // ACD/APE/… de sus tarjetas. El orden sigue al listado alfabético de unidades.
 const UNIT_PALETTE = [
-    { backgroundColor: 'hsl(213 55% 47%)', color: 'hsl(0 0% 100%)' },
-    { backgroundColor: 'hsl(210 52% 80%)', color: 'hsl(213 45% 18%)' },
-    { backgroundColor: 'hsl(0 0% 74%)', color: 'hsl(0 0% 12%)' },
-    { backgroundColor: 'hsl(31 62% 62%)', color: 'hsl(24 45% 16%)' },
-    { backgroundColor: 'hsl(150 35% 55%)', color: 'hsl(152 45% 14%)' },
+    { backgroundColor: 'var(--curriculum-unit-1-background)', color: 'var(--curriculum-unit-1-foreground)' },
+    { backgroundColor: 'var(--curriculum-unit-2-background)', color: 'var(--curriculum-unit-2-foreground)' },
+    { backgroundColor: 'var(--curriculum-unit-3-background)', color: 'var(--curriculum-unit-3-foreground)' },
+    { backgroundColor: 'var(--curriculum-unit-4-background)', color: 'var(--curriculum-unit-4-foreground)' },
+    { backgroundColor: 'var(--curriculum-unit-5-background)', color: 'var(--curriculum-unit-5-foreground)' },
 ];
 const FALLBACK_UNIT_STYLE = {
     backgroundColor: 'var(--primary)',

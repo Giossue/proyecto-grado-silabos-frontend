@@ -63,7 +63,7 @@ const resendVerification = async (): Promise<void> => {
 
 <template>
     <SettingsLayout>
-        <div class="flex flex-col space-y-6">
+        <div class="flex flex-col gap-6">
             <Heading
                 variant="small"
                 title="Perfil"
@@ -72,7 +72,7 @@ const resendVerification = async (): Promise<void> => {
 
             <InputError :message="errors.request" />
 
-            <form v-if="user?.can_edit_identity" class="space-y-6" @submit.prevent="submit">
+            <form v-if="user?.can_edit_identity" class="flex flex-col gap-6" @submit.prevent="submit">
                 <div class="grid gap-2">
                     <Label for="name" required>Nombre completo</Label>
                     <Input
@@ -123,7 +123,7 @@ const resendVerification = async (): Promise<void> => {
                 </div>
             </form>
 
-            <div v-else class="space-y-6">
+            <div v-else class="flex flex-col gap-6">
                 <div class="grid gap-2">
                     <Label for="readonly-name">Nombre completo</Label>
                     <Input id="readonly-name" :model-value="user?.name" placeholder="Ej. MARÍA JOSÉ PÉREZ LÓPEZ" disabled aria-describedby="identity-help" />

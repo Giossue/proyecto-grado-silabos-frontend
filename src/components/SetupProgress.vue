@@ -21,8 +21,8 @@ const tone = computed(() =>
     percent.value < 34
         ? { bar: 'bg-destructive', text: 'text-destructive' }
         : percent.value < 67
-          ? { bar: 'bg-amber-500', text: 'text-amber-600' }
-          : { bar: 'bg-emerald-600', text: 'text-emerald-700' },
+          ? { bar: 'bg-warning', text: 'text-warning' }
+          : { bar: 'bg-success', text: 'text-success' },
 );
 
 onMounted(async () => {

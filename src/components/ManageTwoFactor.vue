@@ -98,11 +98,11 @@ onMounted(() => void load());
 </script>
 
 <template>
-    <div class="space-y-6">
+    <div class="flex flex-col gap-6">
         <Heading variant="small" title="Autenticación de dos factores" description="Administre la protección adicional de su cuenta" />
         <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
 
-        <div v-if="!enabled" class="flex flex-col items-start justify-start space-y-4">
+        <div v-if="!enabled" class="flex flex-col items-start justify-start gap-4">
             <p class="text-sm text-muted-foreground">
                 Al activarla, el inicio de sesión solicitará un código seguro generado por una aplicación TOTP en su dispositivo.
             </p>
@@ -113,7 +113,7 @@ onMounted(() => void load());
             </Button>
         </div>
 
-        <div v-else class="flex flex-col items-start justify-start space-y-4">
+        <div v-else class="flex flex-col items-start justify-start gap-4">
             <p class="text-sm text-muted-foreground">
                 El inicio de sesión solicitará un código temporal generado por la aplicación TOTP de su dispositivo.
             </p>

@@ -22,7 +22,7 @@ const props = withDefaults(
         marginCm: 2.5,
         fontFamily: 'Arial',
         fontSize: 11,
-        textColor: '#000000',
+        textColor: 'var(--document-text)',
         showPageNumbers: true,
     },
 );
@@ -201,15 +201,15 @@ onBeforeUnmount(() => {
     position: relative;
     height: var(--page-height);
     flex-shrink: 0;
-    background: #fff;
-    box-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+    background: var(--document-paper);
+    box-shadow: var(--document-paper-shadow);
 }
 
 .paged-document-number {
     position: absolute;
     right: var(--page-margin);
     bottom: 1cm;
-    color: #595959;
+    color: var(--document-muted-text);
     font-size: 9pt;
 }
 

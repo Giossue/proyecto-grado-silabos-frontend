@@ -1,19 +1,12 @@
 <script setup lang="ts">
-import { Save, Trash2 } from '@lucide/vue';
+import { Save } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import TemplateTableEditor from '@/components/domain/configuration/TemplateTableEditor.vue';
+import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { registerLocalPurgeConfirmation } from '@/composables/usePurgeConfirmation';
 import type { TableLayout } from '@/lib/tableLayout';
@@ -331,32 +324,13 @@ defineExpose({ start });
             </Alert>
         </template>
 
-        <Dialog :open="discardOpen" @update:open="updateDiscardOpen">
-            <DialogContent class="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Descartar cambios de tabla</DialogTitle>
-                    <DialogDescription>
-                        Hay cambios de tabla sin guardar. ¿Desea descartarlos?
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        @click="continueEditing"
-                    >
-                        Seguir editando
-                    </Button>
-                    <Button
-                        type="button"
-                        variant="destructive"
-                        @click="discardChanges"
-                    >
-                        <Trash2 data-icon="inline-start" aria-hidden="true" />
-                        Descartar cambios
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        <UnsavedChangesDialog
+            :open="discardOpen"
+            title="Descartar cambios de tabla"
+            description="Hay cambios de tabla sin guardar. ¿Desea descartarlos?"
+            @update:open="updateDiscardOpen"
+            @continue="continueEditing"
+            @discard="discardChanges"
+        />
     </div>
 </template>

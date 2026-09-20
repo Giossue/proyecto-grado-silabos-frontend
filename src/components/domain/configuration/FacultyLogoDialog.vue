@@ -55,7 +55,7 @@ const submit = async () => {
       <form class="flex flex-col gap-5" @submit.prevent="submit">
         <FieldGroup>
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-          <div class="rounded-md border bg-white p-4"><img :src="currentUrl" :alt="configured ? `Logo actual de ${facultyName}` : 'Ejemplo del logo de facultad'" class="mx-auto max-h-28 max-w-full object-contain" /></div>
+          <div class="rounded-md border bg-background p-4"><img :src="currentUrl" :alt="configured ? `Logo actual de ${facultyName}` : 'Ejemplo del logo de facultad'" class="mx-auto max-h-28 max-w-full object-contain" /></div>
           <Field :data-invalid="Boolean(error)">
             <FieldLabel for="coordinator-faculty-logo" required>Logo (PNG sin fondo)</FieldLabel>
             <Input id="coordinator-faculty-logo" type="file" accept="image/png" required :disabled="saving" :aria-invalid="Boolean(error)" @change="choose" />

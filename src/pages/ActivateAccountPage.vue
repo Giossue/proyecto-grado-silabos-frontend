@@ -46,7 +46,7 @@ const submit = async (): Promise<void> => {
 
 <template>
     <AuthSimpleLayout title="Activar cuenta" description="Verifique su correo y defina una contraseña para ingresar al sistema.">
-        <form class="space-y-6" @submit.prevent="submit">
+        <form class="flex flex-col gap-6" @submit.prevent="submit">
             <div class="grid gap-2">
                 <Label for="activation-password" required>Contraseña</Label>
                 <PasswordInput id="activation-password" v-model="password" autocomplete="new-password" required :aria-invalid="Boolean(errors.password)" />

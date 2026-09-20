@@ -69,8 +69,8 @@ defineProps<{
 }
 
 .id-card td {
-    border: 1px solid #7f7f7f;
-    color: #000;
+    border: 1px solid var(--document-border);
+    color: var(--document-text);
     padding: 2pt 4pt;
     text-align: left;
     vertical-align: middle;
@@ -79,16 +79,16 @@ defineProps<{
 }
 
 .id-blue {
-    background: #4f81bd;
-    color: #fff !important;
+    background: var(--document-table-header-strong-background);
+    color: var(--document-paper) !important;
 }
 
 .id-shade {
-    background: #dbe5f1;
+    background: var(--document-table-header-background);
 }
 
 .id-plain {
-    background: #fff;
+    background: var(--document-paper);
 }
 
 .id-bold {
@@ -104,4 +104,3 @@ defineProps<{
     text-align: center;
 }
 </style>
-

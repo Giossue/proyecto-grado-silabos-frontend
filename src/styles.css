@@ -43,6 +43,16 @@
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
 
+    --color-overlay: var(--overlay);
+    --color-brand-surface: var(--brand-surface);
+    --color-brand-foreground: var(--brand-foreground);
+
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
@@ -122,6 +132,13 @@
     --accent-foreground: hsl(0 0% 9%);
     --destructive: hsl(0 84.2% 48%);
     --destructive-foreground: hsl(0 0% 98%);
+    --overlay: hsl(0 0% 0%);
+    --brand-surface: hsl(0 0% 10%);
+    --brand-foreground: hsl(0 0% 98%);
+    --success: hsl(142 72% 29%);
+    --success-foreground: hsl(0 0% 98%);
+    --warning: hsl(38 92% 35%);
+    --warning-foreground: hsl(0 0% 98%);
     --border: hsl(0 0% 92%);
     --input: hsl(0 0% 84%);
     --ring: hsl(0 0% 3.9%);
@@ -146,6 +163,31 @@
     --sidebar-border: hsl(0 0% 91%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 94%);
+
+    /* Paleta fija del documento académico; no depende del tema de la aplicación. */
+    --document-paper: hsl(0 0% 100%);
+    --document-text: hsl(0 0% 0%);
+    --document-border: hsl(0 0% 50%);
+    --document-table-header-background: hsl(211 42% 84%);
+    --document-table-header-color: hsl(214 45% 38%);
+    --document-table-header-strong-background: hsl(214 44% 53%);
+    --document-table-total-background: hsl(211 46% 78%);
+    --document-muted-text: hsl(0 0% 35%);
+    --document-accent: hsl(205 100% 38%);
+    --document-editor-foreground: hsl(218 28% 17%);
+    --document-field-background: hsl(214 100% 97%);
+    --document-variable-background: hsl(120 33% 95%);
+    --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+    --curriculum-unit-1-background: hsl(213 55% 47%);
+    --curriculum-unit-1-foreground: hsl(0 0% 100%);
+    --curriculum-unit-2-background: hsl(210 52% 80%);
+    --curriculum-unit-2-foreground: hsl(213 45% 18%);
+    --curriculum-unit-3-background: hsl(0 0% 74%);
+    --curriculum-unit-3-foreground: hsl(0 0% 12%);
+    --curriculum-unit-4-background: hsl(31 62% 62%);
+    --curriculum-unit-4-foreground: hsl(24 45% 16%);
+    --curriculum-unit-5-background: hsl(150 35% 55%);
+    --curriculum-unit-5-foreground: hsl(152 45% 14%);
 }
 
 .dark {
@@ -169,6 +211,13 @@
     --accent-foreground: hsl(0 0% 98%);
     --destructive: hsl(0 84% 48%);
     --destructive-foreground: hsl(0 0% 98%);
+    --overlay: hsl(0 0% 0%);
+    --brand-surface: hsl(0 0% 10%);
+    --brand-foreground: hsl(0 0% 98%);
+    --success: hsl(142 64% 39%);
+    --success-foreground: hsl(0 0% 98%);
+    --warning: hsl(38 92% 50%);
+    --warning-foreground: hsl(0 0% 9%);
     --border: hsl(0 0% 16%);
     --input: hsl(0 0% 24%);
     --ring: hsl(0 0% 83.1%);
@@ -193,6 +242,31 @@
     --sidebar-border: hsl(0 0% 15.9%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 9%);
+
+    /* El contenido académico conserva su paleta aunque la interfaz esté en oscuro. */
+    --document-paper: hsl(0 0% 100%);
+    --document-text: hsl(0 0% 0%);
+    --document-border: hsl(0 0% 50%);
+    --document-table-header-background: hsl(211 42% 84%);
+    --document-table-header-color: hsl(214 45% 38%);
+    --document-table-header-strong-background: hsl(214 44% 53%);
+    --document-table-total-background: hsl(211 46% 78%);
+    --document-muted-text: hsl(0 0% 35%);
+    --document-accent: hsl(205 100% 38%);
+    --document-editor-foreground: hsl(218 28% 17%);
+    --document-field-background: hsl(214 100% 97%);
+    --document-variable-background: hsl(120 33% 95%);
+    --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+    --curriculum-unit-1-background: hsl(213 55% 47%);
+    --curriculum-unit-1-foreground: hsl(0 0% 100%);
+    --curriculum-unit-2-background: hsl(210 52% 80%);
+    --curriculum-unit-2-foreground: hsl(213 45% 18%);
+    --curriculum-unit-3-background: hsl(0 0% 74%);
+    --curriculum-unit-3-foreground: hsl(0 0% 12%);
+    --curriculum-unit-4-background: hsl(31 62% 62%);
+    --curriculum-unit-4-foreground: hsl(24 45% 16%);
+    --curriculum-unit-5-background: hsl(150 35% 55%);
+    --curriculum-unit-5-foreground: hsl(152 45% 14%);
 }
 
 @layer base {
@@ -412,5 +486,17 @@
 @media (prefers-reduced-motion: reduce) {
     [data-slot='skeleton'] {
         animation: none !important;
+    }
+}
+
+@layer components {
+    .document-table-header {
+        background-color: var(--document-table-header-background);
+        color: var(--document-table-header-color);
+    }
+
+    .document-table-total {
+        background-color: var(--document-table-total-background);
+        color: var(--document-table-header-color);
     }
 }

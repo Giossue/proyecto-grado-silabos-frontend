@@ -27,6 +27,7 @@ import type {
 } from '@/lib/tableLayout';
 import { displayDocumentValue } from '@/lib/templateDocument';
 import type { DocumentNode, DocumentField } from '@/lib/templateDocument';
+import { DOCUMENT_COLORS } from '@/lib/documentPalette';
 
 type Row = { id: string | null; data: TableRowData };
 type Context = {
@@ -62,10 +63,10 @@ const props = withDefaults(
         presentation: 'document',
         fontFamily: 'Arial',
         fontSize: 11,
-        textColor: '#000000',
+        textColor: DOCUMENT_COLORS.text,
         textAlign: 'left',
-        tableHeaderBackground: '#4F81BD',
-        tableHeaderColor: '#FFFFFF',
+        tableHeaderBackground: DOCUMENT_COLORS.tableHeader,
+        tableHeaderColor: DOCUMENT_COLORS.paper,
     },
 );
 const emit = defineEmits<{
@@ -239,10 +240,10 @@ const cellBorder = (value: unknown): string | undefined => {
     }
 
     if (value === 'thick') {
-        return '2px solid #7F7F7F';
+        return `2px solid ${DOCUMENT_COLORS.border}`;
     }
 
-    return value === 'thin' ? '1px solid #7F7F7F' : undefined;
+    return value === 'thin' ? `1px solid ${DOCUMENT_COLORS.border}` : undefined;
 };
 const setColumn = (context: Context, key: string, value: string | number) => {
     const field = context.field;
@@ -883,8 +884,8 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 
 <style scoped>
 .template-document-view {
-    color: #000;
-    background: #fff;
+    color: var(--document-text);
+    background: var(--document-paper);
     overflow-wrap: anywhere;
 }
 .template-document-view[data-preview] {
@@ -930,7 +931,7 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 }
 .template-document-view :deep(td),
 .template-document-view :deep(th) {
-    border: 1px solid #7f7f7f;
+    border: 1px solid var(--document-border);
     padding: 2px 4px;
     vertical-align: middle;
     font-weight: normal;
@@ -1059,4 +1060,3 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
     min-height: 4rem;
 }
 </style>
-

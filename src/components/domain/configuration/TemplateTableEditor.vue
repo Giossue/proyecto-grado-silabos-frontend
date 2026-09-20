@@ -112,6 +112,7 @@ import {
     documentFieldOptions,
     nodesOfType,
 } from '@/lib/templateDocument';
+import { DOCUMENT_COLORS } from '@/lib/documentPalette';
 import { toast } from '@/lib/toast';
 import {
     cellBoundaryPosition,
@@ -260,7 +261,7 @@ const cellStyle = (attributes: Record<string, unknown>) => {
         styles.push(
             attributes.borderStyle === 'none'
                 ? 'border: 0'
-                : `border: ${attributes.borderStyle === 'thick' ? '2px' : '1px'} solid #7F7F7F`,
+                : `border: ${attributes.borderStyle === 'thick' ? '2px' : '1px'} solid ${DOCUMENT_COLORS.border}`,
         );
     }
 
@@ -2131,7 +2132,7 @@ defineExpose({ getDocument });
 }
 .template-table-editor .template-table-canvas {
     /* El documento se edita sobre papel, independientemente del tema de la interfaz. */
-    background: #fff;
+    background: var(--document-paper);
 }
 .template-table-editor table {
     border-collapse: collapse;
@@ -2140,7 +2141,7 @@ defineExpose({ getDocument });
 }
 .template-table-editor td,
 .template-table-editor th {
-    border: 1px solid #7f7f7f;
+    border: 1px solid var(--document-border);
     cursor: text;
     min-width: 20px;
     padding: 2px 4px;
@@ -2181,7 +2182,7 @@ defineExpose({ getDocument });
     font-style: normal !important;
 }
 .template-table-editor .selectedCell::after {
-    background: rgb(0 112 192 / 20%);
+    background: color-mix(in srgb, var(--document-accent) 20%, transparent);
     content: '';
     inset: 0;
     pointer-events: none;
@@ -2189,7 +2190,7 @@ defineExpose({ getDocument });
 }
 .template-table-editor td:not(:last-child)::before,
 .template-table-editor th:not(:last-child)::before {
-    background: #0070c0;
+    background: var(--document-accent);
     bottom: 0;
     content: '';
     cursor: col-resize;
@@ -2210,16 +2211,16 @@ defineExpose({ getDocument });
     display: none;
 }
 .template-table-editor .template-table-field {
-    background: #edf6ff;
+    background: var(--document-field-background);
     border-radius: 2px;
-    color: #111827 !important;
-    outline: 1px dashed #4f81bd;
+    color: var(--document-editor-foreground) !important;
+    outline: 1px dashed var(--document-table-header-strong-background);
     padding: 1px 3px;
 }
 .template-table-editor .template-table-variable {
-    background: #edf8ee;
+    background: var(--document-variable-background);
     border-radius: 2px;
-    color: #111827 !important;
+    color: var(--document-editor-foreground) !important;
     padding: 1px 3px;
 }
 .template-table-editor .tiptap .template-table-field,
@@ -2232,4 +2233,3 @@ defineExpose({ getDocument });
     white-space: nowrap;
 }
 </style>
-

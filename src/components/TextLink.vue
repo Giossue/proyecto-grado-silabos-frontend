@@ -18,7 +18,7 @@ const component = computed(() => props.as === 'button' ? 'button' : 'RouterLink'
         :to="as === 'button' ? undefined : href"
         :type="as === 'button' ? 'button' : undefined"
         :tabindex="tabindex"
-        class="cursor-pointer text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+        class="cursor-pointer text-foreground underline decoration-border underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current"
     >
         <slot />
     </component>

@@ -60,6 +60,6 @@ onBeforeUnmount(cancel);
       <slot name="filters" />
       <Button v-if="active" type="button" variant="ghost" class="max-sm:w-full" @click="clear"><FilterX />Quitar filtros</Button>
     </MobileFilterSheet>
-    <button type="submit" class="sr-only" tabindex="-1">Buscar</button>
+    <Button type="submit" class="sr-only" tabindex="-1">Buscar</Button>
   </FieldGroup>
 </template>

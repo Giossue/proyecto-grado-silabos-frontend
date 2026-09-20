@@ -11,7 +11,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <div :class="cn('space-y-1', props.class)">
+    <div :class="cn('flex flex-col gap-1', props.class)">
         <h4 v-if="title" class="truncate text-sm leading-tight font-medium">
             {{ title }}
         </h4>

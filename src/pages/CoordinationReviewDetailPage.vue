@@ -145,8 +145,8 @@ onMounted(load);
       <main class="flex min-w-0 flex-col gap-6">
         <Card v-for="section in data.revision.snapshot.sections" :id="`section-${section.key}`" :key="section.key">
           <CardHeader><CardTitle>{{ section.title }}</CardTitle><CardDescription>Contenido exacto enviado en la revisión {{ data.revision.number }}.</CardDescription></CardHeader>
-          <CardContent class="space-y-6">
-            <section v-for="block in section.blocks" :key="block.key" class="space-y-4">
+          <CardContent class="flex flex-col gap-6">
+            <section v-for="block in section.blocks" :key="block.key" class="flex flex-col gap-4">
               <h3 v-if="section.blocks.length > 1" class="font-medium">{{ block.title }}</h3>
               <TemplateDocumentView v-if="block.document" :document="block.document" :fields="documentFields(block.fields)" :variables="data.revision.snapshot.template_variables ?? {}" :layout="block.table" :planning-expectations="planningExpectations" />
               <dl v-else class="grid gap-4">
@@ -155,7 +155,7 @@ onMounted(load);
                   <dd v-if="block.content_type === 'institutional' && field.inherited && data.revision.identification" class="mt-3"><IdentificationCard :grid="data.revision.identification" /></dd>
                   <dd v-else-if="field.rows.length === 0" class="mt-2 text-sm whitespace-pre-wrap">{{ formatValue(field.value) }}</dd>
                   <dd v-else-if="block.table" class="mt-3"><SyllabusTableView :layout="block.table" :rows="tableRows(field)" :planning-expectations="planningExpectations" /></dd>
-                  <dd v-else class="mt-3 space-y-2"><div v-for="(row, index) in field.rows" :key="row.id" class="rounded bg-muted p-3 text-sm whitespace-pre-wrap"><span class="font-medium">Fila {{ index + 1 }}:</span> {{ formatValue(row.data) }}</div></dd>
+                  <dd v-else class="mt-3 flex flex-col gap-2"><div v-for="(row, index) in field.rows" :key="row.id" class="rounded bg-muted p-3 text-sm whitespace-pre-wrap"><span class="font-medium">Fila {{ index + 1 }}:</span> {{ formatValue(row.data) }}</div></dd>
                 </div>
               </dl>
             </section>
@@ -167,8 +167,8 @@ onMounted(load);
         <ReviewObservationSheet v-if="canReviewCurrent" :revision-id="data.revision.id" :sections="data.revision.snapshot.sections" @saved="changed" />
         <Card>
           <CardHeader><CardTitle>Observaciones</CardTitle><CardDescription>{{ unresolvedCount }} pendiente(s) en todo el historial.</CardDescription></CardHeader>
-          <CardContent class="space-y-4">
-            <article v-for="observation in data.observations" :key="observation.id" class="space-y-3 rounded-md border p-4">
+          <CardContent class="flex flex-col gap-4">
+            <article v-for="observation in data.observations" :key="observation.id" class="flex flex-col gap-3 rounded-md border p-4">
               <div class="flex flex-wrap items-center gap-2"><Badge variant="outline">Rev. {{ observation.revision_number }}</Badge><Badge :variant="observation.state === 'verificada' ? 'secondary' : 'destructive'">{{ observationState(observation.state) }}</Badge><Badge v-if="observation.requested" variant="outline">Solicitada</Badge></div>
               <p class="text-sm whitespace-pre-wrap">{{ observation.content }}</p>
               <p class="text-xs text-muted-foreground">{{ observation.created_by }} · {{ new Date(observation.observado_en).toLocaleString('es-EC') }}</p>
@@ -181,7 +181,7 @@ onMounted(load);
 
         <Card v-if="canReviewCurrent && openCurrentObservations.length > 0">
           <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>Seleccione las observaciones que el docente debe responder.</CardDescription></CardHeader>
-          <CardContent><form id="correction-form" class="space-y-4" @submit.prevent="submitCorrection">
+          <CardContent><form id="correction-form" class="flex flex-col gap-4" @submit.prevent="submitCorrection">
             <FieldSet aria-required="true" class="gap-3"><FieldLegend variant="label" required>Observaciones por corregir</FieldLegend>
               <label v-for="observation in openCurrentObservations" :key="observation.id" :for="`correction-observation-${observation.id}`" class="ai-recommendation flex items-start gap-3 rounded-md border p-3 text-sm"><Checkbox :id="`correction-observation-${observation.id}`" :model-value="selectedObservationIds.includes(observation.id)" @update:model-value="toggleObservation(observation.id, $event)" /><span>{{ observation.content }}</span></label>
             </FieldSet>
@@ -190,11 +190,11 @@ onMounted(load);
           </form></CardContent>
         </Card>
 
-        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>La aprobación quedará vinculada exclusivamente a la revisión {{ data.revision.number }}.</CardDescription></CardHeader><CardContent class="space-y-3"><FieldError :errors="[...(errors.observations ?? []), ...(errors.revision ?? [])]" /><Button :disabled="processing || unresolvedCount > 0" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button><p v-if="unresolvedCount > 0" class="text-sm text-destructive">Verifique todas las observaciones antes de aprobar.</p></CardContent></Card>
+        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>La aprobación quedará vinculada exclusivamente a la revisión {{ data.revision.number }}.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="[...(errors.observations ?? []), ...(errors.revision ?? [])]" /><Button :disabled="processing || unresolvedCount > 0" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button><p v-if="unresolvedCount > 0" class="text-sm text-destructive">Verifique todas las observaciones antes de aprobar.</p></CardContent></Card>
 
-        <Card v-if="data.revision.is_current && data.syllabus.state === 'aprobado'"><CardHeader><CardTitle>Reabrir aprobado</CardTitle><CardDescription>Conserva esta aprobación y crea una nueva línea de corrección para el docente.</CardDescription></CardHeader><CardContent><form class="space-y-4" @submit.prevent="run(() => reopenSyllabus(data!.syllabus.id, reopeningCause))"><Field><FieldLabel for="reopening-cause" required>Causa de reapertura</FieldLabel><Textarea id="reopening-cause" v-model="reopeningCause" rows="4" required /><FieldError :errors="errors.cause" /></Field><Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><RotateCcw v-else aria-hidden="true" />Reabrir conservando la aprobación</Button></form></CardContent></Card>
+        <Card v-if="data.revision.is_current && data.syllabus.state === 'aprobado'"><CardHeader><CardTitle>Reabrir aprobado</CardTitle><CardDescription>Conserva esta aprobación y crea una nueva línea de corrección para el docente.</CardDescription></CardHeader><CardContent><form class="flex flex-col gap-4" @submit.prevent="run(() => reopenSyllabus(data!.syllabus.id, reopeningCause))"><Field><FieldLabel for="reopening-cause" required>Causa de reapertura</FieldLabel><Textarea id="reopening-cause" v-model="reopeningCause" rows="4" required /><FieldError :errors="errors.cause" /></Field><Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><RotateCcw v-else aria-hidden="true" />Reabrir conservando la aprobación</Button></form></CardContent></Card>
 
-        <Card><CardHeader><CardTitle>Historial de revisiones</CardTitle><CardDescription>Consulte o compare revisiones enviadas.</CardDescription></CardHeader><CardContent><ol class="space-y-3"><li v-for="(item, index) in data.history" :key="item.id" class="rounded-md border p-3 text-sm"><div class="flex items-center justify-between gap-3"><Button as-child variant="link" class="h-auto p-0"><RouterLink :to="paths.coordination.review(item.id)">Revisión {{ item.number }}</RouterLink></Button><Badge v-if="item.approved_at" variant="secondary">Aprobada</Badge></div><div class="text-muted-foreground">{{ item.submitted_by }} · {{ new Date(item.submitted_at).toLocaleDateString('es-EC') }}</div><div class="mt-2 flex flex-wrap gap-2"><Button v-if="item.approved_at" as-child size="sm" variant="outline"><RouterLink :to="paths.documents(item.id)">Documentos</RouterLink></Button><Button v-if="index > 0" as-child size="sm" variant="outline"><RouterLink :to="paths.coordination.comparison(data.history[index - 1]!.id, item.id)">Comparar con la anterior</RouterLink></Button></div></li></ol></CardContent></Card>
+        <Card><CardHeader><CardTitle>Historial de revisiones</CardTitle><CardDescription>Consulte o compare revisiones enviadas.</CardDescription></CardHeader><CardContent><ol class="flex flex-col gap-3"><li v-for="(item, index) in data.history" :key="item.id" class="rounded-md border p-3 text-sm"><div class="flex items-center justify-between gap-3"><Button as-child variant="link" class="h-auto p-0"><RouterLink :to="paths.coordination.review(item.id)">Revisión {{ item.number }}</RouterLink></Button><Badge v-if="item.approved_at" variant="secondary">Aprobada</Badge></div><div class="text-muted-foreground">{{ item.submitted_by }} · {{ new Date(item.submitted_at).toLocaleDateString('es-EC') }}</div><div class="mt-2 flex flex-wrap gap-2"><Button v-if="item.approved_at" as-child size="sm" variant="outline"><RouterLink :to="paths.documents(item.id)">Documentos</RouterLink></Button><Button v-if="index > 0" as-child size="sm" variant="outline"><RouterLink :to="paths.coordination.comparison(data.history[index - 1]!.id, item.id)">Comparar con la anterior</RouterLink></Button></div></li></ol></CardContent></Card>
       </aside>
     </div>
   </PageFrame>

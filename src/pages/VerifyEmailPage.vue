@@ -86,7 +86,7 @@ onMounted(() => {
                 {{ error }}
             </p>
 
-            <div class="space-y-6 text-center">
+            <div class="flex flex-col gap-6 text-center">
                 <Button type="button" :disabled="processing" variant="secondary" @click="resend">
                     <Spinner v-if="processing" />
                     Reenviar correo de verificación

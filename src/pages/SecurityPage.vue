@@ -51,11 +51,11 @@ const submit = async (): Promise<void> => {
 
 <template>
     <SettingsLayout>
-        <div class="space-y-6">
+        <div class="flex flex-col gap-6">
             <Heading variant="small" title="Actualizar contraseña" description="Use una contraseña larga y única para proteger su cuenta" />
             <InputError :message="errors.request" />
 
-            <form class="space-y-6" @submit.prevent="submit">
+            <form class="flex flex-col gap-6" @submit.prevent="submit">
                 <div class="grid gap-2">
                     <Label for="current_password" required>Contraseña actual</Label>
                     <PasswordInput id="current_password" v-model="currentPassword" required class="mt-1 block w-full" autocomplete="current-password" placeholder="Contraseña actual" />

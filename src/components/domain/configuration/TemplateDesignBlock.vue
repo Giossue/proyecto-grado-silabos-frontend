@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplateDocumentEditor from '@/components/domain/configuration/TemplateDocumentEditor.vue';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
+import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -34,7 +35,11 @@ import type {
 } from '@/lib/templateDocument';
 import { templatePreviewFields } from '@/lib/templatePreview';
 import { toast } from '@/lib/toast';
-import { apiRouter as router, useApiForm as useForm } from '@/lib/apiVisit';
+import {
+    apiRouter as router,
+    useApiForm as useForm,
+    type ApiVisitOptions as VisitOptions,
+} from '@/lib/apiVisit';
 
 const props = defineProps<{
     templateId: string;
@@ -60,6 +65,13 @@ const emit = defineEmits<{
     dirty: [value: boolean];
 }>();
 const propertiesOpen = ref(false);
+const discardOpen = ref(false);
+const pendingNavigation = ref<{
+    url: string | URL;
+    method?: string;
+    data?: Record<string, unknown> | FormData;
+} & VisitOptions | null>(null);
+let bypassNavigationGuard = false;
 const designDirty = ref(false);
 const initialProperties = ref('');
 const isFlow = computed(() => props.block.content_type === 'flow');
@@ -228,15 +240,58 @@ const updatePrimaryName = (value: string | number) => {
 
     form.title = name;
 };
+
+const resumeNavigation = (): void => {
+    const navigation = pendingNavigation.value;
+
+    pendingNavigation.value = null;
+    discardOpen.value = false;
+    designDirty.value = false;
+    initialProperties.value = propertiesSnapshot();
+    propertiesOpen.value = false;
+
+    if (!navigation) {
+        return;
+    }
+
+    bypassNavigationGuard = true;
+
+    try {
+        router.visit(navigation.url, {
+            method: navigation.method,
+            data: navigation.data,
+            preserveScroll: navigation.preserveScroll,
+            preserveState: navigation.preserveState,
+            preserveUrl: navigation.preserveUrl,
+            preserveErrors: navigation.preserveErrors,
+        });
+    } finally {
+        bypassNavigationGuard = false;
+    }
+};
+const continueEditing = (): void => {
+    pendingNavigation.value = null;
+    discardOpen.value = false;
+};
+const updateDiscardOpen = (open: boolean): void => {
+    if (open) {
+        discardOpen.value = true;
+
+        return;
+    }
+
+    continueEditing();
+};
 const stopNavigation = router.on('before', (event) => {
     if (
+        !bypassNavigationGuard &&
         (props.editing || propertiesOpen.value) &&
         dirty.value &&
         !submitting.value &&
-        !window.confirm(
-            'Hay cambios de diseño sin guardar. ¿Desea salir y descartarlos?',
-        )
+        event.detail.visit.method === 'GET'
     ) {
+        pendingNavigation.value = event.detail.visit;
+        discardOpen.value = true;
         event.preventDefault();
     }
 });
@@ -595,5 +650,14 @@ watch(
                 </SheetFooter>
             </SheetContent>
         </Sheet>
+
+        <UnsavedChangesDialog
+            :open="discardOpen"
+            title="Descartar cambios de diseño"
+            description="Hay cambios de diseño sin guardar. ¿Desea descartarlos?"
+            @update:open="updateDiscardOpen"
+            @continue="continueEditing"
+            @discard="resumeNavigation"
+        />
     </div>
 </template>

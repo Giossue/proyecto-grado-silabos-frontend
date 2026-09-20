@@ -1,4 +1,5 @@
 import { columnWidths, headerRows } from '@/lib/tableLayout';
+import { DOCUMENT_COLORS } from '@/lib/documentPalette';
 import type {
     TableColumnRole,
     TableLayout,
@@ -169,7 +170,7 @@ export function defaultDocument(
                     ],
                     count,
                     1,
-                    '#DBE5F1',
+                    DOCUMENT_COLORS.lightBlue,
                 ),
             ],
             'unit',
@@ -187,7 +188,7 @@ export function defaultDocument(
                                 {
                                     type: 'textStyle',
                                     attrs: {
-                                        color: '#365F91',
+                                        color: DOCUMENT_COLORS.tableHeaderText,
                                     },
                                 },
                             ],
@@ -195,7 +196,7 @@ export function defaultDocument(
                     ],
                     cell.colspan,
                     cell.rowspan,
-                    '#DBE5F1',
+                    DOCUMENT_COLORS.lightBlue,
                     cell.columns.map((index) => widths[index]),
                 ),
                 type: 'tableHeader',
@@ -242,7 +243,7 @@ export function defaultDocument(
                                 : [],
                           1,
                           1,
-                          '#B8CCE4',
+                          DOCUMENT_COLORS.total,
                           [widths[index]],
                       ),
                   ),
@@ -286,4 +287,3 @@ export const displayDocumentValue = (value: unknown): string => {
 
     return String(value);
 };
-

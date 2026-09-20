@@ -68,6 +68,11 @@ import {
     textNode,
 } from '@/lib/templateDocument';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
+import {
+    DOCUMENT_CELL_COLORS,
+    DOCUMENT_COLORS,
+    DOCUMENT_TEXT_COLORS,
+} from '@/lib/documentPalette';
 
 const props = defineProps<{
     document: DocumentNode;
@@ -217,7 +222,7 @@ const cellAttributes = () => ({
                       style:
                           value === 'none'
                               ? 'border: 0'
-                              : `${value === 'thick' ? 'border: 2px' : 'border: 1px'} solid #7F7F7F`,
+                              : `${value === 'thick' ? 'border: 2px' : 'border: 1px'} solid ${DOCUMENT_COLORS.border}`,
                   }
                 : {};
         },
@@ -431,21 +436,8 @@ const selectedPersistedField = computed(() =>
 );
 const context = ref<'text' | 'table' | 'field'>('text');
 const fontSizes = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36];
-const textColors = [
-    { label: 'Negro', value: '#000000' },
-    { label: 'Azul institucional', value: '#0070C0' },
-    { label: 'Azul oscuro', value: '#1F4E78' },
-    { label: 'Rojo', value: '#C00000' },
-    { label: 'Verde', value: '#548235' },
-    { label: 'Gris', value: '#595959' },
-];
-const cellColors = [
-    { label: 'Sin fondo', value: null },
-    { label: 'Blanco', value: '#FFFFFF' },
-    { label: 'Azul claro', value: '#DBE5F1' },
-    { label: 'Azul institucional', value: '#4F81BD' },
-    { label: 'Gris claro', value: '#E7E6E6' },
-];
+const textColors = DOCUMENT_TEXT_COLORS;
+const cellColors = DOCUMENT_CELL_COLORS;
 let preservedContextSelection: Selection | null = null;
 watch(selectedField, (node) => {
     if (node) {
@@ -658,7 +650,9 @@ const insertTable = (
                           : [],
                     1,
                     1,
-                    r === 0 && firstResponseRow !== 0 ? '#DBE5F1' : null,
+                    r === 0 && firstResponseRow !== 0
+                        ? DOCUMENT_COLORS.lightBlue
+                        : null,
                 );
             }),
         })),
@@ -1166,7 +1160,7 @@ defineExpose({ save, editor, markClean, prepareDocument });
                                         class="size-3 rounded-sm border"
                                         :style="{
                                             backgroundColor:
-                                                color.value ?? '#FFFFFF',
+                                                color.value ?? DOCUMENT_COLORS.paper,
                                         }"
                                     />
                                     {{ color.label }}
@@ -1425,7 +1419,7 @@ defineExpose({ save, editor, markClean, prepareDocument });
 }
 .template-document-editor td,
 .template-document-editor th {
-    border: 1px solid #7f7f7f;
+    border: 1px solid var(--document-border);
     min-width: 20px;
     padding: 2px 4px;
     vertical-align: top;
@@ -1455,7 +1449,7 @@ defineExpose({ save, editor, markClean, prepareDocument });
     font-style: normal !important;
 }
 .template-document-editor .selectedCell::after {
-    background: rgb(0 112 192 / 20%);
+    background: color-mix(in srgb, var(--document-accent) 20%, transparent);
     content: '';
     inset: 0;
     pointer-events: none;
@@ -1467,15 +1461,15 @@ defineExpose({ save, editor, markClean, prepareDocument });
     top: 0;
     bottom: 0;
     width: 4px;
-    background: #0070c0;
+    background: var(--document-accent);
     pointer-events: none;
 }
 .template-document-editor .resize-cursor {
     cursor: col-resize;
 }
 .template-input-token {
-    background: #edf6ff;
-    outline: 1px dashed #4f81bd;
+    background: var(--document-field-background);
+    outline: 1px dashed var(--document-table-header-strong-background);
     border-radius: 2px;
     padding: 1px 3px;
 }
@@ -1489,7 +1483,7 @@ defineExpose({ save, editor, markClean, prepareDocument });
     display: none;
 }
 .template-variable-token {
-    background: #edf8ee;
+    background: var(--document-variable-background);
     border-radius: 2px;
     padding: 1px 3px;
 }
@@ -1502,4 +1496,3 @@ defineExpose({ save, editor, markClean, prepareDocument });
     padding-left: 24px;
 }
 </style>
-

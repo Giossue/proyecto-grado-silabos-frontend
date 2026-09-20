@@ -64,9 +64,9 @@ const submit = async (): Promise<void> => {
 
 <template>
   <AuthSimpleLayout :title="content.title" :description="content.description">
-    <div class="space-y-6">
-      <form class="space-y-4" @submit.prevent="submit">
-        <div v-if="!showRecoveryInput" class="flex flex-col items-center justify-center space-y-3 text-center">
+    <div class="flex flex-col gap-6">
+      <form class="flex flex-col gap-4" @submit.prevent="submit">
+        <div v-if="!showRecoveryInput" class="flex flex-col items-center justify-center gap-3 text-center">
           <Label for="otp" required>Código de autenticación</Label>
           <div class="flex w-full items-center justify-center">
             <InputOTP id="otp" v-model="code" :maxlength="6" :disabled="pending" aria-required="true" aria-label="Código de autenticación de seis dígitos">
@@ -82,7 +82,7 @@ const submit = async (): Promise<void> => {
         </div>
         <p v-if="error && Object.keys(errors).length === 0" class="text-sm text-destructive" role="alert">{{ error }}</p>
         <Button type="submit" class="w-full" :disabled="pending || !code">Continuar</Button>
-        <div class="text-center text-sm text-muted-foreground"><span>También puede </span><button type="button" class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current dark:decoration-neutral-500" @click="toggleMode">{{ content.buttonText }}</button></div>
+        <div class="text-center text-sm text-muted-foreground"><span>También puede </span><Button type="button" variant="link" class="h-auto p-0 text-foreground underline decoration-border underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current" @click="toggleMode">{{ content.buttonText }}</Button></div>
       </form>
     </div>
   </AuthSimpleLayout>

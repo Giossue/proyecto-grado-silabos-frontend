@@ -51,7 +51,7 @@ onBeforeUnmount(release);
 
 <template>
     <NodeViewWrapper as="figure" data-source-image contenteditable="false" data-drag-handle>
-        <img v-if="objectUrl" :src="objectUrl" :alt="alt" :title="node.attrs.title" draggable="false" />
+        <img v-if="objectUrl" :src="objectUrl" :alt="alt" draggable="false" />
         <p v-else-if="loading" class="text-sm text-muted-foreground">Cargando imagen…</p>
         <p v-else-if="failed" class="text-sm text-destructive">No se pudo cargar esta imagen.</p>
         <figcaption v-if="caption">{{ caption }}</figcaption>

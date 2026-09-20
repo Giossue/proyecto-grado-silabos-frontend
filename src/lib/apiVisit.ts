@@ -26,6 +26,9 @@ type BeforeVisitEvent = {
     preventDefault: () => void;
 };
 
+type BeforeVisitListener = (event: BeforeVisitEvent) => void;
+const beforeVisitListeners = new Set<BeforeVisitListener>();
+
 const flattenErrors = (error: ApiError): ApiErrors => {
     const errors = Object.fromEntries(
         Object.entries(error.errors).map(([key, values]) => [key, values[0] ?? error.message]),
@@ -56,6 +59,24 @@ export const visitApi = async (
 ): Promise<void> => {
     const method = (options.method ?? 'GET').toUpperCase();
     const data = options.data ?? {};
+
+    let prevented = false;
+    const event: BeforeVisitEvent = {
+        detail: { visit: { method, url, data } },
+        preventDefault: () => {
+            prevented = true;
+        },
+    };
+
+    for (const listener of [...beforeVisitListeners]) {
+        listener(event);
+    }
+
+    if (prevented) {
+        options.onFinish?.();
+
+        return;
+    }
 
     try {
         const payload = await api<unknown>(url, {
@@ -179,8 +200,14 @@ export const apiRouter = {
         window.dispatchEvent(new CustomEvent('silabos:reload'));
     },
     on: (event: 'before', listener: (event: BeforeVisitEvent) => void) => {
-        void event;
-        void listener;
-        return () => undefined;
+        if (event !== 'before') {
+            return () => undefined;
+        }
+
+        beforeVisitListeners.add(listener);
+
+        return () => {
+            beforeVisitListeners.delete(listener);
+        };
     },
 };

@@ -57,7 +57,7 @@ const widths = computed(() => columnWidths(props.layout));
                 <tr v-if="layout.repeat.enabled">
                     <th
                         scope="row"
-                        class="w-1/4 border bg-[#DBE5F1] px-3 py-1.5 text-start font-semibold text-[#365F91]"
+                        class="document-table-header w-1/4 border px-3 py-1.5 text-start font-semibold"
                     >
                         {{ layout.repeat.label }} No.
                     </th>
@@ -71,7 +71,7 @@ const widths = computed(() => columnWidths(props.layout));
                 <tr v-for="field in layout.header_fields" :key="field.key">
                     <th
                         scope="row"
-                        class="w-1/4 border bg-[#DBE5F1] px-3 py-1.5 text-start font-semibold text-[#365F91]"
+                        class="document-table-header w-1/4 border px-3 py-1.5 text-start font-semibold"
                     >
                         {{ field.label }}
                     </th>
@@ -91,7 +91,7 @@ const widths = computed(() => columnWidths(props.layout));
                         scope="col"
                         :colspan="cell.colspan"
                         :rowspan="cell.rowspan"
-                        class="border bg-[#DBE5F1] px-3 py-1.5 text-center font-semibold text-[#365F91]"
+                        class="document-table-header border px-3 py-1.5 text-center font-semibold"
                     >
                         {{ cell.label }}
                     </th>
@@ -123,7 +123,7 @@ const widths = computed(() => columnWidths(props.layout));
                     <td
                         v-for="(column, index) in layout.columns"
                         :key="column.key"
-                        class="border bg-[#B8CCE4] px-3 py-1.5 font-semibold text-[#365F91]"
+                        class="document-table-total border px-3 py-1.5 font-semibold"
                         :class="index === 0 ? 'text-end' : 'text-center'"
                     >
                         <template v-if="index === 0">
@@ -145,4 +145,3 @@ const widths = computed(() => columnWidths(props.layout));
         </table>
     </div>
 </template>
-

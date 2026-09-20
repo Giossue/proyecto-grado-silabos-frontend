@@ -9,7 +9,7 @@ const props = defineProps<{
 </script>
 
 <template>
-    <CarouselItem :class="cn('w-full space-y-2 p-4 pl-8', props.class)">
+    <CarouselItem :class="cn('flex w-full flex-col gap-2 p-4 pl-8', props.class)">
         <slot />
     </CarouselItem>
 </template>

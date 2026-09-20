@@ -108,7 +108,7 @@ watch(open, (value) => value && reset());
               </SelectContent>
             </Select>
           </Field>
-          <section class="space-y-2" aria-labelledby="parallel-summary-title">
+          <section class="flex flex-col gap-2" aria-labelledby="parallel-summary-title">
             <h3 id="parallel-summary-title" class="text-sm font-medium">Paralelos registrados</h3>
             <div class="overflow-hidden rounded-md border">
               <Table>

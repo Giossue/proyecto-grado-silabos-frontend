@@ -29,7 +29,7 @@ const props = withDefaults(defineProps<Props>(), {
                 <slot name="icon" />
             </div>
 
-            <div class="space-y-1">
+            <div class="flex flex-col gap-1">
                 <h3 class="text-sm font-medium">
                     {{ props.title }}
                 </h3>

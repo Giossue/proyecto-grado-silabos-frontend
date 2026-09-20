@@ -55,10 +55,10 @@ const submit = (): void => {
                 </DialogDescription>
             </DialogHeader>
 
-            <div class="relative flex w-auto flex-col items-center justify-center space-y-5">
+            <div class="relative flex w-auto flex-col items-center justify-center gap-5">
                 <InputError v-if="error" :message="error" />
                 <template v-if="!verification">
-                    <div class="relative mx-auto aspect-square w-64 overflow-hidden rounded-lg border border-border bg-white p-5">
+                    <div class="relative mx-auto aspect-square w-64 overflow-hidden rounded-lg border border-border bg-background p-5">
                         <Spinner v-if="!qrCodeSvg" class="absolute inset-1/2 size-6 -translate-1/2" />
                         <div v-else class="flex size-full items-center justify-center" v-html="qrCodeSvg" />
                     </div>
@@ -69,8 +69,8 @@ const submit = (): void => {
                         </Button>
                     </div>
                 </template>
-                <form v-else class="w-full space-y-4" @submit.prevent="submit">
-                    <div class="flex w-full flex-col items-center justify-center space-y-3 py-2">
+                <form v-else class="flex w-full flex-col gap-4" @submit.prevent="submit">
+                    <div class="flex w-full flex-col items-center justify-center gap-3 py-2">
                         <Label for="otp" required>Código de autenticación</Label>
                         <InputOTP id="otp" v-model="code" :maxlength="6" :disabled="processing" aria-required="true">
                             <InputOTPGroup><InputOTPSlot v-for="index in 6" :key="index" :index="index - 1" /></InputOTPGroup>
