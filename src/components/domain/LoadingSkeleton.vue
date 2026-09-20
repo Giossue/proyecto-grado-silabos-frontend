@@ -14,6 +14,7 @@ type LoadingVariant =
     | 'catalog'
     | 'academic-structure'
     | 'notifications'
+    | 'cards'
     | 'workspace'
     | 'syllabus'
     | 'review'
@@ -115,6 +116,27 @@ const gridColumns = (): string =>
                 </div>
                 <div class="flex items-center justify-between">
                     <Skeleton class="h-4 w-40" />
+                    <Skeleton class="h-9 w-32" />
+                </div>
+            </template>
+
+            <template v-else-if="variant === 'cards'">
+                <Skeleton class="h-10 w-full" />
+                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div v-for="card in 6" :key="`card-${card}`" class="flex min-h-44 flex-col rounded-xl border bg-card p-6">
+                        <div class="flex items-start justify-between gap-3">
+                            <Skeleton class="h-5 w-2/3" />
+                            <Skeleton class="size-8" />
+                        </div>
+                        <div class="mt-5 flex flex-col gap-2">
+                            <Skeleton class="h-4 w-full" />
+                            <Skeleton class="h-4 w-4/5" />
+                        </div>
+                        <Skeleton class="mt-auto h-5 w-32" />
+                    </div>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <Skeleton class="h-4 w-36" />
                     <Skeleton class="h-9 w-32" />
                 </div>
             </template>
