@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Check, FileUp } from '@lucide/vue';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { emptySourceDocument, getSource, ingestSourcePdf, updateSourceContent, type SourceDetail, type SourceDocument, type SourceIngestionStatus } from '@/api/sources';
+import { emptySourceDocument, getSource, getSourceOriginalPdf, ingestSourcePdf, updateSourceContent, type SourceDetail, type SourceDocument, type SourceIngestionStatus } from '@/api/sources';
 import { getSession } from '@/api/session';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import AcademicSourceDocumentEditor from '@/components/domain/AcademicSourceDocumentEditor.vue';
@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -32,6 +33,10 @@ const fieldErrors = ref<Record<string, string[]>>({});
 const saving = ref(false);
 const selectedPdf = ref<File | null>(null);
 const uploadingPdf = ref(false);
+const activeView = ref('editable');
+const originalPdfObjectUrl = ref<string | null>(null);
+const loadingOriginalPdf = ref(false);
+const originalPdfError = ref<string | null>(null);
 let pollingTimer: number | null = null;
 const id = (): string => String(route.params.source);
 const cloneDocument = (value: SourceDocument): SourceDocument => JSON.parse(JSON.stringify(value)) as SourceDocument;
@@ -56,6 +61,24 @@ const ingestionVariants: Record<SourceIngestionStatus, 'default' | 'secondary' |
 };
 
 const ingestionVariant = (status: SourceIngestionStatus) => ingestionVariants[status];
+
+const releaseOriginalPdf = (): void => {
+  if (originalPdfObjectUrl.value) URL.revokeObjectURL(originalPdfObjectUrl.value);
+  originalPdfObjectUrl.value = null;
+};
+
+const loadOriginalPdf = async (): Promise<void> => {
+  if (originalPdfObjectUrl.value || loadingOriginalPdf.value || !data.value?.source.has_original_pdf) return;
+  loadingOriginalPdf.value = true;
+  originalPdfError.value = null;
+  try {
+    originalPdfObjectUrl.value = URL.createObjectURL(await getSourceOriginalPdf(id()));
+  } catch (reason) {
+    originalPdfError.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el PDF original.';
+  } finally {
+    loadingOriginalPdf.value = false;
+  }
+};
 
 const load = async (preserveEditor = false): Promise<void> => {
   loading.value = true;
@@ -104,6 +127,8 @@ const uploadPdf = async (): Promise<void> => {
   actionError.value = null;
   fieldErrors.value = {};
   try {
+    releaseOriginalPdf();
+    activeView.value = 'editable';
     const response = await ingestSourcePdf(id(), selectedPdf.value);
     toast.success(response.message);
     selectedPdf.value = null;
@@ -140,7 +165,13 @@ onMounted(async () => {
   await load();
   startPolling();
 });
-onUnmounted(stopPolling);
+watch(activeView, (view) => {
+  if (view === 'original') void loadOriginalPdf();
+});
+onUnmounted(() => {
+  stopPolling();
+  releaseOriginalPdf();
+});
 </script>
 
 <template>
@@ -179,7 +210,27 @@ onUnmounted(stopPolling);
         <Alert v-if="ingestion?.status === 'fallida'" variant="destructive"><AlertDescription>No se pudo extraer el contenido del PDF. El contenido anterior se conserva; puedes seleccionar el archivo y reintentarlo.</AlertDescription></Alert>
         <Alert v-else-if="ingestionIsProcessing"><AlertDescription>La extracción se está ejecutando en segundo plano. Esta pantalla se actualizará automáticamente.</AlertDescription></Alert>
         <FieldError :errors="fieldErrors.document" />
-        <AcademicSourceDocumentEditor v-model="content" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
+        <Tabs v-model="activeView">
+          <TabsList v-if="data.source.has_original_pdf" aria-label="Vistas de la fuente académica">
+            <TabsTrigger value="editable">Documento editable</TabsTrigger>
+            <TabsTrigger value="original">PDF original</TabsTrigger>
+          </TabsList>
+          <TabsContent value="editable">
+            <AcademicSourceDocumentEditor v-model="content" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
+          </TabsContent>
+          <TabsContent v-if="data.source.has_original_pdf" value="original">
+            <Alert v-if="originalPdfError" variant="destructive" class="mb-3"><AlertDescription>{{ originalPdfError }}</AlertDescription></Alert>
+            <div class="overflow-hidden rounded-lg border bg-muted/30">
+              <div v-if="loadingOriginalPdf" class="flex min-h-[36rem] items-center justify-center"><Spinner /><span class="sr-only">Cargando PDF original</span></div>
+              <iframe
+                v-else-if="originalPdfObjectUrl"
+                :src="originalPdfObjectUrl"
+                class="h-[75vh] min-h-[36rem] w-full bg-background"
+                title="PDF original de la fuente académica"
+              />
+            </div>
+          </TabsContent>
+        </Tabs>
         <div
           v-if="isDirty"
           class="pointer-events-none fixed bottom-4 right-6 z-20 text-right text-sm text-muted-foreground max-sm:bottom-24"

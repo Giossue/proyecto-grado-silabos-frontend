@@ -1,4 +1,4 @@
-import { api } from '@/api/client';
+import { api, apiBlob } from '@/api/client';
 export type SourceIngestionStatus = 'manual' | 'pendiente' | 'en_ejecucion' | 'completada' | 'fallida';
 export type SourceDocumentNode = {
   type: string;
@@ -18,6 +18,7 @@ export type SourceDetail = {
     description: string | null;
     document: SourceDocument;
     document_schema_version: number;
+    has_original_pdf: boolean;
     ingestion: {
       status: SourceIngestionStatus;
       execution_id: string | null;
@@ -43,3 +44,4 @@ export const ingestSourcePdf = (id: string, file: File) => {
     body,
   });
 };
+export const getSourceOriginalPdf = (id: string) => apiBlob(`/coordination/sources/${id}/pdf-original`);

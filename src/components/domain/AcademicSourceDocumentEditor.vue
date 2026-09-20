@@ -23,7 +23,6 @@ import {
 } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { SourceDocument } from '@/api/sources';
-import PaginatedDocument from '@/components/domain/PaginatedDocument.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -77,7 +76,7 @@ const editor = useEditor({
             'aria-label': props.label,
             role: 'textbox',
             'aria-multiline': 'true',
-            'data-page-markdown-flow-through': '',
+            'data-source-document-flow': 'continuous',
             spellcheck: 'true',
         },
     },
@@ -160,10 +159,10 @@ onBeforeUnmount(() => editor.value?.destroy());
             <Button type="button" variant="ghost" size="icon-sm" aria-label="Separar celda" :disabled="disabled || !editor?.can().splitCell()" @click="action(() => editor?.chain().focus().splitCell().run() ?? false)"><Split aria-hidden="true" /></Button>
             <Button type="button" variant="ghost" size="icon-sm" aria-label="Eliminar tabla" :disabled="disabled || !editor?.isActive('table')" @click="action(() => editor?.chain().focus().deleteTable().run() ?? false)"><Trash2 aria-hidden="true" /></Button>
         </div>
-        <div class="overflow-x-auto p-4 sm:p-6">
-            <PaginatedDocument paper-size="a4" :show-page-numbers="true">
+        <div class="source-document-viewport overflow-x-auto p-3 sm:p-6">
+            <div class="source-document-canvas mx-auto w-full max-w-5xl rounded-md border bg-background px-4 py-6 shadow-sm sm:px-8 lg:px-12">
                 <EditorContent :editor="editor" />
-            </PaginatedDocument>
+            </div>
         </div>
     </section>
 </template>
@@ -174,9 +173,9 @@ onBeforeUnmount(() => editor.value?.destroy());
     color: var(--accent-foreground);
 }
 .source-document-editor .tiptap {
-    min-height: calc(297mm - 5cm);
+    min-height: 20rem;
     outline: none;
-    color: #111;
+    color: var(--foreground);
 }
 .source-document-editor .tiptap > :first-child { margin-top: 0; }
 .source-document-editor .tiptap p { margin: 0 0 0.75rem; }
@@ -188,15 +187,15 @@ onBeforeUnmount(() => editor.value?.destroy());
 .source-document-editor .tiptap h3 { font-size: 1.2rem; }
 .source-document-editor .tiptap ul,
 .source-document-editor .tiptap ol { margin: 0 0 0.75rem 1.5rem; }
-.source-document-editor .tableWrapper { max-width: 100%; overflow-x: auto; margin: 0.75rem 0; }
-.source-document-editor table { width: auto; max-width: 100%; border-collapse: collapse; table-layout: auto; }
+.source-document-editor .tableWrapper { max-width: 100%; overflow-x: auto; margin: 1rem 0; }
+.source-document-editor table { width: max-content; min-width: 100%; border-collapse: collapse; table-layout: auto; }
 .source-document-editor th,
-.source-document-editor td { min-width: 48px; border: 1px solid #a3a3a3; line-height: 1.2; padding: 0.3rem 0.4rem; vertical-align: top; overflow-wrap: anywhere; }
+.source-document-editor td { min-width: 7rem; max-width: 22rem; border: 1px solid var(--border); line-height: 1.35; padding: 0.5rem 0.625rem; vertical-align: top; overflow-wrap: anywhere; }
 .source-document-editor th p,
 .source-document-editor td p { margin: 0; }
-.source-document-editor th { background: #f2f2f2; font-weight: 700; }
+.source-document-editor th { background: var(--muted); font-weight: 700; }
 .source-document-editor .selectedCell::after { background: rgb(37 99 235 / 0.12); content: ''; inset: 0; pointer-events: none; position: absolute; }
 .source-document-editor figure[data-source-image] { margin: 1rem auto; max-width: 100%; text-align: center; }
 .source-document-editor figure[data-source-image] img { display: block; height: auto; margin: 0 auto; max-width: 100%; object-fit: contain; }
-.source-document-editor figure[data-source-image] figcaption { color: #595959; font-size: 0.85em; margin-top: 0.35rem; }
+.source-document-editor figure[data-source-image] figcaption { color: var(--muted-foreground); font-size: 0.85em; margin-top: 0.35rem; }
 </style>

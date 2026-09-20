@@ -5,7 +5,7 @@ import type { SourceDocument } from '@/api/sources';
 import AcademicSourceDocumentEditor from '@/components/domain/AcademicSourceDocumentEditor.vue';
 
 describe('AcademicSourceDocumentEditor', () => {
-    it('entrega todos los bloques al paginador y conserva el texto de las tablas', async () => {
+    it('muestra el documento como flujo continuo y conserva el texto de las tablas', async () => {
         const document: SourceDocument = {
             schemaVersion: 1,
             type: 'doc',
@@ -32,7 +32,9 @@ describe('AcademicSourceDocumentEditor', () => {
         await nextTick();
 
         const editor = wrapper.get('.tiptap');
-        expect(editor.attributes('data-page-markdown-flow-through')).toBe('');
+        expect(editor.attributes('data-source-document-flow')).toBe('continuous');
+        expect(wrapper.findComponent({ name: 'PaginatedDocument' }).exists()).toBe(false);
+        expect(wrapper.find('.source-document-canvas').exists()).toBe(true);
         expect(editor.get('table').text()).toContain('Unidad Básica');
 
         wrapper.unmount();
