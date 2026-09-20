@@ -3,10 +3,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import {
   getTeacherSyllabus,
-  requestAiReview,
   respondObservation,
   saveTeacherField,
-  validateTeacherSyllabus,
   type SyllabusDetail,
 } from "@/api/syllabi";
 import { ApiError } from "@/api/client";
@@ -22,9 +20,7 @@ vi.mock("@/api/syllabi", async (importOriginal) => ({
   saveTeacherField: vi.fn(),
   saveTeacherRows: vi.fn(),
   startTeacherSyllabus: vi.fn(),
-  validateTeacherSyllabus: vi.fn(),
   submitTeacherSyllabus: vi.fn(),
-  requestAiReview: vi.fn(),
   respondObservation: vi.fn(),
 }));
 
@@ -109,8 +105,6 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.useRealTimers();
     vi.mocked(getTeacherSyllabus).mockReset();
     vi.mocked(saveTeacherField).mockReset();
-    vi.mocked(validateTeacherSyllabus).mockReset();
-    vi.mocked(requestAiReview).mockReset();
     vi.mocked(respondObservation).mockReset();
   });
 

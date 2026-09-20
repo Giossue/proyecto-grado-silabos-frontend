@@ -4,13 +4,11 @@ import { useRoute, useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
 import {
   getTeacherSyllabus,
-  requestAiReview,
   respondObservation,
   saveTeacherField,
   saveTeacherRows,
   startTeacherSyllabus,
   submitTeacherSyllabus,
-  validateTeacherSyllabus,
   type SyllabusDetail,
   type SyllabusField,
 } from "@/api/syllabi";
@@ -280,40 +278,6 @@ const flushAutosave = async (): Promise<boolean> => {
   await pendingSave;
 
   return !conflict.value;
-};
-
-const validate = async (): Promise<void> => {
-  if (!syllabus.value) return;
-  try {
-    processingAction.value = true;
-    error.value = null;
-    if (!(await flushAutosave())) return;
-    const result = await validateTeacherSyllabus(syllabus.value.id);
-    validationRan.value = true;
-    validationBlockingErrors.value = result.validation.blocking_errors;
-    validationResults.value = result.validation.results;
-    if (
-      result.validation.blocking_errors === 0
-    ) {
-      try {
-        const review = await requestAiReview(
-          syllabus.value.id,
-          syllabus.value.version_bloqueo,
-        );
-        aiMessage.value = review.message;
-        await aiAssistant.value?.reload();
-      } catch (reason) {
-        aiMessage.value =
-          reason instanceof ApiError
-            ? reason.message
-            : "La ayuda de IA no está disponible; puede enviar el sílabo igualmente.";
-      }
-    }
-  } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : "No se pudo validar el sílabo.";
-  } finally {
-    processingAction.value = false;
-  }
 };
 
 const submit = async (): Promise<void> => {
