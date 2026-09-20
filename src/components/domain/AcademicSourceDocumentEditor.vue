@@ -2,7 +2,7 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
-import { EditorContent, useEditor } from '@tiptap/vue-3';
+import { EditorContent, useEditor, VueNodeViewRenderer } from '@tiptap/vue-3';
 import {
     Bold,
     Columns3,
@@ -23,6 +23,7 @@ import {
 } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { SourceDocument } from '@/api/sources';
+import AcademicSourceImageNodeView from '@/components/domain/AcademicSourceImageNodeView.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -41,7 +42,7 @@ const documentNotice = computed(() => {
     }
 
     return repairedDocument.value
-        ? 'Se recuperaron elementos vacíos incompatibles. Guarde el contenido para conservar la corrección.'
+        ? 'Se corrigieron elementos incompatibles del documento. Guarde el contenido para conservar la corrección.'
         : null;
 });
 
@@ -65,6 +66,7 @@ const sourceImage = Node.create({
         ['img', { src: HTMLAttributes.src, alt: HTMLAttributes.alt, title: HTMLAttributes.title, loading: 'lazy' }],
         ...(HTMLAttributes.alt ? [['figcaption', {}, HTMLAttributes.alt]] : []),
     ],
+    addNodeView: () => VueNodeViewRenderer(AcademicSourceImageNodeView),
 });
 
 const editor = useEditor({

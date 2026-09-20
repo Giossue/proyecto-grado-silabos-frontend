@@ -70,4 +70,42 @@ describe('sanitizeSourceDocument', () => {
             },
         });
     });
+
+    it('convierte saltos escapados en nodos hardBreak', () => {
+        const input: SourceDocument = {
+            schemaVersion: 1,
+            type: 'doc',
+            content: [{
+                type: 'paragraph',
+                content: [{ type: 'text', text: 'Liderazgo\\nAutocontrol\\nDecisiones' }],
+            }],
+        };
+
+        const result = sanitizeSourceDocument(input);
+
+        expect(result.repaired).toBe(true);
+        expect(result.document.content[0].content).toEqual([
+            { type: 'text', text: 'Liderazgo' },
+            { type: 'hardBreak' },
+            { type: 'text', text: 'Autocontrol' },
+            { type: 'hardBreak' },
+            { type: 'text', text: 'Decisiones' },
+        ]);
+    });
+
+    it('retira etiquetas HTML usadas como descripción de imagen', () => {
+        const input: SourceDocument = {
+            schemaVersion: 1,
+            type: 'doc',
+            content: [{
+                type: 'sourceImage',
+                attrs: {
+                    objectId: '0199d329-c0ee-7000-8000-000000000001',
+                    alt: '<div><img src="images/sello.jpg" alt="Image" /></div>',
+                },
+            }],
+        };
+
+        expect(sanitizeSourceDocument(input).document.content[0].attrs?.alt).toBe('Imagen');
+    });
 });
