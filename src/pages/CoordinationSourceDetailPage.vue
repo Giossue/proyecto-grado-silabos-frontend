@@ -160,7 +160,7 @@ onUnmounted(stopPolling);
           <div class="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 class="font-medium">Cargar fuente desde PDF</h2>
-              <p class="mt-1 text-sm text-muted-foreground">PaddleOCR organizará el texto, las tablas y las imágenes en bloques editables.</p>
+              <p class="mt-1 text-sm text-muted-foreground">OpenParser organizará el texto, las tablas y las imágenes en bloques editables.</p>
             </div>
             <Badge :variant="ingestionVariant(ingestion?.status ?? 'manual')">{{ ingestionLabel(ingestion?.status ?? 'manual') }}</Badge>
           </div>
