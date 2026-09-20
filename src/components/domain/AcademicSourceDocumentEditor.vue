@@ -297,7 +297,13 @@ onBeforeUnmount(() => editor.value?.destroy());
 .source-document-editor .tiptap h2 { font-size: 1.45rem; }
 .source-document-editor .tiptap h3 { font-size: 1.2rem; }
 .source-document-editor .tiptap ul,
-.source-document-editor .tiptap ol { margin: 0 0 0.75rem 1.5rem; }
+.source-document-editor .tiptap ol {
+    margin: 0 0 0.75rem;
+    padding-left: 1.5rem;
+}
+.source-document-editor .tiptap ul { list-style: disc; }
+.source-document-editor .tiptap ol { list-style: decimal; }
+.source-document-editor .tiptap li { display: list-item; }
 .source-document-editor .tableWrapper { width: 100%; min-width: 0; max-width: 100%; overflow-x: auto; margin: 1rem 0; }
 .source-document-editor table { width: max-content; min-width: 100%; border-collapse: collapse; table-layout: auto; }
 .source-document-editor th,
