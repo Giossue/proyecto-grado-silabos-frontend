@@ -319,7 +319,7 @@ onBeforeUnmount(() => {
     <section
         class="flex min-h-[30rem] min-w-0 flex-col gap-0 overflow-hidden py-0 xl:h-full xl:min-h-0"
     >
-        <CardHeader class="shrink-0 py-4">
+        <CardHeader class="shrink-0 px-0 py-4">
             <div class="flex items-center gap-2">
                 <CardTitle>Asistente IA</CardTitle>
                 <Badge variant="secondary">Recomendación</Badge>
