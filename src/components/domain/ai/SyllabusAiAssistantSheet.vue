@@ -316,10 +316,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <section
-        class="flex min-h-[30rem] min-w-0 flex-col gap-0 overflow-hidden py-0 xl:h-full xl:min-h-0"
+    <Card
+        class="min-h-[30rem] gap-0 overflow-hidden py-0 xl:h-full xl:min-h-0"
     >
-        <CardHeader class="shrink-0 px-0 py-4">
+        <CardHeader class="shrink-0 py-4">
             <div class="flex items-center gap-2">
                 <CardTitle>Asistente IA</CardTitle>
                 <Badge variant="secondary">Recomendación</Badge>
@@ -718,7 +718,7 @@ onBeforeUnmount(() => {
                 {{ hasProcessing ? 'Revisión en curso' : 'Revisar nuevamente' }}
             </Button>
         </CardFooter>
-    </section>
+    </Card>
 
     <Dialog v-model:open="applyOpen">
         <DialogContent v-if="activeRecommendation" class="sm:max-w-2xl">
