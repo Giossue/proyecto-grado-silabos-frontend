@@ -2,7 +2,6 @@
 import { FileText, Upload, X } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 const props = withDefaults(defineProps<{
@@ -115,7 +114,7 @@ watch(() => props.modelValue, (file) => {
       @dragleave.prevent="handleDragLeave"
       @drop="handleDrop"
     >
-      <Input :id="inputId" ref="input" class="sr-only" type="file" accept="application/pdf,.pdf" :disabled="props.disabled" tabindex="-1" @click.stop @change="selectFile" />
+      <input ref="input" :id="inputId" class="sr-only" type="file" accept="application/pdf,.pdf" :disabled="props.disabled" tabindex="-1" @click.stop @change="selectFile" />
       <div v-if="!modelValue" class="flex flex-col items-center gap-2 text-center">
         <Upload class="size-8 text-muted-foreground" aria-hidden="true" />
         <div>
