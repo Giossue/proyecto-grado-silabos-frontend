@@ -599,7 +599,8 @@ watch(model, (markdown) => {
 
 <style scoped>
 .document-content {
-    color: var(--foreground);
+    /* La hoja siempre es blanca, también cuando la aplicación usa tema oscuro. */
+    color: #111827;
     font-family: Georgia, Cambria, 'Times New Roman', serif;
     font-size: 1rem;
     line-height: 1.7;
@@ -632,7 +633,7 @@ watch(model, (markdown) => {
     font-size: 1.75em;
 }
 .document-content :deep(h2) {
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid #d1d5db;
     font-size: 1.4em;
     padding-bottom: 0.25em;
 }
@@ -654,20 +655,20 @@ watch(model, (markdown) => {
     list-style: decimal;
 }
 .document-content :deep(blockquote) {
-    border-inline-start: 3px solid var(--border);
-    color: var(--muted-foreground);
+    border-inline-start: 3px solid #d1d5db;
+    color: #4b5563;
     margin-block: 0.8em;
     padding-inline-start: 1em;
 }
 .document-content :deep(code) {
-    background: var(--muted);
+    background: #f3f4f6;
     border-radius: var(--radius-sm);
     font-family: var(--font-mono);
     font-size: 0.9em;
     padding: 0.15em 0.35em;
 }
 .document-content :deep(pre) {
-    background: var(--muted);
+    background: #f3f4f6;
     border-radius: var(--radius-md);
     margin-block: 0.8em;
     overflow-x: auto;
@@ -684,14 +685,14 @@ watch(model, (markdown) => {
 }
 .document-content :deep(th),
 .document-content :deep(td) {
-    border: 1px solid var(--border);
+    border: 1px solid #d1d5db;
     min-width: 7rem;
     padding: 0.45em 0.7em;
     text-align: start;
     vertical-align: top;
 }
 .document-content :deep(th) {
-    background: var(--muted);
+    background: #f3f4f6;
     font-family: var(--font-sans);
     font-weight: 600;
 }
@@ -700,8 +701,15 @@ watch(model, (markdown) => {
     text-decoration: underline;
     text-underline-offset: 4px;
 }
+.document-content :deep(img) {
+    display: block;
+    height: auto;
+    margin-block: 1em;
+    max-width: 100%;
+    object-fit: contain;
+}
 .document-content :deep(hr) {
-    border-color: var(--border);
+    border-color: #d1d5db;
     margin-block: 1.75em;
 }
 </style>
