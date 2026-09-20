@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from "vue-router";
 import { sessionState } from "@/state/session";
 import { rememberIntendedRoute } from "@/lib/intended-route";
-import { paths, roleHome as resolveRoleHome, roleSetting, type RoleCode } from "@/lib/routes";
+import { paths, roleEntry as resolveRoleEntry, roleHome as resolveRoleHome, roleSetting, type RoleCode } from "@/lib/routes";
 
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
@@ -155,7 +155,7 @@ router.beforeEach(async (to) => {
     }
     if (!session.user.email_verified) return paths.emailVerificationRequired;
     if (!session.active_role) return paths.roleSelection;
-    return resolveRoleHome(session.active_role.code);
+    return resolveRoleEntry(session.active_role.code);
   }
 
   if (to.meta.requiresAuth !== true) return true;

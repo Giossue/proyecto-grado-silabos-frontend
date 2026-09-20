@@ -10,11 +10,11 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardAction, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
 import { sessionState } from '@/state/session';
 import { consumeIntendedRoute } from '@/lib/intended-route';
-import { paths } from '@/lib/routes';
+import { paths, roleEntry } from '@/lib/routes';
 
 const router = useRouter();
 const session = ref<Session | null>(null);
@@ -26,17 +26,40 @@ const selectingRoleId = ref<string | null>(null);
 const hasCoordinatorScope = computed(() =>
     session.value?.available_roles.some((role) => role.code === 'coordinador') === true,
 );
+const teacherOnly = computed(() => {
+    const roles = session.value?.available_roles ?? [];
+    return roles.length > 0 && roles.every((role) => role.code === 'docente');
+});
 const selectionDescription = computed(() =>
     hasCoordinatorScope.value
         ? 'Seleccione la carrera y el ámbito con el que trabajará en esta sesión.'
-        : 'Seleccione el ámbito con el que trabajará en esta sesión.',
+        : teacherOnly.value
+            ? 'Seleccione la carrera para ver sus sílabos asignados.'
+            : 'Seleccione el ámbito con el que trabajará en esta sesión.',
 );
+
+const roleLabel = (role: ActiveRole): string => ({
+    administrador: 'Administrador',
+    coordinador: 'Coordinador',
+    docente: 'Docente',
+}[role.code]);
+
+const roleTitle = (role: ActiveRole): string =>
+    role.code === 'docente' && role.career_name
+        ? `Docencia · ${role.career_name}`
+        : role.career_name ?? roleLabel(role);
+
+const roleDescription = (role: ActiveRole): string => {
+    if (role.code === 'docente') return 'Sílabos asignados en esta carrera.';
+    if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}.`;
+    return 'Administración general del sistema.';
+};
 
 const actionLabel = (role: ActiveRole): string => {
     if (session.value?.active_role?.id === role.id) return 'Continuar aquí';
-    return role.code === 'coordinador'
-        ? 'Entrar a esta carrera'
-        : `Entrar como ${role.code}`;
+    if (role.code === 'coordinador') return 'Entrar a esta carrera';
+    if (role.code === 'docente') return 'Ver mis sílabos';
+    return 'Entrar como Administrador';
 };
 
 const load = async (): Promise<void> => {
@@ -50,7 +73,13 @@ const load = async (): Promise<void> => {
             return;
         }
         if (session.value.active_role) {
-            await router.replace(consumeIntendedRoute() ?? paths.dashboard);
+            await router.replace(consumeIntendedRoute() ?? roleEntry(session.value.active_role.code));
+            return;
+        }
+        const soleTeacherRole = session.value.available_roles.length === 1
+            && session.value.available_roles[0]?.code === 'docente';
+        if (soleTeacherRole) {
+            await selectRole(session.value.available_roles[0]!.id);
         }
     } catch (reason) {
         if (reason instanceof ApiError && reason.status === 401) {
@@ -69,7 +98,7 @@ const selectRole = async (roleAssignmentId: string): Promise<void> => {
     try {
         session.value = await selectActiveRole(roleAssignmentId);
         sessionState.replace(session.value);
-        await router.replace(consumeIntendedRoute() ?? paths.dashboard);
+        await router.replace(consumeIntendedRoute() ?? roleEntry(session.value.active_role?.code));
     } catch (reason) {
         actionError.value = reason instanceof ApiError
             ? reason.message
@@ -101,13 +130,14 @@ onMounted(load);
         <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <Card v-for="role in session.available_roles" :key="role.id" class="h-full">
                 <CardHeader>
-                    <CardTitle>{{ role.career_name ?? role.code }}</CardTitle>
+                    <CardTitle>{{ roleTitle(role) }}</CardTitle>
+                    <CardDescription>{{ roleDescription(role) }}</CardDescription>
                     <CardAction>
                         <Badge v-if="session.active_role?.id === role.id" variant="secondary">
                             <CheckCircle2 aria-hidden="true" />
                             Activo
                         </Badge>
-                        <Badge v-else variant="outline">{{ role.code }}</Badge>
+                        <Badge v-else variant="outline">{{ roleLabel(role) }}</Badge>
                     </CardAction>
                 </CardHeader>
                 <CardFooter class="mt-auto">

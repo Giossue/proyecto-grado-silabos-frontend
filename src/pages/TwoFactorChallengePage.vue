@@ -5,7 +5,7 @@ import { ApiError } from '@/api/client';
 import { completeTwoFactorLogin } from '@/api/session';
 import { sessionState } from '@/state/session';
 import { consumeIntendedRoute } from '@/lib/intended-route';
-import { paths } from '@/lib/routes';
+import { roleEntry } from '@/lib/routes';
 import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -47,8 +47,8 @@ const submit = async (): Promise<void> => {
       showRecoveryInput.value ? '' : code.value,
       showRecoveryInput.value ? code.value : '',
     );
-    await sessionState.load(true);
-    await router.replace(consumeIntendedRoute() ?? paths.dashboard);
+    const session = await sessionState.load(true);
+    await router.replace(consumeIntendedRoute() ?? roleEntry(session?.active_role?.code));
   } catch (reason) {
     if (reason instanceof ApiError) {
       errors.value = reason.errors;

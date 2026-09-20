@@ -117,6 +117,12 @@ export const roleHome = (role: RoleCode | undefined): string => {
       : paths.teacher.panel;
 };
 
+/** Destino inicial después de autenticarse o seleccionar un rol. */
+export const roleEntry = (role: RoleCode | undefined): string => {
+  if (!role) return paths.roleSelection;
+  return role === 'docente' ? paths.teacher.syllabi : roleHome(role);
+};
+
 export type RoleScopedSetting = 'profile' | 'security';
 
 export const roleSetting = (role: RoleCode, setting: RoleScopedSetting): string => {

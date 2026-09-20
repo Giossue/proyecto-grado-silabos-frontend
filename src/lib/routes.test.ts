@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { paths, roleHome, roleSetting, routeRegistry } from '@/lib/routes';
+import { paths, roleEntry, roleHome, roleSetting, routeRegistry } from '@/lib/routes';
 
 describe('contrato de rutas', () => {
   it('construye destinos dinámicos sin permitir segmentos ambiguos', () => {
@@ -14,6 +14,12 @@ describe('contrato de rutas', () => {
     expect(roleHome('coordinador')).toBe(paths.coordination.panel);
     expect(roleHome('docente')).toBe(paths.teacher.panel);
     expect(roleSetting('docente', 'security')).toBe(paths.teacher.security);
+  });
+
+  it('envía a Docencia directamente a sus sílabos al entrar', () => {
+    expect(roleEntry('docente')).toBe(paths.teacher.syllabi);
+    expect(roleEntry('coordinador')).toBe(paths.coordination.panel);
+    expect(roleEntry(undefined)).toBe(paths.roleSelection);
   });
 
   it('identifica rutas canónicas y alias en el registro', () => {

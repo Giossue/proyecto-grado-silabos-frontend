@@ -13,7 +13,7 @@ import { ApiError } from '@/api/client';
 import { login } from '@/api/session';
 import { sessionState } from '@/state/session';
 import { consumeIntendedRoute } from '@/lib/intended-route';
-import { paths } from '@/lib/routes';
+import { paths, roleEntry } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
 const router = useRouter();
@@ -37,7 +37,7 @@ const submit = async (): Promise<void> => {
     const result = await login(email.value, password.value, remember.value);
     if ('two_factor_required' in result) { await router.replace(paths.twoFactorChallenge); return; }
     sessionState.replace(result);
-    await router.replace(consumeIntendedRoute() ?? paths.dashboard);
+    await router.replace(consumeIntendedRoute() ?? roleEntry(result.active_role?.code));
   } catch (reason) {
     if (reason instanceof ApiError) { errors.value = reason.errors; error.value = reason.message; }
     else { error.value = 'No se pudo iniciar sesión.'; }

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
-import { paths } from '@/lib/routes';
+import { roleEntry } from '@/lib/routes';
 
 const open = defineModel<boolean>('open', { default: false });
 const router = useRouter();
@@ -33,9 +33,10 @@ const select = async (roleAssignmentId: string): Promise<void> => {
   pendingRoleId.value = roleAssignmentId;
   error.value = null;
   try {
-    sessionState.replace(await selectActiveRole(roleAssignmentId));
+    const session = await selectActiveRole(roleAssignmentId);
+    sessionState.replace(session);
     open.value = false;
-    await router.push(paths.dashboard);
+    await router.push(roleEntry(session.active_role?.code));
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo cambiar el ámbito de trabajo.';
   } finally {
