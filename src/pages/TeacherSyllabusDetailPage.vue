@@ -70,6 +70,10 @@ const canReviewWithAi = computed(() =>
 );
 const validationFor = (fieldId: string) =>
   validationResults.value.filter((result) => result.field_id === fieldId);
+const visibleValidationMessages = (fieldId: string): string[] =>
+  validationFor(fieldId)
+    .filter((result) => !result.code.endsWith('obligatorio_faltante'))
+    .map((result) => result.message);
 
 const requestedObservations = computed(() =>
   (syllabus.value?.observations ?? []).filter(
@@ -391,7 +395,7 @@ onBeforeUnmount(() => {
             <IdentificationCard v-if="sectionIndex === 0 && syllabus.identification.length" :grid="syllabus.identification" />
 
             <FieldSet v-for="block in section.blocks" :key="block.id" class="gap-5">
-              <FieldLegend v-if="section.blocks.length > 1" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
+              <FieldLegend v-if="section.blocks.length > 1 && !(block.fields.length === 1 && block.title === block.fields[0]?.label)" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
               <SyllabusAcademicContext v-if="block.content_type === 'institutional'" :variables="syllabus.template_variables ?? {}" />
               <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :layout="block.table" :editable="canEdit && !conflict" presentation="form" :planning-expectations="syllabus.planning_expectations ?? null" @value="(key, value) => updateDesignValue(block.fields, key, value)" @rows="(key, rows) => updateDesignRows(block.fields, key, rows)" />
               <template v-if="!usesTabularDocument(block)">
@@ -413,10 +417,10 @@ onBeforeUnmount(() => {
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required">{{ field.label }}</FieldLabel><div class="boolean-options flex gap-2" role="radiogroup" :aria-label="field.label"><Button type="button" size="sm" :variant="field.value === true ? 'default' : 'outline'" role="radio" :aria-checked="field.value === true" @click="toggleBoolean(field, true)">Sí</Button><Button type="button" size="sm" :variant="field.value === false ? 'default' : 'outline'" role="radio" :aria-checked="field.value === false" @click="toggleBoolean(field, false)">No</Button></div><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
 
-                <div v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'repetible'" :id="`field-${field.id}`" class="flex flex-col gap-2"><p v-if="!block.table" class="text-sm text-muted-foreground">Esta tabla no tiene una estructura configurada.</p><template v-else><SyllabusTableEditor :field-id="field.id" :label="field.label" :layout="block.table" :rows="tableRows(field)" :required="field.required" :invalid="validationFor(field.id).length > 0" :planning-expectations="syllabus.planning_expectations ?? null" @update:rows="updateRows(field, $event)" /><span v-if="savingFieldId === field.id" class="text-xs text-muted-foreground">Guardando…</span></template></div>
+                <div v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'repetible'" :id="`field-${field.id}`" class="flex flex-col gap-2"><template v-if="!block.table"><p class="text-sm font-medium">{{ field.label }}</p><p class="text-sm text-muted-foreground">Esta tabla no tiene una estructura configurada.</p></template><template v-else><SyllabusTableEditor :field-id="field.id" :label="field.label" :layout="block.table" :rows="tableRows(field)" :required="field.required" :invalid="validationFor(field.id).length > 0" :planning-expectations="syllabus.planning_expectations ?? null" @update:rows="updateRows(field, $event)" /><span v-if="savingFieldId === field.id" class="text-xs text-muted-foreground">Guardando…</span></template></div>
 
                 <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Institucional · solo lectura</Badge></div><SyllabusTableView v-if="field.type === 'repetible' && block.table" :layout="block.table" :rows="tableRows(field)" :planning-expectations="syllabus.planning_expectations ?? null" /><span v-else>{{ masterValue(field.value) }}</span></div>
-                <FieldError :errors="validationFor(field.id).map((result) => result.message)" />
+                <FieldError :errors="visibleValidationMessages(field.id)" />
                 </template>
                 </FieldGroup>
               </template>

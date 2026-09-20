@@ -232,10 +232,10 @@ describe("TeacherSyllabusDetailPage", () => {
       blocking_errors: 1,
       warnings: 0,
       results: [{
-        field_id: null,
-        code: "required",
+        field_id: "field-1",
+        code: "campo_obligatorio_faltante",
         severity: "error",
-        message: "Completa el campo obligatorio «Objetivo general».",
+        message: "Completa el campo obligatorio «Descripción de la asignatura».",
       }],
     };
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
