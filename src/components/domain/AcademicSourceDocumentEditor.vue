@@ -21,7 +21,7 @@ import {
     Trash2,
     Undo2,
 } from '@lucide/vue';
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { SourceDocument } from '@/api/sources';
 import AcademicSourceImageNodeView from '@/components/domain/AcademicSourceImageNodeView.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -32,19 +32,8 @@ import { sanitizeSourceDocument } from '@/lib/sourceDocument';
 const props = defineProps<{ modelValue: SourceDocument; disabled?: boolean; label: string }>();
 const emit = defineEmits<{ 'update:modelValue': [document: SourceDocument] }>();
 let applyingExternal = false;
-const repairedDocument = ref(false);
 const contentError = ref(false);
 const initialDocument = sanitizeSourceDocument(props.modelValue);
-repairedDocument.value = initialDocument.repaired;
-const documentNotice = computed(() => {
-    if (contentError.value) {
-        return 'El documento contiene una estructura que no puede mostrarse completa. Vuelva a procesar el PDF o contacte al administrador.';
-    }
-
-    return repairedDocument.value
-        ? 'Se corrigieron elementos incompatibles del documento. Guarde el contenido para conservar la corrección.'
-        : null;
-});
 
 const sourceImage = Node.create({
     name: 'sourceImage',
@@ -114,7 +103,6 @@ watch(
     (document) => {
         if (!editor.value) return;
         const sanitized = sanitizeSourceDocument(document);
-        if (sanitized.repaired) repairedDocument.value = true;
         contentError.value = false;
         if (sanitized.repaired) {
             emit('update:modelValue', sanitized.document);
@@ -137,8 +125,8 @@ onBeforeUnmount(() => editor.value?.destroy());
 
 <template>
     <section class="source-document-editor rounded-lg border bg-muted/30" :aria-label="label">
-        <Alert v-if="documentNotice" :variant="contentError ? 'destructive' : 'default'" class="m-4 mb-0">
-            <AlertDescription>{{ documentNotice }}</AlertDescription>
+        <Alert v-if="contentError" variant="destructive" class="m-4 mb-0">
+            <AlertDescription>El documento contiene una estructura que no puede mostrarse completa. Vuelva a procesar el PDF o contacte al administrador.</AlertDescription>
         </Alert>
         <div class="source-document-toolbar sticky top-0 z-10 flex flex-wrap items-center gap-1 border-b bg-background/95 p-2 backdrop-blur">
             <Button type="button" variant="ghost" size="icon-sm" aria-label="Deshacer" :disabled="disabled || !editor?.can().chain().focus().undo().run()" @click="action(() => editor?.chain().focus().undo().run() ?? false)"><Undo2 aria-hidden="true" /></Button>
