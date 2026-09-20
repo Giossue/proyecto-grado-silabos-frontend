@@ -124,7 +124,7 @@ onBeforeUnmount(() => editor.value?.destroy());
 </script>
 
 <template>
-    <section class="source-document-editor rounded-lg border bg-muted/30" :aria-label="label">
+    <section class="source-document-editor w-full min-w-0 max-w-full overflow-hidden rounded-lg border bg-muted/30" :aria-label="label">
         <Alert v-if="contentError" variant="destructive" class="m-4 mb-0">
             <AlertDescription>El documento contiene una estructura que no puede mostrarse completa. Vuelva a procesar el PDF o contacte al administrador.</AlertDescription>
         </Alert>
@@ -149,7 +149,7 @@ onBeforeUnmount(() => editor.value?.destroy());
             <Button type="button" variant="ghost" size="icon-sm" aria-label="Separar celda" :disabled="disabled || !editor?.can().splitCell()" @click="action(() => editor?.chain().focus().splitCell().run() ?? false)"><Split aria-hidden="true" /></Button>
             <Button type="button" variant="ghost" size="icon-sm" aria-label="Eliminar tabla" :disabled="disabled || !editor?.isActive('table')" @click="action(() => editor?.chain().focus().deleteTable().run() ?? false)"><Trash2 aria-hidden="true" /></Button>
         </div>
-        <div class="source-document-content w-full px-4 py-6 sm:px-6">
+        <div class="source-document-content w-full min-w-0 max-w-full px-4 py-6 sm:px-6">
             <EditorContent :editor="editor" />
         </div>
     </section>
@@ -162,8 +162,11 @@ onBeforeUnmount(() => editor.value?.destroy());
 }
 .source-document-editor .tiptap {
     min-height: 20rem;
+    min-width: 0;
+    max-width: 100%;
     outline: none;
     color: var(--foreground);
+    overflow-wrap: anywhere;
 }
 .source-document-editor .tiptap > :first-child { margin-top: 0; }
 .source-document-editor .tiptap p { margin: 0 0 0.75rem; }
@@ -175,7 +178,7 @@ onBeforeUnmount(() => editor.value?.destroy());
 .source-document-editor .tiptap h3 { font-size: 1.2rem; }
 .source-document-editor .tiptap ul,
 .source-document-editor .tiptap ol { margin: 0 0 0.75rem 1.5rem; }
-.source-document-editor .tableWrapper { max-width: 100%; overflow-x: auto; margin: 1rem 0; }
+.source-document-editor .tableWrapper { width: 100%; min-width: 0; max-width: 100%; overflow-x: auto; margin: 1rem 0; }
 .source-document-editor table { width: max-content; min-width: 100%; border-collapse: collapse; table-layout: auto; }
 .source-document-editor th,
 .source-document-editor td { min-width: 7rem; max-width: 22rem; border: 1px solid var(--border); line-height: 1.35; padding: 0.5rem 0.625rem; vertical-align: top; overflow-wrap: anywhere; }

@@ -107,19 +107,19 @@ onUnmounted(() => {
       <Button v-if="data" type="button" :disabled="saving || !isDirty || Boolean(data.processLock)" @click="saveContent"><Spinner v-if="saving" /><Check v-else data-icon="inline-start" aria-hidden="true" />Guardar contenido</Button>
       <AcademicSourceEditSheet v-if="data" :source="data.source" :disabled="Boolean(data.processLock)" @saved="metadataSaved" />
     </template>
-    <div class="flex flex-col gap-4">
+    <div class="flex min-w-0 max-w-full flex-col gap-4">
       <ProcessLockAlert v-if="data?.processLock" />
       <Alert v-if="actionError && Object.keys(fieldErrors).length === 0" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
       <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
       <LoadingSkeleton v-else-if="loading && !data" variant="source" />
-      <section v-else-if="data" class="flex flex-col gap-3">
+      <section v-else-if="data" class="flex min-w-0 max-w-full flex-col gap-3">
         <FieldError :errors="fieldErrors.document" />
-        <Tabs v-model="activeView">
+        <Tabs v-model="activeView" class="min-w-0 max-w-full">
           <TabsList v-if="data.source.has_original_pdf" aria-label="Vistas de la fuente académica">
             <TabsTrigger value="editable">Documento editable</TabsTrigger>
             <TabsTrigger value="original">PDF original</TabsTrigger>
           </TabsList>
-          <TabsContent value="editable">
+          <TabsContent value="editable" class="min-w-0 max-w-full">
             <AcademicSourceDocumentEditor v-model="content" label="Contenido del documento" :disabled="Boolean(data.processLock)" />
           </TabsContent>
           <TabsContent v-if="data.source.has_original_pdf" value="original">
