@@ -149,10 +149,8 @@ onBeforeUnmount(() => editor.value?.destroy());
             <Button type="button" variant="ghost" size="icon-sm" aria-label="Separar celda" :disabled="disabled || !editor?.can().splitCell()" @click="action(() => editor?.chain().focus().splitCell().run() ?? false)"><Split aria-hidden="true" /></Button>
             <Button type="button" variant="ghost" size="icon-sm" aria-label="Eliminar tabla" :disabled="disabled || !editor?.isActive('table')" @click="action(() => editor?.chain().focus().deleteTable().run() ?? false)"><Trash2 aria-hidden="true" /></Button>
         </div>
-        <div class="source-document-viewport overflow-x-auto p-3 sm:p-6">
-            <div class="source-document-canvas mx-auto w-full max-w-5xl rounded-md border bg-background px-4 py-6 shadow-sm sm:px-8 lg:px-12">
-                <EditorContent :editor="editor" />
-            </div>
+        <div class="source-document-content w-full px-4 py-6 sm:px-6">
+            <EditorContent :editor="editor" />
         </div>
     </section>
 </template>

@@ -5,7 +5,7 @@ import type { SourceDocument } from '@/api/sources';
 import AcademicSourceDocumentEditor from '@/components/domain/AcademicSourceDocumentEditor.vue';
 
 describe('AcademicSourceDocumentEditor', () => {
-    it('muestra el documento como flujo continuo y conserva el texto de las tablas', async () => {
+    it('muestra el contenido en un editor continuo sin simular una hoja', async () => {
         const document: SourceDocument = {
             schemaVersion: 1,
             type: 'doc',
@@ -34,7 +34,8 @@ describe('AcademicSourceDocumentEditor', () => {
         const editor = wrapper.get('.tiptap');
         expect(editor.attributes('data-source-document-flow')).toBe('continuous');
         expect(wrapper.findComponent({ name: 'PaginatedDocument' }).exists()).toBe(false);
-        expect(wrapper.find('.source-document-canvas').exists()).toBe(true);
+        expect(wrapper.find('.source-document-canvas').exists()).toBe(false);
+        expect(wrapper.find('.source-document-content').exists()).toBe(true);
         expect(editor.get('table').text()).toContain('Unidad Básica');
 
         wrapper.unmount();
