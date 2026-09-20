@@ -25,7 +25,9 @@ export type SourceDetail = {
       model: string | null;
       requested_at: string | null;
       completed_at: string | null;
+      progress: number;
       error_code: string | null;
+      error_message: string | null;
     };
   };
 };

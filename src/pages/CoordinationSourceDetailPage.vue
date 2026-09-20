@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { Check, FileUp } from '@lucide/vue';
+import { Check } from '@lucide/vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { emptySourceDocument, getSource, getSourceOriginalPdf, ingestSourcePdf, updateSourceContent, type SourceDetail, type SourceDocument, type SourceIngestionStatus } from '@/api/sources';
+import { emptySourceDocument, getSource, getSourceOriginalPdf, updateSourceContent, type SourceDetail, type SourceDocument } from '@/api/sources';
 import { getSession } from '@/api/session';
-import FileDropzone from '@/components/domain/FileDropzone.vue';
 import AcademicSourceDocumentEditor from '@/components/domain/AcademicSourceDocumentEditor.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -13,9 +12,8 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import AcademicSourceEditSheet from '@/components/domain/configuration/AcademicSourceEditSheet.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import { FieldError } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { paths } from '@/lib/routes';
@@ -31,37 +29,13 @@ const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
 const fieldErrors = ref<Record<string, string[]>>({});
 const saving = ref(false);
-const selectedPdf = ref<File | null>(null);
-const uploadingPdf = ref(false);
 const activeView = ref('editable');
 const originalPdfObjectUrl = ref<string | null>(null);
 const loadingOriginalPdf = ref(false);
 const originalPdfError = ref<string | null>(null);
-let pollingTimer: number | null = null;
 const id = (): string => String(route.params.source);
 const cloneDocument = (value: SourceDocument): SourceDocument => JSON.parse(JSON.stringify(value)) as SourceDocument;
 const isDirty = computed(() => JSON.stringify(content.value) !== JSON.stringify(savedContent.value));
-const ingestion = computed(() => data.value?.source.ingestion);
-const ingestionIsProcessing = computed(() => ingestion.value?.status === 'pendiente' || ingestion.value?.status === 'en_ejecucion');
-
-const ingestionLabel = (status: SourceIngestionStatus): string => ({
-  manual: 'Contenido manual',
-  pendiente: 'PDF en cola',
-  en_ejecucion: 'Procesando PDF',
-  completada: 'PDF procesado',
-  fallida: 'Extracción fallida',
-}[status]);
-
-const ingestionVariants: Record<SourceIngestionStatus, 'default' | 'secondary' | 'outline' | 'destructive'> = {
-  manual: 'outline',
-  pendiente: 'secondary',
-  en_ejecucion: 'secondary',
-  completada: 'default',
-  fallida: 'destructive',
-};
-
-const ingestionVariant = (status: SourceIngestionStatus) => ingestionVariants[status];
-
 const releaseOriginalPdf = (): void => {
   if (originalPdfObjectUrl.value) URL.revokeObjectURL(originalPdfObjectUrl.value);
   originalPdfObjectUrl.value = null;
@@ -98,49 +72,6 @@ const load = async (preserveEditor = false): Promise<void> => {
     loadError.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la fuente.';
   } finally { loading.value = false; }
 };
-const stopPolling = (): void => {
-  if (pollingTimer !== null) {
-    window.clearInterval(pollingTimer);
-    pollingTimer = null;
-  }
-};
-const startPolling = (): void => {
-  stopPolling();
-  if (ingestionIsProcessing.value) {
-    pollingTimer = window.setInterval(() => {
-      void load(true).then(() => {
-        if (!ingestionIsProcessing.value) stopPolling();
-      });
-    }, 2500);
-  }
-};
-const pdfValidationError = (error: string | null): void => {
-  const nextErrors = { ...fieldErrors.value };
-  if (error) nextErrors.pdf = [error];
-  else delete nextErrors.pdf;
-  fieldErrors.value = nextErrors;
-  actionError.value = null;
-};
-const uploadPdf = async (): Promise<void> => {
-  if (!selectedPdf.value) return;
-  uploadingPdf.value = true;
-  actionError.value = null;
-  fieldErrors.value = {};
-  try {
-    releaseOriginalPdf();
-    activeView.value = 'editable';
-    const response = await ingestSourcePdf(id(), selectedPdf.value);
-    toast.success(response.message);
-    selectedPdf.value = null;
-    await load(true);
-    startPolling();
-  } catch (reason) {
-    if (reason instanceof ApiError) {
-      fieldErrors.value = reason.errors;
-      actionError.value = reason.message;
-    } else actionError.value = 'No se pudo enviar el PDF.';
-  } finally { uploadingPdf.value = false; }
-};
 const saveContent = async (): Promise<void> => {
   saving.value = true;
   actionError.value = null;
@@ -158,18 +89,13 @@ const saveContent = async (): Promise<void> => {
 const metadataSaved = async (value: string): Promise<void> => {
   toast.success(value);
   await load();
-  startPolling();
 };
 
-onMounted(async () => {
-  await load();
-  startPolling();
-});
+onMounted(load);
 watch(activeView, (view) => {
   if (view === 'original') void loadOriginalPdf();
 });
 onUnmounted(() => {
-  stopPolling();
   releaseOriginalPdf();
 });
 </script>
@@ -187,28 +113,6 @@ onUnmounted(() => {
       <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
       <LoadingSkeleton v-else-if="loading && !data" variant="source" />
       <section v-else-if="data" class="flex flex-col gap-3">
-        <div class="rounded-lg border bg-card p-4">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 class="font-medium">Cargar fuente desde PDF</h2>
-              <p class="mt-1 text-sm text-muted-foreground">OpenParser organizará el texto, las tablas y las imágenes en bloques editables.</p>
-            </div>
-            <Badge :variant="ingestionVariant(ingestion?.status ?? 'manual')">{{ ingestionLabel(ingestion?.status ?? 'manual') }}</Badge>
-          </div>
-          <div class="mt-4 flex flex-col gap-3">
-            <Field :data-invalid="Boolean(fieldErrors.pdf)">
-              <FieldLabel for="source-pdf">PDF académico</FieldLabel>
-              <FileDropzone v-model="selectedPdf" input-id="source-pdf" :disabled="uploadingPdf || ingestionIsProcessing || Boolean(data.processLock) || isDirty" :invalid="Boolean(fieldErrors.pdf)" :state="uploadingPdf ? 'uploading' : 'idle'" @validation-error="pdfValidationError" />
-              <FieldDescription>Solo PDF, máximo 50 MB. El documento original se conserva privado.</FieldDescription>
-              <FieldError :errors="fieldErrors.pdf" />
-            </Field>
-            <div class="flex flex-wrap items-center gap-2">
-              <Button type="button" :disabled="!selectedPdf || uploadingPdf || ingestionIsProcessing || Boolean(data.processLock) || isDirty" @click="uploadPdf"><Spinner v-if="uploadingPdf" /><FileUp v-else data-icon="inline-start" aria-hidden="true" />{{ uploadingPdf ? 'Enviando PDF…' : 'Procesar PDF' }}</Button>
-            </div>
-          </div>
-        </div>
-        <Alert v-if="ingestion?.status === 'fallida'" variant="destructive"><AlertDescription>No se pudo extraer el contenido del PDF. El contenido anterior se conserva; puedes seleccionar el archivo y reintentarlo.</AlertDescription></Alert>
-        <Alert v-else-if="ingestionIsProcessing"><AlertDescription>La extracción se está ejecutando en segundo plano. Esta pantalla se actualizará automáticamente.</AlertDescription></Alert>
         <FieldError :errors="fieldErrors.document" />
         <Tabs v-model="activeView">
           <TabsList v-if="data.source.has_original_pdf" aria-label="Vistas de la fuente académica">

@@ -60,7 +60,7 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Fuentes académicas" description="Los documentos que la coordinación entrega a los docentes como apoyo para elaborar sus sílabos.">
-    <template #actions><AcademicSourceCreationSheet :disabled="editingLocked" @created="created" /></template>
+    <template #actions><AcademicSourceCreationSheet :disabled="editingLocked" @created="created" @failed="load" /></template>
     <ProcessLockAlert v-if="lock" />
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-if="loading && sources.length === 0" variant="table" :columns="3" />
