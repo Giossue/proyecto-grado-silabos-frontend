@@ -92,9 +92,6 @@ const form = useForm({
     fingerprint: '',
     confirm_purge: false,
 });
-const singleField = computed(
-    () => !isFlow.value && form.properties.length === 1,
-);
 const propertiesSnapshot = () => JSON.stringify([form.title, form.properties]);
 const dirty = computed(
     () => designDirty.value || propertiesSnapshot() !== initialProperties.value,
@@ -118,10 +115,7 @@ const edit = () => {
     form.title = props.block.title;
     form.properties = props.block.fields.map((field) => ({
         key: field.key,
-        label:
-            !isFlow.value && props.block.fields.length === 1
-                ? props.block.title
-                : field.label,
+        label: field.label,
         help: field.help ?? '',
         ...(!field.inherited &&
         !['institutional', 'flow'].includes(props.block.content_type)
@@ -227,18 +221,10 @@ const purge = computed(
 const propertyError = (key: string) =>
     (form.errors as Record<string, string>)[key];
 const primaryNameError = computed(
-    () =>
-        form.errors.title ??
-        (singleField.value ? propertyError('properties.0.label') : undefined),
+    () => form.errors.title,
 );
 const updatePrimaryName = (value: string | number) => {
-    const name = String(value);
-
-    if (singleField.value) {
-        form.properties[0].label = name;
-    }
-
-    form.title = name;
+    form.title = String(value);
 };
 
 const resumeNavigation = (): void => {
@@ -442,15 +428,8 @@ watch(
                                 :errors="[primaryNameError]"
                             />
                             <FieldDescription>
-                                <template v-if="singleField">
-                                    Al tener un solo campo, basta este nombre.
-                                    Si agrega otro, aparecerá el nombre de cada
-                                    campo.
-                                </template>
-                                <template v-else>
-                                    Identifica el bloque completo; cada campo
-                                    conserva su propio nombre.
-                                </template>
+                                Identifica el bloque completo; cada campo
+                                conserva su propio nombre.
                             </FieldDescription>
                         </Field>
                         <p v-if="isFlow" class="text-sm text-muted-foreground">
@@ -463,7 +442,7 @@ watch(
                             class="gap-4 rounded-lg border p-4"
                         >
                             <Field
-                                v-if="!isFlow && !singleField"
+                                v-if="!isFlow"
                                 :data-invalid="
                                     Boolean(
                                         propertyError(

@@ -813,8 +813,6 @@ defineExpose({ save, editor, markClean, prepareDocument });
                     data-page-unit
                     class="template-document-editor overflow-auto rounded-md border border-transparent p-1 focus-within:border-ring"
                     :class="{
-                        'template-document-editor-single-field':
-                            fieldCount === 1,
                         'template-document-editor-embedded': embedded,
                     }"
                     @pointerdown.capture="preserveContextSelection"
@@ -1474,12 +1472,6 @@ defineExpose({ save, editor, markClean, prepareDocument });
     padding: 1px 3px;
 }
 .template-input-token-generic {
-    display: none;
-}
-.template-document-editor-single-field .template-input-token-generic {
-    display: inline;
-}
-.template-document-editor-single-field .template-input-token-label {
     display: none;
 }
 .template-variable-token {
