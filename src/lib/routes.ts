@@ -150,6 +150,7 @@ export type RouteDefinition = {
   roles?: readonly RoleCode[];
   guest?: boolean;
   requiresAuth?: boolean;
+  layout?: 'syllabus-editor';
   aliasOf?: string;
 };
 
@@ -215,7 +216,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'teacher-profile', path: paths.teacher.profile, component: 'ProfilePage', shortcut: 'profile', ...teacher },
   { name: 'teacher-security', path: paths.teacher.security, component: 'SecurityPage', shortcut: 'security', ...teacher },
   { name: 'teacher-syllabi', path: paths.teacher.syllabi, component: 'TeacherSyllabiPage', breadcrumb: 'Mis sílabos', ...teacher },
-  { name: 'teacher-syllabus', path: '/docente/mis-silabos/:syllabus', component: 'TeacherSyllabusDetailPage', states: ['resumen', 'edicion', 'ia', 'envio'], breadcrumb: 'Mis sílabos', ...teacher },
+  { name: 'teacher-syllabus', path: '/docente/mis-silabos/:syllabus', component: 'TeacherSyllabusDetailPage', states: ['resumen', 'edicion', 'ia', 'envio'], breadcrumb: 'Mis sílabos', layout: 'syllabus-editor', ...teacher },
   { name: 'teacher-documents', path: '/docente/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...teacher },
 
   { name: 'legacy-login', path: paths.loginLegacy, guest: true, aliasOf: paths.login },
@@ -227,7 +228,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'legacy-admin-template', path: paths.legacy.adminTemplate, ...admin, aliasOf: paths.admin.template },
   { name: 'legacy-admin-audit', path: paths.legacy.adminAudit, ...admin, aliasOf: paths.admin.audit },
   { name: 'legacy-teacher-syllabi', path: paths.legacy.teacherSyllabi, ...teacher, aliasOf: paths.teacher.syllabi },
-  { name: 'legacy-teacher-syllabus', path: '/mis-silabos/:syllabus', ...teacher, aliasOf: '/docente/mis-silabos/:syllabus' },
+  { name: 'legacy-teacher-syllabus', path: '/mis-silabos/:syllabus', layout: 'syllabus-editor', ...teacher, aliasOf: '/docente/mis-silabos/:syllabus' },
   { name: 'legacy-security', path: paths.security, ...authenticated, aliasOf: paths.configuration.security },
   { name: 'legacy-coordination-academic', path: paths.coordination.academic, ...coordinator, aliasOf: paths.coordination.curriculum },
 ];

@@ -407,7 +407,7 @@ onBeforeUnmount(() => {
       <Alert v-if="validationRan" :variant="validationBlockingErrors && validationBlockingErrors > 0 ? 'destructive' : 'default'"><AlertTitle>Validación del sílabo</AlertTitle><AlertDescription>{{ validationBlockingErrors && validationBlockingErrors > 0 ? `Se encontraron ${validationBlockingErrors} error(es) bloqueante(s).` : 'No hay errores bloqueantes. Las sugerencias de IA son opcionales.' }}</AlertDescription></Alert>
       <Alert v-if="aiMessage"><AlertDescription>{{ aiMessage }}</AlertDescription></Alert>
 
-      <div v-if="syllabus.state !== 'sin_iniciar'" class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+      <div v-if="syllabus.state !== 'sin_iniciar'" class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)]">
         <main class="flex min-w-0 flex-col gap-8">
           <Card v-if="!canEdit" class="syllabus-document-header">
             <CardContent class="flex flex-col items-center gap-5 py-8 text-center">
@@ -466,7 +466,7 @@ onBeforeUnmount(() => {
           </Card>
         </main>
 
-        <aside class="min-w-0 self-start xl:sticky xl:top-[calc(4rem+1.5rem)] xl:h-[calc(100dvh-7rem)]" aria-label="Asistente IA">
+        <aside class="min-w-0 self-start xl:sticky xl:top-4 xl:h-[calc(100dvh-2rem)]" aria-label="Asistente IA">
           <SyllabusAiAssistantSheet
             ref="aiAssistant"
             :syllabus-id="syllabus.id"

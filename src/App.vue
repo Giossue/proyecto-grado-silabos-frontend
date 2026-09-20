@@ -2,10 +2,18 @@
 import { computed } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
+import SyllabusEditorLayout from '@/layouts/SyllabusEditorLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 
 const route = useRoute();
-const usesShell = computed(() => route.meta.requiresAuth === true && route.meta.shell !== false);
+const usesSyllabusEditorLayout = computed(() =>
+    route.meta.requiresAuth === true && route.meta.layout === 'syllabus-editor',
+);
+const usesShell = computed(() =>
+    route.meta.requiresAuth === true &&
+    route.meta.shell !== false &&
+    !usesSyllabusEditorLayout.value,
+);
 const breadcrumbs = computed<BreadcrumbItem[]>(() => {
     const title = route.meta.title;
     return typeof title === 'string' && title !== '' ? [{ title }] : [];
@@ -13,7 +21,10 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
 </script>
 
 <template>
-    <AppLayout v-if="usesShell" :breadcrumbs="breadcrumbs">
+    <SyllabusEditorLayout v-if="usesSyllabusEditorLayout">
+        <RouterView />
+    </SyllabusEditorLayout>
+    <AppLayout v-else-if="usesShell" :breadcrumbs="breadcrumbs">
         <RouterView />
     </AppLayout>
     <RouterView v-else />

@@ -118,7 +118,7 @@ export const router = createRouter({
     { path: "/docente/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["docente"], title: "Perfil" } },
     { path: "/docente/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["docente"], title: "Seguridad" } },
     { path: "/docente/mis-silabos", component: TeacherSyllabiPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" } },
-    { path: "/docente/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" } },
+    { path: "/docente/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", layout: "syllabus-editor" } },
     { path: "/docente/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos" } },
 
     // URLs publicadas por la SPA anterior: se normalizan con replace.
@@ -130,7 +130,7 @@ export const router = createRouter({
     { path: "/administracion/plantilla", component: AdminTemplatePage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/plantilla" } },
     { path: "/administracion/auditoria", component: AdminAuditPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/auditoria" } },
     { path: "/mis-silabos", component: TeacherSyllabiPage, meta: { requiresAuth: true, roles: ["docente"], aliasTarget: "/docente/mis-silabos" } },
-    { path: "/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], aliasTarget: "/docente/mis-silabos/:syllabus" } },
+    { path: "/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], aliasTarget: "/docente/mis-silabos/:syllabus", layout: "syllabus-editor" } },
 
     { path: "/:pathMatch(.*)*", component: NotFoundPage, meta: { title: "Página no encontrada" } },
   ],
