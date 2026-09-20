@@ -11,14 +11,31 @@ const sanitizeNode = (value: SourceDocumentNode): SanitizedNode => {
     }
 
     const node: SourceDocumentNode = { ...value };
+    let repaired = false;
+
+    if (node.type === 'heading' && Array.isArray(node.content)) {
+        const first = node.content[0];
+        const match = first?.type === 'text' && typeof first.text === 'string'
+            ? first.text.match(/^\s{0,3}(#{1,6})\s+(.+)$/su)
+            : null;
+
+        if (match) {
+            node.attrs = { ...node.attrs, level: match[1].length };
+            node.content = [
+                { ...first, text: match[2].trim() },
+                ...node.content.slice(1),
+            ];
+            repaired = true;
+        }
+    }
+
     if (!Array.isArray(value.content)) {
-        return { node, repaired: false };
+        return { node, repaired };
     }
 
     const content: SourceDocumentNode[] = [];
-    let repaired = false;
 
-    for (const child of value.content) {
+    for (const child of node.content ?? []) {
         const result = sanitizeNode(child);
         repaired ||= result.repaired;
         if (result.node) content.push(result.node);

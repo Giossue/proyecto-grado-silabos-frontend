@@ -45,4 +45,29 @@ describe('sanitizeSourceDocument', () => {
             repaired: false,
         });
     });
+
+    it('recupera el nivel de un encabezado sin mostrar los marcadores Markdown', () => {
+        const input: SourceDocument = {
+            schemaVersion: 1,
+            type: 'doc',
+            content: [{
+                type: 'heading',
+                attrs: { level: 2 },
+                content: [{ type: 'text', text: '#### 2.1. Carrera de Software' }],
+            }],
+        };
+
+        expect(sanitizeSourceDocument(input)).toEqual({
+            repaired: true,
+            document: {
+                schemaVersion: 1,
+                type: 'doc',
+                content: [{
+                    type: 'heading',
+                    attrs: { level: 4 },
+                    content: [{ type: 'text', text: '2.1. Carrera de Software' }],
+                }],
+            },
+        });
+    });
 });

@@ -77,6 +77,7 @@ const editor = useEditor({
             'aria-label': props.label,
             role: 'textbox',
             'aria-multiline': 'true',
+            'data-page-markdown-flow-through': '',
             spellcheck: 'true',
         },
     },
@@ -187,10 +188,12 @@ onBeforeUnmount(() => editor.value?.destroy());
 .source-document-editor .tiptap h3 { font-size: 1.2rem; }
 .source-document-editor .tiptap ul,
 .source-document-editor .tiptap ol { margin: 0 0 0.75rem 1.5rem; }
-.source-document-editor .tableWrapper { max-width: 100%; overflow-x: auto; margin: 1rem 0; }
-.source-document-editor table { width: 100%; max-width: 100%; border-collapse: collapse; table-layout: fixed; }
+.source-document-editor .tableWrapper { max-width: 100%; overflow-x: auto; margin: 0.75rem 0; }
+.source-document-editor table { width: auto; max-width: 100%; border-collapse: collapse; table-layout: auto; }
 .source-document-editor th,
-.source-document-editor td { min-width: 48px; border: 1px solid #a3a3a3; padding: 0.45rem; vertical-align: top; overflow-wrap: anywhere; }
+.source-document-editor td { min-width: 48px; border: 1px solid #a3a3a3; line-height: 1.2; padding: 0.3rem 0.4rem; vertical-align: top; overflow-wrap: anywhere; }
+.source-document-editor th p,
+.source-document-editor td p { margin: 0; }
 .source-document-editor th { background: #f2f2f2; font-weight: 700; }
 .source-document-editor .selectedCell::after { background: rgb(37 99 235 / 0.12); content: ''; inset: 0; pointer-events: none; position: absolute; }
 .source-document-editor figure[data-source-image] { margin: 1rem auto; max-width: 100%; text-align: center; }
