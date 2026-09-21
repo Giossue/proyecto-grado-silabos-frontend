@@ -35,7 +35,9 @@ import type { NavItem } from '@/types';
 const route = useRoute();
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
 const mainNavItems = computed<NavItem[]>(() => [
-    { title: 'Panel', href: paths.dashboard, icon: LayoutGrid },
+    ...(activeRole.value?.code === 'administrador'
+        ? [{ title: 'Panel', href: paths.dashboard, icon: LayoutGrid }]
+        : []),
     ...(activeRole.value?.code === 'administrador'
         ? [
               { title: 'Convocatorias', href: paths.admin.convocations, icon: CalendarRange },
@@ -91,8 +93,11 @@ watch(() => route.fullPath, () => {
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton size="lg" as-child>
+                    <SidebarMenuButton v-if="activeRole?.code === 'administrador'" size="lg" as-child>
                         <RouterLink :to="paths.dashboard"><AppLogo /></RouterLink>
+                    </SidebarMenuButton>
+                    <SidebarMenuButton v-else size="lg" as="div">
+                        <AppLogo />
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>

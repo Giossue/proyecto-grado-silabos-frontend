@@ -10,7 +10,12 @@ const { getNotifications, logout, selectActiveRole } = vi.hoisted(() => ({
   selectActiveRole: vi.fn(),
 }));
 
+const { getDashboard } = vi.hoisted(() => ({
+  getDashboard: vi.fn(),
+}));
+
 vi.mock('@/api/notifications', () => ({ getNotifications }));
+vi.mock('@/api/dashboard', () => ({ getDashboard }));
 vi.mock('@/api/session', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/api/session')>(),
   logout,
@@ -59,6 +64,7 @@ describe('AppSidebarLayout', () => {
   beforeEach(() => {
     sessionState.replace(administratorSession);
     getNotifications.mockResolvedValue({ unread_count: 3, filters: { status: 'unread' }, notifications: { data: [], current_page: 1, last_page: 1, total: 0 } });
+    getDashboard.mockResolvedValue({ setup: { title: 'Puesta en marcha', intro: '', done: 1, total: 3, steps: [] } });
     logout.mockResolvedValue(undefined);
     localStorage.clear();
   });
@@ -68,9 +74,32 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Usuarios');
+    expect(wrapper.find('[data-sidebar="sidebar"]').text()).toContain('Panel');
     expect(wrapper.text()).toContain('Configuración');
     expect(wrapper.text()).not.toContain('Mis sílabos');
     expect(wrapper.get('[aria-label="Notificaciones"]').text()).toContain('3');
+  });
+
+  it.each([
+    'coordinador',
+    'docente',
+  ] as const)('deja el checklist en el encabezado y retira el Panel del sidebar para %s', async (code) => {
+    sessionState.replace({
+      ...administratorSession,
+      active_role: {
+        id: `role-${code}`,
+        code,
+        career_id: 'career-1',
+        career_name: 'Software',
+      },
+    });
+    const wrapper = await mountShell();
+    await flushPromises();
+
+    const sidebar = wrapper.find('[data-sidebar="sidebar"]');
+    expect(sidebar.text()).not.toContain('Panel');
+    expect(sidebar.find('a[href="/dashboard"]').exists()).toBe(false);
+    expect(wrapper.find('a[href="/dashboard"]').exists()).toBe(true);
   });
 
   it('permite alternar el tema y conserva la preferencia', async () => {
