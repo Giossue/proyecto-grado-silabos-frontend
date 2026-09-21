@@ -297,7 +297,7 @@ const submit = (): void => {
                             </Field>
                             <Field>
                                 <FieldLabel for="template-block-size">
-                                    Bloques
+                                    Bloque
                                 </FieldLabel>
                                 <Select
                                     v-model="form.section_font_size"
@@ -321,7 +321,7 @@ const submit = (): void => {
                             </Field>
                             <Field>
                                 <FieldLabel for="template-body-size">
-                                    Contenido
+                                    Campo
                                 </FieldLabel>
                                 <Select
                                     v-model="form.body_font_size"
