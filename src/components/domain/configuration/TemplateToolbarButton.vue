@@ -12,12 +12,14 @@ withDefaults(
     defineProps<{
         label: string;
         tooltip?: string;
+        text?: string;
         disabled?: boolean;
         pressed?: boolean;
         variant?: ButtonVariants['variant'];
     }>(),
     {
         tooltip: undefined,
+        text: undefined,
         disabled: false,
         pressed: undefined,
         variant: 'ghost',
@@ -37,7 +39,7 @@ const open = ref(false);
             <span class="inline-flex">
                 <Button
                     type="button"
-                    size="icon-sm"
+                    :size="text ? 'sm' : 'icon-sm'"
                     :variant="variant"
                     :disabled="disabled"
                     :aria-label="label"
@@ -47,10 +49,10 @@ const open = ref(false);
                     @click="emit('click', $event)"
                 >
                     <slot />
+                    <span v-if="text">{{ text }}</span>
                 </Button>
             </span>
         </TooltipTrigger>
         <TooltipContent>{{ tooltip ?? label }}</TooltipContent>
     </Tooltip>
 </template>
-

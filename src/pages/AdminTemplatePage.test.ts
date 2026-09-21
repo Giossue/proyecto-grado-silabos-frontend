@@ -1,5 +1,5 @@
-import { flushPromises, mount } from "@vue/test-utils";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { getSession } from "@/api/session";
@@ -84,6 +84,8 @@ const payload: TemplatePayload = {
 };
 
 describe("AdminTemplatePage", () => {
+  enableAutoUnmount(afterEach);
+
   beforeEach(() => {
     vi.mocked(getSession).mockResolvedValue({
       user: { id: "admin-1", name: "Administración", email: "admin@ueb.edu.ec", email_verified: true, can_edit_identity: true },
@@ -111,6 +113,39 @@ describe("AdminTemplatePage", () => {
 
     expect(document.body.textContent).toContain('Campo · Descripción');
     expect(document.body.textContent).toContain('Editar campo');
+  });
+
+  it("sincroniza una mutación sin desmontar el constructor visual", async () => {
+    const refreshedPayload: TemplatePayload = {
+      ...payload,
+      template: {
+        ...payload.template!,
+        name: "Plantilla institucional actualizada",
+      },
+    };
+    vi.mocked(getTemplate).mockReset();
+    vi.mocked(getTemplate)
+      .mockResolvedValueOnce(payload)
+      .mockResolvedValueOnce(refreshedPayload);
+
+    const wrapper = mount({
+      components: { AdminTemplatePage, TooltipProvider },
+      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
+    }, { attachTo: document.body });
+    await flushPromises();
+
+    const edit = wrapper.findAll('button').find((button) => button.text().trim() === 'Editar');
+    await edit!.trigger("click");
+    await flushPromises();
+
+    const editor = wrapper.get('[aria-label="Constructor visual de la plantilla del sílabo"]');
+    const editorElement = editor.element;
+    window.dispatchEvent(new CustomEvent('silabos:template-changed'));
+    await flushPromises();
+
+    expect(getTemplate).toHaveBeenCalledTimes(2);
+    expect(wrapper.get('[aria-label="Constructor visual de la plantilla del sílabo"]').element)
+      .toBe(editorElement);
   });
 
   it("crea una plantilla vacía sin instalar el formato oficial", async () => {

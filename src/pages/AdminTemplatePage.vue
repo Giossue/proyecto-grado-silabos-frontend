@@ -65,22 +65,36 @@ watch(
     { immediate: true },
 );
 
-const load = async (): Promise<void> => {
-    loading.value = true;
-    loadError.value = null;
+const load = async ({ silent = false }: { silent?: boolean } = {}): Promise<void> => {
+    if (!silent) {
+        loading.value = true;
+        loadError.value = null;
+    }
+
     try {
-        const session = await getSession();
-        if (session.active_role?.code !== 'administrador') {
-            await router.replace(paths.dashboard);
-            return;
+        if (!silent) {
+            const session = await getSession();
+            if (session.active_role?.code !== 'administrador') {
+                await router.replace(paths.dashboard);
+                return;
+            }
         }
+
         payload.value = await getTemplate();
     } catch (reason) {
-        loadError.value = reason instanceof ApiError
+        const message = reason instanceof ApiError
             ? reason.message
             : 'No se pudo cargar la plantilla.';
+
+        if (silent) {
+            actionError.value = message;
+        } else {
+            loadError.value = message;
+        }
     } finally {
-        loading.value = false;
+        if (!silent) {
+            loading.value = false;
+        }
     }
 };
 
@@ -119,7 +133,7 @@ const format = async (): Promise<void> => {
 };
 
 const reloadFromMutation = (): void => {
-    void load();
+    void load({ silent: true });
 };
 
 onMounted(() => {

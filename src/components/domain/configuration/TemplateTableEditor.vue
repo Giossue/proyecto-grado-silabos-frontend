@@ -18,9 +18,9 @@ import {
     Plus,
     Redo2,
     Rows3,
-    SplitSquareHorizontal,
+    Split,
     Undo2,
-    UnfoldHorizontal,
+    Merge,
     UserRoundPlus,
 } from '@lucide/vue';
 import { mergeAttributes, Node } from '@tiptap/core';
@@ -801,6 +801,37 @@ const selectedCell = computed<CellAttributes>(() => {
 });
 
 const inCell = computed(() => Object.keys(selectedCell.value).length > 0);
+const selectedCellCount = computed(() => {
+    const current = state.value;
+
+    if (!current) {
+        return 0;
+    }
+
+    const selection = current.state.selection;
+
+    if (selection instanceof CellSelection) {
+        let count = 0;
+        selection.forEachCell(() => {
+            count += 1;
+        });
+
+        return count;
+    }
+
+    return inCell.value ? 1 : 0;
+});
+const tableSelectionHint = computed(() => {
+    if (!inCell.value) {
+        return 'Haz clic en una celda para editarla. Mantén Mayús y haz clic en otra celda para seleccionar varias.';
+    }
+
+    if (selectedCellCount.value > 1) {
+        return `${selectedCellCount.value} celdas seleccionadas. Ya puedes combinar, agregar filas o agregar columnas.`;
+    }
+
+    return 'Celda seleccionada. Usa «Filas y columnas» para insertar o eliminar; mantén Mayús y haz clic en otra celda para combinar.';
+});
 const ancestorAttributes = (type: 'table' | 'tableRow') => {
     const current = state.value;
 
@@ -1764,17 +1795,19 @@ defineExpose({ getDocument });
 
                 <TemplateToolbarButton
                     label="Combinar celdas"
+                    text="Combinar"
                     :disabled="!can('mergeCells') || pending"
                     @click="state?.chain().focus().mergeCells().run()"
                 >
-                    <UnfoldHorizontal aria-hidden="true" />
+                    <Merge aria-hidden="true" />
                 </TemplateToolbarButton>
                 <TemplateToolbarButton
                     label="Separar celda"
+                    text="Separar"
                     :disabled="!can('splitCell') || pending"
                     @click="state?.chain().focus().splitCell().run()"
                 >
-                    <SplitSquareHorizontal aria-hidden="true" />
+                    <Split aria-hidden="true" />
                 </TemplateToolbarButton>
 
                 <Tooltip v-model:open="tableMenuHelpOpen">
@@ -1784,14 +1817,16 @@ defineExpose({ getDocument });
                                 <DropdownMenuTrigger as-child>
                                     <Button
                                         type="button"
-                                        size="icon-sm"
+                                        size="sm"
                                         variant="ghost"
                                         :disabled="!inCell || pending"
                                         aria-label="Filas y columnas"
                                         @focus="tableMenuHelpOpen = true"
                                         @blur="tableMenuHelpOpen = false"
                                     >
-                                        <Rows3 aria-hidden="true" />
+                                        <Rows3 data-icon="inline-start" aria-hidden="true" />
+                                        Filas y columnas
+                                        <ChevronDown data-icon="inline-end" aria-hidden="true" />
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
@@ -1902,8 +1937,8 @@ defineExpose({ getDocument });
             </div>
         </Teleport>
 
-        <p v-if="!inCell" class="px-3 text-sm text-muted-foreground">
-            Seleccione una celda. Use Mayús + clic para ampliar la selección.
+        <p class="px-3 text-sm text-muted-foreground" aria-live="polite">
+            {{ tableSelectionHint }}
         </p>
 
         <EditorContent
