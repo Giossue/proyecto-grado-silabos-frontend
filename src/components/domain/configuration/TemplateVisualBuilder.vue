@@ -724,7 +724,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         v-on="fieldSelectionListeners(section.id, block.id)"
                     >
                         <h3
-                            v-if="section.blocks.length > 1"
+                            v-if="block.title.trim() !== ''"
                             class="mb-2 leading-snug font-semibold"
                             :style="fieldStyle"
                             data-page-unit

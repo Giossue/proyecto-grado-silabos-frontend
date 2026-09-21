@@ -100,6 +100,7 @@ describe("AdminTemplatePage", () => {
     await flushPromises();
 
     expect(wrapper.get(".template-document-view").text()).toContain("Fundamentos de la asignatura.");
+    expect(wrapper.get("#template-field-block-1 h3").text()).toContain("Descripción");
     const edit = wrapper.findAll('button').find((button) => button.text().trim() === 'Editar');
     expect(edit).toBeDefined();
     await edit!.trigger("click");
