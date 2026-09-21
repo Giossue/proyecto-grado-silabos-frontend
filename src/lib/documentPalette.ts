@@ -6,6 +6,7 @@ export const DOCUMENT_COLORS = Object.freeze({
     text: '#000000',
     paper: '#FFFFFF',
     border: '#7F7F7F',
+    tableBorder: '#000000',
     mutedText: '#595959',
     institutionalBlue: '#0070C0',
     darkBlue: '#1F4E78',

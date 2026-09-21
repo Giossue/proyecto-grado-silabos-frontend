@@ -31,7 +31,6 @@ import TextAlign from '@tiptap/extension-text-align';
 import {
     TextStyle,
     FontFamily,
-    FontSize,
     Color,
 } from '@tiptap/extension-text-style';
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
@@ -222,7 +221,7 @@ const cellAttributes = () => ({
                       style:
                           value === 'none'
                               ? 'border: 0'
-                              : `${value === 'thick' ? 'border: 2px' : 'border: 1px'} solid ${DOCUMENT_COLORS.border}`,
+                              : `${value === 'thick' ? 'border: 2px' : 'border: 1px'} solid ${DOCUMENT_COLORS.tableBorder}`,
                   }
                 : {};
         },
@@ -251,7 +250,6 @@ const editor = useEditor({
         }),
         TextStyle,
         FontFamily,
-        FontSize,
         Color,
         TextAlign.configure({ types: ['paragraph'] }),
         Table.extend({
@@ -435,7 +433,6 @@ const selectedPersistedField = computed(() =>
         : false,
 );
 const context = ref<'text' | 'table' | 'field'>('text');
-const fontSizes = [8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36];
 const textColors = DOCUMENT_TEXT_COLORS;
 const cellColors = DOCUMENT_CELL_COLORS;
 let preservedContextSelection: Selection | null = null;
@@ -884,28 +881,6 @@ defineExpose({ save, editor, markClean, prepareDocument });
                                     "
                                 >
                                     {{ font }}
-                                </ContextMenuItem>
-                            </ContextMenuGroup>
-                        </ContextMenuSubContent>
-                    </ContextMenuSub>
-                    <ContextMenuSub>
-                        <ContextMenuSubTrigger>
-                            Tamaño de fuente
-                        </ContextMenuSubTrigger>
-                        <ContextMenuSubContent>
-                            <ContextMenuGroup>
-                                <ContextMenuItem
-                                    v-for="size in fontSizes"
-                                    :key="size"
-                                    @select="
-                                        state
-                                            .chain()
-                                            .focus()
-                                            .setFontSize(size + 'pt')
-                                            .run()
-                                    "
-                                >
-                                    {{ size }} pt
                                 </ContextMenuItem>
                             </ContextMenuGroup>
                         </ContextMenuSubContent>
@@ -1417,7 +1392,7 @@ defineExpose({ save, editor, markClean, prepareDocument });
 }
 .template-document-editor td,
 .template-document-editor th {
-    border: 1px solid var(--document-border);
+    border: 1px solid var(--document-table-border);
     min-width: 20px;
     padding: 2px 4px;
     vertical-align: top;

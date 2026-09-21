@@ -251,7 +251,7 @@ const cellStyle = (attributes: Record<string, unknown>) => {
         styles.push(
             attributes.borderStyle === 'none'
                 ? 'border: 0'
-                : `border: ${attributes.borderStyle === 'thick' ? '2px' : '1px'} solid ${DOCUMENT_COLORS.border}`,
+                : `border: ${attributes.borderStyle === 'thick' ? '2px' : '1px'} solid ${DOCUMENT_COLORS.tableBorder}`,
         );
     }
 
@@ -2090,7 +2090,7 @@ defineExpose({ getDocument });
 }
 .template-table-editor td,
 .template-table-editor th {
-    border: 1px solid var(--document-border);
+    border: 1px solid var(--document-table-border);
     cursor: text;
     min-width: 20px;
     padding: 2px 4px;

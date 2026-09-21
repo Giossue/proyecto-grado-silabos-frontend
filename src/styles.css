@@ -168,6 +168,7 @@
     --document-paper: hsl(0 0% 100%);
     --document-text: hsl(0 0% 0%);
     --document-border: hsl(0 0% 50%);
+    --document-table-border: hsl(0 0% 0%);
     --document-table-header-background: hsl(211 42% 84%);
     --document-table-header-color: hsl(214 45% 38%);
     --document-table-header-strong-background: hsl(214 44% 53%);
@@ -247,6 +248,7 @@
     --document-paper: hsl(0 0% 100%);
     --document-text: hsl(0 0% 0%);
     --document-border: hsl(0 0% 50%);
+    --document-table-border: hsl(0 0% 0%);
     --document-table-header-background: hsl(211 42% 84%);
     --document-table-header-color: hsl(214 45% 38%);
     --document-table-header-strong-background: hsl(214 44% 53%);

@@ -222,10 +222,6 @@ const markStyle = (
                 style.fontFamily = attrs.fontFamily;
             }
 
-            if (attrs.fontSize && !inheritTableTypography) {
-                style.fontSize = attrs.fontSize;
-            }
-
             if (attrs.color) {
                 style.color = attrs.color;
             }
@@ -240,10 +236,10 @@ const cellBorder = (value: unknown): string | undefined => {
     }
 
     if (value === 'thick') {
-        return `2px solid ${DOCUMENT_COLORS.border}`;
+        return `2px solid ${DOCUMENT_COLORS.tableBorder}`;
     }
 
-    return value === 'thin' ? `1px solid ${DOCUMENT_COLORS.border}` : undefined;
+    return value === 'thin' ? `1px solid ${DOCUMENT_COLORS.tableBorder}` : undefined;
 };
 const setColumn = (context: Context, key: string, value: string | number) => {
     const field = context.field;
@@ -920,7 +916,7 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 }
 .template-document-view :deep(td),
 .template-document-view :deep(th) {
-    border: 1px solid var(--document-border);
+    border: 1px solid var(--document-table-border);
     padding: 2px 4px;
     vertical-align: middle;
     font-weight: normal;
