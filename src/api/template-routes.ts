@@ -6,6 +6,9 @@ const idOf = (value: Entity): string =>
 const endpoint = <T extends (...args: never[]) => string>(url: T) => ({ url });
 
 export const TemplateRoutes = {
+    format: endpoint((template: Entity) =>
+        `/admin/template/${idOf(template)}/format`,
+    ),
     storeLogo: {
         url: () => '/admin/template/logo',
         form: () => ({ action: '/admin/template/logo', method: 'post' as const }),

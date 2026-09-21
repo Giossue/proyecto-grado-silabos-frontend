@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { getSession } from "@/api/session";
-import { getTemplate, type TemplatePayload } from "@/api/template";
+import { createTemplate, formatTemplate, getTemplate, type TemplatePayload } from "@/api/template";
 
 vi.mock("vue-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
@@ -17,6 +17,7 @@ vi.mock("@/api/template", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/template")>()),
   getTemplate: vi.fn(),
   createTemplate: vi.fn(),
+  formatTemplate: vi.fn(),
   createTemplateField: vi.fn(),
   createTemplateSection: vi.fn(),
   deleteTemplateBlock: vi.fn(),
@@ -110,5 +111,45 @@ describe("AdminTemplatePage", () => {
 
     expect(document.body.textContent).toContain('Campo · Descripción');
     expect(document.body.textContent).toContain('Editar campo');
+  });
+
+  it("crea una plantilla vacía sin instalar el formato oficial", async () => {
+    vi.mocked(getTemplate)
+      .mockResolvedValueOnce({ processLock: null, template: null })
+      .mockResolvedValueOnce(payload);
+    vi.mocked(createTemplate).mockResolvedValue({ message: 'Plantilla vacía creada.', template_id: 'template-1' });
+
+    const wrapper = mount({
+      components: { AdminTemplatePage, TooltipProvider },
+      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
+    }, { attachTo: document.body });
+    await flushPromises();
+
+    await wrapper.get('button').trigger('click');
+    await flushPromises();
+
+    expect(createTemplate).toHaveBeenCalledOnce();
+  });
+
+  it("aplica el formato oficial únicamente desde una plantilla vacía", async () => {
+    const emptyPayload: TemplatePayload = {
+      ...payload,
+      template: { ...payload.template!, sections: [] },
+    };
+    vi.mocked(getTemplate).mockResolvedValue(emptyPayload);
+    vi.mocked(formatTemplate).mockResolvedValue({ message: 'Formato oficial aplicado.' });
+
+    const wrapper = mount({
+      components: { AdminTemplatePage, TooltipProvider },
+      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
+    }, { attachTo: document.body });
+    await flushPromises();
+
+    const formatButton = wrapper.findAll('button').find((button) => button.text().trim() === 'Formatear');
+    expect(formatButton).toBeDefined();
+    await formatButton!.trigger('click');
+    await flushPromises();
+
+    expect(formatTemplate).toHaveBeenCalledWith('template-1');
   });
 });

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { Inbox, LoaderCircle, Pencil, Plus } from '@lucide/vue';
+import { Inbox, LoaderCircle, Pencil, Plus, Sparkles } from '@lucide/vue';
 import { ApiError } from '@/api/client';
-import { createTemplate, getTemplate, type TemplatePayload } from '@/api/template';
+import { createTemplate, formatTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
 import TemplateAppearanceSheet from '@/components/domain/configuration/TemplateAppearanceSheet.vue';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
@@ -22,6 +22,7 @@ const router = useRouter();
 const payload = ref<TemplatePayload | null>(null);
 const loading = ref(true);
 const creating = ref(false);
+const formatting = ref(false);
 const editing = ref(false);
 const appearanceOpen = ref(false);
 const loadError = ref<string | null>(null);
@@ -99,6 +100,24 @@ const create = async (): Promise<void> => {
     }
 };
 
+const format = async (): Promise<void> => {
+    const templateId = payload.value?.template?.id;
+    if (!templateId || formatting.value) return;
+
+    formatting.value = true;
+    actionError.value = null;
+    try {
+        await formatTemplate(templateId);
+        await load();
+    } catch (reason) {
+        actionError.value = reason instanceof ApiError
+            ? reason.message
+            : 'No se pudo aplicar el formato oficial.';
+    } finally {
+        formatting.value = false;
+    }
+};
+
 const reloadFromMutation = (): void => {
     void load();
 };
@@ -133,7 +152,7 @@ onBeforeUnmount(() => {
             <Button :disabled="creating || Boolean(payload?.processLock)" @click="create">
                 <LoaderCircle v-if="creating" class="animate-spin" aria-hidden="true" />
                 <Plus v-else aria-hidden="true" />
-                {{ creating ? 'Creando plantilla…' : 'Nueva plantilla' }}
+                {{ creating ? 'Creando plantilla…' : 'Crear plantilla vacía' }}
             </Button>
         </template>
 
@@ -142,7 +161,7 @@ onBeforeUnmount(() => {
             <EmptyHeader class="gap-3">
                 <EmptyMedia variant="icon" class="text-muted-foreground"><Inbox aria-hidden="true" /></EmptyMedia>
                 <EmptyTitle class="text-sm font-normal text-muted-foreground">
-                    No hay una plantilla institucional. Cree la primera: trae el formato oficial completo, listo para ajustar.
+                    No hay una plantilla institucional. Cree el contenedor vacío y decida si desea configurarlo manualmente o aplicar el formato oficial.
                 </EmptyTitle>
             </EmptyHeader>
         </Empty>
@@ -192,6 +211,15 @@ onBeforeUnmount(() => {
         size="wide"
     >
         <template #actions>
+            <Button
+                v-if="builder.template.sections.length === 0"
+                :disabled="formatting || Boolean(builder.processLock)"
+                @click="format"
+            >
+                <LoaderCircle v-if="formatting" class="animate-spin" data-icon="inline-start" aria-hidden="true" />
+                <Sparkles v-else data-icon="inline-start" aria-hidden="true" />
+                {{ formatting ? 'Formateando…' : 'Formatear' }}
+            </Button>
             <Button :disabled="Boolean(builder.processLock)" @click="editing = true">
                 <Pencil data-icon="inline-start" aria-hidden="true" />Editar
             </Button>
