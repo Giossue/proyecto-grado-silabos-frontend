@@ -405,7 +405,7 @@ onBeforeUnmount(() => {
                   <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" :disabled="savingFieldId === field.id" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
-                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && ['texto_largo', 'markdown'].includes(field.type)" :id="`field-${field.id}`">
+                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'texto_largo'" :id="`field-${field.id}`">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Textarea :id="`input-${field.id}`" :model-value="scalarValue(field)" class="min-h-32" :disabled="savingFieldId === field.id" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 

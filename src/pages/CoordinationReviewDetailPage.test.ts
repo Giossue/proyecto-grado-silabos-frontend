@@ -86,7 +86,7 @@ const detail = (withObservation = false): ReviewDetail => ({
           fields: [{
             key: "objetivo",
             label: "Objetivo general",
-            type: "markdown",
+            type: "texto_largo",
             inherited: false,
             value: "Contenido enviado",
             rows: [],

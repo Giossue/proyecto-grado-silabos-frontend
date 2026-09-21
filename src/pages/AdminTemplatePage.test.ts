@@ -70,10 +70,10 @@ const payload: TemplatePayload = {
       blocks: [{
         id: "block-1", key: "descripcion_principal", title: "Descripción", type: "narrativa",
         content_type: "text", table: null, fingerprint: "a".repeat(64),
-        document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Fundamentos de la asignatura. " }, { type: "field", attrs: { key: "descripcion", label: "Descripción de la asignatura", kind: "markdown", choice: null } }] }] },
+        document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Fundamentos de la asignatura. " }, { type: "field", attrs: { key: "descripcion", label: "Descripción de la asignatura", kind: "texto_largo", choice: null } }] }] },
         fields: [{
           id: "field-1", block_id: "block-1", key: "descripcion", label: "Descripción de la asignatura",
-          help: null, type: "markdown", options: [], required: true, inherited: false,
+          help: null, type: "texto_largo", options: [], required: true, inherited: false,
           master_source: null, teacher_editable: true, ai_enabled: true,
           ai_coordinator_configurable: true, content_type: "text",
         }],

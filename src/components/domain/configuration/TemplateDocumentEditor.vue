@@ -447,7 +447,7 @@ watch(selectedField, (node) => {
                 ? 'bulleted_list'
                 : node.attrs.listStyle === 'number'
                   ? 'numbered_list'
-                  : ['markdown', 'repetible', 'texto_corto'].includes(
+                  : ['repetible', 'texto_corto'].includes(
                           node.attrs.kind,
                       )
                     ? 'texto_largo'
@@ -467,7 +467,7 @@ const fieldDraftDirty = computed(
                     ? 'bulleted_list'
                     : selectedField.value.attrs.listStyle === 'number'
                       ? 'numbered_list'
-                      : ['markdown', 'repetible', 'texto_corto'].includes(
+                      : ['repetible', 'texto_corto'].includes(
                               selectedField.value.attrs.kind,
                           )
                         ? 'texto_largo'
@@ -493,7 +493,7 @@ const fieldTypes = computed(() => {
     }
 
     if (
-        ['texto_corto', 'texto_largo', 'markdown', 'repetible'].includes(
+        ['texto_corto', 'texto_largo', 'repetible'].includes(
             node.attrs.kind,
         )
     ) {

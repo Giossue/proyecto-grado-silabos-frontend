@@ -45,7 +45,7 @@ const appearance = {
   body_alignment: "left",
 };
 
-const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", type = "markdown"): SyllabusDetail => ({
+const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", type = "texto_largo"): SyllabusDetail => ({
   id: "syllabus-1",
   subject: "Inteligencia Artificial",
   code: "SW-01",
