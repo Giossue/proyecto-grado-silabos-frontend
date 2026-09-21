@@ -801,37 +801,6 @@ const selectedCell = computed<CellAttributes>(() => {
 });
 
 const inCell = computed(() => Object.keys(selectedCell.value).length > 0);
-const selectedCellCount = computed(() => {
-    const current = state.value;
-
-    if (!current) {
-        return 0;
-    }
-
-    const selection = current.state.selection;
-
-    if (selection instanceof CellSelection) {
-        let count = 0;
-        selection.forEachCell(() => {
-            count += 1;
-        });
-
-        return count;
-    }
-
-    return inCell.value ? 1 : 0;
-});
-const tableSelectionHint = computed(() => {
-    if (!inCell.value) {
-        return 'Haz clic en una celda para editarla. Mantén Mayús y haz clic en otra celda para seleccionar varias.';
-    }
-
-    if (selectedCellCount.value > 1) {
-        return `${selectedCellCount.value} celdas seleccionadas. Ya puedes combinar, agregar filas o agregar columnas.`;
-    }
-
-    return 'Celda seleccionada. Usa «Filas y columnas» para insertar o eliminar; mantén Mayús y haz clic en otra celda para combinar.';
-});
 const ancestorAttributes = (type: 'table' | 'tableRow') => {
     const current = state.value;
 
@@ -1936,10 +1905,6 @@ defineExpose({ getDocument });
                 </div>
             </div>
         </Teleport>
-
-        <p class="px-3 text-sm text-muted-foreground" aria-live="polite">
-            {{ tableSelectionHint }}
-        </p>
 
         <EditorContent
             :editor="editor"
