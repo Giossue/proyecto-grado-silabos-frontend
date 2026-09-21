@@ -30,16 +30,11 @@ provide(pageTitleKey, pageTitle);
 </script>
 
 <template>
-    <main
-        v-if="templateEditorOpen"
-        class="min-h-screen w-full overflow-auto bg-background text-foreground"
-    >
-        <slot />
-    </main>
-    <AppShell v-else variant="sidebar">
-        <AppSidebar />
+    <AppShell variant="sidebar">
+        <AppSidebar v-if="!templateEditorOpen" />
         <AppContent variant="sidebar" class="overflow-clip">
             <AppSidebarHeader
+                v-if="!templateEditorOpen"
                 :breadcrumbs="breadcrumbs"
                 :page-title="pageTitle"
             />
