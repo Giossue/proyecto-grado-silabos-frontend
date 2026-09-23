@@ -8,7 +8,6 @@ import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
-import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import SyllabusProcessActions from '@/components/domain/syllabus/SyllabusProcessActions.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,7 +22,7 @@ import { toast } from '@/lib/toast';
 const router = useRouter(); const data = ref<Processes | null>(null); const loading = ref(true);
 const error = ref<string | null>(null);
 const processes = computed(() => data.value?.processes ?? []);
-const filter = useClientFilter(processes, (item) => [item.name, item.period_name, item.template], { estado: { matches: (item, value) => item.state === value } });
+const filter = useClientFilter(processes, (item) => [item.period_name], { estado: { matches: (item, value) => item.state === value } });
 const { items: processPage, meta: processMeta, setPage: setProcessPage } = useClientPagination(() => filter.items.value);
 const stateLabel = (state: SyllabusProcess['state']): string => ({ preparacion: 'En preparación', abierto: 'Abierto', pausado: 'En pausa', cerrado: 'Cerrado' })[state];
 const formatDate = (value: string): string => new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(new Date(value));
@@ -33,10 +32,9 @@ onMounted(load);
 </script>
 
 <template><PageFrame title="Convocatorias de sílabos" description="Aquí se supervisa el proceso institucional y sus alcances. La preparación inicial se hace desde el período académico; cada coordinación inicia después su propia convocatoria heredada.">
-    <ProcessLockAlert v-if="data?.active_process" />
-    <LoadErrorState v-if="error" :message="error" @retry="load" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="8" />
-    <Card v-if="data"><CardContent class="flex flex-col gap-4"><ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar proceso" placeholder="Buscar por nombre o plantilla"><template #filters><Field><FieldLabel for="processes-search-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="processes-search-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="preparacion">En preparación</SelectItem><SelectItem value="abierto">Abiertos</SelectItem><SelectItem value="pausado">En pausa</SelectItem><SelectItem value="cerrado">Cerrados</SelectItem></SelectGroup></SelectContent></Select></Field></template></ClientFilterBar>
-        <Table data-cards="true"><TableHeader><TableRow><TableHead>Proceso</TableHead><TableHead>Estado</TableHead><TableHead>Periodo</TableHead><TableHead>Plantilla</TableHead><TableHead>Inicio</TableHead><TableHead>Entrega</TableHead><TableHead class="text-right">Convocatorias</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody><TableEmpty v-if="processPage.length === 0" :colspan="8">{{ filter.active.value ? 'Ningún proceso coincide con la búsqueda.' : 'No hay convocatorias institucionales. Ve a Periodos académicos para preparar una.' }}</TableEmpty><TableRow v-for="process in processPage" v-else :key="process.id"><TableCell>{{ process.name }}</TableCell><TableCell>{{ stateLabel(process.state) }}</TableCell><TableCell>{{ process.period_name }}</TableCell><TableCell>{{ process.template }}</TableCell><TableCell>{{ formatDate(process.starts_at) }}</TableCell><TableCell>{{ formatDate(process.due_at) }}</TableCell><TableCell class="text-right">{{ process.convocations_count }}</TableCell><TableCell class="text-right"><SyllabusProcessActions :process="process" :template="data.template" :periods="data.periods" @completed="changed" /></TableCell></TableRow></TableBody></Table>
+    <LoadErrorState v-if="error" :message="error" @retry="load" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="5" />
+    <Card v-if="data"><CardContent class="flex flex-col gap-4"><ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar período" placeholder="Buscar por período"><template #filters><Field><FieldLabel for="processes-search-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="processes-search-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="preparacion">En preparación</SelectItem><SelectItem value="abierto">Abiertos</SelectItem><SelectItem value="pausado">En pausa</SelectItem><SelectItem value="cerrado">Cerrados</SelectItem></SelectGroup></SelectContent></Select></Field></template></ClientFilterBar>
+        <Table data-cards="true"><TableHeader><TableRow><TableHead>Período</TableHead><TableHead>Inicio</TableHead><TableHead>Entrega</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody><TableEmpty v-if="processPage.length === 0" :colspan="5">{{ filter.active.value ? 'Ningún período coincide con los filtros.' : 'No hay convocatorias institucionales. Ve a Períodos académicos para preparar una.' }}</TableEmpty><TableRow v-for="process in processPage" v-else :key="process.id"><TableCell>{{ process.period_name }}</TableCell><TableCell>{{ formatDate(process.starts_at) }}</TableCell><TableCell>{{ formatDate(process.due_at) }}</TableCell><TableCell>{{ stateLabel(process.state) }}</TableCell><TableCell class="text-right"><SyllabusProcessActions :process="process" :template="data.template" :periods="data.periods" @completed="changed" /></TableCell></TableRow></TableBody></Table>
         <TablePagination :meta="processMeta" label="Paginación de procesos de sílabos" @update:page="setProcessPage" />
     </CardContent></Card>
 </PageFrame></template>

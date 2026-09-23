@@ -9,7 +9,6 @@ import CatalogSection from '@/components/domain/academic/CatalogSection.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
-import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import type { GovernanceSection } from '@/types/academic';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
@@ -59,13 +58,12 @@ onMounted(load);
 <template>
     <PageFrame :title="sectionContent.title" :description="sectionContent.description">
         <template #actions>
-        <CatalogRecordSheet v-if="data" :entity="entity" :options="data.options" :disabled="Boolean(data.lock_reason)" @saved="changed" />
+        <CatalogRecordSheet v-if="data" :entity="entity" :options="data.options" @saved="changed" />
         </template>
 
-        <ProcessLockAlert v-if="data?.lock_reason" />
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 8 : entity === 'periodo' ? 6 : 5" />
+        <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 7 : entity === 'periodo' ? 6 : 5" />
 
-        <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" :lock-reason="data.lock_reason" @changed="changed" />
+        <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" @changed="changed" />
     </PageFrame>
 </template>

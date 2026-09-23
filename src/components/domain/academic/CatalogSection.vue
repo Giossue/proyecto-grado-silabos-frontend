@@ -30,7 +30,7 @@ import type {
 } from '@/types/academic';
 
 const props = defineProps<
-    Pick<AcademicStructureProps, 'catalogs' | 'options' | 'lock_reason'> & {
+    Pick<AcademicStructureProps, 'catalogs' | 'options'> & {
         section: GovernanceSection;
     }
 >();
@@ -174,7 +174,6 @@ const {
                                 :campus-options="options.campusOptions"
                                 :logo-url="faculty.logo_url"
                                 :faculties="catalogs.faculties"
-                                :lock-reason="lock_reason"
                                 @changed="emit('changed', $event)"
                             />
                         </TableCell>
@@ -279,7 +278,6 @@ const {
                                 :campus-options="options.campusOptions"
                                 :coordinator="career.coordinator"
                                 :coordinator-users="options.coordinatorUsers"
-                                :lock-reason="lock_reason"
                                 @changed="emit('changed', $event)"
                             />
                         </TableCell>
@@ -352,7 +350,6 @@ const {
                                 :institutional-process="period.institutional_process"
                                 :faculties="catalogs.faculties"
                                 :campus-options="options.campusOptions"
-                                :lock-reason="lock_reason"
                                 @changed="emit('changed', $event)"
                             />
                         </TableCell>
