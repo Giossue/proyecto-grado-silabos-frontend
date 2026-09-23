@@ -38,6 +38,7 @@ const mountShell = async () => {
     history: createMemoryHistory(),
     routes: [
       { path: '/panel', component: { template: '<div />' } },
+      { path: '/admin/panel', component: { template: '<div />' } },
       { path: '/notificaciones', component: { template: '<div />' } },
       { path: '/configuracion/seguridad', component: { template: '<div />' } },
       { path: '/administracion/usuarios', component: { template: '<div />' } },
@@ -47,7 +48,7 @@ const mountShell = async () => {
       { path: '/administracion/auditoria', component: { template: '<div />' } },
     ],
   });
-  await router.push('/panel');
+  await router.push('/admin/panel');
   await router.isReady();
 
   const wrapper = mount(AppSidebarLayout, { attachTo: document.body, global: { plugins: [router] }, slots: { default: '<p>Contenido</p>' } });
@@ -74,7 +75,10 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Usuarios');
-    expect(wrapper.find('[data-sidebar="sidebar"]').text()).toContain('Panel');
+    const sidebar = wrapper.find('[data-sidebar="sidebar"]');
+    expect(sidebar.text()).toContain('Panel');
+    expect(sidebar.get('a[href="/admin/panel"]').attributes('data-active')).toBe('true');
+    expect(sidebar.get('a[href="/admin/panel"]').attributes('aria-current')).toBe('page');
     expect(wrapper.text()).toContain('Configuración');
     expect(wrapper.text()).not.toContain('Mis sílabos');
     expect(wrapper.get('[aria-label="Notificaciones"]').text()).toContain('3');

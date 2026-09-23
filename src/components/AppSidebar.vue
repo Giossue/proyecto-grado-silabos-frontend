@@ -36,7 +36,7 @@ const route = useRoute();
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
 const mainNavItems = computed<NavItem[]>(() => [
     ...(activeRole.value?.code === 'administrador'
-        ? [{ title: 'Panel', href: paths.dashboard, icon: LayoutGrid }]
+        ? [{ title: 'Panel', href: paths.admin.panel, icon: LayoutGrid }]
         : []),
     ...(activeRole.value?.code === 'administrador'
         ? [
