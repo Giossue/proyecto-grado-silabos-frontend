@@ -96,6 +96,43 @@ describe('academic catalog code fields', () => {
     wrapper.unmount();
   });
 
+  it('shows a current faculty logo only when one is configured', async () => {
+    const withoutLogo = mount(CatalogEditSheet, {
+      attachTo: document.body,
+      props: {
+        entity: 'facultad',
+        recordId: 'faculty-without-logo',
+        recordName: 'Facultad sin logo',
+        faculties: [],
+        campusOptions: [],
+        logoUrl: null,
+        open: true,
+      },
+    });
+    await flushPromises();
+
+    expect(document.body.querySelector('img[alt="Logo actual de la facultad"]')).toBeNull();
+    withoutLogo.unmount();
+
+    const withLogo = mount(CatalogEditSheet, {
+      attachTo: document.body,
+      props: {
+        entity: 'facultad',
+        recordId: 'faculty-with-logo',
+        recordName: 'Facultad con logo',
+        faculties: [],
+        campusOptions: [],
+        logoUrl: '/logos/facultad/faculty-with-logo?v=1',
+        open: true,
+      },
+    });
+    await flushPromises();
+
+    expect(document.body.querySelector<HTMLImageElement>('img[alt="Logo actual de la facultad"]')?.src)
+      .toContain('/logos/facultad/faculty-with-logo?v=1');
+    withLogo.unmount();
+  });
+
   it('does not ask for a period code on edit', async () => {
     const wrapper = mount(CatalogEditSheet, {
       attachTo: document.body,
