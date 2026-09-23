@@ -168,7 +168,12 @@ function collectUnits(root: HTMLElement): Unit[] {
             return markdownFlowThroughUnits(element);
         }
 
-        if (element.hasAttribute('data-page-flow-through')) {
+        // Un editor reinterpreta cualquier fila ajena como contenido propio: su
+        // tabla se desplaza entera y nunca recibe espaciadores internos.
+        if (
+            element.hasAttribute('data-page-flow-through') &&
+            !element.querySelector('[contenteditable="true"]')
+        ) {
             const tables = Array.from(element.querySelectorAll('table'))
                 .filter((table) => !table.parentElement?.closest('table'))
                 .flatMap(tableUnits);

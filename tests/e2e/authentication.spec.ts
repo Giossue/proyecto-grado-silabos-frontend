@@ -96,7 +96,8 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByRole('heading', { name: 'Auditoría' })).toBeVisible();
 
     await page.goto('/admin/procesos');
-    await expect(page.getByRole('tab', { name: 'Procesos' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Procesos', exact: true })).toBeVisible();
+    await expect(page.getByRole('tablist')).toHaveCount(0);
 
     await page.getByRole('button', { name: /ADMINISTRADOR DEMO/ }).click();
     await page.getByRole('menuitem', { name: 'Configuración', exact: true }).click();

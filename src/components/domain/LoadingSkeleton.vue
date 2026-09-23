@@ -5,7 +5,6 @@ type LoadingVariant =
     | 'table'
     | 'table-body'
     | 'table-detail'
-    | 'audit'
     | 'detail'
     | 'form'
     | 'document'
@@ -169,48 +168,6 @@ const gridColumns = (): string =>
                                         :style="{ gridTemplateColumns: gridColumns() }"
                                     >
                                         <Skeleton v-for="column in columnCount()" :key="`detail-cell-${row}-${column}`" class="h-4 w-full" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <Skeleton class="h-4 w-40" />
-                            <Skeleton class="h-9 w-32" />
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <!-- Auditoría: pestañas visibles y tabla dentro de una Card. -->
-            <template v-else-if="variant === 'audit'">
-                <div class="bg-muted inline-flex h-9 w-fit items-center gap-1 rounded-lg p-0.75">
-                    <Skeleton class="h-7 w-24 rounded-md" />
-                    <Skeleton class="h-7 w-36 rounded-md" />
-                </div>
-                <div class="overflow-hidden rounded-xl border bg-card p-6">
-                    <div class="flex flex-col gap-4">
-                        <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
-                            <Skeleton class="h-10 min-w-0 flex-1" />
-                            <div class="grid gap-3 sm:grid-cols-3 lg:flex">
-                                <Skeleton v-for="filter in 3" :key="`audit-filter-${filter}`" class="h-10 w-full sm:w-40" />
-                            </div>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <div class="min-w-[64rem] overflow-hidden rounded-lg border">
-                                <div
-                                    class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
-                                    :style="{ gridTemplateColumns: gridColumns() }"
-                                >
-                                    <Skeleton v-for="column in columnCount()" :key="`audit-header-${column}`" class="h-4 w-3/4" />
-                                </div>
-                                <div class="flex flex-col gap-px bg-border">
-                                    <div
-                                        v-for="row in props.rows"
-                                        :key="`audit-row-${row}`"
-                                        class="grid gap-3 bg-background px-3 py-4"
-                                        :style="{ gridTemplateColumns: gridColumns() }"
-                                    >
-                                        <Skeleton v-for="column in columnCount()" :key="`audit-cell-${row}-${column}`" class="h-4 w-full" />
                                     </div>
                                 </div>
                             </div>

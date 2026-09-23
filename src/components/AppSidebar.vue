@@ -57,7 +57,6 @@ const mainNavItems = computed<NavItem[]>(() => [
                   title: 'Auditoría',
                   href: paths.admin.audit,
                   icon: ScrollText,
-                  isActive: route.path === paths.admin.processes,
               },
           ]
         : []),

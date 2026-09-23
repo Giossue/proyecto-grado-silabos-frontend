@@ -1348,7 +1348,6 @@ defineExpose({ getDocument });
         class="template-table-editor relative flex min-w-0 flex-col gap-3"
         :style="editorStyle"
         data-page-unit
-        data-page-flow-through
         :data-resizing="Boolean(resizeGuide) || undefined"
     >
         <div

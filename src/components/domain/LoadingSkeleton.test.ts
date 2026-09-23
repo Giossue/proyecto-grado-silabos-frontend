@@ -6,7 +6,6 @@ const variants = [
   'table',
   'table-body',
   'table-detail',
-  'audit',
   'detail',
   'form',
   'document',
