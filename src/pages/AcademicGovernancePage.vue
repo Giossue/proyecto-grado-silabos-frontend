@@ -39,7 +39,7 @@ const section = computed(() => sectionMap[entity.value]);
 const sectionContent = computed(() => ({
     facultad: { title: 'Facultades', description: 'Las facultades de la universidad y cuántas carreras tiene cada una.' },
     carrera: { title: 'Carreras', description: 'Las carreras y a qué facultad pertenece cada una.' },
-    periodo: { title: 'Periodos académicos', description: 'Los periodos lectivos y sus fechas. El ciclo de una materia no va aquí, va en la malla.' },
+    periodo: { title: 'Periodos académicos', description: 'Los periodos lectivos y sus fechas. Desde cada fila puedes preparar y abrir la convocatoria institucional; el ciclo de una materia va en la malla.' },
 })[entity.value]);
 
 const load = async (): Promise<void> => {
