@@ -28,7 +28,6 @@ vi.mock("@/api/template", async (importOriginal) => ({
   updateTemplateDocument: vi.fn(),
   updateTemplateField: vi.fn(),
   updateTemplateSection: vi.fn(),
-  updateTemplateTable: vi.fn(),
   updateTemplateTitle: vi.fn(),
   uploadInstitutionLogo: vi.fn(),
 }));
