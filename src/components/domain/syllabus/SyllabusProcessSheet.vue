@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { CalendarPlus, Check } from '@lucide/vue';
 import { ref, watch } from 'vue';
-import { createProcess, prepareAndOpenProcess, updateProcess } from '@/api/processes';
+import { createProcess, updateProcess } from '@/api/processes';
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
@@ -16,14 +16,12 @@ const props = withDefaults(defineProps<{
   periods: { id: string; codigo: string }[];
   process?: { id: string; name: string; period_id: string; period_name: string; starts_at: string; due_at: string } | null;
   period?: AcademicPeriod | null;
-  openImmediately?: boolean;
   triggerLabel?: string;
   display?: 'button' | 'menu';
   disabled?: boolean;
 }>(), {
   process: null,
   period: null,
-  openImmediately: false,
   triggerLabel: 'Nuevo proceso',
   display: 'button',
   disabled: false,
@@ -49,9 +47,7 @@ const submit = async (): Promise<void> => {
   try {
     const result = props.process
       ? await updateProcess(props.process.id, form.value)
-      : props.openImmediately
-        ? await prepareAndOpenProcess(form.value)
-        : await createProcess(form.value);
+      : await createProcess(form.value);
     open.value = false;
     emit('saved', result.message);
   } catch (reason) {
@@ -67,8 +63,8 @@ const submit = async (): Promise<void> => {
     v-model:open="open"
     :disabled="props.disabled"
     :trigger-label="triggerLabel"
-    :title="process ? `Editar ${process.name}` : period ? 'Preparar convocatoria institucional' : 'Preparar proceso de sílabos'"
-    :description="period ? `El período ${period.codigo} quedará vinculado a una convocatoria institucional. Elija las fechas de elaboración que heredarán las coordinaciones junto con la plantilla.` : 'El calendario institucional obliga a todas las carreras: fija las fechas de inicio y entrega con las que se elaboran los sílabos. Cada coordinación convoca a su carrera dentro de este proceso.'"
+    :title="process ? `Editar ${process.name}` : 'Abrir convocatoria institucional'"
+    :description="period ? `El período ${period.codigo} quedará vinculado a la convocatoria institucional abierta. Elija las fechas de elaboración que heredarán las coordinaciones junto con la plantilla.` : 'El calendario institucional obliga a todas las carreras: fija las fechas de inicio y entrega con las que se elaboran los sílabos. Cada coordinación inicia el alcance de su carrera dentro de esta convocatoria.'"
     :show-trigger="display !== 'menu'"
   >
     <template #default="{ close }">
@@ -101,7 +97,7 @@ const submit = async (): Promise<void> => {
             <p class="text-sm text-muted-foreground">Esta fecha se heredará en la convocatoria de cada carrera.</p>
             <FieldError :errors="errors.due_at" />
           </Field>
-          <FormSheetActions :close="close" :processing="processing" :icon="process ? Check : CalendarPlus" :label="process ? 'Guardar cambios' : openImmediately ? 'Preparar y abrir' : 'Preparar proceso'" />
+          <FormSheetActions :close="close" :processing="processing" :icon="process ? Check : CalendarPlus" :label="process ? 'Guardar cambios' : 'Abrir convocatoria'" />
         </FieldGroup>
       </form>
     </template>

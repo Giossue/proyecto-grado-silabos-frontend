@@ -130,14 +130,10 @@ test.describe('frontera distribuida de identidad', () => {
         await page.getByRole('option').first().click();
         await pickDate(page, 'Inicio', isoDate(1));
         await pickDate(page, 'Fecha límite de entrega', isoDate(5));
-        await page.getByRole('button', { name: 'Preparar proceso' }).click();
+        await page.getByRole('button', { name: 'Abrir convocatoria' }).click();
         processActions = page.getByRole('button', { name: /Acciones para/ }).first();
         await expect(processActions).toBeVisible();
       }
-      await processActions.click();
-      await page.getByRole('menuitem', { name: 'Abrir', exact: true }).click();
-      await page.getByRole('button', { name: 'Abrir proceso' }).click();
-      await expect(page.getByText(/Proceso abierto/)).toBeVisible();
     }
 
     await page.reload();

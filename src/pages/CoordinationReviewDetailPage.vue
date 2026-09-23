@@ -172,7 +172,7 @@ onMounted(load);
               <div class="flex flex-wrap items-center gap-2"><Badge variant="outline">Rev. {{ observation.revision_number }}</Badge><Badge :variant="observation.state === 'verificada' ? 'secondary' : 'destructive'">{{ observationState(observation.state) }}</Badge><Badge v-if="observation.requested" variant="outline">Solicitada</Badge></div>
               <p class="text-sm whitespace-pre-wrap">{{ observation.content }}</p>
               <p class="text-xs text-muted-foreground">{{ observation.created_by }} · {{ new Date(observation.observado_en).toLocaleString('es-EC') }}</p>
-              <div v-if="observation.response" class="rounded bg-muted p-3 text-sm"><div class="font-medium">Respuesta del docente <span v-if="observation.response.revision_number">· revisión {{ observation.response.revision_number }}</span></div><p class="mt-1 whitespace-pre-wrap">{{ observation.response.content }}</p></div>
+              
               <Button v-if="observation.can_verify" size="sm" variant="outline" :disabled="processing" @click="run(() => verifyObservation(observation.id))"><Spinner v-if="processing" />Marcar verificada</Button>
             </article>
             <p v-if="data.observations.length === 0" class="text-sm text-muted-foreground">Aún no hay observaciones.</p>

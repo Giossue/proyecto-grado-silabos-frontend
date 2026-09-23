@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import {
   getTeacherSyllabus,
-  respondObservation,
   saveTeacherField,
   type SyllabusDetail,
 } from "@/api/syllabi";
@@ -21,7 +20,6 @@ vi.mock("@/api/syllabi", async (importOriginal) => ({
   saveTeacherRows: vi.fn(),
   startTeacherSyllabus: vi.fn(),
   submitTeacherSyllabus: vi.fn(),
-  respondObservation: vi.fn(),
 }));
 
 const appearance = {
@@ -105,7 +103,6 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.useRealTimers();
     vi.mocked(getTeacherSyllabus).mockReset();
     vi.mocked(saveTeacherField).mockReset();
-    vi.mocked(respondObservation).mockReset();
   });
 
   it("presenta como documento de solo lectura una revisión enviada", async () => {
@@ -168,31 +165,21 @@ describe("TeacherSyllabusDetailPage", () => {
     );
   });
 
-  it("envía la respuesta docente a una observación y recarga el expediente", async () => {
+  it("muestra las observaciones de coordinación sin pedir respuesta al docente", async () => {
     const draft = syllabus("correccion_solicitada");
     draft.observations = [{
       id: "observation-1",
       content: "Aclare el resultado.",
       state: "pendiente",
       requested: true,
-      response: null,
     }];
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
-    vi.mocked(respondObservation).mockResolvedValue(undefined);
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get('textarea[placeholder="Ej. Corrección realizada"]').setValue("Contenido corregido.");
-    const answerButton = wrapper.findAll("button").find((button) => button.text() === "Guardar respuesta");
-    await answerButton?.trigger("click");
-    await flushPromises();
-
-    expect(respondObservation).toHaveBeenCalledWith(
-      "syllabus-1",
-      "observation-1",
-      "Contenido corregido.",
-    );
-    expect(getTeacherSyllabus).toHaveBeenCalledTimes(2);
+    expect(wrapper.text()).toContain("Observaciones de coordinación");
+    expect(wrapper.text()).toContain("Aclare el resultado.");
+    expect(wrapper.text()).not.toContain("Guardar respuesta");
   });
 
   it("detiene el autoguardado y ofrece recarga ante un conflicto de versión", async () => {

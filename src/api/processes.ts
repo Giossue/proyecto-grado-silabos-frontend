@@ -3,7 +3,7 @@ import { api } from '@/api/client';
 export type SyllabusProcess = {
   id: string;
   name: string;
-  state: 'preparacion' | 'abierto' | 'pausado' | 'cerrado';
+  state: 'abierto' | 'pausado' | 'cerrado';
   template: string;
   period_id: string;
   period_name: string;
@@ -32,19 +32,13 @@ export const getProcesses = () => api<Processes>('/admin/processes');
 export const createProcess = (payload: ProcessPayload) =>
   api<{ message: string }>('/admin/processes', { method: 'POST', body: JSON.stringify(payload) });
 
-export const prepareAndOpenProcess = (payload: ProcessPayload) =>
-  api<{ message: string }>('/admin/processes/prepare-and-open', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-
 export const updateProcess = (processId: string, payload: ProcessPayload) =>
   api<{ message: string }>(`/admin/processes/${processId}`, { method: 'PATCH', body: JSON.stringify(payload) });
 
 export const deleteProcess = (processId: string) =>
   api<{ message: string }>(`/admin/processes/${processId}`, { method: 'DELETE' });
 
-export const transitionProcess = (processId: string, transition: 'abrir' | 'pausar' | 'reanudar' | 'cerrar', reason?: string) =>
+export const transitionProcess = (processId: string, transition: 'pausar' | 'reanudar' | 'cerrar', reason?: string) =>
   api<{ message: string }>(`/admin/processes/${processId}/${transition}`, {
     method: 'POST',
     body: JSON.stringify(reason ? { reason } : {}),

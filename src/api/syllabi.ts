@@ -94,7 +94,6 @@ export type SyllabusDetail = {
     content: string;
     state: string;
     requested: boolean;
-    response: { content: string } | null;
   }>;
 };
 
@@ -394,12 +393,3 @@ export const clearAiChat = (syllabusId: string) =>
   api<{ message: string }>(`/teacher/syllabi/${syllabusId}/ai-chat`, {
     method: "DELETE",
   });
-export const respondObservation = (
-  syllabusId: string,
-  observationId: string,
-  content: string,
-) =>
-  api<void>(
-    `/teacher/syllabi/${syllabusId}/observations/${observationId}/response`,
-    { method: "POST", body: JSON.stringify({ content }) },
-  );

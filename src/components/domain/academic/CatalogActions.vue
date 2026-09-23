@@ -18,7 +18,7 @@ const props = defineProps<{
     recordCode?: string | null; active?: boolean; facultyId?: string | null; modality?: string | null;
     campus?: string | null; campusOptions: Array<{ value: string; label: string }>;
     startsOn?: string | null; endsOn?: string | null;
-    institutionalProcess?: { id: string; state: 'preparacion' | 'abierto' | 'pausado' | 'cerrado' } | null;
+    institutionalProcess?: { id: string; state: 'abierto' | 'pausado' | 'cerrado' } | null;
     faculties: CatalogRecord[]; coordinator?: { id: string; name: string } | null;
     coordinatorUsers?: Option[]; lockReason?: string | null;
 }>();
@@ -30,7 +30,6 @@ const deleteOpen = ref(false);
 const deleting = ref(false);
 const error = ref<string | null>(null);
 const processStateLabel = (state: NonNullable<typeof props.institutionalProcess>['state']): string => ({
-    preparacion: 'en preparación',
     abierto: 'abierta',
     pausado: 'en pausa',
     cerrado: 'cerrada',
@@ -51,14 +50,14 @@ const remove = async (): Promise<void> => {
         <TableActionsMenu :label="`Acciones para ${recordName}`" :disabled="Boolean(lockReason)">
             <DropdownMenuItem v-if="!lockReason" @select="editOpen = true"><Pencil aria-hidden="true" />Editar</DropdownMenuItem>
             <DropdownMenuItem v-else disabled><LockKeyhole aria-hidden="true" />{{ lockReason }}</DropdownMenuItem>
-            <DropdownMenuItem v-if="entity === 'periodo' && !institutionalProcess && !lockReason" @select="processOpen = true"><CalendarPlus aria-hidden="true" />Preparar convocatoria</DropdownMenuItem>
+            <DropdownMenuItem v-if="entity === 'periodo' && !institutionalProcess && !lockReason" @select="processOpen = true"><CalendarPlus aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
             <DropdownMenuItem v-else-if="entity === 'periodo' && institutionalProcess" disabled><LockKeyhole aria-hidden="true" />Convocatoria {{ processStateLabel(institutionalProcess.state) }}</DropdownMenuItem>
             <DropdownMenuItem v-if="entity === 'carrera' && active && !lockReason" @select="coordinatorOpen = true"><UserRoundCog aria-hidden="true" />{{ coordinator ? 'Reemplazar coordinador' : 'Asignar coordinador' }}</DropdownMenuItem>
             <DropdownMenuItem v-if="!lockReason" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
         </TableActionsMenu>
 
         <CoordinatorReplacementSheet v-if="entity === 'carrera'" :key="`coordinator-${recordId}`" v-model:open="coordinatorOpen" :career-id="recordId" :career-name="recordName" :coordinator="coordinator ?? null" :users="coordinatorUsers ?? []" @saved="emit('changed', $event)" />
-        <SyllabusProcessSheet v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName }" open-immediately display="menu" trigger-label="Preparar convocatoria" @saved="emit('changed', $event)" />
+        <SyllabusProcessSheet v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName }" display="menu" trigger-label="Abrir convocatoria" @saved="emit('changed', $event)" />
         <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :campus-options="campusOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" @saved="emit('changed', $event)" />
 
         <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar registro institucional</DialogTitle><DialogDescription v-if="entity === 'periodo'">Se eliminará el período «{{ recordName }}». Solo puede eliminarse si no tiene materias programadas ni una convocatoria institucional asociada. Si la convocatoria todavía no tiene actividad docente, elimínela primero desde Convocatorias.</DialogDescription><DialogDescription v-else>Se eliminará «{{ recordName }}». La operación se rechazará si tiene carreras, materias programadas, procesos u otro historial relacionado.</DialogDescription></DialogHeader>

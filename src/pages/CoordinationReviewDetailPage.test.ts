@@ -113,7 +113,6 @@ const detail = (withObservation = false): ReviewDetail => ({
     can_verify: false,
     created_by: "Coordinación Demo",
     observado_en: "2026-09-16T10:05:00Z",
-    response: null,
   }] : [],
   correction_request: null,
   reset: { allowed: false },

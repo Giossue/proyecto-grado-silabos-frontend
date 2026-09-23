@@ -72,7 +72,7 @@ export type AcademicStructureProps = {
         status_label: string;
         institutional_process: {
             id: string;
-            state: 'preparacion' | 'abierto' | 'pausado' | 'cerrado';
+            state: 'abierto' | 'pausado' | 'cerrado';
         } | null;
     }[];
     };

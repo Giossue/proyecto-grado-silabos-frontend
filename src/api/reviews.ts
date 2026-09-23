@@ -41,12 +41,6 @@ export type ReviewObservation = {
   can_verify: boolean;
   created_by: string;
   observado_en: string;
-  response: {
-    content: string;
-    responded_by: string;
-    responded_at: string;
-    revision_number: number | null;
-  } | null;
 };
 export type SnapshotField = {
   key: string;

@@ -21,7 +21,6 @@ describe('syllabus process dates', () => {
           starts_on: '2026-09-22',
           ends_on: '2027-01-02',
         },
-        openImmediately: true,
       },
     });
 

@@ -4,7 +4,6 @@ import { useRoute, useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
 import {
   getTeacherSyllabus,
-  respondObservation,
   saveTeacherField,
   saveTeacherRows,
   startTeacherSyllabus,
@@ -53,8 +52,6 @@ const validationResults = ref<Array<{
 }>>([]);
 const validationRan = ref(false);
 const validationBlockingErrors = ref<number | null>(null);
-const responseDrafts = ref<Record<string, string>>({});
-const answeringObservationId = ref<string | null>(null);
 const aiMessage = ref<string | null>(null);
 const aiAssistant = ref<InstanceType<typeof SyllabusAiAssistantSheet> | null>(null);
 const conflict = ref(false);
@@ -302,27 +299,6 @@ const submit = async (): Promise<void> => {
     processingAction.value = false;
   }
 };
-const answer = async (observationId: string): Promise<void> => {
-  if (!syllabus.value) return;
-  const content = (responseDrafts.value[observationId] ?? "").trim();
-  if (!content) {
-    error.value = "Escriba la corrección realizada antes de responder.";
-    return;
-  }
-  answeringObservationId.value = observationId;
-  error.value = null;
-  try {
-    await respondObservation(syllabus.value.id, observationId, content);
-    delete responseDrafts.value[observationId];
-    await load();
-  } catch (reason) {
-    error.value = reason instanceof ApiError
-      ? reason.message
-      : "No se pudo responder la observación.";
-  } finally {
-    answeringObservationId.value = null;
-  }
-};
 
 const visibleSections = computed(() => {
   const sections = syllabus.value?.sections ?? [];
@@ -384,9 +360,9 @@ onBeforeUnmount(() => {
           </Card>
 
           <Card v-if="requestedObservations.length">
-            <CardHeader><CardTitle>Observaciones por responder</CardTitle><CardDescription>Las respuestas se fijan al reenviar una revisión.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Observaciones de coordinación</CardTitle><CardDescription>Corrija lo indicado en el sílabo y reenvíelo para una nueva revisión.</CardDescription></CardHeader>
             <CardContent class="flex flex-col gap-4">
-              <article v-for="observation in requestedObservations" :key="observation.id" class="flex flex-col gap-3 rounded-md border p-4"><div class="flex flex-wrap gap-2"><Badge variant="outline">Revisión {{ observation.revision_number ?? 'actual' }}</Badge><Badge variant="destructive">Requiere respuesta</Badge></div><p class="text-sm whitespace-pre-wrap">{{ observation.content }}</p><div v-if="observation.response" class="rounded bg-muted p-3 text-sm"><div class="font-medium">Su respuesta</div><p class="mt-1">{{ observation.response.content }}</p></div><template v-else><Field><FieldLabel :for="`response-${observation.id}`" required>Respuesta</FieldLabel><Textarea :id="`response-${observation.id}`" v-model="responseDrafts[observation.id]" rows="4" required placeholder="Ej. Corrección realizada" /></Field><Button type="button" size="sm" variant="outline" :disabled="answeringObservationId === observation.id" @click="answer(observation.id)">{{ answeringObservationId === observation.id ? 'Enviando…' : 'Guardar respuesta' }}</Button></template></article>
+              <article v-for="observation in requestedObservations" :key="observation.id" class="flex flex-col gap-3 rounded-md border p-4"><div class="flex flex-wrap gap-2"><Badge variant="outline">Revisión {{ observation.revision_number ?? 'actual' }}</Badge></div><p class="text-sm whitespace-pre-wrap">{{ observation.content }}</p></article>
             </CardContent>
           </Card>
 

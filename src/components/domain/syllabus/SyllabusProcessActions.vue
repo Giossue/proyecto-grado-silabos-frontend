@@ -22,7 +22,7 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 
-type Transition = 'abrir' | 'pausar' | 'reanudar' | 'cerrar';
+type Transition = 'pausar' | 'reanudar' | 'cerrar';
 
 const props = defineProps<{ process: SyllabusProcess; template: string | null; periods: { id: string; codigo: string }[] }>();
 const emit = defineEmits<{
@@ -41,11 +41,6 @@ const deleteError = ref<string | null>(null);
 const reasonCharacters = computed(() => reason.value.trim().length);
 
 const dialogs: Record<Transition, { title: string; description: string; label: string; destructive?: boolean }> = {
-  abrir: {
-    title: 'Abrir el proceso',
-    description: 'Las coordinaciones podrán abrir sus convocatorias y los docentes empezarán a elaborar. Mientras esté abierto, la plantilla no se puede modificar.',
-    label: 'Abrir proceso',
-  },
   pausar: {
     title: 'Pausar el proceso',
     description: 'Se detienen los envíos y la edición docente en todas las carreras hasta que lo reanude. El motivo queda en auditoría.',
@@ -114,7 +109,6 @@ const remove = async (): Promise<void> => {
 <template>
   <TableActionsMenu :label="`Acciones para ${process.name}`">
     <DropdownMenuItem v-if="process.configurable" @select="editOpen = true"><Pencil />Editar</DropdownMenuItem>
-    <DropdownMenuItem v-if="process.state === 'preparacion'" @select="pending = 'abrir'"><Play />Abrir</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'abierto'" @select="pending = 'pausar'"><Pause />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'pausado'" @select="pending = 'reanudar'"><Play />Reanudar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" @select="deadlineOpen = true"><CalendarClock />Prorrogar plazo</DropdownMenuItem>
