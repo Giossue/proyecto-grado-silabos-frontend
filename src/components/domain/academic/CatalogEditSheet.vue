@@ -11,12 +11,13 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { STUDY_MODALITIES } from '@/lib/studyModalities';
+import { calculateAcademicPeriodWeeks } from '@/lib/academicPeriodWeeks';
 import type { CatalogRecord, GovernanceCatalogEntity } from '@/types/academic';
 
 const props = withDefaults(defineProps<{
     entity: GovernanceCatalogEntity; recordId: string; recordName: string; recordCode?: string | null;
     facultyId?: string | null; modality?: string | null; campus?: string | null;
-    startsOn?: string | null; endsOn?: string | null; teachingWeeks?: number | null;
+    startsOn?: string | null; endsOn?: string | null;
     faculties: CatalogRecord[]; campusOptions: Array<{ value: string; label: string }>;
     logoUrl?: string | null; showTrigger?: boolean;
 }>(), { showTrigger: true });
@@ -25,19 +26,22 @@ const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const logo = ref<File | null>(null);
-const form = ref({ nombre: '', code: '', faculty_id: '', campus: '', modality: '', starts_on: '', ends_on: '', teaching_weeks: 16 });
+const form = ref({ nombre: '', code: '', faculty_id: '', campus: '', modality: '', starts_on: '', ends_on: '' });
 
 const entityLabel = computed(() => ({ facultad: 'facultad', carrera: 'carrera', periodo: 'periodo académico' })[props.entity]);
 const formDescription = computed(() => props.entity === 'periodo'
-    ? 'Actualice las fechas y las semanas efectivas de clases. La etiqueta se genera automáticamente.'
+    ? 'Actualice las fechas. Las semanas lectivas se calculan automáticamente.'
     : 'Actualice los datos institucionales. Los cambios quedarán registrados en auditoría.');
+const calculatedTeachingWeeks = computed(() => props.entity === 'periodo'
+    ? calculateAcademicPeriodWeeks(form.value.starts_on, form.value.ends_on)
+    : null);
 const facultyOptions = computed(() => props.faculties.filter((faculty) => faculty.activo || faculty.id === props.facultyId));
 
 const reset = (): void => {
     form.value = {
         nombre: props.recordName, code: props.recordCode ?? '', faculty_id: props.facultyId ?? '',
         campus: props.campus ?? '', modality: props.modality ?? '', starts_on: props.startsOn ?? '',
-        ends_on: props.endsOn ?? '', teaching_weeks: props.teachingWeeks ?? 16,
+        ends_on: props.endsOn ?? '',
     };
     logo.value = null;
     errors.value = {};
@@ -79,7 +83,7 @@ const submit = async (): Promise<void> => {
                 <template v-if="entity === 'periodo'">
                     <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel :for="`edit-starts-on-${recordId}`" required>Fecha de inicio</FieldLabel><DatePicker :id="`edit-starts-on-${recordId}`" v-model="form.starts_on" required /><FieldError :errors="errors.starts_on" /></Field>
                     <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required /><FieldError :errors="errors.ends_on" /></Field>
-                    <Field :data-invalid="Boolean(errors.teaching_weeks)"><FieldLabel :for="`edit-teaching-weeks-${recordId}`" required>Semanas lectivas</FieldLabel><Input :id="`edit-teaching-weeks-${recordId}`" v-model="form.teaching_weeks" type="number" min="1" max="52" required /><FieldDescription>Indique las semanas efectivas de clases del calendario académico. No corresponde a todas las semanas calendario del período.</FieldDescription><FieldError :errors="errors.teaching_weeks" /></Field>
+                    <Field><FieldLabel :for="`edit-teaching-weeks-${recordId}`">Semanas lectivas calculadas</FieldLabel><output :id="`edit-teaching-weeks-${recordId}`" class="block rounded-md border border-input bg-muted/30 px-3 py-2 text-sm">{{ calculatedTeachingWeeks ?? 'Seleccione ambas fechas' }}</output><FieldDescription>Se cuentan las semanas de lunes a domingo que toca el período, aunque la primera o última sea parcial.</FieldDescription></Field>
                 </template>
                 <FormSheetActions :close="close" :processing="processing" :icon="Check" label="Guardar cambios" />
             </FieldGroup></form>

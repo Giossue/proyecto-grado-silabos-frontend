@@ -53,9 +53,10 @@ describe('academic catalog code fields', () => {
     await flushPromises();
 
     expect(document.body.querySelector('#catalog-code')).toBeNull();
+    expect(document.body.querySelector('input#catalog-teaching-weeks')).toBeNull();
     expect(document.body.textContent).not.toContain('Código del período');
-    expect(document.body.textContent).toContain('La etiqueta se generará automáticamente');
-    expect(document.body.textContent).toContain('semanas efectivas de clases');
+    expect(document.body.textContent).toContain('Semanas lectivas calculadas');
+    expect(document.body.textContent).toContain('Seleccione ambas fechas');
     period.unmount();
   });
 
@@ -84,10 +85,9 @@ describe('academic catalog code fields', () => {
       props: {
         entity: 'periodo',
         recordId: 'period-1',
-        recordName: 'Agosto-Diciembre II 2026',
+        recordName: 'Agosto-Diciembre 2026',
         startsOn: '2026-08-17',
         endsOn: '2026-12-18',
-        teachingWeeks: 16,
         faculties: [],
         campusOptions: [],
         open: true,
@@ -96,8 +96,9 @@ describe('academic catalog code fields', () => {
     await flushPromises();
 
     expect(document.body.querySelector('#edit-code-period-1')).toBeNull();
-    expect(document.body.textContent).toContain('La etiqueta se genera automáticamente');
-    expect(document.body.textContent).toContain('semanas efectivas de clases');
+    expect(document.body.querySelector('input#edit-teaching-weeks-period-1')).toBeNull();
+    expect(document.body.textContent).toContain('Semanas lectivas calculadas');
+    expect(document.body.textContent).toContain('18');
     wrapper.unmount();
   });
 });

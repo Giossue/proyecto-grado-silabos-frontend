@@ -11,6 +11,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { STUDY_MODALITIES } from '@/lib/studyModalities';
+import { calculateAcademicPeriodWeeks } from '@/lib/academicPeriodWeeks';
 import type { AcademicStructureProps, GovernanceCatalogEntity } from '@/types/academic';
 
 const props = withDefaults(defineProps<Pick<AcademicStructureProps, 'options'> & { entity: GovernanceCatalogEntity; disabled?: boolean }>(), { disabled: false });
@@ -21,16 +22,19 @@ const errors = ref<Record<string, string[]>>({});
 const open = ref(false);
 const form = ref({
     nombre: '', code: '', faculty_id: '', campus: '', modality: '',
-    cycle_count: 8, starts_on: '', ends_on: '', teaching_weeks: 16,
+    cycle_count: 8, starts_on: '', ends_on: '',
 });
 const logo = ref<File | null>(null);
 
 const labels = computed(() => ({
     facultad: { trigger: 'Nueva facultad', title: 'Nueva facultad', description: 'Registre una unidad académica que agrupará sus carreras.' },
     carrera: { trigger: 'Nueva carrera', title: 'Nueva carrera', description: 'Registre una carrera dentro de una facultad activa.' },
-    periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico', description: 'Registre las fechas y las semanas efectivas de clases. La etiqueta se generará automáticamente.' },
+    periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico', description: 'Registre las fechas. Las semanas lectivas se calculan automáticamente y la etiqueta se genera con el rango de meses y año.' },
 })[props.entity]);
 const submitLabel = computed(() => ({ facultad: 'Crear facultad', carrera: 'Crear carrera', periodo: 'Crear periodo' })[props.entity]);
+const calculatedTeachingWeeks = computed(() => props.entity === 'periodo'
+    ? calculateAcademicPeriodWeeks(form.value.starts_on, form.value.ends_on)
+    : null);
 
 const logoValidationError = (message: string | null): void => {
     const nextErrors = { ...errors.value };
@@ -39,7 +43,7 @@ const logoValidationError = (message: string | null): void => {
     errors.value = nextErrors;
 };
 const reset = (): void => {
-    form.value = { nombre: '', code: '', faculty_id: '', campus: '', modality: '', cycle_count: 8, starts_on: '', ends_on: '', teaching_weeks: 16 };
+    form.value = { nombre: '', code: '', faculty_id: '', campus: '', modality: '', cycle_count: 8, starts_on: '', ends_on: '' };
     logo.value = null;
 };
 const submit = async (): Promise<void> => {
@@ -99,7 +103,7 @@ const submit = async (): Promise<void> => {
                     <template v-if="entity === 'periodo'">
                         <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" required /><FieldError :errors="errors.starts_on" /></Field>
                         <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel for="catalog-ends-on" required>Fecha de fin</FieldLabel><DatePicker id="catalog-ends-on" v-model="form.ends_on" required /><FieldError :errors="errors.ends_on" /></Field>
-                        <Field :data-invalid="Boolean(errors.teaching_weeks)"><FieldLabel for="catalog-teaching-weeks" required>Semanas lectivas</FieldLabel><Input id="catalog-teaching-weeks" v-model="form.teaching_weeks" type="number" min="1" max="52" required /><FieldDescription>Indique las semanas efectivas de clases del calendario académico. No corresponde a todas las semanas calendario del período.</FieldDescription><FieldError :errors="errors.teaching_weeks" /></Field>
+                        <Field><FieldLabel for="catalog-teaching-weeks">Semanas lectivas calculadas</FieldLabel><output id="catalog-teaching-weeks" class="block rounded-md border border-input bg-muted/30 px-3 py-2 text-sm">{{ calculatedTeachingWeeks ?? 'Seleccione ambas fechas' }}</output><FieldDescription>Se cuentan las semanas de lunes a domingo que toca el período, aunque la primera o última sea parcial.</FieldDescription></Field>
                     </template>
                     <FormSheetActions :close="close" :processing="processing" :icon="Plus" :label="submitLabel" />
                 </FieldGroup>
