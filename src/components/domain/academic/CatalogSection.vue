@@ -353,6 +353,7 @@ const {
                                 :record-code="period.code"
                                 :starts-on="period.starts_on"
                                 :ends-on="period.ends_on"
+                                :institutional-process="period.institutional_process"
                                 :faculties="catalogs.faculties"
                                 :campus-options="options.campusOptions"
                                 :lock-reason="lock_reason"

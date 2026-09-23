@@ -67,10 +67,14 @@ export type AcademicStructureProps = {
             code: string;
             starts_on: string;
             ends_on: string;
-            teaching_weeks: number;
-            status: 'proximo' | 'en_curso' | 'finalizado';
-            status_label: string;
-        }[];
+        teaching_weeks: number;
+        status: 'proximo' | 'en_curso' | 'finalizado';
+        status_label: string;
+        institutional_process: {
+            id: string;
+            state: 'preparacion' | 'abierto' | 'pausado' | 'cerrado';
+        } | null;
+    }[];
     };
     subjects: {
         id: string;

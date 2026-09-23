@@ -31,6 +31,12 @@ export const getProcesses = () => api<Processes>('/admin/processes');
 export const createProcess = (payload: ProcessPayload) =>
   api<{ message: string }>('/admin/processes', { method: 'POST', body: JSON.stringify(payload) });
 
+export const prepareAndOpenProcess = (payload: ProcessPayload) =>
+  api<{ message: string }>('/admin/processes/prepare-and-open', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+
 export const updateProcess = (processId: string, payload: ProcessPayload) =>
   api<{ message: string }>(`/admin/processes/${processId}`, { method: 'PATCH', body: JSON.stringify(payload) });
 
