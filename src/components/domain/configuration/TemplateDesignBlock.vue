@@ -115,8 +115,7 @@ const edit = () => {
         key: field.key,
         label: field.label,
         help: field.help ?? '',
-        ...(!field.inherited &&
-        !['institutional', 'flow'].includes(props.block.content_type)
+        ...(props.block.content_type !== 'flow'
             ? { ai_enabled: field.ai_enabled ?? false }
             : {}),
     }));
@@ -521,12 +520,13 @@ watch(
                                 />
                                 <FieldContent>
                                     <FieldLabel :for="`design-ai-${index}`"
-                                        >Permite asistencia de IA</FieldLabel
+                                        >Permitir que la IA lea este
+                                        campo</FieldLabel
                                     >
                                     <FieldDescription
-                                        >Habilita la ayuda de IA; el docente
-                                        sigue siendo responsable del
-                                        contenido.</FieldDescription
+                                        >La IA lo usará como referencia para
+                                        sus sugerencias; el docente decide si
+                                        las aplica.</FieldDescription
                                     >
                                 </FieldContent>
                             </Field>

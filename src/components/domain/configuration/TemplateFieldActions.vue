@@ -304,11 +304,7 @@ defineExpose({
                         />
                     </Field>
                     <Field
-                        v-if="
-                            !primary?.inherited &&
-                            form.content_type !== 'institutional' &&
-                            form.content_type !== 'flow'
-                        "
+                        v-if="form.content_type !== 'flow'"
                         orientation="horizontal"
                     >
                         <Checkbox
@@ -318,11 +314,11 @@ defineExpose({
                         />
                         <FieldContent>
                             <FieldLabel for="edit-template-field-ai-enabled">
-                                Usar asistencia de IA
+                                Permitir que la IA lea este campo
                             </FieldLabel>
                             <FieldDescription>
-                                La IA solo sugiere; el docente decide si
-                                aplica cada sugerencia.
+                                La IA lo usará como referencia para sus
+                                sugerencias; el docente decide si las aplica.
                             </FieldDescription>
                         </FieldContent>
                     </Field>

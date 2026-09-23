@@ -1124,8 +1124,13 @@ const insertField = (
         },
     });
 
+/** Un total solo suma números: un dato de texto ahí quedaría siempre vacío. */
+const canInsertRepeatedColumn = (column: TableColumn): boolean =>
+    selectedRowRole.value === 'record' ||
+    (selectedRowRole.value === 'total' && column.type === 'number');
+
 const insertRepeatedColumn = (column: TableColumn): void => {
-    if (!['record', 'total'].includes(selectedRowRole.value)) {
+    if (!canInsertRepeatedColumn(column)) {
         return;
     }
 
@@ -1500,9 +1505,7 @@ defineExpose({ getDocument });
                                             v-for="column in repeatedColumns"
                                             :key="column.key"
                                             :disabled="
-                                                !['record', 'total'].includes(
-                                                    selectedRowRole,
-                                                )
+                                                !canInsertRepeatedColumn(column)
                                             "
                                             @select="
                                                 insertRepeatedColumn(column)
