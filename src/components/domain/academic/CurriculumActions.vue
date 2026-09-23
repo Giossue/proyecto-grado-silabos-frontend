@@ -14,6 +14,6 @@ const emit = defineEmits<{ configure: [] }>();
         @click="emit('configure')"
     >
         <Settings2 data-icon="inline-start" aria-hidden="true" />
-        Configurar malla
+        Configurar ciclos
     </Button>
 </template>
