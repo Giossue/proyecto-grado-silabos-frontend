@@ -36,8 +36,8 @@ watch(open, (value) => {
   if (value) {
     form.value = {
       period_id: props.process?.period_id ?? props.period?.id ?? '',
-      starts_at: props.process?.starts_at.slice(0, 10) ?? props.period?.starts_on ?? '',
-      due_at: props.process?.due_at.slice(0, 10) ?? props.period?.ends_on ?? '',
+      starts_at: props.process?.starts_at.slice(0, 10) ?? '',
+      due_at: props.process?.due_at.slice(0, 10) ?? '',
     };
     errors.value = {};
   }
@@ -68,7 +68,7 @@ const submit = async (): Promise<void> => {
     :disabled="props.disabled"
     :trigger-label="triggerLabel"
     :title="process ? `Editar ${process.name}` : period ? 'Preparar convocatoria institucional' : 'Preparar proceso de sílabos'"
-    :description="period ? `El período ${period.codigo} quedará vinculado a una convocatoria institucional. Las coordinaciones heredarán sus fechas y la plantilla, y luego iniciarán su propio alcance.` : 'El calendario institucional obliga a todas las carreras: fija las fechas de inicio y entrega con las que se elaboran los sílabos. Cada coordinación convoca a su carrera dentro de este proceso.'"
+    :description="period ? `El período ${period.codigo} quedará vinculado a una convocatoria institucional. Elija las fechas de elaboración que heredarán las coordinaciones junto con la plantilla.` : 'El calendario institucional obliga a todas las carreras: fija las fechas de inicio y entrega con las que se elaboran los sílabos. Cada coordinación convoca a su carrera dentro de este proceso.'"
     :show-trigger="display !== 'menu'"
   >
     <template #default="{ close }">
@@ -91,13 +91,13 @@ const submit = async (): Promise<void> => {
           </Field>
           <Field :data-invalid="Boolean(errors.starts_at)">
             <FieldLabel for="process-starts" required>Inicio de la elaboración</FieldLabel>
-            <DatePicker id="process-starts" v-model="form.starts_at" required />
-            <p class="text-sm text-muted-foreground">Puede ser distinto al inicio de clases del período.</p>
+            <DatePicker id="process-starts" v-model="form.starts_at" required :aria-invalid="Boolean(errors.starts_at)" />
+            <p class="text-sm text-muted-foreground">Elija cuándo comienza la elaboración; no se copia el inicio de clases.</p>
             <FieldError :errors="errors.starts_at" />
           </Field>
           <Field :data-invalid="Boolean(errors.due_at)">
             <FieldLabel for="process-due" required>Fecha límite de entrega</FieldLabel>
-            <DatePicker id="process-due" v-model="form.due_at" required />
+            <DatePicker id="process-due" v-model="form.due_at" required :aria-invalid="Boolean(errors.due_at)" />
             <p class="text-sm text-muted-foreground">Esta fecha se heredará en la convocatoria de cada carrera.</p>
             <FieldError :errors="errors.due_at" />
           </Field>
