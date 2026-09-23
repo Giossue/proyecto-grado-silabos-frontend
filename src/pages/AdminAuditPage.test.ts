@@ -69,5 +69,6 @@ describe('AdminAuditPage', () => {
     expect(wrapper.text()).not.toContain('Activo');
     expect(wrapper.find('form').exists()).toBe(false);
     expect(wrapper.find('[role="tablist"]').exists()).toBe(false);
+    expect(wrapper.find('[data-slot="badge"]').exists()).toBe(false);
   });
 });

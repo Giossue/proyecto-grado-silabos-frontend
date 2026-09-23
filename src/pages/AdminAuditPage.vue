@@ -8,7 +8,6 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { paths } from '@/lib/routes';
@@ -55,7 +54,7 @@ onMounted(() => { void load(); });
               <TableCell class="text-xs whitespace-nowrap">{{ formatDate(event.occurred_at) }}</TableCell>
               <TableCell><div>{{ event.action }}</div><div class="text-xs text-muted-foreground">{{ event.resource }}</div></TableCell>
               <TableCell><div>{{ event.actor }}</div><div v-if="event.role || event.career" class="text-xs text-muted-foreground">{{ [event.role, event.career].filter(Boolean).join(' · ') }}</div></TableCell>
-              <TableCell><Badge :variant="event.result === 'fallido' ? 'destructive' : 'secondary'">{{ event.result === 'fallido' ? 'Fallido' : 'Correcto' }}</Badge></TableCell>
+              <TableCell>{{ event.result === 'fallido' ? 'Fallido' : 'Correcto' }}</TableCell>
             </TableRow>
             <TableEmpty v-if="data.events.data.length === 0" :colspan="4">Todavía no hay actividad registrada.</TableEmpty>
           </TableBody>
