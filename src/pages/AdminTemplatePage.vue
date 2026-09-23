@@ -184,7 +184,7 @@ onBeforeUnmount(() => {
     <div v-else-if="editing && builder && previewAppearance" class="min-h-dvh min-w-0">
         <header class="sticky top-0 z-30 border-b bg-background/95 shadow-sm backdrop-blur" aria-label="Herramientas del editor de plantilla">
             <div class="grid h-12 min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 sm:px-5">
-                <Button variant="outline" size="sm" class="justify-self-start" @click="editing = false">Volver a la vista</Button>
+                <Button variant="link" size="sm" class="h-auto justify-self-start px-0" @click="editing = false">Volver a la vista</Button>
                 <div id="template-editor-header-selection" class="min-w-0 justify-self-center" />
                 <div aria-hidden="true" />
             </div>
