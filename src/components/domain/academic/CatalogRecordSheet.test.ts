@@ -45,7 +45,7 @@ describe('academic catalog code fields', () => {
     career.unmount();
   });
 
-  it('does not ask for a period code and explains teaching weeks', async () => {
+  it('does not ask for a period code or teaching weeks', async () => {
     const period = mount(CatalogRecordSheet, {
       attachTo: document.body,
       props: { entity: 'periodo', options, open: true },
@@ -55,8 +55,7 @@ describe('academic catalog code fields', () => {
     expect(document.body.querySelector('#catalog-code')).toBeNull();
     expect(document.body.querySelector('input#catalog-teaching-weeks')).toBeNull();
     expect(document.body.textContent).not.toContain('Código del período');
-    expect(document.body.textContent).toContain('Semanas lectivas calculadas');
-    expect(document.body.textContent).toContain('Seleccione ambas fechas');
+    expect(document.body.textContent).not.toContain('Semanas lectivas calculadas');
     period.unmount();
   });
 
@@ -97,8 +96,7 @@ describe('academic catalog code fields', () => {
 
     expect(document.body.querySelector('#edit-code-period-1')).toBeNull();
     expect(document.body.querySelector('input#edit-teaching-weeks-period-1')).toBeNull();
-    expect(document.body.textContent).toContain('Semanas lectivas calculadas');
-    expect(document.body.textContent).toContain('18');
+    expect(document.body.textContent).not.toContain('Semanas lectivas calculadas');
     wrapper.unmount();
   });
 });

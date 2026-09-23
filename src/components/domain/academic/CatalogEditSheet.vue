@@ -7,11 +7,10 @@ import DatePicker from '@/components/DatePicker.vue';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { STUDY_MODALITIES } from '@/lib/studyModalities';
-import { calculateAcademicPeriodWeeks } from '@/lib/academicPeriodWeeks';
 import type { CatalogRecord, GovernanceCatalogEntity } from '@/types/academic';
 
 const props = withDefaults(defineProps<{
@@ -30,11 +29,8 @@ const form = ref({ nombre: '', code: '', faculty_id: '', campus: '', modality: '
 
 const entityLabel = computed(() => ({ facultad: 'facultad', carrera: 'carrera', periodo: 'periodo académico' })[props.entity]);
 const formDescription = computed(() => props.entity === 'periodo'
-    ? 'Actualice las fechas. Las semanas lectivas se calculan automáticamente.'
+    ? 'Actualice las fechas. La etiqueta se genera con el rango de meses y año.'
     : 'Actualice los datos institucionales. Los cambios quedarán registrados en auditoría.');
-const calculatedTeachingWeeks = computed(() => props.entity === 'periodo'
-    ? calculateAcademicPeriodWeeks(form.value.starts_on, form.value.ends_on)
-    : null);
 const facultyOptions = computed(() => props.faculties.filter((faculty) => faculty.activo || faculty.id === props.facultyId));
 
 const reset = (): void => {
@@ -83,7 +79,6 @@ const submit = async (): Promise<void> => {
                 <template v-if="entity === 'periodo'">
                     <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel :for="`edit-starts-on-${recordId}`" required>Fecha de inicio</FieldLabel><DatePicker :id="`edit-starts-on-${recordId}`" v-model="form.starts_on" required /><FieldError :errors="errors.starts_on" /></Field>
                     <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required /><FieldError :errors="errors.ends_on" /></Field>
-                    <Field><FieldLabel :for="`edit-teaching-weeks-${recordId}`">Semanas lectivas calculadas</FieldLabel><output :id="`edit-teaching-weeks-${recordId}`" class="block rounded-md border border-input bg-muted/30 px-3 py-2 text-sm">{{ calculatedTeachingWeeks ?? 'Seleccione ambas fechas' }}</output><FieldDescription>Se cuentan las semanas de lunes a domingo que toca el período, aunque la primera o última sea parcial.</FieldDescription></Field>
                 </template>
                 <FormSheetActions :close="close" :processing="processing" :icon="Check" label="Guardar cambios" />
             </FieldGroup></form>
