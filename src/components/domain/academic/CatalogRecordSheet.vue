@@ -20,7 +20,7 @@ const errors = ref<Record<string, string[]>>({});
 const open = ref(false);
 const form = ref({
     nombre: '', code: '', faculty_id: '', campus: '', modality: '',
-    curriculum_code: '', cycle_count: 8, starts_on: '', ends_on: '', teaching_weeks: 16,
+    cycle_count: 8, starts_on: '', ends_on: '', teaching_weeks: 16,
 });
 const logo = ref<File | null>(null);
 
@@ -30,13 +30,13 @@ const labels = computed(() => ({
     periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico', description: 'Registre una ventana temporal institucional con fechas válidas.' },
 })[props.entity]);
 const submitLabel = computed(() => ({ facultad: 'Crear facultad', carrera: 'Crear carrera', periodo: 'Crear periodo' })[props.entity]);
-const codeLabel = computed(() => ({ facultad: 'Código de facultad', carrera: 'Código de carrera', periodo: 'Código estable' })[props.entity]);
+const codeLabel = computed(() => props.entity === 'carrera' ? 'Código de carrera' : 'Código del período');
 
 const setLogo = (event: Event): void => {
     logo.value = (event.target as HTMLInputElement).files?.[0] ?? null;
 };
 const reset = (): void => {
-    form.value = { nombre: '', code: '', faculty_id: '', campus: '', modality: '', curriculum_code: '', cycle_count: 8, starts_on: '', ends_on: '', teaching_weeks: 16 };
+    form.value = { nombre: '', code: '', faculty_id: '', campus: '', modality: '', cycle_count: 8, starts_on: '', ends_on: '', teaching_weeks: 16 };
     logo.value = null;
 };
 const submit = async (): Promise<void> => {
@@ -44,7 +44,10 @@ const submit = async (): Promise<void> => {
     processing.value = true;
     errors.value = {};
     const payload = new FormData();
-    for (const [key, value] of Object.entries(form.value)) payload.set(key, String(value));
+    for (const [key, value] of Object.entries(form.value)) {
+        if (key === 'code' && props.entity === 'facultad') continue;
+        payload.set(key, String(value));
+    }
     if (logo.value) payload.set('logo', logo.value);
     try {
         const result = await createAcademicRecord(props.entity, payload);
@@ -86,9 +89,8 @@ const submit = async (): Promise<void> => {
                         <FieldError :errors="errors.modality" />
                     </Field>
                     <Field v-if="entity !== 'periodo'" :data-invalid="Boolean(errors.nombre)"><FieldLabel for="catalog-name" required>Nombre</FieldLabel><Input id="catalog-name" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
-                    <Field :data-invalid="Boolean(errors.code)"><FieldLabel for="catalog-code" :required="entity === 'periodo'">{{ codeLabel }}</FieldLabel><Input id="catalog-code" v-model="form.code" :required="entity === 'periodo'" /><FieldError :errors="errors.code" /></Field>
+                    <Field v-if="entity !== 'facultad'" :data-invalid="Boolean(errors.code)"><FieldLabel for="catalog-code" required>{{ codeLabel }}</FieldLabel><Input id="catalog-code" v-model="form.code" required /><FieldError :errors="errors.code" /></Field>
                     <template v-if="entity === 'carrera'">
-                        <Field :data-invalid="Boolean(errors.curriculum_code)"><FieldLabel for="catalog-curriculum-code" required>Código de malla curricular</FieldLabel><Input id="catalog-curriculum-code" v-model="form.curriculum_code" placeholder="Ej. MALLA-SW-2026" required /><FieldError :errors="errors.curriculum_code" /></Field>
                         <Field :data-invalid="Boolean(errors.cycle_count)"><FieldLabel for="catalog-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="catalog-cycle-count" v-model="form.cycle_count" type="number" min="1" max="30" step="1" required /><FieldError :errors="errors.cycle_count" /></Field>
                     </template>
                     <template v-if="entity === 'periodo'">

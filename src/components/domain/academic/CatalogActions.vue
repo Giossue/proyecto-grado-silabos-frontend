@@ -14,7 +14,7 @@ import type { CatalogRecord, GovernanceCatalogEntity, Option } from '@/types/aca
 
 const props = defineProps<{
     entity: GovernanceCatalogEntity; recordId: string; logoUrl?: string | null; recordName: string;
-    recordCode: string | null; active?: boolean; facultyId?: string | null; modality?: string | null;
+    recordCode?: string | null; active?: boolean; facultyId?: string | null; modality?: string | null;
     campus?: string | null; campusOptions: Array<{ value: string; label: string }>;
     startsOn?: string | null; endsOn?: string | null; teachingWeeks?: number | null;
     faculties: CatalogRecord[]; coordinator?: { id: string; name: string } | null;
@@ -47,7 +47,7 @@ const remove = async (): Promise<void> => {
         </TableActionsMenu>
 
         <CoordinatorReplacementSheet v-if="entity === 'carrera'" :key="`coordinator-${recordId}`" v-model:open="coordinatorOpen" :career-id="recordId" :career-name="recordName" :coordinator="coordinator ?? null" :users="coordinatorUsers ?? []" @saved="emit('changed', $event)" />
-        <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode" :faculty-id="facultyId" :modality="modality" :campus="campus" :campus-options="campusOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :teaching-weeks="teachingWeeks" :faculties="faculties" :show-trigger="false" @saved="emit('changed', $event)" />
+        <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :campus-options="campusOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :teaching-weeks="teachingWeeks" :faculties="faculties" :show-trigger="false" @saved="emit('changed', $event)" />
 
         <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar registro institucional</DialogTitle><DialogDescription>Se eliminará «{{ recordName }}». La operación se rechazará si tiene carreras, materias programadas, procesos u otro historial relacionado.</DialogDescription></DialogHeader>
             <p v-if="error" class="mb-4 text-sm text-destructive">{{ error }}</p>

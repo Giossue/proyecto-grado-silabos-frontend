@@ -8,7 +8,6 @@ describe('CurriculumActions', () => {
       props: {
         curriculum: {
           id: 'curriculum-1',
-          code: 'SW-8C',
           cycle_count: 8,
           editable: true,
           lock_reason: 'Convocatoria activa',

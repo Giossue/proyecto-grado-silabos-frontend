@@ -55,7 +55,7 @@ const facultyName = (facultyId: string): string =>
 
 const facultyFilter = useClientFilter(
     () => props.catalogs.faculties,
-    (item) => [item.nombre, item.campus, item.codigo_facultad, item.codigo],
+    (item) => [item.nombre, item.campus],
     {
         estado: {
             matches: (item, value) => item.activo === (value === 'active'),
@@ -102,7 +102,7 @@ const {
                 :filter="facultyFilter"
                 input-id="faculties-search"
                 label="Buscar facultad"
-                placeholder="Buscar por nombre o código"
+                placeholder="Buscar por nombre"
             >
                 <template #filters>
                     <Field>
@@ -135,7 +135,6 @@ const {
                     <TableRow>
                         <TableHead>Facultad</TableHead>
                         <TableHead>Campus</TableHead>
-                        <TableHead>Código de facultad</TableHead>
                         <TableHead>Carreras relacionadas</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead class="text-right">Acciones</TableHead>
@@ -144,7 +143,7 @@ const {
                 <TableBody>
                     <TableEmpty
                         v-if="facultyPage.length === 0"
-                        :colspan="6"
+                        :colspan="5"
                     >
                         {{ facultyFilter.active.value ? 'Ninguna facultad coincide con los filtros.' : 'No existen facultades registradas.' }}
                     </TableEmpty>
@@ -160,12 +159,6 @@ const {
                             {{ faculty.campus ?? 'Sin campus' }}
                         </TableCell>
                         <TableCell>
-                            {{
-                                faculty.codigo_facultad ||
-                                'Sin código de facultad'
-                            }}
-                        </TableCell>
-                        <TableCell>
                             {{ careerCount(faculty.id) }}
                         </TableCell>
                         <TableCell>
@@ -176,7 +169,6 @@ const {
                                 entity="facultad"
                                 :record-id="faculty.id"
                                 :record-name="faculty.nombre"
-                                :record-code="faculty.codigo_facultad ?? null"
                                 :active="faculty.activo"
                                 :campus="faculty.campus"
                                 :campus-options="options.campusOptions"

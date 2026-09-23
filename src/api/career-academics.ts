@@ -8,7 +8,6 @@ export type Curriculum = {
   };
   curriculum: {
     id: string;
-    code: string;
     cycle_count: number;
     editable: boolean;
     lock_reason: string | null;
@@ -163,7 +162,7 @@ export const deleteCareerRecord = (entity: string, id: string) =>
   });
 export const updateCurriculumConfiguration = (
   careerId: string,
-  payload: { code: string; cycle_count: number },
+  payload: { cycle_count: number },
 ) =>
   api<{ message: string }>(
     `/coordination/academic/curriculum/${careerId}/configuration`,

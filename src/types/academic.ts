@@ -5,7 +5,6 @@ export type Option = {
     label?: string;
     code?: string;
     codigo?: string;
-    codigo_facultad?: string;
     codigo_carrera?: string;
     codigo_asignatura?: string;
     email?: string;
@@ -24,8 +23,6 @@ export type Option = {
 
 export type CatalogRecord = {
     id: string;
-    codigo_facultad?: string | null;
-    codigo?: string | null;
     nombre: string;
     activo: boolean;
     /** Solo facultades: logo que encabeza el sílabo de sus carreras. */
@@ -61,7 +58,7 @@ export type AcademicStructureProps = {
             /** Quién coordina hoy; nulo si la carrera no tiene coordinación activa. */
             coordinator: { id: string; name: string } | null;
             campus_name: string | null;
-            code: string | null;
+            code: string;
             name: string;
             active: boolean;
         }[];
@@ -196,7 +193,6 @@ export type CurriculumBuilderProps = {
     };
     curriculum: {
         id: string;
-        code: string;
         cycle_count: number;
         editable: boolean;
         lock_reason: string | null;

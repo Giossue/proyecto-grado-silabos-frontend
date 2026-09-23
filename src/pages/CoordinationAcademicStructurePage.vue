@@ -46,7 +46,7 @@ const pageTitle = computed(() => ({
 const pageDescription = computed(() => {
   const career = curriculum.value?.career.name ?? 'la carrera activa';
   return {
-    curriculum: `${curriculum.value?.curriculum.code ?? 'Malla curricular'} · ${career}. Gestione las materias y sus relaciones en el constructor interactivo.`,
+    curriculum: `Malla curricular de ${career}. Gestione las materias y sus relaciones en el constructor interactivo.`,
     schedule: `Planifique qué materias se dictan cada período en ${career} y organice sus paralelos.`,
     teachers: `Quién dicta cada paralelo en ${career}.`,
   }[props.mode];
