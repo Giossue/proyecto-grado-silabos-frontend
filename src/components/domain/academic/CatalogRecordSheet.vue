@@ -4,6 +4,7 @@ import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { createAcademicRecord } from '@/api/academic';
 import DatePicker from '@/components/DatePicker.vue';
+import FileDropzone from '@/components/domain/FileDropzone.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -32,8 +33,11 @@ const labels = computed(() => ({
 const submitLabel = computed(() => ({ facultad: 'Crear facultad', carrera: 'Crear carrera', periodo: 'Crear periodo' })[props.entity]);
 const codeLabel = computed(() => props.entity === 'carrera' ? 'Código de carrera' : 'Código del período');
 
-const setLogo = (event: Event): void => {
-    logo.value = (event.target as HTMLInputElement).files?.[0] ?? null;
+const logoValidationError = (message: string | null): void => {
+    const nextErrors = { ...errors.value };
+    if (message) nextErrors.logo = [message];
+    else delete nextErrors.logo;
+    errors.value = nextErrors;
 };
 const reset = (): void => {
     form.value = { nombre: '', code: '', faculty_id: '', campus: '', modality: '', cycle_count: 8, starts_on: '', ends_on: '', teaching_weeks: 16 };
@@ -74,7 +78,7 @@ const submit = async (): Promise<void> => {
                     </Field>
                     <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.logo)">
                         <FieldLabel for="faculty-logo">Logo de la facultad (PNG sin fondo)</FieldLabel>
-                        <Input id="faculty-logo" type="file" accept="image/png" @change="setLogo" />
+                        <FileDropzone v-model="logo" input-id="faculty-logo" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" @validation-error="logoValidationError" />
                         <FieldDescription>Opcional para Administración. Si lo deja pendiente, Coordinación deberá cargarlo desde su Panel antes de abrir la convocatoria.</FieldDescription>
                         <FieldError :errors="errors.logo" />
                     </Field>

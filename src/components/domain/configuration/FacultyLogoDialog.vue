@@ -3,6 +3,7 @@ import { Save } from "@lucide/vue";
 import { ref } from "vue";
 import { ApiError } from "@/api/client";
 import { uploadFacultyLogo } from "@/api/career-academics";
+import FileDropzone from "@/components/domain/FileDropzone.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
 defineProps<{
@@ -28,7 +28,7 @@ const open = defineModel<boolean>("open", { default: false });
 const file = ref<File | null>(null);
 const saving = ref(false);
 const error = ref<string | null>(null);
-const choose = (event: Event) => { file.value = (event.target as HTMLInputElement).files?.[0] ?? null; };
+const fileValidationError = (message: string | null): void => { error.value = message; };
 const submit = async () => {
   if (!file.value) return;
   saving.value = true;
@@ -58,7 +58,7 @@ const submit = async () => {
           <div class="rounded-md border bg-background p-4"><img :src="currentUrl" :alt="configured ? `Logo actual de ${facultyName}` : 'Ejemplo del logo de facultad'" class="mx-auto max-h-28 max-w-full object-contain" /></div>
           <Field :data-invalid="Boolean(error)">
             <FieldLabel for="coordinator-faculty-logo" required>Logo (PNG sin fondo)</FieldLabel>
-            <Input id="coordinator-faculty-logo" type="file" accept="image/png" required :disabled="saving" :aria-invalid="Boolean(error)" @change="choose" />
+            <FileDropzone v-model="file" input-id="coordinator-faculty-logo" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="saving" :invalid="Boolean(error)" @validation-error="fileValidationError" />
             <FieldDescription>Se ajustará a {{ size.width }} × {{ size.height }} px conservando su proporción.</FieldDescription>
             <FieldError v-if="error" :errors="[error]" />
           </Field>

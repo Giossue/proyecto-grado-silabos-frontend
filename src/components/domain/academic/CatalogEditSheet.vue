@@ -4,6 +4,7 @@ import { computed, ref, watch } from 'vue';
 import { updateAcademicRecord } from '@/api/academic';
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
+import FileDropzone from '@/components/domain/FileDropzone.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -39,7 +40,12 @@ const reset = (): void => {
     errors.value = {};
 };
 watch(open, (value) => { if (value) reset(); }, { immediate: true });
-const setLogo = (event: Event): void => { logo.value = (event.target as HTMLInputElement).files?.[0] ?? null; };
+const logoValidationError = (message: string | null): void => {
+    const nextErrors = { ...errors.value };
+    if (message) nextErrors.logo = [message];
+    else delete nextErrors.logo;
+    errors.value = nextErrors;
+};
 const submit = async (): Promise<void> => {
     processing.value = true; errors.value = {};
     const payload = new FormData();
@@ -62,7 +68,7 @@ const submit = async (): Promise<void> => {
         <template #default="{ close }">
             <form @submit.prevent="submit"><FieldGroup>
                 <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.campus)"><FieldLabel :for="`edit-campus-${recordId}`" required>Campus</FieldLabel><Select v-model="form.campus" required><SelectTrigger :id="`edit-campus-${recordId}`"><SelectValue placeholder="Seleccione el campus de la facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in campusOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.campus" /></Field>
-                <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.logo)"><FieldLabel :for="`edit-faculty-logo-${recordId}`">Logo de la facultad (PNG sin fondo)</FieldLabel><img v-if="logoUrl" :src="logoUrl" alt="Logo actual de la facultad" class="h-12 w-auto rounded border bg-background p-1"><Input :id="`edit-faculty-logo-${recordId}`" type="file" accept="image/png" @change="setLogo" /><FieldError :errors="errors.logo" /></Field>
+                <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.logo)"><FieldLabel :for="`edit-faculty-logo-${recordId}`">Logo de la facultad (PNG sin fondo)</FieldLabel><img v-if="logoUrl" :src="logoUrl" alt="Logo actual de la facultad" class="h-12 w-auto rounded border bg-background p-1"><FileDropzone v-model="logo" :input-id="`edit-faculty-logo-${recordId}`" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" @validation-error="logoValidationError" /><FieldError :errors="errors.logo" /></Field>
                 <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.faculty_id)"><FieldLabel :for="`edit-faculty-${recordId}`" required>Facultad</FieldLabel><Select v-model="form.faculty_id" required><SelectTrigger :id="`edit-faculty-${recordId}`"><SelectValue placeholder="Seleccione una facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="faculty in facultyOptions" :key="faculty.id" :value="faculty.id">{{ faculty.nombre }} {{ faculty.activo ? '' : '(inactiva)' }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.faculty_id" /></Field>
                 <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.modality)"><FieldLabel :for="`edit-modality-${recordId}`" required>Modalidad</FieldLabel><Select v-model="form.modality" required><SelectTrigger :id="`edit-modality-${recordId}`"><SelectValue placeholder="Seleccione la modalidad aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in STUDY_MODALITIES" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.modality" /></Field>
                 <Field v-if="entity !== 'periodo'" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
