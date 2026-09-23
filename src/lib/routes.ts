@@ -74,7 +74,6 @@ export const paths = {
     curriculum: '/coordinacion/malla',
     scheduledSubjects: '/coordinacion/materias-paralelos',
     teacherAssignments: '/coordinacion/asignaciones-docentes',
-    reports: '/coordinacion/informes',
     documents: (revision: string): string =>
       `/coordinacion/revisiones/${segment(revision)}/documentos`,
   },
@@ -208,7 +207,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-curriculum', path: paths.coordination.curriculum, component: 'CoordinationAcademicStructurePage', states: ['curriculum'], breadcrumb: 'Malla', ...coordinator },
   { name: 'coordination-scheduled-subjects', path: paths.coordination.scheduledSubjects, component: 'CoordinationAcademicStructurePage', states: ['schedule'], breadcrumb: 'Materias y paralelos', ...coordinator },
   { name: 'coordination-teacher-assignments', path: paths.coordination.teacherAssignments, component: 'CoordinationAcademicStructurePage', states: ['teachers'], breadcrumb: 'Asignación docente', ...coordinator },
-  { name: 'coordination-reports', path: paths.coordination.reports, component: 'CoordinationReportsPage', breadcrumb: 'Informes', ...coordinator },
   { name: 'coordination-documents', path: '/coordinacion/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...coordinator },
 
   { name: 'teacher-panel', path: paths.teacher.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...teacher },

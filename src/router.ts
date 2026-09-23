@@ -31,7 +31,6 @@ const CoordinationReviewComparisonPage = () => import("@/pages/CoordinationRevie
 const CoordinationSourcesPage = () => import("@/pages/CoordinationSourcesPage.vue");
 const CoordinationSourceDetailPage = () => import("@/pages/CoordinationSourceDetailPage.vue");
 const CoordinationAcademicStructurePage = () => import("@/pages/CoordinationAcademicStructurePage.vue");
-const CoordinationReportsPage = () => import("@/pages/CoordinationReportsPage.vue");
 const DocumentsPage = () => import("@/pages/DocumentsPage.vue");
 const NotFoundPage = () => import("@/pages/NotFoundPage.vue");
 
@@ -109,7 +108,6 @@ export const router = createRouter({
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },
     { path: "/coordinacion/materias-paralelos", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y paralelos" } },
     { path: "/coordinacion/asignaciones-docentes", component: CoordinationAcademicStructurePage, props: { mode: "teachers" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Asignación docente" } },
-    { path: "/coordinacion/informes", component: CoordinationReportsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Informes" } },
     { path: "/coordinacion/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Documentos" } },
 
     // Docencia.

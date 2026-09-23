@@ -20,7 +20,6 @@ type LoadingVariant =
     | 'documents'
     | 'source'
     | 'template'
-    | 'report'
     | 'comparison';
 
 const props = withDefaults(
@@ -463,21 +462,6 @@ const gridColumns = (): string =>
                     </div>
                 </div>
             </template>
-
-            <template v-else-if="variant === 'report'">
-                <div class="rounded-xl border bg-card p-5">
-                    <div class="flex flex-col gap-4">
-                        <Skeleton class="h-6 w-48" />
-                        <Skeleton class="h-4 w-96 max-w-full" />
-                        <div class="grid gap-3 lg:grid-cols-[minmax(0,1fr)_12rem_12rem_auto]"><Skeleton v-for="control in 4" :key="`report-control-${control}`" class="h-10 w-full" /></div>
-                    </div>
-                </div>
-                <div v-for="card in 2" :key="`report-card-${card}`" class="rounded-xl border bg-card p-5">
-                    <div class="flex flex-col gap-2"><Skeleton class="h-6 w-56" /><Skeleton class="h-4 w-80 max-w-full" /></div>
-                    <div class="mt-5 overflow-hidden rounded-lg border"><Skeleton class="h-10 w-full rounded-none" /><div class="flex flex-col gap-px bg-border"><Skeleton v-for="row in 4" :key="`report-row-${card}-${row}`" class="h-14 w-full rounded-none" /></div></div>
-                </div>
-            </template>
-
 
             <!-- Comparación: resumen y tarjetas de cambios con dos columnas. -->
             <template v-else-if="variant === 'comparison'">

@@ -207,9 +207,6 @@ test.describe('frontera distribuida de identidad', () => {
     await mainNavigation(page).getByRole('link', { name: 'Revisión', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Revisión' })).toBeVisible();
 
-    await mainNavigation(page).getByRole('link', { name: 'Informes', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Informes' })).toBeVisible();
-
     await mainNavigation(page).getByRole('link', { name: 'Malla', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Malla' })).toBeVisible();
     expect(serverErrors).toEqual([]);

@@ -33,7 +33,6 @@ const aliases = {
     'coordinacion-materias-paralelos': 'coordinacion-materias-paralelos',
     'coordinacion-malla': 'coordinacion-malla',
     'coordinacion-fuentes': 'coordinacion-fuentes',
-    'coordinacion-informes': 'coordinacion-informes',
     'configuracion-perfil': 'coordinacion-configuracion-perfil',
     'configuracion-seguridad': 'coordinacion-configuracion-seguridad',
     'configuracion-apariencia': 'coordinacion-configuracion-apariencia',

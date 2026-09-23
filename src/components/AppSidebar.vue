@@ -3,7 +3,6 @@ import {
     BookOpenCheck,
     Building2,
     CalendarRange,
-    ChartNoAxesCombined,
     ClipboardCheck,
     FileStack,
     LayoutGrid,
@@ -62,13 +61,13 @@ const mainNavItems = computed<NavItem[]>(() => [
         : []),
     ...(activeRole.value?.code === 'coordinador'
         ? [
+              { title: 'Panel', href: paths.coordination.panel, icon: LayoutGrid },
               { title: 'Convocatorias', href: paths.coordination.convocations, icon: CalendarRange },
               { title: 'Revisión', href: paths.coordination.reviews, icon: ClipboardCheck },
               { title: 'Asignación docente', href: paths.coordination.teacherAssignments, icon: UsersRound },
               { title: 'Materias y paralelos', href: paths.coordination.scheduledSubjects, icon: Building2 },
               { title: 'Malla', href: paths.coordination.curriculum, icon: BookOpenCheck },
               { title: 'Fuentes académicas', href: paths.coordination.sources, icon: LibraryBig },
-              { title: 'Informes', href: paths.coordination.reports, icon: ChartNoAxesCombined },
           ]
         : []),
     ...(activeRole.value?.code === 'docente'
@@ -91,7 +90,7 @@ watch(() => route.fullPath, () => {
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton v-if="activeRole?.code === 'administrador'" size="lg" as-child>
+                    <SidebarMenuButton v-if="activeRole?.code === 'administrador' || activeRole?.code === 'coordinador'" size="lg" as-child>
                         <RouterLink :to="paths.dashboard"><AppLogo /></RouterLink>
                     </SidebarMenuButton>
                     <SidebarMenuButton v-else size="lg" as="div">

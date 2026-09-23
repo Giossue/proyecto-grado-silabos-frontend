@@ -84,18 +84,23 @@ describe('AppSidebarLayout', () => {
     expect(wrapper.get('[aria-label="Notificaciones"]').text()).toContain('3');
   });
 
-  it.each([
-    'coordinador',
-    'docente',
-  ] as const)('deja el checklist en el encabezado y retira el Panel del sidebar para %s', async (code) => {
+  it('muestra el Panel de Coordinación en el sidebar', async () => {
     sessionState.replace({
       ...administratorSession,
-      active_role: {
-        id: `role-${code}`,
-        code,
-        career_id: 'career-1',
-        career_name: 'Software',
-      },
+      active_role: { id: 'role-coordinador', code: 'coordinador', career_id: 'career-1', career_name: 'Software' },
+    });
+    const wrapper = await mountShell();
+    await flushPromises();
+
+    const sidebar = wrapper.find('[data-sidebar="sidebar"]');
+    expect(sidebar.text()).toContain('Panel');
+    expect(sidebar.find('a[href="/coordinacion/panel"]').exists()).toBe(true);
+  });
+
+  it('deja el checklist en el encabezado y retira el Panel del sidebar para docente', async () => {
+    sessionState.replace({
+      ...administratorSession,
+      active_role: { id: 'role-docente', code: 'docente', career_id: 'career-1', career_name: 'Software' },
     });
     const wrapper = await mountShell();
     await flushPromises();

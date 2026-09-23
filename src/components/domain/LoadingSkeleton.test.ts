@@ -20,7 +20,6 @@ const variants = [
   'documents',
   'source',
   'template',
-  'report',
   'comparison',
 ] as const;
 
