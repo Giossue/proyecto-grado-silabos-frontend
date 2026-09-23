@@ -55,7 +55,7 @@ const facultyName = (facultyId: string): string =>
 
 const facultyFilter = useClientFilter(
     () => props.catalogs.faculties,
-    (item) => [item.nombre, item.codigo_facultad, item.codigo],
+    (item) => [item.nombre, item.campus, item.codigo_facultad, item.codigo],
     {
         estado: {
             matches: (item, value) => item.activo === (value === 'active'),
@@ -83,21 +83,6 @@ const {
     meta: careerMeta,
     setPage: setCareerPage,
 } = useClientPagination(() => careerFilter.items.value);
-const campusFilter = useClientFilter(
-    () => props.catalogs.campuses,
-    (item) => [item.nombre, item.codigo_campus, item.codigo],
-    {
-        estado: {
-            matches: (item, value) => item.activo === (value === 'active'),
-        },
-    },
-);
-
-const {
-    items: campusPage,
-    meta: campusMeta,
-    setPage: setCampusPage,
-} = useClientPagination(() => campusFilter.items.value);
 const periodFilter = useClientFilter(
     () => props.catalogs.periods,
     (item) => [item.code],
@@ -149,6 +134,7 @@ const {
                 <TableHeader>
                     <TableRow>
                         <TableHead>Facultad</TableHead>
+                        <TableHead>Campus</TableHead>
                         <TableHead>Código de facultad</TableHead>
                         <TableHead>Carreras relacionadas</TableHead>
                         <TableHead>Estado</TableHead>
@@ -158,7 +144,7 @@ const {
                 <TableBody>
                     <TableEmpty
                         v-if="facultyPage.length === 0"
-                        :colspan="5"
+                        :colspan="6"
                     >
                         {{ facultyFilter.active.value ? 'Ninguna facultad coincide con los filtros.' : 'No existen facultades registradas.' }}
                     </TableEmpty>
@@ -169,6 +155,9 @@ const {
                     >
                         <TableCell>
                             {{ faculty.nombre }}
+                        </TableCell>
+                        <TableCell>
+                            {{ faculty.campus ?? 'Sin campus' }}
                         </TableCell>
                         <TableCell>
                             {{
@@ -189,6 +178,8 @@ const {
                                 :record-name="faculty.nombre"
                                 :record-code="faculty.codigo_facultad ?? null"
                                 :active="faculty.activo"
+                                :campus="faculty.campus"
+                                :campus-options="options.campusOptions"
                                 :logo-url="faculty.logo_url"
                                 :faculties="catalogs.faculties"
                                 :lock-reason="lock_reason"
@@ -249,7 +240,7 @@ const {
                         <TableHead>Modalidad</TableHead>
                         <TableHead>Campus</TableHead>
                         <TableHead>Coordinación</TableHead>
-                        <TableHead>Código de campus</TableHead>
+                        <TableHead>Código de carrera</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead class="text-right">Acciones</TableHead>
                     </TableRow>
@@ -296,9 +287,8 @@ const {
                                 :active="career.active"
                                 :faculty-id="career.faculty_id"
                                 :modality="career.modality"
-                                :campus-id="career.campus_id"
                                 :faculties="catalogs.faculties"
-                                :campuses="catalogs.campuses"
+                                :campus-options="options.campusOptions"
                                 :coordinator="career.coordinator"
                                 :coordinator-users="options.coordinatorUsers"
                                 :lock-reason="lock_reason"
@@ -313,94 +303,6 @@ const {
                 mode="client"
                 label="Paginación de carreras"
                 @update:page="setCareerPage"
-            />
-        </CardContent>
-    </Card>
-
-    <Card v-else-if="section === 'campuses'">
-        <CardContent class="flex flex-col gap-4">
-            <ClientFilterBar
-                :filter="campusFilter"
-                input-id="campuses-search"
-                label="Buscar campus"
-                placeholder="Buscar por nombre o código"
-            >
-                <template #filters>
-                    <Field>
-                        <FieldLabel for="campuses-search-state" class="sr-only"
-                            >Estado</FieldLabel
-                        >
-                        <Select v-model="campusFilter.values.estado.value">
-                            <SelectTrigger id="campuses-search-state">
-                                <SelectValue placeholder="Todos los estados" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    <SelectItem value="all"
-                                        >Todos los estados</SelectItem
-                                    >
-                                    <SelectItem value="active"
-                                        >Activos</SelectItem
-                                    >
-                                    <SelectItem value="inactive"
-                                        >Inactivos</SelectItem
-                                    >
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                    </Field>
-                </template>
-            </ClientFilterBar>
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Campus</TableHead>
-                        <TableHead>Código de campus</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead class="text-right">Acciones</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableEmpty
-                        v-if="campusPage.length === 0"
-                        :colspan="4"
-                    >
-                        {{ campusFilter.active.value ? 'Ningún campus coincide con los filtros.' : 'No existen campus registrados.' }}
-                    </TableEmpty>
-                    <TableRow
-                        v-for="campus in campusPage"
-                        v-else
-                        :key="campus.id"
-                    >
-                        <TableCell>
-                            {{ campus.nombre }}
-                        </TableCell>
-                        <TableCell>
-                            {{ campus.codigo_campus || 'Sin código de campus' }}
-                        </TableCell>
-                        <TableCell>
-                            {{ campus.activo ? 'Activo' : 'Inactivo' }}
-                        </TableCell>
-                        <TableCell class="text-right">
-                            <CatalogActions
-                                entity="campus"
-                                :record-id="campus.id"
-                                :record-name="campus.nombre"
-                                :record-code="campus.codigo_campus ?? null"
-                                :active="campus.activo"
-                                :faculties="catalogs.faculties"
-                                :lock-reason="lock_reason"
-                                @changed="emit('changed', $event)"
-                            />
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-            <TablePagination
-                :meta="campusMeta"
-                mode="client"
-                label="Paginación de campus"
-                @update:page="setCampusPage"
             />
         </CardContent>
     </Card>
@@ -461,6 +363,7 @@ const {
                                 :ends-on="period.ends_on"
                                 :teaching-weeks="period.teaching_weeks"
                                 :faculties="catalogs.faculties"
+                                :campus-options="options.campusOptions"
                                 :lock-reason="lock_reason"
                                 @changed="emit('changed', $event)"
                             />

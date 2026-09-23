@@ -114,7 +114,7 @@ watch(open, (value) => value && reset());
     wide
     trigger-label="Preparar período"
     title="Preparar período académico"
-    description="Seleccione materias aún no programadas y configure sus paralelos. Campus y modalidad se heredan de la carrera."
+    description="Seleccione materias aún no programadas y configure sus paralelos. El campus viene de la facultad y la modalidad de la carrera o materia."
   >
     <template #trigger>
       <Button :disabled="props.disabled"><CalendarCheck data-icon="inline-start" aria-hidden="true" />Preparar período</Button>

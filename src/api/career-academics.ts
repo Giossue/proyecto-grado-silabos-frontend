@@ -60,7 +60,6 @@ export type ScheduledSubjects = {
     id: string;
     subject_id: string;
     period_id: string;
-    campus_id: string;
     label: string;
     subject_code: string;
     subject_name: string;
@@ -86,7 +85,6 @@ export type ScheduledSubjects = {
       status_label: string;
       planning_enabled: boolean;
     }>;
-    campuses: Array<{ id: string; nombre: string }>;
     activeSubjects: Array<{
       id: string;
       codigo_asignatura: string;

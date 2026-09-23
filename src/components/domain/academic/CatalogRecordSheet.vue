@@ -19,7 +19,7 @@ const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const open = ref(false);
 const form = ref({
-    nombre: '', code: '', faculty_id: '', campus_id: '', modality: '',
+    nombre: '', code: '', faculty_id: '', campus: '', modality: '',
     curriculum_code: '', cycle_count: 8, starts_on: '', ends_on: '', teaching_weeks: 16,
 });
 const logo = ref<File | null>(null);
@@ -27,17 +27,16 @@ const logo = ref<File | null>(null);
 const labels = computed(() => ({
     facultad: { trigger: 'Nueva facultad', title: 'Nueva facultad', description: 'Registre una unidad académica que agrupará sus carreras.' },
     carrera: { trigger: 'Nueva carrera', title: 'Nueva carrera', description: 'Registre una carrera dentro de una facultad activa.' },
-    campus: { trigger: 'Nuevo campus', title: 'Nuevo campus', description: 'Registre una sede institucional disponible para las carreras y programas.' },
     periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico', description: 'Registre una ventana temporal institucional con fechas válidas.' },
 })[props.entity]);
-const submitLabel = computed(() => ({ facultad: 'Crear facultad', carrera: 'Crear carrera', campus: 'Crear campus', periodo: 'Crear periodo' })[props.entity]);
-const codeLabel = computed(() => ({ facultad: 'Código de facultad', carrera: 'Código de carrera', campus: 'Código de campus', periodo: 'Código estable' })[props.entity]);
+const submitLabel = computed(() => ({ facultad: 'Crear facultad', carrera: 'Crear carrera', periodo: 'Crear periodo' })[props.entity]);
+const codeLabel = computed(() => ({ facultad: 'Código de facultad', carrera: 'Código de carrera', periodo: 'Código estable' })[props.entity]);
 
 const setLogo = (event: Event): void => {
     logo.value = (event.target as HTMLInputElement).files?.[0] ?? null;
 };
 const reset = (): void => {
-    form.value = { nombre: '', code: '', faculty_id: '', campus_id: '', modality: '', curriculum_code: '', cycle_count: 8, starts_on: '', ends_on: '', teaching_weeks: 16 };
+    form.value = { nombre: '', code: '', faculty_id: '', campus: '', modality: '', curriculum_code: '', cycle_count: 8, starts_on: '', ends_on: '', teaching_weeks: 16 };
     logo.value = null;
 };
 const submit = async (): Promise<void> => {
@@ -65,6 +64,11 @@ const submit = async (): Promise<void> => {
         <template #default="{ close }">
             <form @submit.prevent="submit">
                 <FieldGroup>
+                    <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.campus)">
+                        <FieldLabel for="catalog-campus" required>Campus</FieldLabel>
+                        <Select v-model="form.campus" required><SelectTrigger id="catalog-campus"><SelectValue placeholder="Seleccione el campus de la facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in options.campusOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select>
+                        <FieldError :errors="errors.campus" />
+                    </Field>
                     <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.logo)">
                         <FieldLabel for="faculty-logo">Logo de la facultad (PNG sin fondo)</FieldLabel>
                         <Input id="faculty-logo" type="file" accept="image/png" @change="setLogo" />
@@ -80,11 +84,6 @@ const submit = async (): Promise<void> => {
                         <FieldLabel for="catalog-modality" required>Modalidad</FieldLabel>
                         <Select v-model="form.modality" required><SelectTrigger id="catalog-modality"><SelectValue placeholder="Seleccione la modalidad aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in STUDY_MODALITIES" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select>
                         <FieldError :errors="errors.modality" />
-                    </Field>
-                    <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.campus_id)">
-                        <FieldLabel for="catalog-campus" required>Campus</FieldLabel>
-                        <Select v-model="form.campus_id" required><SelectTrigger id="catalog-campus"><SelectValue placeholder="Seleccione la sede aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in options.campuses" :key="item.id" :value="item.id">{{ item.nombre }}</SelectItem></SelectGroup></SelectContent></Select>
-                        <FieldError :errors="errors.campus_id" />
                     </Field>
                     <Field v-if="entity !== 'periodo'" :data-invalid="Boolean(errors.nombre)"><FieldLabel for="catalog-name" required>Nombre</FieldLabel><Input id="catalog-name" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
                     <Field :data-invalid="Boolean(errors.code)"><FieldLabel for="catalog-code" :required="entity === 'periodo'">{{ codeLabel }}</FieldLabel><Input id="catalog-code" v-model="form.code" :required="entity === 'periodo'" /><FieldError :errors="errors.code" /></Field>

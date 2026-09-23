@@ -3,10 +3,10 @@ import type { AcademicStructureProps } from '@/types/academic';
 
 export type AcademicGovernance = Pick<AcademicStructureProps, 'lock_reason' | 'catalogs' | 'options'> & {
   lock_reason: string | null;
-  section: 'faculties' | 'careers' | 'campuses' | 'academic-periods';
+  section: 'faculties' | 'careers' | 'academic-periods';
 };
 
-export type AcademicEntity = 'facultad' | 'campus' | 'carrera' | 'periodo';
+export type AcademicEntity = 'facultad' | 'carrera' | 'periodo';
 
 export const getAcademicGovernance = () =>
   api<AcademicGovernance>('/admin/academic');

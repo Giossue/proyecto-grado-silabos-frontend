@@ -18,14 +18,14 @@ describe('academic API', () => {
     api.mockResolvedValue({ message: 'ok' });
 
     await updateAcademicRecord('carrera', 'career-1', { nombre: 'Software' });
-    await setAcademicRecordStatus('campus', 'campus-1', false);
+    await setAcademicRecordStatus('facultad', 'faculty-1', false);
     await deleteAcademicRecord('periodo', 'period-1');
 
     expect(api).toHaveBeenNthCalledWith(1, '/admin/academic/carrera/career-1', {
       method: 'PATCH',
       body: JSON.stringify({ nombre: 'Software' }),
     });
-    expect(api).toHaveBeenNthCalledWith(2, '/admin/academic/campus/campus-1/status', {
+    expect(api).toHaveBeenNthCalledWith(2, '/admin/academic/facultad/faculty-1/status', {
       method: 'PATCH',
       body: JSON.stringify({ active: false }),
     });

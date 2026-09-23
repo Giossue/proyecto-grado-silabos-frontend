@@ -21,14 +21,14 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 
 const sectionMap: Record<AcademicEntity, GovernanceSection> = {
-    facultad: 'faculties', carrera: 'careers', campus: 'campuses', periodo: 'academic-periods',
+    facultad: 'faculties', carrera: 'careers', periodo: 'academic-periods',
 };
 const routeSections: Array<{ value: AcademicEntity; label: string }> = [
-    { value: 'facultad', label: 'Facultades' }, { value: 'campus', label: 'Campus' },
-    { value: 'carrera', label: 'Carreras' }, { value: 'periodo', label: 'Períodos' },
+    { value: 'facultad', label: 'Facultades' }, { value: 'carrera', label: 'Carreras' },
+    { value: 'periodo', label: 'Períodos' },
 ];
 const routeParamSections: Record<string, AcademicEntity> = {
-    facultades: 'facultad', campus: 'campus', carreras: 'carrera', 'periodos-academicos': 'periodo',
+    facultades: 'facultad', carreras: 'carrera', 'periodos-academicos': 'periodo',
 };
 const entity = computed<AcademicEntity>(() =>
     typeof route.query.seccion === 'string' && routeSections.some((item) => item.value === route.query.seccion)
@@ -39,7 +39,6 @@ const section = computed(() => sectionMap[entity.value]);
 const sectionContent = computed(() => ({
     facultad: { title: 'Facultades', description: 'Las facultades de la universidad y cuántas carreras tiene cada una.' },
     carrera: { title: 'Carreras', description: 'Las carreras y a qué facultad pertenece cada una.' },
-    campus: { title: 'Campus', description: 'Las sedes donde se dictan clases.' },
     periodo: { title: 'Periodos académicos', description: 'Los periodos lectivos y sus fechas. El ciclo de una materia no va aquí, va en la malla.' },
 })[entity.value]);
 

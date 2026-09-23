@@ -23,7 +23,6 @@ const facultyLogoOpen = ref(false);
 const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, correction_requested: CircleAlert, teachers_pending: UsersRound };
 const setupRoutes: Record<string, string> = {
   faculties: paths.admin.academic,
-  campuses: paths.admin.academic,
   careers: paths.admin.academic,
   coordinators: paths.admin.users,
   template: paths.admin.template,

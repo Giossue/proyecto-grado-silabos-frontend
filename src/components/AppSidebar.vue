@@ -48,7 +48,6 @@ const mainNavItems = computed<NavItem[]>(() => [
                   icon: Building2,
                   items: [
                       { title: 'Facultades', href: paths.admin.academicWithSection('facultad') },
-                      { title: 'Campus', href: paths.admin.academicWithSection('campus') },
                       { title: 'Carreras', href: paths.admin.academicWithSection('carrera') },
                       { title: 'Periodos académicos', href: paths.admin.academicWithSection('periodo') },
                   ],

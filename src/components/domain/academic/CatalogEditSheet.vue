@@ -14,25 +14,26 @@ import type { CatalogRecord, GovernanceCatalogEntity } from '@/types/academic';
 
 const props = withDefaults(defineProps<{
     entity: GovernanceCatalogEntity; recordId: string; recordName: string; recordCode: string | null;
-    facultyId?: string | null; modality?: string | null; campusId?: string | null;
+    facultyId?: string | null; modality?: string | null; campus?: string | null;
     startsOn?: string | null; endsOn?: string | null; teachingWeeks?: number | null;
-    faculties: CatalogRecord[]; campuses?: CatalogRecord[]; logoUrl?: string | null; showTrigger?: boolean;
-}>(), { showTrigger: true, campuses: () => [] });
+    faculties: CatalogRecord[]; campusOptions: Array<{ value: string; label: string }>;
+    logoUrl?: string | null; showTrigger?: boolean;
+}>(), { showTrigger: true });
 const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const logo = ref<File | null>(null);
-const form = ref({ nombre: '', code: '', faculty_id: '', campus_id: '', modality: '', starts_on: '', ends_on: '', teaching_weeks: 16 });
+const form = ref({ nombre: '', code: '', faculty_id: '', campus: '', modality: '', starts_on: '', ends_on: '', teaching_weeks: 16 });
 
-const entityLabel = computed(() => ({ facultad: 'facultad', carrera: 'carrera', campus: 'campus', periodo: 'periodo académico' })[props.entity]);
-const codeLabel = computed(() => ({ facultad: 'Código de facultad', carrera: 'Código de carrera', campus: 'Código de campus', periodo: 'Código estable' })[props.entity]);
+const entityLabel = computed(() => ({ facultad: 'facultad', carrera: 'carrera', periodo: 'periodo académico' })[props.entity]);
+const codeLabel = computed(() => ({ facultad: 'Código de facultad', carrera: 'Código de carrera', periodo: 'Código estable' })[props.entity]);
 const facultyOptions = computed(() => props.faculties.filter((faculty) => faculty.activo || faculty.id === props.facultyId));
 
 const reset = (): void => {
     form.value = {
         nombre: props.recordName, code: props.recordCode ?? '', faculty_id: props.facultyId ?? '',
-        campus_id: props.campusId ?? '', modality: props.modality ?? '', starts_on: props.startsOn ?? '',
+        campus: props.campus ?? '', modality: props.modality ?? '', starts_on: props.startsOn ?? '',
         ends_on: props.endsOn ?? '', teaching_weeks: props.teachingWeeks ?? 16,
     };
     logo.value = null;
@@ -58,10 +59,10 @@ const submit = async (): Promise<void> => {
     <FormSheet v-model:open="open" trigger-label="Editar" :title="`Editar ${entityLabel}`" description="Actualice los datos institucionales. Los cambios quedarán registrados en auditoría." :show-trigger="showTrigger">
         <template #default="{ close }">
             <form @submit.prevent="submit"><FieldGroup>
+                <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.campus)"><FieldLabel :for="`edit-campus-${recordId}`" required>Campus</FieldLabel><Select v-model="form.campus" required><SelectTrigger :id="`edit-campus-${recordId}`"><SelectValue placeholder="Seleccione el campus de la facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in campusOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.campus" /></Field>
                 <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.logo)"><FieldLabel :for="`edit-faculty-logo-${recordId}`">Logo de la facultad (PNG sin fondo)</FieldLabel><img v-if="logoUrl" :src="logoUrl" alt="Logo actual de la facultad" class="h-12 w-auto rounded border bg-background p-1"><Input :id="`edit-faculty-logo-${recordId}`" type="file" accept="image/png" @change="setLogo" /><FieldError :errors="errors.logo" /></Field>
                 <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.faculty_id)"><FieldLabel :for="`edit-faculty-${recordId}`" required>Facultad</FieldLabel><Select v-model="form.faculty_id" required><SelectTrigger :id="`edit-faculty-${recordId}`"><SelectValue placeholder="Seleccione una facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="faculty in facultyOptions" :key="faculty.id" :value="faculty.id">{{ faculty.nombre }} {{ faculty.activo ? '' : '(inactiva)' }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.faculty_id" /></Field>
                 <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.modality)"><FieldLabel :for="`edit-modality-${recordId}`" required>Modalidad</FieldLabel><Select v-model="form.modality" required><SelectTrigger :id="`edit-modality-${recordId}`"><SelectValue placeholder="Seleccione la modalidad aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in STUDY_MODALITIES" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.modality" /></Field>
-                <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.campus_id)"><FieldLabel :for="`edit-campus-${recordId}`" required>Campus</FieldLabel><Select v-model="form.campus_id" required><SelectTrigger :id="`edit-campus-${recordId}`"><SelectValue placeholder="Seleccione la sede aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="campus in campuses" :key="campus.id" :value="campus.id">{{ campus.nombre }} {{ campus.activo ? '' : '(inactivo)' }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.campus_id" /></Field>
                 <Field v-if="entity !== 'periodo'" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
                 <Field :data-invalid="Boolean(errors.code)"><FieldLabel :for="`edit-code-${recordId}`" :required="entity === 'periodo'">{{ codeLabel }}</FieldLabel><Input :id="`edit-code-${recordId}`" v-model="form.code" :required="entity === 'periodo'" /><FieldError :errors="errors.code" /></Field>
                 <template v-if="entity === 'periodo'">

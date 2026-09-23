@@ -6,7 +6,6 @@ export type Option = {
     code?: string;
     codigo?: string;
     codigo_facultad?: string;
-    codigo_campus?: string;
     codigo_carrera?: string;
     codigo_asignatura?: string;
     email?: string;
@@ -26,19 +25,20 @@ export type Option = {
 export type CatalogRecord = {
     id: string;
     codigo_facultad?: string | null;
-    codigo_campus?: string | null;
     codigo?: string | null;
     nombre: string;
     activo: boolean;
     /** Solo facultades: logo que encabeza el sílabo de sus carreras. */
     logo_url?: string | null;
+    /** Solo facultades: campus institucional obligatorio. */
+    campus?: string | null;
 };
 
 export type GovernanceCatalogEntity =
-    'facultad' | 'carrera' | 'campus' | 'periodo';
+    'facultad' | 'carrera' | 'periodo';
 
 export type GovernanceSection =
-    'faculties' | 'careers' | 'campuses' | 'academic-periods';
+    'faculties' | 'careers' | 'academic-periods';
 
 export type AcademicStructureProps = {
     selectedPeriodId?: string | null;
@@ -60,13 +60,11 @@ export type AcademicStructureProps = {
             modality_label: string | null;
             /** Quién coordina hoy; nulo si la carrera no tiene coordinación activa. */
             coordinator: { id: string; name: string } | null;
-            campus_id: string | null;
             campus_name: string | null;
             code: string | null;
             name: string;
             active: boolean;
         }[];
-        campuses: CatalogRecord[];
         periods: {
             id: string;
             code: string;
@@ -92,7 +90,6 @@ export type AcademicStructureProps = {
         id: string;
         subject_id: string;
         period_id: string;
-        campus_id: string;
         label: string;
         subject_code: string;
         subject_name: string;
@@ -147,7 +144,7 @@ export type AcademicStructureProps = {
         faculties: Option[];
         careers: Option[];
         periods: Option[];
-        campuses: Option[];
+        campusOptions: Array<{ value: string; label: string }>;
         currentCurricula: Option[];
         activeSubjects: Option[];
         scheduledSubjects: Option[];
@@ -220,4 +217,3 @@ export type CurriculumBuilderProps = {
     modalityOptions: { value: string; label: string }[];
     options: AcademicStructureProps['options'];
 };
-

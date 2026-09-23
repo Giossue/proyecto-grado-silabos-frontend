@@ -14,7 +14,7 @@ export type CareerAcademicEntity = 'asignatura' | 'programacion_asignatura' | 'p
 export type CareerAcademicEditableRecord = {
     id: string; code?: string; shift?: string | null; name?: string; cycle?: number | null;
     credits?: string | null; total_hours?: number | null; subject_id?: string; period_id?: string;
-    campus_id?: string; scheduled_subject_id?: string; user_id?: string; parallel_id?: string;
+    scheduled_subject_id?: string; user_id?: string; parallel_id?: string;
     parallels?: { id: string; code: string; shift: string | null }[];
 };
 export type CareerAcademicOptions = {
@@ -35,7 +35,7 @@ const planningPeriods = computed(() => (props.options.periods ?? []).filter((per
 const reset = (): void => { form.value = {
     code: props.record.code ?? '', shift: props.record.shift ?? '', nombre: props.record.name ?? '', cycle: props.record.cycle ?? '',
     creditos: props.record.credits ?? '', horas_totales: props.record.total_hours ?? '', subject_id: props.record.subject_id ?? '',
-    period_id: props.record.period_id ?? '', campus_id: props.record.campus_id ?? '', scheduled_subject_id: props.record.scheduled_subject_id ?? '',
+    period_id: props.record.period_id ?? '', scheduled_subject_id: props.record.scheduled_subject_id ?? '',
     user_id: props.record.user_id ?? '', parallel_id: props.record.parallel_id ?? '',
 }; errors.value = {}; };
 watch(open, (value) => { if (value) reset(); });
