@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { getLocalTimeZone, today } from '@internationalized/date';
 import { Plus } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { createAcademicRecord } from '@/api/academic';
 import DatePicker from '@/components/DatePicker.vue';
@@ -24,6 +25,14 @@ const form = ref({
     cycle_count: 8, starts_on: '', ends_on: '',
 });
 const logo = ref<File | null>(null);
+const minimumPeriodDate = today(getLocalTimeZone()).toString();
+const minimumPeriodEndDate = computed(() => form.value.starts_on || minimumPeriodDate);
+
+watch(() => form.value.starts_on, (startsOn) => {
+    if (startsOn && form.value.ends_on && form.value.ends_on < startsOn) {
+        form.value.ends_on = '';
+    }
+});
 
 const labels = computed(() => ({
     facultad: { trigger: 'Nueva facultad', title: 'Nueva facultad', description: 'Registre una unidad académica que agrupará sus carreras.' },
@@ -98,8 +107,8 @@ const submit = async (): Promise<void> => {
                         <Field :data-invalid="Boolean(errors.cycle_count)"><FieldLabel for="catalog-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="catalog-cycle-count" v-model="form.cycle_count" type="number" min="1" max="30" step="1" required /><FieldError :errors="errors.cycle_count" /></Field>
                     </template>
                     <template v-if="entity === 'periodo'">
-                        <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" required /><FieldError :errors="errors.starts_on" /></Field>
-                        <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel for="catalog-ends-on" required>Fecha de fin</FieldLabel><DatePicker id="catalog-ends-on" v-model="form.ends_on" required /><FieldError :errors="errors.ends_on" /></Field>
+                        <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" :min-value="minimumPeriodDate" :aria-invalid="Boolean(errors.starts_on)" required /><FieldDescription>Debe ser hoy o una fecha posterior.</FieldDescription><FieldError :errors="errors.starts_on" /></Field>
+                        <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel for="catalog-ends-on" required>Fecha de fin</FieldLabel><DatePicker id="catalog-ends-on" v-model="form.ends_on" :min-value="minimumPeriodEndDate" :aria-invalid="Boolean(errors.ends_on)" required /><FieldError :errors="errors.ends_on" /></Field>
                     </template>
                     <FormSheetActions :close="close" :processing="processing" :icon="Plus" :label="submitLabel" />
                 </FieldGroup>

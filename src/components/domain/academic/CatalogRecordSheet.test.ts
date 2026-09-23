@@ -1,5 +1,8 @@
 import { flushPromises, mount } from '@vue/test-utils';
+import { getLocalTimeZone, today } from '@internationalized/date';
+import { nextTick } from 'vue';
 import { afterEach, describe, expect, it } from 'vitest';
+import DatePicker from '@/components/DatePicker.vue';
 import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
 import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
 
@@ -74,6 +77,28 @@ describe('academic catalog code fields', () => {
     expect(document.body.querySelector('input#catalog-teaching-weeks')).toBeNull();
     expect(document.body.textContent).not.toContain('Código del período');
     expect(document.body.textContent).not.toContain('Semanas lectivas calculadas');
+    period.unmount();
+  });
+
+  it('limits a new period to today and keeps its end after its start', async () => {
+    const period = mount(CatalogRecordSheet, {
+      attachTo: document.body,
+      props: { entity: 'periodo', options, open: true },
+    });
+    await flushPromises();
+
+    const datePickers = period.findAllComponents(DatePicker);
+    const localToday = today(getLocalTimeZone()).toString();
+    expect(datePickers).toHaveLength(2);
+    expect(datePickers[0].props('minValue')).toBe(localToday);
+    expect(datePickers[1].props('minValue')).toBe(localToday);
+
+    datePickers[1].vm.$emit('update:modelValue', '2029-12-18');
+    datePickers[0].vm.$emit('update:modelValue', '2030-01-10');
+    await nextTick();
+
+    expect(datePickers[1].props('minValue')).toBe('2030-01-10');
+    expect(datePickers[1].props('modelValue')).toBe('');
     period.unmount();
   });
 
