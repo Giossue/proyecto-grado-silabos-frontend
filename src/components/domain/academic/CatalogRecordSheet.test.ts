@@ -45,6 +45,20 @@ describe('academic catalog code fields', () => {
     career.unmount();
   });
 
+  it('does not ask for a period code and explains teaching weeks', async () => {
+    const period = mount(CatalogRecordSheet, {
+      attachTo: document.body,
+      props: { entity: 'periodo', options, open: true },
+    });
+    await flushPromises();
+
+    expect(document.body.querySelector('#catalog-code')).toBeNull();
+    expect(document.body.textContent).not.toContain('Código del período');
+    expect(document.body.textContent).toContain('La etiqueta se generará automáticamente');
+    expect(document.body.textContent).toContain('semanas efectivas de clases');
+    period.unmount();
+  });
+
   it('omits faculty code on edit', async () => {
     const wrapper = mount(CatalogEditSheet, {
       attachTo: document.body,
@@ -61,6 +75,29 @@ describe('academic catalog code fields', () => {
 
     expect(document.body.querySelector('#edit-code-faculty-1')).toBeNull();
     expect(document.body.textContent).not.toContain('Código de facultad');
+    wrapper.unmount();
+  });
+
+  it('does not ask for a period code on edit', async () => {
+    const wrapper = mount(CatalogEditSheet, {
+      attachTo: document.body,
+      props: {
+        entity: 'periodo',
+        recordId: 'period-1',
+        recordName: 'Agosto-Diciembre II 2026',
+        startsOn: '2026-08-17',
+        endsOn: '2026-12-18',
+        teachingWeeks: 16,
+        faculties: [],
+        campusOptions: [],
+        open: true,
+      },
+    });
+    await flushPromises();
+
+    expect(document.body.querySelector('#edit-code-period-1')).toBeNull();
+    expect(document.body.textContent).toContain('La etiqueta se genera automáticamente');
+    expect(document.body.textContent).toContain('semanas efectivas de clases');
     wrapper.unmount();
   });
 });

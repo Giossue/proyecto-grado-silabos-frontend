@@ -28,10 +28,9 @@ const logo = ref<File | null>(null);
 const labels = computed(() => ({
     facultad: { trigger: 'Nueva facultad', title: 'Nueva facultad', description: 'Registre una unidad académica que agrupará sus carreras.' },
     carrera: { trigger: 'Nueva carrera', title: 'Nueva carrera', description: 'Registre una carrera dentro de una facultad activa.' },
-    periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico', description: 'Registre una ventana temporal institucional con fechas válidas.' },
+    periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico', description: 'Registre las fechas y las semanas efectivas de clases. La etiqueta se generará automáticamente.' },
 })[props.entity]);
 const submitLabel = computed(() => ({ facultad: 'Crear facultad', carrera: 'Crear carrera', periodo: 'Crear periodo' })[props.entity]);
-const codeLabel = computed(() => props.entity === 'carrera' ? 'Código de carrera' : 'Código del período');
 
 const logoValidationError = (message: string | null): void => {
     const nextErrors = { ...errors.value };
@@ -49,7 +48,7 @@ const submit = async (): Promise<void> => {
     errors.value = {};
     const payload = new FormData();
     for (const [key, value] of Object.entries(form.value)) {
-        if (key === 'code' && props.entity === 'facultad') continue;
+        if (key === 'code' && props.entity !== 'carrera') continue;
         payload.set(key, String(value));
     }
     if (logo.value) payload.set('logo', logo.value);
@@ -93,14 +92,14 @@ const submit = async (): Promise<void> => {
                         <FieldError :errors="errors.modality" />
                     </Field>
                     <Field v-if="entity !== 'periodo'" :data-invalid="Boolean(errors.nombre)"><FieldLabel for="catalog-name" required>Nombre</FieldLabel><Input id="catalog-name" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
-                    <Field v-if="entity !== 'facultad'" :data-invalid="Boolean(errors.code)"><FieldLabel for="catalog-code" required>{{ codeLabel }}</FieldLabel><Input id="catalog-code" v-model="form.code" required /><FieldError :errors="errors.code" /></Field>
+                    <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.code)"><FieldLabel for="catalog-code" required>Código de carrera</FieldLabel><Input id="catalog-code" v-model="form.code" required /><FieldError :errors="errors.code" /></Field>
                     <template v-if="entity === 'carrera'">
                         <Field :data-invalid="Boolean(errors.cycle_count)"><FieldLabel for="catalog-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="catalog-cycle-count" v-model="form.cycle_count" type="number" min="1" max="30" step="1" required /><FieldError :errors="errors.cycle_count" /></Field>
                     </template>
                     <template v-if="entity === 'periodo'">
                         <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" required /><FieldError :errors="errors.starts_on" /></Field>
                         <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel for="catalog-ends-on" required>Fecha de fin</FieldLabel><DatePicker id="catalog-ends-on" v-model="form.ends_on" required /><FieldError :errors="errors.ends_on" /></Field>
-                        <Field :data-invalid="Boolean(errors.teaching_weeks)"><FieldLabel for="catalog-teaching-weeks" required>Semanas lectivas</FieldLabel><Input id="catalog-teaching-weeks" v-model="form.teaching_weeks" type="number" min="1" max="52" required /><FieldError :errors="errors.teaching_weeks" /></Field>
+                        <Field :data-invalid="Boolean(errors.teaching_weeks)"><FieldLabel for="catalog-teaching-weeks" required>Semanas lectivas</FieldLabel><Input id="catalog-teaching-weeks" v-model="form.teaching_weeks" type="number" min="1" max="52" required /><FieldDescription>Indique las semanas efectivas de clases del calendario académico. No corresponde a todas las semanas calendario del período.</FieldDescription><FieldError :errors="errors.teaching_weeks" /></Field>
                     </template>
                     <FormSheetActions :close="close" :processing="processing" :icon="Plus" :label="submitLabel" />
                 </FieldGroup>

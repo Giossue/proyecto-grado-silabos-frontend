@@ -305,7 +305,7 @@ const {
                 :filter="periodFilter"
                 input-id="periods-search"
                 label="Buscar periodo"
-                placeholder="Buscar por código"
+                placeholder="Buscar por período"
             />
             <Table>
                 <TableHeader>
