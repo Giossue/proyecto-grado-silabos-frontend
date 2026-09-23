@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Spinner } from '@/components/ui/spinner';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths } from '@/lib/routes';
 import { relativeTime } from '@/lib/relativeTime';
 
@@ -94,25 +93,21 @@ onMounted(refreshCount);
 
 <template>
     <Popover v-model:open="open">
-        <Tooltip>
-            <TooltipTrigger as-child>
-                <PopoverTrigger as-child>
-                    <Button
-                        type="button"
-                        :variant="open || isNotificationsPage ? 'secondary' : 'ghost'"
-                        size="icon-sm"
-                        class="relative"
-                        aria-label="Notificaciones"
-                    >
-                        <Bell data-icon="inline-start" aria-hidden="true" />
-                        <Badge v-if="unreadCount > 0" as="span" class="absolute -top-1 -right-1 min-w-5 px-1" aria-hidden="true">
-                            {{ unreadCount > 99 ? '99+' : unreadCount }}
-                        </Badge>
-                    </Button>
-                </PopoverTrigger>
-            </TooltipTrigger>
-            <TooltipContent>Notificaciones</TooltipContent>
-        </Tooltip>
+        <PopoverTrigger as-child>
+            <Button
+                type="button"
+                :variant="open || isNotificationsPage ? 'secondary' : 'ghost'"
+                size="icon-sm"
+                class="relative"
+                aria-label="Notificaciones"
+                title="Notificaciones"
+            >
+                <Bell data-icon="inline-start" aria-hidden="true" />
+                <Badge v-if="unreadCount > 0" as="span" class="absolute -top-1 -right-1 min-w-5 px-1" aria-hidden="true">
+                    {{ unreadCount > 99 ? '99+' : unreadCount }}
+                </Badge>
+            </Button>
+        </PopoverTrigger>
         <PopoverContent align="end" class="flex w-[min(24rem,calc(100vw-1rem))] flex-col gap-3 p-0">
             <div class="flex items-center justify-between px-4 pt-4">
                 <h2 class="text-lg font-semibold">Notificaciones</h2>
