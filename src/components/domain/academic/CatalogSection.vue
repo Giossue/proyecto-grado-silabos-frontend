@@ -46,10 +46,6 @@ const facultyNames = computed(
         ),
 );
 
-const careerCount = (facultyId: string): number =>
-    props.catalogs.careers.filter((career) => career.faculty_id === facultyId)
-        .length;
-
 const facultyName = (facultyId: string): string =>
     facultyNames.value.get(facultyId) ?? 'Facultad no disponible';
 
@@ -135,7 +131,6 @@ const {
                     <TableRow>
                         <TableHead>Facultad</TableHead>
                         <TableHead>Campus</TableHead>
-                        <TableHead>Carreras relacionadas</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead class="text-right">Acciones</TableHead>
                     </TableRow>
@@ -143,7 +138,7 @@ const {
                 <TableBody>
                     <TableEmpty
                         v-if="facultyPage.length === 0"
-                        :colspan="5"
+                        :colspan="4"
                     >
                         {{ facultyFilter.active.value ? 'Ninguna facultad coincide con los filtros.' : 'No existen facultades registradas.' }}
                     </TableEmpty>
@@ -157,9 +152,6 @@ const {
                         </TableCell>
                         <TableCell>
                             {{ faculty.campus ?? 'Sin campus' }}
-                        </TableCell>
-                        <TableCell>
-                            {{ careerCount(faculty.id) }}
                         </TableCell>
                         <TableCell>
                             {{ faculty.activo ? 'Activa' : 'Inactiva' }}
