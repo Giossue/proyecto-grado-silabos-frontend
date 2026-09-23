@@ -46,5 +46,5 @@ export const transitionProcess = (processId: string, transition: 'abrir' | 'paus
     body: JSON.stringify(reason ? { reason } : {}),
   });
 
-export const extendProcessDeadline = (processId: string, payload: { stage: string; due_at: string; reason: string }) =>
+export const extendProcessDeadline = (processId: string, payload: { due_at: string; reason: string }) =>
   api<{ message: string }>(`/admin/processes/${processId}/deadline`, { method: 'POST', body: JSON.stringify(payload) });
