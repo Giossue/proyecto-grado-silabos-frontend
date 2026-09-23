@@ -224,6 +224,16 @@ const gridColumns = (): string =>
             </template>
 
             <template v-else-if="variant === 'dashboard'">
+                <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+                    <div v-for="tile in 4" :key="`tile-${tile}`" class="rounded-xl border bg-card p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <Skeleton class="h-4 w-24" />
+                            <Skeleton class="size-9 rounded-lg" />
+                        </div>
+                        <Skeleton class="mt-4 h-8 w-20" />
+                        <Skeleton class="mt-2 h-3 w-32" />
+                    </div>
+                </div>
                 <div class="rounded-xl border bg-card p-5">
                     <div class="flex flex-col gap-4">
                         <div class="flex items-center justify-between gap-4">
@@ -237,16 +247,6 @@ const gridColumns = (): string =>
                         <div class="grid gap-3 sm:grid-cols-3">
                             <Skeleton v-for="step in 3" :key="`setup-${step}`" class="h-16 w-full" />
                         </div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
-                    <div v-for="tile in 4" :key="`tile-${tile}`" class="rounded-xl border bg-card p-4">
-                        <div class="flex items-start justify-between gap-3">
-                            <Skeleton class="h-4 w-24" />
-                            <Skeleton class="size-9 rounded-lg" />
-                        </div>
-                        <Skeleton class="mt-4 h-8 w-20" />
-                        <Skeleton class="mt-2 h-3 w-32" />
                     </div>
                 </div>
             </template>
