@@ -247,11 +247,3 @@ export const relieveCareerTeacher = (payload: {
     method: "POST",
     body: JSON.stringify(payload),
   });
-export const uploadFacultyLogo = (logo: File) => {
-  const body = new FormData();
-  body.append("logo", logo);
-  return api<{ message: string }>("/coordination/faculty-logo", {
-    method: "POST",
-    body,
-  });
-};

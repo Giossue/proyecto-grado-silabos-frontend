@@ -27,12 +27,6 @@ export type SetupChecklist = {
 export type Dashboard = {
   metrics: DashboardMetric[];
   setup: SetupChecklist | null;
-  faculty_logo: {
-    name: string;
-    current_url: string;
-    configured: boolean;
-    size: { width: number; height: number };
-  } | null;
 };
 
 export const getDashboard = () => api<Dashboard>('/dashboard');

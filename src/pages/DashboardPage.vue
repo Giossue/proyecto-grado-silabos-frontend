@@ -9,16 +9,13 @@ import { sessionState } from '@/state/session';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
-import FacultyLogoDialog from '@/components/domain/configuration/FacultyLogoDialog.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
 import StatTile from '@/components/domain/StatTile.vue';
 import { paths } from '@/lib/routes';
-import { toast } from '@/lib/toast';
 
 const router = useRouter();
 const dashboard = ref<Dashboard | null>(null);
 const error = ref<string | null>(null);
-const facultyLogoOpen = ref(false);
 
 const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, correction_requested: CircleAlert, teachers_pending: UsersRound };
 const setupRoutes: Record<string, string> = {
@@ -41,17 +38,6 @@ const setup = computed(() => dashboard.value?.setup ? {
     href: setupRoutes[step.key] ?? paths.dashboard,
   })),
 } : null);
-const handleSetupAction = (action: string) => {
-  if (action === 'faculty_logo') facultyLogoOpen.value = true;
-};
-const handleLogoSaved = async (notice: string) => {
-  toast.success(notice);
-  try {
-    dashboard.value = await getDashboard();
-  } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo actualizar el panel de trabajo.';
-  }
-};
 
 const load = async (): Promise<void> => {
   error.value = null;
@@ -75,17 +61,8 @@ onMounted(() => { void load(); });
         <StatTile v-for="metric in dashboard.metrics" :key="metric.key" :label="metric.label" :value="metric.value" :suffix="metric.suffix ?? undefined" :hint="metric.hint" :icon="icons[metric.key]" />
       </div>
       <p v-else class="text-sm text-muted-foreground">No hay indicadores disponibles para este rol.</p>
-      <SetupChecklist v-if="setup" :setup="setup" @action="handleSetupAction" />
+      <SetupChecklist v-if="setup" :setup="setup" />
     </template>
     <LoadingSkeleton v-else variant="dashboard" />
   </PageFrame>
-  <FacultyLogoDialog
-    v-if="dashboard?.faculty_logo"
-    v-model:open="facultyLogoOpen"
-    :faculty-name="dashboard.faculty_logo.name"
-    :current-url="dashboard.faculty_logo.current_url"
-    :configured="dashboard.faculty_logo.configured"
-    :size="dashboard.faculty_logo.size"
-    @saved="handleLogoSaved"
-  />
 </template>

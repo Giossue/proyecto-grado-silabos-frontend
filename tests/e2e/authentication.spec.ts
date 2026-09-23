@@ -14,30 +14,6 @@ const expectPanel = async (page: Page, area: 'admin' | 'coordinacion' | 'docente
 const mainNavigation = (page: Page) =>
   page.locator('[data-sidebar="content"]');
 
-const transparentFacultyLogo = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAlgAAAC0CAYAAABIf1IMAAAACXBIWXMAAA7EAAAOxAGVKw4bAAABuklEQVR4nO3BgQAAAADDoPlT3+AEVQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHQOYjgABYRRRSgAAAABJRU5ErkJggg==',
-  'base64',
-);
-
-const configureFacultyLogo = async (page: Page): Promise<void> => {
-  await expect(page.getByText('Cargando panel…')).toBeHidden();
-  const configure = page.getByRole('button', { name: 'Configurar', exact: true });
-  if (await configure.count() === 0) return;
-
-  await configure.click();
-  const dialog = page.getByRole('dialog', { name: 'Logo de la facultad' });
-  await dialog.getByLabel('Logo (PNG sin fondo)').setInputFiles({
-    name: 'logo-facultad-e2e.png',
-    mimeType: 'image/png',
-    buffer: transparentFacultyLogo,
-  });
-  const saved = page.waitForResponse((response) =>
-    response.request().method() === 'POST'
-    && /\/api\/v1\/coordination\/faculty-logo$/.test(response.url()),
-  );
-  await dialog.getByRole('button', { name: 'Guardar logo' }).click();
-  expect((await saved).status()).toBe(200);
-};
 
 const captureServerErrors = (page: Page): string[] => {
   const errors: string[] = [];
@@ -155,7 +131,7 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByText('Seleccione la carrera y el ámbito con el que trabajará en esta sesión.')).toBeVisible();
     await page.getByRole('button', { name: 'Entrar a esta carrera' }).click();
     await expect(page.getByRole('heading', { name: 'Panel' })).toBeVisible();
-    await configureFacultyLogo(page);
+    await expect(page.getByText('Cargar el logo de la facultad')).toHaveCount(0);
 
     await mainNavigation(page).getByRole('link', { name: 'Convocatorias', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Convocatorias' })).toBeVisible();
