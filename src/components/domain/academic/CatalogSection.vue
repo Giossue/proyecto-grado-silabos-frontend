@@ -231,7 +231,6 @@ const {
                         <TableHead>Facultad</TableHead>
                         <TableHead>Modalidad</TableHead>
                         <TableHead>Campus</TableHead>
-                        <TableHead>Coordinación</TableHead>
                         <TableHead>Código de carrera</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead class="text-right">Acciones</TableHead>
@@ -240,7 +239,7 @@ const {
                 <TableBody>
                     <TableEmpty
                         v-if="careerPage.length === 0"
-                        :colspan="8"
+                        :colspan="7"
                     >
                         {{ careerFilter.active.value ? 'Ninguna carrera coincide con los filtros.' : 'No existen carreras registradas.' }}
                     </TableEmpty>
@@ -260,9 +259,6 @@ const {
                         </TableCell>
                         <TableCell>
                             {{ career.campus_name ?? 'Sin campus' }}
-                        </TableCell>
-                        <TableCell>
-                            {{ career.coordinator?.name ?? 'Sin coordinador' }}
                         </TableCell>
                         <TableCell>
                             {{ career.code || 'Sin código de carrera' }}
