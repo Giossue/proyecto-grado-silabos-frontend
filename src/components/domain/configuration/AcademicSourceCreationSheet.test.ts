@@ -69,7 +69,7 @@ describe('AcademicSourceCreationSheet', () => {
     document.body.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
     await flushPromises();
 
-    expect(document.body.textContent).toContain('OpenParser está organizando');
+    expect(document.body.textContent).toContain('Organizando el texto, las tablas y las imágenes');
     expect(document.body.textContent).toContain('45 %');
     expect(wrapper.emitted('created')).toBeUndefined();
 

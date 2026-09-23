@@ -70,10 +70,10 @@ onMounted(() => { void load(); });
       <CardContent class="flex min-w-0 flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="sources-search" label="Buscar fuente" placeholder="Buscar por nombre o descripción" />
       <div aria-live="polite">
-        <Empty v-if="sourcePage.length === 0" class="min-h-52">
-          <EmptyHeader>
-            <EmptyMedia variant="icon"><Inbox aria-hidden="true" /></EmptyMedia>
-            <EmptyTitle>{{ filter.active.value ? 'Ninguna fuente coincide con la búsqueda.' : 'No existen fuentes.' }}</EmptyTitle>
+        <Empty v-if="sourcePage.length === 0" class="min-h-40 gap-3 rounded-none border-0 p-6 md:p-10">
+          <EmptyHeader class="gap-3">
+            <EmptyMedia variant="icon" class="text-muted-foreground"><Inbox aria-hidden="true" /></EmptyMedia>
+            <EmptyTitle class="text-sm text-muted-foreground">{{ filter.active.value ? 'Ninguna fuente coincide con la búsqueda.' : 'No existen fuentes.' }}</EmptyTitle>
           </EmptyHeader>
         </Empty>
         <div v-else class="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-3">

@@ -37,7 +37,7 @@ const dialogTitle = computed(() => processingStage.value === 'failed'
 const progressMessage = computed(() => ({
   creating: 'Creando la fuente académica…',
   uploading: 'Subiendo el PDF privado…',
-  processing: 'OpenParser está organizando el texto, las tablas y las imágenes…',
+  processing: 'Organizando el texto, las tablas y las imágenes…',
   failed: '',
 }[processingStage.value]));
 
@@ -86,7 +86,7 @@ const poll = async (): Promise<void> => {
       return;
     }
     if (ingestion.status === 'fallida') {
-      fail(ingestion.error_message || 'OpenParser no pudo estructurar este PDF.');
+      fail(ingestion.error_message || 'No se pudo estructurar este PDF.');
       return;
     }
     pollingTimer = window.setTimeout(() => { void poll(); }, 1200);
@@ -159,7 +159,7 @@ onUnmounted(clearPolling);
     <template #default="{ close }"><form @submit.prevent="submit(close)"><FieldGroup>
       <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel for="source-name" required>Nombre</FieldLabel><Input id="source-name" v-model="form.nombre" placeholder="Ej. Reglamento de régimen académico" required :aria-invalid="Boolean(errors.nombre)" /><FieldError :errors="errors.nombre" /></Field>
       <Field :data-invalid="Boolean(errors.description)"><FieldLabel for="source-description">Descripción</FieldLabel><Textarea id="source-description" v-model="form.description" :aria-invalid="Boolean(errors.description)" /><FieldError :errors="errors.description" /></Field>
-      <Field :data-invalid="Boolean(errors.pdf)"><FieldLabel for="source-pdf" required>Cargar fuente desde PDF</FieldLabel><FileDropzone v-model="selectedPdf" input-id="source-pdf" :disabled="processing" :invalid="Boolean(errors.pdf)" @validation-error="pdfValidationError" /><FieldDescription>OpenParser organizará el texto, las tablas y las imágenes como un documento editable. Máximo 50 MB.</FieldDescription><FieldError :errors="errors.pdf" /></Field>
+      <Field :data-invalid="Boolean(errors.pdf)"><FieldLabel for="source-pdf" required>Cargar fuente desde PDF</FieldLabel><FileDropzone v-model="selectedPdf" input-id="source-pdf" :disabled="processing" :invalid="Boolean(errors.pdf)" @validation-error="pdfValidationError" /><FieldDescription>El texto, las tablas y las imágenes se organizarán como un documento editable. Máximo 50 MB.</FieldDescription><FieldError :errors="errors.pdf" /></Field>
       <FormSheetActions :close="close" :processing="processing" :icon="FileUp" label="Crear fuente" />
     </FieldGroup></form></template>
   </FormSheet>
