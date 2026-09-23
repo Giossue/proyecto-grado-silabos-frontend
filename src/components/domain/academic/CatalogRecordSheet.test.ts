@@ -45,6 +45,24 @@ describe('academic catalog code fields', () => {
     career.unmount();
   });
 
+  it('orders faculty name, campus, and logo fields', async () => {
+    const faculty = mount(CatalogRecordSheet, {
+      attachTo: document.body,
+      props: { entity: 'facultad', options, open: true },
+    });
+    await flushPromises();
+
+    const nameLabel = document.body.querySelector('label[for="catalog-name"]');
+    const campusLabel = document.body.querySelector('label[for="catalog-campus"]');
+    const logoLabel = document.body.querySelector('label[for="faculty-logo"]');
+    expect(nameLabel).not.toBeNull();
+    expect(campusLabel).not.toBeNull();
+    expect(logoLabel).not.toBeNull();
+    expect(nameLabel!.compareDocumentPosition(campusLabel!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(campusLabel!.compareDocumentPosition(logoLabel!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    faculty.unmount();
+  });
+
   it('does not ask for a period code or teaching weeks', async () => {
     const period = mount(CatalogRecordSheet, {
       attachTo: document.body,
