@@ -43,7 +43,9 @@ onMounted(() => { void load(); });
 <template>
   <PageFrame title="Auditoría" description="Registro de las acciones realizadas en el sistema.">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" />
+    <Card v-else-if="loading && !data">
+      <CardContent><LoadingSkeleton variant="table-body" :columns="4" /></CardContent>
+    </Card>
     <Card v-else-if="data">
       <CardContent class="flex flex-col gap-4">
         <Table label="Registro de auditoría">

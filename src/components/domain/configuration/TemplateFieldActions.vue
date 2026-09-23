@@ -75,7 +75,6 @@ const form = useForm({
     master_source: '',
     teacher_editable: true,
     ai_enabled: false,
-    ai_coordinator_configurable: true,
     document_marker: '',
     document: null as TemplateFieldContainer['document'],
     fingerprint: '',
@@ -104,9 +103,6 @@ const openEdit = (): void => {
     form.master_source = value.master_source ?? '';
     form.teacher_editable = Boolean(value.teacher_editable);
     form.ai_enabled = Boolean(value.ai_enabled);
-    form.ai_coordinator_configurable = Boolean(
-        value.ai_coordinator_configurable,
-    );
     form.document_marker = value.document_marker ?? '';
     form.document = props.field.document ?? null;
     form.fingerprint = props.field.fingerprint ?? '';
@@ -145,8 +141,6 @@ const save = (): void => {
                             label: data.label,
                             help: data.help,
                             ai_enabled: data.ai_enabled,
-                            ai_coordinator_configurable:
-                                data.ai_coordinator_configurable,
                         },
                     ],
                 }) as typeof data,
@@ -327,33 +321,8 @@ defineExpose({
                                 Usar asistencia de IA
                             </FieldLabel>
                             <FieldDescription>
-                                Define el valor predeterminado para las
-                                carreras.
-                            </FieldDescription>
-                        </FieldContent>
-                    </Field>
-                    <Field
-                        v-if="
-                            !primary?.inherited &&
-                            form.content_type !== 'institutional' &&
-                            form.content_type !== 'flow'
-                        "
-                        orientation="horizontal"
-                    >
-                        <Checkbox
-                            id="edit-template-field-ai-coordinator"
-                            v-model="form.ai_coordinator_configurable"
-                            :disabled="form.processing"
-                        />
-                        <FieldContent>
-                            <FieldLabel
-                                for="edit-template-field-ai-coordinator"
-                            >
-                                Permitir que Coordinación cambie este valor
-                            </FieldLabel>
-                            <FieldDescription>
-                                Si se desactiva, cada carrera seguirá siempre la
-                                decisión de Administración.
+                                La IA solo sugiere; el docente decide si
+                                aplica cada sugerencia.
                             </FieldDescription>
                         </FieldContent>
                     </Field>

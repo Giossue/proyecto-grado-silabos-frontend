@@ -51,7 +51,6 @@ const props = defineProps<{
         fields: (DocumentField & {
             help?: string | null;
             ai_enabled?: boolean;
-            ai_coordinator_configurable?: boolean;
         })[];
         document?: DocumentNode | null;
         fingerprint?: string;
@@ -87,7 +86,6 @@ const form = useForm({
         label: string;
         help: string;
         ai_enabled?: boolean;
-        ai_coordinator_configurable?: boolean;
     }[],
     fingerprint: '',
     confirm_purge: false,
@@ -121,13 +119,6 @@ const edit = () => {
         !['institutional', 'flow'].includes(props.block.content_type)
             ? { ai_enabled: field.ai_enabled ?? false }
             : {}),
-        ...(!field.inherited &&
-        !['institutional', 'flow'].includes(props.block.content_type)
-            ? {
-                  ai_coordinator_configurable:
-                      field.ai_coordinator_configurable ?? true,
-              }
-            : {}),
     }));
     initialProperties.value = propertiesSnapshot();
     designDirty.value = false;
@@ -148,7 +139,6 @@ const openProperties = () => {
                     label: String(node.attrs?.label ?? 'Respuesta del docente'),
                     help: '',
                     ai_enabled: false,
-                    ai_coordinator_configurable: true,
                 });
             }
         }
@@ -538,33 +528,6 @@ watch(
                                         sigue siendo responsable del
                                         contenido.</FieldDescription
                                     >
-                                </FieldContent>
-                            </Field>
-                            <Field
-                                v-if="
-                                    property.ai_coordinator_configurable !==
-                                    undefined
-                                "
-                                orientation="horizontal"
-                            >
-                                <Checkbox
-                                    :id="`design-ai-coordinator-${index}`"
-                                    v-model="
-                                        property.ai_coordinator_configurable
-                                    "
-                                    :disabled="form.processing"
-                                />
-                                <FieldContent>
-                                    <FieldLabel
-                                        :for="`design-ai-coordinator-${index}`"
-                                    >
-                                        Permitir que Coordinación cambie este
-                                        valor
-                                    </FieldLabel>
-                                    <FieldDescription>
-                                        Si se desactiva, cada carrera seguirá
-                                        siempre la decisión de Administración.
-                                    </FieldDescription>
                                 </FieldContent>
                             </Field>
                         </FieldGroup>

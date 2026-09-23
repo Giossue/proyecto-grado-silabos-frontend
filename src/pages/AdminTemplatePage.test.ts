@@ -76,7 +76,7 @@ const payload: TemplatePayload = {
           id: "field-1", block_id: "block-1", key: "descripcion", label: "Descripción de la asignatura",
           help: null, type: "texto_largo", options: [], required: true, inherited: false,
           master_source: null, teacher_editable: true, ai_enabled: true,
-          ai_coordinator_configurable: true, content_type: "text",
+          content_type: "text",
         }],
       }],
     }],
