@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Trash2 } from '@lucide/vue';
+import { RotateCcw } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -13,7 +13,7 @@ import { usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
 
 /*
  * Un solo diálogo para toda la aplicación: aparece cuando el servidor avisa que un
- * cambio va a borrar sílabos en curso. Confirmar repite la petición ya confirmada.
+ * cambio va a reemplazar sílabos. Confirmar repite la petición ya confirmada.
  */
 const { open, message, confirm, cancel } = usePurgeConfirmation();
 </script>
@@ -29,7 +29,7 @@ const { open, message, confirm, cancel } = usePurgeConfirmation();
     >
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Este cambio borra trabajo en curso</DialogTitle>
+                <DialogTitle>Este cambio reemplaza los sílabos afectados</DialogTitle>
                 <DialogDescription>{{ message }}</DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -37,8 +37,8 @@ const { open, message, confirm, cancel } = usePurgeConfirmation();
                     Cancelar
                 </Button>
                 <Button type="button" variant="destructive" @click="confirm">
-                    <Trash2 data-icon="inline-start" aria-hidden="true" />
-                    Borrar y guardar
+                    <RotateCcw data-icon="inline-start" aria-hidden="true" />
+                    Guardar y regenerar
                 </Button>
             </DialogFooter>
         </DialogContent>

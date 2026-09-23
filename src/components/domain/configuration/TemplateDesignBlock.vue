@@ -371,8 +371,8 @@ watch(
                 ><AlertTitle>Confirmación necesaria</AlertTitle
                 ><AlertDescription class="flex flex-wrap items-center gap-2"
                     ><span
-                        >{{ purge }} Guardar y reiniciar elimina ese trabajo en
-                        curso.</span
+                        >{{ purge }} Guardar y regenerar aplica la plantilla
+                        corregida a todo el alcance.</span
                     ><Button
                         type="button"
                         variant="destructive"
@@ -382,7 +382,7 @@ watch(
                             form.confirm_purge = true;
                             submit();
                         "
-                        >Guardar y reiniciar</Button
+                        >Guardar y regenerar</Button
                     ></AlertDescription
                 ></Alert
             >
@@ -544,8 +544,8 @@ watch(
                 <Alert v-if="purge" variant="destructive" class="mx-4"
                     ><AlertTitle>Confirmación necesaria</AlertTitle
                     ><AlertDescription
-                        >{{ purge }} Guardar y reiniciar elimina ese trabajo en
-                        curso.</AlertDescription
+                        >{{ purge }} Guardar y regenerar aplica la plantilla
+                        corregida a todo el alcance.</AlertDescription
                     ></Alert
                 >
                 <SheetFooter class="mt-auto">
@@ -579,7 +579,7 @@ watch(
                             submit();
                         "
                     >
-                        Guardar y reiniciar
+                        Guardar y regenerar
                     </Button>
                     <Button
                         v-else

@@ -307,8 +307,8 @@ defineExpose({ start });
                 <AlertTitle>Confirmación necesaria</AlertTitle>
                 <AlertDescription class="flex flex-wrap items-center gap-2">
                     <span>
-                        {{ purge }} Guardar y reiniciar elimina ese trabajo en
-                        curso.
+                        {{ purge }} Guardar y regenerar aplica la plantilla
+                        corregida a todo el alcance.
                     </span>
                     <Button
                         type="button"
@@ -318,7 +318,7 @@ defineExpose({ start });
                         @click="confirmAndSave"
                     >
                         <Save data-icon="inline-start" aria-hidden="true" />
-                        Guardar y reiniciar
+                        Guardar y regenerar
                     </Button>
                 </AlertDescription>
             </Alert>
