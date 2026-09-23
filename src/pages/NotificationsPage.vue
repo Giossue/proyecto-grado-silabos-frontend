@@ -12,9 +12,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Spinner } from '@/components/ui/spinner';
+import { useOpenNotification } from '@/composables/useOpenNotification';
 import { paths } from '@/lib/routes';
 
 const router = useRouter();
+const { open, openingId } = useOpenNotification();
 const result = ref<NotificationsResponse | null>(null);
 const status = ref<'all' | 'unread'>('all');
 const error = ref<string | null>(null);
@@ -47,7 +49,7 @@ onMounted(load);
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-if="loading && !result" variant="notifications" />
     <Card v-else-if="result"><CardContent class="flex flex-col gap-3" aria-live="polite">
-      <article v-for="notification in result.notifications.data" :key="notification.id" class="rounded-lg border p-4" :class="notification.leido_en === null ? 'bg-muted/40' : ''"><div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><h2 class="font-medium">{{ notification.titulo }}</h2><Badge v-if="notification.leido_en === null" variant="secondary">Nueva</Badge></div><p class="mt-1 text-sm">{{ notification.mensaje }}</p><p class="mt-2 text-xs text-muted-foreground">{{ formatDate(notification.notificado_en) }}</p></div><div class="flex shrink-0 flex-wrap gap-2"><Button v-if="!notification.leido_en" type="button" size="sm" variant="outline" :disabled="pending" @click="read(notification.id)">Marcar leída</Button><Button v-if="notification.resource_path" as-child size="sm"><RouterLink :to="notification.resource_path"><ExternalLink />Abrir expediente</RouterLink></Button></div></div></article>
+      <article v-for="notification in result.notifications.data" :key="notification.id" class="rounded-lg border p-4" :class="notification.leido_en === null ? 'bg-muted/40' : ''"><div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div class="min-w-0"><div class="flex flex-wrap items-center gap-2"><h2 class="font-medium">{{ notification.titulo }}</h2><Badge v-if="notification.leido_en === null" variant="secondary">Nueva</Badge></div><p class="mt-1 text-sm">{{ notification.mensaje }}</p><p class="mt-2 text-xs text-muted-foreground">{{ formatDate(notification.notificado_en) }}<template v-if="notification.context"> · {{ notification.context }}</template></p></div><div class="flex shrink-0 flex-wrap gap-2"><Button v-if="!notification.leido_en" type="button" size="sm" variant="outline" :disabled="pending" @click="read(notification.id)">Marcar leída</Button><Button v-if="notification.has_destination" type="button" size="sm" :disabled="openingId !== null" @click="open(notification)"><Spinner v-if="openingId === notification.id" data-icon="inline-start" /><ExternalLink v-else data-icon="inline-start" aria-hidden="true" />Abrir</Button></div></div></article>
       <div v-if="result.notifications.data.length === 0" class="py-12 text-center text-sm text-muted-foreground">No existen notificaciones.</div>
     </CardContent></Card>
     <TablePagination v-if="result && result.notifications.last_page > 1" :meta="result.notifications" label="Paginación de notificaciones" @update:page="load" />

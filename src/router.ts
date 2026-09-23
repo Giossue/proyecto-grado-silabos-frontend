@@ -63,7 +63,7 @@ export const router = createRouter({
     { path: "/verificar-correo", component: VerifyEmailPage, meta: { requiresAuth: true, shell: false } },
     { path: "/verificar-dos-factores", component: TwoFactorChallengePage, meta: { guest: true } },
     { path: "/", redirect: "/login" },
-    { path: "/rol", component: WorkspacePage, meta: { requiresAuth: true, title: "Seleccionar ámbito de trabajo" } },
+    { path: "/rol", component: WorkspacePage, meta: { requiresAuth: true, layout: "workspace", title: "Seleccionar ámbito de trabajo" } },
 
     // Direcciones cortas compartidas: el guard las resuelve al área activa.
     { path: "/panel", component: DashboardPage, meta: { requiresAuth: true, aliasTarget: "/dashboard", title: "Panel" } },

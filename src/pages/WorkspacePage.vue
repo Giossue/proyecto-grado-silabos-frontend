@@ -72,14 +72,9 @@ const load = async (): Promise<void> => {
             await router.replace(paths.emailVerificationRequired);
             return;
         }
+        // Coordinación y Docencia eligen siempre su ámbito, aunque tengan uno solo (I-121).
         if (session.value.active_role) {
             await router.replace(consumeIntendedRoute() ?? roleEntry(session.value.active_role.code));
-            return;
-        }
-        const soleTeacherRole = session.value.available_roles.length === 1
-            && session.value.available_roles[0]?.code === 'docente';
-        if (soleTeacherRole) {
-            await selectRole(session.value.available_roles[0]!.id);
         }
     } catch (reason) {
         if (reason instanceof ApiError && reason.status === 401) {

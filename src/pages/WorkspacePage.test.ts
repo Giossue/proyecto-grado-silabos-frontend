@@ -52,7 +52,7 @@ describe('WorkspacePage', () => {
     sessionState.clear();
   });
 
-  it('envía directamente a Mis sílabos cuando el docente tiene un solo ámbito', async () => {
+  it('continúa en Mis sílabos cuando el docente ya eligió su ámbito', async () => {
     const role = teacherRole('role-1', 'Software');
     vi.mocked(getSession).mockResolvedValue(sessionFor([role]));
 
@@ -61,6 +61,20 @@ describe('WorkspacePage', () => {
 
     expect(replace).toHaveBeenCalledWith('/docente/mis-silabos');
     expect(selectActiveRole).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  it('pide elegir aunque el docente tenga una sola carrera (I-121)', async () => {
+    const role = teacherRole('role-1', 'Software');
+    vi.mocked(getSession).mockResolvedValue(sessionFor([role], null));
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.findAll('[data-slot="card"]')).toHaveLength(1);
+    expect(wrapper.text()).toContain('Docencia · Software');
+    expect(selectActiveRole).not.toHaveBeenCalled();
+    expect(replace).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 

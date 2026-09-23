@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { Bell, BookOpen, CheckCheck, FileText, MoreHorizontal, Sparkles } from '@lucide/vue';
+import { Bell, BookOpen, CalendarClock, CheckCheck, ClipboardCheck, FileText, MoreHorizontal, Sparkles, UserRound } from '@lucide/vue';
 import { computed, onMounted, ref, watch, type Component } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 import { getNotifications, markAllNotificationsRead, markNotificationRead, type Notification } from '@/api/notifications';
+import { useOpenNotification } from '@/composables/useOpenNotification';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -10,12 +11,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Spinner } from '@/components/ui/spinner';
 import { paths } from '@/lib/routes';
 import { relativeTime } from '@/lib/relativeTime';
+import { sessionState } from '@/state/session';
 
 /** El panel es un vistazo rápido; el historial completo vive en la página de notificaciones. */
 const PREVIEW_LIMIT = 10;
 
 const route = useRoute();
-const router = useRouter();
+const { open: openDestination } = useOpenNotification();
 const open = ref(false);
 const status = ref<'all' | 'unread'>('all');
 const items = ref<Notification[]>([]);
@@ -23,12 +25,17 @@ const unreadCount = ref(0);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
+/** Sin ámbito elegido no existe la página de notificaciones: solo este panel. */
+const hasActiveRole = computed(() => sessionState.current.value?.active_role != null);
 const isNotificationsPage = computed(() => route.path.endsWith('/notificaciones') || route.path === paths.notifications);
 
 const iconFor = (tipo: string): Component => {
     if (tipo.startsWith('documento')) return FileText;
     if (tipo.startsWith('ia')) return Sparkles;
     if (tipo.startsWith('fuente_academica')) return BookOpen;
+    if (tipo.startsWith('proceso') || tipo.startsWith('convocatoria')) return CalendarClock;
+    if (tipo.startsWith('silabo')) return ClipboardCheck;
+    if (tipo.startsWith('docente') || tipo.startsWith('coordinacion') || tipo.startsWith('usuario')) return UserRound;
     return Bell;
 };
 
@@ -55,16 +62,17 @@ const refreshCount = async (): Promise<void> => {
 };
 
 const select = async (notification: Notification): Promise<void> => {
-    if (notification.leido_en === null) {
+    const unread = notification.leido_en === null;
+    if (notification.has_destination) {
+        // El servidor marca el aviso, activa el rol que corresponde y devuelve el destino.
+        open.value = false;
+        await openDestination(notification);
+    } else if (unread) {
         // Se marca en pantalla de inmediato; si la API falla, la próxima carga lo corrige.
         notification.leido_en = new Date().toISOString();
-        unreadCount.value = Math.max(0, unreadCount.value - 1);
         void markNotificationRead(notification.id).catch(() => undefined);
     }
-    if (notification.resource_path) {
-        open.value = false;
-        await router.push(notification.resource_path);
-    }
+    if (unread) unreadCount.value = Math.max(0, unreadCount.value - 1);
 };
 
 const readAll = async (): Promise<void> => {
@@ -149,7 +157,7 @@ onMounted(refreshCount);
                 </Button>
             </div>
 
-            <div class="max-h-[min(26rem,60vh)] overflow-y-auto px-2" aria-live="polite">
+            <div class="max-h-[min(26rem,60vh)] overflow-y-auto px-2" :class="{ 'pb-3': !hasActiveRole }" aria-live="polite">
                 <div v-if="loading && items.length === 0" class="flex justify-center py-10">
                     <Spinner />
                 </div>
@@ -170,6 +178,9 @@ onMounted(refreshCount);
                             <span class="min-w-0 flex-1" :class="notification.leido_en === null ? '' : 'text-muted-foreground'">
                                 <span class="block text-sm font-medium">{{ notification.titulo }}</span>
                                 <span class="line-clamp-2 text-sm">{{ notification.mensaje }}</span>
+                                <span v-if="notification.context" class="mt-0.5 block text-xs text-muted-foreground">
+                                    {{ notification.context }}
+                                </span>
                                 <span
                                     class="mt-0.5 block text-xs"
                                     :class="notification.leido_en === null ? 'font-medium text-primary' : 'text-muted-foreground'"
@@ -187,7 +198,7 @@ onMounted(refreshCount);
                 </ul>
             </div>
 
-            <div class="px-4 pb-4">
+            <div v-if="hasActiveRole" class="px-4 pb-4">
                 <Button as-child variant="secondary" class="w-full">
                     <RouterLink :to="paths.notifications" @click="open = false">
                         Ver todas las notificaciones
