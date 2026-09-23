@@ -104,8 +104,10 @@ test.describe('frontera distribuida de identidad', () => {
     await page.getByRole('link', { name: 'Seguridad', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Seguridad' })).toBeVisible();
 
-    await page.getByRole('link', { name: 'Notificaciones', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Notificaciones' })).toBeVisible();
+    await page.getByRole('button', { name: 'Notificaciones', exact: true }).click();
+    await expect(page.getByRole('dialog').getByRole('heading', { name: 'Notificaciones' })).toBeVisible();
+    await page.getByRole('link', { name: 'Ver todas las notificaciones' }).click();
+    await expect(page).toHaveURL(/\/admin\/notificaciones$/);
 
     await mainNavigation(page).getByRole('link', { name: 'Plantilla', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Plantilla' })).toBeVisible();
