@@ -11,6 +11,7 @@ export type SyllabusProcess = {
   due_at: string;
   convocations_count: number;
   configurable: boolean;
+  deletable: boolean;
 };
 
 export type Processes = {
@@ -39,6 +40,9 @@ export const prepareAndOpenProcess = (payload: ProcessPayload) =>
 
 export const updateProcess = (processId: string, payload: ProcessPayload) =>
   api<{ message: string }>(`/admin/processes/${processId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+
+export const deleteProcess = (processId: string) =>
+  api<{ message: string }>(`/admin/processes/${processId}`, { method: 'DELETE' });
 
 export const transitionProcess = (processId: string, transition: 'abrir' | 'pausar' | 'reanudar' | 'cerrar', reason?: string) =>
   api<{ message: string }>(`/admin/processes/${processId}/${transition}`, {

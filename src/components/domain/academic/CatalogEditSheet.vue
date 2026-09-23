@@ -11,6 +11,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { STUDY_MODALITIES } from '@/lib/studyModalities';
+import { requestPurgeConfirmation } from '@/composables/usePurgeConfirmation';
 import type { CatalogRecord, GovernanceCatalogEntity } from '@/types/academic';
 
 const props = withDefaults(defineProps<{
@@ -49,7 +50,7 @@ const logoValidationError = (message: string | null): void => {
     else delete nextErrors.logo;
     errors.value = nextErrors;
 };
-const submit = async (): Promise<void> => {
+const submit = async (confirmPurge = false): Promise<void> => {
     processing.value = true; errors.value = {};
     const payload = new FormData();
     for (const [key, value] of Object.entries(form.value)) {
@@ -57,11 +58,22 @@ const submit = async (): Promise<void> => {
         payload.set(key, String(value));
     }
     if (logo.value) payload.set('logo', logo.value);
+    if (confirmPurge) payload.set('confirm_purge', '1');
     try {
         const result = await updateAcademicRecord(props.entity, props.recordId, payload);
         open.value = false;
         emit('saved', result.message);
-    } catch (reason) { errors.value = reason instanceof ApiError ? reason.errors : {}; }
+    } catch (reason) {
+        errors.value = reason instanceof ApiError ? reason.errors : {};
+        const purgeMessage = errors.value.purge_required?.[0];
+        if (purgeMessage) {
+            requestPurgeConfirmation(
+                purgeMessage,
+                Number(errors.value.purge_count?.[0] ?? 0),
+                () => void submit(true),
+            );
+        }
+    }
     finally { processing.value = false; }
 };
 </script>

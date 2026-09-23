@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { CalendarClock, Lock, Pause, Pencil, Play, Square } from '@lucide/vue';
+import { CalendarClock, Lock, Pause, Pencil, Play, Square, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
-import { transitionProcess, type SyllabusProcess } from '@/api/processes';
+import { deleteProcess, transitionProcess, type SyllabusProcess } from '@/api/processes';
 import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
 import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
@@ -35,6 +35,9 @@ const processing = ref(false);
 const error = ref<string | null>(null);
 const editOpen = ref(false);
 const deadlineOpen = ref(false);
+const deleteOpen = ref(false);
+const deleting = ref(false);
+const deleteError = ref<string | null>(null);
 const reasonCharacters = computed(() => reason.value.trim().length);
 
 const dialogs: Record<Transition, { title: string; description: string; label: string; destructive?: boolean }> = {
@@ -84,6 +87,28 @@ const confirm = async (): Promise<void> => {
     processing.value = false;
   }
 };
+
+const openDelete = (event: Event): void => {
+  event.preventDefault();
+  deleteError.value = null;
+  deleteOpen.value = true;
+};
+
+const remove = async (): Promise<void> => {
+  deleting.value = true;
+  deleteError.value = null;
+  try {
+    const response = await deleteProcess(props.process.id);
+    deleteOpen.value = false;
+    emit('completed', response.message);
+  } catch (cause) {
+    deleteError.value = cause instanceof ApiError
+      ? (cause.errors.process?.[0] ?? cause.message)
+      : 'No se pudo eliminar la convocatoria institucional.';
+  } finally {
+    deleting.value = false;
+  }
+};
 </script>
 
 <template>
@@ -97,7 +122,9 @@ const confirm = async (): Promise<void> => {
       <DropdownMenuSeparator />
       <DropdownMenuItem variant="destructive" @select="pending = 'cerrar'"><Square />Cerrar</DropdownMenuItem>
     </template>
-    <DropdownMenuItem v-if="process.state === 'cerrado'" disabled><Lock />Proceso cerrado</DropdownMenuItem>
+    <DropdownMenuSeparator v-if="process.state !== 'cerrado'" />
+    <DropdownMenuItem v-if="process.deletable" variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
+    <DropdownMenuItem v-else disabled><Lock aria-hidden="true" />Conservado por actividad docente</DropdownMenuItem>
   </TableActionsMenu>
 
   <Dialog :open="pending !== null" @update:open="(value) => { if (!value) pending = null; }">
@@ -108,6 +135,19 @@ const confirm = async (): Promise<void> => {
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
         <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing || (pending === 'pausar' && reasonCharacters < 10)"><Spinner v-if="processing" />{{ dialogs[pending].label }}</Button></DialogFooter>
       </form>
+    </DialogContent>
+  </Dialog>
+  <Dialog v-model:open="deleteOpen">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Eliminar convocatoria institucional</DialogTitle>
+        <DialogDescription>Se eliminarán esta convocatoria, sus alcances de carrera y todos los sílabos que nunca fueron iniciados. Esta acción no se puede deshacer.</DialogDescription>
+      </DialogHeader>
+      <Alert v-if="deleteError" variant="destructive"><AlertDescription>{{ deleteError }}</AlertDescription></Alert>
+      <DialogFooter>
+        <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
+        <Button type="button" variant="destructive" :disabled="deleting" @click="remove"><Spinner v-if="deleting" /><Trash2 v-else aria-hidden="true" />Eliminar convocatoria</Button>
+      </DialogFooter>
     </DialogContent>
   </Dialog>
   <SyllabusProcessSheet v-model:open="editOpen" :template="template" :periods="periods" :process="process" display="menu" @saved="emit('completed', $event)" />
