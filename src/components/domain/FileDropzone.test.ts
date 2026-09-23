@@ -11,11 +11,13 @@ const selectFile = async (wrapper: ReturnType<typeof mount>, file: File): Promis
 describe('FileDropzone', () => {
   it('renders the PNG variant and accepts PNG files', async () => {
     const wrapper = mount(FileDropzone, {
-      props: { modelValue: null, inputId: 'faculty-logo', kind: 'png' },
+      props: { modelValue: null, inputId: 'faculty-logo', kind: 'png', required: true },
     });
 
     expect(wrapper.text()).toContain('Arrastra tu PNG aquí');
     expect(wrapper.get('input').attributes('accept')).toBe('image/png,.png');
+    expect(wrapper.get('input').attributes('required')).toBeDefined();
+    expect(wrapper.get('input').attributes('aria-required')).toBe('true');
 
     const file = new File(['png'], 'facultad.png', { type: 'image/png' });
     await selectFile(wrapper, file);

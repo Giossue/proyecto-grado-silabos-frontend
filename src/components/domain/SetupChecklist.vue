@@ -122,7 +122,7 @@ const percent = computed(() =>
                         class="shrink-0"
                         @click="emit('action', step.action)"
                     >
-                        Configurar
+                        {{ step.action === 'open_convocation' ? 'Abrir convocatoria' : 'Configurar' }}
                     </Button>
                     <Button
                         v-else-if="step.key === nextKey"

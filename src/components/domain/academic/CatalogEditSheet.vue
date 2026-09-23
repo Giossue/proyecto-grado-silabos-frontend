@@ -7,7 +7,7 @@ import DatePicker from '@/components/DatePicker.vue';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { STUDY_MODALITIES } from '@/lib/studyModalities';
@@ -51,7 +51,12 @@ const logoValidationError = (message: string | null): void => {
     errors.value = nextErrors;
 };
 const submit = async (confirmPurge = false): Promise<void> => {
-    processing.value = true; errors.value = {};
+    errors.value = {};
+    if (props.entity === 'facultad' && !props.logoUrl && !logo.value) {
+        errors.value = { logo: ['El logo de la facultad es obligatorio.'] };
+        return;
+    }
+    processing.value = true;
     const payload = new FormData();
     for (const [key, value] of Object.entries(form.value)) {
         if (key === 'code' && props.entity !== 'carrera') continue;
@@ -84,7 +89,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
             <form @submit.prevent="submit()"><FieldGroup>
                 <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
                 <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.campus)"><FieldLabel :for="`edit-campus-${recordId}`" required>Campus</FieldLabel><Select v-model="form.campus" required><SelectTrigger :id="`edit-campus-${recordId}`"><SelectValue placeholder="Seleccione el campus de la facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in campusOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.campus" /></Field>
-                <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.logo)"><FieldLabel :for="`edit-faculty-logo-${recordId}`">Logo de la facultad (PNG sin fondo)</FieldLabel><img v-if="logoUrl" :src="logoUrl" alt="Logo actual de la facultad" class="h-12 w-auto rounded border bg-background p-1"><FileDropzone v-model="logo" :input-id="`edit-faculty-logo-${recordId}`" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" @validation-error="logoValidationError" /><FieldError :errors="errors.logo" /></Field>
+                <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.logo)"><FieldLabel :for="`edit-faculty-logo-${recordId}`" :required="!logoUrl">Logo de la facultad (PNG sin fondo)</FieldLabel><img v-if="logoUrl" :src="logoUrl" alt="Logo actual de la facultad" class="h-12 w-auto rounded border bg-background p-1"><FileDropzone v-model="logo" :input-id="`edit-faculty-logo-${recordId}`" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" :required="!logoUrl" @validation-error="logoValidationError" /><FieldDescription>Medida recomendada: 600 × 180 px. Use una imagen con fondo transparente.</FieldDescription><FieldError :errors="errors.logo" /></Field>
                 <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.faculty_id)"><FieldLabel :for="`edit-faculty-${recordId}`" required>Facultad</FieldLabel><Select v-model="form.faculty_id" required><SelectTrigger :id="`edit-faculty-${recordId}`"><SelectValue placeholder="Seleccione una facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="faculty in facultyOptions" :key="faculty.id" :value="faculty.id">{{ faculty.nombre }} {{ faculty.activo ? '' : '(inactiva)' }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.faculty_id" /></Field>
                 <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.modality)"><FieldLabel :for="`edit-modality-${recordId}`" required>Modalidad</FieldLabel><Select v-model="form.modality" required><SelectTrigger :id="`edit-modality-${recordId}`"><SelectValue placeholder="Seleccione la modalidad aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in STUDY_MODALITIES" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.modality" /></Field>
                 <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>

@@ -11,12 +11,14 @@ const props = withDefaults(defineProps<{
   inputId: string;
   disabled?: boolean;
   invalid?: boolean;
+  required?: boolean;
   maxBytes?: number;
   kind?: FileKind;
   state?: 'idle' | 'uploading' | 'processing' | 'error' | 'done';
 }>(), {
   disabled: false,
   invalid: false,
+  required: false,
   maxBytes: 50 * 1024 * 1024,
   kind: 'pdf' as FileKind,
   state: 'idle',
@@ -151,7 +153,7 @@ watch(() => props.modelValue, (file) => {
       @dragleave.prevent="handleDragLeave"
       @drop="handleDrop"
     >
-      <input ref="input" :id="inputId" class="sr-only" type="file" :accept="copy.accept" :disabled="props.disabled" :aria-invalid="props.invalid" tabindex="-1" @click.stop @change="selectFile" />
+      <input ref="input" :id="inputId" class="sr-only" type="file" :accept="copy.accept" :disabled="props.disabled" :required="props.required" :aria-invalid="props.invalid" :aria-required="props.required" tabindex="-1" @click.stop @change="selectFile" />
       <div v-if="!modelValue" class="flex flex-col items-center gap-2 text-center">
         <Upload class="size-8 text-muted-foreground" aria-hidden="true" />
         <div>

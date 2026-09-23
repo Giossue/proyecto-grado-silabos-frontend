@@ -76,11 +76,11 @@ describe("CoordinationConvocationsPage", () => {
     await wrapper.get("table tbody button").trigger("click");
     await flushPromises();
     const startItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'))
-      .find((item) => item.textContent?.includes('Iniciar'));
+      .find((item) => item.textContent?.includes('Abrir convocatoria'));
     startItem?.click();
     await flushPromises();
     const submit = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'))
-      .find((button) => button.textContent?.includes('Iniciar convocatoria'));
+      .find((button) => button.textContent?.includes('Abrir convocatoria'));
     expect(submit?.disabled).toBe(true);
 
     const source = document.body.querySelector<HTMLElement>('[role="dialog"] [role="checkbox"]');

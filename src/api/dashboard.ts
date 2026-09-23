@@ -24,9 +24,29 @@ export type SetupChecklist = {
   steps: SetupStep[];
 };
 
+export type DashboardDeadline = {
+  period: string;
+  starts_at: string;
+  due_at: string;
+  state: 'upcoming' | 'active' | 'paused' | 'overdue' | 'closed';
+  days_until_start: number;
+  days_until_due: number;
+  convocation_id: string | null;
+};
+
+export type CoordinationConvocation = {
+  process_id: string;
+  period: string;
+  convocation_id: string | null;
+  can_open: boolean;
+  available_sources: Array<{ id: string; name: string }>;
+};
+
 export type Dashboard = {
   metrics: DashboardMetric[];
   setup: SetupChecklist | null;
+  deadline: DashboardDeadline | null;
+  coordination_convocation: CoordinationConvocation | null;
 };
 
 export const getDashboard = () => api<Dashboard>('/dashboard');

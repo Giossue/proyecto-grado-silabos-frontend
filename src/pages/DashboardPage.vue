@@ -9,13 +9,19 @@ import { sessionState } from '@/state/session';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import ConvocationDeadlineCard from '@/components/domain/ConvocationDeadlineCard.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
 import StatTile from '@/components/domain/StatTile.vue';
+import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
+import ConvocationTrackingSheet from '@/components/domain/syllabus/ConvocationTrackingSheet.vue';
 import { paths } from '@/lib/routes';
+import { toast } from '@/lib/toast';
 
 const router = useRouter();
 const dashboard = ref<Dashboard | null>(null);
 const error = ref<string | null>(null);
+const openingOpen = ref(false);
+const trackingOpen = ref(false);
 
 const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, correction_requested: CircleAlert, teachers_pending: UsersRound };
 const setupRoutes: Record<string, string> = {
@@ -38,6 +44,20 @@ const setup = computed(() => dashboard.value?.setup ? {
     href: setupRoutes[step.key] ?? paths.dashboard,
   })),
 } : null);
+const roleCode = computed(() => sessionState.current.value?.active_role?.code ?? null);
+const deadlineRole = computed(() => roleCode.value === 'coordinador' || roleCode.value === 'docente' ? roleCode.value : null);
+const trackingId = computed(() => dashboard.value?.coordination_convocation?.convocation_id ?? dashboard.value?.deadline?.convocation_id ?? null);
+
+const handleSetupAction = (action: string): void => {
+  if (action === 'open_convocation' && dashboard.value?.coordination_convocation?.can_open) {
+    openingOpen.value = true;
+  }
+};
+
+const handleOpened = async (message: string): Promise<void> => {
+  toast.success(message);
+  await load();
+};
 
 const load = async (): Promise<void> => {
   error.value = null;
@@ -61,8 +81,18 @@ onMounted(() => { void load(); });
         <StatTile v-for="metric in dashboard.metrics" :key="metric.key" :label="metric.label" :value="metric.value" :suffix="metric.suffix ?? undefined" :hint="metric.hint" :icon="icons[metric.key]" />
       </div>
       <p v-else class="text-sm text-muted-foreground">No hay indicadores disponibles para este rol.</p>
-      <SetupChecklist v-if="setup" :setup="setup" />
+      <ConvocationDeadlineCard v-if="dashboard.deadline && deadlineRole" :deadline="dashboard.deadline" :role="deadlineRole" @tracking="trackingOpen = true" />
+      <SetupChecklist v-if="setup" :setup="setup" @action="handleSetupAction" />
     </template>
     <LoadingSkeleton v-else variant="dashboard" />
   </PageFrame>
+  <ConvocationOpeningDialog
+    v-if="dashboard?.coordination_convocation"
+    v-model:open="openingOpen"
+    :process-id="dashboard.coordination_convocation.process_id"
+    :period="dashboard.coordination_convocation.period"
+    :available-sources="dashboard.coordination_convocation.available_sources"
+    @opened="handleOpened"
+  />
+  <ConvocationTrackingSheet v-if="trackingId" v-model:open="trackingOpen" :convocation-id="trackingId" />
 </template>
