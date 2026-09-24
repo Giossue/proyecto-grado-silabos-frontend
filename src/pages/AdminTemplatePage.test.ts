@@ -96,14 +96,14 @@ describe("AdminTemplatePage", () => {
     expect(edit).toBeDefined();
     await edit!.trigger("click");
     await flushPromises();
-    await wrapper.get('[aria-label="Campo Descripción"]').trigger("pointerdown");
+    await wrapper.get('[aria-label="Parte Descripción"]').trigger("pointerdown");
     await flushPromises();
 
-    expect(document.body.textContent).toContain('Campo · Descripción');
-    expect(document.body.textContent).toContain('Editar campo');
+    expect(document.body.textContent).toContain('Texto · Descripción');
+    expect(document.body.textContent).toContain('Editar parte');
   });
 
-  it("marca los bloques de contenido fijo que el docente no llena", async () => {
+  it("muestra el tipo real de un texto fijo en la barra, sin etiqueta sobre el lienzo", async () => {
     const withFixed: TemplatePayload = {
       ...payload,
       template: {
@@ -128,8 +128,46 @@ describe("AdminTemplatePage", () => {
     }, { attachTo: document.body });
     await flushPromises();
 
-    expect(wrapper.get("#template-field-block-2 h3").text()).toContain("Contenido fijo · el docente no llena");
-    expect(wrapper.get("#template-field-block-1 h3").text()).not.toContain("Contenido fijo");
+    expect(wrapper.get("#template-field-block-2 h3").text()).toBe("1.2 Firmas");
+    const edit = wrapper.findAll("button").find((button) => button.text() === "Editar");
+    await edit!.trigger("click");
+    await flushPromises();
+    await wrapper.get('[aria-label="Parte Firmas"]').trigger("pointerdown");
+    await flushPromises();
+
+    expect(document.body.textContent).toContain("Texto fijo · Firmas");
+    expect(document.body.textContent).toContain("Editar texto fijo");
+    wrapper.unmount();
+  });
+
+  it("muestra horizontal la hoja de una sección con una parte en hoja horizontal", async () => {
+    const landscape: TemplatePayload = {
+      ...payload,
+      template: {
+        ...payload.template!,
+        sections: [
+          ...payload.template!.sections,
+          {
+            id: "section-2", key: "planificacion", title: "Planificación", description: null,
+            blocks: [{
+              id: "block-plan", key: "plan", title: "Planificación", type: "repetible", content_type: "table",
+              page_orientation: "landscape", table: null, document: null, fingerprint: "c".repeat(64), fields: [],
+            }],
+          },
+        ],
+      },
+    };
+    vi.mocked(getTemplate).mockResolvedValue(landscape);
+    const wrapper = mount({
+      components: { AdminTemplatePage, TooltipProvider },
+      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
+    }, { attachTo: document.body });
+    await flushPromises();
+
+    const sheets = wrapper.findAll("[data-sheet-orientation]").map((sheet) => sheet.attributes("data-sheet-orientation"));
+    expect(sheets).toEqual(["portrait", "landscape"]);
+    expect(wrapper.findAll("[data-sheet-orientation]")[1]!.text()).toContain("2. Planificación");
+    wrapper.unmount();
   });
 
   it("sincroniza una mutación sin desmontar el constructor visual", async () => {
@@ -197,7 +235,7 @@ describe("AdminTemplatePage", () => {
     }, { attachTo: document.body });
     await flushPromises();
 
-    const formatButton = wrapper.findAll('button').find((button) => button.text().trim() === 'Formatear');
+    const formatButton = wrapper.findAll('button').find((button) => button.text().trim() === 'Cargar formato oficial UEB');
     expect(formatButton).toBeDefined();
     await formatButton!.trigger('click');
     await flushPromises();

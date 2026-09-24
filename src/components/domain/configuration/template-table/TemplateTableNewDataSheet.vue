@@ -5,7 +5,6 @@ import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import {
     Field,
-    FieldDescription,
     FieldError,
     FieldGroup,
     FieldLabel,
@@ -28,7 +27,8 @@ export type NewRepeatedData = {
     scope: 'record' | 'unit';
 };
 
-const props = defineProps<{
+// Las horas y semanas de Planificación vienen de fábrica: aquí no se configuran.
+defineProps<{
     usedColumnRoles: Set<TableColumnRole>;
 }>();
 
@@ -72,19 +72,6 @@ const setNewDataType = (value: unknown): void => {
     }
 };
 
-const setNewDataRole = (value: unknown): void => {
-    if (
-        value === 'none' ||
-        ['week', 'hours_acd', 'hours_ape', 'hours_aa'].includes(String(value))
-    ) {
-        newDataRole.value = value as TableColumnRole | 'none';
-
-        if (value !== 'none') {
-            newDataType.value = 'number';
-        }
-    }
-};
-
 const createRepeatedData = (): void => {
     const label = newDataLabel.value.trim();
 
@@ -96,16 +83,6 @@ const createRepeatedData = (): void => {
 
     if (label.length > 180) {
         newDataError.value = 'Use un nombre de hasta 180 caracteres.';
-
-        return;
-    }
-
-    if (
-        newDataRole.value !== 'none' &&
-        props.usedColumnRoles.has(newDataRole.value)
-    ) {
-        newDataError.value =
-            'Esa función especial ya pertenece a otra columna.';
 
         return;
     }
@@ -125,13 +102,9 @@ defineExpose({ open });
 <template>
     <FormSheet
         :open="newDataOpen"
-        trigger-label="Nuevo dato repetible"
-        :title="
-            newDataScope === 'unit'
-                ? 'Nuevo dato de unidad'
-                : 'Nuevo dato de fila'
-        "
-        description="Se insertará en la celda seleccionada y lo completará el docente."
+        trigger-label="Nuevo dato que llena el docente"
+        title="Nuevo dato que llena el docente"
+        description="Se insertará en la celda seleccionada. El docente lo llenará en cada fila que agregue."
         :show-trigger="false"
         @update:open="updateNewDataOpen"
     >
@@ -178,65 +151,6 @@ defineExpose({ open });
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
-                    </Field>
-
-                    <Field
-                        v-if="
-                            newDataScope === 'record' &&
-                            newDataType === 'number'
-                        "
-                    >
-                        <FieldLabel for="table-data-role">
-                            Función especial
-                        </FieldLabel>
-                        <Select
-                            :model-value="newDataRole"
-                            @update:model-value="setNewDataRole"
-                        >
-                            <SelectTrigger id="table-data-role" class="w-full">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    <SelectItem value="none">
-                                        Ninguna
-                                    </SelectItem>
-                                    <SelectItem
-                                        value="week"
-                                        :disabled="usedColumnRoles.has('week')"
-                                    >
-                                        Semana de planificación
-                                    </SelectItem>
-                                    <SelectItem
-                                        value="hours_acd"
-                                        :disabled="
-                                            usedColumnRoles.has('hours_acd')
-                                        "
-                                    >
-                                        Horas ACD
-                                    </SelectItem>
-                                    <SelectItem
-                                        value="hours_ape"
-                                        :disabled="
-                                            usedColumnRoles.has('hours_ape')
-                                        "
-                                    >
-                                        Horas APE
-                                    </SelectItem>
-                                    <SelectItem
-                                        value="hours_aa"
-                                        :disabled="
-                                            usedColumnRoles.has('hours_aa')
-                                        "
-                                    >
-                                        Horas AA
-                                    </SelectItem>
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                        <FieldDescription>
-                            Úsela solo en la tabla de planificación.
-                        </FieldDescription>
                     </Field>
                 </FieldGroup>
 

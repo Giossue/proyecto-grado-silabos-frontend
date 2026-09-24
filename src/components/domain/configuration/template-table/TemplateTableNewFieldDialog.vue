@@ -93,7 +93,7 @@ defineExpose({ open });
     <Dialog v-model:open="newFieldOpen">
         <DialogContent class="sm:max-w-md">
             <DialogHeader>
-                <DialogTitle>Nuevo campo del docente</DialogTitle>
+                <DialogTitle>Nueva pregunta al docente</DialogTitle>
                 <DialogDescription>
                     Se insertará en la celda seleccionada y aparecerá en el
                     formulario del sílabo.
@@ -103,7 +103,7 @@ defineExpose({ open });
             <FieldGroup>
                 <Field>
                     <FieldLabel for="table-field-label"
-                        >Nombre visible</FieldLabel
+                        >Pregunta que verá el docente</FieldLabel
                     >
                     <Input
                         id="table-field-label"
@@ -164,7 +164,7 @@ defineExpose({ open });
                         data-icon="inline-start"
                         aria-hidden="true"
                     />
-                    Insertar campo
+                    Insertar pregunta
                 </Button>
             </DialogFooter>
         </DialogContent>

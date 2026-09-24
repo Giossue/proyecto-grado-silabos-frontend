@@ -23,7 +23,7 @@ type ContextGroup = {
 };
 
 const value = (key: string): string =>
-    props.variables[key]?.trim() || 'Dato no disponible';
+    props.variables[key]?.trim() || 'Pendiente de Coordinación';
 
 const groups = computed<ContextGroup[]>(() => [
     {

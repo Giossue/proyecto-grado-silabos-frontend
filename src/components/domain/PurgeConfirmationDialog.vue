@@ -42,7 +42,7 @@ const { open, message, confirm, cancel } = usePurgeConfirmation();
                 </Button>
                 <Button type="button" variant="destructive" @click="confirm">
                     <RotateCcw data-icon="inline-start" aria-hidden="true" />
-                    Guardar y regenerar
+                    Guardar y rehacer los sílabos afectados
                 </Button>
             </DialogFooter>
         </DialogContent>

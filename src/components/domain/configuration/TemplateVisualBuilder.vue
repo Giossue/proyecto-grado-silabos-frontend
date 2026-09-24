@@ -27,6 +27,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { defaultDocument, nodesOfType } from '@/lib/templateDocument';
+import { partTypeLabel, sectionOrientation } from '@/lib/templateParts';
 import { templatePreviewFields } from '@/lib/templatePreview';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
@@ -122,11 +123,11 @@ const selectionLabel = computed(() => {
     }
 
     if (selectedField.value) {
-        return `Campo · ${selectedField.value.title}`;
+        return `${partTypeLabel(selectedField.value)} · ${selectedField.value.title}`;
     }
 
     if (selectedSection.value) {
-        return `Bloque · ${selectedSection.value.title}`;
+        return `Sección · ${selectedSection.value.title}`;
     }
 
     return 'Ningún elemento seleccionado';
@@ -168,12 +169,50 @@ const fieldsFor = (block: TemplateFieldContainer) =>
     templatePreviewFields(block.fields, block.table);
 const hasTable = (block: TemplateFieldContainer): boolean =>
     nodesOfType(documentFor(block), 'table').length > 0;
-const isFixedContent = (block: TemplateFieldContainer): boolean =>
-    block.content_type === 'fixed' ||
-    (block.fields.length === 0 &&
-        Boolean(block.document) &&
-        nodesOfType(block.document!, 'field').length === 0 &&
-        nodesOfType(block.document!, 'column').length === 0);
+
+type SheetGroup = {
+    orientation: TemplateAppearance['orientation'];
+    sections: { section: TemplateSection; index: number }[];
+};
+
+/**
+ * Secciones seguidas con la misma orientación comparten hojas. Una sección con
+ * hoja horizontal abre su propio grupo, igual que en el documento Word.
+ */
+const sheetGroups = computed<SheetGroup[]>(() => {
+    const groups: SheetGroup[] = [];
+
+    props.template.sections.forEach((section, index) => {
+        const orientation = sectionOrientation(
+            section.blocks,
+            props.appearance.orientation,
+        );
+        const last = groups.at(-1);
+
+        if (last && last.orientation === orientation) {
+            last.sections.push({ section, index });
+
+            return;
+        }
+
+        groups.push({ orientation, sections: [{ section, index }] });
+    });
+
+    return groups.length > 0
+        ? groups
+        : [{ orientation: props.appearance.orientation, sections: [] }];
+});
+const groupPages = ref<number[]>([]);
+const startPage = (groupIndex: number): number =>
+    1 +
+    groupPages.value
+        .slice(0, groupIndex)
+        .reduce((total, count) => total + (count ?? 1), 0);
+const updateGroupPages = (groupIndex: number, count: number): void => {
+    const next = [...groupPages.value];
+    next[groupIndex] = count;
+    groupPages.value = next;
+};
 
 const shiftedIds = (
     ids: string[],
@@ -218,11 +257,11 @@ const moveSection = (sectionId: string, direction: MoveDirection): void => {
         {
             preserveScroll: true,
             preserveState: true,
-            onSuccess: () => toast.success('Bloque movido'),
+            onSuccess: () => toast.success('Sección movida'),
             onError: (errors) =>
                 toast.error(
                     Object.values(errors)[0] ??
-                        'No se pudo cambiar el orden del bloque',
+                        'No se pudo cambiar el orden de la sección',
                 ),
             onFinish: () => {
                 reorderPending.value = false;
@@ -257,11 +296,11 @@ const moveField = (
         {
             preserveScroll: true,
             preserveState: true,
-            onSuccess: () => toast.success('Campo movido'),
+            onSuccess: () => toast.success('Parte movida'),
             onError: (errors) =>
                 toast.error(
                     Object.values(errors)[0] ??
-                        'No se pudo cambiar el orden del campo',
+                        'No se pudo cambiar el orden de la parte',
                 ),
             onFinish: () => {
                 reorderPending.value = false;
@@ -453,7 +492,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                         data-icon="inline-start"
                                         aria-hidden="true"
                                     />
-                                    Renombrar bloque
+                                    Renombrar sección
                                 </Button>
                                 <Button
                                     type="button"
@@ -470,7 +509,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                         data-icon="inline-start"
                                         aria-hidden="true"
                                     />
-                                    Eliminar bloque
+                                    Eliminar sección
                                 </Button>
                             </template>
 
@@ -506,7 +545,12 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                         data-icon="inline-start"
                                         aria-hidden="true"
                                     />
-                                    Editar campo
+                                    {{
+                                        partTypeLabel(selectedField) ===
+                                        'Texto fijo'
+                                            ? 'Editar texto fijo'
+                                            : 'Editar parte'
+                                    }}
                                 </Button>
                                 <Button
                                     type="button"
@@ -523,7 +567,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                         data-icon="inline-start"
                                         aria-hidden="true"
                                     />
-                                    Eliminar campo
+                                    Eliminar parte
                                 </Button>
                             </template>
                         </template>
@@ -551,14 +595,20 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
             </div>
         </Teleport>
 
-        <div class="min-w-0 overflow-x-auto p-1 pb-4">
+        <div class="flex min-w-0 flex-col gap-6 overflow-x-auto p-1 pb-4">
             <PaginatedDocument
-                :orientation="appearance.orientation"
+                v-for="(group, groupIndex) in sheetGroups"
+                :key="groupIndex"
+                :orientation="group.orientation"
                 :margin-cm="appearance.margin_cm"
                 :font-family="appearance.font_family"
                 :font-size="appearance.body_font_size"
                 :text-color="appearance.text_color"
+                :start-page="startPage(groupIndex)"
+                :data-sheet-orientation="group.orientation"
+                @pages="updateGroupPages(groupIndex, $event)"
             >
+                <template v-if="groupIndex === 0">
                 <div
                     class="mb-5 flex w-full items-center justify-between gap-6"
                     :style="{
@@ -633,12 +683,13 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         empty
                     />
                     <p v-else class="text-center text-muted-foreground">
-                        La plantilla todavía no tiene bloques.
+                        La plantilla todavía no tiene secciones.
                     </p>
                 </div>
+                </template>
 
                 <section
-                    v-for="(section, sectionIndex) in template.sections"
+                    v-for="{ section, index: sectionIndex } in group.sections"
                     :key="section.id"
                     data-template-selectable="section"
                     class="relative mb-6 rounded-none outline-offset-4 transition-shadow"
@@ -648,7 +699,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             selection.kind === 'section' &&
                             selection.sectionId === section.id,
                     }"
-                    :aria-label="`Bloque ${section.title}`"
+                    :aria-label="`Sección ${section.title}`"
                     :role="readonly ? undefined : 'button'"
                     :aria-pressed="
                         readonly
@@ -702,7 +753,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         class="mb-3 text-sm text-muted-foreground"
                         data-page-unit
                     >
-                        Este bloque todavía no tiene campos.
+                        Esta sección todavía no tiene partes.
                     </p>
 
                     <article
@@ -718,7 +769,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                 selection.kind === 'field' &&
                                 selection.blockId === block.id,
                         }"
-                        :aria-label="`Campo ${block.title}`"
+                        :aria-label="`Parte ${block.title}`"
                         :role="readonly || activeTable ? undefined : 'button'"
                         :aria-pressed="
                             readonly || activeTable
@@ -739,13 +790,6 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         >
                             {{ sectionIndex + 1 }}.{{ fieldIndex + 1 }}
                             {{ block.title }}
-                            <Badge
-                                v-if="isFixedContent(block)"
-                                variant="secondary"
-                                class="ml-2 align-middle text-xs font-normal"
-                            >
-                                Contenido fijo · el docente no llena
-                            </Badge>
                         </h3>
 
                         <TemplateTableDesigner
@@ -813,7 +857,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                 class="absolute top-1/2 left-full ms-1 flex -translate-y-1/2 items-center gap-1"
                             >
                                 <TemplateToolbarButton
-                                    label="Mover campo arriba"
+                                    label="Mover parte arriba"
                                     variant="outline"
                                     :disabled="
                                         reorderPending || fieldIndex === 0
@@ -823,7 +867,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                     <ArrowUp aria-hidden="true" />
                                 </TemplateToolbarButton>
                                 <TemplateToolbarButton
-                                    label="Mover campo abajo"
+                                    label="Mover parte abajo"
                                     variant="outline"
                                     :disabled="
                                         reorderPending ||
@@ -860,7 +904,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             class="absolute top-1/2 left-full ms-1 flex -translate-y-1/2 items-center gap-1"
                         >
                             <TemplateToolbarButton
-                                label="Mover bloque arriba"
+                                label="Mover sección arriba"
                                 variant="outline"
                                 :disabled="reorderPending || sectionIndex === 0"
                                 @click="moveSection(section.id, -1)"
@@ -868,7 +912,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                 <ArrowUp aria-hidden="true" />
                             </TemplateToolbarButton>
                             <TemplateToolbarButton
-                                label="Mover bloque abajo"
+                                label="Mover sección abajo"
                                 variant="outline"
                                 :disabled="
                                     reorderPending ||

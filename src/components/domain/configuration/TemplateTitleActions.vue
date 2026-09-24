@@ -63,7 +63,7 @@ defineExpose({ openEdit });
             <DialogHeader>
                 <DialogTitle>Editar título principal</DialogTitle>
                 <DialogDescription>
-                    Este bloque es único y siempre aparece al inicio del
+                    El título es único y siempre aparece al inicio del
                     documento.
                 </DialogDescription>
             </DialogHeader>

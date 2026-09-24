@@ -95,15 +95,6 @@ export function useTemplateTableSelection(
             ? (role as TableRowRole)
             : 'fixed';
     });
-    const groupedByUnit = computed(() => {
-        void version.value;
-
-        const value = ancestorAttributes('table')?.groupByUnit;
-
-        return typeof value === 'boolean'
-            ? value
-            : Boolean(props.layout?.repeat.enabled);
-    });
     const repeatField = computed(() =>
         props.fields.find((field) => field.type === 'repetible'),
     );
@@ -221,11 +212,6 @@ export function useTemplateTableSelection(
 
         return [...byKey.values()];
     });
-    const conditionalChoices = computed(() =>
-        teacherFields.value.flatMap((field) =>
-            (field.options ?? []).map((option) => ({ field, option })),
-        ),
-    );
     const can = (command: TableCommand) => {
         void version.value;
         const commands = state.value?.can();
@@ -240,13 +226,11 @@ export function useTemplateTableSelection(
         inCell,
         ancestorAttributes,
         selectedRowRole,
-        groupedByUnit,
         repeatField,
         repeatedColumns,
         selectedRowHasColumns,
         usedColumnRoles,
         teacherFields,
-        conditionalChoices,
         can,
     };
 }

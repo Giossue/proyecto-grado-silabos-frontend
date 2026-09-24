@@ -15,6 +15,8 @@ const props = withDefaults(
         fontSize?: number;
         textColor?: string;
         showPageNumbers?: boolean;
+        /** Número de la primera hoja, cuando el documento sigue de otro anterior. */
+        startPage?: number;
     }>(),
     {
         orientation: 'portrait',
@@ -24,8 +26,11 @@ const props = withDefaults(
         fontSize: 11,
         textColor: 'var(--document-text)',
         showPageNumbers: true,
+        startPage: 1,
     },
 );
+
+const emit = defineEmits<{ pages: [count: number] }>();
 
 const page = computed(() => ({
     width:
@@ -140,6 +145,7 @@ onMounted(() => {
 });
 
 watch(page, schedule);
+watch(pages, (count) => emit('pages', count), { immediate: true });
 
 onBeforeUnmount(() => {
     disposed = true;
@@ -169,7 +175,7 @@ onBeforeUnmount(() => {
     >
         <div class="paged-document-papers" aria-hidden="true">
             <div v-for="page in pages" :key="page" class="paged-document-paper">
-                <span v-if="props.showPageNumbers" class="paged-document-number">{{ page }}</span>
+                <span v-if="props.showPageNumbers" class="paged-document-number">{{ page + props.startPage - 1 }}</span>
             </div>
         </div>
         <div ref="content" class="paged-document-content">

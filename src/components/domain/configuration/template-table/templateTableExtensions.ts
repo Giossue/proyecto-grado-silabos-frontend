@@ -1,4 +1,4 @@
-import { mergeAttributes, Node } from '@tiptap/core';
+import { Extension, mergeAttributes, Node } from '@tiptap/core';
 import type { Extensions } from '@tiptap/core';
 import {
     Table,
@@ -11,10 +11,24 @@ import TextAlign from '@tiptap/extension-text-align';
 import { Color, FontFamily, TextStyle } from '@tiptap/extension-text-style';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import type { EditorView } from '@tiptap/pm/view';
+import { PluginKey } from '@tiptap/pm/state';
 import StarterKit from '@tiptap/starter-kit';
+import Suggestion from '@tiptap/suggestion';
+import type { SuggestionOptions } from '@tiptap/suggestion';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
+import { inlineNodeLabel } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import TemplateTableInlineNode from '@/components/domain/configuration/TemplateTableInlineNode.vue';
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
+import type { TemplateVariable } from '@/lib/templateDocument';
+
+export type TemplateTableExtensionOptions = {
+    /** Nombre visible de un dato automático; nunca se muestra su clave. */
+    variableLabel?: (id: string) => string | undefined;
+    /** Lista que se abre al escribir «@» dentro de una celda. */
+    suggestion?: Omit<SuggestionOptions<TemplateVariable>, 'editor'>;
+};
+
+
 
 class ResponsiveTableView extends TableView {
     constructor(
@@ -172,9 +186,13 @@ const StyledTableHeader = TableHeader.extend({
     },
 });
 
-const inlineNode = (name: 'field' | 'column' | 'variable') =>
+const inlineNode = (
+    name: 'field' | 'column' | 'variable',
+    variableLabel?: (id: string) => string | undefined,
+) =>
     Node.create({
         name,
+        addOptions: () => ({ variableLabel }),
         group: 'inline',
         inline: true,
         atom: true,
@@ -207,14 +225,7 @@ const inlineNode = (name: 'field' | 'column' | 'variable') =>
             },
         ],
         renderHTML: ({ node, HTMLAttributes }) => {
-            const label =
-                name === 'variable'
-                    ? `@${node.attrs.id}`
-                    : name === 'column'
-                      ? `$${node.attrs.key}`
-                      : node.attrs.choice
-                        ? `X si ${node.attrs.label} = ${node.attrs.choice}`
-                        : node.attrs.label;
+            const label = inlineNodeLabel(name, node.attrs, variableLabel);
 
             return [
                 'span',
@@ -237,7 +248,25 @@ const inlineNode = (name: 'field' | 'column' | 'variable') =>
         },
     });
 
-export const templateTableExtensions = (): Extensions => [
+const variableSuggestion = (
+    suggestion: NonNullable<TemplateTableExtensionOptions['suggestion']>,
+) =>
+    Extension.create({
+        name: 'variableSuggestion',
+        addProseMirrorPlugins() {
+            return [
+                Suggestion<TemplateVariable>({
+                    editor: this.editor,
+                    pluginKey: new PluginKey('variableSuggestion'),
+                    ...suggestion,
+                }),
+            ];
+        },
+    });
+
+export const templateTableExtensions = (
+    options: TemplateTableExtensionOptions = {},
+): Extensions => [
     StarterKit.configure({
         heading: false,
         blockquote: false,
@@ -280,5 +309,6 @@ export const templateTableExtensions = (): Extensions => [
     StyledTableHeader,
     inlineNode('field'),
     inlineNode('column'),
-    inlineNode('variable'),
+    inlineNode('variable', options.variableLabel),
+    ...(options.suggestion ? [variableSuggestion(options.suggestion)] : []),
 ];

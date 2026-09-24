@@ -1,3 +1,4 @@
+import { CellSelection } from '@tiptap/pm/tables';
 import type { Editor } from '@tiptap/vue-3';
 import { computed } from 'vue';
 import type { ShallowRef } from 'vue';
@@ -119,14 +120,6 @@ export function useTemplateTableActions(
         state.value?.chain().focus().deleteRow().run();
     };
 
-    const setGroupedByUnit = (value: boolean): void => {
-        if (!enableRepeatedTable()) {
-            return;
-        }
-
-        setAncestorAttribute('table', 'groupByUnit', value);
-    };
-
     const setCell = (attribute: keyof CellAttributes, value: unknown): void => {
         state.value?.chain().focus().setCellAttribute(attribute, value).run();
     };
@@ -177,12 +170,91 @@ export function useTemplateTableActions(
             .run();
     };
 
+    /**
+     * Lo insertado queda después de lo seleccionado; nunca lo reemplaza. Con
+     * varias celdas marcadas, entra al final de la última.
+     */
     const insertNode = (node: DocumentNode): void => {
-        if (!inCell.value || props.pending) {
+        const current = state.value;
+
+        if (!current || !inCell.value || props.pending) {
             return;
         }
 
-        state.value?.chain().focus().insertContent(node).run();
+        const { selection } = current.state;
+        let position = selection.to;
+
+        if (selection instanceof CellSelection) {
+            const cell = selection.$headCell.nodeAfter;
+
+            position = cell
+                ? selection.$headCell.pos + cell.nodeSize - 2
+                : selection.to;
+        }
+
+        current
+            .chain()
+            .focus()
+            .setTextSelection(position)
+            .insertContent(node)
+            .run();
+    };
+
+    /**
+     * Convierte la tabla seleccionada en texto fijo: quita lo que llena el
+     * docente y deja todas las filas fijas. Es un solo paso para poder
+     * deshacerlo de una vez.
+     */
+    const convertTableToFixed = (): void => {
+        const current = state.value;
+
+        if (!current) {
+            return;
+        }
+
+        const { state: editorState, view } = current;
+        const { $from } = editorState.selection;
+        let depth = $from.depth;
+
+        while (depth > 0 && $from.node(depth).type.name !== 'table') {
+            depth--;
+        }
+
+        if (depth === 0) {
+            return;
+        }
+
+        const table = $from.node(depth);
+        const tablePos = $from.before(depth);
+        const tr = editorState.tr;
+        const removals: { from: number; to: number }[] = [];
+
+        table.descendants((node, offset) => {
+            const pos = tablePos + 1 + offset;
+
+            if (node.type.name === 'field' || node.type.name === 'column') {
+                removals.push({ from: pos, to: pos + node.nodeSize });
+            } else if (node.type.name === 'tableRow') {
+                tr.setNodeMarkup(pos, undefined, {
+                    ...node.attrs,
+                    rowRole: 'fixed',
+                });
+            }
+        });
+        tr.setNodeMarkup(tablePos, undefined, {
+            ...table.attrs,
+            repeatKey: null,
+            repeatLabel: null,
+            groupByUnit: null,
+            visualStructure: null,
+        });
+
+        // Borrar de atrás hacia adelante mantiene válidas las posiciones previas.
+        for (const range of removals.reverse()) {
+            tr.delete(range.from, range.to);
+        }
+
+        view.dispatch(tr);
     };
 
     const insertVariable = (variable: TemplateVariable): void =>
@@ -269,7 +341,6 @@ export function useTemplateTableActions(
     return {
         setRowRole,
         deleteSelectedRow,
-        setGroupedByUnit,
         setCell,
         background,
         cellTextColor,
@@ -279,6 +350,7 @@ export function useTemplateTableActions(
         alignmentTooltip,
         resetCell,
         insertNode,
+        convertTableToFixed,
         insertVariable,
         insertField,
         canInsertRepeatedColumn,

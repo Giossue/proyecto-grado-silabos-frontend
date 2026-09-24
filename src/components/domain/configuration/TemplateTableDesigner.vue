@@ -307,8 +307,8 @@ defineExpose({ start });
                 <AlertTitle>Confirmación necesaria</AlertTitle>
                 <AlertDescription class="flex flex-wrap items-center gap-2">
                     <span>
-                        {{ purge }} Guardar y regenerar aplica la plantilla
-                        corregida a todo el alcance.
+                        {{ purge }} Si guarda, esos sílabos se rehacen con la
+                        plantilla corregida.
                     </span>
                     <Button
                         type="button"
@@ -318,7 +318,7 @@ defineExpose({ start });
                         @click="confirmAndSave"
                     >
                         <Save data-icon="inline-start" aria-hidden="true" />
-                        Guardar y regenerar
+                        Guardar y rehacer los sílabos afectados
                     </Button>
                 </AlertDescription>
             </Alert>

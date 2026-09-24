@@ -1,63 +1,45 @@
-import type { MentionOptions } from '@tiptap/extension-mention';
-import type { SuggestionProps } from '@tiptap/suggestion';
+import type { SuggestionOptions, SuggestionProps } from '@tiptap/suggestion';
 import { ref, shallowRef } from 'vue';
-import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
+import type { TemplateVariable } from '@/lib/templateDocument';
 
 type VariableSuggestionOptions = {
     variables: () => TemplateVariable[];
-    allowTeacher: () => boolean;
-    teacherNode: () => DocumentNode;
+    /** Se consulta al escribir «@»: fuera de una celda no se abre la lista. */
+    enabled?: () => boolean;
 };
 
 const normalize = (value: string) =>
     value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
+/**
+ * Autocompletado de datos automáticos: al escribir «@» se abre la lista y el
+ * elegido entra como ficha con su nombre. La clave nunca se muestra.
+ */
 export function useVariableSuggestions(options: VariableSuggestionOptions) {
     const suggestions = shallowRef<SuggestionProps<TemplateVariable> | null>(
         null,
     );
     const selectedSuggestion = ref(0);
     const chooseVariable = (item: TemplateVariable) =>
-        suggestions.value?.command({ id: item.key, label: item.key });
-    const suggestion: MentionOptions<TemplateVariable>['suggestion'] = {
+        suggestions.value?.command(item);
+    const suggestion: Omit<SuggestionOptions<TemplateVariable>, 'editor'> = {
         char: '@',
+        allow: () => options.enabled?.() ?? true,
         items: ({ query }) =>
-            [
-                {
-                    key: 'docente',
-                    label: 'Campo que completará el docente',
-                    sample: '',
-                },
-                ...options.variables(),
-            ]
-                .filter(
-                    (item) => item.key !== 'docente' || options.allowTeacher(),
-                )
+            options
+                .variables()
                 .filter((item) =>
-                    normalize(`${item.key} ${item.label}`).includes(
-                        normalize(query),
-                    ),
+                    normalize(item.label).includes(normalize(query)),
                 )
                 .slice(0, 8),
         command: ({ editor: target, range, props: item }) => {
-            if (item.id === 'docente') {
-                target
-                    .chain()
-                    .focus()
-                    .insertContentAt(range, options.teacherNode())
-                    .setNodeSelection(range.from)
-                    .run();
-
-                return;
-            }
-
             target
                 .chain()
                 .focus()
                 .insertContentAt(range, [
                     {
                         type: 'variable',
-                        attrs: { id: item.id, label: item.id },
+                        attrs: { id: item.key, label: item.label },
                     },
                     { type: 'text', text: ' ' },
                 ])

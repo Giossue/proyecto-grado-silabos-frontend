@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Blocks, Trash2 } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
@@ -20,6 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { choosableTypes } from '@/lib/templateParts';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type { TemplateContentType } from '@/types/configuration';
@@ -42,6 +43,8 @@ const props = withDefaults(
         choice: false,
     },
 );
+
+const typeOptions = computed(() => choosableTypes(props.blockTypes));
 
 let sequence = 0;
 const technicalKey = (prefix: string): string => {
@@ -93,11 +96,29 @@ const errorFor = (path: string): string | undefined =>
     (form.errors as Record<string, string>)[path];
 
 const submit = (): void => {
+    const errors: Record<string, string> = {};
+
+    if (form.title.trim() === '') {
+        errors.title = 'Escriba un nombre.';
+    }
+
+    form.fields.forEach((field, index) => {
+        if (field.label.trim() === '') {
+            errors[`fields.${index}.label`] = 'Escriba un nombre.';
+        }
+    });
+
+    if (Object.keys(errors).length > 0) {
+        form.errors = errors;
+
+        return;
+    }
+
     form.position = props.position + 1;
     form.post(TemplateController.storeSection.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success('Bloque agregado.');
+            toast.success('Sección agregada.');
             open.value = false;
             reset();
             emit('closed');
@@ -105,7 +126,7 @@ const submit = (): void => {
         onError: (errors) => {
             if (!('purge_required' in errors)) {
                 toast.error(
-                    Object.values(errors)[0] ?? 'No se pudo agregar el bloque.',
+                    Object.values(errors)[0] ?? 'No se pudo agregar la sección.',
                 );
             }
         },
@@ -125,9 +146,9 @@ const updateOpen = (value: boolean): void => {
 <template>
     <FormSheet
         :open="open"
-        :trigger-label="empty ? 'Agregar primer bloque' : 'Agregar bloque'"
-        title="Nuevo bloque"
-        description="El bloque agrupa los campos que completará el docente."
+        :trigger-label="empty ? 'Agregar primera sección' : 'Agregar sección'"
+        title="Nueva sección"
+        description="La sección es un título numerado del sílabo. Dentro van sus partes."
         @update:open="updateOpen"
     >
         <template #trigger>
@@ -138,7 +159,7 @@ const updateOpen = (value: boolean): void => {
                 :class="choice ? 'w-full justify-start' : undefined"
             >
                 <Blocks data-icon="inline-start" aria-hidden="true" />
-                {{ empty ? 'Agregar primer bloque' : 'Agregar bloque' }}
+                {{ empty ? 'Agregar primera sección' : 'Agregar sección' }}
             </Button>
         </template>
         <template #default="{ close }">
@@ -147,7 +168,7 @@ const updateOpen = (value: boolean): void => {
                     <FieldGroup>
                         <Field :data-invalid="Boolean(errorFor('title'))">
                             <FieldLabel for="new-template-block-title" required>
-                                Nombre del bloque
+                                Nombre de la sección
                             </FieldLabel>
                             <Input
                                 id="new-template-block-title"
@@ -172,7 +193,7 @@ const updateOpen = (value: boolean): void => {
                                 class="flex items-center justify-between gap-2"
                             >
                                 <p class="text-sm font-medium">
-                                    Campo {{ index + 1 }}
+                                    Parte {{ index + 1 }}
                                 </p>
                                 <Button
                                     v-if="form.fields.length > 1"
@@ -180,7 +201,7 @@ const updateOpen = (value: boolean): void => {
                                     variant="ghost"
                                     size="icon-sm"
                                     :disabled="form.processing"
-                                    :aria-label="`Quitar campo ${index + 1}`"
+                                    :aria-label="`Quitar parte ${index + 1}`"
                                     @click="removeField(index)"
                                 >
                                     <Trash2 aria-hidden="true" />
@@ -231,7 +252,7 @@ const updateOpen = (value: boolean): void => {
                                     :for="`new-template-field-type-${index}`"
                                     required
                                 >
-                                    Tipo de contenido
+                                    Tipo de parte
                                 </FieldLabel>
                                 <Select
                                     v-model="field.content_type"
@@ -253,7 +274,7 @@ const updateOpen = (value: boolean): void => {
                                     <SelectContent>
                                         <SelectGroup>
                                             <SelectItem
-                                                v-for="type in blockTypes"
+                                                v-for="type in typeOptions"
                                                 :key="type.value"
                                                 :value="type.value"
                                             >
@@ -283,11 +304,11 @@ const updateOpen = (value: boolean): void => {
                         :disabled="form.processing || form.fields.length >= 20"
                         @click="addField"
                     >
-                        Agregar otro campo
+                        Agregar otra parte
                     </Button>
                 </div>
                 <FormSheetActions
-                    label="Crear bloque"
+                    label="Crear sección"
                     :close="close"
                     :processing="form.processing"
                     :icon="Blocks"

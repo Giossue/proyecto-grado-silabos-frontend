@@ -32,6 +32,7 @@ export type TemplateFieldContainer = {
     title: string;
     type: string;
     content_type: TemplateContentType;
+    page_orientation?: 'portrait' | 'landscape' | null;
     table: TableLayout | null;
     document?: DocumentNode | null;
     fingerprint?: string;

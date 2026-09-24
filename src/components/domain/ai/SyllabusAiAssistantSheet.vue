@@ -454,12 +454,13 @@ onBeforeUnmount(() => {
                         </EmptyMedia>
                         <EmptyTitle>Aún no hay una revisión</EmptyTitle>
                         <EmptyDescription v-if="canReview">
-                            El sílabo está listo. Inicia la revisión para
-                            recibir consejos organizados por sección
+                            Inicia la revisión para recibir consejos
+                            organizados por sección. Puedes pedirla aunque
+                            todavía falten partes por completar
                         </EmptyDescription>
                         <EmptyDescription v-else>
-                            Completa los campos obligatorios y valida el sílabo
-                            para habilitar la revisión
+                            La revisión se puede pedir mientras el sílabo
+                            está en edición
                         </EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent v-if="canReview">

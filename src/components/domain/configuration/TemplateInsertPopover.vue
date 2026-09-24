@@ -37,7 +37,7 @@ const open = ref(false);
             <Plus aria-hidden="true" />
         </template>
 
-        <PopoverContent align="center" class="w-48 p-1.5">
+        <PopoverContent align="center" class="w-56 p-1.5">
             <div class="flex flex-col gap-1">
                 <TemplateFieldCreator
                     :template-id="templateId"
@@ -45,6 +45,15 @@ const open = ref(false);
                     :position="fieldPosition"
                     :block-types="blockTypes"
                     choice
+                    @closed="open = false"
+                />
+                <TemplateFieldCreator
+                    :template-id="templateId"
+                    :section-id="sectionId"
+                    :position="fieldPosition"
+                    :block-types="blockTypes"
+                    choice
+                    fixed
                     @closed="open = false"
                 />
                 <TemplateBlockCreator

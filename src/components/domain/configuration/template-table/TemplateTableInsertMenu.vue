@@ -1,25 +1,18 @@
 <script setup lang="ts">
-import type { AcceptableValue } from 'reka-ui';
 import {
-    BadgeCheck,
     Braces,
     ChevronDown,
-    Database,
+    MessageCircleQuestionMark,
     Plus,
     Rows3,
-    UserRoundPlus,
 } from '@lucide/vue';
 import type { TableRowRole } from '@/components/domain/configuration/template-table/types';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
-    DropdownMenuCheckboxItem,
     DropdownMenuContent,
     DropdownMenuGroup,
     DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuRadioGroup,
-    DropdownMenuRadioItem,
     DropdownMenuSeparator,
     DropdownMenuSub,
     DropdownMenuSubContent,
@@ -29,29 +22,27 @@ import {
 import type { TableColumn } from '@/lib/tableLayout';
 import type { DocumentField, TemplateVariable } from '@/lib/templateDocument';
 
+/*
+ * Tres opciones y nada más. Lo propio de Planificación (unidades, horas y
+ * totales) viene de fábrica y no se configura aquí.
+ */
 defineProps<{
     disabled: boolean;
     variables: TemplateVariable[];
     teacherFields: DocumentField[];
-    conditionalChoices: {
-        field: DocumentField;
-        option: { value: string; label: string };
-    }[];
     repeatedColumns: TableColumn[];
     canInsertRepeatedColumn: (column: TableColumn) => boolean;
     selectedRowRole: TableRowRole;
     selectedRowHasColumns: boolean;
-    groupedByUnit: boolean;
 }>();
 
 const emit = defineEmits<{
     insertVariable: [variable: TemplateVariable];
-    insertField: [field: DocumentField, choice: string | null];
+    insertField: [field: DocumentField];
     newField: [];
     insertRepeatedColumn: [column: TableColumn];
     newData: [];
-    groupedByUnit: [value: boolean];
-    rowRole: [value: AcceptableValue];
+    rowRole: [value: TableRowRole];
 }>();
 </script>
 
@@ -63,7 +54,7 @@ const emit = defineEmits<{
                 size="sm"
                 variant="ghost"
                 :disabled="disabled"
-                aria-label="Insertar contenido en la celda"
+                aria-label="Insertar en la celda"
             >
                 <Plus data-icon="inline-start" aria-hidden="true" />
                 Insertar
@@ -86,15 +77,8 @@ const emit = defineEmits<{
                                 :key="variable.key"
                                 @select="emit('insertVariable', variable)"
                             >
-                                <span class="min-w-0">
-                                    <span class="block truncate font-medium">
-                                        {{ variable.label }}
-                                    </span>
-                                    <span
-                                        class="block truncate text-xs text-muted-foreground"
-                                    >
-                                        @{{ variable.key }}
-                                    </span>
+                                <span class="truncate">
+                                    {{ variable.label }}
                                 </span>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
@@ -103,8 +87,8 @@ const emit = defineEmits<{
 
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
-                        <UserRoundPlus />
-                        Campo del docente
+                        <MessageCircleQuestionMark />
+                        Pregunta al docente
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent
                         class="max-h-80 w-72 overflow-y-auto"
@@ -113,152 +97,66 @@ const emit = defineEmits<{
                             <DropdownMenuItem
                                 v-for="field in teacherFields"
                                 :key="field.key"
-                                @select="emit('insertField', field, null)"
+                                @select="emit('insertField', field)"
                             >
                                 {{ field.label }}
                             </DropdownMenuItem>
-                            <DropdownMenuItem
-                                v-if="teacherFields.length === 0"
-                                disabled
-                            >
-                                Aún no hay campos
-                            </DropdownMenuItem>
                         </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
+                        <DropdownMenuSeparator v-if="teacherFields.length" />
                         <DropdownMenuItem @select="emit('newField')">
                             <Plus />
-                            Nuevo campo…
+                            Nueva pregunta…
                         </DropdownMenuItem>
                     </DropdownMenuSubContent>
                 </DropdownMenuSub>
 
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
-                        <BadgeCheck />
-                        Marca condicional
+                        <Rows3 />
+                        Filas que agrega el docente
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent
                         class="max-h-80 w-80 overflow-y-auto"
                     >
                         <DropdownMenuGroup>
                             <DropdownMenuItem
-                                v-for="item in conditionalChoices"
-                                :key="
-                                    [item.field.key, item.option.value].join(
-                                        '-',
-                                    )
-                                "
-                                @select="
-                                    emit(
-                                        'insertField',
-                                        item.field,
-                                        item.option.value,
-                                    )
-                                "
+                                v-if="selectedRowRole === 'fixed'"
+                                @select="emit('rowRole', 'record')"
                             >
-                                X si {{ item.field.label }} =
-                                {{ item.option.label }}
+                                El docente repite esta fila
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                v-if="conditionalChoices.length === 0"
-                                disabled
+                                v-else-if="selectedRowRole === 'record'"
+                                :disabled="selectedRowHasColumns"
+                                @select="emit('rowRole', 'fixed')"
                             >
-                                Cree primero un campo de selección
+                                Esta fila ya no la repite el docente
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
-                    </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                <DropdownMenuSeparator />
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                        <Database />
-                        Dato repetible
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent
-                        class="max-h-80 w-72 overflow-y-auto"
-                    >
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem
-                                v-for="column in repeatedColumns"
-                                :key="column.key"
-                                :disabled="!canInsertRepeatedColumn(column)"
-                                @select="emit('insertRepeatedColumn', column)"
-                            >
-                                <span class="min-w-0">
-                                    <span class="block truncate font-medium">
+                        <template v-if="selectedRowRole !== 'fixed'">
+                            <DropdownMenuSeparator />
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem
+                                    v-for="column in repeatedColumns"
+                                    :key="column.key"
+                                    :disabled="!canInsertRepeatedColumn(column)"
+                                    @select="
+                                        emit('insertRepeatedColumn', column)
+                                    "
+                                >
+                                    <span class="truncate">
                                         {{ column.label }}
                                     </span>
-                                    <span
-                                        class="block truncate text-xs text-muted-foreground"
-                                    >
-                                        ${{ column.key }}
-                                    </span>
-                                </span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                v-if="repeatedColumns.length === 0"
-                                disabled
-                            >
-                                Aún no hay datos de fila
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem
-                                :disabled="selectedRowRole === 'total'"
-                                @select="emit('newData')"
-                            >
-                                <Plus />
-                                {{
-                                    selectedRowRole === 'unit'
-                                        ? 'Nuevo dato de unidad…'
-                                        : 'Nuevo dato de fila…'
-                                }}
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                    </DropdownMenuSubContent>
-                </DropdownMenuSub>
-
-                <DropdownMenuSub>
-                    <DropdownMenuSubTrigger>
-                        <Rows3 />
-                        Estructura de filas
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent class="w-72">
-                        <DropdownMenuCheckboxItem
-                            :checked="groupedByUnit"
-                            @select.prevent="
-                                emit('groupedByUnit', !groupedByUnit)
-                            "
-                        >
-                            Organizar por unidades
-                        </DropdownMenuCheckboxItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuLabel> Tipo de fila </DropdownMenuLabel>
-                        <DropdownMenuRadioGroup
-                            :model-value="selectedRowRole"
-                            @update:model-value="emit('rowRole', $event)"
-                        >
-                            <DropdownMenuRadioItem
-                                value="fixed"
-                                :disabled="
-                                    selectedRowRole !== 'fixed' &&
-                                    selectedRowHasColumns
-                                "
-                            >
-                                Fila normal
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="record">
-                                Fila que completa el docente
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="unit">
-                                Datos de la unidad
-                            </DropdownMenuRadioItem>
-                            <DropdownMenuRadioItem value="total">
-                                Fila de totales
-                            </DropdownMenuRadioItem>
-                        </DropdownMenuRadioGroup>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    :disabled="selectedRowRole === 'total'"
+                                    @select="emit('newData')"
+                                >
+                                    <Plus />
+                                    Nuevo dato que llena el docente…
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                        </template>
                     </DropdownMenuSubContent>
                 </DropdownMenuSub>
             </DropdownMenuGroup>

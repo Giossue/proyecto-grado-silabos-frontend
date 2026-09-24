@@ -160,7 +160,7 @@ onBeforeUnmount(() => {
     <PageFrame
         v-else-if="!payload?.template"
         title="Plantilla de sílabo"
-        description="El formato del sílabo: qué campos tiene y en qué orden. Se edita en el sitio; cada sílabo entregado conserva su propia copia."
+        description="El formato del sílabo: qué secciones y partes tiene, y en qué orden. Se edita en el sitio; cada sílabo entregado conserva su propia copia."
     >
         <template #actions>
             <Button :disabled="creating || Boolean(payload?.processLock)" @click="create">
@@ -232,7 +232,7 @@ onBeforeUnmount(() => {
             >
                 <LoaderCircle v-if="formatting" class="animate-spin" data-icon="inline-start" aria-hidden="true" />
                 <Sparkles v-else data-icon="inline-start" aria-hidden="true" />
-                {{ formatting ? 'Formateando…' : 'Formatear' }}
+                {{ formatting ? 'Cargando formato…' : 'Cargar formato oficial UEB' }}
             </Button>
             <Button :disabled="Boolean(builder.processLock)" @click="editing = true">
                 <Pencil data-icon="inline-start" aria-hidden="true" />Editar

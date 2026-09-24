@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ListPlus } from '@lucide/vue';
-import { ref } from 'vue';
+import { ListPlus, Lock } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
@@ -20,6 +20,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { choosableTypes } from '@/lib/templateParts';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type { TemplateContentType } from '@/types/configuration';
@@ -36,8 +37,28 @@ const props = withDefaults(
         position: number;
         blockTypes: { value: EditableContentType; label: string }[];
         choice?: boolean;
+        /** Crea un texto fijo: lo escribe Administración y el docente no lo llena. */
+        fixed?: boolean;
     }>(),
-    { choice: false },
+    { choice: false, fixed: false },
+);
+
+const typeOptions = computed(() => choosableTypes(props.blockTypes));
+const texts = computed(() =>
+    props.fixed
+        ? {
+              action: 'Agregar texto fijo',
+              title: 'Nuevo texto fijo',
+              description:
+                  'Texto que escribe Administración dentro de esta sección. El docente no lo llena.',
+              done: 'Texto fijo agregado.',
+          }
+        : {
+              action: 'Agregar parte',
+              title: 'Nueva parte',
+              description: 'Se añadirá dentro de esta sección.',
+              done: 'Parte agregada.',
+          },
 );
 
 const open = ref(false);
@@ -59,7 +80,7 @@ const reset = (): void => {
     form.position = props.position + 1;
     form.key = keyFor();
     form.label = '';
-    form.content_type = 'text';
+    form.content_type = props.fixed ? 'fixed' : 'text';
 };
 
 reset();
@@ -68,11 +89,17 @@ const errorFor = (path: string): string | undefined =>
     (form.errors as Record<string, string>)[path];
 
 const submit = (): void => {
+    if (form.label.trim() === '') {
+        form.errors = { label: 'Escriba un nombre.' };
+
+        return;
+    }
+
     form.position = props.position + 1;
     form.post(TemplateController.storeField.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success('Campo agregado.');
+            toast.success(texts.value.done);
             open.value = false;
             reset();
             emit('closed');
@@ -80,7 +107,7 @@ const submit = (): void => {
         onError: (errors) => {
             if (!('purge_required' in errors)) {
                 toast.error(
-                    Object.values(errors)[0] ?? 'No se pudo agregar el campo.',
+                    Object.values(errors)[0] ?? 'No se pudo agregar la parte.',
                 );
             }
         },
@@ -100,9 +127,9 @@ const updateOpen = (value: boolean): void => {
 <template>
     <FormSheet
         :open="open"
-        trigger-label="Agregar campo"
-        title="Nuevo campo"
-        description="Se añadirá dentro de este bloque."
+        :trigger-label="texts.action"
+        :title="texts.title"
+        :description="texts.description"
         @update:open="updateOpen"
     >
         <template #trigger>
@@ -112,8 +139,9 @@ const updateOpen = (value: boolean): void => {
                 size="sm"
                 :class="choice ? 'w-full justify-start' : undefined"
             >
-                <ListPlus data-icon="inline-start" aria-hidden="true" />
-                Agregar campo
+                <Lock v-if="fixed" data-icon="inline-start" aria-hidden="true" />
+                <ListPlus v-else data-icon="inline-start" aria-hidden="true" />
+                {{ texts.action }}
             </Button>
         </template>
         <template #default="{ close }">
@@ -136,9 +164,12 @@ const updateOpen = (value: boolean): void => {
                             :errors="[errorFor('label')]"
                         />
                     </Field>
-                    <Field :data-invalid="Boolean(errorFor('content_type'))">
+                    <Field
+                        v-if="!fixed"
+                        :data-invalid="Boolean(errorFor('content_type'))"
+                    >
                         <FieldLabel for="new-field-content-type" required>
-                            Tipo de contenido
+                            Tipo de parte
                         </FieldLabel>
                         <Select
                             v-model="form.content_type"
@@ -156,7 +187,7 @@ const updateOpen = (value: boolean): void => {
                             <SelectContent>
                                 <SelectGroup>
                                     <SelectItem
-                                        v-for="type in blockTypes"
+                                        v-for="type in typeOptions"
                                         :key="type.value"
                                         :value="type.value"
                                     >
@@ -172,10 +203,10 @@ const updateOpen = (value: boolean): void => {
                     </Field>
                 </FieldGroup>
                 <FormSheetActions
-                    label="Agregar campo"
+                    :label="texts.action"
                     :close="close"
                     :processing="form.processing"
-                    :icon="ListPlus"
+                    :icon="fixed ? Lock : ListPlus"
                 />
             </form>
         </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3';
 import { computed } from 'vue';
+import { inlineNodeLabel } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import {
     Tooltip,
     TooltipContent,
@@ -10,19 +11,15 @@ import {
 const props = defineProps(nodeViewProps);
 
 const kind = computed(() => props.node.type.name);
-const label = computed(() => {
-    if (kind.value === 'variable') {
-        return `@${props.node.attrs.id}`;
-    }
-
-    if (kind.value === 'column') {
-        return `$${props.node.attrs.key}`;
-    }
-
-    return props.node.attrs.choice
-        ? `X si ${props.node.attrs.label} = ${props.node.attrs.choice}`
-        : String(props.node.attrs.label);
-});
+const label = computed(() =>
+    inlineNodeLabel(
+        kind.value,
+        props.node.attrs,
+        props.extension.options.variableLabel as
+            | ((id: string) => string | undefined)
+            | undefined,
+    ),
+);
 const tokenClass = computed(() =>
     kind.value === 'variable'
         ? 'template-table-variable'

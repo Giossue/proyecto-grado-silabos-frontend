@@ -25,6 +25,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -32,7 +33,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
-import type { TableRowData } from '@/lib/tableLayout';
+import type { TableLayout, TableRowData } from '@/lib/tableLayout';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 
@@ -59,6 +60,7 @@ const aiMessage = ref<string | null>(null);
 const aiAssistant = ref<InstanceType<typeof SyllabusAiAssistantSheet> | null>(null);
 const conflict = ref(false);
 const processingAction = ref(false);
+const confirmSubmitOpen = ref(false);
 /** Motivo local de bloqueo: un guardado rechazado con 403 (p. ej. la convocatoria se pausó). */
 const localBlockReason = ref<string | null>(null);
 /** Hay cambios que no llegaron al servidor tras un fallo; se ofrecen para reintentar. */
@@ -84,13 +86,50 @@ const validationFor = (fieldId: string) =>
   validationResults.value.filter((result) => result.field_id === fieldId);
 const visibleValidationMessages = (fieldId: string): string[] =>
   validationFor(fieldId).map((result) => result.message);
-const blockingMessages = computed(() =>
-  Array.from(new Set(
-    validationResults.value
-      .filter((result) => result.severity === "error")
-      .map((result) => result.message),
-  )),
+/** Dónde está cada parte en la página, para llevar al docente con un clic. */
+const partTargets = computed(() => {
+  const targets = new Map<string, string>();
+  for (const section of syllabus.value?.sections ?? []) {
+    for (const block of section.blocks) {
+      for (const field of block.fields) {
+        targets.set(field.id, usesTabularDocument(block) ? `block-${block.id}` : `field-${field.id}`);
+      }
+    }
+  }
+  return targets;
+});
+const blockingResults = computed(() => {
+  const seen = new Set<string>();
+  return validationResults.value
+    .filter((result) => result.severity === "error")
+    .filter((result) => {
+      const key = `${result.field_id ?? ''}|${result.message}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+});
+const missingParts = computed(() =>
+  new Set(blockingResults.value.map((result) => result.field_id).filter((id): id is string => id !== null)).size,
 );
+const validationTitle = computed(() => {
+  if (missingParts.value === 1) return "Falta 1 parte por completar";
+  if (missingParts.value > 1) return `Faltan ${missingParts.value} partes por completar`;
+  if (blockingResults.value.length > 0) return "Revise lo siguiente antes de enviar";
+  return "Todo listo para enviar";
+});
+const goToPart = (fieldId: string | null): void => {
+  const target = fieldId ? document.getElementById(partTargets.value.get(fieldId) ?? `field-${fieldId}`) : null;
+  if (!target) return;
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+  target.querySelector<HTMLElement>("input, textarea, button, [contenteditable='true']")?.focus({ preventScroll: true });
+};
+/** El aviso rojo de una parte se quita apenas el docente la cambia. */
+const clearFieldValidation = (fieldId: string): void => {
+  if (validationResults.value.some((result) => result.field_id === fieldId)) {
+    validationResults.value = validationResults.value.filter((result) => result.field_id !== fieldId);
+  }
+};
 const hasUnsavedChanges = (): boolean => dirtyFields.size > 0 || dirtyRows.size > 0;
 
 const requestedObservations = computed(() =>
@@ -142,10 +181,11 @@ const start = async (): Promise<void> => {
   }
 };
 
+// Tras guardar, la validación anterior deja de ser la última palabra, pero la lista de
+// partes pendientes se conserva: cada aviso se quita al corregir su parte.
 const invalidateValidation = (): void => {
   validationRan.value = false;
   validationBlockingErrors.value = null;
-  validationResults.value = [];
 };
 
 const handleSaveFailure = (reason: unknown): void => {
@@ -241,11 +281,13 @@ const toggleChoice = (
     ? Array.from(new Set([...selectedValues(field), value]))
     : selectedValues(field).filter((item) => item !== value);
   (field as unknown as { value: string[] }).value = next;
+  clearFieldValidation(field.id);
   scheduleSave(field);
 };
 
 const toggleBoolean = (field: SyllabusField, checked: boolean): void => {
   (field as unknown as { value: boolean }).value = checked;
+  clearFieldValidation(field.id);
   scheduleSave(field);
 };
 
@@ -255,16 +297,18 @@ const scalarValue = (field: SyllabusField): string | number =>
     : "";
 
 const masterValue = (value: unknown): string => {
-  if (value === null || value === undefined || value === '') return 'Dato no disponible';
+  if (value === null || value === undefined || value === '') return 'Pendiente de Coordinación';
   if (typeof value !== 'object') return typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value);
   if (Array.isArray(value)) return value.map(String).join(', ');
-  return Object.entries(value)
-    .map(([key, item]) => `${key.replaceAll('_', ' ')}: ${String(item ?? '—')}`)
+  // Solo los valores: las claves internas no se muestran.
+  return Object.values(value)
+    .map((item) => String(item ?? '—'))
     .join(' · ');
 };
 
 const updateScalar = (field: SyllabusField, value: string): void => {
   field.value = field.type === "numero" && value !== "" ? Number(value) : value;
+  clearFieldValidation(field.id);
   scheduleSave(field);
 };
 
@@ -279,15 +323,16 @@ const tableRows = (field: SyllabusField): Array<{ id: string | null; data: Table
   field.rows.map((row) => ({ id: row.id ?? null, data: row.data }));
 const updateDesignValue = (fields: SyllabusField[], key: string, value: string | number | boolean): void => {
   const field = fields.find((item) => item.key === key);
-  if (field) { field.value = value; scheduleSave(field); }
+  if (field) { field.value = value; clearFieldValidation(field.id); scheduleSave(field); }
 };
 const updateDesignRows = (fields: SyllabusField[], key: string, rows: Array<{ id: string | null; data: TableRowData }>): void => {
   const field = fields.find((item) => item.key === key);
-  if (field) { field.rows = rows.map((row, index) => ({ id: row.id ?? undefined, data: row.data as Record<string, string | number | null>, position: index + 1 })); scheduleRows(field); }
+  if (field) { field.rows = rows.map((row, index) => ({ id: row.id ?? undefined, data: row.data as Record<string, string | number | null>, position: index + 1 })); clearFieldValidation(field.id); scheduleRows(field); }
 };
 
 const updateRows = (field: SyllabusField, rows: Array<{ id?: string | null; data: TableRowData; position?: number }>): void => {
   field.rows = rows.map((row, index) => ({ id: row.id ?? undefined, data: row.data as Record<string, string | number | null>, position: row.position ?? index + 1 }));
+  clearFieldValidation(field.id);
   scheduleRows(field);
 };
 
@@ -351,6 +396,17 @@ const runValidation = async (): Promise<void> => {
   validationRan.value = true;
 };
 
+/** Una lista o tabla de una sola columna muestra el nombre de la parte, no «Contenido». */
+const partLayout = (layout: TableLayout, label: string): TableLayout =>
+  layout.columns.length === 1 && layout.columns[0].key === 'texto' && layout.header_fields.length === 0
+    ? { ...layout, columns: [{ ...layout.columns[0], label }] }
+    : layout;
+
+const confirmSubmit = (): void => {
+  confirmSubmitOpen.value = false;
+  void submit();
+};
+
 const submit = async (): Promise<void> => {
   if (!syllabus.value) return;
   try {
@@ -364,6 +420,7 @@ const submit = async (): Promise<void> => {
       )
     ).syllabus;
     invalidateValidation();
+    validationResults.value = [];
   } catch (reason) {
     // El servidor valida al enviar; si rechaza por errores bloqueantes, se piden los
     // resultados para marcar los campos y listar los errores.
@@ -438,7 +495,7 @@ onBeforeUnmount(() => {
     <template #actions>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-if="canStart" :disabled="starting" @click="start"><Spinner v-if="starting" />{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button>
-      <Button v-else-if="syllabus && canEdit" :disabled="processingAction || conflict" @click="submit"><Spinner v-if="processingAction" />Enviar sílabo</Button>
+      <Button v-else-if="syllabus && canEdit" :disabled="processingAction || conflict" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" />Enviar sílabo</Button>
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
@@ -449,7 +506,7 @@ onBeforeUnmount(() => {
       <Card v-if="canStart"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar los campos de la plantilla institucional.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>
 
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
-      <Alert v-if="validationRan" :variant="validationBlockingErrors && validationBlockingErrors > 0 ? 'destructive' : 'default'"><AlertTitle>Validación del sílabo</AlertTitle><AlertDescription class="flex flex-col gap-2"><span>{{ validationBlockingErrors && validationBlockingErrors > 0 ? `Se encontraron ${validationBlockingErrors} error(es) bloqueante(s). Corríjalos antes de enviar.` : 'No hay errores bloqueantes. Las sugerencias de IA son opcionales.' }}</span><ul v-if="validationBlockingErrors && blockingMessages.length" class="validation-errors list-disc pl-5"><li v-for="message in blockingMessages" :key="message">{{ message }}</li></ul></AlertDescription></Alert>
+      <Alert v-if="validationRan || blockingResults.length" :variant="blockingResults.length ? 'destructive' : 'default'"><AlertTitle>{{ validationTitle }}</AlertTitle><AlertDescription class="flex flex-col gap-2"><span v-if="blockingResults.length">Pulse cada una para ir a ella.</span><span v-else>Las sugerencias de IA son opcionales.</span><ul v-if="blockingResults.length" class="validation-errors list-disc pl-5"><li v-for="result in blockingResults" :key="`${result.field_id}-${result.message}`"><button v-if="result.field_id" type="button" class="text-left underline underline-offset-2 hover:no-underline" @click="goToPart(result.field_id)">{{ result.message }}</button><span v-else>{{ result.message }}</span></li></ul></AlertDescription></Alert>
       <Alert v-if="aiMessage"><AlertDescription>{{ aiMessage }}</AlertDescription></Alert>
 
       <div v-if="syllabus.state !== 'sin_iniciar'" class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)]">
@@ -472,10 +529,10 @@ onBeforeUnmount(() => {
           </Card>
 
           <section v-for="(section, sectionIndex) in visibleSections" :id="`section-${section.id}`" :key="section.id" class="flex scroll-mt-6 flex-col gap-6 border-t pt-8 first:border-t-0 first:pt-0">
-            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p class="text-sm text-muted-foreground">{{ section.description ?? 'Complete los campos aplicables.' }}</p></header>
+            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
             <IdentificationCard v-if="sectionIndex === 0 && syllabus.identification.length" :grid="syllabus.identification" />
 
-            <FieldSet v-for="block in section.blocks" :key="block.id" class="gap-5">
+            <FieldSet v-for="block in section.blocks" :id="`block-${block.id}`" :key="block.id" class="scroll-mt-6 gap-5">
               <FieldLegend v-if="section.blocks.length > 1 && !(block.fields.length === 1 && block.title === block.fields[0]?.label)" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
               <SyllabusAcademicContext v-if="block.content_type === 'institutional'" :variables="syllabus.template_variables ?? {}" />
               <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :layout="block.table" :editable="canEdit && !conflict" presentation="form" :planning-expectations="syllabus.planning_expectations ?? null" @value="(key, value) => updateDesignValue(block.fields, key, value)" @rows="(key, rows) => updateDesignRows(block.fields, key, rows)" />
@@ -483,11 +540,11 @@ onBeforeUnmount(() => {
                 <FieldGroup>
                 <template v-for="field in block.fields.filter((item) => block.content_type !== 'institutional' || (item.teacher_editable && !item.inherited))" :key="field.id">
                 <Field v-if="canEdit && field.teacher_editable && !field.inherited && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                  <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" :disabled="savingFieldId === field.id" @update:model-value="updateScalar(field, String($event))" />
+                  <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'texto_largo'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                  <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Textarea :id="`input-${field.id}`" :model-value="scalarValue(field)" class="min-h-32" :disabled="savingFieldId === field.id" @update:model-value="updateScalar(field, String($event))" />
+                  <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Textarea :id="`input-${field.id}`" :model-value="scalarValue(field)" class="min-h-32" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'seleccion_unica'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
@@ -498,9 +555,9 @@ onBeforeUnmount(() => {
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required">{{ field.label }}</FieldLabel><div class="boolean-options flex gap-2" role="radiogroup" :aria-label="field.label"><Button type="button" size="sm" :variant="field.value === true ? 'default' : 'outline'" role="radio" :aria-checked="field.value === true" @click="toggleBoolean(field, true)">Sí</Button><Button type="button" size="sm" :variant="field.value === false ? 'default' : 'outline'" role="radio" :aria-checked="field.value === false" @click="toggleBoolean(field, false)">No</Button></div><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
 
-                <div v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'repetible'" :id="`field-${field.id}`" class="flex flex-col gap-2"><template v-if="!block.table"><p class="text-sm font-medium">{{ field.label }}</p><p class="text-sm text-muted-foreground">Esta tabla no tiene una estructura configurada.</p></template><template v-else><SyllabusTableEditor :field-id="field.id" :label="field.label" :layout="block.table" :rows="tableRows(field)" :required="field.required" :invalid="validationFor(field.id).length > 0" :planning-expectations="syllabus.planning_expectations ?? null" @update:rows="updateRows(field, $event)" /><span v-if="savingFieldId === field.id" class="text-xs text-muted-foreground">Guardando…</span></template></div>
+                <div v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'repetible'" :id="`field-${field.id}`" class="flex flex-col gap-2"><template v-if="!block.table"><p class="text-sm font-medium">{{ field.label }}</p><p class="text-sm text-muted-foreground">Esta tabla no tiene una estructura configurada.</p></template><template v-else><SyllabusTableEditor :field-id="field.id" :label="field.label" :layout="partLayout(block.table, field.label)" :rows="tableRows(field)" :required="field.required" :invalid="validationFor(field.id).length > 0" :planning-expectations="syllabus.planning_expectations ?? null" @update:rows="updateRows(field, $event)" /><span v-if="savingFieldId === field.id" class="text-xs text-muted-foreground">Guardando…</span></template></div>
 
-                <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Institucional · solo lectura</Badge></div><SyllabusTableView v-if="field.type === 'repetible' && block.table" :layout="block.table" :rows="tableRows(field)" :planning-expectations="syllabus.planning_expectations ?? null" /><span v-else>{{ masterValue(field.value) }}</span></div>
+                <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Dato automático</Badge></div><SyllabusTableView v-if="field.type === 'repetible' && block.table" :layout="partLayout(block.table, field.label)" :rows="tableRows(field)" :planning-expectations="syllabus.planning_expectations ?? null" /><span v-else>{{ masterValue(field.value) }}</span></div>
                 <FieldError :errors="visibleValidationMessages(field.id)" />
                 </template>
                 </FieldGroup>
@@ -522,5 +579,18 @@ onBeforeUnmount(() => {
         </aside>
       </div>
     </template>
+
+    <Dialog v-model:open="confirmSubmitOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>¿Enviar a Coordinación?</DialogTitle>
+          <DialogDescription>Coordinación revisará el sílabo. Mientras lo revisa, no podrá hacer cambios.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>
+          <Button type="button" :disabled="processingAction || conflict" @click="confirmSubmit">Enviar a Coordinación</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </PageFrame>
 </template>

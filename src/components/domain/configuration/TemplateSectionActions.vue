@@ -59,14 +59,14 @@ const save = (): void => {
         {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Bloque actualizado.');
+                toast.success('Sección actualizada.');
                 editOpen.value = false;
             },
             onError: (errors) => {
                 if (!('purge_required' in errors)) {
                     toast.error(
                         Object.values(errors)[0] ??
-                            'No se pudo actualizar el bloque.',
+                            'No se pudo actualizar la sección.',
                     );
                 }
             },
@@ -83,14 +83,14 @@ const destroy = (): void => {
         {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Bloque eliminado.');
+                toast.success('Sección eliminada.');
                 deleteOpen.value = false;
             },
             onError: (errors) => {
                 if (!('purge_required' in errors)) {
                     toast.error(
                         Object.values(errors)[0] ??
-                            'No se pudo eliminar el bloque.',
+                            'No se pudo eliminar la sección.',
                     );
                 }
             },
@@ -117,7 +117,7 @@ defineExpose({
                             variant="outline"
                             size="icon-sm"
                             class="size-7 text-foreground"
-                            :aria-label="`Acciones del bloque ${section.title}`"
+                            :aria-label="`Acciones de la sección ${section.title}`"
                         >
                             <MoreHorizontal aria-hidden="true" />
                         </Button>
@@ -125,7 +125,7 @@ defineExpose({
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem @select="openEdit">
                             <Pencil aria-hidden="true" />
-                            Renombrar bloque
+                            Renombrar sección
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -133,30 +133,30 @@ defineExpose({
                             @select="deleteOpen = true"
                         >
                             <Trash2 aria-hidden="true" />
-                            Eliminar bloque
+                            Eliminar sección
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </span>
         </TooltipTrigger>
         <TooltipContent paper side="left" :side-offset="8">
-            Acciones del bloque
+            Acciones de la sección
         </TooltipContent>
     </Tooltip>
 
     <Dialog v-model:open="editOpen">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Renombrar bloque</DialogTitle>
+                <DialogTitle>Renombrar sección</DialogTitle>
                 <DialogDescription>
-                    Cambie el nombre que identifica este grupo de campos.
+                    Cambie el nombre de esta sección.
                 </DialogDescription>
             </DialogHeader>
             <form class="flex flex-col gap-4" @submit.prevent="save">
                 <FieldGroup>
                     <Field :data-invalid="Boolean(form.errors.title)">
                         <FieldLabel for="edit-template-section-title" required>
-                            Nombre del bloque
+                            Nombre de la sección
                         </FieldLabel>
                         <Input
                             id="edit-template-section-title"
@@ -201,10 +201,10 @@ defineExpose({
     <Dialog v-model:open="deleteOpen">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Eliminar bloque</DialogTitle>
+                <DialogTitle>Eliminar sección</DialogTitle>
                 <DialogDescription>
                     Se quitará «{{ section.title }}» con sus
-                    {{ section.blocks.length }} campos. Los sílabos entregados
+                    {{ section.blocks.length }} partes. Los sílabos entregados
                     conservan su copia.
                 </DialogDescription>
             </DialogHeader>
@@ -229,7 +229,7 @@ defineExpose({
                         data-icon="inline-start"
                         aria-hidden="true"
                     />
-                    Eliminar bloque
+                    Eliminar sección
                 </Button>
             </DialogFooter>
         </DialogContent>

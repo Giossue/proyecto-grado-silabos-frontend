@@ -159,8 +159,9 @@ const draw = (
                 'data-page-fragment': '',
                 class: 'document-variable',
             },
-            props.variables[String(attrs.id)] ??
-                (props.preview ? `@${attrs.id}` : ''),
+            // Un dato automático se muestra con su valor, nunca con su clave.
+            props.variables[String(attrs.id)] ||
+                (props.preview ? 'Dato automático' : 'Pendiente de Coordinación'),
         );
     }
 
@@ -299,7 +300,13 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 .template-document-view {
     color: var(--document-text);
     background: var(--document-paper);
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
+}
+/* Las palabras no se parten dentro de una celda. */
+.template-document-view :deep(td),
+.template-document-view :deep(th) {
+    overflow-wrap: normal;
+    word-break: normal;
 }
 .template-document-view[data-preview] {
     /* The page surfaces supply white; the space between them stays transparent. */

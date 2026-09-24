@@ -8,6 +8,7 @@ import {
     Bold,
     Eraser,
     Italic,
+    Lock,
     PaintBucket,
     Redo2,
     Split,
@@ -31,7 +32,9 @@ import { useTemplateTableActions } from '@/components/domain/configuration/templ
 import { useTemplateTableSelection } from '@/components/domain/configuration/template-table/useTemplateTableSelection';
 import TemplateToolbarButton from '@/components/domain/configuration/TemplateToolbarButton.vue';
 import TemplateToolbarSelect from '@/components/domain/configuration/TemplateToolbarSelect.vue';
+import { Button } from '@/components/ui/button';
 import { SelectItem } from '@/components/ui/select';
+import { useVariableSuggestions } from '@/composables/useVariableSuggestions';
 import { Separator } from '@/components/ui/separator';
 import type { TableLayout } from '@/lib/tableLayout';
 import { tableKeyFor } from '@/lib/tableLayout';
@@ -77,6 +80,23 @@ const newFieldDialog = ref<InstanceType<
 const newDataSheet = ref<InstanceType<typeof TemplateTableNewDataSheet> | null>(
     null,
 );
+const variableLabels = computed(
+    () =>
+        new Map(props.variables.map((variable) => [variable.key, variable.label])),
+);
+// «@» dentro de una celda abre la lista de datos automáticos.
+const { suggestions, selectedSuggestion, chooseVariable, suggestion } =
+    useVariableSuggestions({
+        variables: () => props.variables,
+        enabled: () => !props.pending,
+    });
+const suggestionStyle = computed<CSSProperties>(() => {
+    const rect = suggestions.value?.clientRect?.();
+
+    return rect
+        ? { position: 'fixed', left: `${rect.left}px`, top: `${rect.bottom + 4}px` }
+        : { display: 'none' };
+});
 const editor = useEditor({
     content: props.document,
     editorProps: {
@@ -88,7 +108,10 @@ const editor = useEditor({
         },
     },
     extensions: [
-        ...templateTableExtensions(),
+        ...templateTableExtensions({
+            variableLabel: (id) => variableLabels.value.get(id),
+            suggestion,
+        }),
         // Page breaks between rows drawn by the sheet view; presentation only.
         Extension.create({
             name: 'pageSpacers',
@@ -128,18 +151,15 @@ const {
     selectedCell,
     inCell,
     selectedRowRole,
-    groupedByUnit,
     repeatedColumns,
     selectedRowHasColumns,
     usedColumnRoles,
     teacherFields,
-    conditionalChoices,
     can,
 } = selection;
 const {
     setRowRole,
     deleteSelectedRow,
-    setGroupedByUnit,
     setCell,
     background,
     cellTextColor,
@@ -149,6 +169,7 @@ const {
     alignmentTooltip,
     resetCell,
     insertNode,
+    convertTableToFixed,
     insertVariable,
     insertField,
     canInsertRepeatedColumn,
@@ -249,20 +270,27 @@ defineExpose({ getDocument });
                     :disabled="!inCell || pending"
                     :variables="variables"
                     :teacher-fields="teacherFields"
-                    :conditional-choices="conditionalChoices"
                     :repeated-columns="repeatedColumns"
                     :can-insert-repeated-column="canInsertRepeatedColumn"
                     :selected-row-role="selectedRowRole"
                     :selected-row-has-columns="selectedRowHasColumns"
-                    :grouped-by-unit="groupedByUnit"
                     @insert-variable="insertVariable"
-                    @insert-field="insertField"
+                    @insert-field="insertField($event)"
                     @new-field="openNewField"
                     @insert-repeated-column="insertRepeatedColumn"
                     @new-data="openNewData"
-                    @grouped-by-unit="setGroupedByUnit"
                     @row-role="setRowRole"
                 />
+
+                <TemplateToolbarButton
+                    label="Hacer texto fijo"
+                    tooltip="Hacer texto fijo (el docente no lo llena)"
+                    text="Hacer texto fijo"
+                    :disabled="!state?.isActive('table') || pending"
+                    @click="convertTableToFixed"
+                >
+                    <Lock aria-hidden="true" />
+                </TemplateToolbarButton>
 
                 <Separator orientation="vertical" class="h-7" />
 
@@ -436,6 +464,39 @@ defineExpose({ getDocument });
             class="template-table-canvas min-w-0 overflow-x-clip"
             @mousedown.capture="startCellResize"
         />
+
+        <Teleport to="body">
+            <div
+                v-if="suggestions"
+                class="z-50 flex max-h-72 w-72 flex-col gap-1 overflow-y-auto rounded-md border bg-popover p-1.5 text-popover-foreground shadow-md"
+                :style="suggestionStyle"
+                role="listbox"
+                aria-label="Datos automáticos"
+            >
+                <p
+                    v-if="!suggestions.items.length"
+                    class="px-2 py-1.5 text-sm text-muted-foreground"
+                >
+                    No hay datos automáticos con ese nombre.
+                </p>
+                <Button
+                    v-for="(item, index) in suggestions.items"
+                    :key="item.key"
+                    type="button"
+                    size="sm"
+                    :variant="
+                        selectedSuggestion === index ? 'secondary' : 'ghost'
+                    "
+                    class="justify-start"
+                    role="option"
+                    :aria-selected="selectedSuggestion === index"
+                    @mousedown.prevent
+                    @click="chooseVariable(item)"
+                >
+                    <span class="truncate">{{ item.label }}</span>
+                </Button>
+            </div>
+        </Teleport>
     </div>
 
     <TemplateTableNewDataSheet
@@ -475,7 +536,9 @@ defineExpose({ getDocument });
     padding: 2px 4px;
     position: relative;
     vertical-align: top;
-    overflow-wrap: anywhere;
+    /* Las palabras no se parten dentro de una celda. */
+    overflow-wrap: normal;
+    word-break: normal;
 }
 .template-table-editor td *,
 .template-table-editor th * {

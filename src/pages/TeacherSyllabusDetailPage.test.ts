@@ -279,10 +279,24 @@ describe("TeacherSyllabusDetailPage", () => {
     await send!.trigger("click");
     await flushPromises();
 
+    // Enviar pide confirmación antes de mandar el sílabo a Coordinación.
+    expect(submitTeacherSyllabus).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain("¿Enviar a Coordinación?");
+    const confirm = Array.from(document.body.querySelectorAll("button")).find((button) => button.textContent?.includes("Enviar a Coordinación"));
+    expect(confirm).toBeDefined();
+    confirm!.click();
+    await flushPromises();
+
     expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2);
-    expect(wrapper.text()).toContain("Se encontraron 2 error(es) bloqueante(s)");
+    expect(wrapper.text()).toContain("Faltan 2 partes por completar");
     expect(wrapper.get(".validation-errors").text()).toContain("Falta el dato institucional de créditos.");
     expect(wrapper.get("#field-field-1").attributes("data-invalid")).toBe("true");
+
+    // Al corregir la parte, su aviso rojo desaparece enseguida.
+    await wrapper.get("#input-field-1").setValue("Contenido nuevo");
+    expect(wrapper.get("#field-field-1").attributes("data-invalid")).toBe("false");
+    expect(wrapper.text()).toContain("Falta 1 parte por completar");
+    wrapper.unmount();
   });
 
   it("habilita la revisión con IA sin exigir una validación previa", async () => {
