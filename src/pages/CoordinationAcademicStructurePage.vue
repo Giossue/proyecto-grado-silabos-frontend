@@ -47,7 +47,7 @@ const pageDescription = computed(() => {
   const career = curriculum.value?.career.name ?? 'la carrera activa';
   return {
     curriculum: `Malla curricular de ${career}. Gestione las materias y sus relaciones en el constructor interactivo.`,
-    schedule: `Planifique qué materias se dictan cada período en ${career} y organice sus paralelos.`,
+    schedule: `Prepare cada período con la malla completa de ${career}, sus paralelos y docentes.`,
     teachers: `Quién dicta cada paralelo en ${career}.`,
   }[props.mode];
 });
@@ -108,6 +108,10 @@ const handleScheduleChanged = async (notice: string) => {
   toast.success(notice);
   await reloadSchedule(schedule.value?.selectedPeriodId ?? undefined);
 };
+const handlePeriodPrepared = async (notice: string, periodId: string) => {
+  toast.success(notice);
+  await Promise.all([reloadSchedule(periodId), reloadAssignments()]);
+};
 const reloadAssignments = async () => {
   try {
     actionError.value = null;
@@ -146,12 +150,14 @@ onMounted(() => {
   >
     <template #actions>
       <PeriodPreparationSheet
-        v-if="mode === 'schedule' && schedule && schedule.options.periods.some((item) => item.planning_enabled)"
+        v-if="mode === 'schedule' && schedule && assignments && schedule.options.periods.some((item) => item.planning_enabled)"
         :scheduled-subjects="schedule.scheduledSubjects"
         :options="schedule.options"
+        :assignments="assignments.teacherAssignments"
+        :teacher-users="assignments.options.teacherUsers"
         :initial-period-id="schedule.selectedPeriodId"
         :disabled="Boolean(schedule.career.lock_reason)"
-        @saved="handleScheduleChanged"
+        @saved="handlePeriodPrepared"
       />
       <DropdownMenu v-if="mode === 'teachers' && assignments && (assignments.canCreateTeacher || !assignments.career.lock_reason)">
         <DropdownMenuTrigger as-child><Button :disabled="Boolean(assignments.career.lock_reason)"><UserPlus data-icon="inline-start" aria-hidden="true" />Gestionar docente<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button></DropdownMenuTrigger>

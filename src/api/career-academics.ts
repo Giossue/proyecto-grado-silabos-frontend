@@ -142,7 +142,13 @@ export const createCareerRecord = (
     method: "POST",
     body: JSON.stringify(payload),
   });
-export const preparePeriod = (payload: Record<string, unknown>) =>
+export const preparePeriod = (payload: {
+  period_id: string;
+  subjects: Array<{
+    id: string;
+    parallels: Array<{ code: string; shift: string | null; teacher_user_id: string | null }>;
+  }>;
+}) =>
   api<{ message: string }>("/coordination/academic/prepare-period", {
     method: "POST",
     body: JSON.stringify(payload),

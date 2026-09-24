@@ -1,110 +1,86 @@
 <script setup lang="ts">
-import { CalendarCheck, ListChecks, Trash2 } from "@lucide/vue";
-import { computed, ref, watch } from "vue";
-import { ApiError } from "@/api/client";
-import { preparePeriod, type ScheduledSubjects } from "@/api/career-academics";
-import FormSheet from "@/components/domain/FormSheet.vue";
-import FormSheetActions from "@/components/domain/FormSheetActions.vue";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableEmpty,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { PARALLEL_SHIFTS } from "@/lib/parallelShifts";
-
-type ParallelDraft = { code: string; shift: string };
-type PreparationRow = {
-  id: string;
-  code: string;
-  name: string;
-  selected: boolean;
-  parallels: ParallelDraft[];
-};
+import { CalendarCheck, ListChecks, Trash2 } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
+import { ApiError } from '@/api/client';
+import { preparePeriod, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
+import FormSheet from '@/components/domain/FormSheet.vue';
+import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { preparationRows, type PreparationRow } from '@/lib/periodPreparation';
+import { PARALLEL_SHIFTS } from '@/lib/parallelShifts';
 
 const props = defineProps<{
-  scheduledSubjects: ScheduledSubjects["scheduledSubjects"];
-  options: ScheduledSubjects["options"];
+  scheduledSubjects: ScheduledSubjects['scheduledSubjects'];
+  options: ScheduledSubjects['options'];
+  assignments: TeacherAssignments['teacherAssignments'];
+  teacherUsers: TeacherAssignments['options']['teacherUsers'];
   initialPeriodId?: string | null;
   disabled?: boolean;
 }>();
-const emit = defineEmits<{ saved: [message: string] }>();
+const emit = defineEmits<{ saved: [message: string, periodId: string] }>();
 const open = ref(false);
-const periodId = ref("");
+const periodId = ref('');
 const rows = ref<PreparationRow[]>([]);
-const bulkCode = ref("A");
-const bulkShift = ref("");
+const sourcePeriodCode = ref<string | null>(null);
 const saving = ref(false);
 const error = ref<string | null>(null);
-const formatter = new Intl.DateTimeFormat("es-EC", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
+const formatter = new Intl.DateTimeFormat('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
 const planningPeriods = computed(() => props.options.periods.filter((period) => period.planning_enabled));
-const preparedIds = computed(() => new Set(props.scheduledSubjects.filter((item) => item.period_id === periodId.value).map((item) => item.subject_id)));
-const availableRows = computed(() => periodId.value ? rows.value.filter((row) => !preparedIds.value.has(row.id)) : []);
-const selectedRows = computed(() => availableRows.value.filter((row) => row.selected));
-const invalidRows = computed(() => selectedRows.value.some((row) => row.parallels.length === 0 || row.parallels.some((parallel) => !parallel.code.trim())));
-const dateRange = (period: ScheduledSubjects["options"]["periods"][number]) =>
+const parallelCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.length, 0));
+const assignedCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.filter((parallel) => parallel.teacherId).length, 0));
+const invalidRows = computed(() => rows.value.some((row) =>
+  row.parallels.length === 0 || row.parallels.some((parallel) => !parallel.code.trim())
+  || new Set(row.parallels.map((parallel) => parallel.code.trim())).size !== row.parallels.length,
+));
+const dateRange = (period: ScheduledSubjects['options']['periods'][number]) =>
   `${period.code} · ${formatter.format(new Date(`${period.starts_on}T00:00:00Z`))} – ${formatter.format(new Date(`${period.ends_on}T00:00:00Z`))}`;
 
-const reset = () => {
-  rows.value = props.options.activeSubjects.map((item) => ({
-    id: item.id,
-    code: item.codigo_asignatura,
-    name: item.nombre,
-    selected: false,
-    parallels: [{ code: "A", shift: "" }],
-  }));
-  periodId.value = planningPeriods.value.some((item) => item.id === props.initialPeriodId)
-    ? props.initialPeriodId ?? ""
-    : planningPeriods.value[0]?.id ?? "";
-  bulkCode.value = "A";
-  bulkShift.value = "";
+const updateProposal = () => {
+  const proposal = preparationRows(periodId.value, props.options, props.scheduledSubjects, props.assignments, props.teacherUsers);
+  rows.value = proposal.rows;
+  sourcePeriodCode.value = proposal.sourcePeriodCode;
   error.value = null;
 };
-const selectAll = (selected: boolean) => availableRows.value.forEach((row) => { row.selected = selected; });
-const applyToSelected = () => {
-  if (!bulkCode.value.trim()) return;
-  selectedRows.value.forEach((row) => { row.parallels[0] = { code: bulkCode.value.trim(), shift: bulkShift.value }; });
+const reset = () => {
+  periodId.value = planningPeriods.value.some((item) => item.id === props.initialPeriodId)
+    ? props.initialPeriodId ?? ''
+    : planningPeriods.value[0]?.id ?? '';
+  updateProposal();
 };
-const addParallel = (row: PreparationRow) => row.parallels.push({ code: "", shift: "" });
+const addParallel = (row: PreparationRow) => row.parallels.push({ code: '', shift: '', teacherId: '' });
 const removeParallel = (row: PreparationRow, index: number) => row.parallels.length > 1 && row.parallels.splice(index, 1);
 const submit = async (close: () => void) => {
-  if (props.disabled) return;
-  if (!periodId.value || selectedRows.value.length === 0 || invalidRows.value) return;
+  if (props.disabled || !periodId.value || !rows.value.length || invalidRows.value) return;
   saving.value = true;
   error.value = null;
   try {
+    const savedPeriodId = periodId.value;
     const result = await preparePeriod({
-      period_id: periodId.value,
-      subjects: selectedRows.value.map((row) => ({
+      period_id: savedPeriodId,
+      subjects: rows.value.map((row) => ({
         id: row.id,
-        parallels: row.parallels.map((parallel) => ({ code: parallel.code.trim(), shift: parallel.shift || null })),
+        parallels: row.parallels.map((parallel) => ({
+          code: parallel.code.trim(),
+          shift: parallel.shift || null,
+          teacher_user_id: parallel.teacherId || null,
+        })),
       })),
     });
-    emit("saved", result.message);
+    emit('saved', result.message, savedPeriodId);
     close();
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : "No se pudo preparar el período.";
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo preparar el período.';
   } finally {
     saving.value = false;
   }
 };
 watch(open, (value) => value && reset());
+watch(periodId, () => { if (open.value) updateProposal(); });
 </script>
 
 <template>
@@ -114,7 +90,7 @@ watch(open, (value) => value && reset());
     wide
     trigger-label="Preparar período"
     title="Preparar período académico"
-    description="Seleccione materias aún no programadas y configure sus paralelos. El campus viene de la facultad y la modalidad de la carrera o materia."
+    description="La malla activa se incluirá completa. Revise los paralelos y docentes propuestos antes de guardar."
   >
     <template #trigger>
       <Button :disabled="props.disabled"><CalendarCheck data-icon="inline-start" aria-hidden="true" />Preparar período</Button>
@@ -132,45 +108,48 @@ watch(open, (value) => value && reset());
             </Select>
           </Field>
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-          <Alert v-if="!periodId"><AlertDescription>Seleccione un período para ver las materias que aún no están programadas.</AlertDescription></Alert>
+          <Alert v-if="!periodId"><AlertDescription>Seleccione un período para ver las materias pendientes.</AlertDescription></Alert>
           <template v-else>
-            <div v-if="availableRows.length" class="flex w-full max-w-5xl flex-col gap-3 rounded-lg border bg-muted/30 p-4 lg:flex-row lg:items-end">
-              <Field class="min-w-0 flex-1"><FieldLabel for="period-bulk-code">Paralelo inicial para las seleccionadas</FieldLabel><Input id="period-bulk-code" v-model="bulkCode" placeholder="Ej. A" /></Field>
-              <Field class="min-w-0 flex-1"><FieldLabel for="period-bulk-shift">Jornada inicial para las seleccionadas</FieldLabel>
-                <Select v-model="bulkShift"><SelectTrigger id="period-bulk-shift"><SelectValue placeholder="Sin jornada definida" /></SelectTrigger><SelectContent><SelectGroup>
-                  <SelectItem v-for="option in PARALLEL_SHIFTS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
-                </SelectGroup></SelectContent></Select>
-              </Field>
-              <Button type="button" variant="outline" :disabled="!selectedRows.length" @click="applyToSelected">Aplicar a seleccionadas</Button>
-            </div>
-            <div v-if="availableRows.length" class="flex flex-wrap items-center gap-2">
-              <Button type="button" size="sm" variant="ghost" @click="selectAll(true)">Seleccionar todas</Button>
-              <Button type="button" size="sm" variant="ghost" @click="selectAll(false)">Ninguna</Button>
-              <p class="text-sm text-muted-foreground">{{ selectedRows.length }} de {{ availableRows.length }} materias seleccionadas.</p>
-            </div>
+            <p v-if="rows.length" class="text-sm text-muted-foreground">
+              {{ rows.length }} materias pendientes · {{ parallelCount }} paralelos · {{ assignedCount }} docentes propuestos.
+              <span v-if="sourcePeriodCode"> Basado en {{ sourcePeriodCode }}; puede cambiar cualquier propuesta.</span>
+              <span v-else> Sin programación anterior; complete los datos que correspondan.</span>
+            </p>
             <Table>
-              <TableHeader><TableRow><TableHead class="w-12"><span class="sr-only">Incluir</span></TableHead><TableHead>Código</TableHead><TableHead>Materia</TableHead><TableHead>Paralelos y jornada</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Código</TableHead><TableHead>Materia</TableHead><TableHead>Paralelos, jornada y docente</TableHead></TableRow></TableHeader>
               <TableBody>
-                <TableEmpty v-if="!availableRows.length" :colspan="4">Todas las materias activas ya están programadas en este período. Agregue paralelos desde las acciones de cada materia programada.</TableEmpty>
-                <TableRow v-for="row in availableRows" v-else :key="row.id">
-                  <TableCell><Checkbox :model-value="row.selected" :aria-label="`Incluir ${row.name}`" @update:model-value="row.selected = $event === true" /></TableCell>
-                  <TableCell>{{ row.code }}</TableCell><TableCell>{{ row.name }}</TableCell>
+                <TableEmpty v-if="!rows.length" :colspan="3">Todas las materias activas ya están programadas en este período. Agregue paralelos desde las acciones de cada materia.</TableEmpty>
+                <TableRow v-for="row in rows" v-else :key="row.id">
+                  <TableCell class="align-top">{{ row.code }}</TableCell>
+                  <TableCell class="align-top">{{ row.name }}</TableCell>
                   <TableCell><div class="flex flex-col gap-2">
                     <div v-for="(parallel, index) in row.parallels" :key="index" class="flex flex-wrap items-center gap-2">
-                      <Input v-model="parallel.code" class="w-28" :disabled="!row.selected" :aria-label="`Código del paralelo ${index + 1} de ${row.name}`" :placeholder="index ? 'Ej. B' : 'Ej. A'" />
-                      <Select v-model="parallel.shift" :disabled="!row.selected"><SelectTrigger class="w-44" :aria-label="`Jornada del paralelo ${index + 1} de ${row.name}`"><SelectValue placeholder="Sin jornada" /></SelectTrigger><SelectContent><SelectGroup>
-                        <SelectItem v-for="option in PARALLEL_SHIFTS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
-                      </SelectGroup></SelectContent></Select>
-                      <Button v-if="row.parallels.length > 1" type="button" size="icon-sm" variant="ghost" :disabled="!row.selected" :aria-label="`Quitar paralelo ${parallel.code || index + 1}`" @click="removeParallel(row, index)"><Trash2 aria-hidden="true" /></Button>
+                      <Input v-model="parallel.code" class="w-20" :aria-label="`Código del paralelo ${index + 1} de ${row.name}`" :placeholder="index ? 'Ej. B' : 'Ej. A'" />
+                      <Select :model-value="parallel.shift || 'sin_jornada'" @update:model-value="parallel.shift = String($event) === 'sin_jornada' ? '' : String($event)">
+                        <SelectTrigger class="w-40" :aria-label="`Jornada del paralelo ${index + 1} de ${row.name}`"><SelectValue placeholder="Sin jornada" /></SelectTrigger>
+                        <SelectContent><SelectGroup>
+                          <SelectItem value="sin_jornada">Sin jornada</SelectItem>
+                          <SelectItem v-for="option in PARALLEL_SHIFTS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
+                        </SelectGroup></SelectContent>
+                      </Select>
+                      <Select :model-value="parallel.teacherId || 'sin_docente'" @update:model-value="parallel.teacherId = String($event) === 'sin_docente' ? '' : String($event)">
+                        <SelectTrigger class="min-w-44 max-w-60 flex-1" :aria-label="`Docente del paralelo ${parallel.code || index + 1} de ${row.name}`"><SelectValue placeholder="Sin docente" /></SelectTrigger>
+                        <SelectContent><SelectGroup>
+                          <SelectItem value="sin_docente">Sin docente</SelectItem>
+                          <SelectItem v-for="teacher in teacherUsers" :key="teacher.id" :value="teacher.id">{{ teacher.name }}</SelectItem>
+                        </SelectGroup></SelectContent>
+                      </Select>
+                      <Button v-if="row.parallels.length > 1" type="button" size="icon-sm" variant="ghost" :aria-label="`Quitar paralelo ${parallel.code || index + 1}`" @click="removeParallel(row, index)"><Trash2 data-icon="inline-start" aria-hidden="true" /></Button>
                     </div>
-                    <Button type="button" size="sm" variant="outline" class="w-fit" :disabled="!row.selected" @click="addParallel(row)">Agregar paralelo</Button>
+                    <Button type="button" size="sm" variant="outline" class="w-fit" @click="addParallel(row)">Agregar paralelo</Button>
                   </div></TableCell>
                 </TableRow>
               </TableBody>
             </Table>
-            <Alert v-if="invalidRows" variant="destructive"><AlertDescription>Cada materia seleccionada debe tener al menos un paralelo con código.</AlertDescription></Alert>
+            <Alert v-if="invalidRows" variant="destructive"><AlertDescription>Cada materia debe tener paralelos con códigos distintos.</AlertDescription></Alert>
+            <p v-if="rows.length && assignedCount < parallelCount" class="text-sm text-muted-foreground">Los paralelos sin docente se guardarán pendientes de asignación.</p>
           </template>
-          <FormSheetActions :close="close" :processing="saving" :disabled="!periodId || !selectedRows.length || invalidRows" :icon="ListChecks" label="Aplicar preparación" />
+          <FormSheetActions :close="close" :processing="saving" :disabled="!periodId || !rows.length || invalidRows" :icon="ListChecks" label="Confirmar preparación" />
         </FieldGroup>
       </form>
     </template>
