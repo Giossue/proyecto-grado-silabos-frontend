@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { getManagedUsers, type ManagedUser, type ManagedUsersResponse } from '@/api/admin-users';
 import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
@@ -24,10 +24,12 @@ import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
 const router = useRouter();
+const route = useRoute();
 const currentUserId = ref<string | null>(null);
 const result = ref<ManagedUsersResponse | null>(null);
 const error = ref<string | null>(null); const loading = ref(true);
-const q = ref(''); const status = ref('all'); const role = ref('all'); const career = ref('all');
+// Un aviso puede abrir la lista ya filtrada por la persona (`?q=correo`).
+const q = ref(typeof route.query.q === 'string' ? route.query.q : ''); const status = ref('all'); const role = ref('all'); const career = ref('all');
 const statusOf = (user: ManagedUser): { label: string; hint: string } => {
     if (!user.active) return { label: 'Inactivo', hint: 'La cuenta está desactivada y no puede iniciar sesión.' };
     if (user.pending_activation) return { label: 'Pendiente de activación', hint: 'La cuenta espera que su titular abra la invitación y defina su contraseña.' };
