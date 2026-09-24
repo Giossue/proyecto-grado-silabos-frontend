@@ -103,10 +103,11 @@ onMounted(refreshCount);
 <template>
     <Popover v-model:open="open">
         <TooltipProvider :delay-duration="150">
-            <!-- El PopoverTrigger va por fuera: si el TooltipTrigger lo envuelve, captura el clic y el popover no abre. -->
-            <PopoverTrigger as-child>
-                <Tooltip :open="open ? false : undefined">
-                    <TooltipTrigger as-child>
+            <!-- Tooltip > TooltipTrigger > PopoverTrigger > Button: el Tooltip no renderiza elemento propio,
+                 así que un PopoverTrigger as-child por fuera pierde el clic y el popover no abre. -->
+            <Tooltip :open="open ? false : undefined">
+                <TooltipTrigger as-child>
+                    <PopoverTrigger as-child>
                         <Button
                             type="button"
                             :variant="open || isNotificationsPage ? 'secondary' : 'ghost'"
@@ -119,10 +120,10 @@ onMounted(refreshCount);
                                 {{ unreadCount > 99 ? '99+' : unreadCount }}
                             </Badge>
                         </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Notificaciones</TooltipContent>
-                </Tooltip>
-            </PopoverTrigger>
+                    </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>Notificaciones</TooltipContent>
+            </Tooltip>
         </TooltipProvider>
         <PopoverContent align="end" class="flex w-[min(24rem,calc(100vw-1rem))] flex-col gap-3 p-0">
             <div class="flex items-center justify-between px-4 pt-4">
