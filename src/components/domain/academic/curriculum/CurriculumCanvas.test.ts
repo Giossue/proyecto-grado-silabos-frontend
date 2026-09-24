@@ -1,4 +1,4 @@
-import { shallowMount } from '@vue/test-utils';
+import { flushPromises, shallowMount } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 import CurriculumCanvas from '@/components/domain/academic/curriculum/CurriculumCanvas.vue';
@@ -80,8 +80,12 @@ describe('CurriculumCanvas', () => {
         await nextTick();
         expect((flow.props('nodes') as typeof preview).find((node) => node.id === 'a')?.position.y).toBe(32);
 
-        flow.vm.$emit('node-drag-stop', { node: dragged });
-        await nextTick();
+        // Vue Flow puede entregar en drag-stop la posición anterior mientras sincroniza
+        // su modelo; el índice confirmado es el que mostró el último drag.
+        flow.vm.$emit('node-drag-stop', {
+            node: { ...dragged, position: { x: 145, y: 32 } },
+        });
+        await flushPromises();
         expect(updateSubjectLayout).toHaveBeenCalledWith('career', {
             subject_id: 'a', cycle: 1, position: 2,
         });

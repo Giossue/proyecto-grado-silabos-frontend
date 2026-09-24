@@ -522,6 +522,21 @@ const buildEdges = (): Edge[] => {
 const nodes = ref<Node[]>(buildNodes());
 const edges = ref<Edge[]>(buildEdges());
 
+const synchronizeNodePositions = async (): Promise<void> => {
+    const nextNodes = buildNodes();
+    nodes.value = nextNodes;
+    setNodes(nextNodes);
+    await nextTick();
+    // setNodes conserva computedPosition de los nodos existentes. El mismo
+    // posicionamiento debe aplicarse al estado visual interno de Vue Flow.
+    nextNodes.filter((item) => item.type === 'subject').forEach((item) => {
+        updateNode(item.id, (current) => ({
+            position: item.position,
+            computedPosition: { ...current.computedPosition, ...item.position },
+        }));
+    });
+};
+
 watch(() => props.subjects, () => { dragPreview.value = null; });
 
 watch(
@@ -679,35 +694,15 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     const index = dragPreview.value?.subjectId === node.id
         ? dragPreview.value.index
         : originalIndex;
-    const finalPosition = {
-        x: laneStart + index * subjectStep,
-        y: (subject.cycle - 1) * laneHeight + subjectOffset.value,
-    };
-    const snapDraggedNode = (): void => {
-        // Vue Flow conserva computedPosition del gesto al llamar setNodes;
-        // actualizar ambas coordenadas evita que la tarjeta quede entre casillas.
-        updateNode(node.id, (current) => ({
-            position: finalPosition,
-            computedPosition: { ...current.computedPosition, ...finalPosition },
-        }));
-    };
     if (index === originalIndex) {
         dragPreview.value = null;
-        const restoredNodes = buildNodes();
-        nodes.value = restoredNodes;
-        setNodes(restoredNodes);
-        await nextTick();
-        snapDraggedNode();
+        await synchronizeNodePositions();
         return;
     }
 
     // La vista previa se conserva hasta que la consulta refresque la malla.
     savingLayout.value = true;
-    const previewNodes = buildNodes();
-    nodes.value = previewNodes;
-    setNodes(previewNodes);
-    await nextTick();
-    snapDraggedNode();
+    await synchronizeNodePositions();
     try {
         const result = await updateSubjectLayout(props.curriculum.id, {
             subject_id: node.id,
@@ -717,21 +712,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         emit('changed', result.message);
     } catch (reason) {
         dragPreview.value = null;
-        const restoredNodes = buildNodes();
-        nodes.value = restoredNodes;
-        setNodes(restoredNodes);
-        await nextTick();
-        updateNode(node.id, (current) => ({
-            position: {
-                x: laneStart + originalIndex * subjectStep,
-                y: finalPosition.y,
-            },
-            computedPosition: {
-                ...current.computedPosition,
-                x: laneStart + originalIndex * subjectStep,
-                y: finalPosition.y,
-            },
-        }));
+        await synchronizeNodePositions();
         toast.error(reason instanceof ApiError ? reason.message : 'No se pudo mover la materia.');
     } finally {
         savingLayout.value = false;
