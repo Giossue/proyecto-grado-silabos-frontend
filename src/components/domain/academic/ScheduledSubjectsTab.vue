@@ -34,12 +34,25 @@ const emit = defineEmits<{ period: [id: string]; changed: [message: string]; fai
 const selectedPeriod = ref(props.data.selectedPeriodId ?? "");
 const formatter = new Intl.DateTimeFormat("es-EC", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
 const periodRows = computed(() => props.data.scheduledSubjects.filter((item) => item.period_id === selectedPeriod.value));
-const filter = useClientFilter(periodRows, (item) => [
-  item.subject_name,
-  item.subject_code,
-  item.subject_cycle?.toString(),
-  ...item.parallels.flatMap((parallel) => [parallel.code, shiftLabel(parallel.shift)]),
-]);
+type ScheduledRow = ScheduledSubjects["scheduledSubjects"][number];
+const cycleKey = (item: ScheduledRow) => item.subject_cycle === null ? "none" : String(item.subject_cycle);
+const shiftKey = (shift: string | null | undefined) => shift ?? "none";
+// El buscador queda para materia y código; ciclo, paralelo y jornada tienen su propio selector.
+const filter = useClientFilter(periodRows, (item) => [item.subject_name, item.subject_code], {
+  ciclo: { matches: (item, value) => cycleKey(item) === value },
+  paralelo: { matches: (item, value) => item.parallels.some((parallel) => parallel.code === value) },
+  jornada: { matches: (item, value) => item.parallels.some((parallel) => shiftKey(parallel.shift) === value) },
+});
+const cycleOptions = computed(() => [...new Map(periodRows.value.map((item) => [
+  cycleKey(item),
+  { value: cycleKey(item), label: item.subject_cycle === null ? "Sin ciclo" : `${item.subject_cycle}.º ciclo`, order: item.subject_cycle ?? Number.MAX_SAFE_INTEGER },
+])).values()].sort((a, b) => a.order - b.order));
+const parallelOptions = computed(() => [...new Set(periodRows.value.flatMap((item) => item.parallels.map((parallel) => parallel.code)))]
+  .sort((a, b) => a.localeCompare(b, "es", { numeric: true })));
+const shiftOptions = computed(() => [...new Map(periodRows.value.flatMap((item) => item.parallels).map((parallel) => [
+  shiftKey(parallel.shift),
+  { value: shiftKey(parallel.shift), label: shiftLabel(parallel.shift) },
+])).values()].sort((a, b) => a.label.localeCompare(b.label, "es")));
 const { items, meta, setPage } = useClientPagination(() => filter.items.value);
 const selectedPeriodOption = computed(() => props.data.options.periods.find((item) => item.id === selectedPeriod.value));
 const emptyMessage = computed(() => filter.active.value ? "No hay materias que coincidan con los filtros." : "No hay materias programadas para este período.");
@@ -58,12 +71,30 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
 <template>
   <Card>
     <CardContent class="flex flex-col gap-4">
-      <ClientFilterBar :filter="filter" input-id="scheduled-subjects-search" label="Buscar materia programada" placeholder="Buscar por materia, código, ciclo, paralelo o jornada">
+      <ClientFilterBar :filter="filter" input-id="scheduled-subjects-search" label="Buscar materia programada" placeholder="Buscar por materia o código">
         <template #filters>
           <Field data-wide><FieldLabel for="scheduled-subject-period" class="sr-only">Período académico</FieldLabel>
             <Select :model-value="selectedPeriod" @update:model-value="changePeriod">
               <SelectTrigger id="scheduled-subject-period"><SelectValue placeholder="Seleccione un período" /></SelectTrigger>
               <SelectContent><SelectGroup><SelectItem v-for="period in data.options.periods" :key="period.id" :value="period.id">{{ periodLabel(period) }} · {{ period.status_label }}</SelectItem></SelectGroup></SelectContent>
+            </Select>
+          </Field>
+          <Field><FieldLabel for="scheduled-subject-cycle" class="sr-only">Ciclo</FieldLabel>
+            <Select v-model="filter.values.ciclo.value" @update:model-value="setPage(1)">
+              <SelectTrigger id="scheduled-subject-cycle"><SelectValue placeholder="Todos los ciclos" /></SelectTrigger>
+              <SelectContent><SelectGroup><SelectItem value="all">Todos los ciclos</SelectItem><SelectItem v-for="option in cycleOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
+            </Select>
+          </Field>
+          <Field><FieldLabel for="scheduled-subject-parallel" class="sr-only">Paralelo</FieldLabel>
+            <Select v-model="filter.values.paralelo.value" @update:model-value="setPage(1)">
+              <SelectTrigger id="scheduled-subject-parallel"><SelectValue placeholder="Todos los paralelos" /></SelectTrigger>
+              <SelectContent><SelectGroup><SelectItem value="all">Todos los paralelos</SelectItem><SelectItem v-for="code in parallelOptions" :key="code" :value="code">Paralelo {{ code }}</SelectItem></SelectGroup></SelectContent>
+            </Select>
+          </Field>
+          <Field><FieldLabel for="scheduled-subject-shift" class="sr-only">Jornada</FieldLabel>
+            <Select v-model="filter.values.jornada.value" @update:model-value="setPage(1)">
+              <SelectTrigger id="scheduled-subject-shift"><SelectValue placeholder="Todas las jornadas" /></SelectTrigger>
+              <SelectContent><SelectGroup><SelectItem value="all">Todas las jornadas</SelectItem><SelectItem v-for="option in shiftOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
             </Select>
           </Field>
         </template>
