@@ -458,8 +458,9 @@ defineExpose({ getDocument });
     width: 100%;
 }
 .template-table-editor .template-table-canvas {
-    /* El documento se edita sobre papel, independientemente del tema de la interfaz. */
-    background: var(--document-paper);
+    /* La hoja ya pinta el papel; un fondo propio taparía el hueco entre hojas
+       cuando la tabla se parte por filas. */
+    background: transparent;
 }
 .template-table-editor table {
     border-collapse: collapse;
