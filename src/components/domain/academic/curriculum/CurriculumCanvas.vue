@@ -437,7 +437,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
 
 <template>
   <div
-    class="curriculum-canvas relative h-[72vh] min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
+    class="curriculum-canvas relative h-[76vh] min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
     aria-label="Modo interactivo de la malla"
   >
     <!--

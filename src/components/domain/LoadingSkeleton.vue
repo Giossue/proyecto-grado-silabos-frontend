@@ -274,7 +274,7 @@ const gridColumns = (): string =>
                 <template v-if="props.mode === 'curriculum'">
                     <div
                         data-skeleton="curriculum-canvas"
-                        class="relative h-[72vh] min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
+                        class="relative h-[76vh] min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
                     >
                         <div class="absolute inset-0 overflow-hidden p-6 sm:p-8">
                             <div class="grid h-full grid-cols-2 gap-5 sm:grid-cols-4 sm:gap-8">

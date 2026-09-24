@@ -49,7 +49,7 @@ describe('LoadingSkeleton', () => {
       props: { variant: 'academic-structure', mode: 'curriculum' },
     });
 
-    expect(wrapper.get('[data-skeleton="curriculum-canvas"]').classes()).toContain('h-[72vh]');
+    expect(wrapper.get('[data-skeleton="curriculum-canvas"]').classes()).toContain('h-[76vh]');
     expect(wrapper.find('.bg-muted.inline-flex').exists()).toBe(false);
     expect(wrapper.findAll('[data-slot="skeleton"]').length).toBeGreaterThan(0);
     expect(wrapper.findAll('button')).toHaveLength(0);
