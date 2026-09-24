@@ -516,4 +516,21 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
     :deep(textarea.document-input) {
     min-height: 4rem;
 }
+/* En el formulario del docente las casillas no se encogen hasta volverse
+   ilegibles: si la tabla no cabe, se desplaza dentro de su marco. */
+.template-document-view[data-presentation='form']
+    :deep(.document-table td input.document-input[type='number']) {
+    min-width: 4rem;
+    padding-inline: 0.25rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+.template-document-view[data-presentation='form']
+    :deep(.document-table td input.document-input:not([type='number'])) {
+    min-width: 8rem;
+}
+.template-document-view[data-presentation='form']
+    :deep(.document-table td textarea.document-input) {
+    min-width: 12rem;
+}
 </style>

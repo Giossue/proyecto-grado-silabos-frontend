@@ -380,3 +380,52 @@ export const groupByUnit = <Row extends { data: TableRowData }>(
     return [...units.values()].sort((a, b) => a.number - b.number);
 };
 
+
+/** Número de unidad de una fila; lo que no es un entero positivo cuenta como 1. */
+const unitOf = (data: TableRowData): number => {
+    const raw = Number(data._unit ?? 1);
+
+    return Number.isFinite(raw) && raw >= 1 ? Math.floor(raw) : 1;
+};
+
+/**
+ * Deja las unidades numeradas 1, 2, 3… sin huecos, conservando su orden. Si una
+ * unidad se quitó o se perdió (p. ej. solo existe la «Unidad 2»), las demás se
+ * corren para que el docente nunca quede con una numeración que no puede
+ * corregir. Devuelve el mismo arreglo cuando no hay nada que cambiar.
+ */
+export const consecutiveUnits = <Row extends { data: TableRowData }>(
+    rows: Row[],
+): Row[] => {
+    if (!rows.some((row) => '_unit' in row.data)) {
+        return rows;
+    }
+
+    const numbers = [...new Set(rows.map((row) => unitOf(row.data)))].sort(
+        (a, b) => a - b,
+    );
+    const rank = new Map(numbers.map((number, index) => [number, index + 1]));
+
+    if (rows.every((row) => row.data._unit === rank.get(unitOf(row.data)))) {
+        return rows;
+    }
+
+    return rows.map((row) => ({
+        ...row,
+        data: { ...row.data, _unit: rank.get(unitOf(row.data))! },
+    }));
+};
+
+/** Una unidad «tiene datos» si alguna de sus celdas no está vacía. */
+export const unitHasData = (
+    unit: TableUnit<{ data: TableRowData }>,
+): boolean =>
+    [unit.header, ...unit.rows].some((row) =>
+        Object.entries(row?.data ?? {}).some(
+            ([key, value]) =>
+                !key.startsWith('_') &&
+                value !== null &&
+                value !== undefined &&
+                String(value).trim() !== '',
+        ),
+    );

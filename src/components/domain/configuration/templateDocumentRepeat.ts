@@ -1,7 +1,12 @@
 import { h } from 'vue';
 import type { VNodeChild } from 'vue';
 import { Button } from '@/components/ui/button';
-import { groupByUnit, sumColumn, formatSum } from '@/lib/tableLayout';
+import {
+    groupByUnit,
+    sumColumn,
+    formatSum,
+    unitHasData,
+} from '@/lib/tableLayout';
 import type {
     PlanningExpectations,
     TableLayout,
@@ -124,20 +129,34 @@ export const createRepeatTable =
                                       onClick: () =>
                                           options.addRecord(field, unit.number),
                                   },
-                                  () => 'Agregar fila de datos',
+                                  () => 'Agregar fila',
                               ),
-                              ...(layout.repeat.enabled && units.length > 1
+                              ...(layout.repeat.enabled &&
+                              (units.length > 1 || unitHasData(unit))
                                   ? [
                                         h(
                                             Button,
                                             {
                                                 type: 'button',
                                                 variant: 'ghost',
-                                                onClick: () =>
-                                                    options.removeUnit(
-                                                        field,
-                                                        unit.number,
-                                                    ),
+                                                onClick: () => {
+                                                    const label = (
+                                                        layout.repeat.label ??
+                                                        'Unidad'
+                                                    ).toLowerCase();
+
+                                                    if (
+                                                        !unitHasData(unit) ||
+                                                        window.confirm(
+                                                            `¿Quitar la ${label} ${unit.number} y todo lo que tiene escrito?`,
+                                                        )
+                                                    ) {
+                                                        options.removeUnit(
+                                                            field,
+                                                            unit.number,
+                                                        );
+                                                    }
+                                                },
                                             },
                                             () =>
                                                 `Quitar ${(layout.repeat.label ?? 'Unidad').toLowerCase()}`,
@@ -169,12 +188,9 @@ export const createRepeatTable =
                     {
                         type: 'button',
                         variant: 'outline',
+                        class: 'self-start',
                         onClick: () =>
-                            options.addUnit(
-                                field,
-                                Math.max(...units.map((unit) => unit.number)) +
-                                    1,
-                            ),
+                            options.addUnit(field, units.length + 1),
                     },
                     () => 'Agregar unidad',
                 ),

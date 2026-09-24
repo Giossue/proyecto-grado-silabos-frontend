@@ -34,7 +34,7 @@ import { Spinner } from '@/components/ui/spinner';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
 import type { TableLayout, TableRowData } from '@/lib/tableLayout';
-import { isListLayout } from '@/lib/tableLayout';
+import { consecutiveUnits, isListLayout } from '@/lib/tableLayout';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { hiddenKeys } from '@/lib/fieldConditions';
@@ -167,6 +167,7 @@ const syllabusId = (): string => String(route.params.syllabus);
 const load = async (): Promise<void> => {
   try {
     syllabus.value = (await getTeacherSyllabus(syllabusId())).syllabus;
+    repairUnitNumbers();
     validationRan.value = Boolean(syllabus.value.validation && syllabus.value.validation.version_bloqueo === syllabus.value.version_bloqueo);
     validationBlockingErrors.value = syllabus.value.validation?.blocking_errors ?? null;
     validationResults.value = syllabus.value.validation?.results ?? [];
@@ -359,11 +360,11 @@ const updateDesignValue = (fields: SyllabusField[], key: string, value: string |
 };
 const updateDesignRows = (fields: SyllabusField[], key: string, rows: Array<{ id: string | null; data: TableRowData }>): void => {
   const field = fields.find((item) => item.key === key);
-  if (field) { field.rows = rows.map((row, index) => ({ id: row.id ?? undefined, data: row.data as Record<string, string | number | null>, position: index + 1 })); clearFieldValidation(field.id); scheduleRows(field); }
+  if (field) { field.rows = consecutiveUnits(rows).map((row, index) => ({ id: row.id ?? undefined, data: row.data as Record<string, string | number | null>, position: index + 1 })); clearFieldValidation(field.id); scheduleRows(field); }
 };
 
 const updateRows = (field: SyllabusField, rows: Array<{ id?: string | null; data: TableRowData; position?: number }>): void => {
-  field.rows = rows.map((row, index) => ({ id: row.id ?? undefined, data: row.data as Record<string, string | number | null>, position: row.position ?? index + 1 }));
+  field.rows = consecutiveUnits(rows).map((row, index) => ({ id: row.id ?? undefined, data: row.data as Record<string, string | number | null>, position: row.position ?? index + 1 }));
   clearFieldValidation(field.id);
   scheduleRows(field);
 };
@@ -392,6 +393,21 @@ const saveRows = (field: SyllabusField): void => {
       savingFieldId.value = null;
     }
   });
+};
+
+/**
+ * Si una planificación llegó con unidades salteadas (p. ej. solo la «Unidad 2»),
+ * se renumera 1, 2, 3… y se guarda, para que el docente no quede atascado con el
+ * aviso de «numeración consecutiva» sin forma de corregirlo.
+ */
+const repairUnitNumbers = (): void => {
+  for (const field of (syllabus.value?.sections ?? []).flatMap((section) => section.blocks.flatMap((block) => block.fields))) {
+    if (field.type !== 'repetible') continue;
+    const fixed = consecutiveUnits(field.rows);
+    if (fixed === field.rows) continue;
+    field.rows = fixed;
+    scheduleRows(field);
+  }
 };
 
 const scheduleRows = (field: SyllabusField): void => {

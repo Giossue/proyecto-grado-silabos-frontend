@@ -13,11 +13,14 @@ import {
     totalizes,
     planningColumns,
     isListLayout,
+    consecutiveUnits,
+    unitHasData,
 } from '@/lib/tableLayout';
 import type {
     PlanningExpectations,
     TableLayout,
     TableRowData,
+    TableUnit,
 } from '@/lib/tableLayout';
 
 type EditableRow = { id: string | null; data: TableRowData };
@@ -143,33 +146,55 @@ const removeRow = (target: EditableRow): void => {
     emit('update:rows', rows);
 };
 
-const addUnit = (): void => {
-    const next = Math.max(0, ...units.value.map((unit) => unit.number)) + 1;
+const unitHeader = (number: number): EditableRow => {
     const header: EditableRow = {
         id: null,
-        data: { _unit: next, _kind: 'unit' },
+        data: { _unit: number, _kind: 'unit' },
     };
 
     for (const field of props.layout.header_fields) {
         header.data[field.key] = '';
     }
 
-    emit('update:rows', [...cloneRows(), header]);
+    return header;
 };
 
-/** Quita la unidad y renumera las siguientes para no dejar huecos. */
-const removeUnit = (number: number): void => {
-    const rows = cloneRows()
-        .filter((row) => Number(row.data._unit ?? 1) !== number)
-        .map((row) => {
-            const current = Number(row.data._unit ?? 1);
+/**
+ * Agrega la unidad siguiente a la última visible. Si todavía no hay filas, la
+ * «Unidad 1» que se muestra vacía también se guarda; así nunca aparece una
+ * «Unidad 2» sin la 1.
+ */
+const addUnit = (): void => {
+    const rows = cloneRows();
 
-            return current > number
-                ? { ...row, data: { ...row.data, _unit: current - 1 } }
-                : row;
-        });
+    if (rows.length === 0) {
+        rows.push(unitHeader(1));
+    }
 
-    emit('update:rows', rows);
+    emit('update:rows', [...rows, unitHeader(units.value.length + 1)]);
+};
+
+/** Quita la unidad (confirmando si tiene datos) y renumera sin dejar huecos. */
+const removeUnit = (unit: TableUnit<EditableRow>): void => {
+    const label = (props.layout.repeat.label ?? 'Unidad').toLowerCase();
+
+    if (
+        unitHasData(unit) &&
+        !window.confirm(
+            `¿Quitar la ${label} ${unit.number} y todo lo que tiene escrito?`,
+        )
+    ) {
+        return;
+    }
+
+    emit(
+        'update:rows',
+        consecutiveUnits(
+            cloneRows().filter(
+                (row) => Number(row.data._unit ?? 1) !== unit.number,
+            ),
+        ),
+    );
 };
 const widths = computed(() => columnWidths(props.layout));
 </script>
@@ -227,11 +252,11 @@ const widths = computed(() => columnWidths(props.layout));
                         {{ layout.repeat.label ?? 'Unidad' }} {{ unit.number }}
                     </p>
                     <Button
-                        v-if="layout.repeat.enabled && units.length > 1"
+                        v-if="layout.repeat.enabled && (units.length > 1 || unitHasData(unit))"
                         type="button"
                         variant="ghost"
                         size="sm"
-                        @click="removeUnit(unit.number)"
+                        @click="removeUnit(unit)"
                     >
                         <Trash2 data-icon="inline-start" aria-hidden="true" />
                         Quitar {{ (layout.repeat.label ?? 'Unidad').toLowerCase() }}

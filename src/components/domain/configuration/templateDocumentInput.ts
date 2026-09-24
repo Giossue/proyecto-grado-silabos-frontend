@@ -275,9 +275,13 @@ export const createDocumentInput = (options: Options) => {
                 columnRole === 'week'
                     ? (options.props.planningExpectations?.teaching_weeks ?? 52)
                     : undefined,
-            placeholder: attrs.listStyle
-                ? `Ej. ${label}: un elemento por línea`
-                : `Ej. ${label}`,
+            // Un número no lleva «Ej.»: en una casilla angosta solo estorba.
+            placeholder:
+                kind === 'numero'
+                    ? undefined
+                    : attrs.listStyle
+                      ? `Ej. ${label}: un elemento por línea`
+                      : `Ej. ${label}`,
             'onUpdate:modelValue': change,
         });
     };

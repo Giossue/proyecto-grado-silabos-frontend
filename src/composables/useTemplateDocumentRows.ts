@@ -1,4 +1,4 @@
-import { planningColumns } from '@/lib/tableLayout';
+import { consecutiveUnits, planningColumns } from '@/lib/tableLayout';
 import type {
     PlanningExpectations,
     TableLayout,
@@ -72,31 +72,38 @@ export function useTemplateDocumentRows(options: Options) {
             { id: null, data },
         ]);
     };
-    const addUnit = (field: DocumentField, number: number) => {
+    const unitHeader = (number: number) => {
         const data: TableRowData = { _unit: number, _kind: 'unit' };
 
         for (const header of options.layout()?.header_fields ?? []) {
             data[header.key] = '';
         }
 
+        return { id: null, data };
+    };
+    /**
+     * Sin filas, la «Unidad 1» vacía que se ve en pantalla también se guarda, para
+     * que la nueva no quede como «Unidad 2» sin la 1.
+     */
+    const addUnit = (field: DocumentField, number: number) => {
+        const rows = field.rows ?? [];
+
         options.emit('rows', field.key, [
-            ...(field.rows ?? []),
-            { id: null, data },
+            ...rows,
+            ...(rows.length === 0 ? [unitHeader(1)] : []),
+            unitHeader(rows.length === 0 ? Math.max(2, number) : number),
         ]);
     };
+    /** Quita la unidad y renumera las demás 1, 2, 3… sin huecos. */
     const removeUnit = (field: DocumentField, number: number) =>
         options.emit(
             'rows',
             field.key,
-            (field.rows ?? [])
-                .filter((row) => Number(row.data._unit ?? 1) !== number)
-                .map((row) => {
-                    const current = Number(row.data._unit ?? 1);
-
-                    return current > number
-                        ? { ...row, data: { ...row.data, _unit: current - 1 } }
-                        : row;
-                }),
+            consecutiveUnits(
+                (field.rows ?? []).filter(
+                    (row) => Number(row.data._unit ?? 1) !== number,
+                ),
+            ),
         );
     const removeRecord = (field: DocumentField, row: Row) =>
         options.emit(
