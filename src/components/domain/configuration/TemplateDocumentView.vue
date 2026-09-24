@@ -2,43 +2,23 @@
 import { defineComponent, h, useId, useSlots } from 'vue';
 import { computed } from 'vue';
 import type { VNodeChild, CSSProperties } from 'vue';
-import PlanningSummary from '@/components/domain/syllabus/PlanningSummary.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import {
-    groupByUnit,
-    sumColumn,
-    formatSum,
-    planningColumns,
-} from '@/lib/tableLayout';
-import type {
-    PlanningExpectations,
-    TableLayout,
-    TableRowData,
-} from '@/lib/tableLayout';
-import { displayDocumentValue } from '@/lib/templateDocument';
+import type { PlanningExpectations, TableLayout } from '@/lib/tableLayout';
 import type { DocumentNode, DocumentField } from '@/lib/templateDocument';
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
+import { useTemplateDocumentRows } from '@/composables/useTemplateDocumentRows';
+import { createRepeatTable } from '@/components/domain/configuration/templateDocumentRepeat';
+import { createDocumentInput } from '@/components/domain/configuration/templateDocumentInput';
+import {
+    cellBorder,
+    columnGroup,
+    markStyle,
+    textFragments,
+} from '@/components/domain/configuration/templateDocumentRender';
+import type {
+    Context,
+    Row,
+} from '@/components/domain/configuration/templateDocumentRender';
 
-type Row = { id: string | null; data: TableRowData };
-type Context = {
-    field?: DocumentField;
-    row?: Row;
-    unit?: number;
-    role?: string;
-    totals?: TableRowData;
-    insideCell?: boolean;
-    cellTextAlign?: string;
-};
 const props = withDefaults(
     defineProps<{
         document: DocumentNode;
@@ -87,76 +67,6 @@ const documentStyle = computed((): CSSProperties & Record<string, string> =>
               '--document-table-header-color': props.tableHeaderColor,
           },
 );
-const textFragments = (
-    text: string,
-    attributes: Record<string, unknown> = {},
-): VNodeChild[] =>
-    (text.match(/\S+[ \t]*|[ \t]+|(?:\r\n|\r|\n)/g) ?? [text]).map(
-        (fragment, index) =>
-            /^(?:\r\n|\r|\n)$/.test(fragment)
-                ? h('br', {
-                      ...attributes,
-                      key: index,
-                      'data-page-fragment': '',
-                  })
-                : h(
-                      'span',
-                      {
-                          ...attributes,
-                          key: index,
-                          'data-page-fragment': '',
-                      },
-                      fragment,
-                  ),
-    );
-const columnGroup = (table: DocumentNode): VNodeChild => {
-    const occupied: boolean[][] = [];
-    const widths: number[] = [];
-
-    for (const [y, row] of (table.content ?? []).entries()) {
-        let x = 0;
-
-        for (const cell of row.content ?? []) {
-            while (occupied[y]?.[x]) {
-                x++;
-            }
-
-            const span = Number(cell.attrs?.colspan ?? 1);
-            const height = Number(cell.attrs?.rowspan ?? 1);
-            const values = Array.isArray(cell.attrs?.colwidth)
-                ? cell.attrs.colwidth
-                : [];
-
-            for (let column = 0; column < span; column++) {
-                if (values[column]) {
-                    widths[x + column] = Number(values[column]);
-                } else {
-                    widths[x + column] ??= 0;
-                }
-
-                for (let r = y; r < y + height; r++) {
-                    occupied[r] ??= [];
-                    occupied[r][x + column] = true;
-                }
-            }
-
-            x += span;
-        }
-    }
-
-    const resolved = widths.map(
-        (width) => width || 600 / Math.max(1, widths.length),
-    );
-    const total = resolved.reduce((sum, width) => sum + width, 0);
-
-    return h(
-        'colgroup',
-        {},
-        resolved.map((width) =>
-            h('col', { style: { width: `${(width / total) * 100}%` } }),
-        ),
-    );
-};
 const tableWithAction = (
     table: DocumentNode,
     content: VNodeChild[],
@@ -196,354 +106,28 @@ const tableWithAction = (
             : null,
     ]);
 };
-const markStyle = (
-    node: DocumentNode,
-    inheritTableTypography = false,
-): CSSProperties => {
-    const style: CSSProperties = {};
-
-    for (const mark of node.marks ?? []) {
-        if (mark.type === 'bold') {
-            style.fontWeight = 'bold';
-        }
-
-        if (mark.type === 'italic') {
-            style.fontStyle = 'italic';
-        }
-
-        if (mark.type === 'underline') {
-            style.textDecoration = 'underline';
-        }
-
-        if (mark.type === 'textStyle') {
-            const attrs = mark.attrs ?? {};
-
-            if (attrs.fontFamily && !inheritTableTypography) {
-                style.fontFamily = attrs.fontFamily;
-            }
-
-            if (attrs.color) {
-                style.color = attrs.color;
-            }
-        }
-    }
-
-    return style;
-};
-const cellBorder = (value: unknown): string | undefined => {
-    if (value === 'none') {
-        return '0';
-    }
-
-    if (value === 'thick') {
-        return `2px solid ${DOCUMENT_COLORS.tableBorder}`;
-    }
-
-    return value === 'thin' ? `1px solid ${DOCUMENT_COLORS.tableBorder}` : undefined;
-};
-const setColumn = (context: Context, key: string, value: string | number) => {
-    const field = context.field;
-
-    if (!field) {
-        return;
-    }
-
-    const rows = (field.rows ?? []).map((row) => ({
-        id: row.id,
-        data: { ...row.data },
-    }));
-    let index = (field.rows ?? []).indexOf(context.row!);
-
-    if (index < 0) {
-        rows.push({
-            id: null,
-            data: {
-                _unit: context.unit ?? 1,
-                ...(context.role === 'unit' ? { _kind: 'unit' } : {}),
-            },
-        });
-        index = rows.length - 1;
-    }
-
-    rows[index].data[key] = value;
-    emit('rows', field.key, rows);
-};
-const addRecord = (field: DocumentField, unit: number) => {
-    const data: TableRowData = { _unit: unit };
-    const weekKey = props.layout ? planningColumns(props.layout).week : null;
-
-    if (weekKey) {
-        const used = new Set(
-            (field.rows ?? [])
-                .map((row) => Number(row.data[weekKey]))
-                .filter((week) => Number.isInteger(week) && week > 0),
-        );
-        const maximum = props.planningExpectations?.teaching_weeks ?? 52;
-        data[weekKey] =
-            Array.from({ length: maximum }, (_, index) => index + 1).find(
-                (week) => !used.has(week),
-            ) ?? '';
-    }
-
-    emit('rows', field.key, [...(field.rows ?? []), { id: null, data }]);
-};
-const addUnit = (field: DocumentField, number: number) => {
-    const data: TableRowData = { _unit: number, _kind: 'unit' };
-
-    for (const header of props.layout?.header_fields ?? []) {
-        data[header.key] = '';
-    }
-
-    emit('rows', field.key, [...(field.rows ?? []), { id: null, data }]);
-};
-const removeUnit = (field: DocumentField, number: number) =>
-    emit(
-        'rows',
-        field.key,
-        (field.rows ?? [])
-            .filter((row) => Number(row.data._unit ?? 1) !== number)
-            .map((row) => {
-                const current = Number(row.data._unit ?? 1);
-
-                return current > number
-                    ? { ...row, data: { ...row.data, _unit: current - 1 } }
-                    : row;
-            }),
-    );
-const removeRecord = (field: DocumentField, row: Row) =>
-    emit(
-        'rows',
-        field.key,
-        (field.rows ?? []).filter((item) => item !== row),
-    );
-
-const input = (
-    node: DocumentNode,
-    context: Context,
-    path: string,
-): VNodeChild => {
-    const attrs = node.attrs ?? {};
-    const key = String(attrs.key);
-    const field =
-        node.type === 'column'
-            ? context.field
-            : props.fields.find((item) => item.key === key);
-    const choice = attrs.choice;
-    const isColumn = node.type === 'column';
-    const value = isColumn
-        ? context.role === 'total'
-            ? context.totals?.[key]
-            : context.row?.data[key]
-        : field?.value;
-    const canEdit =
-        props.editable &&
-        field &&
-        !field.inherited &&
-        field.teacher_editable !== false &&
-        context.role !== 'total';
-    const label = String(attrs.label ?? field?.label ?? 'Contenido');
-    const kind = isColumn
-        ? String(attrs.kind)
-        : (field?.type ?? String(attrs.kind));
-    const change = (value: string | number | boolean) => {
-        if (!canEdit) {
-            return;
-        }
-
-        if (isColumn) {
-            setColumn(
-                context,
-                key,
-                value === ''
-                    ? ''
-                    : kind === 'numero'
-                      ? Number(value)
-                      : String(value),
-            );
-        } else {
-            emit('value', key, value);
-        }
-    };
-    const style = markStyle(node, context.insideCell === true);
-    const text = displayDocumentValue(value);
-
-    if (!canEdit) {
-        if (attrs.listStyle) {
-            const items =
-                field?.type === 'repetible' && !isColumn
-                    ? (field.rows ?? []).map((row) =>
-                          displayDocumentValue(row.data.texto),
-                      )
-                    : text.split(/\r?\n/).filter((line) => line.trim());
-
-            return h(
-                attrs.listStyle === 'number' ? 'ol' : 'ul',
-                { style },
-                (items.length || !props.preview ? items : [label]).map((item) =>
-                    h('li', {}, item),
-                ),
-            );
-        }
-
-        const content = choice
-            ? text === choice
-                ? 'X'
-                : ''
-            : field?.type === 'repetible' && !isColumn
-              ? (field.rows ?? [])
-                    .map((row) => displayDocumentValue(row.data.texto))
-                    .join('\n')
-              : text;
-
-        return h(
-            'span',
-            { class: 'contents' },
-            textFragments(content || (props.preview && !choice ? label : ''), {
-                style,
-                class: 'document-value',
-            }),
-        );
-    }
-
-    const attributes = {
-        id: `${prefix}-${path}`,
-        'aria-label': label,
-        'aria-required': field.required ?? true,
-        class: 'document-input',
-        style,
-    };
-
-    if (choice) {
-        return h(
-            Button,
-            {
-                type: 'button',
-                variant: 'ghost',
-                size: 'sm',
-                'aria-label': `${label}: ${choice}`,
-                'aria-pressed': text === choice,
-                onClick: () => change(String(choice)),
-            },
-            () => (text === choice ? 'X' : '□'),
-        );
-    }
-
-    if (!isColumn && kind === 'repetible') {
-        const rows = field.rows ?? [];
-
-        return h('div', { class: 'flex flex-col gap-2', style }, [
-            ...rows.map((row, index) =>
-                h(
-                    'div',
-                    { class: 'flex items-start gap-1', key: row.id ?? index },
-                    [
-                        h(Textarea, {
-                            ...attributes,
-                            id: `${prefix}-${path}-${index}`,
-                            modelValue: String(row.data.texto ?? ''),
-                            placeholder: `Ej. ${label}`,
-                            'onUpdate:modelValue': (value: string | number) =>
-                                emit(
-                                    'rows',
-                                    key,
-                                    rows.map((item, i) =>
-                                        i === index
-                                            ? {
-                                                  ...item,
-                                                  data: {
-                                                      ...item.data,
-                                                      texto: String(value),
-                                                  },
-                                              }
-                                            : item,
-                                    ),
-                                ),
-                        }),
-                        h(
-                            Button,
-                            {
-                                variant: 'ghost',
-                                type: 'button',
-                                'aria-label': `Quitar elemento ${index + 1}`,
-                                onClick: () => removeRecord(field, row),
-                            },
-                            () => 'Quitar',
-                        ),
-                    ],
-                ),
-            ),
-            h(
-                Button,
-                {
-                    variant: 'outline',
-                    type: 'button',
-                    class: 'self-start',
-                    onClick: () =>
-                        emit('rows', key, [
-                            ...rows,
-                            { id: null, data: { texto: '' } },
-                        ]),
-                },
-                () => 'Agregar elemento',
-            ),
-        ]);
-    }
-
-    if (kind === 'seleccion_unica') {
-        return h(
-            Select,
-            {
-                modelValue: text,
-                'onUpdate:modelValue': (value) => change(String(value)),
-            },
-            () => [
-                h(SelectTrigger, attributes, () =>
-                    h(SelectValue, { placeholder: 'Seleccione' }),
-                ),
-                h(SelectContent, {}, () =>
-                    h(SelectGroup, {}, () =>
-                        (field.options ?? []).map((option) =>
-                            h(
-                                SelectItem,
-                                { value: option.value, key: option.value },
-                                () => option.label,
-                            ),
-                        ),
-                    ),
-                ),
-            ],
-        );
-    }
-
-    const control =
-        !attrs.listStyle && ['numero', 'fecha', 'texto_corto'].includes(kind)
-            ? Input
-            : Textarea;
-    const columnRole = isColumn
-        ? props.layout?.columns.find((column) => column.key === key)?.role
-        : null;
-
-    return h(control, {
-        ...attributes,
-        modelValue: text,
-        type: kind === 'numero' ? 'number' : kind === 'fecha' ? 'date' : 'text',
-        step:
-            columnRole === 'week'
-                ? 1
-                : columnRole?.startsWith('hours_')
-                  ? 0.01
-                  : undefined,
-        min: columnRole ? 0 : undefined,
-        max:
-            columnRole === 'week'
-                ? (props.planningExpectations?.teaching_weeks ?? 52)
-                : undefined,
-        placeholder: attrs.listStyle
-            ? `Ej. ${label}: un elemento por línea`
-            : `Ej. ${label}`,
-        'onUpdate:modelValue': change,
+const { setColumn, addRecord, addUnit, removeUnit, removeRecord } =
+    useTemplateDocumentRows({
+        layout: () => props.layout,
+        planningExpectations: () => props.planningExpectations,
+        emit,
     });
-};
+const repeatTable = createRepeatTable({
+    props,
+    draw: (node, context, path) => draw(node, context, path),
+    tableWithAction,
+    addRecord,
+    addUnit,
+    removeUnit,
+    removeRecord,
+});
+const input = createDocumentInput({
+    props,
+    prefix,
+    emit,
+    setColumn,
+    removeRecord,
+});
 
 const draw = (
     node: DocumentNode,
@@ -613,163 +197,7 @@ const draw = (
             return null;
         }
 
-        const layout = props.layout;
-        const grouped = groupByUnit(field.rows ?? [], layout.repeat.enabled);
-        const units = grouped.length
-            ? grouped
-            : [{ number: 1, header: null, rows: [] }];
-        const tables = units.map((unit) => {
-            const totals: TableRowData = {};
-
-            for (const column of layout.columns) {
-                if (column.type === 'number' && column.sum !== false) {
-                    totals[column.key] = formatSum(
-                        sumColumn(
-                            unit.rows.map((row) => row.data),
-                            column.key,
-                        ),
-                    );
-                }
-            }
-
-            const content: VNodeChild[] = [];
-            const designRows = node.content ?? [];
-
-            for (let index = 0; index < designRows.length; index++) {
-                const source = designRows[index];
-                const role = String(source.attrs?.rowRole ?? 'fixed');
-
-                if (role === 'record') {
-                    const group = [source];
-
-                    while (designRows[index + 1]?.attrs?.rowRole === 'record') {
-                        group.push(designRows[++index]);
-                    }
-
-                    for (const [rowIndex, record] of (unit.rows.length
-                        ? unit.rows
-                        : [null]
-                    ).entries()) {
-                        group.forEach((row, offset) =>
-                            content.push(
-                                draw(
-                                    row,
-                                    {
-                                        field,
-                                        row: record ?? undefined,
-                                        role,
-                                        unit: unit.number,
-                                    },
-                                    `${path}-u${unit.number}-r${rowIndex}-${offset}`,
-                                ),
-                            ),
-                        );
-                    }
-                } else {
-                    content.push(
-                        draw(
-                            source,
-                            {
-                                field,
-                                row: unit.header ?? undefined,
-                                role,
-                                unit: unit.number,
-                                totals,
-                            },
-                            `${path}-u${unit.number}-${index}`,
-                        ),
-                    );
-                }
-            }
-
-            return h(
-                'div',
-                { class: 'document-repeat-unit', key: unit.number },
-                [
-                    layout.repeat.enabled
-                        ? h(
-                              'p',
-                              { class: 'font-bold', 'data-page-keep-next': '' },
-                              `${layout.repeat.label} ${unit.number}`,
-                          )
-                        : null,
-                    tableWithAction(node, content),
-                    props.editable
-                        ? h('div', { class: 'flex flex-wrap gap-2 py-2' }, [
-                              h(
-                                  Button,
-                                  {
-                                      type: 'button',
-                                      variant: 'outline',
-                                      onClick: () =>
-                                          addRecord(field, unit.number),
-                                  },
-                                  () => 'Agregar fila de datos',
-                              ),
-                              ...(layout.repeat.enabled && units.length > 1
-                                  ? [
-                                        h(
-                                            Button,
-                                            {
-                                                type: 'button',
-                                                variant: 'ghost',
-                                                onClick: () =>
-                                                    removeUnit(
-                                                        field,
-                                                        unit.number,
-                                                    ),
-                                            },
-                                            () =>
-                                                `Quitar ${layout.repeat.label.toLowerCase()}`,
-                                        ),
-                                    ]
-                                  : []),
-                              ...unit.rows.map((row, i) =>
-                                  h(
-                                      Button,
-                                      {
-                                          type: 'button',
-                                          variant: 'ghost',
-                                          onClick: () =>
-                                              removeRecord(field, row),
-                                      },
-                                      () => `Quitar fila ${i + 1}`,
-                                  ),
-                              ),
-                          ])
-                        : null,
-                ],
-            );
-        });
-
-        tables.push(
-            h(PlanningSummary, {
-                layout,
-                rows: (field.rows ?? []).map((row) => row.data),
-                expectations: props.planningExpectations,
-            }),
-        );
-
-        if (props.editable && layout.repeat.enabled) {
-            tables.push(
-                h(
-                    Button,
-                    {
-                        type: 'button',
-                        variant: 'outline',
-                        onClick: () =>
-                            addUnit(
-                                field,
-                                Math.max(...units.map((unit) => unit.number)) +
-                                    1,
-                            ),
-                    },
-                    () => 'Agregar unidad',
-                ),
-            );
-        }
-
-        return h('div', { class: 'flex flex-col gap-3' }, tables);
+        return repeatTable(node, field, props.layout, path);
     }
 
     if (node.type === 'table') {
