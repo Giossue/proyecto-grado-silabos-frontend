@@ -207,6 +207,19 @@ const lastAgentHint = computed(() => {
 });
 watch(lastAgentHint, (hint) => avatar.applyAgentHint(hint));
 
+const avatarCaption = computed((): string => {
+    const { mode, emotion, intensity = 0.6 } = avatar.state.value;
+    if (mode === 'thinking') return 'Revisando tu sílabo…';
+    if (mode === 'speaking') return 'Aquí van mis sugerencias';
+    if (mode === 'listening') return 'Te escucho';
+    if (emotion === 'happy') {
+        return intensity >= 0.8 ? 'Tu sílabo va muy bien' : 'Tengo algunas sugerencias para ti';
+    }
+    if (emotion === 'confused') return 'Hubo partes que no pude revisar';
+    if (emotion === 'surprised') return 'Revisé una parte del sílabo';
+    return hasResults.value ? 'Revisión lista' : 'Listo para revisar tu sílabo';
+});
+
 const statusLabel = (execution: Execution): string => {
     if (execution.stale) return 'Desactualizado';
     return {
@@ -377,7 +390,7 @@ onBeforeUnmount(() => {
                     <MessageContent class="w-full">
                         <Card>
                             <CardHeader>
-                                <div class="flex justify-center">
+                                <div class="flex flex-col items-center gap-2">
                                     <div
                                         class="flex size-20 shrink-0 items-center justify-center"
                                     >
@@ -386,6 +399,12 @@ onBeforeUnmount(() => {
                                             v-bind="avatar.state.value"
                                         />
                                     </div>
+                                    <p
+                                        class="text-center text-sm text-muted-foreground"
+                                        aria-live="polite"
+                                    >
+                                        {{ avatarCaption }}
+                                    </p>
                                 </div>
                             </CardHeader>
                             <CardContent v-if="assistance.sources.length > 0">
@@ -429,7 +448,7 @@ onBeforeUnmount(() => {
                     </Suggestion>
                 </Suggestions>
 
-                <Empty v-if="!hasResults && canReview" class="min-h-64 border">
+                <Empty v-if="!hasResults && canReview" class="min-h-64 border-0">
                     <EmptyContent>
                         <Button
                             type="button"
