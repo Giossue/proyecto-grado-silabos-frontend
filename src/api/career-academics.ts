@@ -136,6 +136,7 @@ export type TeacherAssignments = {
   canCreateTeacher: boolean;
   career: { id: string; name: string; lock_reason: string | null };
   pendingTeachers: Array<{ id: string; name: string; email: string }>;
+  careerTeachers: Array<{ id: string; name: string; email: string; pending_activation: boolean }>;
   teacherAssignments: Array<{
     id: string;
     user_id: string;

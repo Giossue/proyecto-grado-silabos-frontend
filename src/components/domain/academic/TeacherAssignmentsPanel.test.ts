@@ -14,6 +14,11 @@ const data: TeacherAssignments = {
     canCreateTeacher: true,
     career: { id: 'career-1', name: 'Software', lock_reason: null },
     pendingTeachers: [{ id: 'teacher-pending', name: 'Docente pendiente', email: 'pendiente@example.test' }],
+    careerTeachers: [
+        { id: 'teacher-pending', name: 'Docente pendiente', email: 'pendiente@example.test', pending_activation: true },
+        { id: 'teacher-active', name: 'Docente activo', email: 'activo@example.test', pending_activation: false },
+        { id: 'teacher-free', name: 'Docente sin paralelo', email: 'docente2.pruebas@example.test', pending_activation: false },
+    ],
     teacherAssignments: [{
         id: 'assignment-1',
         user_id: 'teacher-active',
@@ -34,6 +39,7 @@ const data: TeacherAssignments = {
 const inactivePendingData: TeacherAssignments = {
     ...data,
     pendingTeachers: [{ id: 'teacher-inactive', name: 'Docente retirado', email: 'retirado@example.test' }],
+    careerTeachers: [{ id: 'teacher-inactive', name: 'Docente retirado', email: 'retirado@example.test', pending_activation: true }],
     teacherAssignments: [{
         ...data.teacherAssignments[0],
         id: 'assignment-inactive',
@@ -126,5 +132,50 @@ describe('TeacherAssignmentsPanel', () => {
 
         expect(wrapper.text()).toContain('Finalizada');
         expect(wrapper.text()).not.toContain('Pendiente de activación');
+    });
+
+    it('muestra al docente activo sin paralelo con guiones y estado Activa', () => {
+        const wrapper = mount(TeacherAssignmentsPanel, {
+            props: { data: { ...data, pendingTeachers: [], careerTeachers: [data.careerTeachers[2]], teacherAssignments: [] } },
+            global: {
+                stubs: {
+                    Card: passthrough,
+                    CardContent: passthrough,
+                    CareerAcademicActions: passthrough,
+                    ClientFilterBar: passthrough,
+                    DropdownMenuItem: passthrough,
+                    Field: passthrough,
+                    FieldLabel: passthrough,
+                    MailCheck: passthrough,
+                    Select: passthrough,
+                    SelectContent: passthrough,
+                    SelectGroup: passthrough,
+                    SelectItem: passthrough,
+                    SelectTrigger: passthrough,
+                    SelectValue: passthrough,
+                    Spinner: passthrough,
+                    Table: passthrough,
+                    TableActionsMenu: passthrough,
+                    TableBody: passthrough,
+                    TableCell: passthrough,
+                    TableEmpty: passthrough,
+                    TableHead: passthrough,
+                    TableHeader: passthrough,
+                    TablePagination: passthrough,
+                    TableRow: passthrough,
+                    Tooltip: passthrough,
+                    TooltipContent: passthrough,
+                    TooltipTrigger: passthrough,
+                },
+            },
+        });
+
+        const text = wrapper.text();
+        expect(text).toContain('Docente sin paralelo');
+        expect(text).toContain('docente2.pruebas@example.test');
+        expect(text).toContain('Activa');
+        expect(text).toContain('—');
+        expect(text).not.toContain('Pendiente de activación');
+        expect(text).not.toContain('Reenviar invitación');
     });
 });

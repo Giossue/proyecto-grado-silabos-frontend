@@ -41,10 +41,11 @@ const resendError = ref<string | null>(null);
 const rows = computed<TeacherRow[]>(() => {
   const pendingIds = new Set(props.data.pendingTeachers.map((teacher) => teacher.id));
   const assignedUserIds = new Set(props.data.teacherAssignments.map((item) => item.user_id));
-  const pendingWithoutAssignment = props.data.pendingTeachers
+  // Todo docente activo de la carrera aparece: sin paralelo, la fila muestra el estado de su rol.
+  const teachersWithoutAssignment = props.data.careerTeachers
     .filter((teacher) => !assignedUserIds.has(teacher.id))
     .map((teacher): TeacherRow => ({
-      id: `pending-${teacher.id}`,
+      id: `teacher-${teacher.id}`,
       user_id: teacher.id,
       user_name: teacher.name,
       user_email: teacher.email,
@@ -55,11 +56,11 @@ const rows = computed<TeacherRow[]>(() => {
       period_planning_enabled: false,
       active: true,
       editable: false,
-      pending_activation: true,
+      pending_activation: teacher.pending_activation,
     }));
 
   return [
-    ...pendingWithoutAssignment,
+    ...teachersWithoutAssignment,
     ...props.data.teacherAssignments.map((item): TeacherRow => ({
       ...item,
       pending_activation: pendingIds.has(item.user_id),
@@ -69,6 +70,7 @@ const rows = computed<TeacherRow[]>(() => {
 const statusOf = (item: TeacherRow): { label: string; hint: string } => {
   if (!item.active) return { label: "Finalizada", hint: "La asignación docente ya no está activa." };
   if (item.pending_activation) return { label: "Pendiente de activación", hint: "La cuenta espera que su titular abra la invitación y defina su contraseña." };
+  if (!item.parallel_id) return { label: "Activa", hint: "El rol docente está vigente; aún no tiene paralelo asignado." };
   return { label: "Activa", hint: "La asignación docente está vigente." };
 };
 const filter = useClientFilter(() => rows.value, (item) => [
@@ -117,7 +119,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
             <CareerAcademicActions v-if="item.parallel_id" entity="asignacion_docente" :record="item" :record-label="`la asignación de ${item.user_name}`" :editable="item.editable" :active="item.active" :allow-locked-actions="item.pending_activation" :delete-supported="item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? (item.period_status === 'finalizado' ? 'Período finalizado · solo lectura' : 'Período inactivo · solo lectura') : undefined" @changed="emit('changed', $event)">
               <DropdownMenuItem v-if="item.pending_activation" :disabled="resendingId !== null" @select="resendInvitation(item.user_id)"><Spinner v-if="resendingId === item.user_id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
             </CareerAcademicActions>
-            <TableActionsMenu v-else :label="`Acciones para ${item.user_name}`"><DropdownMenuItem :disabled="resendingId !== null" @select="resendInvitation(item.user_id)"><Spinner v-if="resendingId === item.user_id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem></TableActionsMenu>
+            <TableActionsMenu v-else-if="item.pending_activation" :label="`Acciones para ${item.user_name}`"><DropdownMenuItem :disabled="resendingId !== null" @select="resendInvitation(item.user_id)"><Spinner v-if="resendingId === item.user_id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem></TableActionsMenu>
           </TableCell>
         </TableRow>
       </TableBody>
