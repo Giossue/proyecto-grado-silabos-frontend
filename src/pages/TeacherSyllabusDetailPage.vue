@@ -12,6 +12,7 @@ import {
   type SyllabusDetail,
   type SyllabusField,
 } from "@/api/syllabi";
+import { reconcileSavedRows } from '@/lib/repeatableRows';
 import SyllabusAiAssistantSheet from '@/components/domain/ai/SyllabusAiAssistantSheet.vue';
 import SyllabusTableEditor from '@/components/domain/syllabus/SyllabusTableEditor.vue';
 import SyllabusTableView from '@/components/domain/syllabus/SyllabusTableView.vue';
@@ -33,6 +34,7 @@ import { Spinner } from '@/components/ui/spinner';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
 import type { TableLayout, TableRowData } from '@/lib/tableLayout';
+import { isListLayout } from '@/lib/tableLayout';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { hiddenKeys } from '@/lib/fieldConditions';
@@ -353,13 +355,14 @@ const saveRows = (field: SyllabusField): void => {
     if (!syllabus.value) return;
     savingFieldId.value = field.id;
     try {
+      const sent = field.rows.map((row) => ({ ...row, id: row.id || undefined }));
       const saved = await saveTeacherRows(
         syllabus.value.id,
         field.id,
         syllabus.value.version_bloqueo,
-        field.rows.map((row) => ({ ...row, id: row.id || undefined })),
+        sent,
       );
-      field.rows = saved.rows;
+      field.rows = reconcileSavedRows(field.rows, sent, saved.rows);
       syllabus.value.version_bloqueo = saved.version_bloqueo;
       invalidateValidation();
       if (!hasUnsavedChanges()) saveFailed.value = false;
@@ -566,7 +569,7 @@ onBeforeUnmount(() => {
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><div class="boolean-options flex gap-2" role="radiogroup" :aria-label="field.label.trim() || section.title"><Button type="button" size="sm" :variant="field.value === true ? 'default' : 'outline'" role="radio" :aria-checked="field.value === true" @click="toggleBoolean(field, true)">Sí</Button><Button type="button" size="sm" :variant="field.value === false ? 'default' : 'outline'" role="radio" :aria-checked="field.value === false" @click="toggleBoolean(field, false)">No</Button></div><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
 
-                <div v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'repetible'" :id="`field-${field.id}`" class="flex flex-col gap-2"><template v-if="!block.table"><p v-if="field.label.trim()" class="text-sm font-medium">{{ field.label }}</p><p class="text-sm text-muted-foreground">Esta tabla no tiene una estructura configurada.</p></template><template v-else><SyllabusTableEditor :field-id="field.id" :label="field.label.trim() || section.title" :layout="partLayout(block.table, field.label.trim() || section.title)" :rows="tableRows(field)" :required="field.required" :invalid="validationFor(field.id).length > 0" :planning-expectations="syllabus.planning_expectations ?? null" @update:rows="updateRows(field, $event)" /><span v-if="savingFieldId === field.id" class="text-xs text-muted-foreground">Guardando…</span></template></div>
+                <div v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'repetible'" :id="`field-${field.id}`" class="flex flex-col gap-2"><template v-if="!block.table"><p v-if="field.label.trim()" class="text-sm font-medium">{{ field.label }}</p><p class="text-sm text-muted-foreground">Esta tabla no tiene una estructura configurada.</p></template><template v-else><FieldLabel :for="isListLayout(block.table) && field.rows.length > 0 ? `field-${field.id}-u1-r1-texto` : undefined" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><SyllabusTableEditor :field-id="field.id" :label="field.label.trim() || section.title" :layout="partLayout(block.table, field.label.trim() || section.title)" :rows="tableRows(field)" :required="field.required" :invalid="validationFor(field.id).length > 0" :planning-expectations="syllabus.planning_expectations ?? null" @update:rows="updateRows(field, $event)" /><span v-if="savingFieldId === field.id" class="text-xs text-muted-foreground">Guardando…</span></template></div>
 
                 <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div v-if="field.label.trim() || field.inherited" class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Dato automático</Badge></div><SyllabusTableView v-if="field.type === 'repetible' && block.table" :layout="partLayout(block.table, field.label.trim() || section.title)" :rows="tableRows(field)" :planning-expectations="syllabus.planning_expectations ?? null" hide-summary /><span v-else>{{ masterValue(field.value) }}</span></div>
                 <FieldError :errors="visibleValidationMessages(field.id)" />

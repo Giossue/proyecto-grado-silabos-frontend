@@ -12,6 +12,7 @@ import {
     columnWidths,
     totalizes,
     planningColumns,
+    isListLayout,
 } from '@/lib/tableLayout';
 import type {
     PlanningExpectations,
@@ -41,6 +42,8 @@ const emit = defineEmits<{
 }>();
 
 const header = computed(() => headerRows(props.layout));
+const isList = computed(() => isListLayout(props.layout));
+const listKey = computed(() => props.layout.columns[0]?.key ?? 'texto');
 const units = computed(() => {
     const grouped = groupByUnit(props.rows, props.layout.repeat.enabled);
 
@@ -172,7 +175,44 @@ const widths = computed(() => columnWidths(props.layout));
 </script>
 
 <template>
-    <div class="flex flex-col gap-4">
+    <div v-if="isList" class="flex flex-col gap-2">
+        <div
+            v-for="(row, rowIndex) in rows"
+            :key="row.id ?? `r${rowIndex}`"
+            class="flex items-start gap-2"
+        >
+            <Textarea
+                :id="cellId(1, rowIndex + 1, listKey)"
+                rows="2"
+                class="min-h-16 flex-1"
+                :model-value="String(display(row.data[listKey]))"
+                :aria-label="`${label}, elemento ${rowIndex + 1}`"
+                :aria-invalid="invalid"
+                :aria-required="required"
+                @update:model-value="setCell(row, listKey, $event, 'text')"
+            />
+            <Button
+                type="button"
+                size="icon-sm"
+                variant="ghost"
+                class="mt-1"
+                :aria-label="`Quitar elemento ${rowIndex + 1}`"
+                @click="removeRow(row)"
+            >
+                <Trash2 aria-hidden="true" />
+            </Button>
+        </div>
+        <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            class="self-start"
+            @click="addRow(1)"
+        >
+            Agregar elemento
+        </Button>
+    </div>
+    <div v-else class="flex flex-col gap-4">
         <div
             v-for="unit in units"
             :key="unit.number"

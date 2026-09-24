@@ -223,6 +223,19 @@ export const headerRows = (layout: TableLayout): HeaderCell[][] => {
     return rows;
 };
 
+/**
+ * Parte tipo lista (p. ej. «Objetivos específicos»): una sola columna de texto
+ * sin cabeceras de unidad ni totales. Se edita como una lista de elementos, no
+ * como una tabla.
+ */
+export const isListLayout = (layout: TableLayout): boolean =>
+  layout.columns.length === 1
+  && layout.columns[0]!.key === 'texto'
+  && layout.columns[0]!.type === 'text'
+  && layout.header_fields.length === 0
+  && !layout.repeat.enabled
+  && !layout.totals.enabled;
+
 export const numericColumns = (layout: TableLayout): TableColumn[] =>
     layout.columns.filter((column) => column.type === 'number');
 

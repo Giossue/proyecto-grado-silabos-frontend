@@ -4,6 +4,7 @@ import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import {
   getTeacherSyllabus,
   saveTeacherField,
+  saveTeacherRows,
   submitTeacherSyllabus,
   validateTeacherSyllabus,
   type SyllabusDetail,
@@ -112,6 +113,7 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.useRealTimers();
     vi.mocked(getTeacherSyllabus).mockReset();
     vi.mocked(saveTeacherField).mockReset();
+    vi.mocked(saveTeacherRows).mockReset();
     vi.mocked(submitTeacherSyllabus).mockReset();
     vi.mocked(validateTeacherSyllabus).mockReset();
     vi.mocked(handleUnauthorized).mockReset();
@@ -126,6 +128,43 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.get(".syllabus-document-header").text()).toContain("PROGRAMA");
     expect(wrapper.find("textarea").exists()).toBe(false);
     expect(wrapper.get(".syllabus-readonly-field").text()).toContain("Texto enviado");
+  });
+
+  it("mantiene la fila agregada tras guardarla aunque esté vacía y no pisa lo escrito durante el guardado", async () => {
+    vi.useFakeTimers();
+    const detail = syllabus("borrador", "repetible");
+    const block = detail.sections[0]!.blocks[0]!;
+    block.content_type = "table";
+    block.table = {
+      columns: [{ key: "texto", label: "Elemento", type: "text", group: null, band: null, sum: false, width: null, role: null }],
+      groups: [], bands: [], header_fields: [], totals: { enabled: false }, repeat: { enabled: false },
+    };
+    block.fields[0]!.label = "Objetivos específicos";
+    block.fields[0]!.value = null;
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    let resolveSave: (value: Awaited<ReturnType<typeof saveTeacherRows>>) => void = () => {};
+    vi.mocked(saveTeacherRows).mockImplementation(() => new Promise((resolve) => { resolveSave = resolve; }));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find("table").exists()).toBe(false);
+    expect(wrapper.text()).toContain("Objetivos específicos");
+    const add = wrapper.findAll("button").find((button) => button.text() === "Agregar elemento")!;
+    await add.trigger("click");
+    await vi.advanceTimersByTimeAsync(700);
+    expect(saveTeacherRows).toHaveBeenCalledTimes(1);
+
+    await wrapper.get("textarea").setValue("Escrito mientras se guarda");
+    // El servidor guarda la celda vacía como null.
+    resolveSave({ version_bloqueo: 3, guardado_en: null, rows: [{ id: "row-1", data: { texto: null }, position: 1 }] });
+    await flushPromises();
+
+    expect(wrapper.findAll("textarea")).toHaveLength(1);
+    expect((wrapper.get("textarea").element as HTMLTextAreaElement).value).toBe("Escrito mientras se guarda");
+    vi.mocked(saveTeacherRows).mockResolvedValue({ version_bloqueo: 4, guardado_en: null, rows: [{ id: "row-1", data: { texto: "Escrito mientras se guarda" }, position: 1 }] });
+    await vi.advanceTimersByTimeAsync(700);
+    await flushPromises();
+    expect(saveTeacherRows).toHaveBeenLastCalledWith("syllabus-1", "field-1", 3, [{ id: "row-1", data: { texto: "Escrito mientras se guarda" }, position: 1 }]);
   });
 
   it("guarda No como booleano explícito y no como campo vacío", async () => {
