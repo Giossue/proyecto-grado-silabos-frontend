@@ -19,6 +19,7 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import IdentificationCard from '@/components/domain/syllabus/IdentificationCard.vue';
 import SyllabusAcademicContext from '@/components/domain/syllabus/SyllabusAcademicContext.vue';
+import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -485,6 +486,8 @@ onBeforeUnmount(() => {
               <p class="text-sm text-muted-foreground">Esta versión es de solo lectura.</p>
             </CardContent>
           </Card>
+
+          <DocumentSignatureCard v-if="syllabus.state === 'aprobado' && syllabus.approved_revision_id" :revision-id="syllabus.approved_revision_id" :file-name="`silabo-${syllabus.code}`" />
 
           <Card v-if="requestedObservations.length">
             <CardHeader><CardTitle>Observaciones de coordinación</CardTitle><CardDescription>Corrija lo indicado en el sílabo y reenvíelo para una nueva revisión.</CardDescription></CardHeader>

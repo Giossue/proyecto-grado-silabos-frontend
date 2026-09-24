@@ -63,6 +63,8 @@ export type SyllabusDetail = {
   /** El docente puede escribir ahora (convocatoria en curso y asignación vigente). */
   editable?: boolean;
   edit_block_reason?: string | null;
+  /** Revisión aprobada vigente (solo con el sílabo aprobado); se usa para la firma electrónica. */
+  approved_revision_id?: string | null;
   iniciado_en: string | null;
   parallels: string[];
   teachers: string[];

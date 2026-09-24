@@ -277,11 +277,11 @@
 }
 
 /* En oscuro se conserva la misma jerarquía del tema claro: el lienzo contiene
-   ciclos apenas más oscuros que las tarjetas de materia. */
+   ciclos apenas más oscuros que las tarjetas. Los laterales conservan el tinte
+   primario suave definido para ambos temas. */
 .dark .curriculum-canvas {
     --curriculum-canvas-background: hsl(0 0% 5.5%);
     --curriculum-lane: hsl(0 0% 6%);
-    --curriculum-cycle-chrome: hsl(0 0% 7%);
 }
 
 @layer base {
