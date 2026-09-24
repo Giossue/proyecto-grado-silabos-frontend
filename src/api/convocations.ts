@@ -44,8 +44,8 @@ export const getConvocations = (filters: { q?: string; state?: string; page?: nu
   return api<ConvocationsPage>(`/coordination/convocations${suffix}`);
 };
 
-export const createConvocation = (processId: string, sourceIds: string[]) =>
-  api<{ message: string; convocation_id: string }>('/coordination/convocations', { method: 'POST', body: JSON.stringify({ process_id: processId, source_ids: sourceIds }) });
+export const createConvocation = (processId: string) =>
+  api<{ message: string; convocation_id: string }>('/coordination/convocations', { method: 'POST', body: JSON.stringify({ process_id: processId }) });
 
 export const getConvocation = (convocationId: string) => api<ConvocationDetail>(`/coordination/convocations/${convocationId}`);
 

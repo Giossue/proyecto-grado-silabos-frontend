@@ -65,7 +65,7 @@ describe("CoordinationConvocationsPage", () => {
     });
   });
 
-  it("exige y envía la selección explícita de fuentes", async () => {
+  it("abre la convocatoria sin pedir selección de fuentes", async () => {
     const wrapper = mount(CoordinationConvocationsPage, {
       attachTo: document.body,
       global: { stubs: { RouterLink: { template: "<a><slot /></a>" } } },
@@ -80,16 +80,12 @@ describe("CoordinationConvocationsPage", () => {
     await flushPromises();
     const submit = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'))
       .find((button) => button.textContent?.includes('Abrir convocatoria'));
-    expect(submit?.disabled).toBe(true);
-
-    const source = document.body.querySelector<HTMLElement>('[role="dialog"] [role="checkbox"]');
-    source?.click();
-    await flushPromises();
+    expect(document.body.querySelector('[role="dialog"] [role="checkbox"]')).toBeNull();
     expect(submit?.disabled).toBe(false);
     submit?.click();
     await flushPromises();
 
-    expect(createConvocation).toHaveBeenCalledWith("process-1", ["source-1"]);
+    expect(createConvocation).toHaveBeenCalledWith("process-1");
     expect(getConvocations).toHaveBeenLastCalledWith({ q: "", state: "", page: 1 });
     expect(push).not.toHaveBeenCalled();
     wrapper.unmount();
