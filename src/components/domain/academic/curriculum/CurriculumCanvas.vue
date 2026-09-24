@@ -561,7 +561,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
 
 <style scoped>
 :deep(.vue-flow) {
-  background-color: color-mix(in srgb, var(--background) 90%, black);
+  background-color: var(--curriculum-canvas-background);
 }
 
 :deep(.vue-flow__node-subject:not(.dragging)) {

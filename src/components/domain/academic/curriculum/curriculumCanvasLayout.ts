@@ -272,8 +272,8 @@ export const buildRequirementEdges = (
     return requirements.map((requirement) => {
         const color =
             requirement.type === 'correquisito'
-                ? 'var(--primary)'
-                : 'var(--destructive)';
+                ? 'var(--curriculum-corequisite)'
+                : 'var(--curriculum-prerequisite)';
         const sameLevel = sameLevelIds.has(requirement.id);
         const offset = offsets.get(requirement.id);
 

@@ -449,7 +449,7 @@ export function createDocumentPaginator(
         spacer.setAttribute('data-page-spacer', '');
         spacer.setAttribute('aria-hidden', 'true');
         spacer.setAttribute('contenteditable', 'false');
-        spacer.style.cssText = `height:${height}px;pointer-events:none;margin:0;padding:0;list-style:none;counter-increment:list-item 0;`;
+        spacer.style.cssText = `height:${height}px;pointer-events:none;overflow-anchor:none;margin:0;padding:0;list-style:none;counter-increment:list-item 0;`;
 
         if (isRow) {
             const cell = document.createElement('td');
@@ -485,7 +485,15 @@ export function createDocumentPaginator(
         const { height, margin, gap } = metrics();
         const pitch = height + gap;
         const usable = height - 2 * margin;
-        const origin = root.getBoundingClientRect().top;
+        // Always relative to the root's current position: inserting a spacer above
+        // the caret lets the browser's scroll anchoring scroll the page, which would
+        // shift every later viewport measurement by the spacer height.
+        const topOf = (element: HTMLElement) =>
+            element.getBoundingClientRect().top -
+            root.getBoundingClientRect().top;
+        const bottomOf = (element: HTMLElement) =>
+            element.getBoundingClientRect().bottom -
+            root.getBoundingClientRect().top;
         const units = collectUnits(root);
         let page = 0;
 
@@ -497,14 +505,13 @@ export function createDocumentPaginator(
                 last++;
             }
 
-            const top = unit.first.getBoundingClientRect().top - origin;
-            let bottom =
-                units[last].last.getBoundingClientRect().bottom - origin;
+            const top = topOf(unit.first);
+            let bottom = bottomOf(units[last].last);
             const end = page * pitch + usable;
 
             // A heading should accompany the first content, not an entire section.
             if (bottom - top > usable) {
-                bottom = unit.last.getBoundingClientRect().bottom - origin;
+                bottom = bottomOf(unit.last);
             }
 
             if (
@@ -517,8 +524,7 @@ export function createDocumentPaginator(
             }
 
             // Exceptionally tall indivisible content remains visible, never clipped.
-            const actualBottom =
-                unit.last.getBoundingClientRect().bottom - origin;
+            const actualBottom = bottomOf(unit.last);
             page = Math.max(page, Math.floor((actualBottom - 0.5) / pitch));
         }
 

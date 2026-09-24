@@ -17,14 +17,14 @@ defineProps<{
         <dl class="flex flex-col gap-1">
             <div class="flex items-center gap-2">
                 <dt
-                    class="h-0.5 w-5 shrink-0 rounded bg-destructive"
+                    class="h-0.5 w-5 shrink-0 rounded bg-[var(--curriculum-prerequisite)]"
                     aria-hidden="true"
                 ></dt>
                 <dd>Prerrequisito</dd>
             </div>
             <div class="flex items-center gap-2">
                 <dt
-                    class="h-0.5 w-5 shrink-0 rounded bg-primary"
+                    class="h-0.5 w-5 shrink-0 rounded bg-[var(--curriculum-corequisite)]"
                     aria-hidden="true"
                 ></dt>
                 <dd>Correquisito</dd>
@@ -56,4 +56,3 @@ defineProps<{
         </dl>
     </div>
 </template>
-

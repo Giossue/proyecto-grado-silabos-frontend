@@ -14,6 +14,7 @@ import {
     Undo2,
     Merge,
 } from '@lucide/vue';
+import { Extension } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { CSSProperties } from 'vue';
@@ -34,6 +35,7 @@ import { SelectItem } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import type { TableLayout } from '@/lib/tableLayout';
 import { tableKeyFor } from '@/lib/tableLayout';
+import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import type {
     DocumentField,
     DocumentNode,
@@ -85,7 +87,14 @@ const editor = useEditor({
             spellcheck: 'true',
         },
     },
-    extensions: templateTableExtensions(),
+    extensions: [
+        ...templateTableExtensions(),
+        // Page breaks between rows drawn by the sheet view; presentation only.
+        Extension.create({
+            name: 'pageSpacers',
+            addProseMirrorPlugins: () => [pageSpacersPlugin()],
+        }),
+    ],
     onUpdate: ({ editor: current }) => {
         version.value++;
         emit('dirty', JSON.stringify(current.getJSON()) !== initial);

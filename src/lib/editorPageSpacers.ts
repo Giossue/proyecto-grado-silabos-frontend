@@ -22,7 +22,7 @@ function widget(spacer: Spacer) {
             node.setAttribute('aria-hidden', 'true');
             node.setAttribute('contenteditable', 'false');
             node.className = 'page-break-spacer';
-            node.style.cssText = `height:${spacer.height}px;pointer-events:none;margin:0;padding:0;list-style:none;counter-increment:list-item 0;`;
+            node.style.cssText = `height:${spacer.height}px;pointer-events:none;overflow-anchor:none;margin:0;padding:0;list-style:none;counter-increment:list-item 0;`;
 
             if (spacer.tag === 'tr') {
                 const cell = document.createElement('td');
