@@ -280,7 +280,7 @@
    ciclos apenas más oscuros que las tarjetas de materia. */
 .dark .curriculum-canvas {
     --curriculum-canvas-background: hsl(0 0% 5.5%);
-    --curriculum-lane: hsl(0 0% 7%);
+    --curriculum-lane: hsl(0 0% 6%);
     --curriculum-cycle-chrome: hsl(0 0% 7%);
 }
 
