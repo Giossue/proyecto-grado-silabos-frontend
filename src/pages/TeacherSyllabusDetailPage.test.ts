@@ -4,14 +4,22 @@ import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import {
   getTeacherSyllabus,
   saveTeacherField,
+  submitTeacherSyllabus,
+  validateTeacherSyllabus,
   type SyllabusDetail,
 } from "@/api/syllabi";
 import { ApiError } from "@/api/client";
+import { handleUnauthorized } from "@/lib/unauthorized";
+
+const routeLeaveGuards: Array<() => Promise<boolean> | boolean> = [];
 
 vi.mock("vue-router", () => ({
   useRoute: () => ({ params: { syllabus: "syllabus-1" } }),
   useRouter: () => ({ replace: vi.fn() }),
+  onBeforeRouteLeave: (guard: () => Promise<boolean> | boolean) => routeLeaveGuards.push(guard),
 }));
+
+vi.mock("@/lib/unauthorized", () => ({ handleUnauthorized: vi.fn() }));
 
 vi.mock("@/api/syllabi", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/syllabi")>()),
@@ -20,6 +28,7 @@ vi.mock("@/api/syllabi", async (importOriginal) => ({
   saveTeacherRows: vi.fn(),
   startTeacherSyllabus: vi.fn(),
   submitTeacherSyllabus: vi.fn(),
+  validateTeacherSyllabus: vi.fn(),
 }));
 
 const appearance = {
@@ -103,6 +112,10 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.useRealTimers();
     vi.mocked(getTeacherSyllabus).mockReset();
     vi.mocked(saveTeacherField).mockReset();
+    vi.mocked(submitTeacherSyllabus).mockReset();
+    vi.mocked(validateTeacherSyllabus).mockReset();
+    vi.mocked(handleUnauthorized).mockReset();
+    routeLeaveGuards.length = 0;
   });
 
   it("presenta como documento de solo lectura una revisión enviada", async () => {
@@ -199,7 +212,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.get(".feedback.error button").text()).toBe("Recargar borrador");
   });
 
-  it("oculta la revisión final y el botón de validación", async () => {
+  it("oculta la revisión final y el botón de validación, pero muestra los errores vigentes", async () => {
     const draft = syllabus("borrador");
     draft.sections.push({
       id: "section-review",
@@ -232,7 +245,153 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.text()).toContain("Descripción");
     expect(wrapper.text()).not.toContain("Revisión y aprobación");
     expect(wrapper.text()).not.toContain("Resultados de validación");
-    expect(wrapper.text()).not.toContain("Completa el campo obligatorio");
+    expect(wrapper.text()).toContain("Completa el campo obligatorio");
     expect(wrapper.findAll("button").some((button) => button.text() === "Validar sílabo")).toBe(false);
+  });
+
+  const buttonNamed = (wrapper: ReturnType<typeof mountPage>, name: string) =>
+    wrapper.findAll("button").find((button) => button.text().includes(name));
+
+  it("permite enviar sin validar antes y marca los errores bloqueantes que devuelve el servidor", async () => {
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
+    vi.mocked(submitTeacherSyllabus).mockRejectedValue(
+      new ApiError("Corrija los errores.", 422, { validation: ["Corrija los errores determinísticos antes de enviar."] }),
+    );
+    vi.mocked(validateTeacherSyllabus).mockResolvedValue({
+      message: "Validación completada.",
+      validation: {
+        version_bloqueo: 2,
+        blocking_errors: 2,
+        warnings: 0,
+        results: [
+          { field_id: "field-1", code: "campo_obligatorio_faltante", severity: "error", message: "Completa «Contenido»." },
+          { field_id: "master-1", code: "dato_maestro_faltante", severity: "error", message: "Falta el dato institucional de créditos." },
+        ],
+      },
+    });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const send = buttonNamed(wrapper, "Enviar sílabo");
+    expect(send).toBeDefined();
+    await send!.trigger("click");
+    await flushPromises();
+
+    expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2);
+    expect(wrapper.text()).toContain("Se encontraron 2 error(es) bloqueante(s)");
+    expect(wrapper.get(".validation-errors").text()).toContain("Falta el dato institucional de créditos.");
+    expect(wrapper.get("#field-field-1").attributes("data-invalid")).toBe("true");
+  });
+
+  it("habilita la revisión con IA sin exigir una validación previa", async () => {
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
+    const wrapper = mount(TeacherSyllabusDetailPage, {
+      global: { stubs: { SyllabusAiAssistantSheet: { props: ["canReview"], template: '<div class="ai" :data-can-review="String(canReview)" />' } } },
+    });
+    await flushPromises();
+
+    expect(wrapper.get(".ai").attributes("data-can-review")).toBe("true");
+  });
+
+  it("muestra el motivo y no ofrece iniciar cuando la convocatoria está en pausa", async () => {
+    const draft = syllabus("borrador");
+    draft.state = "sin_iniciar" as SyllabusDetail["state"];
+    draft.editable = false;
+    draft.edit_block_reason = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude.";
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();
+    expect(wrapper.get(".edit-blocked").text()).toContain("en pausa");
+  });
+
+  it("pasa a solo lectura si un guardado es rechazado por pausa", async () => {
+    vi.useFakeTimers();
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
+    vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("This action is unauthorized.", 403));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get("textarea").setValue("Cambio local");
+    await vi.advanceTimersByTimeAsync(700);
+    await flushPromises();
+
+    expect(wrapper.find("textarea").exists()).toBe(false);
+    expect(wrapper.get(".edit-blocked").text()).toContain("La convocatoria está en pausa. Podrá seguir editando cuando se reanude.");
+    expect(buttonNamed(wrapper, "Enviar sílabo")).toBeUndefined();
+  });
+
+  it("deja el campo pendiente tras un fallo y lo reenvía con Reintentar", async () => {
+    vi.useFakeTimers();
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
+    vi.mocked(saveTeacherField)
+      .mockRejectedValueOnce(new ApiError("Error temporal.", 500))
+      .mockResolvedValueOnce({ version_bloqueo: 3, guardado_en: null });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get("textarea").setValue("Cambio local");
+    await vi.advanceTimersByTimeAsync(700);
+    await flushPromises();
+
+    expect(wrapper.get(".save-status").text()).toContain("Sin guardar");
+    await buttonNamed(wrapper, "Reintentar")!.trigger("click");
+    await flushPromises();
+
+    expect(saveTeacherField).toHaveBeenCalledTimes(2);
+    expect(saveTeacherField).toHaveBeenLastCalledWith("syllabus-1", "field-1", 2, "Cambio local");
+    expect(wrapper.find(".save-status").exists()).toBe(false);
+  });
+
+  it("lleva al inicio de sesión si un guardado falla por sesión caducada", async () => {
+    vi.useFakeTimers();
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
+    vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("CSRF token mismatch.", 419));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get("textarea").setValue("Cambio local");
+    await vi.advanceTimersByTimeAsync(700);
+    await flushPromises();
+
+    expect(handleUnauthorized).toHaveBeenCalled();
+    expect(wrapper.get(".save-status").text()).toContain("Sin guardar");
+  });
+
+  it("guarda lo pendiente al salir de la página en lugar de descartarlo", async () => {
+    vi.useFakeTimers();
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get("textarea").setValue("Antes de salir");
+    const event = new Event("beforeunload", { cancelable: true });
+    window.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+
+    const allowed = await routeLeaveGuards[0]!();
+
+    expect(allowed).toBe(true);
+    expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, "Antes de salir");
+    wrapper.unmount();
+  });
+
+  it("pide confirmación al salir si lo pendiente no se pudo guardar", async () => {
+    vi.useFakeTimers();
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
+    vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("Error temporal.", 500));
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get("textarea").setValue("Antes de salir");
+    const allowed = await routeLeaveGuards[0]!();
+
+    expect(allowed).toBe(false);
+    expect(confirm).toHaveBeenCalled();
+    confirm.mockRestore();
+    wrapper.unmount();
   });
 });

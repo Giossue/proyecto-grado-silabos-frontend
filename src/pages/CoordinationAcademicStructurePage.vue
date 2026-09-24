@@ -159,11 +159,11 @@ onMounted(() => {
         :disabled="Boolean(schedule.career.lock_reason)"
         @saved="handlePeriodPrepared"
       />
-      <DropdownMenu v-if="mode === 'teachers' && assignments && (assignments.canCreateTeacher || !assignments.career.lock_reason)">
+      <DropdownMenu v-if="mode === 'teachers' && assignments">
         <DropdownMenuTrigger as-child><Button><UserPlus data-icon="inline-start" aria-hidden="true" />Gestionar docente<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end"><DropdownMenuGroup>
           <DropdownMenuItem v-if="assignments.canCreateTeacher" @select="teacherOpen = true">Crear docente</DropdownMenuItem>
-          <DropdownMenuItem :disabled="Boolean(assignments.career.lock_reason)" @select="assignmentOpen = true">Asignar docente</DropdownMenuItem>
+          <DropdownMenuItem @select="assignmentOpen = true">Asignar docente</DropdownMenuItem>
         </DropdownMenuGroup></DropdownMenuContent>
       </DropdownMenu>
       <TeacherAssignmentSheet
@@ -171,7 +171,6 @@ onMounted(() => {
         v-model:open="assignmentOpen"
         :options="assignments.options"
         :show-trigger="false"
-        :disabled="Boolean(assignments.career.lock_reason)"
         @saved="handleAssignmentChanged"
       />
       <CurriculumActions
@@ -196,7 +195,6 @@ onMounted(() => {
         @changed="handleScheduleChanged"
         @failed="actionError = $event"
       />
-      <ProcessLockAlert v-if="mode === 'teachers' && assignments.career.lock_reason" />
       <TeacherAssignmentsPanel v-if="mode === 'teachers'" :data="assignments" @changed="handleAssignmentChanged" />
       </template
     >

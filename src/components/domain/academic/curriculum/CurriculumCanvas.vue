@@ -336,9 +336,12 @@ const buildNodes = (): Node[] => {
                     },
                 },
                 draggable: editable.value && !hasOpenEditor.value && !savingLayout.value,
+                // Vue Flow descuenta las dimensiones medidas del nodo del límite
+                // superior. Darle solo la coordenada final de la tarjeta la empuja
+                // fuera del carril al empezar a arrastrarla.
                 extent: [
                     [laneStart, cycleY],
-                    [laneStart + (cycleSubjects.length - 1) * subjectStep, cycleY],
+                    [laneStart + cycleSubjects.length * subjectStep, cycleY + laneHeight - laneInset],
                 ],
                 connectable: editable.value && !hasOpenEditor.value,
                 selectable: false,
@@ -644,14 +647,22 @@ const onNodeDrag = ({ node }: NodeDragEvent): void => {
     if (!editable.value || savingLayout.value || node.type !== 'subject' || !subject || typeof subject.cycle !== 'number') return;
 
     const cycleSubjects = subjectsForCycle(subject.cycle);
+    const cycleY = (subject.cycle - 1) * laneHeight + subjectOffset.value;
+    const maxX = laneStart + (cycleSubjects.length - 1) * subjectStep;
+    const x = Math.max(laneStart, Math.min(maxX, node.position.x));
     const index = Math.max(0, Math.min(cycleSubjects.length - 1,
-        Math.round((node.position.x - laneStart) / subjectStep)));
-    if (dragPreview.value?.subjectId === node.id && dragPreview.value.index === index) return;
+        Math.round((x - laneStart) / subjectStep)));
 
-    dragPreview.value = { subjectId: node.id, cycle: subject.cycle, index };
+    if (dragPreview.value?.subjectId !== node.id || dragPreview.value.index !== index) {
+        dragPreview.value = { subjectId: node.id, cycle: subject.cycle, index };
+    }
     const previewPositions = new Map(previewSubjectsForCycle(subject.cycle).map((item, slot) => [item.id, slot]));
     nodes.value = nodes.value.map((current) => {
-        if (current.id === node.id) return { ...current, position: node.position, zIndex: 10 };
+        if (current.id === node.id) return {
+            ...current,
+            position: { x, y: cycleY },
+            zIndex: 10,
+        };
         const slot = previewPositions.get(current.id);
         return slot === undefined ? current : {
             ...current,
@@ -669,13 +680,17 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     const index = dragPreview.value?.index ?? originalIndex;
     if (index === originalIndex) {
         dragPreview.value = null;
-        nodes.value = buildNodes();
+        const restoredNodes = buildNodes();
+        nodes.value = restoredNodes;
+        setNodes(restoredNodes);
         return;
     }
 
     // La vista previa se conserva hasta que la consulta refresque la malla.
     savingLayout.value = true;
-    nodes.value = buildNodes();
+    const previewNodes = buildNodes();
+    nodes.value = previewNodes;
+    setNodes(previewNodes);
     try {
         const result = await updateSubjectLayout(props.curriculum.id, {
             subject_id: node.id,
@@ -685,7 +700,9 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         emit('changed', result.message);
     } catch (reason) {
         dragPreview.value = null;
-        nodes.value = buildNodes();
+        const restoredNodes = buildNodes();
+        nodes.value = restoredNodes;
+        setNodes(restoredNodes);
         toast.error(reason instanceof ApiError ? reason.message : 'No se pudo mover la materia.');
     } finally {
         savingLayout.value = false;
@@ -734,6 +751,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
             :min-zoom="0.2"
             :max-zoom="1.5"
             :translate-extent="navigationExtent"
+            :auto-pan-on-node-drag="false"
             :connection-mode="ConnectionMode.Loose"
             :nodes-draggable="editable && !hasOpenEditor"
             :nodes-connectable="editable && !hasOpenEditor"

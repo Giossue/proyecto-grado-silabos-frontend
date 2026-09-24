@@ -30,7 +30,11 @@ const { open, message, confirm, cancel } = usePurgeConfirmation();
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Este cambio reemplaza los sílabos afectados</DialogTitle>
-                <DialogDescription>{{ message }}</DialogDescription>
+                <DialogDescription>
+                    {{ message }} Cada docente afectado recibirá un aviso de
+                    que su sílabo se generó de nuevo y perdió el contenido
+                    anterior.
+                </DialogDescription>
             </DialogHeader>
             <DialogFooter>
                 <Button type="button" variant="outline" @click="cancel">

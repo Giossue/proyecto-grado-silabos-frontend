@@ -280,14 +280,3 @@ export const resendCareerTeacherInvitation = (userId: string) =>
   api<{ message: string }>(`/coordination/academic/teachers/${userId}/resend-activation`, {
     method: "POST",
   });
-/** Único cambio de docente: todos sus paralelos vigentes o solo `teacher_assignment_id`. */
-export const relieveCareerTeacher = (payload: {
-  outgoing_user_id: string;
-  incoming_user_id: string;
-  teacher_assignment_id?: string;
-  idempotency_key: string;
-}) =>
-  api<{ message: string }>("/coordination/academic/relieve-teacher", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });

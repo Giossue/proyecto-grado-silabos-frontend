@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
 import {
   getTeacherSyllabus,
@@ -8,6 +8,7 @@ import {
   saveTeacherRows,
   startTeacherSyllabus,
   submitTeacherSyllabus,
+  validateTeacherSyllabus,
   type SyllabusDetail,
   type SyllabusField,
 } from "@/api/syllabi";
@@ -32,6 +33,7 @@ import TemplateDocumentView from '@/components/domain/configuration/TemplateDocu
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
 import type { TableRowData } from '@/lib/tableLayout';
 import { paths } from '@/lib/routes';
+import { handleUnauthorized } from '@/lib/unauthorized';
 
 const route = useRoute();
 const router = useRouter();
@@ -56,21 +58,39 @@ const aiMessage = ref<string | null>(null);
 const aiAssistant = ref<InstanceType<typeof SyllabusAiAssistantSheet> | null>(null);
 const conflict = ref(false);
 const processingAction = ref(false);
+/** Motivo local de bloqueo: un guardado rechazado con 403 (p. ej. la convocatoria se pausó). */
+const localBlockReason = ref<string | null>(null);
+/** Hay cambios que no llegaron al servidor tras un fallo; se ofrecen para reintentar. */
+const saveFailed = ref(false);
+const PAUSED_MESSAGE = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude.";
 
+const editBlockReason = computed<string | null>(() =>
+  localBlockReason.value ??
+  (syllabus.value?.editable === false
+    ? syllabus.value.edit_block_reason ?? "El sílabo no admite cambios en este momento."
+    : null),
+);
 const canEdit = computed(() =>
-  ["borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? ""),
+  ["borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? "") &&
+  editBlockReason.value === null,
 );
-const canReviewWithAi = computed(() =>
-  canEdit.value &&
-  validationRan.value &&
-  validationBlockingErrors.value === 0,
+const canStart = computed(() =>
+  syllabus.value?.state === "sin_iniciar" && editBlockReason.value === null,
 );
+// La revisión con IA no depende de una validación previa: el servidor valida al enviar.
+const canReviewWithAi = computed(() => canEdit.value && !conflict.value);
 const validationFor = (fieldId: string) =>
   validationResults.value.filter((result) => result.field_id === fieldId);
 const visibleValidationMessages = (fieldId: string): string[] =>
-  validationFor(fieldId)
-    .filter((result) => !result.code.endsWith('obligatorio_faltante'))
-    .map((result) => result.message);
+  validationFor(fieldId).map((result) => result.message);
+const blockingMessages = computed(() =>
+  Array.from(new Set(
+    validationResults.value
+      .filter((result) => result.severity === "error")
+      .map((result) => result.message),
+  )),
+);
+const hasUnsavedChanges = (): boolean => dirtyFields.size > 0 || dirtyRows.size > 0;
 
 const requestedObservations = computed(() =>
   (syllabus.value?.observations ?? []).filter(
@@ -102,11 +122,16 @@ const load = async (): Promise<void> => {
 };
 
 const start = async (): Promise<void> => {
+  if (!canStart.value) return;
   starting.value = true;
   error.value = null;
   try {
     syllabus.value = (await startTeacherSyllabus(syllabusId())).syllabus;
   } catch (reason) {
+    if (reason instanceof ApiError && reason.status === 403) {
+      localBlockReason.value = PAUSED_MESSAGE;
+      return;
+    }
     error.value =
       reason instanceof ApiError
         ? reason.message
@@ -122,20 +147,45 @@ const invalidateValidation = (): void => {
   validationResults.value = [];
 };
 
-const queueSave = (operation: () => Promise<void>): void => {
+const handleSaveFailure = (reason: unknown): void => {
+  saveFailed.value = true;
+  if (reason instanceof ApiError && (reason.status === 401 || reason.status === 419)) {
+    handleUnauthorized(router);
+    error.value = "Su sesión caducó. Inicie sesión de nuevo para guardar los cambios pendientes.";
+    return;
+  }
+  if (reason instanceof ApiError && reason.status === 409) {
+    conflict.value = true;
+    error.value =
+      "El borrador cambió en otra sesión. Recárguelo antes de continuar para evitar sobrescribir cambios.";
+    return;
+  }
+  if (reason instanceof ApiError && reason.status === 403) {
+    localBlockReason.value = PAUSED_MESSAGE;
+    return;
+  }
+  error.value =
+    reason instanceof ApiError
+      ? reason.message
+      : "No se pudo guardar el cambio.";
+};
+
+/**
+ * Encola un guardado. Si falla (o ya no se puede escribir), el campo vuelve a quedar
+ * pendiente para que «Reintentar» o la salida de la página lo vuelvan a enviar.
+ */
+const queueSave = (markPending: () => void, operation: () => Promise<void>): void => {
   pendingSave = pendingSave.then(async () => {
-    if (!conflict.value) await operation();
-  }).catch((reason: unknown) => {
-    if (reason instanceof ApiError && reason.status === 409) {
-      conflict.value = true;
-      error.value =
-        "El borrador cambió en otra sesión. Recárguelo antes de continuar para evitar sobrescribir cambios.";
+    if (conflict.value || !canEdit.value) {
+      markPending();
       return;
     }
-    error.value =
-      reason instanceof ApiError
-        ? reason.message
-        : "No se pudo guardar el cambio.";
+    try {
+      await operation();
+    } catch (reason) {
+      markPending();
+      handleSaveFailure(reason);
+    }
   });
 };
 
@@ -144,7 +194,7 @@ const saveField = (field: SyllabusField): void => {
   const timer = saveTimers.get(field.id);
   if (timer) clearTimeout(timer);
   saveTimers.delete(field.id);
-  queueSave(async () => {
+  queueSave(() => { if (!dirtyFields.has(field.id)) dirtyFields.set(field.id, field); }, async () => {
     if (!syllabus.value) return;
     savingFieldId.value = field.id;
     try {
@@ -156,6 +206,7 @@ const saveField = (field: SyllabusField): void => {
       );
       syllabus.value.version_bloqueo = saved.version_bloqueo;
       invalidateValidation();
+      if (!hasUnsavedChanges()) saveFailed.value = false;
     } finally {
       savingFieldId.value = null;
     }
@@ -243,7 +294,7 @@ const saveRows = (field: SyllabusField): void => {
   const timer = rowSaveTimers.get(field.id);
   if (timer) clearTimeout(timer);
   rowSaveTimers.delete(field.id);
-  queueSave(async () => {
+  queueSave(() => { if (!dirtyRows.has(field.id)) dirtyRows.set(field.id, field); }, async () => {
     if (!syllabus.value) return;
     savingFieldId.value = field.id;
     try {
@@ -256,6 +307,7 @@ const saveRows = (field: SyllabusField): void => {
       field.rows = saved.rows;
       syllabus.value.version_bloqueo = saved.version_bloqueo;
       invalidateValidation();
+      if (!hasUnsavedChanges()) saveFailed.value = false;
     } finally {
       savingFieldId.value = null;
     }
@@ -274,11 +326,27 @@ const scheduleRows = (field: SyllabusField): void => {
 };
 
 const flushAutosave = async (): Promise<boolean> => {
-  for (const field of Array.from(dirtyFields.values())) saveField(field);
-  for (const field of Array.from(dirtyRows.values())) saveRows(field);
+  if (canEdit.value && !conflict.value) {
+    for (const field of Array.from(dirtyFields.values())) saveField(field);
+    for (const field of Array.from(dirtyRows.values())) saveRows(field);
+  }
   await pendingSave;
+  if (!hasUnsavedChanges()) saveFailed.value = false;
 
-  return !conflict.value;
+  return !conflict.value && !hasUnsavedChanges();
+};
+
+const retrySave = async (): Promise<void> => {
+  error.value = null;
+  await flushAutosave();
+};
+
+const runValidation = async (): Promise<void> => {
+  if (!syllabus.value) return;
+  const { validation } = await validateTeacherSyllabus(syllabus.value.id);
+  validationResults.value = validation.results;
+  validationBlockingErrors.value = validation.blocking_errors;
+  validationRan.value = true;
 };
 
 const submit = async (): Promise<void> => {
@@ -293,7 +361,22 @@ const submit = async (): Promise<void> => {
         syllabus.value.version_bloqueo,
       )
     ).syllabus;
+    invalidateValidation();
   } catch (reason) {
+    // El servidor valida al enviar; si rechaza por errores bloqueantes, se piden los
+    // resultados para marcar los campos y listar los errores.
+    if (reason instanceof ApiError && reason.status === 422 && reason.errors.validation) {
+      try {
+        await runValidation();
+        return;
+      } catch {
+        // Si la consulta de detalle falla, al menos queda el mensaje del envío.
+      }
+    }
+    if (reason instanceof ApiError && reason.status === 403) {
+      localBlockReason.value = PAUSED_MESSAGE;
+      return;
+    }
     error.value = reason instanceof ApiError ? reason.message : "No se pudo enviar el sílabo.";
   } finally {
     processingAction.value = false;
@@ -322,8 +405,29 @@ const recommendationApplied = (payload: {
   invalidateValidation();
 };
 
-onMounted(load);
+const warnBeforeUnload = (event: BeforeUnloadEvent): void => {
+  if (!hasUnsavedChanges() && savingFieldId.value === null) return;
+  event.preventDefault();
+  event.returnValue = "";
+};
+
+onMounted(() => {
+  window.addEventListener("beforeunload", warnBeforeUnload);
+  void load();
+});
+// Al salir se envía lo pendiente en lugar de descartarlo; solo si no se pudo guardar
+// se pide confirmación para no perder cambios en silencio.
+onBeforeRouteLeave(async () => {
+  if (!hasUnsavedChanges()) {
+    await pendingSave;
+    if (!hasUnsavedChanges()) return true;
+  }
+  if (await flushAutosave()) return true;
+
+  return window.confirm("Hay cambios sin guardar. ¿Desea salir de todos modos?");
+});
 onBeforeUnmount(() => {
+  window.removeEventListener("beforeunload", warnBeforeUnload);
   saveTimers.forEach((timer) => clearTimeout(timer));
   rowSaveTimers.forEach((timer) => clearTimeout(timer));
 });
@@ -335,18 +439,20 @@ onBeforeUnmount(() => {
     :description="syllabus ? `${syllabus.code} · ${syllabus.convocation} · Paralelo(s) ${syllabus.parallels.join(', ')}` : 'Complete los campos del sílabo institucional.'"
   >
     <template #actions>
-      <Button v-if="syllabus?.state === 'sin_iniciar'" :disabled="starting" @click="start"><Spinner v-if="starting" />{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button>
-      <Button v-else-if="syllabus && canEdit && validationRan && validationBlockingErrors === 0" :disabled="processingAction || conflict" @click="submit"><Spinner v-if="processingAction" />Enviar sílabo</Button>
+      <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
+      <Button v-if="canStart" :disabled="starting" @click="start"><Spinner v-if="starting" />{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button>
+      <Button v-else-if="syllabus && canEdit" :disabled="processingAction || conflict" @click="submit"><Spinner v-if="processingAction" />Enviar sílabo</Button>
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
     <LoadingSkeleton v-if="!syllabus && !error" variant="syllabus" />
 
     <template v-if="syllabus">
-      <Card v-if="syllabus.state === 'sin_iniciar'"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar los campos de la plantilla institucional.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>
+      <Alert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked"><AlertTitle>Edición no disponible</AlertTitle><AlertDescription>{{ editBlockReason }}</AlertDescription></Alert>
+      <Card v-if="canStart"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar los campos de la plantilla institucional.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>
 
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
-      <Alert v-if="validationRan" :variant="validationBlockingErrors && validationBlockingErrors > 0 ? 'destructive' : 'default'"><AlertTitle>Validación del sílabo</AlertTitle><AlertDescription>{{ validationBlockingErrors && validationBlockingErrors > 0 ? `Se encontraron ${validationBlockingErrors} error(es) bloqueante(s).` : 'No hay errores bloqueantes. Las sugerencias de IA son opcionales.' }}</AlertDescription></Alert>
+      <Alert v-if="validationRan" :variant="validationBlockingErrors && validationBlockingErrors > 0 ? 'destructive' : 'default'"><AlertTitle>Validación del sílabo</AlertTitle><AlertDescription class="flex flex-col gap-2"><span>{{ validationBlockingErrors && validationBlockingErrors > 0 ? `Se encontraron ${validationBlockingErrors} error(es) bloqueante(s). Corríjalos antes de enviar.` : 'No hay errores bloqueantes. Las sugerencias de IA son opcionales.' }}</span><ul v-if="validationBlockingErrors && blockingMessages.length" class="validation-errors list-disc pl-5"><li v-for="message in blockingMessages" :key="message">{{ message }}</li></ul></AlertDescription></Alert>
       <Alert v-if="aiMessage"><AlertDescription>{{ aiMessage }}</AlertDescription></Alert>
 
       <div v-if="syllabus.state !== 'sin_iniciar'" class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)]">
@@ -377,15 +483,15 @@ onBeforeUnmount(() => {
               <template v-if="!usesTabularDocument(block)">
                 <FieldGroup>
                 <template v-for="field in block.fields.filter((item) => block.content_type !== 'institutional' || (item.teacher_editable && !item.inherited))" :key="field.id">
-                <Field v-if="canEdit && field.teacher_editable && !field.inherited && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`">
+                <Field v-if="canEdit && field.teacher_editable && !field.inherited && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" :disabled="savingFieldId === field.id" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
-                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'texto_largo'" :id="`field-${field.id}`">
+                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'texto_largo'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Textarea :id="`input-${field.id}`" :model-value="scalarValue(field)" class="min-h-32" :disabled="savingFieldId === field.id" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
-                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'seleccion_unica'" :id="`field-${field.id}`">
+                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'seleccion_unica'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><Select :model-value="String(scalarValue(field))" @update:model-value="updateScalar(field, String($event))"><SelectTrigger :id="`input-${field.id}`"><SelectValue placeholder="Seleccione una opción" /></SelectTrigger><SelectContent><SelectItem v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select>
                 </Field>
 

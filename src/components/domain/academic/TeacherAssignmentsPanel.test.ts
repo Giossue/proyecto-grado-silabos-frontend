@@ -75,11 +75,9 @@ describe('TeacherAssignmentsPanel', () => {
                     TableHeader: passthrough,
                     TablePagination: passthrough,
                     TableRow: passthrough,
-                    TeacherReliefSheet: passthrough,
                     Tooltip: passthrough,
                     TooltipContent: passthrough,
                     TooltipTrigger: passthrough,
-                    UserRoundCog: passthrough,
                 },
             },
         });
@@ -119,11 +117,9 @@ describe('TeacherAssignmentsPanel', () => {
                     TableHeader: passthrough,
                     TablePagination: passthrough,
                     TableRow: passthrough,
-                    TeacherReliefSheet: passthrough,
                     Tooltip: passthrough,
                     TooltipContent: passthrough,
                     TooltipTrigger: passthrough,
-                    UserRoundCog: passthrough,
                 },
             },
         });

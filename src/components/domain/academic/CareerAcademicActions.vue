@@ -10,8 +10,8 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 
-// Coordinación no edita en sitio: la materia programada se prepara por período y el
-// docente de un paralelo cambia solo con el relevo.
+// Coordinación no edita en sitio: la materia programada se prepara por período. El
+// docente de un paralelo se quita y se asigna otro; el sílabo sigue al paralelo (I-130).
 type CareerAcademicEntity = 'programacion_asignatura' | 'asignacion_docente';
 type CareerAcademicRecord = { id: string; parallels?: { id: string; code: string; shift: string | null }[] };
 
@@ -22,8 +22,9 @@ const props = withDefaults(defineProps<{
 }>(), { active: true, deleteSupported: false, parallelCreationSupported: false, allowLockedActions: false });
 const emit = defineEmits<{ changed: [message: string] }>();
 const deleteOpen = ref(false); const parallelCreationOpen = ref(false); const processing = ref(false); const error = ref<string | null>(null);
-const deletionTitle = computed(() => props.entity === 'programacion_asignatura' ? 'Eliminar materia programada' : 'Eliminar asignación docente');
-const deletionDescription = computed(() => props.entity === 'programacion_asignatura' ? 'Se eliminarán también sus paralelos y asignaciones docentes. La operación se rechazará si existe algún sílabo relacionado, para conservar su historial.' : 'La operación se rechazará si el registro ya forma parte de un sílabo. Use el relevo docente para cambiar responsables de expedientes existentes.');
+const deletionTitle = computed(() => props.entity === 'programacion_asignatura' ? 'Eliminar materia programada' : 'Quitar docente del paralelo');
+const deletionDescription = computed(() => props.entity === 'programacion_asignatura' ? 'Se eliminarán también sus paralelos y asignaciones docentes. La operación se rechazará si existe algún sílabo relacionado, para conservar su historial.' : 'El sílabo del paralelo se conserva tal como está. Quien se asigne después al paralelo continúa con él; mientras tanto nadie lo edita.');
+const deleteLabel = computed(() => props.entity === 'asignacion_docente' ? 'Quitar' : 'Eliminar');
 const actionsDisabled = computed(() => !props.editable || Boolean(props.lockedLabel));
 const menuDisabled = computed(() => actionsDisabled.value && !props.allowLockedActions);
 const disabledLabel = computed(() => props.lockedLabel ?? 'Con historial: este registro queda protegido');
@@ -34,7 +35,7 @@ const remove = async (): Promise<void> => { processing.value = true; error.value
     <DropdownMenuItem v-if="actionsDisabled" disabled><LockKeyhole aria-hidden="true" />{{ disabledLabel }}</DropdownMenuItem>
     <slot />
     <DropdownMenuItem v-if="entity === 'programacion_asignatura' && parallelCreationSupported && !actionsDisabled" @select="parallelCreationOpen = true"><Plus aria-hidden="true" />Agregar paralelo</DropdownMenuItem>
-    <DropdownMenuItem v-if="deleteSupported && !actionsDisabled" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
+    <DropdownMenuItem v-if="deleteSupported && !actionsDisabled" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />{{ deleteLabel }}</DropdownMenuItem>
 </TableActionsMenu>
 <ParallelCreationSheet v-if="entity === 'programacion_asignatura'" :key="`parallel-${record.id}`" v-model:open="parallelCreationOpen" :scheduled-subject-id="record.id" :scheduled-subject-label="recordLabel" :parallels="record.parallels ?? []" @saved="emit('changed', $event)" />
 <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>{{ deletionTitle }}</DialogTitle><DialogDescription>{{ deletionDescription }}</DialogDescription></DialogHeader><p v-if="error" class="mb-4 text-sm text-destructive">{{ error }}</p><DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" variant="destructive" :disabled="processing" @click="remove"><Spinner v-if="processing" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />{{ deletionTitle }}</Button></DialogFooter></DialogContent></Dialog>

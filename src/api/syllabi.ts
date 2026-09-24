@@ -60,6 +60,9 @@ export type SyllabusDetail = {
   period: string;
   state: SyllabusRow["state"];
   version_bloqueo: number;
+  /** El docente puede escribir ahora (convocatoria en curso y asignación vigente). */
+  editable?: boolean;
+  edit_block_reason?: string | null;
   iniciado_en: string | null;
   parallels: string[];
   teachers: string[];
@@ -305,6 +308,7 @@ export const validateTeacherSyllabus = (syllabusId: string) =>
   api<{
     message: string;
     validation: {
+      version_bloqueo: number;
       blocking_errors: number;
       warnings: number;
       results: Array<{

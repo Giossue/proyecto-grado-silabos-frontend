@@ -59,9 +59,13 @@ describe('CurriculumCanvas', () => {
             id: string;
             position: { x: number; y: number };
             data: { cycle?: number };
+            extent?: [[number, number], [number, number]];
         }>;
         expect(initialNodes.find((node) => node.id === 'add-subject-1')?.position.x)
             .toBeGreaterThan((initialNodes.find((node) => node.id === 'c')?.position.x ?? 0) + 274);
+        const bounds = initialNodes.find((node) => node.id === 'a')?.extent;
+        expect(bounds?.[1][0]).toBeGreaterThan((initialNodes.find((node) => node.id === 'c')?.position.x ?? 0) + 274);
+        expect(bounds?.[1][1]).toBeGreaterThan(bounds?.[0][1] ?? 0);
         const dragged = { ...flow.props('nodes').find((node: { id: string }) => node.id === 'a'),
             position: { x: 145 + 2 * 308, y: 238 + 48 } };
 
@@ -70,6 +74,11 @@ describe('CurriculumCanvas', () => {
         const preview = flow.props('nodes') as Array<{ id: string; position: { x: number; y: number } }>;
         expect(preview.find((node) => node.id === 'b')?.position.x).toBe(145);
         expect(preview.find((node) => node.id === 'c')?.position.x).toBe(145 + 308);
+        expect(preview.find((node) => node.id === 'a')?.position.y).toBe(32);
+
+        flow.vm.$emit('node-drag', { node: { ...dragged, position: { ...dragged.position, y: -200 } } });
+        await nextTick();
+        expect((flow.props('nodes') as typeof preview).find((node) => node.id === 'a')?.position.y).toBe(32);
 
         flow.vm.$emit('node-drag-stop', { node: dragged });
         await nextTick();
