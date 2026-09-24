@@ -55,6 +55,24 @@ const emit = defineEmits<{
 }>();
 const slots = useSlots();
 const prefix = useId();
+/**
+ * En la vista temática, las cabeceras usan el color de texto de cabecera (blanco sobre
+ * azul fuerte). Si la celda trae su propio fondo claro, ese blanco no se leería: como en
+ * el formato UEB, se usa el azul oscuro de cabecera.
+ */
+const readableHeaderText = (background: unknown): string | undefined => {
+    if (!props.preview || typeof background !== 'string') {
+        return undefined;
+    }
+    const hex = /^#?([0-9a-f]{6})$/i.exec(background)?.[1];
+    if (!hex) {
+        return undefined;
+    }
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    return luminance > 0.6 ? DOCUMENT_COLORS.tableHeaderText : undefined;
+};
 const documentStyle = computed((): CSSProperties & Record<string, string> =>
     props.presentation === 'form'
         ? {}
@@ -216,7 +234,9 @@ const draw = (
 
     if (node.type === 'tableCell' || node.type === 'tableHeader') {
         const textColor =
-            typeof attrs.textColor === 'string' ? attrs.textColor : undefined;
+            typeof attrs.textColor === 'string'
+                ? attrs.textColor
+                : readableHeaderText(attrs.backgroundColor);
         const textAlign =
             typeof attrs.textAlign === 'string' ? attrs.textAlign : undefined;
         const cellContext = {
@@ -309,10 +329,12 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
  */
 .template-document-view :deep(td),
 .template-document-view :deep(th) {
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     word-break: normal;
     hyphens: auto;
     -webkit-hyphens: auto;
+    /* Solo se silabean palabras de 8+ letras. */
+    hyphenate-limit-chars: 8 4 4;
 }
 .template-document-view[data-preview] {
     /* The page surfaces supply white; the space between them stays transparent. */
@@ -333,7 +355,9 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 .template-document-view :deep(.document-table) {
     border-collapse: collapse;
     width: 100%;
-    table-layout: fixed;
+    /* auto: los anchos son preferencias y una columna crece lo justo para que una
+       palabra corta (Semana, APE) no se parta. */
+    table-layout: auto;
     margin: 8px 0;
 }
 .template-document-view :deep(.document-table-container) {

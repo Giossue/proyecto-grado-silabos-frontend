@@ -41,7 +41,7 @@ const elapsed = computed(() => {
 });
 
 const summary = computed(() => {
-  if (props.deadline.state === 'paused') return 'No se admiten envíos mientras la convocatoria permanezca en pausa.';
+  if (props.deadline.state === 'paused') return '';
   if (props.deadline.state === 'overdue') return 'El plazo de entrega venció.';
   if (props.deadline.state === 'closed') return 'La convocatoria institucional está cerrada.';
   if (props.deadline.state === 'upcoming') {
@@ -67,7 +67,7 @@ const summary = computed(() => {
       </div>
     </CardHeader>
     <CardContent class="flex flex-col gap-5">
-      <p class="text-lg font-semibold" aria-live="polite">{{ summary }}</p>
+      <p v-if="summary" class="text-lg font-semibold" aria-live="polite">{{ summary }}</p>
       <div class="flex flex-col gap-2">
         <div class="flex items-end justify-between gap-4">
           <div class="flex flex-col gap-1">

@@ -28,7 +28,7 @@ describe('ConvocationDeadlineCard', () => {
     expect(wrapper.text()).toContain('Continuar mis sílabos');
   });
 
-  it('explica la pausa sin presentar un conteo engañoso', () => {
+  it('muestra la pausa sin mensaje ni conteo engañoso', () => {
     const wrapper = mount(ConvocationDeadlineCard, {
       props: {
         deadline: { ...deadline, state: 'paused', days_until_start: 0, days_until_due: 0 },
@@ -38,7 +38,7 @@ describe('ConvocationDeadlineCard', () => {
     });
 
     expect(wrapper.text()).toContain('En pausa');
-    expect(wrapper.text()).toContain('No se admiten envíos mientras la convocatoria permanezca en pausa.');
+    expect(wrapper.text()).not.toContain('No se admiten envíos');
     expect(wrapper.text()).not.toContain('Quedan 0 días');
   });
 

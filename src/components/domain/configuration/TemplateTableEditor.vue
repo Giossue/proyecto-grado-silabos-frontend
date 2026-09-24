@@ -525,7 +525,9 @@ defineExpose({ getDocument });
 }
 .template-table-editor table {
     border-collapse: collapse;
-    table-layout: fixed;
+    /* auto: los anchos son preferencias y una columna crece lo justo para que una
+       palabra corta (Semana, APE) no se parta. */
+    table-layout: auto;
     width: 100% !important;
 }
 .template-table-editor td,
@@ -537,10 +539,12 @@ defineExpose({ getDocument });
     position: relative;
     vertical-align: top;
     /* Las celdas no desbordan: sílabas con guion y, si no alcanza, corte. */
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     word-break: normal;
     hyphens: auto;
     -webkit-hyphens: auto;
+    /* Solo se silabean palabras de 8+ letras. */
+    hyphenate-limit-chars: 8 4 4;
 }
 .template-table-editor td *,
 .template-table-editor th * {

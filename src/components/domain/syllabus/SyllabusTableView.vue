@@ -42,7 +42,7 @@ const widths = computed(() => columnWidths(props.layout));
         <table
             v-for="unit in units"
             :key="unit.number"
-            class="w-full border-collapse text-sm hyphens-auto [&_td]:[overflow-wrap:anywhere] [&_th]:[overflow-wrap:anywhere]"
+            class="w-full border-collapse text-sm hyphens-auto [hyphenate-limit-chars:8_4_4] [&_td]:[overflow-wrap:break-word] [&_td]:[word-break:normal] [&_th]:[word-break:normal] [&_th]:[overflow-wrap:break-word]"
         >
             <colgroup v-if="widths">
                 <col

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { DialogContentEmits, DialogContentProps } from "reka-ui"
-import type { HTMLAttributes } from "vue"
+import { ref, type HTMLAttributes } from "vue"
 import { reactiveOmit } from "@vueuse/core"
 import {
   DialogContent,
@@ -24,6 +24,18 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
 const preventImplicitDismiss = (event: Event): void => {
   event.preventDefault()
 }
+
+// Escape cierra el diálogo salvo que el usuario ya haya escrito o cambiado algo en él:
+// así no se pierde trabajo sin guardar. El clic fuera nunca cierra.
+const hasUnsavedChanges = ref(false)
+const markChanged = (): void => {
+  hasUnsavedChanges.value = true
+}
+const onEscapeKeyDown = (event: KeyboardEvent): void => {
+  if (hasUnsavedChanges.value) {
+    event.preventDefault()
+  }
+}
 </script>
 
 <template>
@@ -32,7 +44,7 @@ const preventImplicitDismiss = (event: Event): void => {
     <DialogContent
       data-slot="dialog-content"
       v-bind="{ ...$attrs, ...forwarded }"
-      @escape-key-down="preventImplicitDismiss"
+      @escape-key-down="onEscapeKeyDown"
       @interact-outside="preventImplicitDismiss"
       @pointer-down-outside="preventImplicitDismiss"
       :class="
@@ -41,7 +53,9 @@ const preventImplicitDismiss = (event: Event): void => {
           props.class,
         )"
     >
-      <slot />
+      <div class="contents" @input.capture="markChanged" @change.capture="markChanged">
+        <slot />
+      </div>
     </DialogContent>
   </DialogPortal>
 </template>
