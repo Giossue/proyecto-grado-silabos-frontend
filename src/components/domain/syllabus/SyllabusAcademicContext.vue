@@ -106,9 +106,6 @@ const groups = computed<ContextGroup[]>(() => [
                     </div>
                 </dl>
             </section>
-            <p class="text-xs text-muted-foreground md:col-span-2 2xl:col-span-4">
-                Estos datos vienen de la planificación académica y no se editan aquí.
-            </p>
         </CardContent>
     </Card>
 </template>

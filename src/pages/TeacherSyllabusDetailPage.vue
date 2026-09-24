@@ -38,6 +38,7 @@ import { isListLayout } from '@/lib/tableLayout';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { hiddenKeys } from '@/lib/fieldConditions';
+import { Send } from '@lucide/vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -114,6 +115,25 @@ const blockingResults = computed(() => {
 const missingParts = computed(() =>
   new Set(blockingResults.value.map((result) => result.field_id).filter((id): id is string => id !== null)).size,
 );
+/** Parte del docente que aún no tiene contenido; el envío se habilita cuando no queda ninguna. */
+const isFieldEmpty = (field: SyllabusField): boolean => {
+  if (field.type === "repetible") return field.rows.length === 0;
+  if (field.type === "booleano") return typeof field.value !== "boolean";
+  if (Array.isArray(field.value)) return field.value.length === 0;
+  if (typeof field.value === "number") return false;
+  return typeof field.value !== "string" || field.value.trim() === "";
+};
+const emptyParts = computed(() =>
+  (syllabus.value?.sections ?? [])
+    .flatMap((section) => section.blocks.flatMap((block) => block.fields))
+    .filter((field) => field.teacher_editable && !field.inherited && !hiddenParts.value.has(field.key))
+    .filter(isFieldEmpty).length,
+);
+const submitHint = computed(() => {
+  if (emptyParts.value === 1) return "Falta 1 parte por completar";
+  if (emptyParts.value > 1) return `Faltan ${emptyParts.value} partes por completar`;
+  return "";
+});
 const validationTitle = computed(() => {
   if (missingParts.value === 1) return "Falta 1 parte por completar";
   if (missingParts.value > 1) return `Faltan ${missingParts.value} partes por completar`;
@@ -510,7 +530,7 @@ onBeforeUnmount(() => {
     <template #actions>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-if="canStart" :disabled="starting" @click="start"><Spinner v-if="starting" />{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button>
-      <Button v-else-if="syllabus && canEdit" :disabled="processingAction || conflict" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" />Enviar sílabo</Button>
+      <span v-else-if="syllabus && canEdit" class="flex items-center gap-2"><span v-if="submitHint" class="submit-hint text-xs text-muted-foreground">{{ submitHint }}</span><Button :disabled="processingAction || conflict || emptyParts > 0" :title="submitHint || undefined" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />Enviar sílabo</Button></span>
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
