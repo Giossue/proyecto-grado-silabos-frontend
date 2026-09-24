@@ -105,7 +105,7 @@ onMounted(refreshCount);
         <TooltipProvider :delay-duration="150">
             <!-- Tooltip > TooltipTrigger > PopoverTrigger > Button: el Tooltip no renderiza elemento propio,
                  así que un PopoverTrigger as-child por fuera pierde el clic y el popover no abre. -->
-            <Tooltip :open="open ? false : undefined">
+            <Tooltip>
                 <TooltipTrigger as-child>
                     <PopoverTrigger as-child>
                         <Button
