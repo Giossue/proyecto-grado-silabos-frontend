@@ -49,7 +49,7 @@ const scheduleBlink = (): void => {
             blinking.value = false;
             scheduleBlink();
         }, 190);
-    }, 2800 + Math.random() * 3400);
+    }, 1600 + Math.random() * 2200);
 };
 
 watch(blinks, scheduleBlink);
@@ -186,7 +186,7 @@ onBeforeUnmount(() => {
 
 /* Modos */
 [data-mode='idle'] #robot_root {
-    animation: idle-float 5.5s ease-in-out infinite;
+    animation: idle-float 4s ease-in-out infinite;
 }
 
 [data-mode='listening'] #robot_root {
@@ -195,7 +195,7 @@ onBeforeUnmount(() => {
 }
 
 [data-mode='listening'] #antenna {
-    animation: antenna-sway 3.2s ease-in-out infinite;
+    animation: antenna-sway 2.6s ease-in-out infinite;
     --sway: 1.5deg;
 }
 

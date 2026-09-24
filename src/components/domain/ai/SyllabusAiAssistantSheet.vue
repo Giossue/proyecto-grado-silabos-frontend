@@ -379,7 +379,7 @@ onBeforeUnmount(() => {
                             <CardHeader>
                                 <div class="flex justify-center">
                                     <div
-                                        class="flex size-12 shrink-0 items-center justify-center"
+                                        class="flex size-20 shrink-0 items-center justify-center"
                                     >
                                         <RobotAvatar
                                             class="size-full"
