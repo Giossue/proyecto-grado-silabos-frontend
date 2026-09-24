@@ -1,6 +1,5 @@
 import { h } from 'vue';
 import type { VNodeChild } from 'vue';
-import PlanningSummary from '@/components/domain/syllabus/PlanningSummary.vue';
 import { Button } from '@/components/ui/button';
 import { groupByUnit, sumColumn, formatSum } from '@/lib/tableLayout';
 import type {
@@ -162,14 +161,6 @@ export const createRepeatTable =
                 ],
             );
         });
-
-        tables.push(
-            h(PlanningSummary, {
-                layout,
-                rows: (field.rows ?? []).map((row) => row.data),
-                expectations: options.props.planningExpectations,
-            }),
-        );
 
         if (options.props.editable && layout.repeat.enabled) {
             tables.push(
