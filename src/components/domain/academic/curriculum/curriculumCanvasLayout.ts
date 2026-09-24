@@ -7,8 +7,8 @@ import type {
 
 export type CurriculumRequirement = CurriculumBuilderProps['requirements'][number];
 
-// Cada unidad de organización curricular recibe un color en la leyenda y en los
-// encabezados ACD/APE/… de sus tarjetas. El orden sigue al listado de unidades.
+// Cada unidad de organización curricular recibe un color en la leyenda y en el badge
+// de su materia. El resto de la tarjeta conserva las superficies del tema.
 export const UNIT_PALETTE = [
     { backgroundColor: 'var(--curriculum-unit-1-background)', color: 'var(--curriculum-unit-1-foreground)' },
     { backgroundColor: 'var(--curriculum-unit-2-background)', color: 'var(--curriculum-unit-2-foreground)' },

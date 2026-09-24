@@ -276,37 +276,12 @@
     --curriculum-unit-5-foreground: hsl(152 45% 14%);
 }
 
-/* La malla usa tonos azul grisáceo para reducir el contraste agresivo de los
-   grises neutros. Estos tokens no cambian las demás pantallas. */
+/* En oscuro se conserva la misma jerarquía del tema claro: el lienzo contiene
+   ciclos apenas más oscuros que las tarjetas de materia. */
 .dark .curriculum-canvas {
-    --background: #101316;
-    --foreground: #e4e7eb;
-    --card: #22282e;
-    --card-foreground: #e4e7eb;
-    --secondary: #1d2328;
-    --secondary-foreground: #e4e7eb;
-    --muted: #1d2328;
-    --muted-foreground: #a0a7af;
-    --accent: #292f35;
-    --accent-foreground: #e4e7eb;
-    --primary: #4f83bd;
-    --primary-foreground: #101316;
-    --destructive: #d65f5f;
-    --border: #343b42;
-    --input: #343b42;
-    --ring: #6c9bcb;
-    --surface-ring: #292f35;
-    --curriculum-canvas-background: #14181c;
-    --curriculum-lane: #191e23;
-    --curriculum-cycle-chrome: #1d2328;
-    --curriculum-prerequisite: #d65f5f;
-    --curriculum-corequisite: #5e8fd1;
-    --curriculum-unit-1-background: #4f83bd;
-    --curriculum-unit-1-foreground: #101316;
-    --curriculum-unit-2-background: #6c9bcb;
-    --curriculum-unit-2-foreground: #101316;
-    --curriculum-unit-3-background: #a0a7af;
-    --curriculum-unit-3-foreground: #101316;
+    --curriculum-canvas-background: hsl(0 0% 5.5%);
+    --curriculum-lane: hsl(0 0% 7%);
+    --curriculum-cycle-chrome: hsl(0 0% 7%);
 }
 
 @layer base {

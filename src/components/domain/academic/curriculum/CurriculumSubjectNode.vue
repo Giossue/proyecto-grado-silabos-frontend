@@ -144,6 +144,7 @@ const totalFields = computed(
           <Badge
             v-if="data.subject.organization_unit_label"
             variant="secondary"
+            :style="data.unitStyle"
           >
             {{ data.subject.organization_unit_label }}
           </Badge>
@@ -181,8 +182,7 @@ const totalFields = computed(
             class="border-r text-center last:border-r-0"
           >
             <dt
-              class="px-1 py-1 text-[0.6rem] font-semibold"
-              :style="data.unitStyle"
+              class="bg-muted px-1 py-1 text-[0.6rem] font-semibold text-muted-foreground"
             >
               {{ field.label }}
             </dt>
@@ -198,8 +198,7 @@ const totalFields = computed(
           :class="{ 'border-t': regularFields.length > 0 }"
         >
           <dt
-            class="px-1 py-1 text-[0.6rem] font-semibold"
-            :style="data.unitStyle"
+            class="bg-muted px-1 py-1 text-[0.6rem] font-semibold text-muted-foreground"
           >
             {{ field.label }}
           </dt>
