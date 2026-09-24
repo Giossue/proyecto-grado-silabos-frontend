@@ -243,11 +243,10 @@ export const deleteSubjectRequirement = (
   requirementId: string,
 ) =>
   withPurgeConfirmation((confirm) =>
+    // @openapi-method DELETE: la confirmación solo agrega cuerpo a la misma operación.
     api<{ message: string }>(
       `/coordination/academic/curriculum/${curriculumId}/requirements/${requirementId}`,
-      confirm
-        ? { method: "DELETE", body: jsonBody({}, true) }
-        : { method: "DELETE" },
+      { method: "DELETE", ...(confirm ? { body: jsonBody({}, true) } : {}) },
     ),
   );
 export const deleteCurriculumSubject = (
