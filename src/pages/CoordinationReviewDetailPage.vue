@@ -23,8 +23,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Field, FieldError, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
+import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { PlanningExpectations, TableRowData } from '@/lib/tableLayout';
@@ -39,7 +38,6 @@ const processing = ref(false);
 const loadError = ref('');
 const actionError = ref('');
 const errors = ref<Record<string, string[]>>({});
-const selectedObservationIds = ref<string[]>([]);
 const correctionJustification = ref('');
 const reopeningCause = ref('');
 
@@ -95,12 +93,6 @@ const planningExpectations = computed<PlanningExpectations>(() => ({
   hours_aa: data.value?.revision.snapshot.academic_context?.subject?.hours_aa ?? null,
 }));
 
-const toggleObservation = (id: string, checked: boolean | 'indeterminate'): void => {
-  if (typeof checked !== 'boolean') return;
-  const values = new Set(selectedObservationIds.value);
-  if (checked) values.add(id); else values.delete(id);
-  selectedObservationIds.value = [...values];
-};
 const tableRows = (field: SnapshotField): { id: string | null; data: TableRowData }[] => field.rows
   .filter((row) => typeof row.data === 'object' && row.data !== null && !Array.isArray(row.data))
   .map((row) => ({ id: row.id, data: row.data as TableRowData }));
@@ -114,7 +106,6 @@ const formatValue = (value: unknown): string => {
 const stateLabel = (value: string): string => ({ en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado' })[value] ?? 'Estado no disponible';
 const observationState = (value: string): string => ({ abierta: 'Abierta', respondida: 'Respondida', verificada: 'Verificada' })[value] ?? 'Estado no disponible';
 const submitCorrection = (): Promise<void> => run(() => requestCorrection(data.value!.revision.id, {
-  observation_ids: selectedObservationIds.value,
   justification: correctionJustification.value,
 }));
 
@@ -176,13 +167,13 @@ onMounted(load);
         </Card>
 
         <Card v-if="canReviewCurrent && openCurrentObservations.length > 0">
-          <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>Seleccione las observaciones que el docente debe responder.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>{{ openCurrentObservations.length === 1 ? 'Se enviará al docente la observación pendiente de esta revisión.' : `Se enviarán al docente las ${openCurrentObservations.length} observaciones pendientes de esta revisión.` }}</CardDescription></CardHeader>
           <CardContent><form id="correction-form" class="flex flex-col gap-4" @submit.prevent="submitCorrection">
-            <FieldSet aria-required="true" class="gap-3"><FieldLegend variant="label" required>Observaciones por corregir</FieldLegend>
-              <label v-for="observation in openCurrentObservations" :key="observation.id" :for="`correction-observation-${observation.id}`" class="ai-recommendation flex items-start gap-3 rounded-md border p-3 text-sm"><Checkbox :id="`correction-observation-${observation.id}`" :model-value="selectedObservationIds.includes(observation.id)" @update:model-value="toggleObservation(observation.id, $event)" /><span>{{ observation.content }}</span></label>
-            </FieldSet>
-            <Field><FieldLabel for="correction-justification" required>Justificación para el docente</FieldLabel><Textarea id="correction-justification" v-model="correctionJustification" rows="4" required /><FieldError :errors="[...(errors.observation_ids ?? []), ...(errors.justification ?? [])]" /></Field>
-            <Button type="submit" variant="destructive" :disabled="processing || selectedObservationIds.length === 0"><Spinner v-if="processing" /><Undo2 v-else aria-hidden="true" />Solicitar corrección</Button>
+            <ul class="flex flex-col gap-2" aria-label="Observaciones que se enviarán">
+              <li v-for="observation in openCurrentObservations" :key="observation.id" class="rounded-md border p-3 text-sm whitespace-pre-wrap">{{ observation.content }}</li>
+            </ul>
+            <Field><FieldLabel for="correction-justification" required>Justificación para el docente</FieldLabel><Textarea id="correction-justification" v-model="correctionJustification" rows="4" required /><FieldError :errors="[...(errors.revision ?? []), ...(errors.justification ?? [])]" /></Field>
+            <Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><Undo2 v-else aria-hidden="true" />Solicitar corrección</Button>
           </form></CardContent>
         </Card>
 

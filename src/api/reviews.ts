@@ -156,7 +156,7 @@ export const addObservation = (
   });
 export const requestCorrection = (
   revisionId: string,
-  payload: { observation_ids: string[]; justification: string },
+  payload: { justification: string },
 ) =>
   api<{ message: string }>(
     `/coordination/reviews/${revisionId}/request-correction`,

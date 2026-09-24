@@ -205,20 +205,20 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("envía únicamente las observaciones elegidas al solicitar corrección", async () => {
+  it("solicita corrección con todas las observaciones pendientes, sin selección", async () => {
     vi.mocked(getReview).mockResolvedValue(detail(true));
     vi.mocked(requestCorrection).mockResolvedValue({ message: "Corrección solicitada." });
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get('.ai-recommendation [role="checkbox"]').trigger("click");
     const correctionForm = wrapper.get("#correction-form");
+    expect(correctionForm.find('[role="checkbox"]').exists()).toBe(false);
+    expect(wrapper.text()).toContain("Se enviará al docente la observación pendiente de esta revisión.");
     await correctionForm.get("textarea").setValue("Debe precisar el resultado observado.");
     await correctionForm.trigger("submit");
     await flushPromises();
 
     expect(requestCorrection).toHaveBeenCalledWith("revision-1", {
-      observation_ids: ["observation-1"],
       justification: "Debe precisar el resultado observado.",
     });
     wrapper.unmount();
