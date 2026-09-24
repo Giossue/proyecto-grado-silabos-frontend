@@ -27,8 +27,8 @@ export type TableLayout = {
     groups: TableNamed[];
     bands: TableNamed[];
     header_fields: TableNamed[];
-    totals: { enabled: boolean; label: string };
-    repeat: { enabled: boolean; label: string };
+    totals: { enabled: boolean; label?: string };
+    repeat: { enabled: boolean; label?: string };
 };
 
 export type TableCellValue = string | number | boolean | null;

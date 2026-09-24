@@ -26,7 +26,7 @@ import type { TemplateContentType } from '@/types/configuration';
 
 type EditableContentType = Exclude<
     TemplateContentType,
-    'institutional' | 'flow'
+    'institutional'
 >;
 
 const props = withDefaults(

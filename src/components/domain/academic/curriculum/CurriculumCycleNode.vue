@@ -15,7 +15,7 @@ defineProps<{
 
 <template>
     <section
-        class="size-full cursor-move overflow-hidden rounded-md border bg-card"
+        class="size-full cursor-move overflow-hidden rounded-md border bg-[var(--curriculum-lane)]"
         :aria-label="`Nivel ${data.level}`"
     >
         <div class="flex h-full">
@@ -35,7 +35,7 @@ defineProps<{
                 </span>
             </div>
             <header
-                class="flex w-20 shrink-0 flex-col items-center justify-center gap-1 border-r bg-primary/10 p-3 text-center"
+                class="flex w-20 shrink-0 flex-col items-center justify-center gap-1 border-r bg-[var(--curriculum-cycle-chrome)] p-3 text-center"
             >
                 <span class="text-xs text-muted-foreground uppercase">
                     Nivel
@@ -44,13 +44,13 @@ defineProps<{
             </header>
             <div class="flex-1"></div>
             <div
-                class="flex w-20 shrink-0 flex-col items-center justify-center gap-1 border-l bg-primary/10 p-3 text-center"
+                class="flex w-20 shrink-0 flex-col items-center justify-center gap-1 border-l bg-[var(--curriculum-cycle-chrome)] p-3 text-center"
             >
                 <span class="text-xs text-muted-foreground">Asignaturas</span>
                 <strong class="text-sm">{{ data.subjectCount }}</strong>
             </div>
             <div
-                class="flex w-20 shrink-0 flex-col items-center justify-center gap-1 border-l bg-primary/10 p-3 text-center"
+                class="flex w-20 shrink-0 flex-col items-center justify-center gap-1 border-l bg-[var(--curriculum-cycle-chrome)] p-3 text-center"
             >
                 <span class="text-xs text-muted-foreground">Total</span>
                 <strong class="text-sm">
@@ -60,4 +60,3 @@ defineProps<{
         </div>
     </section>
 </template>
-

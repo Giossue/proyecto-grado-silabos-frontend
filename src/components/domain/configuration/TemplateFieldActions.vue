@@ -51,7 +51,7 @@ import type {
 
 type EditableContentType = Exclude<
     TemplateContentType,
-    'institutional' | 'flow'
+    'institutional'
 >;
 
 const props = defineProps<{
@@ -78,7 +78,22 @@ const form = useForm({
     document_marker: '',
     document: null as TemplateFieldContainer['document'],
     fingerprint: '',
+    rules: {
+        required: true,
+        max_length: '' as number | string,
+        min_rows: '' as number | string,
+        max_rows: '' as number | string,
+    },
 });
+
+// Tipos de campo a los que aplica cada regla (el backend ignora el resto).
+const textTypes = ['texto_corto', 'texto_largo'];
+const isText = computed(() => textTypes.includes(primary.value?.type ?? ''));
+const isRepeatable = computed(() => primary.value?.type === 'repetible');
+const numberOrNull = (value: unknown): number | null =>
+    value === '' || value === null || value === undefined
+        ? null
+        : Number(value);
 
 const title = computed(() => props.field.title);
 const typeCanChange = computed(
@@ -88,12 +103,20 @@ const typeCanChange = computed(
 const openEdit = (): void => {
     const value = primary.value;
 
+    form.clearErrors();
+    form.block_id = props.field.id;
+    form.document = props.field.document ?? null;
+    form.fingerprint = props.field.fingerprint ?? '';
+
     if (!value) {
+        // Bloque de contenido fijo: sin campos, solo se renombra.
+        form.label = props.field.title;
+        form.content_type = props.field.content_type;
+        editOpen.value = true;
+
         return;
     }
 
-    form.clearErrors();
-    form.block_id = props.field.id;
     form.key = value.key;
     form.label = props.field.title;
     form.content_type = value.content_type;
@@ -104,15 +127,19 @@ const openEdit = (): void => {
     form.teacher_editable = Boolean(value.teacher_editable);
     form.ai_enabled = Boolean(value.ai_enabled);
     form.document_marker = value.document_marker ?? '';
-    form.document = props.field.document ?? null;
-    form.fingerprint = props.field.fingerprint ?? '';
+    form.rules = {
+        required: value.rules?.required ?? Boolean(value.required),
+        max_length: value.rules?.max_length ?? '',
+        min_rows: value.rules?.min_rows ?? '',
+        max_rows: value.rules?.max_rows ?? '',
+    };
     editOpen.value = true;
 };
 
 const save = (): void => {
     const value = primary.value;
 
-    if (!value) {
+    if (!value && !props.field.document) {
         return;
     }
 
@@ -123,8 +150,14 @@ const save = (): void => {
           })
         : TemplateController.updateField.url({
               template: props.templateId,
-              field: value.id,
+              field: value!.id,
           });
+    const rules = {
+        required: Boolean(form.rules.required),
+        max_length: numberOrNull(form.rules.max_length),
+        min_rows: numberOrNull(form.rules.min_rows),
+        max_rows: numberOrNull(form.rules.max_rows),
+    };
 
     if (props.field.document) {
         // Un bloque documental guarda sus propiedades junto con el documento. Sin
@@ -135,16 +168,21 @@ const save = (): void => {
                 ({
                     ...data,
                     title: data.label,
-                    properties: [
-                        {
-                            key: data.key,
-                            label: data.label,
-                            help: data.help,
-                            ai_enabled: data.ai_enabled,
-                        },
-                    ],
+                    properties: value
+                        ? [
+                              {
+                                  key: data.key,
+                                  label: data.label,
+                                  help: data.help,
+                                  ai_enabled: data.ai_enabled,
+                                  rules,
+                              },
+                          ]
+                        : [],
                 }) as typeof data,
         );
+    } else {
+        form.transform((data) => ({ ...data, rules }) as typeof data);
     }
 
     form.patch(url, {
@@ -197,7 +235,7 @@ defineExpose({
 </script>
 
 <template>
-    <Tooltip v-if="primary" :disable-hoverable-content="true">
+    <Tooltip :disable-hoverable-content="true">
         <TooltipTrigger as-child>
             <span class="inline-flex">
                 <DropdownMenu>
@@ -303,10 +341,58 @@ defineExpose({
                             :errors="[form.errors.content_type]"
                         />
                     </Field>
-                    <Field
-                        v-if="form.content_type !== 'flow'"
-                        orientation="horizontal"
-                    >
+                    <Field v-if="primary" orientation="horizontal">
+                        <Checkbox
+                            id="edit-template-field-required"
+                            v-model="form.rules.required"
+                            :disabled="form.processing"
+                        />
+                        <FieldLabel for="edit-template-field-required">
+                            Obligatorio
+                        </FieldLabel>
+                    </Field>
+                    <Field v-if="isText">
+                        <FieldLabel for="edit-template-field-max-length">
+                            Máximo de caracteres
+                        </FieldLabel>
+                        <Input
+                            id="edit-template-field-max-length"
+                            v-model="form.rules.max_length"
+                            type="number"
+                            min="1"
+                            placeholder="Sin límite"
+                            :disabled="form.processing"
+                        />
+                    </Field>
+                    <div v-if="isRepeatable" class="grid grid-cols-2 gap-4">
+                        <Field>
+                            <FieldLabel for="edit-template-field-min-rows">
+                                Mínimo de filas
+                            </FieldLabel>
+                            <Input
+                                id="edit-template-field-min-rows"
+                                v-model="form.rules.min_rows"
+                                type="number"
+                                min="0"
+                                placeholder="Sin mínimo"
+                                :disabled="form.processing"
+                            />
+                        </Field>
+                        <Field>
+                            <FieldLabel for="edit-template-field-max-rows">
+                                Máximo de filas
+                            </FieldLabel>
+                            <Input
+                                id="edit-template-field-max-rows"
+                                v-model="form.rules.max_rows"
+                                type="number"
+                                min="1"
+                                placeholder="Sin máximo"
+                                :disabled="form.processing"
+                            />
+                        </Field>
+                    </div>
+                    <Field v-if="primary" orientation="horizontal">
                         <Checkbox
                             id="edit-template-field-ai-enabled"
                             v-model="form.ai_enabled"

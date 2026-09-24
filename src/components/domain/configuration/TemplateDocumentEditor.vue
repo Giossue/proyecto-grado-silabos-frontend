@@ -2,6 +2,7 @@
 import { NodeSelection, TextSelection } from '@tiptap/pm/state';
 import type { Selection } from '@tiptap/pm/state';
 import { CellSelection } from '@tiptap/pm/tables';
+import { Extension } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { ContextMenu, ContextMenuTrigger } from '@/components/ui/context-menu';
 import { useTemplateDocumentField } from '@/composables/useTemplateDocumentField';
 import { useVariableSuggestions } from '@/composables/useVariableSuggestions';
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
+import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import {
     cellNode,
     fieldNode,
@@ -61,7 +63,14 @@ const editor = useEditor({
             spellcheck: 'true',
         },
     },
-    extensions: templateDocumentExtensions(suggestion),
+    extensions: [
+        ...templateDocumentExtensions(suggestion),
+        // Page breaks drawn by the sheet view; presentation only.
+        Extension.create({
+            name: 'pageSpacers',
+            addProseMirrorPlugins: () => [pageSpacersPlugin()],
+        }),
+    ],
     onUpdate: ({ editor: current }) => {
         dirty.value = JSON.stringify(current.getJSON()) !== initial.value;
     },
@@ -471,6 +480,11 @@ defineExpose({ save, editor, markClean, prepareDocument });
     min-height: 300px;
     outline: none;
     padding: 12px;
+}
+/* Embedded in the sheet view: the paper behind is already white. An opaque
+   background here would paint over the gap between sheets and page numbers. */
+.template-document-editor-embedded {
+    background: transparent;
 }
 .template-document-editor-embedded .tiptap {
     min-height: 1.5em;

@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { createDocumentPaginator } from '@/lib/documentPagination';
+import {
+    createDocumentPaginator,
+    registerPageEditor,
+} from '@/lib/documentPagination';
+import type { PageSpacerRequest } from '@/lib/documentPagination';
 
 const PAGE = { width: 800, height: 100, margin: 0, gap: 0 };
 
@@ -41,5 +45,24 @@ describe('createDocumentPaginator', () => {
         createDocumentPaginator(root, () => PAGE).paginate();
 
         expect(root.querySelectorAll('tr[data-page-spacer]')).toHaveLength(0);
+    });
+
+    it('pide al editor registrado que dibuje el salto antes de la fila que cruza la hoja', () => {
+        const root = tableWithRows(true);
+        const host = root.querySelector<HTMLElement>('[contenteditable]')!;
+        const calls: PageSpacerRequest[][] = [];
+        const unregister = registerPageEditor(host, {
+            clear: () => calls.push([]),
+            apply: (requests) => calls.push(requests),
+        });
+
+        createDocumentPaginator(root, () => PAGE).paginate();
+        unregister();
+
+        const last = calls.at(-1)!;
+        expect(root.querySelectorAll('[data-page-spacer]')).toHaveLength(0);
+        expect(last).toHaveLength(1);
+        expect(last[0].element).toBe(root.querySelectorAll('tr')[1]);
+        expect(last[0].height).toBe(30);
     });
 });

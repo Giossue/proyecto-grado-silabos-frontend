@@ -9,7 +9,7 @@ import type { TemplateContentType } from '@/types/configuration';
 
 type EditableContentType = Exclude<
     TemplateContentType,
-    'institutional' | 'flow'
+    'institutional'
 >;
 
 defineProps<{

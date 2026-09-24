@@ -59,7 +59,7 @@ const widths = computed(() => columnWidths(props.layout));
                         scope="row"
                         class="document-table-header w-1/4 border px-3 py-1.5 text-start font-semibold"
                     >
-                        {{ layout.repeat.label }} No.
+                        {{ layout.repeat.label ?? 'Unidad' }} No.
                     </th>
                     <td
                         class="border px-3 py-1.5"
@@ -127,7 +127,7 @@ const widths = computed(() => columnWidths(props.layout));
                         :class="index === 0 ? 'text-end' : 'text-center'"
                     >
                         <template v-if="index === 0">
-                            {{ layout.totals.label }}
+                            {{ layout.totals.label ?? 'Total' }}
                         </template>
                         <template v-else-if="totalizes(column)">
                             {{

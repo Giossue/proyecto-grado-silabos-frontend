@@ -232,7 +232,7 @@ export function defaultDocument(
                   layout.columns.map((column, index) =>
                       cellNode(
                           index === 0
-                              ? [textNode(layout.totals.label)]
+                              ? [textNode(layout.totals.label ?? 'Total')]
                               : column.type === 'number' && column.sum !== false
                                 ? [
                                       fieldNode(

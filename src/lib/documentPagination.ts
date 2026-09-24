@@ -15,6 +15,85 @@ export const A4_PAGE = {
 
 export type DocumentPageMetrics = typeof LETTER_PAGE;
 
+export type PageSpacerRequest = {
+    element: HTMLElement;
+    height: number;
+    colspan: number;
+};
+
+type PageEditor = {
+    clear: () => void;
+    apply: (requests: PageSpacerRequest[]) => void;
+};
+
+/**
+ * Rich text editors own their DOM: foreign nodes inside them would be read back as
+ * content. An editor registers here so the paginator can split its blocks and table
+ * rows by asking the editor to draw the spacers itself (as decorations).
+ */
+const pageEditors = new Map<HTMLElement, PageEditor>();
+
+export function registerPageEditor(element: HTMLElement, editor: PageEditor) {
+    pageEditors.set(element, editor);
+
+    return () => {
+        pageEditors.delete(element);
+    };
+}
+
+function editorOf(element: HTMLElement): HTMLElement | undefined {
+    for (const host of pageEditors.keys()) {
+        if (host !== element && host.contains(element)) {
+            return host;
+        }
+    }
+
+    return undefined;
+}
+
+function editorUnits(host: HTMLElement): Unit[] {
+    return Array.from(host.children).flatMap((child) => {
+        if (!(child instanceof HTMLElement) || child.hasAttribute('data-page-spacer')) {
+            return [];
+        }
+
+        const table =
+            child instanceof HTMLTableElement
+                ? child
+                : child.querySelector(':scope > table');
+
+        if (table instanceof HTMLTableElement) {
+            return tableUnits(table);
+        }
+
+        if (['UL', 'OL'].includes(child.tagName)) {
+            const items = Array.from(child.children).filter(
+                (item): item is HTMLLIElement =>
+                    item instanceof HTMLLIElement &&
+                    !item.hasAttribute('data-page-spacer'),
+            );
+
+            if (items.length > 0) {
+                return items.map((item) => ({
+                    first: item,
+                    last: item,
+                    keepNext: false,
+                    flowThrough: false,
+                }));
+            }
+        }
+
+        return [
+            {
+                first: child,
+                last: child,
+                keepNext: /^H[1-6]$/.test(child.tagName),
+                flowThrough: false,
+            },
+        ];
+    });
+}
+
 type Unit = {
     first: HTMLElement;
     last: HTMLElement;
@@ -164,6 +243,18 @@ function collectUnits(root: HTMLElement): Unit[] {
             return tableUnits(element);
         }
 
+        const editor = Array.from(pageEditors.keys()).find((host) =>
+            element.contains(host),
+        );
+
+        if (editor) {
+            const units = editorUnits(editor);
+
+            if (units.length > 0) {
+                return units;
+            }
+        }
+
         if (element.hasAttribute('data-page-markdown-flow-through')) {
             return markdownFlowThroughUnits(element);
         }
@@ -252,6 +343,7 @@ export function createDocumentPaginator(
     metrics: () => DocumentPageMetrics = () => LETTER_PAGE,
 ) {
     const inserted: HTMLElement[] = [];
+    const editorRequests = new Map<HTMLElement, PageSpacerRequest[]>();
     let snapshot: {
         first: HTMLElement;
         last: HTMLElement;
@@ -311,10 +403,44 @@ export function createDocumentPaginator(
 
         inserted.length = 0;
         snapshot = [];
+
+        for (const [host, editor] of pageEditors) {
+            if (root.contains(host)) {
+                editor.clear();
+            }
+        }
+
+        editorRequests.clear();
     };
 
     const spacerBefore = (unit: Unit, height: number) => {
         const isRow = unit.first instanceof HTMLTableRowElement;
+        const columns = () =>
+            Math.max(
+                ...Array.from(unit.table!.rows, (row) =>
+                    Array.from(row.cells).reduce(
+                        (sum, item) => sum + item.colSpan,
+                        0,
+                    ),
+                ),
+            );
+        const editor = editorOf(unit.first);
+
+        if (editor) {
+            const requests = editorRequests.get(editor) ?? [];
+
+            requests.push({
+                element: unit.first,
+                height,
+                colspan: isRow ? columns() : 1,
+            });
+            editorRequests.set(editor, requests);
+            // Synchronous: later units are measured with this break applied.
+            pageEditors.get(editor)?.apply([...requests]);
+
+            return;
+        }
+
         const isListItem = unit.first.tagName === 'LI';
         const anchor = spacerAnchor(unit.first, root);
         const spacer = document.createElement(
@@ -327,14 +453,7 @@ export function createDocumentPaginator(
 
         if (isRow) {
             const cell = document.createElement('td');
-            cell.colSpan = Math.max(
-                ...Array.from(unit.table!.rows, (row) =>
-                    Array.from(row.cells).reduce(
-                        (sum, item) => sum + item.colSpan,
-                        0,
-                    ),
-                ),
-            );
+            cell.colSpan = columns();
             cell.style.cssText = `height:${height}px;padding:0!important;border:0!important;background:transparent!important;`;
             spacer.append(cell);
         }

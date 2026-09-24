@@ -103,6 +103,35 @@ describe("AdminTemplatePage", () => {
     expect(document.body.textContent).toContain('Editar campo');
   });
 
+  it("marca los bloques de contenido fijo que el docente no llena", async () => {
+    const withFixed: TemplatePayload = {
+      ...payload,
+      template: {
+        ...payload.template!,
+        sections: [{
+          ...payload.template!.sections[0]!,
+          blocks: [
+            ...payload.template!.sections[0]!.blocks,
+            {
+              id: "block-2", key: "firmas", title: "Firmas", type: "fijo", content_type: "fixed",
+              table: null, fingerprint: "b".repeat(64), fields: [],
+              document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Firma" }] }] },
+            },
+          ],
+        }],
+      },
+    };
+    vi.mocked(getTemplate).mockResolvedValue(withFixed);
+    const wrapper = mount({
+      components: { AdminTemplatePage, TooltipProvider },
+      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
+    }, { attachTo: document.body });
+    await flushPromises();
+
+    expect(wrapper.get("#template-field-block-2 h3").text()).toContain("Contenido fijo · el docente no llena");
+    expect(wrapper.get("#template-field-block-1 h3").text()).not.toContain("Contenido fijo");
+  });
+
   it("sincroniza una mutación sin desmontar el constructor visual", async () => {
     const refreshedPayload: TemplatePayload = {
       ...payload,

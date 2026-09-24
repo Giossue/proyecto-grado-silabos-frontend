@@ -111,7 +111,7 @@ export const createRepeatTable =
                         ? h(
                               'p',
                               { class: 'font-bold', 'data-page-keep-next': '' },
-                              `${layout.repeat.label} ${unit.number}`,
+                              `${layout.repeat.label ?? 'Unidad'} ${unit.number}`,
                           )
                         : null,
                     options.tableWithAction(node, content),
@@ -141,7 +141,7 @@ export const createRepeatTable =
                                                     ),
                                             },
                                             () =>
-                                                `Quitar ${layout.repeat.label.toLowerCase()}`,
+                                                `Quitar ${(layout.repeat.label ?? 'Unidad').toLowerCase()}`,
                                         ),
                                     ]
                                   : []),

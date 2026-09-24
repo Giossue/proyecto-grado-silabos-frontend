@@ -168,6 +168,12 @@ const fieldsFor = (block: TemplateFieldContainer) =>
     templatePreviewFields(block.fields, block.table);
 const hasTable = (block: TemplateFieldContainer): boolean =>
     nodesOfType(documentFor(block), 'table').length > 0;
+const isFixedContent = (block: TemplateFieldContainer): boolean =>
+    block.content_type === 'fixed' ||
+    (block.fields.length === 0 &&
+        Boolean(block.document) &&
+        nodesOfType(block.document!, 'field').length === 0 &&
+        nodesOfType(block.document!, 'column').length === 0);
 
 const shiftedIds = (
     ids: string[],
@@ -733,6 +739,13 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         >
                             {{ sectionIndex + 1 }}.{{ fieldIndex + 1 }}
                             {{ block.title }}
+                            <Badge
+                                v-if="isFixedContent(block)"
+                                variant="secondary"
+                                class="ml-2 align-middle text-xs font-normal"
+                            >
+                                Contenido fijo · el docente no llena
+                            </Badge>
                         </h3>
 
                         <TemplateTableDesigner

@@ -11,7 +11,6 @@ import type {
   NodeDragEvent,
   NodeMouseEvent,
 } from "@vue-flow/core";
-import { MiniMap } from "@vue-flow/minimap";
 import { computed, nextTick, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
 import { updateSubjectLayout } from "@/api/career-academics";
@@ -60,7 +59,6 @@ import type {
 import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
 import "@vue-flow/controls/dist/style.css";
-import "@vue-flow/minimap/dist/style.css";
 
 const props = defineProps<
   Pick<
@@ -439,7 +437,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
 
 <template>
   <div
-    class="relative h-[72vh] min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
+    class="curriculum-canvas relative h-[72vh] min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
     aria-label="Modo interactivo de la malla"
   >
     <!--
@@ -517,14 +515,6 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         :subject-name="subjectName"
         @changed="(message) => emit('changed', message)"
       />
-      <MiniMap
-        class="max-sm:hidden"
-        pannable
-        zoomable
-        node-color="var(--muted)"
-        node-stroke-color="var(--border)"
-        mask-color="color-mix(in srgb, var(--background) 65%, transparent)"
-      />
     </VueFlow>
     <Dialog
       :open="hasOpenEditor"
@@ -582,13 +572,6 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
   :deep(.vue-flow__node-subject) {
     transition: none;
   }
-}
-
-:deep(.vue-flow__minimap) {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
-  background-color: var(--card);
 }
 
 :deep(.vue-flow__controls) {

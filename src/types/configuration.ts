@@ -1,3 +1,4 @@
+import type { FieldRules } from '@/api/template';
 import type { TableLayout } from '@/lib/tableLayout';
 import type {
     DocumentField,
@@ -13,7 +14,7 @@ export type TemplateContentType =
     | 'boolean'
     | 'multiple_choice'
     | 'institutional'
-    | 'flow';
+    | 'fixed';
 
 export type TemplateField = DocumentField & {
     id: string;
@@ -24,6 +25,7 @@ export type TemplateField = DocumentField & {
     master_source: string | null;
     ai_enabled: boolean;
     document_marker: string | null;
+    rules?: FieldRules;
 };
 
 export type TemplateFieldContainer = {
@@ -104,7 +106,7 @@ export type TemplateBuilderProps = {
         sections: TemplateSection[];
     };
     blockTypes: {
-        value: Exclude<TemplateContentType, 'institutional' | 'flow'>;
+        value: Exclude<TemplateContentType, 'institutional'>;
         label: string;
     }[];
     appearanceOptions: TemplateAppearanceOptions;

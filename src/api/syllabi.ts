@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import type { TemplateAppearance } from "@/api/template";
+import type { FieldRules, TemplateAppearance } from "@/api/template";
 import type { TableColumnRole } from "@/lib/tableLayout";
 import type { DocumentNode } from "@/lib/templateDocument";
 import type { AgentAvatarHint } from "@/components/domain/ai/avatar/types";
@@ -123,8 +123,8 @@ export type TableLayout = {
   groups: Array<{ key: string; label: string }>;
   bands: Array<{ key: string; label: string }>;
   header_fields: Array<{ key: string; label: string }>;
-  totals: { enabled: boolean; label: string };
-  repeat: { enabled: boolean; label: string };
+  totals: { enabled: boolean; label?: string };
+  repeat: { enabled: boolean; label?: string };
 };
 
 export type SyllabusField = {
@@ -135,6 +135,7 @@ export type SyllabusField = {
   type: string;
   options: Array<{ value: string; label: string }>;
   required: boolean;
+  rules?: FieldRules;
   inherited: boolean;
   teacher_editable: boolean;
   ai_enabled: boolean;

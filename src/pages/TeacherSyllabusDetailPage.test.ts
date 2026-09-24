@@ -212,7 +212,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.get(".feedback.error button").text()).toBe("Recargar borrador");
   });
 
-  it("oculta la revisión final y el botón de validación, pero muestra los errores vigentes", async () => {
+  it("muestra la revisión final como contenido fijo, oculta el botón de validación y muestra los errores vigentes", async () => {
     const draft = syllabus("borrador");
     draft.sections.push({
       id: "section-review",
@@ -221,9 +221,10 @@ describe("TeacherSyllabusDetailPage", () => {
       description: "Complete los campos aplicables.",
       blocks: [{
         id: "review-block",
-        title: "Estado de revisión",
-        content_type: "flow",
+        title: "Firmas",
+        content_type: "fixed",
         table: null,
+        document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Firma del coordinador" }] }] },
         fields: [],
       }],
     });
@@ -243,10 +244,38 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("Descripción");
-    expect(wrapper.text()).not.toContain("Revisión y aprobación");
+    expect(wrapper.text()).toContain("Revisión y aprobación");
+    expect(wrapper.text()).toContain("Firma del coordinador");
     expect(wrapper.text()).not.toContain("Resultados de validación");
     expect(wrapper.text()).toContain("Completa el campo obligatorio");
     expect(wrapper.findAll("button").some((button) => button.text() === "Validar sílabo")).toBe(false);
+  });
+
+  it("muestra contadores de caracteres y filas sin bloquear la edición", async () => {
+    const draft = syllabus("borrador");
+    draft.sections[0]!.blocks[0]!.fields[0]!.rules = { required: true, max_length: 5, min_rows: null, max_rows: null };
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const counter = wrapper.findAll("p").find((item) => item.text() === "13 / 5 caracteres");
+    expect(counter).toBeDefined();
+    expect(counter!.classes()).toContain("text-destructive");
+    expect(wrapper.get("#input-field-1").attributes("disabled")).toBeUndefined();
+
+    const repeatable = syllabus("borrador", "repetible");
+    const field = repeatable.sections[0]!.blocks[0]!.fields[0]!;
+    field.rules = { required: true, max_length: null, min_rows: 2, max_rows: 4 };
+    repeatable.sections[0]!.blocks[0]!.table = {
+      columns: [{ key: "tema", label: "Tema", type: "text", group: null, band: null, sum: false, width: null, role: null }],
+      groups: [], bands: [], header_fields: [], totals: { enabled: false }, repeat: { enabled: false },
+    };
+    field.rows = [{ data: { _kind: "unit" }, position: 0 }, { data: { tema: "Uno" }, position: 1 }];
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: repeatable });
+    const second = mountPage();
+    await flushPromises();
+
+    expect(second.text()).toContain("1 fila (mín. 2, máx. 4)");
   });
 
   const buttonNamed = (wrapper: ReturnType<typeof mountPage>, name: string) =>

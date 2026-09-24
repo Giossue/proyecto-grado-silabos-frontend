@@ -190,7 +190,7 @@ const widths = computed(() => columnWidths(props.layout));
             >
                 <div class="flex items-center justify-between gap-3">
                     <p v-if="layout.repeat.enabled" class="font-medium">
-                        {{ layout.repeat.label }} {{ unit.number }}
+                        {{ layout.repeat.label ?? 'Unidad' }} {{ unit.number }}
                     </p>
                     <Button
                         v-if="layout.repeat.enabled && units.length > 1"
@@ -200,7 +200,7 @@ const widths = computed(() => columnWidths(props.layout));
                         @click="removeUnit(unit.number)"
                     >
                         <Trash2 data-icon="inline-start" aria-hidden="true" />
-                        Quitar {{ layout.repeat.label.toLowerCase() }}
+                        Quitar {{ (layout.repeat.label ?? 'Unidad').toLowerCase() }}
                     </Button>
                 </div>
                 <div
@@ -354,7 +354,7 @@ const widths = computed(() => columnWidths(props.layout));
                                 "
                             >
                                 <template v-if="index === 0">
-                                    {{ layout.totals.label }}
+                                    {{ layout.totals.label ?? 'Total' }}
                                 </template>
                                 <template v-else-if="totalizes(column)">
                                     {{
@@ -393,7 +393,7 @@ const widths = computed(() => columnWidths(props.layout));
             class="self-start"
             @click="addUnit"
         >
-            Agregar {{ layout.repeat.label.toLowerCase() }}
+            Agregar {{ (layout.repeat.label ?? 'Unidad').toLowerCase() }}
         </Button>
     </div>
 </template>

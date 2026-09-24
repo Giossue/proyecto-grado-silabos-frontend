@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { FieldRules } from '@/api/template';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplateDocumentEditor from '@/components/domain/configuration/TemplateDocumentEditor.vue';
@@ -51,6 +52,7 @@ const props = defineProps<{
         fields: (DocumentField & {
             help?: string | null;
             ai_enabled?: boolean;
+            rules?: FieldRules;
         })[];
         document?: DocumentNode | null;
         fingerprint?: string;
@@ -73,8 +75,7 @@ const pendingNavigation = ref<{
 let bypassNavigationGuard = false;
 const designDirty = ref(false);
 const initialProperties = ref('');
-const isFlow = computed(() => props.block.content_type === 'flow');
-const open = computed(() => Boolean(props.editing) && !isFlow.value);
+const open = computed(() => Boolean(props.editing));
 const submitting = ref(false);
 const editor = ref<InstanceType<typeof TemplateDocumentEditor> | null>(null);
 const draft = ref<DocumentNode>({ type: 'doc', content: [] });
@@ -86,6 +87,7 @@ const form = useForm({
         label: string;
         help: string;
         ai_enabled?: boolean;
+        rules?: FieldRules;
     }[],
     fingerprint: '',
     confirm_purge: false,
@@ -115,9 +117,8 @@ const edit = () => {
         key: field.key,
         label: field.label,
         help: field.help ?? '',
-        ...(props.block.content_type !== 'flow'
-            ? { ai_enabled: field.ai_enabled ?? false }
-            : {}),
+        ai_enabled: field.ai_enabled ?? false,
+        ...(field.rules ? { rules: field.rules } : {}),
     }));
     initialProperties.value = propertiesSnapshot();
     designDirty.value = false;
@@ -125,7 +126,7 @@ const edit = () => {
 const openProperties = () => {
     const current = editor.value?.prepareDocument();
 
-    if (current && !isFlow.value) {
+    if (current) {
         for (const node of nodesOfType(current, 'field')) {
             const key = String(node.attrs?.key ?? '');
 
@@ -287,9 +288,9 @@ const saveCurrent = (silent = false): Promise<boolean> => {
         return Promise.resolve(true);
     }
 
-    const value = isFlow.value ? null : editor.value?.prepareDocument();
+    const value = editor.value?.prepareDocument();
 
-    if (!isFlow.value && !value) {
+    if (!value) {
         return Promise.resolve(false);
     }
 
@@ -421,17 +422,12 @@ watch(
                                 conserva su propio nombre.
                             </FieldDescription>
                         </Field>
-                        <p v-if="isFlow" class="text-sm text-muted-foreground">
-                            El estado de revisión lo determina el sistema. Aquí
-                            solo se ajustan el nombre y la ayuda.
-                        </p>
                         <FieldGroup
                             v-for="(property, index) in form.properties"
                             :key="property.key"
                             class="gap-4 rounded-lg border p-4"
                         >
                             <Field
-                                v-if="!isFlow"
                                 :data-invalid="
                                     Boolean(
                                         propertyError(
@@ -531,7 +527,7 @@ watch(
                                 </FieldContent>
                             </Field>
                         </FieldGroup>
-                        <p v-if="!isFlow" class="text-sm text-muted-foreground">
+                        <p class="text-sm text-muted-foreground">
                             Para configurar la ayuda de un campo nuevo, primero
                             guarde su diseño.
                         </p>
@@ -567,7 +563,7 @@ watch(
                         :disabled="form.processing"
                         @click="closeProperties(false)"
                     >
-                        {{ isFlow ? 'Cancelar' : 'Cerrar' }}
+                        Cerrar
                     </Button>
                     <Button
                         v-if="purge"

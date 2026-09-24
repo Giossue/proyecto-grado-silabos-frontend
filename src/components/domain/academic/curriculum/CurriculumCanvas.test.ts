@@ -21,7 +21,6 @@ vi.mock('@vue-flow/core', () => ({
     Position: { Top: 'top', Bottom: 'bottom' },
 }));
 vi.mock('@vue-flow/controls', () => ({ Controls: { template: '<div />' } }));
-vi.mock('@vue-flow/minimap', () => ({ MiniMap: { template: '<div />' } }));
 
 const subject = (id: string, position: number): CurriculumBuilderSubject => ({
     id,
