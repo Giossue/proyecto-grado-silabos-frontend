@@ -41,7 +41,7 @@ defineProps<{
                     :style="item.style"
                     aria-hidden="true"
                 ></dt>
-                <dd class="truncate">{{ item.unit }}</dd>
+                <dd class="leading-tight">{{ item.unit }}</dd>
             </div>
         </dl>
         <dl class="flex flex-col gap-1 border-t pt-2">

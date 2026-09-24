@@ -22,7 +22,7 @@ const contentId = 'curriculum-legend-content';
     <div
         :class="[
             'relative rounded-md bg-card/90 text-card-foreground shadow-surface ring-1 ring-surface-ring',
-            open ? 'w-56' : 'size-8',
+            open ? 'w-64' : 'size-8',
         ]"
     >
         <Collapsible v-model:open="open">
