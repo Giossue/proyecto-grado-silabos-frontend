@@ -1,5 +1,5 @@
 import { api } from "@/api/client";
-import type { FieldRules, TemplateAppearance } from "@/api/template";
+import type { TemplateAppearance } from "@/api/template";
 import type { TableColumnRole } from "@/lib/tableLayout";
 import type { DocumentNode } from "@/lib/templateDocument";
 import type { AgentAvatarHint } from "@/components/domain/ai/avatar/types";
@@ -137,7 +137,6 @@ export type SyllabusField = {
   type: string;
   options: Array<{ value: string; label: string }>;
   required: boolean;
-  rules?: FieldRules;
   inherited: boolean;
   teacher_editable: boolean;
   ai_enabled: boolean;

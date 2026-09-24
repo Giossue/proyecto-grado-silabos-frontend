@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { FieldRules } from '@/api/template';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplateDocumentEditor from '@/components/domain/configuration/TemplateDocumentEditor.vue';
@@ -52,7 +51,6 @@ const props = defineProps<{
         fields: (DocumentField & {
             help?: string | null;
             ai_enabled?: boolean;
-            rules?: FieldRules;
         })[];
         document?: DocumentNode | null;
         fingerprint?: string;
@@ -87,7 +85,6 @@ const form = useForm({
         label: string;
         help: string;
         ai_enabled?: boolean;
-        rules?: FieldRules;
     }[],
     fingerprint: '',
     confirm_purge: false,
@@ -118,7 +115,6 @@ const edit = () => {
         label: field.label,
         help: field.help ?? '',
         ai_enabled: field.ai_enabled ?? false,
-        ...(field.rules ? { rules: field.rules } : {}),
     }));
     initialProperties.value = propertiesSnapshot();
     designDirty.value = false;

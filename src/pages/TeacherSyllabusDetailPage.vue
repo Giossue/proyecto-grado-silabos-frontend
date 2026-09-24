@@ -271,31 +271,6 @@ const updateScalar = (field: SyllabusField, value: string): void => {
 const usesTabularDocument = (block: { content_type: string; document?: DocumentNode | null }): block is { content_type: string; document: DocumentNode } =>
   ['table', 'fixed'].includes(block.content_type) && block.document != null;
 
-// Contadores informativos: avisan del límite, pero no bloquean escribir ni guardar.
-const maxLengthFor = (field: SyllabusField): number | null =>
-  ['texto_corto', 'texto_largo'].includes(field.type) ? field.rules?.max_length ?? null : null;
-const textLength = (field: SyllabusField): number => String(field.value ?? '').length;
-const rowRulesFor = (field: SyllabusField): { min: number | null; max: number | null } | null => {
-  if (field.type !== 'repetible') return null;
-  const min = field.rules?.min_rows ?? null;
-  const max = field.rules?.max_rows ?? null;
-
-  return min === null && max === null ? null : { min, max };
-};
-const rowCount = (field: SyllabusField): number => field.rows.filter((row) => row.data._kind !== 'unit').length;
-const rowHint = (field: SyllabusField): string => {
-  const limits = rowRulesFor(field);
-  const parts = [limits?.min != null ? `mín. ${limits.min}` : null, limits?.max != null ? `máx. ${limits.max}` : null].filter(Boolean);
-  const count = rowCount(field);
-
-  return `${count} ${count === 1 ? 'fila' : 'filas'} (${parts.join(', ')})`;
-};
-const rowsOutOfRange = (field: SyllabusField): boolean => {
-  const limits = rowRulesFor(field);
-  const count = rowCount(field);
-
-  return limits !== null && ((limits.min !== null && count < limits.min) || (limits.max !== null && count > limits.max));
-};
 const designFields = (fields: SyllabusField[]): DocumentField[] => fields.map((field) => ({
   ...field,
   rows: field.rows.map((row) => ({ id: row.id ?? null, data: row.data })),
@@ -504,16 +479,15 @@ onBeforeUnmount(() => {
               <FieldLegend v-if="section.blocks.length > 1 && !(block.fields.length === 1 && block.title === block.fields[0]?.label)" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
               <SyllabusAcademicContext v-if="block.content_type === 'institutional'" :variables="syllabus.template_variables ?? {}" />
               <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :layout="block.table" :editable="canEdit && !conflict" presentation="form" :planning-expectations="syllabus.planning_expectations ?? null" @value="(key, value) => updateDesignValue(block.fields, key, value)" @rows="(key, rows) => updateDesignRows(block.fields, key, rows)" />
-              <template v-if="usesTabularDocument(block)"><p v-for="field in block.fields.filter((item) => rowRulesFor(item))" :key="`rows-${field.id}`" class="text-xs" :class="rowsOutOfRange(field) ? 'text-destructive' : 'text-muted-foreground'">{{ rowHint(field) }}</p></template>
               <template v-if="!usesTabularDocument(block)">
                 <FieldGroup>
                 <template v-for="field in block.fields.filter((item) => block.content_type !== 'institutional' || (item.teacher_editable && !item.inherited))" :key="field.id">
                 <Field v-if="canEdit && field.teacher_editable && !field.inherited && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                  <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" :disabled="savingFieldId === field.id" @update:model-value="updateScalar(field, String($event))" /><p v-if="maxLengthFor(field) !== null" class="text-xs" :class="textLength(field) > maxLengthFor(field)! ? 'text-destructive' : 'text-muted-foreground'">{{ textLength(field) }} / {{ maxLengthFor(field) }} caracteres</p>
+                  <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" :disabled="savingFieldId === field.id" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'texto_largo'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                  <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Textarea :id="`input-${field.id}`" :model-value="scalarValue(field)" class="min-h-32" :disabled="savingFieldId === field.id" @update:model-value="updateScalar(field, String($event))" /><p v-if="maxLengthFor(field) !== null" class="text-xs" :class="textLength(field) > maxLengthFor(field)! ? 'text-destructive' : 'text-muted-foreground'">{{ textLength(field) }} / {{ maxLengthFor(field) }} caracteres</p>
+                  <FieldLabel :for="`input-${field.id}`" :required="field.required">{{ field.label }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Textarea :id="`input-${field.id}`" :model-value="scalarValue(field)" class="min-h-32" :disabled="savingFieldId === field.id" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'seleccion_unica'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
@@ -524,7 +498,7 @@ onBeforeUnmount(() => {
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required">{{ field.label }}</FieldLabel><div class="boolean-options flex gap-2" role="radiogroup" :aria-label="field.label"><Button type="button" size="sm" :variant="field.value === true ? 'default' : 'outline'" role="radio" :aria-checked="field.value === true" @click="toggleBoolean(field, true)">Sí</Button><Button type="button" size="sm" :variant="field.value === false ? 'default' : 'outline'" role="radio" :aria-checked="field.value === false" @click="toggleBoolean(field, false)">No</Button></div><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
 
-                <div v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'repetible'" :id="`field-${field.id}`" class="flex flex-col gap-2"><template v-if="!block.table"><p class="text-sm font-medium">{{ field.label }}</p><p class="text-sm text-muted-foreground">Esta tabla no tiene una estructura configurada.</p></template><template v-else><SyllabusTableEditor :field-id="field.id" :label="field.label" :layout="block.table" :rows="tableRows(field)" :required="field.required" :invalid="validationFor(field.id).length > 0" :planning-expectations="syllabus.planning_expectations ?? null" @update:rows="updateRows(field, $event)" /><p v-if="rowRulesFor(field)" class="text-xs" :class="rowsOutOfRange(field) ? 'text-destructive' : 'text-muted-foreground'">{{ rowHint(field) }}</p><span v-if="savingFieldId === field.id" class="text-xs text-muted-foreground">Guardando…</span></template></div>
+                <div v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'repetible'" :id="`field-${field.id}`" class="flex flex-col gap-2"><template v-if="!block.table"><p class="text-sm font-medium">{{ field.label }}</p><p class="text-sm text-muted-foreground">Esta tabla no tiene una estructura configurada.</p></template><template v-else><SyllabusTableEditor :field-id="field.id" :label="field.label" :layout="block.table" :rows="tableRows(field)" :required="field.required" :invalid="validationFor(field.id).length > 0" :planning-expectations="syllabus.planning_expectations ?? null" @update:rows="updateRows(field, $event)" /><span v-if="savingFieldId === field.id" class="text-xs text-muted-foreground">Guardando…</span></template></div>
 
                 <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Institucional · solo lectura</Badge></div><SyllabusTableView v-if="field.type === 'repetible' && block.table" :layout="block.table" :rows="tableRows(field)" :planning-expectations="syllabus.planning_expectations ?? null" /><span v-else>{{ masterValue(field.value) }}</span></div>
                 <FieldError :errors="visibleValidationMessages(field.id)" />

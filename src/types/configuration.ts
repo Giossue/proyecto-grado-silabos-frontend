@@ -1,4 +1,3 @@
-import type { FieldRules } from '@/api/template';
 import type { TableLayout } from '@/lib/tableLayout';
 import type {
     DocumentField,
@@ -25,7 +24,6 @@ export type TemplateField = DocumentField & {
     master_source: string | null;
     ai_enabled: boolean;
     document_marker: string | null;
-    rules?: FieldRules;
 };
 
 export type TemplateFieldContainer = {

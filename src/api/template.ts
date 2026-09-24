@@ -2,9 +2,8 @@ import { api } from '@/api/client';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 
 export type TemplateContentType = "text" | "table" | "bulleted_list" | "numbered_list" | "boolean" | "multiple_choice" | "institutional" | "fixed";
-export type FieldRules = { required: boolean; max_length: number | null; min_rows: number | null; max_rows: number | null };
 export type TemplateChoice = { value: string; label: string };
-export type TemplateField = { id: string; block_id: string; key: string; label: string; help: string | null; type: string; options: TemplateChoice[]; required: boolean; rules?: FieldRules; inherited: boolean; master_source: string | null; teacher_editable: boolean; ai_enabled: boolean; document_marker?: string | null; content_type: TemplateContentType };
+export type TemplateField = { id: string; block_id: string; key: string; label: string; help: string | null; type: string; options: TemplateChoice[]; required: boolean; inherited: boolean; master_source: string | null; teacher_editable: boolean; ai_enabled: boolean; document_marker?: string | null; content_type: TemplateContentType };
 export type TemplateFieldDraft = { key: string; label: string; help: string; content_type: TemplateContentType; options: TemplateChoice[]; ai_enabled: boolean };
 export type TemplateNamedItem = { key: string; label: string };
 export type TemplateTableColumn = {

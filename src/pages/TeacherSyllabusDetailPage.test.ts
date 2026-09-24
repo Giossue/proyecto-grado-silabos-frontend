@@ -236,7 +236,7 @@ describe("TeacherSyllabusDetailPage", () => {
         field_id: "field-1",
         code: "campo_obligatorio_faltante",
         severity: "error",
-        message: "Completa el campo obligatorio «Descripción de la asignatura».",
+        message: "«Descripción de la asignatura» está vacío. Complétalo antes de enviar.",
       }],
     };
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
@@ -247,35 +247,8 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.text()).toContain("Revisión y aprobación");
     expect(wrapper.text()).toContain("Firma del coordinador");
     expect(wrapper.text()).not.toContain("Resultados de validación");
-    expect(wrapper.text()).toContain("Completa el campo obligatorio");
+    expect(wrapper.text()).toContain("está vacío");
     expect(wrapper.findAll("button").some((button) => button.text() === "Validar sílabo")).toBe(false);
-  });
-
-  it("muestra contadores de caracteres y filas sin bloquear la edición", async () => {
-    const draft = syllabus("borrador");
-    draft.sections[0]!.blocks[0]!.fields[0]!.rules = { required: true, max_length: 5, min_rows: null, max_rows: null };
-    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
-    const wrapper = mountPage();
-    await flushPromises();
-
-    const counter = wrapper.findAll("p").find((item) => item.text() === "13 / 5 caracteres");
-    expect(counter).toBeDefined();
-    expect(counter!.classes()).toContain("text-destructive");
-    expect(wrapper.get("#input-field-1").attributes("disabled")).toBeUndefined();
-
-    const repeatable = syllabus("borrador", "repetible");
-    const field = repeatable.sections[0]!.blocks[0]!.fields[0]!;
-    field.rules = { required: true, max_length: null, min_rows: 2, max_rows: 4 };
-    repeatable.sections[0]!.blocks[0]!.table = {
-      columns: [{ key: "tema", label: "Tema", type: "text", group: null, band: null, sum: false, width: null, role: null }],
-      groups: [], bands: [], header_fields: [], totals: { enabled: false }, repeat: { enabled: false },
-    };
-    field.rows = [{ data: { _kind: "unit" }, position: 0 }, { data: { tema: "Uno" }, position: 1 }];
-    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: repeatable });
-    const second = mountPage();
-    await flushPromises();
-
-    expect(second.text()).toContain("1 fila (mín. 2, máx. 4)");
   });
 
   const buttonNamed = (wrapper: ReturnType<typeof mountPage>, name: string) =>
