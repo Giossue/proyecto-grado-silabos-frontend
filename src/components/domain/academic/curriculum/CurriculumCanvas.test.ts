@@ -14,7 +14,7 @@ vi.mock('@/api/career-academics', () => ({
 }));
 vi.mock('@vue-flow/core', () => ({
     VueFlow: { name: 'VueFlow', props: ['nodes', 'edges'], template: '<div><slot /></div>' },
-    useVueFlow: () => ({ setNodes: vi.fn(), setEdges: vi.fn() }),
+    useVueFlow: () => ({ setNodes: vi.fn(), setEdges: vi.fn(), updateNode: vi.fn() }),
     ConnectionMode: { Loose: 'loose' },
     MarkerType: { ArrowClosed: 'arrowclosed' },
     Handle: { template: '<div />' },

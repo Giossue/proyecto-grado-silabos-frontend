@@ -17,7 +17,7 @@ import type {
     NodeMouseEvent,
 } from '@vue-flow/core';
 import { MiniMap } from '@vue-flow/minimap';
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import {
     createSubjectRequirement,
@@ -171,7 +171,7 @@ const summaryRows = computed(() => [
 ]);
 
 const flowId = `curriculum-${props.curriculum.id}`;
-const { setEdges, setNodes } = useVueFlow({ id: flowId });
+const { setEdges, setNodes, updateNode } = useVueFlow({ id: flowId });
 
 // El carril se dibuja un 30 % más bajo que los 340 px originales; con menos aire
 // sobrante, las tarjetas se centran en él en vez de colgar del borde superior.
@@ -675,14 +675,29 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     const { node } = event;
     const subject = subjectById.value.get(node.id);
     if (!editable.value || node.type !== 'subject' || !subject || typeof subject.cycle !== 'number') return;
-    onNodeDrag(event);
     const originalIndex = subjectsForCycle(subject.cycle).findIndex((item) => item.id === node.id);
-    const index = dragPreview.value?.index ?? originalIndex;
+    const index = dragPreview.value?.subjectId === node.id
+        ? dragPreview.value.index
+        : originalIndex;
+    const finalPosition = {
+        x: laneStart + index * subjectStep,
+        y: (subject.cycle - 1) * laneHeight + subjectOffset.value,
+    };
+    const snapDraggedNode = (): void => {
+        // Vue Flow conserva computedPosition del gesto al llamar setNodes;
+        // actualizar ambas coordenadas evita que la tarjeta quede entre casillas.
+        updateNode(node.id, (current) => ({
+            position: finalPosition,
+            computedPosition: { ...current.computedPosition, ...finalPosition },
+        }));
+    };
     if (index === originalIndex) {
         dragPreview.value = null;
         const restoredNodes = buildNodes();
         nodes.value = restoredNodes;
         setNodes(restoredNodes);
+        await nextTick();
+        snapDraggedNode();
         return;
     }
 
@@ -691,6 +706,8 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     const previewNodes = buildNodes();
     nodes.value = previewNodes;
     setNodes(previewNodes);
+    await nextTick();
+    snapDraggedNode();
     try {
         const result = await updateSubjectLayout(props.curriculum.id, {
             subject_id: node.id,
@@ -703,6 +720,18 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         const restoredNodes = buildNodes();
         nodes.value = restoredNodes;
         setNodes(restoredNodes);
+        await nextTick();
+        updateNode(node.id, (current) => ({
+            position: {
+                x: laneStart + originalIndex * subjectStep,
+                y: finalPosition.y,
+            },
+            computedPosition: {
+                ...current.computedPosition,
+                x: laneStart + originalIndex * subjectStep,
+                y: finalPosition.y,
+            },
+        }));
         toast.error(reason instanceof ApiError ? reason.message : 'No se pudo mover la materia.');
     } finally {
         savingLayout.value = false;
