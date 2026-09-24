@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { activateAccount } from '@/api/session';
+import { activateAccount, logout } from '@/api/session';
 import { ApiError } from '@/api/client';
 import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
 import InputError from '@/components/InputError.vue';
@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { paths } from '@/lib/routes';
+import { clearIntendedRoute } from '@/lib/intended-route';
+import { sessionState } from '@/state/session';
 
 const route = useRoute();
 const router = useRouter();
@@ -30,6 +32,13 @@ const submit = async (): Promise<void> => {
     errors.value = {};
     try {
         const result = await activateAccount(token.value, password.value, passwordConfirmation.value);
+        // Si el navegador tenía otra sesión abierta (o la misma cuenta pendiente), se cierra:
+        // la persona debe ingresar con la contraseña que acaba de definir.
+        if (sessionState.current.value) {
+            await logout().catch(() => undefined);
+            sessionState.clear();
+        }
+        clearIntendedRoute();
         await router.replace({ path: paths.login, query: { status: result.message } });
     } catch (reason) {
         if (reason instanceof ApiError) {

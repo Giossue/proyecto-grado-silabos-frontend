@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import {
-    Bot,
     Check,
     ChevronRight,
     CircleAlert,
@@ -8,7 +7,7 @@ import {
     FileText,
     Sparkles,
 } from '@lucide/vue';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import {
     applyAiRecommendation,
     decideAiRecommendation,
@@ -65,6 +64,8 @@ import {
     EmptyTitle,
 } from '@/components/ui/empty';
 import { Separator } from '@/components/ui/separator';
+import RobotAvatar from '@/components/domain/ai/avatar/RobotAvatar.vue';
+import { useAvatarController } from '@/components/domain/ai/avatar/useAvatarController';
 import { Spinner } from '@/components/ui/spinner';
 import { ApiError } from '@/api/client';
 import { toast } from '@/lib/toast';
@@ -188,6 +189,27 @@ const hasProcessing = computed(() =>
     ),
 );
 const hasResults = computed(() => assistance.value.executions.length > 0);
+
+const finishedCount = computed(() =>
+    assistance.value.executions.filter((execution) =>
+        !['pendiente', 'en_ejecucion'].includes(execution.status),
+    ).length,
+);
+const userEngaged = ref(false);
+const avatar = useAvatarController({
+    userEngaged,
+    awaitingModel: computed(() => requestingReview.value || hasProcessing.value),
+    receivedCount: finishedCount,
+});
+
+const lastAgentHint = computed(() => {
+    const messages = chat.value?.conversation?.messages ?? [];
+    const lastAssistant = [...messages].reverse().find((message) =>
+        message.role === 'asistente' && message.status === 'completado',
+    );
+    return lastAssistant?.avatar ?? chat.value?.review?.avatar ?? null;
+});
+watch(lastAgentHint, (hint) => avatar.applyAgentHint(hint));
 
 const statusLabel = (execution: Execution): string => {
     if (execution.stale) return 'Desactualizado';
@@ -318,6 +340,10 @@ onBeforeUnmount(() => {
 <template>
     <Card
         class="min-h-[30rem] gap-0 overflow-hidden py-0 xl:h-full xl:min-h-0"
+        @pointerenter="userEngaged = true"
+        @pointerleave="userEngaged = false"
+        @focusin="userEngaged = true"
+        @focusout="userEngaged = false"
     >
         <CardHeader class="shrink-0 py-4">
             <div class="flex items-center gap-2">
@@ -361,9 +387,12 @@ onBeforeUnmount(() => {
                             <CardHeader>
                                 <div class="flex items-start gap-3">
                                     <div
-                                        class="flex size-9 shrink-0 items-center justify-center rounded-full bg-muted"
+                                        class="flex size-12 shrink-0 items-center justify-center"
                                     >
-                                        <Bot aria-hidden="true" />
+                                        <RobotAvatar
+                                            class="size-full"
+                                            v-bind="avatar.state.value"
+                                        />
                                     </div>
                                     <div class="flex min-w-0 flex-col gap-1">
                                         <CardTitle class="text-base">

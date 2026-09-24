@@ -2,6 +2,7 @@ import { api } from "@/api/client";
 import type { TemplateAppearance } from "@/api/template";
 import type { TableColumnRole } from "@/lib/tableLayout";
 import type { DocumentNode } from "@/lib/templateDocument";
+import type { AgentAvatarHint } from "@/components/domain/ai/avatar/types";
 
 export type DocumentPresentation = {
   appearance: TemplateAppearance;
@@ -190,6 +191,8 @@ export type AiChatMessage = {
   error: string | null;
   created_at: string;
   citations: AiChatCitation[];
+  /** Pista opcional de expresión declarada por el agente. */
+  avatar?: AgentAvatarHint | null;
 };
 
 export type AiChat = {
@@ -218,6 +221,8 @@ export type AiChat = {
     progress: number;
     requested_at: string;
     completed_at: string | null;
+    /** Pista opcional de expresión declarada por el agente. */
+    avatar?: AgentAvatarHint | null;
   } | null;
   review_results: Array<{
     id: string;

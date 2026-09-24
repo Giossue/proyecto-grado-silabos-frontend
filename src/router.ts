@@ -57,8 +57,11 @@ export const router = createRouter({
     { path: "/ingresar", component: LoginPage, meta: { guest: true, aliasTarget: "/login" } },
     { path: "/recuperar-contrasena", component: PasswordRecoveryPage, meta: { guest: true } },
     { path: "/restablecer-contrasena", component: ResetPasswordPage, meta: { guest: true } },
-    { path: "/activar-cuenta", component: ActivateAccountPage, meta: { guest: true, shell: false } },
-    { path: "/api/v1/authentication/email-verification/:user/:hash", component: VerifyEmailPage, meta: { guest: true } },
+    // Los enlaces que llegan por correo se abren con o sin sesión: quien los recibe puede
+    // tener abierta otra cuenta (o la misma, pendiente) en el navegador. Cada página
+    // decide qué hacer con esa sesión; el guard no debe desviarlos.
+    { path: "/activar-cuenta", component: ActivateAccountPage, meta: { shell: false } },
+    { path: "/api/v1/authentication/email-verification/:user/:hash", component: VerifyEmailPage, meta: { shell: false } },
     { path: "/verificar-correo", component: VerifyEmailPage, meta: { requiresAuth: true, shell: false } },
     { path: "/verificar-dos-factores", component: TwoFactorChallengePage, meta: { guest: true } },
     { path: "/", redirect: "/login" },
