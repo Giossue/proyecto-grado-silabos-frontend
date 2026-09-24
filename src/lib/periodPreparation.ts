@@ -8,6 +8,31 @@ export type PreparationRow = {
   parallels: ParallelDraft[];
 };
 
+/** Jornada con la que nace cada paralelo nuevo: el coordinador solo corrige lo distinto. */
+export const DEFAULT_SHIFT = 'matutina';
+
+/** Todo paralelo necesita código y jornada, sin códigos repetidos en la misma materia. */
+export function preparationProblem(rows: PreparationRow[]): string | null {
+  for (const row of rows) {
+    if (row.parallels.length === 0) return `${row.name}: agregue al menos un paralelo.`;
+    if (row.parallels.some((parallel) => !parallel.code.trim())) return `${row.name}: escriba el código de cada paralelo.`;
+    if (row.parallels.some((parallel) => !parallel.shift)) return `${row.name}: elija la jornada de cada paralelo.`;
+    const codes = row.parallels.map((parallel) => parallel.code.trim().toUpperCase());
+    if (new Set(codes).size !== codes.length) return `${row.name}: hay paralelos con el mismo código.`;
+  }
+  return null;
+}
+
+/** Siguiente letra libre para un paralelo nuevo (A, B, C…). */
+export function nextParallelCode(parallels: ParallelDraft[]): string {
+  const used = new Set(parallels.map((parallel) => parallel.code.trim().toUpperCase()));
+  for (let index = 0; index < 26; index++) {
+    const code = String.fromCharCode(65 + index);
+    if (!used.has(code)) return code;
+  }
+  return '';
+}
+
 export function preparationRows(
   periodId: string,
   options: ScheduledSubjects['options'],
@@ -42,11 +67,11 @@ export function preparationRows(
             const teacherId = activeAssignments.get(parallel.id) ?? '';
             return {
               code: parallel.code,
-              shift: parallel.shift ?? '',
+              shift: parallel.shift || DEFAULT_SHIFT,
               teacherId: availableTeachers.has(teacherId) ? teacherId : '',
             };
           })
-          : [{ code: 'A', shift: '', teacherId: '' }],
+          : [{ code: 'A', shift: DEFAULT_SHIFT, teacherId: '' }],
       };
     }),
     sourcePeriodCode: previous && previousSchedules.size > 0 ? previous.code : null,

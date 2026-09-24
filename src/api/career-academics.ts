@@ -103,7 +103,7 @@ export type ScheduledSubjects = {
     period_planning_enabled: boolean;
     campus_name: string;
     modality_name: string;
-    parallels: Array<{ id: string; code: string; shift: string | null }>;
+    parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }>;
     active: boolean;
     editable: boolean;
   }>;
@@ -182,7 +182,7 @@ export const preparePeriod = (payload: {
   period_id: string;
   subjects: Array<{
     id: string;
-    parallels: Array<{ code: string; shift: string | null; teacher_user_id: string | null }>;
+    parallels: Array<{ code: string; shift: string; teacher_user_id: string | null }>;
   }>;
 }) =>
   api<{ message: string }>("/coordination/academic/prepare-period", {
@@ -261,11 +261,20 @@ export const deleteCurriculumSubject = (
 export const createParallels = (payload: {
   scheduled_subject_id: string;
   codes: string[];
-  shift: string | null;
+  shift: string;
 }) =>
   api<{ message: string }>("/coordination/academic/parallels", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+export const updateParallel = (id: string, payload: { code: string; shift: string }) =>
+  api<{ message: string }>(`/coordination/academic/parallels/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+export const deleteParallel = (id: string) =>
+  api<{ message: string }>(`/coordination/academic/parallels/${id}`, {
+    method: "DELETE",
   });
 export const deleteScheduledSubject = (id: string) =>
   api<{ message: string }>(`/coordination/academic/scheduled-subjects/${id}`, {

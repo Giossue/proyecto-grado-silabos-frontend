@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ScheduledSubjects, TeacherAssignments } from '@/api/career-academics';
-import { preparationRows } from './periodPreparation';
+import { nextParallelCode, preparationProblem, preparationRows } from './periodPreparation';
 
 const options: ScheduledSubjects['options'] = {
   periods: [
@@ -40,9 +40,9 @@ describe('preparationRows', () => {
     expect(result.rows).toEqual([
       { id: 'subject-a', code: 'SW-1', name: 'Materia A', parallels: [
         { code: 'A', shift: 'matutina', teacherId: 'teacher-1' },
-        { code: 'B', shift: '', teacherId: '' },
+        { code: 'B', shift: 'matutina', teacherId: '' },
       ] },
-      { id: 'subject-b', code: 'SW-2', name: 'Materia B', parallels: [{ code: 'A', shift: '', teacherId: '' }] },
+      { id: 'subject-b', code: 'SW-2', name: 'Materia B', parallels: [{ code: 'A', shift: 'matutina', teacherId: '' }] },
     ]);
   });
 
@@ -51,5 +51,29 @@ describe('preparationRows', () => {
       schedule('target-a', 'subject-a', 'target', [{ id: 'target-parallel', code: 'A', shift: null }]),
     ], [], []);
     expect(result.rows.map((row) => row.id)).toEqual(['subject-b']);
+  });
+
+  it('proposes paralelo A in the morning shift when there is no previous schedule', () => {
+    const result = preparationRows('target', options, [], [], []);
+    expect(result.rows.every((row) => row.parallels.length === 1 && row.parallels[0].code === 'A' && row.parallels[0].shift === 'matutina')).toBe(true);
+  });
+});
+
+describe('preparationProblem', () => {
+  const row = (parallels: Array<{ code: string; shift: string }>) => ({ id: 'x', code: 'SW-1', name: 'Materia A', parallels: parallels.map((item) => ({ ...item, teacherId: '' })) });
+
+  it('accepts rows where every parallel has code and shift', () => {
+    expect(preparationProblem([row([{ code: 'A', shift: 'matutina' }, { code: 'B', shift: 'nocturna' }])])).toBeNull();
+  });
+
+  it('explains simply what is missing', () => {
+    expect(preparationProblem([row([{ code: ' ', shift: 'matutina' }])])).toBe('Materia A: escriba el código de cada paralelo.');
+    expect(preparationProblem([row([{ code: 'A', shift: '' }])])).toBe('Materia A: elija la jornada de cada paralelo.');
+    expect(preparationProblem([row([{ code: 'a', shift: 'matutina' }, { code: 'A ', shift: 'matutina' }])])).toBe('Materia A: hay paralelos con el mismo código.');
+    expect(preparationProblem([row([])])).toBe('Materia A: agregue al menos un paralelo.');
+  });
+
+  it('suggests the next free letter', () => {
+    expect(nextParallelCode([{ code: 'A', shift: 'matutina', teacherId: '' }])).toBe('B');
   });
 });

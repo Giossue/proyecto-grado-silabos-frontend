@@ -11,7 +11,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { preparationRows, type PreparationRow } from '@/lib/periodPreparation';
+import { DEFAULT_SHIFT, nextParallelCode, preparationProblem, preparationRows, type PreparationRow } from '@/lib/periodPreparation';
 import { PARALLEL_SHIFTS } from '@/lib/parallelShifts';
 
 const props = defineProps<{
@@ -33,10 +33,8 @@ const formatter = new Intl.DateTimeFormat('es-EC', { day: '2-digit', month: '2-d
 const planningPeriods = computed(() => props.options.periods.filter((period) => period.planning_enabled));
 const parallelCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.length, 0));
 const assignedCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.filter((parallel) => parallel.teacherId).length, 0));
-const invalidRows = computed(() => rows.value.some((row) =>
-  row.parallels.length === 0 || row.parallels.some((parallel) => !parallel.code.trim())
-  || new Set(row.parallels.map((parallel) => parallel.code.trim())).size !== row.parallels.length,
-));
+const problem = computed(() => preparationProblem(rows.value));
+const invalidRows = computed(() => problem.value !== null);
 const dateRange = (period: ScheduledSubjects['options']['periods'][number]) =>
   `${period.code} · ${formatter.format(new Date(`${period.starts_on}T00:00:00Z`))} – ${formatter.format(new Date(`${period.ends_on}T00:00:00Z`))}`;
 
@@ -52,7 +50,7 @@ const reset = () => {
     : planningPeriods.value[0]?.id ?? '';
   updateProposal();
 };
-const addParallel = (row: PreparationRow) => row.parallels.push({ code: '', shift: '', teacherId: '' });
+const addParallel = (row: PreparationRow) => row.parallels.push({ code: nextParallelCode(row.parallels), shift: DEFAULT_SHIFT, teacherId: '' });
 const removeParallel = (row: PreparationRow, index: number) => row.parallels.length > 1 && row.parallels.splice(index, 1);
 const submit = async (close: () => void) => {
   if (props.disabled || !periodId.value || !rows.value.length || invalidRows.value) return;
@@ -66,7 +64,7 @@ const submit = async (close: () => void) => {
         id: row.id,
         parallels: row.parallels.map((parallel) => ({
           code: parallel.code.trim(),
-          shift: parallel.shift || null,
+          shift: parallel.shift,
           teacher_user_id: parallel.teacherId || null,
         })),
       })),
@@ -113,7 +111,7 @@ watch(periodId, () => { if (open.value) updateProposal(); });
             <p v-if="rows.length" class="text-sm text-muted-foreground">
               {{ rows.length }} materias pendientes · {{ parallelCount }} paralelos · {{ assignedCount }} docentes propuestos.
               <span v-if="sourcePeriodCode"> Basado en {{ sourcePeriodCode }}; puede cambiar cualquier propuesta.</span>
-              <span v-else> Sin programación anterior; complete los datos que correspondan.</span>
+              <span v-else> Cada materia viene con el paralelo A en jornada matutina; cambie solo lo que sea distinto.</span>
             </p>
             <Table>
               <TableHeader><TableRow><TableHead>Código</TableHead><TableHead>Materia</TableHead><TableHead>Paralelos, jornada y docente</TableHead></TableRow></TableHeader>
@@ -124,11 +122,10 @@ watch(periodId, () => { if (open.value) updateProposal(); });
                   <TableCell class="align-top">{{ row.name }}</TableCell>
                   <TableCell><div class="flex flex-col gap-2">
                     <div v-for="(parallel, index) in row.parallels" :key="index" class="flex flex-wrap items-center gap-2">
-                      <Input v-model="parallel.code" class="w-20" :aria-label="`Código del paralelo ${index + 1} de ${row.name}`" :placeholder="index ? 'Ej. B' : 'Ej. A'" />
-                      <Select :model-value="parallel.shift || 'sin_jornada'" @update:model-value="parallel.shift = String($event) === 'sin_jornada' ? '' : String($event)">
-                        <SelectTrigger class="w-40" :aria-label="`Jornada del paralelo ${index + 1} de ${row.name}`"><SelectValue placeholder="Sin jornada" /></SelectTrigger>
+                      <Input v-model="parallel.code" class="w-20" :aria-label="`Código del paralelo ${index + 1} de ${row.name}`" :aria-invalid="!parallel.code.trim()" :placeholder="index ? 'Ej. B' : 'Ej. A'" />
+                      <Select v-model="parallel.shift">
+                        <SelectTrigger class="w-40" :aria-label="`Jornada del paralelo ${index + 1} de ${row.name}`" :aria-invalid="!parallel.shift"><SelectValue placeholder="Elija jornada" /></SelectTrigger>
                         <SelectContent><SelectGroup>
-                          <SelectItem value="sin_jornada">Sin jornada</SelectItem>
                           <SelectItem v-for="option in PARALLEL_SHIFTS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
                         </SelectGroup></SelectContent>
                       </Select>
@@ -146,7 +143,7 @@ watch(periodId, () => { if (open.value) updateProposal(); });
                 </TableRow>
               </TableBody>
             </Table>
-            <Alert v-if="invalidRows" variant="destructive"><AlertDescription>Cada materia debe tener paralelos con códigos distintos.</AlertDescription></Alert>
+            <Alert v-if="problem" variant="destructive"><AlertDescription>{{ problem }}</AlertDescription></Alert>
             <p v-if="rows.length && assignedCount < parallelCount" class="text-sm text-muted-foreground">Los paralelos sin docente se guardarán pendientes de asignación.</p>
           </template>
           <FormSheetActions :close="close" :processing="saving" :disabled="!periodId || !rows.length || invalidRows" :icon="ListChecks" label="Confirmar preparación" />
