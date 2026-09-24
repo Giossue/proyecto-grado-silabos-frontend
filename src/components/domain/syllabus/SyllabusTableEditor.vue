@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
-import PlanningSummary from '@/components/domain/syllabus/PlanningSummary.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -174,11 +173,6 @@ const widths = computed(() => columnWidths(props.layout));
 
 <template>
     <div class="flex flex-col gap-4">
-        <PlanningSummary
-            :layout="layout"
-            :rows="rows.map((row) => row.data)"
-            :expectations="planningExpectations"
-        />
         <div
             v-for="unit in units"
             :key="unit.number"

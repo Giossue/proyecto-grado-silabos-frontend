@@ -20,6 +20,8 @@ const props = defineProps<{
     layout: TableLayout;
     rows: { id: string | null; data: TableRowData }[];
     planningExpectations?: PlanningExpectations | null;
+    /** El docente no ve el resumen: la validación al enviar ya le avisa. */
+    hideSummary?: boolean;
 }>();
 
 const header = computed(() => headerRows(props.layout));
@@ -35,6 +37,7 @@ const widths = computed(() => columnWidths(props.layout));
 <template>
     <div class="flex flex-col gap-4">
         <PlanningSummary
+            v-if="!hideSummary"
             :layout="layout"
             :rows="rows.map((row) => row.data)"
             :expectations="planningExpectations"
