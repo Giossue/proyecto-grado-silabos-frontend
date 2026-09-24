@@ -7,7 +7,7 @@ import { useOpenNotification } from '@/composables/useOpenNotification';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths } from '@/lib/routes';
@@ -20,6 +20,7 @@ const PREVIEW_LIMIT = 10;
 const route = useRoute();
 const { open: openDestination } = useOpenNotification();
 const open = ref(false);
+const anchor = ref<HTMLElement | null>(null);
 const status = ref<'all' | 'unread'>('all');
 const items = ref<Notification[]>([]);
 const unreadCount = ref(0);
@@ -98,34 +99,46 @@ watch(isNotificationsPage, (current, previous) => {
     if (previous && !current) void refreshCount();
 });
 onMounted(refreshCount);
+
+// Un clic sobre la campana ya alterna el panel; sin esto el panel lo tomaría como clic
+// exterior, se cerraría y el botón lo volvería a abrir.
+const ignoreBell = (event: Event): void => {
+    const target = event.target as Node | null;
+    if (target && anchor.value?.contains(target)) event.preventDefault();
+};
 </script>
 
 <template>
     <Popover v-model:open="open">
         <TooltipProvider :delay-duration="150">
-            <!-- Tooltip > TooltipTrigger > PopoverTrigger > Button: el Tooltip no renderiza elemento propio,
-                 así que un PopoverTrigger as-child por fuera pierde el clic y el popover no abre. -->
-            <Tooltip>
-                <TooltipTrigger as-child>
-                    <PopoverTrigger as-child>
-                        <Button
-                            type="button"
-                            :variant="open || isNotificationsPage ? 'secondary' : 'ghost'"
-                            size="icon-sm"
-                            class="relative"
-                            aria-label="Notificaciones"
-                        >
-                            <Bell data-icon="inline-start" aria-hidden="true" />
-                            <Badge v-if="unreadCount > 0" as="span" class="absolute -top-1 -right-1 min-w-5 px-1" aria-hidden="true">
-                                {{ unreadCount > 99 ? '99+' : unreadCount }}
-                            </Badge>
-                        </Button>
-                    </PopoverTrigger>
-                </TooltipTrigger>
-                <TooltipContent>Notificaciones</TooltipContent>
-            </Tooltip>
+            <!-- La campana no usa PopoverTrigger: anidar dos triggers as-child sobre el mismo botón
+                 impedía abrir el panel. El botón alterna `open` y PopoverAnchor posiciona el panel. -->
+            <PopoverAnchor as-child>
+                <span ref="anchor" class="inline-flex">
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <Button
+                                type="button"
+                                :variant="open || isNotificationsPage ? 'secondary' : 'ghost'"
+                                size="icon-sm"
+                                class="relative"
+                                aria-label="Notificaciones"
+                                aria-haspopup="dialog"
+                                :aria-expanded="open"
+                                @click="open = !open"
+                            >
+                                <Bell data-icon="inline-start" aria-hidden="true" />
+                                <Badge v-if="unreadCount > 0" as="span" class="absolute -top-1 -right-1 min-w-5 px-1" aria-hidden="true">
+                                    {{ unreadCount > 99 ? '99+' : unreadCount }}
+                                </Badge>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Notificaciones</TooltipContent>
+                    </Tooltip>
+                </span>
+            </PopoverAnchor>
         </TooltipProvider>
-        <PopoverContent align="end" class="flex w-[min(24rem,calc(100vw-1rem))] flex-col gap-3 p-0">
+        <PopoverContent align="end" @interact-outside="ignoreBell" class="flex w-[min(24rem,calc(100vw-1rem))] flex-col gap-3 p-0">
             <div class="flex items-center justify-between px-4 pt-4">
                 <h2 class="text-lg font-semibold">Notificaciones</h2>
                 <DropdownMenu>
