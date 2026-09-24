@@ -112,9 +112,18 @@ const blockingResults = computed(() => {
       return true;
     });
 });
-const missingParts = computed(() =>
-  new Set(blockingResults.value.map((result) => result.field_id).filter((id): id is string => id !== null)).size,
+/** Partes de la página con al menos un error, en el orden en que aparecen. */
+const partsWithErrors = computed(() => {
+  const failing = new Set(blockingResults.value.map((result) => result.field_id));
+  return [...partTargets.value.keys()].filter((id) => failing.has(id));
+});
+const missingParts = computed(() => partsWithErrors.value.length);
+/** Errores que no pertenecen a ninguna parte visible (p. ej. datos de Coordinación). */
+const orphanResults = computed(() =>
+  blockingResults.value.filter((result) => !result.field_id || !partTargets.value.has(result.field_id)),
 );
+const blockErrors = (fields: SyllabusField[]): string[] =>
+  [...new Set(fields.flatMap((field) => visibleValidationMessages(field.id)))];
 /** Parte del docente que aún no tiene contenido; el envío se habilita cuando no queda ninguna. */
 const isFieldEmpty = (field: SyllabusField): boolean => {
   if (field.type === "repetible") return field.rows.length === 0;
@@ -135,10 +144,9 @@ const submitHint = computed(() => {
   return "";
 });
 const validationTitle = computed(() => {
-  if (missingParts.value === 1) return "Falta 1 parte por completar";
-  if (missingParts.value > 1) return `Faltan ${missingParts.value} partes por completar`;
-  if (blockingResults.value.length > 0) return "Revise lo siguiente antes de enviar";
-  return "Todo listo para enviar";
+  if (missingParts.value === 1) return "Falta 1 parte por completar. Está marcada en rojo.";
+  if (missingParts.value > 1) return `Faltan ${missingParts.value} partes por completar. Están marcadas en rojo.`;
+  return "Revise lo siguiente antes de enviar.";
 });
 const goToPart = (fieldId: string | null): void => {
   const target = fieldId ? document.getElementById(partTargets.value.get(fieldId) ?? `field-${fieldId}`) : null;
@@ -541,7 +549,7 @@ onBeforeUnmount(() => {
       <Card v-if="canStart"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar las partes del sílabo.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>
 
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
-      <Alert v-if="validationRan || blockingResults.length" :variant="blockingResults.length ? 'destructive' : 'default'"><AlertTitle>{{ validationTitle }}</AlertTitle><AlertDescription class="flex flex-col gap-2"><span v-if="blockingResults.length">Pulse cada una para ir a ella.</span><span v-else>Las sugerencias de IA son opcionales.</span><ul v-if="blockingResults.length" class="validation-errors list-disc pl-5"><li v-for="result in blockingResults" :key="`${result.field_id}-${result.message}`"><button v-if="result.field_id" type="button" class="text-left underline underline-offset-2 hover:no-underline" @click="goToPart(result.field_id)">{{ result.message }}</button><span v-else>{{ result.message }}</span></li></ul></AlertDescription></Alert>
+      <div v-if="blockingResults.length" class="submit-feedback flex flex-col gap-1 rounded-md border border-destructive/40 px-3 py-2 text-sm text-destructive" role="status"><div class="flex flex-wrap items-center gap-2"><span>{{ validationTitle }}</span><Button v-if="partsWithErrors.length" type="button" size="sm" variant="outline" @click="goToPart(partsWithErrors[0])">Ir a la primera</Button></div><ul v-if="orphanResults.length" class="validation-errors list-disc pl-5"><li v-for="result in orphanResults" :key="`${result.field_id}-${result.message}`">{{ result.message }}</li></ul></div>
       <Alert v-if="aiMessage"><AlertDescription>{{ aiMessage }}</AlertDescription></Alert>
 
       <div v-if="syllabus.state !== 'sin_iniciar'" class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)]">
@@ -570,6 +578,7 @@ onBeforeUnmount(() => {
             <FieldSet v-for="block in section.blocks" :id="`block-${block.id}`" :key="block.id" class="scroll-mt-6 gap-5">
               <FieldLegend v-if="(block.title ?? '').trim() !== '' && section.blocks.length > 1 && !(block.fields.length === 1 && block.title === block.fields[0]?.label)" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
               <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :layout="block.table" :editable="canEdit && !conflict" presentation="form" :planning-expectations="syllabus.planning_expectations ?? null" @value="(key, value) => updateDesignValue(block.fields, key, value)" @rows="(key, rows) => updateDesignRows(block.fields, key, rows)" />
+              <FieldError v-if="usesTabularDocument(block)" class="block-errors" :errors="blockErrors(block.fields)" />
               <template v-if="!usesTabularDocument(block)">
                 <FieldGroup>
                 <template v-for="field in block.fields.filter((item) => !hiddenParts.has(item.key) && (block.content_type !== 'institutional' || (item.teacher_editable && !item.inherited)))" :key="field.id">

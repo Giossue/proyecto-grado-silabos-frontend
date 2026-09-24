@@ -372,14 +372,19 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2);
-    expect(wrapper.text()).toContain("Faltan 2 partes por completar");
+    // Aviso breve: cuenta partes (no mensajes); lo que no es de ninguna parte va en el aviso.
+    expect(wrapper.get(".submit-feedback").text()).toContain("Falta 1 parte por completar. Está marcada en rojo.");
+    expect(buttonNamed(wrapper, "Ir a la primera")).toBeDefined();
     expect(wrapper.get(".validation-errors").text()).toContain("Falta el dato institucional de créditos.");
+    expect(wrapper.get(".validation-errors").text()).not.toContain("Completa «Contenido».");
+    expect(wrapper.text()).not.toContain("Pulse cada una");
     expect(wrapper.get("#field-field-1").attributes("data-invalid")).toBe("true");
 
     // Al corregir la parte, su aviso rojo desaparece enseguida.
     await wrapper.get("#input-field-1").setValue("Contenido nuevo");
     expect(wrapper.get("#field-field-1").attributes("data-invalid")).toBe("false");
-    expect(wrapper.text()).toContain("Falta 1 parte por completar");
+    expect(wrapper.get(".submit-feedback").text()).toContain("Revise lo siguiente antes de enviar.");
+    expect(buttonNamed(wrapper, "Ir a la primera")).toBeUndefined();
     wrapper.unmount();
   });
 
