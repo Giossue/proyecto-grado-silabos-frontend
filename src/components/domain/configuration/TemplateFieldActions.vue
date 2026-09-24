@@ -79,7 +79,7 @@ const form = useForm({
     fingerprint: '',
 });
 
-const title = computed(() => props.field.title);
+const title = computed(() => props.field.title.trim() || 'sin nombre');
 const typeOptions = computed(() => choosableTypes(props.blockTypes));
 const typeCanChange = computed(
     () => !fixed.value && !props.field.document && !primary.value?.inherited,
@@ -116,15 +116,9 @@ const openEdit = (): void => {
 const save = (): void => {
     const value = primary.value;
 
-    if (form.label.trim() === '') {
-        form.errors = { label: 'Escriba un nombre.' };
-
-        return;
-    }
-
     if (!value && !props.field.document) {
         toast.error(
-            'No se pudo guardar: esta parte no tiene contenido. Recargue la página e intente de nuevo.',
+            'Escriba el texto fijo antes de guardar. Recargue la página e intente de nuevo.',
         );
 
         return;
@@ -271,8 +265,8 @@ defineExpose({
             <form class="flex flex-col gap-4" @submit.prevent="save">
                 <FieldGroup>
                     <Field :data-invalid="Boolean(form.errors.label)">
-                        <FieldLabel for="edit-template-field-label" required>
-                            Nombre
+                        <FieldLabel for="edit-template-field-label">
+                            Nombre (opcional)
                         </FieldLabel>
                         <Input
                             id="edit-template-field-label"
@@ -282,6 +276,9 @@ defineExpose({
                             :disabled="form.processing"
                             :aria-invalid="Boolean(form.errors.label)"
                         />
+                        <FieldDescription>
+                            Si lo deja vacío, la parte no lleva subtítulo.
+                        </FieldDescription>
                         <FieldError
                             v-if="form.errors.label"
                             :errors="[form.errors.label]"

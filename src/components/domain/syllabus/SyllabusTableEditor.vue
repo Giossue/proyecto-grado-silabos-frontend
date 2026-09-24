@@ -236,7 +236,7 @@ const widths = computed(() => columnWidths(props.layout));
             </div>
 
             <div class="overflow-x-auto">
-                <table class="w-full border-collapse text-sm">
+                <table class="w-full border-collapse text-sm hyphens-auto [&_td]:[overflow-wrap:anywhere] [&_th]:[overflow-wrap:anywhere]">
                     <colgroup v-if="widths">
                         <col
                             v-for="(width, index) in widths"

@@ -54,4 +54,16 @@ describe('ConvocationDeadlineCard', () => {
     await wrapper.get('button').trigger('click');
     expect(wrapper.emitted('tracking')).toHaveLength(1);
   });
+
+  it('muestra una barra con el avance del plazo entre inicio y entrega', () => {
+    const wrapper = mount(ConvocationDeadlineCard, {
+      props: {
+        deadline: { ...deadline, state: 'active', days_until_start: 0, days_until_due: 2, starts_at: '2026-09-24T00:00:00Z', due_at: '2026-09-28T00:00:00Z' },
+        role: 'docente',
+      },
+      global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
+    });
+
+    expect(wrapper.find('[aria-label="Avance del plazo: 50 %"]').exists()).toBe(true);
+  });
 });

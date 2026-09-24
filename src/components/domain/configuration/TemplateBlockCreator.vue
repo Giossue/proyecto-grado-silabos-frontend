@@ -99,14 +99,8 @@ const submit = (): void => {
     const errors: Record<string, string> = {};
 
     if (form.title.trim() === '') {
-        errors.title = 'Escriba un nombre.';
+        errors.title = 'Escriba el nombre de la sección.';
     }
-
-    form.fields.forEach((field, index) => {
-        if (field.label.trim() === '') {
-            errors[`fields.${index}.label`] = 'Escriba un nombre.';
-        }
-    });
 
     if (Object.keys(errors).length > 0) {
         form.errors = errors;
@@ -215,9 +209,8 @@ const updateOpen = (value: boolean): void => {
                             >
                                 <FieldLabel
                                     :for="`new-template-field-${index}`"
-                                    required
                                 >
-                                    Nombre
+                                    Nombre (opcional)
                                 </FieldLabel>
                                 <Input
                                     :id="`new-template-field-${index}`"

@@ -536,9 +536,11 @@ defineExpose({ getDocument });
     padding: 2px 4px;
     position: relative;
     vertical-align: top;
-    /* Las palabras no se parten dentro de una celda. */
-    overflow-wrap: normal;
+    /* Las celdas no desbordan: sílabas con guion y, si no alcanza, corte. */
+    overflow-wrap: anywhere;
     word-break: normal;
+    hyphens: auto;
+    -webkit-hyphens: auto;
 }
 .template-table-editor td *,
 .template-table-editor th * {

@@ -159,9 +159,10 @@ const draw = (
                 'data-page-fragment': '',
                 class: 'document-variable',
             },
-            // Un dato automático se muestra con su valor, nunca con su clave.
+            // Un dato automático se muestra con su valor, nunca con su clave. En la
+            // vista previa, si no tiene valor, la celda queda vacía como en la hoja.
             props.variables[String(attrs.id)] ||
-                (props.preview ? 'Dato automático' : 'Pendiente de Coordinación'),
+                (props.preview ? '' : 'Pendiente de Coordinación'),
         );
     }
 
@@ -302,11 +303,16 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
     background: var(--document-paper);
     overflow-wrap: break-word;
 }
-/* Las palabras no se parten dentro de una celda. */
+/*
+ * Las celdas no desbordan: primero se separa en sílabas con guion (español) y,
+ * solo si una palabra aún no cabe, se corta donde haga falta.
+ */
 .template-document-view :deep(td),
 .template-document-view :deep(th) {
-    overflow-wrap: normal;
+    overflow-wrap: anywhere;
     word-break: normal;
+    hyphens: auto;
+    -webkit-hyphens: auto;
 }
 .template-document-view[data-preview] {
     /* The page surfaces supply white; the space between them stays transparent. */

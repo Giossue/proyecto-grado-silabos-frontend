@@ -7,6 +7,7 @@ import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
 import {
     Field,
+    FieldDescription,
     FieldError,
     FieldGroup,
     FieldLabel,
@@ -89,12 +90,6 @@ const errorFor = (path: string): string | undefined =>
     (form.errors as Record<string, string>)[path];
 
 const submit = (): void => {
-    if (form.label.trim() === '') {
-        form.errors = { label: 'Escriba un nombre.' };
-
-        return;
-    }
-
     form.position = props.position + 1;
     form.post(TemplateController.storeField.url(props.templateId), {
         preserveScroll: true,
@@ -148,8 +143,8 @@ const updateOpen = (value: boolean): void => {
             <form class="flex flex-col gap-4" @submit.prevent="submit">
                 <FieldGroup>
                     <Field :data-invalid="Boolean(errorFor('label'))">
-                        <FieldLabel for="new-field-label" required>
-                            Nombre
+                        <FieldLabel for="new-field-label">
+                            Nombre (opcional)
                         </FieldLabel>
                         <Input
                             id="new-field-label"
@@ -159,6 +154,9 @@ const updateOpen = (value: boolean): void => {
                             :disabled="form.processing"
                             :aria-invalid="Boolean(errorFor('label'))"
                         />
+                        <FieldDescription>
+                            Si lo deja vacío, la parte no lleva subtítulo.
+                        </FieldDescription>
                         <FieldError
                             v-if="errorFor('label')"
                             :errors="[errorFor('label')]"

@@ -5,7 +5,7 @@ import { RouterLink } from 'vue-router';
 import type { DashboardDeadline } from '@/api/dashboard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { paths } from '@/lib/routes';
 
 const props = defineProps<{
@@ -27,6 +27,18 @@ const stateLabel = computed(() => ({
   overdue: 'Plazo vencido',
   closed: 'Cerrada',
 })[props.deadline.state]);
+
+/** Cuánto del plazo ya pasó, de 0 a 100. Se calcula con los días que envía el servidor. */
+const elapsed = computed(() => {
+  if (['overdue', 'closed'].includes(props.deadline.state)) return 100;
+  if (props.deadline.state === 'upcoming') return 0;
+  const start = Date.parse(props.deadline.starts_at);
+  const due = Date.parse(props.deadline.due_at);
+  const total = Math.round((due - start) / 86_400_000);
+  if (!Number.isFinite(total) || total <= 0) return 100;
+  const done = total - Math.max(0, props.deadline.days_until_due);
+  return Math.min(100, Math.max(0, Math.round((done / total) * 100)));
+});
 
 const summary = computed(() => {
   if (props.deadline.state === 'paused') return 'No se admiten envíos mientras la convocatoria permanezca en pausa.';
@@ -56,16 +68,18 @@ const summary = computed(() => {
     </CardHeader>
     <CardContent class="flex flex-col gap-5">
       <p class="text-lg font-semibold" aria-live="polite">{{ summary }}</p>
-      <div class="grid gap-3 sm:grid-cols-[auto_minmax(2rem,1fr)_auto] sm:items-center">
-        <div class="flex flex-col gap-1">
-          <span class="text-xs text-muted-foreground">Inicio</span>
-          <time class="text-sm font-medium" :datetime="deadline.starts_at">{{ formatDate(deadline.starts_at) }}</time>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-end justify-between gap-4">
+          <div class="flex flex-col gap-1">
+            <span class="text-xs text-muted-foreground">Inicio</span>
+            <time class="text-sm font-medium" :datetime="deadline.starts_at">{{ formatDate(deadline.starts_at) }}</time>
+          </div>
+          <div class="flex flex-col gap-1 text-right">
+            <span class="text-xs text-muted-foreground">Entrega</span>
+            <time class="text-sm font-medium" :datetime="deadline.due_at">{{ formatDate(deadline.due_at) }}</time>
+          </div>
         </div>
-        <Separator class="hidden sm:block" />
-        <div class="flex flex-col gap-1 sm:text-right">
-          <span class="text-xs text-muted-foreground">Entrega</span>
-          <time class="text-sm font-medium" :datetime="deadline.due_at">{{ formatDate(deadline.due_at) }}</time>
-        </div>
+        <Progress :model-value="elapsed" class="h-2" :aria-label="`Avance del plazo: ${elapsed} %`" />
       </div>
     </CardContent>
     <CardFooter v-if="role === 'docente' || deadline.convocation_id">

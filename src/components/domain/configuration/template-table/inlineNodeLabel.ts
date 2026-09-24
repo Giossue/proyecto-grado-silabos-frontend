@@ -10,7 +10,8 @@ export const inlineNodeLabel = (
 
         return (
             variableLabel?.(id) ??
-            (label !== '' && label !== id ? label : 'Dato automático')
+            // Sin nombre conocido la ficha queda vacía: nunca una clave ni un rótulo genérico.
+            (label !== '' && label !== id ? label : '')
         );
     }
 

@@ -123,7 +123,9 @@ const selectionLabel = computed(() => {
     }
 
     if (selectedField.value) {
-        return `${partTypeLabel(selectedField.value)} · ${selectedField.value.title}`;
+        const name = selectedField.value.title.trim() || 'sin nombre';
+
+        return `${partTypeLabel(selectedField.value)} · ${name}`;
     }
 
     if (selectedSection.value) {
@@ -167,6 +169,11 @@ const documentFor = (block: TemplateFieldContainer) =>
     block.document ?? defaultDocument(block, props.identificationDesign);
 const fieldsFor = (block: TemplateFieldContainer) =>
     templatePreviewFields(block.fields, block.table);
+/** Las partes sin nombre no llevan subtítulo ni número, igual que en el Word. */
+const partNumber = (section: TemplateSection, index: number): number =>
+    section.blocks
+        .slice(0, index + 1)
+        .filter((block) => block.title.trim() !== '').length;
 const hasTable = (block: TemplateFieldContainer): boolean =>
     nodesOfType(documentFor(block), 'table').length > 0;
 
@@ -635,7 +642,11 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
 
                 <TemplateTitleActions
                     v-if="!readonly"
-                    ref="titleActions"
+                    :ref="
+                        (instance) => {
+                            titleActions = (instance as TitleActions | null) ?? null;
+                        }
+                    "
                     :template-id="template.id"
                     :title="template.titleBlock.text"
                 />
@@ -769,7 +780,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                 selection.kind === 'field' &&
                                 selection.blockId === block.id,
                         }"
-                        :aria-label="`Parte ${block.title}`"
+                        :aria-label="`Parte ${block.title.trim() || 'sin nombre'}`"
                         :role="readonly || activeTable ? undefined : 'button'"
                         :aria-pressed="
                             readonly || activeTable
@@ -788,7 +799,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             data-page-keep-next
                             tabindex="-1"
                         >
-                            {{ sectionIndex + 1 }}.{{ fieldIndex + 1 }}
+                            {{ sectionIndex + 1 }}.{{ partNumber(section, fieldIndex) }}
                             {{ block.title }}
                         </h3>
 
