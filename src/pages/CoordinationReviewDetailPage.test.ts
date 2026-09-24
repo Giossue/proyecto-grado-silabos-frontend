@@ -8,8 +8,6 @@ import {
   reopenSyllabus,
   requestCorrection,
   resetSyllabus,
-  transferTeacher,
-  verifyObservation,
   type ReviewDetail,
 } from "@/api/reviews";
 import { getSession } from "@/api/session";
@@ -30,11 +28,9 @@ vi.mock("@/api/reviews", async (importOriginal) => ({
   reopenSyllabus: vi.fn(),
   requestCorrection: vi.fn(),
   resetSyllabus: vi.fn(),
-  transferTeacher: vi.fn(),
-  verifyObservation: vi.fn(),
 }));
 
-const detail = (withObservation = false): ReviewDetail => ({
+const detail = (withObservation = false, decisionsAllowed = true): ReviewDetail => ({
   syllabus: {
     id: "syllabus-1",
     subject: "Arquitectura de Software",
@@ -110,13 +106,12 @@ const detail = (withObservation = false): ReviewDetail => ({
     content: "Aclare el resultado esperado.",
     state: "abierta",
     requested: false,
-    can_verify: false,
     created_by: "Coordinación Demo",
     observado_en: "2026-09-16T10:05:00Z",
   }] : [],
   correction_request: null,
+  decisions_allowed: decisionsAllowed,
   reset: { allowed: false },
-  transfer: { allowed: false, current: [], candidates: [] },
   reopening: null,
 });
 
@@ -142,8 +137,6 @@ describe("CoordinationReviewDetailPage", () => {
       reopenSyllabus,
       requestCorrection,
       resetSyllabus,
-      transferTeacher,
-      verifyObservation,
     ]) vi.mocked(mock).mockReset();
     vi.mocked(getSession).mockResolvedValue({
       user: {
@@ -161,6 +154,34 @@ describe("CoordinationReviewDetailPage", () => {
       },
       available_roles: [],
     });
+  });
+
+  it("deja la revisión solo para consulta con la convocatoria cerrada", async () => {
+    vi.mocked(getReview).mockResolvedValue(detail(true, false));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Convocatoria cerrada");
+    expect(wrapper.find('[aria-label="Nueva observación"]').exists()).toBe(false);
+    expect(wrapper.find("#correction-form").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("Aprobar revisión");
+    wrapper.unmount();
+  });
+
+  it("aprueba sin verificar aparte las observaciones pendientes", async () => {
+    vi.mocked(getReview).mockResolvedValue(detail(true));
+    vi.mocked(approveReview).mockResolvedValue({ message: "Revisión aprobada." });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain("Marcar verificada");
+    const approve = wrapper.findAll("button").find((button) => button.text().includes("Aprobar revisión"))!;
+    expect(approve.attributes("disabled")).toBeUndefined();
+    await approve.trigger("click");
+    await flushPromises();
+
+    expect(approveReview).toHaveBeenCalledWith("revision-1");
+    wrapper.unmount();
   });
 
   it("registra una observación sobre el documento", async () => {

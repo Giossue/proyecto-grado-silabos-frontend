@@ -4,7 +4,6 @@ import { Handle, Position } from '@vue-flow/core';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { deleteCurriculumSubject } from '@/api/career-academics';
-import CurriculumVisualSubjectForm from '@/components/domain/academic/curriculum/CurriculumVisualSubjectForm.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,19 +28,12 @@ import type {
 const props = defineProps<{
     data: {
         career: CurriculumBuilderProps['career'];
-        modalityOptions: CurriculumBuilderProps['modalityOptions'];
         curriculum: CurriculumBuilderProps['curriculum'];
         fixedFields: FixedSubjectField[];
-        organizationUnits: string[];
-        subject: CurriculumBuilderSubject | null;
+        subject: CurriculumBuilderSubject;
         unitStyle: { backgroundColor: string; color: string };
-        cycle: number;
-        position: number;
         editable: boolean;
-        draggable: boolean;
-        editing: boolean;
         onEdit: () => void;
-        onCancel: () => void;
         onSaved: (message?: string) => void;
     };
     dragging?: boolean;
@@ -93,21 +85,7 @@ const totalFields = computed(
 </script>
 
 <template>
-    <CurriculumVisualSubjectForm
-        v-if="data.editing"
-        :career="data.career"
-        :modality-options="data.modalityOptions"
-        :curriculum="data.curriculum"
-        :fixed-fields="data.fixedFields"
-        :organization-units="data.organizationUnits"
-        :subject="data.subject"
-        :cycle="data.cycle"
-        :position="data.position"
-        @cancel="data.onCancel"
-        @saved="data.onSaved"
-    />
-
-    <template v-else-if="data.subject">
+    <template v-if="data.subject">
         <Handle
             type="target"
             :position="Position.Top"

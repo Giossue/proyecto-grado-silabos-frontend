@@ -16,7 +16,6 @@ vi.mock("@/api/convocations", () => ({
   getConvocation: vi.fn(),
   getConvocations: vi.fn(),
   createConvocation: vi.fn(),
-  openConvocation: vi.fn(),
   transitionConvocation: vi.fn(),
 }));
 

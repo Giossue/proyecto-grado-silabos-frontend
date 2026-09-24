@@ -2,7 +2,7 @@
 import { Eye, Lock, Pause, Play } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
-import { openConvocation, transitionConvocation, type ConvocationItem } from '@/api/convocations';
+import { transitionConvocation, type ConvocationItem } from '@/api/convocations';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,7 +13,7 @@ import { Textarea } from '@/components/ui/textarea';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
 import ConvocationTrackingSheet from '@/components/domain/syllabus/ConvocationTrackingSheet.vue';
 
-type Transition = 'abrir' | 'pausar' | 'reanudar';
+type Transition = 'pausar' | 'reanudar';
 const props = defineProps<{ convocation: ConvocationItem; availableSources: Array<{ id: string; name: string }> }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const pending = ref<Transition | null>(null);
@@ -25,9 +25,8 @@ const trackingOpen = ref(false);
 const openingOpen = ref(false);
 const reasonCharacters = computed(() => reason.value.trim().length);
 const dialogs: Record<Transition, { title: string; description: string; label: string }> = {
-  abrir: { title: 'Abrir la convocatoria', description: 'Se fijan la plantilla del proceso y las fuentes, se valida que cada paralelo tenga docente vigente y se generan todos los expedientes en una sola transacción. Si algo falta, no se crea ninguno.', label: 'Abrir y generar expedientes' },
-  pausar: { title: 'Pausar la convocatoria', description: 'Los docentes de su carrera no podrán editar ni enviar hasta que la reanude; sus borradores se conservan. La malla y las fuentes quedan editables. El motivo queda en auditoría.', label: 'Pausar' },
-  reanudar: { title: 'Reanudar la convocatoria', description: 'Los docentes vuelven a trabajar y la malla y las fuentes de la carrera quedan protegidas de nuevo.', label: 'Reanudar' },
+  pausar: { title: 'Pausar la convocatoria', description: 'Los docentes de su carrera no podrán editar ni enviar hasta que la reanude; sus borradores se conservan. Durante la pausa puede corregir la malla y las fuentes; la revisión de lo enviado continúa. El motivo queda en auditoría.', label: 'Pausar' },
+  reanudar: { title: 'Reanudar la convocatoria', description: 'Los docentes vuelven a trabajar, los paralelos creados durante la pausa reciben su sílabo y la malla y las fuentes de la carrera quedan protegidas de nuevo.', label: 'Reanudar' },
 };
 const select = (value: Transition): void => {
   pending.value = value;
@@ -42,9 +41,7 @@ const submit = async (): Promise<void> => {
   fieldErrors.value = {};
   try {
     if (!props.convocation.id) return;
-    const result = pending.value === 'abrir'
-      ? await openConvocation(props.convocation.id)
-      : await transitionConvocation(props.convocation.id, pending.value, pending.value === 'pausar' ? reason.value : undefined);
+    const result = await transitionConvocation(props.convocation.id, pending.value, pending.value === 'pausar' ? reason.value : undefined);
     pending.value = null;
     emit('changed', result.message);
   } catch (failure) {
@@ -61,7 +58,6 @@ const opened = (message: string): void => emit('changed', message);
   <TableActionsMenu :label="`Acciones para ${convocation.name}`">
     <DropdownMenuItem v-if="convocation.id === null" :disabled="convocation.process_state !== 'abierto'" @select="openingOpen = true"><Play aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.id !== null" @select="trackingOpen = true"><Eye aria-hidden="true" />Ver seguimiento</DropdownMenuItem>
-    <DropdownMenuItem v-if="convocation.state === 'preparacion'" :disabled="convocation.process_state !== 'abierto'" @select="select('abrir')"><Play aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'abierta'" @select="select('pausar')"><Pause aria-hidden="true" />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'pausada'" :disabled="convocation.process_state !== 'abierto'" @select="select('reanudar')"><Play aria-hidden="true" />Reanudar</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'cerrada'" disabled><Lock aria-hidden="true" />Convocatoria cerrada</DropdownMenuItem>

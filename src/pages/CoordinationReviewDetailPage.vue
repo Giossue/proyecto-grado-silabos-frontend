@@ -8,7 +8,6 @@ import {
   getReview,
   reopenSyllabus,
   requestCorrection,
-  verifyObservation,
   type ReviewDetail,
   type SnapshotField,
 } from '@/api/reviews';
@@ -20,7 +19,6 @@ import IdentificationCard from '@/components/domain/syllabus/IdentificationCard.
 import ReviewObservationSheet from '@/components/domain/syllabus/ReviewObservationSheet.vue';
 import SyllabusResetDialog from '@/components/domain/syllabus/SyllabusResetDialog.vue';
 import SyllabusTableView from '@/components/domain/syllabus/SyllabusTableView.vue';
-import TeacherTransferSheet from '@/components/domain/syllabus/TeacherTransferSheet.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -86,7 +84,7 @@ const openCurrentObservations = computed(() => data.value?.observations.filter(
   (observation) => observation.revision_number === data.value?.revision.number && observation.state === 'abierta',
 ) ?? []);
 const unresolvedCount = computed(() => data.value?.observations.filter((observation) => observation.state !== 'verificada').length ?? 0);
-const canReviewCurrent = computed(() => Boolean(data.value?.revision.is_current && data.value?.syllabus.state === 'en_revision'));
+const canReviewCurrent = computed(() => Boolean(data.value?.decisions_allowed && data.value?.revision.is_current && data.value?.syllabus.state === 'en_revision'));
 const planningExpectations = computed<PlanningExpectations>(() => ({
   teaching_weeks: data.value?.revision.snapshot.academic_context?.scheduled_subject?.teaching_weeks
     ?? data.value?.revision.snapshot.academic_context?.offering?.teaching_weeks ?? null,
@@ -133,10 +131,10 @@ onMounted(load);
     </template>
     <template #actions>
       <SyllabusResetDialog v-if="data.reset.allowed && data.revision.is_current" :syllabus-id="data.syllabus.id" :subject="data.syllabus.subject" @saved="changed" />
-      <TeacherTransferSheet v-if="data.transfer.allowed && data.transfer.current.length > 0" :syllabus-id="data.syllabus.id" :state="data.syllabus.state" :current="data.transfer.current" :candidates="data.transfer.candidates" @saved="changed" />
     </template>
 
     <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo completar la operación</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
+    <Alert v-if="!data.decisions_allowed"><LockKeyhole aria-hidden="true" /><AlertTitle>Convocatoria cerrada</AlertTitle><AlertDescription>La revisión queda solo para consulta: ya no se pueden registrar observaciones, solicitar correcciones, aprobar, reabrir ni reiniciar.</AlertDescription></Alert>
     <Alert v-if="!data.revision.is_current"><LockKeyhole aria-hidden="true" /><AlertTitle>Está consultando una revisión histórica</AlertTitle><AlertDescription>Esta revisión se conserva tal como fue enviada. Las acciones del flujo solo están disponibles en la revisión vigente.</AlertDescription></Alert>
     <Alert v-if="data.correction_request"><Undo2 aria-hidden="true" /><AlertTitle>Corrección solicitada en esta revisión</AlertTitle><AlertDescription>{{ data.correction_request.justification }}</AlertDescription></Alert>
     <Alert v-if="data.reopening"><RotateCcw aria-hidden="true" /><AlertTitle>El expediente tuvo una reapertura</AlertTitle><AlertDescription>{{ data.reopening.cause }} · {{ data.reopening.reopened_by }} · {{ new Date(data.reopening.reopened_at).toLocaleString('es-EC') }}. La aprobación anterior se conserva.</AlertDescription></Alert>
@@ -172,8 +170,6 @@ onMounted(load);
               <div class="flex flex-wrap items-center gap-2"><Badge variant="outline">Rev. {{ observation.revision_number }}</Badge><Badge :variant="observation.state === 'verificada' ? 'secondary' : 'destructive'">{{ observationState(observation.state) }}</Badge><Badge v-if="observation.requested" variant="outline">Solicitada</Badge></div>
               <p class="text-sm whitespace-pre-wrap">{{ observation.content }}</p>
               <p class="text-xs text-muted-foreground">{{ observation.created_by }} · {{ new Date(observation.observado_en).toLocaleString('es-EC') }}</p>
-              
-              <Button v-if="observation.can_verify" size="sm" variant="outline" :disabled="processing" @click="run(() => verifyObservation(observation.id))"><Spinner v-if="processing" />Marcar verificada</Button>
             </article>
             <p v-if="data.observations.length === 0" class="text-sm text-muted-foreground">Aún no hay observaciones.</p>
           </CardContent>
@@ -190,9 +186,9 @@ onMounted(load);
           </form></CardContent>
         </Card>
 
-        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>La aprobación quedará vinculada exclusivamente a la revisión {{ data.revision.number }}.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="[...(errors.observations ?? []), ...(errors.revision ?? [])]" /><Button :disabled="processing || unresolvedCount > 0" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button><p v-if="unresolvedCount > 0" class="text-sm text-destructive">Verifique todas las observaciones antes de aprobar.</p></CardContent></Card>
+        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>La aprobación quedará vinculada exclusivamente a la revisión {{ data.revision.number }}.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button><p v-if="unresolvedCount > 0" class="text-sm text-muted-foreground">Al aprobar, las {{ unresolvedCount }} observación(es) pendiente(s) se darán por resueltas.</p></CardContent></Card>
 
-        <Card v-if="data.revision.is_current && data.syllabus.state === 'aprobado'"><CardHeader><CardTitle>Reabrir aprobado</CardTitle><CardDescription>Conserva esta aprobación y crea una nueva línea de corrección para el docente.</CardDescription></CardHeader><CardContent><form class="flex flex-col gap-4" @submit.prevent="run(() => reopenSyllabus(data!.syllabus.id, reopeningCause))"><Field><FieldLabel for="reopening-cause" required>Causa de reapertura</FieldLabel><Textarea id="reopening-cause" v-model="reopeningCause" rows="4" required /><FieldError :errors="errors.cause" /></Field><Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><RotateCcw v-else aria-hidden="true" />Reabrir conservando la aprobación</Button></form></CardContent></Card>
+        <Card v-if="data.decisions_allowed && data.revision.is_current && data.syllabus.state === 'aprobado'"><CardHeader><CardTitle>Reabrir aprobado</CardTitle><CardDescription>Conserva esta aprobación y crea una nueva línea de corrección para el docente.</CardDescription></CardHeader><CardContent><form class="flex flex-col gap-4" @submit.prevent="run(() => reopenSyllabus(data!.syllabus.id, reopeningCause))"><Field><FieldLabel for="reopening-cause" required>Causa de reapertura</FieldLabel><Textarea id="reopening-cause" v-model="reopeningCause" rows="4" required /><FieldError :errors="errors.cause" /></Field><Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><RotateCcw v-else aria-hidden="true" />Reabrir conservando la aprobación</Button></form></CardContent></Card>
 
         <Card><CardHeader><CardTitle>Historial de revisiones</CardTitle><CardDescription>Consulte o compare revisiones enviadas.</CardDescription></CardHeader><CardContent><ol class="flex flex-col gap-3"><li v-for="(item, index) in data.history" :key="item.id" class="rounded-md border p-3 text-sm"><div class="flex items-center justify-between gap-3"><Button as-child variant="link" class="h-auto p-0"><RouterLink :to="paths.coordination.review(item.id)">Revisión {{ item.number }}</RouterLink></Button><Badge v-if="item.approved_at" variant="secondary">Aprobada</Badge></div><div class="text-muted-foreground">{{ item.submitted_by }} · {{ new Date(item.submitted_at).toLocaleDateString('es-EC') }}</div><div class="mt-2 flex flex-wrap gap-2"><Button v-if="item.approved_at" as-child size="sm" variant="outline"><RouterLink :to="paths.documents(item.id)">Documentos</RouterLink></Button><Button v-if="index > 0" as-child size="sm" variant="outline"><RouterLink :to="paths.coordination.comparison(data.history[index - 1]!.id, item.id)">Comparar con la anterior</RouterLink></Button></div></li></ol></CardContent></Card>
       </aside>

@@ -10,5 +10,5 @@ it('abre el panel al hacer clic en la campana pese al tooltip', async () => {
   
   await b.trigger('pointerdown'); await b.trigger('mousedown'); await b.trigger('click'); await flushPromises();
 
-  expect((w.vm as any).open).toBe(true);
+  expect((w.vm as unknown as { open: boolean }).open).toBe(true);
 });

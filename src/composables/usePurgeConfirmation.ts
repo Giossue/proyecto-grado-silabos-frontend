@@ -4,6 +4,7 @@ const open = ref(false);
 const message = ref('');
 const count = ref(0);
 let retry: (() => Promise<void> | void) | null = null;
+let onCancel: (() => void) | null = null;
 
 /**
  * Los editores canónicos registraban la URL en el ciclo de Inertia. En la SPA el
@@ -23,7 +24,11 @@ export function requestPurgeConfirmation(
     purgeMessage: string,
     purgeCount: number,
     confirmedRequest: () => Promise<void> | void,
+    cancelled?: () => void,
 ): void {
+    // Una confirmación pendiente que se sustituye equivale a cancelarla.
+    onCancel?.();
+    onCancel = cancelled ?? null;
     message.value = purgeMessage;
     count.value = purgeCount;
     retry = confirmedRequest;
@@ -35,12 +40,16 @@ export function usePurgeConfirmation() {
         const operation = retry;
         open.value = false;
         retry = null;
+        onCancel = null;
         await operation?.();
     };
 
     const cancel = (): void => {
+        const cancelled = onCancel;
         open.value = false;
         retry = null;
+        onCancel = null;
+        cancelled?.();
     };
 
     return {

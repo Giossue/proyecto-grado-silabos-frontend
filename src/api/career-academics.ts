@@ -1,4 +1,35 @@
-import { api } from "@/api/client";
+import { api, ApiError } from "@/api/client";
+import { requestPurgeConfirmation } from "@/composables/usePurgeConfirmation";
+
+/**
+ * Los cambios estructurales de la malla durante una convocatoria pausada reemplazan
+ * sílabos en curso. El servidor lo avisa con `purge_required`; aquí se pide la
+ * confirmación con el diálogo común y se repite la misma petición con `confirm_purge`.
+ * Cancelar rechaza la promesa sin guardar nada.
+ */
+export const PURGE_CANCELLED_MESSAGE = "Cambio cancelado. No se guardó nada.";
+
+export function withPurgeConfirmation<T>(
+  send: (confirmPurge: boolean) => Promise<T>,
+): Promise<T> {
+  return send(false).catch((reason: unknown) => {
+    const purgeMessage =
+      reason instanceof ApiError ? reason.errors.purge_required?.[0] : undefined;
+    if (!(reason instanceof ApiError) || !purgeMessage) throw reason;
+
+    return new Promise<T>((resolve, reject) => {
+      requestPurgeConfirmation(
+        purgeMessage,
+        Number(reason.errors.purge_count?.[0] ?? 0),
+        () => send(true).then(resolve, reject),
+        () => reject(new ApiError(PURGE_CANCELLED_MESSAGE, 409)),
+      );
+    });
+  });
+}
+
+const jsonBody = (payload: object, confirmPurge: boolean): string =>
+  JSON.stringify(confirmPurge ? { ...payload, confirm_purge: true } : payload);
 
 export type Curriculum = {
   career: {
@@ -138,10 +169,12 @@ export const createCareerRecord = (
   entity: string,
   payload: Record<string, unknown>,
 ) =>
-  api<{ message: string }>(`/coordination/academic/${entity}`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  withPurgeConfirmation((confirm) =>
+    api<{ message: string }>(`/coordination/academic/${entity}`, {
+      method: "POST",
+      body: jsonBody(payload, confirm),
+    }),
+  );
 export const preparePeriod = (payload: {
   period_id: string;
   subjects: Array<{
@@ -153,15 +186,6 @@ export const preparePeriod = (payload: {
     method: "POST",
     body: JSON.stringify(payload),
   });
-export const setCareerRecordStatus = (
-  entity: string,
-  id: string,
-  active: boolean,
-) =>
-  api<{ message: string }>(`/coordination/academic/${entity}/${id}/status`, {
-    method: "PATCH",
-    body: JSON.stringify({ active }),
-  });
 export const deleteCareerRecord = (entity: string, id: string) =>
   api<{ message: string }>(`/coordination/academic/${entity}/${id}`, {
     method: "DELETE",
@@ -170,27 +194,33 @@ export const updateCurriculumConfiguration = (
   careerId: string,
   payload: { cycle_count: number },
 ) =>
-  api<{ message: string }>(
-    `/coordination/academic/curriculum/${careerId}/configuration`,
-    { method: "PATCH", body: JSON.stringify(payload) },
+  withPurgeConfirmation((confirm) =>
+    api<{ message: string }>(
+      `/coordination/academic/curriculum/${careerId}/configuration`,
+      { method: "PATCH", body: jsonBody(payload, confirm) },
+    ),
   );
 export const updateSubjectLayout = (
   curriculumId: string,
   payload: { subject_id: string; cycle: number; position: number },
 ) =>
-  api<{ message: string }>(
-    `/coordination/academic/curriculum/${curriculumId}/subject-layout`,
-    { method: "PATCH", body: JSON.stringify(payload) },
+  withPurgeConfirmation((confirm) =>
+    api<{ message: string }>(
+      `/coordination/academic/curriculum/${curriculumId}/subject-layout`,
+      { method: "PATCH", body: jsonBody(payload, confirm) },
+    ),
   );
 export const updateCareerRecord = (
   entity: string,
   id: string,
   payload: Record<string, unknown>,
 ) =>
-  api<{ message: string }>(`/coordination/academic/${entity}/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(payload),
-  });
+  withPurgeConfirmation((confirm) =>
+    api<{ message: string }>(`/coordination/academic/${entity}/${id}`, {
+      method: "PATCH",
+      body: jsonBody(payload, confirm),
+    }),
+  );
 export const createSubjectRequirement = (
   curriculumId: string,
   payload: {
@@ -199,17 +229,23 @@ export const createSubjectRequirement = (
     type: "prerrequisito" | "correquisito";
   },
 ) =>
-  api<{ message: string }>(
-    `/coordination/academic/curriculum/${curriculumId}/requirements`,
-    { method: "POST", body: JSON.stringify(payload) },
+  withPurgeConfirmation((confirm) =>
+    api<{ message: string }>(
+      `/coordination/academic/curriculum/${curriculumId}/requirements`,
+      { method: "POST", body: jsonBody(payload, confirm) },
+    ),
   );
 export const deleteSubjectRequirement = (
   curriculumId: string,
   requirementId: string,
 ) =>
-  api<{ message: string }>(
-    `/coordination/academic/curriculum/${curriculumId}/requirements/${requirementId}`,
-    { method: "DELETE" },
+  withPurgeConfirmation((confirm) =>
+    api<{ message: string }>(
+      `/coordination/academic/curriculum/${curriculumId}/requirements/${requirementId}`,
+      confirm
+        ? { method: "DELETE", body: jsonBody({}, true) }
+        : { method: "DELETE" },
+    ),
   );
 export const deleteCurriculumSubject = (
   curriculumId: string,
@@ -244,9 +280,11 @@ export const resendCareerTeacherInvitation = (userId: string) =>
   api<{ message: string }>(`/coordination/academic/teachers/${userId}/resend-activation`, {
     method: "POST",
   });
+/** Único cambio de docente: todos sus paralelos vigentes o solo `teacher_assignment_id`. */
 export const relieveCareerTeacher = (payload: {
   outgoing_user_id: string;
   incoming_user_id: string;
+  teacher_assignment_id?: string;
   idempotency_key: string;
 }) =>
   api<{ message: string }>("/coordination/academic/relieve-teacher", {

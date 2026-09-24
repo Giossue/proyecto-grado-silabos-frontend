@@ -49,9 +49,6 @@ export const createConvocation = (processId: string, sourceIds: string[]) =>
 
 export const getConvocation = (convocationId: string) => api<ConvocationDetail>(`/coordination/convocations/${convocationId}`);
 
-export const openConvocation = (convocationId: string) =>
-  api<{ message: string }>(`/coordination/convocations/${convocationId}/open`, { method: 'POST' });
-
 export const transitionConvocation = (convocationId: string, transition: 'pausar' | 'reanudar', reason?: string) =>
   api<{ message: string }>(`/coordination/convocations/${convocationId}/${transition}`, {
     method: 'POST', body: JSON.stringify(reason ? { reason } : {}),

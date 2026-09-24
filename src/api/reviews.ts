@@ -38,7 +38,6 @@ export type ReviewObservation = {
   content: string;
   state: string;
   requested: boolean;
-  can_verify: boolean;
   created_by: string;
   observado_en: string;
 };
@@ -108,12 +107,9 @@ export type ReviewDetail = {
   }>;
   observations: ReviewObservation[];
   correction_request: { justification: string; requested_at: string } | null;
+  /** Falso con la convocatoria cerrada: la revisión queda solo para consulta. */
+  decisions_allowed: boolean;
   reset: { allowed: boolean };
-  transfer: {
-    allowed: boolean;
-    current: Array<{ id: string; nombre: string }>;
-    candidates: Array<{ id: string; nombre: string }>;
-  };
   reopening: { cause: string; reopened_at: string; reopened_by: string } | null;
 };
 export type ReviewComparison = {
@@ -166,11 +162,6 @@ export const requestCorrection = (
     `/coordination/reviews/${revisionId}/request-correction`,
     { method: "POST", body: JSON.stringify(payload) },
   );
-export const verifyObservation = (observationId: string) =>
-  api<{ message: string }>(
-    `/coordination/observations/${observationId}/verify`,
-    { method: "POST" },
-  );
 export const approveReview = (revisionId: string) =>
   api<{ message: string }>(`/coordination/reviews/${revisionId}/approve`, {
     method: "POST",
@@ -186,19 +177,3 @@ export const resetSyllabus = (syllabusId: string, reason: string) =>
     method: "POST",
     body: JSON.stringify({ reason }),
   });
-export const transferTeacher = (
-  syllabusId: string,
-  outgoing_user_id: string,
-  incoming_user_id: string,
-) =>
-  api<{ message: string }>(
-    `/coordination/syllabi/${syllabusId}/teacher-transfer`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        outgoing_user_id,
-        incoming_user_id,
-        idempotency_key: crypto.randomUUID(),
-      }),
-    },
-  );

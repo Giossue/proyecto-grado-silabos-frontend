@@ -102,6 +102,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
     resendingId.value = null;
   }
 };
+const parallelLabel = (item: TeacherRow): string => [item.subject_name, item.parallel_code && `paralelo ${item.parallel_code}`, item.period_name].filter(Boolean).join(" · ");
 const parallelCount = (teacherId: string) => props.data.teacherAssignments.filter((item) => item.user_id === teacherId && item.active && item.period_planning_enabled).length;
 </script>
 
@@ -119,7 +120,7 @@ const parallelCount = (teacherId: string) => props.data.teacherAssignments.filte
           <TableCell>{{ item.subject_name ?? "—" }}</TableCell><TableCell>{{ item.period_name ?? "—" }}</TableCell><TableCell>{{ item.parallel_code ?? "—" }}</TableCell>
           <TableCell><Tooltip><TooltipTrigger as-child><span>{{ statusOf(item).label }}</span></TooltipTrigger><TooltipContent class="max-w-xs">{{ statusOf(item).hint }}</TooltipContent></Tooltip></TableCell>
           <TableCell class="text-right">
-            <CareerAcademicActions v-if="item.parallel_id" entity="asignacion_docente" :record="item" :record-label="`la asignación de ${item.user_name}`" :editable="item.editable" :active="item.active" :allow-locked-actions="Boolean(data.career.lock_reason) && item.active && item.period_planning_enabled" :delete-supported="!data.career.lock_reason && item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? (item.period_status === 'finalizado' ? 'Período finalizado · solo lectura' : 'Período inactivo · solo lectura') : data.career.lock_reason ?? undefined" :options="data.options" @changed="emit('changed', $event)">
+            <CareerAcademicActions v-if="item.parallel_id" entity="asignacion_docente" :record="item" :record-label="`la asignación de ${item.user_name}`" :editable="item.editable" :active="item.active" :allow-locked-actions="Boolean(data.career.lock_reason) && ((item.active && item.period_planning_enabled) || item.pending_activation)" :delete-supported="!data.career.lock_reason && item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? (item.period_status === 'finalizado' ? 'Período finalizado · solo lectura' : 'Período inactivo · solo lectura') : data.career.lock_reason ?? undefined" @changed="emit('changed', $event)">
               <DropdownMenuItem v-if="item.pending_activation" :disabled="resendingId !== null" @select="resendInvitation(item.user_id)"><Spinner v-if="resendingId === item.user_id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
               <DropdownMenuItem v-if="item.active && item.period_planning_enabled" @select="openRelief(item)"><UserRoundCog data-icon="inline-start" aria-hidden="true" />Relevar docente</DropdownMenuItem>
             </CareerAcademicActions>
@@ -131,5 +132,5 @@ const parallelCount = (teacherId: string) => props.data.teacherAssignments.filte
     <TablePagination :meta="meta" mode="client" label="Paginación de docentes y asignaciones" @update:page="setPage" />
   </CardContent></Card>
 
-  <TeacherReliefSheet v-if="selected" v-model:open="reliefOpen" :outgoing-teacher="{ id: selected.user_id, name: selected.user_name, parallelCount: parallelCount(selected.user_id) }" :options="data.options" @saved="emit('changed', $event)" />
+  <TeacherReliefSheet v-if="selected" v-model:open="reliefOpen" :outgoing-teacher="{ id: selected.user_id, name: selected.user_name, parallelCount: parallelCount(selected.user_id) }" :assignment="selected.parallel_id ? { id: selected.id, label: parallelLabel(selected) } : undefined" :options="data.options" @saved="emit('changed', $event)" />
 </template>

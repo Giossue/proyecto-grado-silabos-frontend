@@ -30,6 +30,7 @@ import CurriculumLegend from '@/components/domain/academic/curriculum/Curriculum
 import CurriculumLegendPanel from '@/components/domain/academic/curriculum/CurriculumLegendPanel.vue';
 import CurriculumRequirementEdge from '@/components/domain/academic/curriculum/CurriculumRequirementEdge.vue';
 import CurriculumSubjectNode from '@/components/domain/academic/curriculum/CurriculumSubjectNode.vue';
+import CurriculumVisualSubjectForm from '@/components/domain/academic/curriculum/CurriculumVisualSubjectForm.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -188,9 +189,10 @@ const addSubjectOffset = Math.round(
 const laneStart = 145;
 // Tarjeta de 274 px (un 7 % más ancha que las 256 originales) más 34 px de aire.
 const subjectStep = 308;
-const editorStep = 610;
 const editingSubjectId = ref<string | null>(null);
 const draftCycle = ref<number | null>(null);
+const dragPreview = ref<{ subjectId: string; cycle: number; index: number } | null>(null);
+const savingLayout = ref(false);
 const hasOpenEditor = computed(
     () => editingSubjectId.value !== null || draftCycle.value !== null,
 );
@@ -207,26 +209,25 @@ const subjectsForCycle = (cycle: number): CurriculumBuilderSubject[] =>
                 : left.position - right.position,
         );
 
+const previewSubjectsForCycle = (cycle: number): CurriculumBuilderSubject[] => {
+    const subjects = subjectsForCycle(cycle);
+    const preview = dragPreview.value;
+    if (!preview || preview.cycle !== cycle) return subjects;
+    const sourceIndex = subjects.findIndex((subject) => subject.id === preview.subjectId);
+    if (sourceIndex === -1) return subjects;
+    const [moved] = subjects.splice(sourceIndex, 1);
+    if (moved) subjects.splice(preview.index, 0, moved);
+    return subjects;
+};
+
 const laneWidth = computed(() => {
     const widestCycle = Array.from(
         { length: props.curriculum.cycle_count },
         (_, index) => {
             const cycle = index + 1;
-            const subjectsWidth = subjectsForCycle(cycle).reduce(
-                (width, subject) =>
-                    width +
-                    (editingSubjectId.value === subject.id
-                        ? editorStep
-                        : subjectStep),
-                laneStart,
-            );
-            const creationWidth = editable.value
-                ? draftCycle.value === cycle
-                    ? editorStep
-                    : subjectStep
-                : 0;
-
-            return subjectsWidth + creationWidth;
+            return laneStart +
+                subjectsForCycle(cycle).length * subjectStep +
+                (editable.value ? subjectStep : 0);
         },
     ).reduce((widest, width) => Math.max(widest, width), 0);
 
@@ -255,6 +256,14 @@ const navigationExtent = computed<CoordinateExtent>(() => {
 const subjectById = computed(
     () => new Map(props.subjects.map((subject) => [subject.id, subject])),
 );
+const editorSubject = computed(() =>
+    editingSubjectId.value ? subjectById.value.get(editingSubjectId.value) ?? null : null,
+);
+const editorCycle = computed(() => editorSubject.value?.cycle ?? draftCycle.value ?? 1);
+const editorPosition = computed(() =>
+    editorSubject.value?.position ??
+    Math.max(-1, ...subjectsForCycle(editorCycle.value).map((subject) => subject.position)) + 1,
+);
 
 const beginSubjectEdit = (subjectId: string): void => {
     if (!editable.value) return;
@@ -277,7 +286,7 @@ const buildNodes = (): Node[] => {
     const nodes: Node[] = [];
 
     for (let cycle = 1; cycle <= props.curriculum.cycle_count; cycle += 1) {
-        const cycleSubjects = subjectsForCycle(cycle);
+        const cycleSubjects = previewSubjectsForCycle(cycle);
         nodes.push({
             id: `cycle-${cycle}`,
             type: 'cycle',
@@ -306,104 +315,57 @@ const buildNodes = (): Node[] => {
 
         let x = laneStart;
         cycleSubjects.forEach((subject) => {
-            const editing = editingSubjectId.value === subject.id;
+            const cycleY = (cycle - 1) * laneHeight + subjectOffset.value;
             nodes.push({
                 id: subject.id,
                 type: 'subject',
                 position: {
                     x,
-                    y: (cycle - 1) * laneHeight + subjectOffset.value,
+                    y: cycleY,
                 },
                 data: {
                     career: props.career,
-                    modalityOptions: props.modalityOptions,
                     curriculum: props.curriculum,
                     fixedFields: props.fixedFields,
-                    organizationUnits: props.organizationUnits,
                     subject,
                     unitStyle: unitStyleFor(subject.organization_unit),
-                    cycle,
-                    position: subject.position,
                     editable: editable.value,
-                    draggable:
-                        editable.value && !hasOpenEditor.value,
-                    editing,
                     onEdit: () => beginSubjectEdit(subject.id),
-                    onCancel: closeEditor,
                     onSaved: (message?: string) => {
-                        closeEditor();
                         if (message) emit('changed', message);
                     },
                 },
-                draggable: editable.value && !hasOpenEditor.value,
+                draggable: editable.value && !hasOpenEditor.value && !savingLayout.value,
+                extent: [
+                    [laneStart, cycleY],
+                    [laneStart + (cycleSubjects.length - 1) * subjectStep, cycleY],
+                ],
                 connectable: editable.value && !hasOpenEditor.value,
                 selectable: false,
-                // El formulario en línea es más alto que la tarjeta e invade la fila de
-                // abajo: el nodo en edición se pinta por encima de todos los demás.
-                zIndex: editing ? 1000 : 0,
+                zIndex: dragPreview.value?.subjectId === subject.id ? 10 : 0,
             });
-            x += editing ? editorStep : subjectStep;
+            x += subjectStep;
         });
 
         if (!editable.value) {
             continue;
         }
 
-        if (draftCycle.value === cycle) {
-            const position =
-                Math.max(
-                    -1,
-                    ...cycleSubjects.map((subject) => subject.position),
-                ) + 1;
-            nodes.push({
-                id: `draft-subject-${cycle}`,
-                type: 'subject',
-                position: {
-                    x,
-                    y: (cycle - 1) * laneHeight + subjectOffset.value,
-                },
-                data: {
-                    career: props.career,
-                    modalityOptions: props.modalityOptions,
-                    curriculum: props.curriculum,
-                    fixedFields: props.fixedFields,
-                    organizationUnits: props.organizationUnits,
-                    subject: null,
-                    unitStyle: FALLBACK_UNIT_STYLE,
-                    cycle,
-                    position,
-                    editable: true,
-                    draggable: false,
-                    editing: true,
-                    onEdit: () => undefined,
-                    onCancel: closeEditor,
-                    onSaved: (message?: string) => {
-                        closeEditor();
-                        if (message) emit('changed', message);
-                    },
-                },
-                draggable: false,
-                connectable: false,
-                zIndex: 1000,
-                selectable: false,
-            });
-        } else {
-            nodes.push({
-                id: `add-subject-${cycle}`,
-                type: 'addSubject',
-                position: {
-                    x,
-                    y: (cycle - 1) * laneHeight + addSubjectOffset,
-                },
-                data: {
-                    cycle,
-                    disabled: hasOpenEditor.value,
-                },
-                draggable: false,
-                selectable: false,
-                connectable: false,
-            });
-        }
+        nodes.push({
+            id: `add-subject-${cycle}`,
+            type: 'addSubject',
+            position: {
+                x,
+                y: (cycle - 1) * laneHeight + addSubjectOffset,
+            },
+            data: {
+                cycle,
+                disabled: hasOpenEditor.value || savingLayout.value,
+            },
+            draggable: false,
+            selectable: false,
+            connectable: false,
+        });
     }
 
     return nodes;
@@ -557,6 +519,8 @@ const buildEdges = (): Edge[] => {
 const nodes = ref<Node[]>(buildNodes());
 const edges = ref<Edge[]>(buildEdges());
 
+watch(() => props.subjects, () => { dragPreview.value = null; });
+
 watch(
     [
         () => props.subjects,
@@ -675,46 +639,56 @@ const deleteRequirement = async (): Promise<void> => {
     }
 };
 
-const onNodeDragStop = async ({ node }: NodeDragEvent): Promise<void> => {
-    if (
-        !editable.value ||
-        node.type !== 'subject' ||
-        !subjectById.value.has(node.id)
-    ) {
-        return;
-    }
-
+const onNodeDrag = ({ node }: NodeDragEvent): void => {
     const subject = subjectById.value.get(node.id);
+    if (!editable.value || savingLayout.value || node.type !== 'subject' || !subject || typeof subject.cycle !== 'number') return;
 
-    if (!subject) {
-        return;
-    }
+    const cycleSubjects = subjectsForCycle(subject.cycle);
+    const index = Math.max(0, Math.min(cycleSubjects.length - 1,
+        Math.round((node.position.x - laneStart) / subjectStep)));
+    if (dragPreview.value?.subjectId === node.id && dragPreview.value.index === index) return;
 
-    const cycle = Math.min(
-        props.curriculum.cycle_count,
-        Math.max(
-            1,
-            Math.round((node.position.y - subjectOffset.value) / laneHeight) +
-                1,
-        ),
-    );
-    const position = Math.max(
-        0,
-        Math.round((node.position.x - laneStart) / subjectStep),
-    );
+    dragPreview.value = { subjectId: node.id, cycle: subject.cycle, index };
+    const previewPositions = new Map(previewSubjectsForCycle(subject.cycle).map((item, slot) => [item.id, slot]));
+    nodes.value = nodes.value.map((current) => {
+        if (current.id === node.id) return { ...current, position: node.position, zIndex: 10 };
+        const slot = previewPositions.get(current.id);
+        return slot === undefined ? current : {
+            ...current,
+            position: { ...current.position, x: laneStart + slot * subjectStep },
+        };
+    });
+};
 
-    if (subject.cycle === cycle && subject.position === position) {
+const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
+    const { node } = event;
+    const subject = subjectById.value.get(node.id);
+    if (!editable.value || node.type !== 'subject' || !subject || typeof subject.cycle !== 'number') return;
+    onNodeDrag(event);
+    const originalIndex = subjectsForCycle(subject.cycle).findIndex((item) => item.id === node.id);
+    const index = dragPreview.value?.index ?? originalIndex;
+    if (index === originalIndex) {
+        dragPreview.value = null;
         nodes.value = buildNodes();
-
         return;
     }
 
+    // La vista previa se conserva hasta que la consulta refresque la malla.
+    savingLayout.value = true;
+    nodes.value = buildNodes();
     try {
-        const result = await updateSubjectLayout(props.curriculum.id, { subject_id: node.id, cycle, position });
+        const result = await updateSubjectLayout(props.curriculum.id, {
+            subject_id: node.id,
+            cycle: subject.cycle,
+            position: index,
+        });
         emit('changed', result.message);
     } catch (reason) {
+        dragPreview.value = null;
         nodes.value = buildNodes();
         toast.error(reason instanceof ApiError ? reason.message : 'No se pudo mover la materia.');
+    } finally {
+        savingLayout.value = false;
     }
 };
 </script>
@@ -767,6 +741,7 @@ const onNodeDragStop = async ({ node }: NodeDragEvent): Promise<void> => {
             @connect="onConnect"
             @edge-click="onEdgeClick"
             @node-click="onNodeClick"
+            @node-drag="onNodeDrag"
             @node-drag-stop="onNodeDragStop"
         >
             <template #edge-requirement="edgeProps">
@@ -910,12 +885,45 @@ const onNodeDragStop = async ({ node }: NodeDragEvent): Promise<void> => {
                 mask-color="color-mix(in srgb, var(--background) 65%, transparent)"
             />
         </VueFlow>
+        <Dialog :open="hasOpenEditor" @update:open="(open) => { if (!open) closeEditor(); }">
+            <DialogContent class="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>{{ editorSubject ? 'Editar materia' : 'Agregar materia' }}</DialogTitle>
+                    <DialogDescription>
+                        Ciclo {{ toRoman(editorCycle) }}. Complete los datos académicos de la materia.
+                    </DialogDescription>
+                </DialogHeader>
+                <CurriculumVisualSubjectForm
+                    :key="editorSubject?.id ?? `new-${editorCycle}`"
+                    :career="career"
+                    :modality-options="modalityOptions"
+                    :curriculum="curriculum"
+                    :fixed-fields="fixedFields"
+                    :organization-units="organizationUnits"
+                    :subject="editorSubject"
+                    :cycle="editorCycle"
+                    :position="editorPosition"
+                    @cancel="closeEditor"
+                    @saved="(message) => { closeEditor(); if (message) emit('changed', message); }"
+                />
+            </DialogContent>
+        </Dialog>
     </div>
 </template>
 
 <style scoped>
 :deep(.vue-flow) {
     background-color: color-mix(in srgb, var(--background) 90%, black);
+}
+
+:deep(.vue-flow__node-subject:not(.dragging)) {
+    transition: transform 150ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :deep(.vue-flow__node-subject) {
+        transition: none;
+    }
 }
 
 :deep(.vue-flow__minimap) {

@@ -22,6 +22,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import { DialogFooter } from '@/components/ui/dialog';
 import { useCurriculumSubjectFieldValues } from '@/composables/useCurriculumSubjectFieldValues';
 import { INHERITED_MODALITY } from '@/lib/studyModalities';
 import type {
@@ -98,13 +99,7 @@ const submit = async (event: Event): Promise<void> => {
 </script>
 
 <template>
-    <form
-        :key="subject?.id ?? `new-${cycle}-${position}`"
-        class="nodrag nopan nowheel w-[36rem] cursor-default rounded-md bg-card p-3 text-card-foreground shadow-modal ring-1 ring-surface-ring"
-        @keydown.stop
-        @mousedown.stop
-        @submit.prevent="submit"
-    >
+    <form :key="subject?.id ?? `new-${cycle}-${position}`" @submit.prevent="submit">
         <input type="hidden" name="cycle" :value="cycle" />
         <input type="hidden" name="position" :value="position" />
         <FieldGroup class="gap-3">
@@ -112,7 +107,7 @@ const submit = async (event: Event): Promise<void> => {
                 <FieldError :errors="[errors.record]" />
             </Field>
 
-            <div class="grid grid-cols-[10rem_minmax(0,1fr)] gap-2">
+            <div class="grid gap-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
                 <Field :data-invalid="Boolean(errors.code)">
                     <FieldLabel
                         :for="`visual-subject-code-${subject?.id ?? cycle}`"
@@ -204,14 +199,11 @@ const submit = async (event: Event): Promise<void> => {
                 <FieldError :errors="[errors.modality]" />
             </Field>
 
-            <div
-                v-if="fixedFields.length > 0"
-                class="-m-1 flex gap-2 overflow-x-auto p-1"
-            >
+            <div v-if="fixedFields.length > 0" class="grid grid-cols-2 gap-3 sm:grid-cols-5">
                 <CurriculumSubjectFieldInput
                     v-for="field in fixedFields"
                     :key="field.id"
-                    class="min-w-24 flex-1 gap-1"
+                    class="min-w-0 gap-1"
                     :field="field"
                     :input-id="`visual-subject-${subject?.id ?? cycle}-${field.id}`"
                     :value="valueFor(field)"
@@ -220,7 +212,7 @@ const submit = async (event: Event): Promise<void> => {
                 />
             </div>
 
-            <div class="flex justify-end gap-2">
+            <DialogFooter>
                 <Button
                     type="button"
                     size="sm"
@@ -235,7 +227,7 @@ const submit = async (event: Event): Promise<void> => {
                     <Check v-else data-icon="inline-start" aria-hidden="true" />
                     {{ subject ? 'Guardar' : 'Agregar materia' }}
                 </Button>
-            </div>
+            </DialogFooter>
         </FieldGroup>
     </form>
 </template>
