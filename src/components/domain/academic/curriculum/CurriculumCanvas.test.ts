@@ -2,6 +2,10 @@ import { flushPromises, shallowMount } from '@vue/test-utils';
 import { nextTick } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 import CurriculumCanvas from '@/components/domain/academic/curriculum/CurriculumCanvas.vue';
+import {
+    laneStart,
+    subjectStep,
+} from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
 import type { CurriculumBuilderSubject } from '@/types/academic';
 
 const { updateSubjectLayout } = vi.hoisted(() => ({
@@ -58,22 +62,24 @@ describe('CurriculumCanvas', () => {
         const initialNodes = flow.props('nodes') as Array<{
             id: string;
             position: { x: number; y: number };
-            data: { cycle?: number };
+            data: { cycle?: number; unit?: string };
             extent?: [[number, number], [number, number]];
         }>;
+        expect(initialNodes.find((node) => node.id === 'cycle-1')?.data)
+            .not.toHaveProperty('unit');
         expect(initialNodes.find((node) => node.id === 'add-subject-1')?.position.x)
             .toBeGreaterThan((initialNodes.find((node) => node.id === 'c')?.position.x ?? 0) + 274);
         const bounds = initialNodes.find((node) => node.id === 'a')?.extent;
         expect(bounds?.[1][0]).toBeGreaterThan((initialNodes.find((node) => node.id === 'c')?.position.x ?? 0) + 274);
         expect(bounds?.[1][1]).toBeGreaterThan(bounds?.[0][1] ?? 0);
         const dragged = { ...flow.props('nodes').find((node: { id: string }) => node.id === 'a'),
-            position: { x: 145 + 2 * 308, y: 238 + 48 } };
+            position: { x: laneStart + 2 * subjectStep, y: 238 + 48 } };
 
         flow.vm.$emit('node-drag', { node: dragged });
         await nextTick();
         const preview = flow.props('nodes') as Array<{ id: string; position: { x: number; y: number } }>;
-        expect(preview.find((node) => node.id === 'b')?.position.x).toBe(145);
-        expect(preview.find((node) => node.id === 'c')?.position.x).toBe(145 + 308);
+        expect(preview.find((node) => node.id === 'b')?.position.x).toBe(laneStart);
+        expect(preview.find((node) => node.id === 'c')?.position.x).toBe(laneStart + subjectStep);
         expect(preview.find((node) => node.id === 'a')?.position.y).toBe(32);
 
         flow.vm.$emit('node-drag', { node: { ...dragged, position: { ...dragged.position, y: -200 } } });
@@ -83,7 +89,7 @@ describe('CurriculumCanvas', () => {
         // Vue Flow puede entregar en drag-stop la posición anterior mientras sincroniza
         // su modelo; el índice confirmado es el que mostró el último drag.
         flow.vm.$emit('node-drag-stop', {
-            node: { ...dragged, position: { x: 145, y: 32 } },
+            node: { ...dragged, position: { x: laneStart, y: 32 } },
         });
         await flushPromises();
         expect(updateSubjectLayout).toHaveBeenCalledWith('career', {

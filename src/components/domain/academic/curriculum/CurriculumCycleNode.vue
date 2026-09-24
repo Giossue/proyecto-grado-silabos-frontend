@@ -5,8 +5,6 @@ defineProps<{
     data: {
         cycle: number;
         level: string;
-        unit: string | null;
-        unitStyle: { backgroundColor: string; color: string };
         subjectCount: number;
         totalHours: number;
     };
@@ -19,21 +17,6 @@ defineProps<{
         :aria-label="`Nivel ${data.level}`"
     >
         <div class="flex h-full">
-            <!--
-                Franja de unidad de organización curricular al estilo de la malla
-                institucional: los niveles contiguos de la misma unidad comparten
-                color y se leen como un solo bloque.
-            -->
-            <div
-                class="flex w-9 shrink-0 items-center justify-center border-r"
-                :style="data.unitStyle"
-            >
-                <span
-                    class="-rotate-90 text-[0.6rem] font-semibold tracking-wide whitespace-nowrap uppercase"
-                >
-                    {{ data.unit ?? '' }}
-                </span>
-            </div>
             <header
                 class="flex w-20 shrink-0 flex-col items-center justify-center gap-1 border-r bg-[var(--curriculum-cycle-chrome)] p-3 text-center"
             >

@@ -7,9 +7,8 @@ import type {
 
 export type CurriculumRequirement = CurriculumBuilderProps['requirements'][number];
 
-// Paleta al estilo de la malla institucional: cada unidad de organización
-// curricular recibe un color que comparten su franja de nivel y los encabezados
-// ACD/APE/… de sus tarjetas. El orden sigue al listado alfabético de unidades.
+// Cada unidad de organización curricular recibe un color en la leyenda y en los
+// encabezados ACD/APE/… de sus tarjetas. El orden sigue al listado de unidades.
 export const UNIT_PALETTE = [
     { backgroundColor: 'var(--curriculum-unit-1-background)', color: 'var(--curriculum-unit-1-foreground)' },
     { backgroundColor: 'var(--curriculum-unit-2-background)', color: 'var(--curriculum-unit-2-foreground)' },
@@ -44,25 +43,6 @@ export const toRoman = (value: number): string => {
     return roman || String(value);
 };
 
-// La unidad predominante del ciclo define el color de su franja lateral.
-export const dominantUnit = (
-    cycleSubjects: CurriculumBuilderSubject[],
-): string | null => {
-    const counts = new Map<string, number>();
-    cycleSubjects.forEach((subject) => {
-        const unit = subject.organization_unit?.trim();
-
-        if (unit) {
-            counts.set(unit, (counts.get(unit) ?? 0) + 1);
-        }
-    });
-
-    return [...counts.entries()].reduce<[string | null, number]>(
-        (winner, [unit, count]) => (count > winner[1] ? [unit, count] : winner),
-        [null, 0],
-    )[0];
-};
-
 // El carril se dibuja un 30 % más bajo que los 340 px originales; con menos aire
 // sobrante, las tarjetas se centran en él en vez de colgar del borde superior.
 export const laneHeight = 238;
@@ -76,7 +56,7 @@ export const subjectOffset = Math.round(
 export const addSubjectOffset = Math.round(
     (laneHeight - laneInset - addSubjectHeight) / 2,
 );
-export const laneStart = 145;
+export const laneStart = 109;
 // Tarjeta de 274 px (un 7 % más ancha que las 256 originales) más 34 px de aire.
 export const subjectStep = 308;
 // El viewport termina donde termina la malla. El margen permite respirar alrededor
@@ -110,8 +90,6 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
             data: {
                 cycle,
                 level: toRoman(cycle),
-                unit: dominantUnit(cycleSubjects),
-                unitStyle: options.unitStyleFor(dominantUnit(cycleSubjects)),
                 subjectCount: cycleSubjects.length,
                 totalHours: cycleSubjects.reduce(
                     (total, subject) => total + (subject.total_hours ?? 0),

@@ -274,22 +274,22 @@
 }
 
 /* La malla necesita separar visualmente el lienzo, los ciclos y las materias.
-   Estos tokens se acotan al constructor para no cambiar las demás pantallas. */
+   Estos grises se acotan al constructor para no cambiar las demás pantallas. */
 .dark .curriculum-canvas {
-    --background: hsl(216 29% 11%);
-    --card: hsl(214 24% 33%);
+    --background: hsl(0 0% 5%);
+    --card: hsl(0 0% 22%);
     --card-foreground: hsl(0 0% 98%);
-    --secondary: hsl(213 29% 42%);
+    --secondary: hsl(0 0% 27%);
     --secondary-foreground: hsl(0 0% 98%);
-    --muted: hsl(215 25% 24%);
-    --muted-foreground: hsl(214 25% 86%);
-    --accent: hsl(213 24% 40%);
+    --muted: hsl(0 0% 14%);
+    --muted-foreground: hsl(0 0% 82%);
+    --accent: hsl(0 0% 28%);
     --accent-foreground: hsl(0 0% 98%);
-    --border: hsl(213 17% 55%);
-    --input: hsl(213 17% 55%);
-    --surface-ring: rgb(210 226 245 / 0.35);
-    --curriculum-lane: hsl(215 25% 19%);
-    --curriculum-cycle-chrome: hsl(213 29% 28%);
+    --border: hsl(0 0% 45%);
+    --input: hsl(0 0% 45%);
+    --surface-ring: rgb(255 255 255 / 0.28);
+    --curriculum-lane: hsl(0 0% 10%);
+    --curriculum-cycle-chrome: hsl(0 0% 17%);
 }
 
 @layer base {
