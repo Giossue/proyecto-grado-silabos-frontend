@@ -60,7 +60,6 @@ const actionError = ref<string | null>(null);
 const teacherOpen = ref(false);
 const assignmentOpen = ref(false);
 const configurationOpen = ref(false);
-const organizationUnits = computed(() => Array.from(new Set((curriculum.value?.subjects ?? []).map((item) => item.organization_unit?.trim()).filter((item): item is string => Boolean(item)))).sort((a, b) => a.localeCompare(b, 'es')));
 const removeLegacyBreakdownMode = () => {
   const url = new URL(window.location.href);
   if (url.searchParams.get('modo') !== 'desglose') return;
@@ -184,7 +183,7 @@ onMounted(() => {
       >
       <template v-if="mode === 'curriculum'">
         <ProcessLockAlert v-if="curriculum.curriculum.lock_reason" />
-        <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="organizationUnits" @changed="handleCurriculumChanged" />
+        <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" @changed="handleCurriculumChanged" />
         <CurriculumConfigurationSheet v-model:open="configurationOpen" :curriculum="curriculum.curriculum" @saved="handleCurriculumChanged" />
       </template>
       <ProcessLockAlert v-if="mode === 'schedule' && schedule.career.lock_reason" />

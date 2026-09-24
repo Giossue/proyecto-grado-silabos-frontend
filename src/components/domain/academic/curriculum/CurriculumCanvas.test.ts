@@ -30,6 +30,7 @@ const subject = (id: string, position: number): CurriculumBuilderSubject => ({
     cycle: 1,
     position,
     organization_unit: null,
+    organization_unit_label: null,
     modality: null,
     modality_label: null,
     credits: null,

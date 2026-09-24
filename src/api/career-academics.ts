@@ -62,6 +62,7 @@ export type Curriculum = {
     cycle: number | null;
     position: number;
     organization_unit: string | null;
+    organization_unit_label: string | null;
     modality: string | null;
     modality_label: string | null;
     credits: string | null;
@@ -81,6 +82,7 @@ export type Curriculum = {
     type: "prerrequisito" | "correquisito";
   }>;
   modalityOptions: Array<{ value: string; label: string }>;
+  organizationUnitOptions: Array<{ value: string; label: string }>;
 };
 
 export type ScheduledSubjects = {
