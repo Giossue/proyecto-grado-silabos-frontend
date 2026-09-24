@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { CalendarPlus } from '@lucide/vue';
-import { ref, watch } from 'vue';
+import { getLocalTimeZone, today } from '@internationalized/date';
+import { computed, ref, watch } from 'vue';
 import { createProcess } from '@/api/processes';
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
@@ -38,6 +39,10 @@ watch(open, (value) => {
     errors.value = {};
   }
 });
+// La elaboración va de hoy al último día del período; la entrega, después del inicio.
+const todayIso = today(getLocalTimeZone()).toString();
+const periodEnd = computed(() => props.period?.ends_on?.slice(0, 10));
+const dueMinimum = computed(() => (form.value.starts_at > todayIso ? form.value.starts_at : todayIso));
 const submit = async (): Promise<void> => {
   if (props.disabled) return;
   processing.value = true;
@@ -82,13 +87,13 @@ const submit = async (): Promise<void> => {
           </Field>
           <Field :data-invalid="Boolean(errors.starts_at)">
             <FieldLabel for="process-starts" required>Inicio de la elaboración</FieldLabel>
-            <DatePicker id="process-starts" v-model="form.starts_at" required :aria-invalid="Boolean(errors.starts_at)" />
+            <DatePicker id="process-starts" v-model="form.starts_at" :min-value="todayIso" :max-value="periodEnd" required :aria-invalid="Boolean(errors.starts_at)" />
             <p class="text-sm text-muted-foreground">Elija cuándo comienza la elaboración; no se copia el inicio de clases.</p>
             <FieldError :errors="errors.starts_at" />
           </Field>
           <Field :data-invalid="Boolean(errors.due_at)">
             <FieldLabel for="process-due" required>Fecha límite de entrega</FieldLabel>
-            <DatePicker id="process-due" v-model="form.due_at" required :aria-invalid="Boolean(errors.due_at)" />
+            <DatePicker id="process-due" v-model="form.due_at" :min-value="dueMinimum" :max-value="periodEnd" required :aria-invalid="Boolean(errors.due_at)" />
             <p class="text-sm text-muted-foreground">Esta fecha se heredará en la convocatoria de cada carrera.</p>
             <FieldError :errors="errors.due_at" />
           </Field>

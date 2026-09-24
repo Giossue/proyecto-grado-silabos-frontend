@@ -17,6 +17,7 @@ const props = withDefaults(defineProps<{
   ariaInvalid?: boolean;
   disabled?: boolean;
   minValue?: string;
+  maxValue?: string;
   placeholder?: string;
 }>(), {
   name: undefined,
@@ -25,6 +26,7 @@ const props = withDefaults(defineProps<{
   ariaInvalid: false,
   disabled: false,
   minValue: undefined,
+  maxValue: undefined,
   placeholder: 'Elegir fecha',
 });
 
@@ -43,9 +45,10 @@ const parse = (value: string | undefined): DateValue | undefined => {
   }
 };
 const minimum = computed<DateValue | undefined>(() => parse(props.minValue));
+const maximum = computed<DateValue | undefined>(() => parse(props.maxValue));
 const yearRange = computed(() => createYearRange({
   start: minimum.value ?? today(getLocalTimeZone()).cycle('year', -5),
-  end: today(getLocalTimeZone()).cycle('year', 10),
+  end: maximum.value ?? today(getLocalTimeZone()).cycle('year', 10),
 }));
 const selected = computed<DateValue | undefined>({
   get: () => parse(model.value),
@@ -71,7 +74,7 @@ const clear = (): void => { selected.value = undefined; };
         </Button>
       </PopoverTrigger>
       <PopoverContent class="w-auto p-0" align="start">
-        <Calendar v-model="selected" layout="month-and-year" :year-range="yearRange" :min-value="minimum" locale="es-EC" initial-focus class="p-3" />
+        <Calendar v-model="selected" layout="month-and-year" :year-range="yearRange" :min-value="minimum" :max-value="maximum" locale="es-EC" initial-focus class="p-3" />
         <div v-if="!required && selected !== undefined" class="border-t p-2">
           <Button type="button" variant="ghost" size="sm" class="w-full justify-center" @click="clear"><X data-icon="inline-start" aria-hidden="true" />Quitar fecha</Button>
         </div>
