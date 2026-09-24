@@ -222,7 +222,7 @@ const widths = computed(() => columnWidths(props.layout));
                         "
                         rows="2"
                         :aria-invalid="invalid"
-                        :placeholder="`Ej. ${field.label}`"
+                        
                         @update:model-value="
                             setHeader(
                                 unit.number,
@@ -235,8 +235,8 @@ const widths = computed(() => columnWidths(props.layout));
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full border-collapse text-sm hyphens-auto [hyphenate-limit-chars:8_4_4] [&_td]:[overflow-wrap:break-word] [&_td]:[word-break:normal] [&_th]:[word-break:normal] [&_th]:[overflow-wrap:break-word]">
+            <div class="max-w-full overflow-x-auto rounded-md">
+                <table class="w-full min-w-[48rem] border-collapse text-sm hyphens-auto [hyphenate-limit-chars:8_4_4] [&_td]:[overflow-wrap:break-word] [&_td]:[word-break:normal] [&_th]:[word-break:normal] [&_th]:[overflow-wrap:break-word]">
                     <colgroup v-if="widths">
                         <col
                             v-for="(width, index) in widths"
@@ -275,7 +275,7 @@ const widths = computed(() => columnWidths(props.layout));
                                 v-for="column in layout.columns"
                                 :key="column.key"
                                 class="border p-1 align-top"
-                                :class="{ 'w-24': column.type === 'number' }"
+                                :class="column.type === 'number' ? 'w-20 min-w-16' : 'min-w-44'"
                             >
                                 <Input
                                     v-if="column.type === 'number'"
@@ -295,11 +295,10 @@ const widths = computed(() => columnWidths(props.layout));
                                               52)
                                             : undefined
                                     "
-                                    class="h-8 text-center"
+                                    class="h-9 min-w-14 px-1 text-center tabular-nums"
                                     :model-value="display(row.data[column.key])"
                                     :aria-label="`${column.label}, fila ${rowIndex + 1}`"
                                     :aria-invalid="invalid"
-                                    placeholder="Ej. 2"
                                     @update:model-value="
                                         setCell(
                                             row,
@@ -319,14 +318,13 @@ const widths = computed(() => columnWidths(props.layout));
                                         )
                                     "
                                     rows="2"
-                                    class="min-h-8"
+                                    class="min-h-16 text-sm"
                                     :model-value="
                                         String(display(row.data[column.key]))
                                     "
                                     :aria-label="`${column.label}, fila ${rowIndex + 1}`"
                                     :aria-invalid="invalid"
                                     :aria-required="required"
-                                    :placeholder="`Ej. ${column.label}`"
                                     @update:model-value="
                                         setCell(row, column.key, $event, 'text')
                                     "

@@ -18,7 +18,6 @@ import SyllabusTableView from '@/components/domain/syllabus/SyllabusTableView.vu
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import IdentificationCard from '@/components/domain/syllabus/IdentificationCard.vue';
-import SyllabusAcademicContext from '@/components/domain/syllabus/SyllabusAcademicContext.vue';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -442,6 +441,10 @@ const submit = async (): Promise<void> => {
   }
 };
 
+/** Numera la sección como en el documento, salvo que el título ya traiga número. */
+const sectionHeading = (title: string, index: number): string =>
+  /^\s*\d+[.)]/.test(title) ? title : `${index + 1}. ${title}`;
+
 const visibleSections = computed(() => syllabus.value?.sections ?? []);
 
 const recommendationApplied = (payload: {
@@ -510,7 +513,7 @@ onBeforeUnmount(() => {
       <Alert v-if="aiMessage"><AlertDescription>{{ aiMessage }}</AlertDescription></Alert>
 
       <div v-if="syllabus.state !== 'sin_iniciar'" class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)]">
-        <main class="flex min-w-0 flex-col gap-8">
+        <main class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
           <Card v-if="!canEdit" class="syllabus-document-header">
             <CardContent class="flex flex-col items-center gap-5 py-8 text-center">
               <div class="flex w-full items-center justify-between gap-6"><img :src="syllabus.presentation.logos.institution" alt="Logo institucional" class="max-h-10 max-w-40 object-contain" /><img :src="syllabus.presentation.logos.faculty" alt="Logo de facultad" class="max-h-14 max-w-40 object-contain" /></div>
@@ -529,12 +532,11 @@ onBeforeUnmount(() => {
           </Card>
 
           <section v-for="(section, sectionIndex) in visibleSections" :id="`section-${section.id}`" :key="section.id" class="flex scroll-mt-6 flex-col gap-6 border-t pt-8 first:border-t-0 first:pt-0">
-            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
-            <IdentificationCard v-if="sectionIndex === 0 && syllabus.identification.length" :grid="syllabus.identification" />
+            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionHeading(section.title, sectionIndex) }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
+            <div v-if="sectionIndex === 0 && syllabus.identification.length" class="max-w-full overflow-x-auto"><IdentificationCard class="min-w-[44rem]" :grid="syllabus.identification" /></div>
 
             <FieldSet v-for="block in section.blocks" :id="`block-${block.id}`" :key="block.id" class="scroll-mt-6 gap-5">
               <FieldLegend v-if="(block.title ?? '').trim() !== '' && section.blocks.length > 1 && !(block.fields.length === 1 && block.title === block.fields[0]?.label)" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
-              <SyllabusAcademicContext v-if="block.content_type === 'institutional'" :variables="syllabus.template_variables ?? {}" />
               <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :layout="block.table" :editable="canEdit && !conflict" presentation="form" :planning-expectations="syllabus.planning_expectations ?? null" @value="(key, value) => updateDesignValue(block.fields, key, value)" @rows="(key, rows) => updateDesignRows(block.fields, key, rows)" />
               <template v-if="!usesTabularDocument(block)">
                 <FieldGroup>

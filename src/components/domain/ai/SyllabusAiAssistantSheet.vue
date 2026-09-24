@@ -58,10 +58,6 @@ import {
 import {
     Empty,
     EmptyContent,
-    EmptyDescription,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle,
 } from '@/components/ui/empty';
 import { Separator } from '@/components/ui/separator';
 import RobotAvatar from '@/components/domain/ai/avatar/RobotAvatar.vue';
@@ -433,23 +429,8 @@ onBeforeUnmount(() => {
                     </Suggestion>
                 </Suggestions>
 
-                <Empty v-if="!hasResults" class="min-h-64 border">
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                            <FileText aria-hidden="true" />
-                        </EmptyMedia>
-                        <EmptyTitle>Aún no hay una revisión</EmptyTitle>
-                        <EmptyDescription v-if="canReview">
-                            Inicia la revisión para recibir consejos
-                            organizados por sección. Puedes pedirla aunque
-                            todavía falten partes por completar
-                        </EmptyDescription>
-                        <EmptyDescription v-else>
-                            La revisión se puede pedir mientras el sílabo
-                            está en edición
-                        </EmptyDescription>
-                    </EmptyHeader>
-                    <EmptyContent v-if="canReview">
+                <Empty v-if="!hasResults && canReview" class="min-h-64 border">
+                    <EmptyContent>
                         <Button
                             type="button"
                             :disabled="requestingReview || saving"
@@ -714,14 +695,10 @@ onBeforeUnmount(() => {
             <ConversationScrollButton />
         </Conversation>
 
-        <Separator />
+        <Separator v-if="hasResults && canReview" />
 
-        <CardFooter class="shrink-0 justify-between gap-3 px-4 py-3">
-            <p class="text-xs text-muted-foreground">
-                La IA recomienda; tú decides qué aplicar
-            </p>
+        <CardFooter v-if="hasResults && canReview" class="shrink-0 justify-end gap-3 px-4 py-3">
             <Button
-                v-if="hasResults && canReview"
                 type="button"
                 :disabled="requestingReview || saving || hasProcessing"
                 @click="requestReview"

@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { AlertCircle, CheckCircle2 } from '@lucide/vue';
+import { AlertCircle, Check, CheckCircle2, X } from '@lucide/vue';
 import { computed } from 'vue';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { formatSum, summarizePlanning } from '@/lib/tableLayout';
 import type {
     PlanningExpectations,
@@ -105,63 +103,83 @@ const configuration = computed(() => {
 const valid = computed(
     () => weeksOk.value && hoursOk.value && configuration.value.ok,
 );
+const dash = (value: number | null): string =>
+    value === null ? '—' : formatSum(value);
+const checks = computed(() => [
+    {
+        label: 'Semanas',
+        ok: weeksOk.value,
+        value: `${new Set(summary.value?.weeks ?? []).size} de ${props.expectations?.teaching_weeks ?? '—'}`,
+    },
+    ...comparisons.value.map((item) => ({
+        label: `Horas ${item.label}`,
+        ok: item.expected !== null && item.actual === item.expected,
+        value: `${formatSum(item.actual)} de ${dash(item.expected)} h`,
+    })),
+    {
+        label: 'Componentes de la malla',
+        ok: configuration.value.componentsOk,
+        value: `${dash(configuration.value.componentTotal)} de ${dash(configuration.value.total)} h`,
+    },
+    {
+        label: `Créditos (${props.expectations?.credits == null || props.expectations.credits === '' ? '—' : formatSum(Number(props.expectations.credits))} × 48)`,
+        ok: configuration.value.creditsOk,
+        value: `${dash(configuration.value.total)} de ${dash(configuration.value.creditHours)} h`,
+    },
+]);
 </script>
 
 <template>
-    <Alert
+    <section
         v-if="summary && expectations"
-        :variant="valid ? 'default' : 'destructive'"
+        class="flex flex-col gap-3 rounded-lg border bg-muted/30 p-4"
+        aria-label="Resumen automático de planificación"
     >
-        <CheckCircle2 v-if="valid" aria-hidden="true" />
-        <AlertCircle v-else aria-hidden="true" />
-        <AlertTitle>Resumen automático de planificación</AlertTitle>
-        <AlertDescription class="flex flex-col gap-2">
-            <div class="flex flex-wrap gap-2">
-                <Badge :variant="weeksOk ? 'secondary' : 'destructive'">
-                    Semanas: {{ new Set(summary.weeks).size }} /
-                    {{ expectations?.teaching_weeks ?? '—' }}
-                </Badge>
-                <Badge
-                    v-for="item in comparisons"
-                    :key="item.label"
-                    :variant="
-                        item.actual === item.expected
-                            ? 'secondary'
-                            : 'destructive'
-                    "
-                >
-                    {{ item.label }}: {{ formatSum(item.actual) }} /
-                    {{
-                        item.expected === null ? '—' : formatSum(item.expected)
-                    }}
-                </Badge>
-                <Badge variant="outline">
-                    Créditos de malla: {{ expectations?.credits ?? '—' }}
-                </Badge>
-                <Badge
-                    :variant="
-                        configuration.componentsOk ? 'secondary' : 'destructive'
-                    "
-                >
-                    Componentes / total de malla:
-                    {{ configuration.componentTotal ?? '—' }} /
-                    {{ configuration.total ?? '—' }}
-                </Badge>
-                <Badge
-                    :variant="
-                        configuration.creditsOk ? 'secondary' : 'destructive'
-                    "
-                >
-                    Total malla / créditos × 48:
-                    {{ configuration.total ?? '—' }} /
-                    {{ configuration.creditHours ?? '—' }}
-                </Badge>
-            </div>
-            <span v-if="!valid">
-                Puede guardar el borrador, pero deberá completar las semanas y
-                hacer coincidir las horas con la malla antes de enviarlo.
-            </span>
-        </AlertDescription>
-    </Alert>
+        <div class="flex items-center gap-2">
+            <CheckCircle2
+                v-if="valid"
+                class="size-4 text-primary"
+                aria-hidden="true"
+            />
+            <AlertCircle
+                v-else
+                class="size-4 text-muted-foreground"
+                aria-hidden="true"
+            />
+            <h4 class="text-sm font-medium">
+                Resumen automático de planificación
+            </h4>
+        </div>
+        <ul class="grid gap-x-6 gap-y-1.5 text-sm sm:grid-cols-2">
+            <li
+                v-for="item in checks"
+                :key="item.label"
+                class="flex items-center justify-between gap-3"
+            >
+                <span class="flex items-center gap-2">
+                    <Check
+                        v-if="item.ok"
+                        class="size-4 text-primary"
+                        aria-hidden="true"
+                    />
+                    <X
+                        v-else
+                        class="size-4 text-destructive"
+                        aria-hidden="true"
+                    />
+                    <span>{{ item.label }}</span>
+                    <span class="sr-only">{{
+                        item.ok ? 'correcto' : 'pendiente'
+                    }}</span>
+                </span>
+                <span class="text-muted-foreground tabular-nums">{{
+                    item.value
+                }}</span>
+            </li>
+        </ul>
+        <p v-if="!valid" class="text-xs text-muted-foreground">
+            Puede guardar el borrador, pero antes de enviarlo deben estar todas
+            las semanas y las horas deben coincidir con la malla.
+        </p>
+    </section>
 </template>
-
