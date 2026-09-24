@@ -189,7 +189,7 @@
     --curriculum-unit-4-foreground: hsl(24 45% 16%);
     --curriculum-unit-5-background: hsl(150 35% 55%);
     --curriculum-unit-5-foreground: hsl(152 45% 14%);
-    --curriculum-lane: var(--card);
+    --curriculum-lane: color-mix(in srgb, var(--card) 50%, var(--muted));
     --curriculum-cycle-chrome: color-mix(in srgb, var(--primary) 10%, var(--card));
     --curriculum-canvas-background: color-mix(in srgb, var(--background) 90%, black);
     --curriculum-prerequisite: var(--destructive);

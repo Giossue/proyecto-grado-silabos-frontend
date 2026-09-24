@@ -52,7 +52,7 @@ const attribute = (subject: forge.pki.Certificate['subject'], name: string): str
 export function readCertificate(p12: Uint8Array, password: string, now: Date = new Date()): SignerCertificate {
   let asn1: forge.asn1.Asn1;
   try {
-    asn1 = forge.asn1.fromDer(forge.util.createBuffer(toBinary(p12)), { strict: false });
+    asn1 = forge.asn1.fromDer(forge.util.createBuffer(toBinary(p12)), false);
   } catch {
     throw new SignatureError('invalid_file');
   }

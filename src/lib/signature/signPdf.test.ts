@@ -27,7 +27,7 @@ const lastSignature = (signed: Uint8Array) => {
 const verifies = (signed: Uint8Array): boolean => {
   const { b, c, hex } = lastSignature(signed);
   const der = forge.util.hexToBytes(hex.replace(/(00)+$/, ''));
-  const message = forge.pkcs7.messageFromAsn1(forge.asn1.fromDer(der, { strict: false, parseAllBytes: false })) as forge.pkcs7.PkcsSignedData & {
+  const message = forge.pkcs7.messageFromAsn1(forge.asn1.fromDer(der, false)) as forge.pkcs7.PkcsSignedData & {
     rawCapture: { authenticatedAttributes: forge.asn1.Asn1[]; signature: string };
   };
   const covered = Buffer.concat([Buffer.from(signed.subarray(0, b)), Buffer.from(signed.subarray(c))]);
