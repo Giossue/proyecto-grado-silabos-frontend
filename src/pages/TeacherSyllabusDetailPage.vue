@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
 import {
@@ -117,7 +117,6 @@ const partsWithErrors = computed(() => {
   const failing = new Set(blockingResults.value.map((result) => result.field_id));
   return [...partTargets.value.keys()].filter((id) => failing.has(id));
 });
-const missingParts = computed(() => partsWithErrors.value.length);
 /** Errores que no pertenecen a ninguna parte visible (p. ej. datos de Coordinación). */
 const orphanResults = computed(() =>
   blockingResults.value.filter((result) => !result.field_id || !partTargets.value.has(result.field_id)),
@@ -142,11 +141,6 @@ const submitHint = computed(() => {
   if (emptyParts.value === 1) return "Falta 1 parte por completar";
   if (emptyParts.value > 1) return `Faltan ${emptyParts.value} partes por completar`;
   return "";
-});
-const validationTitle = computed(() => {
-  if (missingParts.value === 1) return "Falta 1 parte por completar. Está marcada en rojo.";
-  if (missingParts.value > 1) return `Faltan ${missingParts.value} partes por completar. Están marcadas en rojo.`;
-  return "Revise lo siguiente antes de enviar.";
 });
 const goToPart = (fieldId: string | null): void => {
   const target = fieldId ? document.getElementById(partTargets.value.get(fieldId) ?? `field-${fieldId}`) : null;
@@ -466,6 +460,11 @@ const submit = async (): Promise<void> => {
     if (reason instanceof ApiError && reason.status === 422 && reason.errors.validation) {
       try {
         await runValidation();
+        // Sin avisos arriba: se lleva al docente a la primera parte marcada en rojo.
+        // Lo que no pertenece a ninguna parte (p. ej. «Avise a Coordinación») va al aviso de error.
+        await nextTick();
+        goToPart(partsWithErrors.value[0] ?? null);
+        if (orphanResults.value.length) error.value = orphanResults.value.map((result) => result.message).join(" ");
         return;
       } catch {
         // Si la consulta de detalle falla, al menos queda el mensaje del envío.
@@ -549,7 +548,6 @@ onBeforeUnmount(() => {
       <Card v-if="canStart"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar las partes del sílabo.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>
 
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
-      <div v-if="blockingResults.length" class="submit-feedback flex flex-col gap-1 rounded-md border border-destructive/40 px-3 py-2 text-sm text-destructive" role="status"><div class="flex flex-wrap items-center gap-2"><span>{{ validationTitle }}</span><Button v-if="partsWithErrors.length" type="button" size="sm" variant="outline" @click="goToPart(partsWithErrors[0])">Ir a la primera</Button></div><ul v-if="orphanResults.length" class="validation-errors list-disc pl-5"><li v-for="result in orphanResults" :key="`${result.field_id}-${result.message}`">{{ result.message }}</li></ul></div>
       <Alert v-if="aiMessage"><AlertDescription>{{ aiMessage }}</AlertDescription></Alert>
 
       <div v-if="syllabus.state !== 'sin_iniciar'" class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)]">
