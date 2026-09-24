@@ -18,17 +18,6 @@ vi.mock("@/api/template", async (importOriginal) => ({
   getTemplate: vi.fn(),
   createTemplate: vi.fn(),
   formatTemplate: vi.fn(),
-  createTemplateField: vi.fn(),
-  createTemplateSection: vi.fn(),
-  deleteTemplateBlock: vi.fn(),
-  deleteTemplateSection: vi.fn(),
-  reorderTemplateBlocks: vi.fn(),
-  reorderTemplateSections: vi.fn(),
-  updateTemplateAppearance: vi.fn(),
-  updateTemplateDocument: vi.fn(),
-  updateTemplateField: vi.fn(),
-  updateTemplateSection: vi.fn(),
-  updateTemplateTitle: vi.fn(),
   uploadInstitutionLogo: vi.fn(),
 }));
 

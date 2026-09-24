@@ -101,7 +101,11 @@ const resendVerification = async (): Promise<void> => {
                         required
                         autocomplete="username"
                         placeholder="Ej. maria.perez@ueb.edu.ec"
+                        :disabled="user.email_verified"
                     />
+                    <p v-if="user.email_verified" class="text-sm text-muted-foreground">
+                        La cuenta ya fue activada: su correo no se puede cambiar.
+                    </p>
                     <InputError class="mt-2" :message="errors.correo_electronico" />
                 </div>
 

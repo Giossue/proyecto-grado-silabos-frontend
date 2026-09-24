@@ -37,11 +37,11 @@ describe('academic API', () => {
   it('uses the dedicated coordinator replacement endpoint', async () => {
     api.mockResolvedValue({ message: 'ok' });
 
-    await replaceCareerCoordinator('career-1', 'user-2', true);
+    await replaceCareerCoordinator('career-1', 'user-2');
 
     expect(api).toHaveBeenCalledWith('/admin/academic/careers/career-1/coordinator', {
       method: 'POST',
-      body: JSON.stringify({ incoming_user_id: 'user-2', deactivate_outgoing: true }),
+      body: JSON.stringify({ incoming_user_id: 'user-2' }),
     });
   });
 });

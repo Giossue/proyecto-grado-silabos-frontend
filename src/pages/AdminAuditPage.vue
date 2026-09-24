@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getAuditEvents, type AuditPayload } from '@/api/operations';
 import { getSession } from '@/api/session';
@@ -8,6 +8,7 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { paths } from '@/lib/routes';
@@ -41,6 +42,7 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Auditoría" description="Registro de las acciones realizadas en el sistema.">
+    <template #actions><Button as-child variant="outline"><RouterLink :to="paths.admin.processes">Trabajos fallidos</RouterLink></Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <Card v-else-if="loading && !data">
       <CardContent><LoadingSkeleton variant="table-body" :columns="4" /></CardContent>

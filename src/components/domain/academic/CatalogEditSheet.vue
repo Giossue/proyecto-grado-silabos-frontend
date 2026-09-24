@@ -70,7 +70,9 @@ const submit = async (confirmPurge = false): Promise<void> => {
         emit('saved', result.message);
     } catch (reason) {
         errors.value = reason instanceof ApiError ? reason.errors : {};
-        const purgeMessage = errors.value.purge_required?.[0];
+        // Solo el período (semanas lectivas) reinicia sílabos; facultad y carrera son
+        // datos de presentación y se guardan sin confirmar purga (I-127).
+        const purgeMessage = props.entity === 'periodo' ? errors.value.purge_required?.[0] : undefined;
         if (purgeMessage) {
             requestPurgeConfirmation(
                 purgeMessage,

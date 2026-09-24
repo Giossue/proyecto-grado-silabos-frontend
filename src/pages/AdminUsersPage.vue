@@ -24,6 +24,7 @@ import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
 const router = useRouter();
+const currentUserId = ref<string | null>(null);
 const result = ref<ManagedUsersResponse | null>(null);
 const error = ref<string | null>(null); const loading = ref(true);
 const q = ref(''); const status = ref('all'); const role = ref('all'); const career = ref('all');
@@ -37,6 +38,7 @@ const load = async (page = 1): Promise<void> => {
     try {
         const session = await getSession();
         if (session.active_role?.code !== 'administrador') { await router.replace(paths.dashboard); return; }
+        currentUserId.value = session.user.id;
         result.value = await getManagedUsers({ q: q.value, status: status.value, role: role.value, career: career.value, page });
     } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los usuarios.'; }
     finally { loading.value = false; }
@@ -69,7 +71,7 @@ onMounted(load);
                     <TableCell><div class="flex flex-col items-start gap-1"><span v-for="(item, index) in user.roles" :key="`rol-${index}`">{{ item.name }}</span><span v-if="user.roles.length === 0" class="text-sm text-muted-foreground">Sin rol vigente</span></div></TableCell>
                     <TableCell><div class="flex flex-col items-start gap-1 text-sm"><span v-for="(scope, index) in user.careers" :key="`carrera-${index}`" :class="scope ? '' : 'text-muted-foreground'">{{ scope ?? 'Todas las carreras' }}</span><span v-if="user.careers.length === 0" class="text-muted-foreground">—</span></div></TableCell>
                     <TableCell><Tooltip><TooltipTrigger as-child><span>{{ statusOf(user).label }}</span></TooltipTrigger><TooltipContent class="max-w-xs">{{ statusOf(user).hint }}</TooltipContent></Tooltip></TableCell>
-                    <TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${user.nombre}`"><ManagedUserDetailSheet :user="user" /><ManagedUserEditSheet display="menu" :user="user" :roles="result.roles" :careers="result.careers" @saved="changed" /><ManagedUserPendingActions v-if="user.pending_activation" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
+                    <TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${user.nombre}`"><ManagedUserDetailSheet :user="user" /><!-- La cuenta propia se edita desde Perfil; las acciones pendientes exigen cuenta activa. --><ManagedUserEditSheet v-if="user.id !== currentUserId" display="menu" :user="user" :roles="result.roles" :careers="result.careers" @saved="changed" /><ManagedUserPendingActions v-if="user.pending_activation && user.active" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
                 </TableRow>
             </TableBody></Table>
             <TablePagination :meta="result.users" label="Paginación de usuarios" @update:page="load" />

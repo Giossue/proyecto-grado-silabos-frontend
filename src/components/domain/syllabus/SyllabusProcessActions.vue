@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { CalendarClock, Lock, Pause, Pencil, Play, Square, Trash2 } from '@lucide/vue';
+import { CalendarClock, Lock, Pause, Play, Square, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { deleteProcess, transitionProcess, type SyllabusProcess } from '@/api/processes';
 import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
-import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -24,7 +23,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 type Transition = 'pausar' | 'reanudar' | 'cerrar';
 
-const props = defineProps<{ process: SyllabusProcess; template: string | null; periods: { id: string; codigo: string }[] }>();
+const props = defineProps<{ process: SyllabusProcess }>();
 const emit = defineEmits<{
   completed: [message: string];
 }>();
@@ -33,7 +32,6 @@ const pending = ref<Transition | null>(null);
 const reason = ref('');
 const processing = ref(false);
 const error = ref<string | null>(null);
-const editOpen = ref(false);
 const deadlineOpen = ref(false);
 const deleteOpen = ref(false);
 const deleting = ref(false);
@@ -108,7 +106,6 @@ const remove = async (): Promise<void> => {
 
 <template>
   <TableActionsMenu :label="`Acciones para ${process.name}`">
-    <DropdownMenuItem v-if="process.configurable" @select="editOpen = true"><Pencil />Editar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'abierto'" @select="pending = 'pausar'"><Pause />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'pausado'" @select="pending = 'reanudar'"><Play />Reanudar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" @select="deadlineOpen = true"><CalendarClock />Prorrogar plazo</DropdownMenuItem>
@@ -144,6 +141,5 @@ const remove = async (): Promise<void> => {
       </DialogFooter>
     </DialogContent>
   </Dialog>
-  <SyllabusProcessSheet v-model:open="editOpen" :template="template" :periods="periods" :process="process" display="menu" @saved="emit('completed', $event)" />
   <DeadlineExtensionSheet v-model:open="deadlineOpen" :process-id="process.id" display="menu" @saved="emit('completed', $event)" />
 </template>

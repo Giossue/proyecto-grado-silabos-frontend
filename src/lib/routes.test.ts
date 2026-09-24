@@ -3,7 +3,7 @@ import { paths, roleEntry, roleHome, roleSetting, routeRegistry } from '@/lib/ro
 
 describe('contrato de rutas', () => {
   it('construye destinos dinámicos sin permitir segmentos ambiguos', () => {
-    expect(paths.admin.user('usuario/1')).toBe('/admin/usuarios/usuario%2F1');
+    expect(paths.coordination.source('fuente/1')).toBe('/coordinacion/fuentes/fuente%2F1');
     expect(paths.coordination.comparison('antes', 'después')).toBe(
       '/coordinacion/revisiones/antes/comparar/despu%C3%A9s',
     );

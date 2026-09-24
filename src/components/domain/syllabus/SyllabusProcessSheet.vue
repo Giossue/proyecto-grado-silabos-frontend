@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { CalendarPlus, Check } from '@lucide/vue';
+import { CalendarPlus } from '@lucide/vue';
 import { ref, watch } from 'vue';
-import { createProcess, updateProcess } from '@/api/processes';
+import { createProcess } from '@/api/processes';
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
@@ -14,13 +14,11 @@ type AcademicPeriod = { id: string; codigo: string; starts_on?: string; ends_on?
 const props = withDefaults(defineProps<{
   template: string | null;
   periods: { id: string; codigo: string }[];
-  process?: { id: string; name: string; period_id: string; period_name: string; starts_at: string; due_at: string } | null;
   period?: AcademicPeriod | null;
   triggerLabel?: string;
   display?: 'button' | 'menu';
   disabled?: boolean;
 }>(), {
-  process: null,
   period: null,
   triggerLabel: 'Nuevo proceso',
   display: 'button',
@@ -33,9 +31,9 @@ const form = ref({ period_id: '', starts_at: '', due_at: '' });
 watch(open, (value) => {
   if (value) {
     form.value = {
-      period_id: props.process?.period_id ?? props.period?.id ?? '',
-      starts_at: props.process?.starts_at.slice(0, 10) ?? '',
-      due_at: props.process?.due_at.slice(0, 10) ?? '',
+      period_id: props.period?.id ?? '',
+      starts_at: '',
+      due_at: '',
     };
     errors.value = {};
   }
@@ -45,9 +43,7 @@ const submit = async (): Promise<void> => {
   processing.value = true;
   errors.value = {};
   try {
-    const result = props.process
-      ? await updateProcess(props.process.id, form.value)
-      : await createProcess(form.value);
+    const result = await createProcess(form.value);
     open.value = false;
     emit('saved', result.message);
   } catch (reason) {
@@ -63,7 +59,7 @@ const submit = async (): Promise<void> => {
     v-model:open="open"
     :disabled="props.disabled"
     :trigger-label="triggerLabel"
-    :title="process ? `Editar ${process.name}` : 'Abrir convocatoria institucional'"
+    title="Abrir convocatoria institucional"
     :description="period ? `El período ${period.codigo} quedará vinculado a la convocatoria institucional abierta. Elija las fechas de elaboración que heredarán las coordinaciones junto con la plantilla.` : 'El calendario institucional obliga a todas las carreras: fija las fechas de inicio y entrega con las que se elaboran los sílabos. Cada coordinación inicia el alcance de su carrera dentro de esta convocatoria.'"
     :show-trigger="display !== 'menu'"
   >
@@ -82,7 +78,6 @@ const submit = async (): Promise<void> => {
               <SelectTrigger id="process-period"><SelectValue placeholder="Seleccione un periodo" /></SelectTrigger>
               <SelectContent><SelectGroup><SelectItem v-for="item in periods" :key="item.id" :value="item.id">{{ item.codigo }}</SelectItem></SelectGroup></SelectContent>
             </Select>
-            <p v-if="process" class="text-sm text-muted-foreground">No se puede cambiar si ya existen convocatorias.</p>
             <FieldError :errors="errors.period_id" />
           </Field>
           <Field :data-invalid="Boolean(errors.starts_at)">
@@ -97,7 +92,7 @@ const submit = async (): Promise<void> => {
             <p class="text-sm text-muted-foreground">Esta fecha se heredará en la convocatoria de cada carrera.</p>
             <FieldError :errors="errors.due_at" />
           </Field>
-          <FormSheetActions :close="close" :processing="processing" :icon="process ? Check : CalendarPlus" :label="process ? 'Guardar cambios' : 'Abrir convocatoria'" />
+          <FormSheetActions :close="close" :processing="processing" :icon="CalendarPlus" label="Abrir convocatoria" />
         </FieldGroup>
       </form>
     </template>

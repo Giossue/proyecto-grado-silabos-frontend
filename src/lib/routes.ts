@@ -42,7 +42,6 @@ export const paths = {
     root: '/admin',
     panel: '/admin/panel',
     users: '/admin/usuarios',
-    user: (user: string): string => `/admin/usuarios/${segment(user)}`,
     academic: '/admin/estructura-academica',
     academicWithSection: (section: string): string =>
       `/admin/estructura-academica?seccion=${encodeURIComponent(section)}`,
@@ -90,7 +89,6 @@ export const paths = {
   },
   legacy: {
     adminUsers: '/administracion/usuarios',
-    adminUser: (user: string): string => `/administracion/usuarios/${segment(user)}`,
     adminAcademic: '/administracion/estructura-academica',
     adminProcesses: '/administracion/procesos',
     adminJobs: '/administracion/trabajos',
@@ -182,13 +180,12 @@ export const routeRegistry: readonly RouteDefinition[] = [
 
   { name: 'admin-panel', path: paths.admin.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...admin },
   { name: 'admin-users', path: paths.admin.users, component: 'AdminUsersPage', breadcrumb: 'Usuarios y roles', ...admin },
-  { name: 'admin-user', path: '/admin/usuarios/:user', component: 'AdminUserDetailPage', breadcrumb: 'Detalle de usuario', ...admin },
   { name: 'admin-academic', path: paths.admin.academic, component: 'AcademicGovernancePage', breadcrumb: 'Estructura académica', ...admin },
   { name: 'admin-academic-section', path: '/admin/estructura-academica/:section', component: 'AcademicGovernancePage', breadcrumb: 'Estructura académica', ...admin },
   { name: 'admin-convocations', path: paths.admin.convocations, component: 'AdminProcessesPage', breadcrumb: 'Convocatorias', ...admin },
   { name: 'admin-template', path: paths.admin.template, component: 'AdminTemplatePage', states: ['indice', 'lectura', 'edicion'], breadcrumb: 'Plantilla', ...admin },
   { name: 'admin-audit', path: paths.admin.audit, component: 'AdminAuditPage', breadcrumb: 'Auditoría', ...admin },
-  { name: 'admin-processes', path: paths.admin.processes, component: 'AdminJobsPage', breadcrumb: 'Procesos', ...admin },
+  { name: 'admin-processes', path: paths.admin.processes, component: 'AdminJobsPage', breadcrumb: 'Trabajos fallidos', ...admin },
   { name: 'admin-profile', path: paths.admin.profile, component: 'ProfilePage', shortcut: 'profile', ...admin },
   { name: 'admin-security', path: paths.admin.security, component: 'SecurityPage', shortcut: 'security', ...admin },
   { name: 'admin-notifications', path: paths.admin.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...admin },
@@ -219,7 +216,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
 
   { name: 'legacy-login', path: paths.loginLegacy, guest: true, aliasOf: paths.login },
   { name: 'legacy-admin-users', path: paths.legacy.adminUsers, ...admin, aliasOf: paths.admin.users },
-  { name: 'legacy-admin-user', path: '/administracion/usuarios/:user', ...admin, aliasOf: '/admin/usuarios/:user' },
   { name: 'legacy-admin-academic', path: paths.legacy.adminAcademic, ...admin, aliasOf: paths.admin.academic },
   { name: 'legacy-admin-processes', path: paths.legacy.adminProcesses, ...admin, aliasOf: paths.admin.convocations },
   { name: 'legacy-admin-jobs', path: paths.legacy.adminJobs, ...admin, aliasOf: paths.admin.processes },

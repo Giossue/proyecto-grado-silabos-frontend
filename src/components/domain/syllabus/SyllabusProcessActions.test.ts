@@ -40,7 +40,7 @@ const process = (deletable: boolean) => ({
 });
 
 const mountActions = (deletable: boolean) => mount(SyllabusProcessActions, {
-  props: { process: process(deletable), template: null, periods: [] },
+  props: { process: process(deletable) },
   global: {
     stubs: {
       TableActionsMenu: passthrough,

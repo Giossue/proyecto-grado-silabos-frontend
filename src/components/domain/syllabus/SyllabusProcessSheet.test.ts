@@ -35,32 +35,4 @@ describe('syllabus process dates', () => {
 
     wrapper.unmount();
   });
-
-  it('keeps the saved dates when editing an existing process', async () => {
-    const wrapper = mount(SyllabusProcessSheet, {
-      attachTo: document.body,
-      props: {
-        open: false,
-        template: null,
-        periods: [],
-        process: {
-          id: 'process-1',
-          name: 'Convocatoria Septiembre-Enero 2026-2027',
-          period_id: 'period-1',
-          period_name: 'Septiembre-Enero 2026-2027',
-          starts_at: '2026-10-01T05:00:00.000000Z',
-          due_at: '2026-12-15T04:59:59.000000Z',
-        },
-      },
-    });
-
-    await wrapper.setProps({ open: true });
-    await flushPromises();
-
-    const datePickers = wrapper.findAllComponents(DatePicker);
-    expect(datePickers[0].props('modelValue')).toBe('2026-10-01');
-    expect(datePickers[1].props('modelValue')).toBe('2026-12-15');
-
-    wrapper.unmount();
-  });
 });

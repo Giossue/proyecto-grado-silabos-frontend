@@ -81,7 +81,7 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame title="Procesos" description="Correos, documentos y análisis ejecutados en segundo plano.">
+  <PageFrame title="Trabajos fallidos" description="Correos, documentos y análisis ejecutados en segundo plano.">
     <p v-if="actionError" class="text-sm text-destructive" role="alert">{{ actionError }}</p>
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="7" />

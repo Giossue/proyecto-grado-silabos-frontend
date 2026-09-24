@@ -27,8 +27,8 @@ export const setAcademicRecordStatus = (entity: Exclude<AcademicEntity, 'periodo
   api<{ message: string }>(`/admin/academic/${entity}/${id}/status`, { method: 'PATCH', body: JSON.stringify({ active }) });
 export const deleteAcademicRecord = (entity: AcademicEntity, id: string) =>
   api<{ message: string }>(`/admin/academic/${entity}/${id}`, { method: 'DELETE' });
-export const replaceCareerCoordinator = (careerId: string, incomingUserId: string, deactivateOutgoing: boolean) =>
+export const replaceCareerCoordinator = (careerId: string, incomingUserId: string) =>
   api<{ message: string }>(`/admin/academic/careers/${careerId}/coordinator`, {
     method: 'POST',
-    body: JSON.stringify({ incoming_user_id: incomingUserId, deactivate_outgoing: deactivateOutgoing }),
+    body: JSON.stringify({ incoming_user_id: incomingUserId }),
   });

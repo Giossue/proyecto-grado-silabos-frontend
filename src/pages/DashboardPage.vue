@@ -25,17 +25,22 @@ const trackingOpen = ref(false);
 
 const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, correction_requested: CircleAlert, teachers_pending: UsersRound };
 const setupRoutes: Record<string, string> = {
-  faculties: paths.admin.academic,
-  careers: paths.admin.academic,
-  coordinators: paths.admin.users,
+  faculties: paths.admin.academicSection('facultades'),
+  careers: paths.admin.academicSection('carreras'),
+  periods: paths.admin.academicSection('periodos-academicos'),
+  accounts: paths.admin.users,
+  coordinators: paths.admin.academicSection('carreras'),
   template: paths.admin.template,
-  process: paths.admin.convocations,
+  process: paths.admin.academicSection('periodos-academicos'),
   curriculum: paths.coordination.curriculum,
   scheduled_subjects: paths.coordination.scheduledSubjects,
   parallels: paths.coordination.scheduledSubjects,
   teachers: paths.coordination.teacherAssignments,
   sources: paths.coordination.sources,
   convocation: paths.coordination.convocations,
+  assigned: paths.teacher.syllabi,
+  started: paths.teacher.syllabi,
+  submitted: paths.teacher.syllabi,
 };
 const setup = computed(() => dashboard.value?.setup ? {
   ...dashboard.value.setup,

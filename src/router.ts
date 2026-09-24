@@ -17,7 +17,6 @@ const SecurityPage = () => import("@/pages/SecurityPage.vue");
 const ProfilePage = () => import("@/pages/ProfilePage.vue");
 const NotificationsPage = () => import("@/pages/NotificationsPage.vue");
 const AdminUsersPage = () => import("@/pages/AdminUsersPage.vue");
-const AdminUserDetailPage = () => import("@/pages/AdminUserDetailPage.vue");
 const AcademicGovernancePage = () => import("@/pages/AcademicGovernancePage.vue");
 const AdminProcessesPage = () => import("@/pages/AdminProcessesPage.vue");
 const AdminTemplatePage = () => import("@/pages/AdminTemplatePage.vue");
@@ -84,13 +83,12 @@ export const router = createRouter({
     // Administración — rutas canónicas del monolito.
     { path: "/admin/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Panel" } },
     { path: "/admin/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Usuarios y roles" } },
-    { path: "/admin/usuarios/:user", component: AdminUserDetailPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Detalle de usuario" } },
     { path: "/admin/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Estructura académica" } },
     { path: "/admin/estructura-academica/:section", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Estructura académica" } },
     { path: "/admin/convocatorias", component: AdminProcessesPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Convocatorias" } },
     { path: "/admin/plantilla", component: AdminTemplatePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Plantilla" } },
     { path: "/admin/auditoria", component: AdminAuditPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Auditoría" } },
-    { path: "/admin/procesos", component: AdminJobsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Auditoría" } },
+    { path: "/admin/procesos", component: AdminJobsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Trabajos fallidos" } },
     { path: "/admin/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Perfil" } },
     { path: "/admin/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Seguridad" } },
     { path: "/admin/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Notificaciones" } },
@@ -124,7 +122,6 @@ export const router = createRouter({
 
     // URLs publicadas por la SPA anterior: se normalizan con replace.
     { path: "/administracion/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/usuarios" } },
-    { path: "/administracion/usuarios/:user", component: AdminUserDetailPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/usuarios/:user" } },
     { path: "/administracion/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/estructura-academica" } },
     { path: "/administracion/procesos", component: AdminProcessesPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/convocatorias" } },
     { path: "/administracion/trabajos", component: AdminJobsPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/procesos" } },
