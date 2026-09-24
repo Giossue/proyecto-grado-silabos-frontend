@@ -346,13 +346,9 @@ onBeforeUnmount(() => {
         @focusout="userEngaged = false"
     >
         <CardHeader class="shrink-0 py-4">
-            <div class="flex items-center gap-2">
-                <CardTitle>Asistente IA</CardTitle>
-                <Badge variant="secondary">Recomendación</Badge>
-            </div>
-            <CardDescription>
-                Revisa el sílabo completo y explica cada sugerencia con su
-                fuente
+            <CardTitle class="text-center">Asistente IA</CardTitle>
+            <CardDescription class="text-center">
+                Sugerencias para mejorar tu sílabo, sección por sección
             </CardDescription>
         </CardHeader>
 
@@ -385,7 +381,7 @@ onBeforeUnmount(() => {
                     <MessageContent class="w-full">
                         <Card>
                             <CardHeader>
-                                <div class="flex items-start gap-3">
+                                <div class="flex justify-center">
                                     <div
                                         class="flex size-12 shrink-0 items-center justify-center"
                                     >
@@ -393,16 +389,6 @@ onBeforeUnmount(() => {
                                             class="size-full"
                                             v-bind="avatar.state.value"
                                         />
-                                    </div>
-                                    <div class="flex min-w-0 flex-col gap-1">
-                                        <CardTitle class="text-base">
-                                            Revisión contextual
-                                        </CardTitle>
-                                        <CardDescription>
-                                            Analizaré únicamente los campos
-                                            habilitados y las fuentes elegidas
-                                            por Coordinación
-                                        </CardDescription>
                                     </div>
                                 </div>
                             </CardHeader>
