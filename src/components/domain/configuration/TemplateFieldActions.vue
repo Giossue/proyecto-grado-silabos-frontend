@@ -27,6 +27,8 @@ import {
     FieldError,
     FieldGroup,
     FieldLabel,
+    FieldLegend,
+    FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
@@ -43,6 +45,7 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import type { ShowWhen } from '@/lib/fieldConditions';
 import { choosableTypes, isFixedPart } from '@/lib/templateParts';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
@@ -61,7 +64,39 @@ const props = defineProps<{
     sectionTitle: string;
     field: TemplateFieldContainer;
     blockTypes: { value: EditableContentType; label: string }[];
+    /** Partes Sí/No o de selección de la plantilla, para «Mostrar solo si». */
+    choiceFields?: {
+        key: string;
+        label: string;
+        options: { value: string; label: string }[];
+    }[];
 }>();
+
+const ALWAYS = '__siempre__';
+/** Partes que llena el docente: cada una puede tener su «Mostrar solo si». */
+const conditionParts = computed(() =>
+    props.field.fields.filter(
+        (item) => !item.inherited && item.teacher_editable !== false,
+    ),
+);
+const conditions = ref<Record<string, { key: string; value: string }>>({});
+const conditionTargets = (ownKey: string) =>
+    (props.choiceFields ?? []).filter((item) => item.key !== ownKey);
+const targetOptions = (key: string) =>
+    (props.choiceFields ?? []).find((item) => item.key === key)?.options ?? [];
+const chooseTarget = (ownKey: string, key: string): void => {
+    conditions.value[ownKey] = {
+        key,
+        value: key === ALWAYS ? '' : (targetOptions(key)[0]?.value ?? ''),
+    };
+};
+const showWhen = (key: string): ShowWhen => {
+    const condition = conditions.value[key];
+
+    return condition && condition.key !== ALWAYS && condition.value !== ''
+        ? { key: condition.key, value: condition.value }
+        : null;
+};
 
 const primary = computed(() => props.field.fields[0] ?? null);
 const fixed = computed(() => isFixedPart(props.field));
@@ -97,6 +132,15 @@ const openEdit = (): void => {
     form.fingerprint = props.field.fingerprint ?? '';
     form.label = props.field.title;
     form.landscape = props.field.page_orientation === 'landscape';
+    conditions.value = Object.fromEntries(
+        conditionParts.value.map((part) => [
+            part.key,
+            {
+                key: part.show_when?.key ?? ALWAYS,
+                value: part.show_when?.value ?? '',
+            },
+        ]),
+    );
 
     if (!value) {
         // Texto fijo: sin preguntas al docente, solo se renombra.
@@ -142,24 +186,45 @@ const save = (): void => {
         delete rest.landscape;
 
         if (!props.field.document) {
-            return { ...rest, ...orientation };
+            const condition =
+                value && conditionParts.value.some((part) => part.key === value.key)
+                    ? { show_when: showWhen(value.key) }
+                    : {};
+
+            return { ...rest, ...orientation, ...condition };
         }
 
-        // Una parte con documento guarda sus propiedades junto con el documento.
+        // Una parte con documento guarda sus propiedades junto con el documento;
+        // las demás partes del docente solo agregan su «Mostrar solo si».
+        const properties: Record<string, unknown>[] = value
+            ? [
+                  {
+                      key: data.key,
+                      label: data.label,
+                      help: data.help,
+                      ai_enabled: data.ai_enabled,
+                  },
+              ]
+            : [];
+        for (const part of conditionParts.value) {
+            const existing = properties.find((item) => item.key === part.key);
+            if (existing) {
+                existing.show_when = showWhen(part.key);
+            } else {
+                properties.push({
+                    key: part.key,
+                    label: part.label,
+                    help: part.help ?? '',
+                    show_when: showWhen(part.key),
+                });
+            }
+        }
+
         return {
             ...rest,
             ...orientation,
             title: data.label,
-            properties: value
-                ? [
-                      {
-                          key: data.key,
-                          label: data.label,
-                          help: data.help,
-                          ai_enabled: data.ai_enabled,
-                      },
-                  ]
-                : [],
+            properties,
         };
     });
 
@@ -357,6 +422,94 @@ defineExpose({
                             </FieldDescription>
                         </FieldContent>
                     </Field>
+                    <FieldSet
+                        v-for="part in fixed ? [] : conditionParts"
+                        :key="part.key"
+                        class="gap-3"
+                        :data-condition="part.key"
+                    >
+                        <FieldLegend variant="label">
+                            Mostrar
+                            {{
+                                conditionParts.length > 1
+                                    ? `«${part.label.trim() || title}»`
+                                    : 'esta parte'
+                            }}
+                        </FieldLegend>
+                        <FieldDescription>
+                            Elija «Siempre» o que aparezca solo cuando otra
+                            parte tenga cierta respuesta.
+                        </FieldDescription>
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            <Field>
+                                <FieldLabel :for="`condition-part-${part.key}`">
+                                    Mostrar solo si
+                                </FieldLabel>
+                                <Select
+                                    :model-value="conditions[part.key]?.key ?? ALWAYS"
+                                    :disabled="form.processing"
+                                    @update:model-value="
+                                        chooseTarget(part.key, String($event))
+                                    "
+                                >
+                                    <SelectTrigger
+                                        :id="`condition-part-${part.key}`"
+                                        class="w-full"
+                                    >
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectItem :value="ALWAYS">
+                                                Siempre
+                                            </SelectItem>
+                                            <SelectItem
+                                                v-for="target in conditionTargets(part.key)"
+                                                :key="target.key"
+                                                :value="target.key"
+                                            >
+                                                {{ target.label }}
+                                            </SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                            <Field
+                                v-if="
+                                    conditions[part.key] &&
+                                    conditions[part.key].key !== ALWAYS
+                                "
+                            >
+                                <FieldLabel :for="`condition-value-${part.key}`">
+                                    es igual a
+                                </FieldLabel>
+                                <Select
+                                    v-model="conditions[part.key].value"
+                                    :disabled="form.processing"
+                                >
+                                    <SelectTrigger
+                                        :id="`condition-value-${part.key}`"
+                                        class="w-full"
+                                    >
+                                        <SelectValue placeholder="Elija un valor" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectGroup>
+                                            <SelectItem
+                                                v-for="option in targetOptions(
+                                                    conditions[part.key].key,
+                                                )"
+                                                :key="option.value"
+                                                :value="option.value"
+                                            >
+                                                {{ option.label }}
+                                            </SelectItem>
+                                        </SelectGroup>
+                                    </SelectContent>
+                                </Select>
+                            </Field>
+                        </div>
+                    </FieldSet>
                 </FieldGroup>
                 <DialogFooter>
                     <Button

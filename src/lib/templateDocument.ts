@@ -28,6 +28,9 @@ export type DocumentField = {
     inherited?: boolean;
     teacher_editable?: boolean;
     required?: boolean;
+    /** «Mostrar solo si»: la condición no se cumple y la parte no se muestra. */
+    hidden?: boolean;
+    show_when?: { key: string; value: string } | null;
     role?: TableColumnRole | null;
     sum?: boolean | null;
 };

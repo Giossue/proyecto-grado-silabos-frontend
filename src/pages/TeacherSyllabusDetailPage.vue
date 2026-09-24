@@ -35,6 +35,7 @@ import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
 import type { TableLayout, TableRowData } from '@/lib/tableLayout';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
+import { hiddenKeys } from '@/lib/fieldConditions';
 
 const route = useRoute();
 const router = useRouter();
@@ -314,8 +315,16 @@ const updateScalar = (field: SyllabusField, value: string): void => {
 const usesTabularDocument = (block: { content_type: string; document?: DocumentNode | null }): block is { content_type: string; document: DocumentNode } =>
   ['table', 'fixed'].includes(block.content_type) && block.document != null;
 
+/**
+ * «Mostrar solo si»: partes ocultas mientras su condición no se cumple. Solo se
+ * ocultan; el valor ya escrito no se borra y vuelve a verse al cumplirse.
+ */
+const hiddenParts = computed(() => hiddenKeys(
+  (syllabus.value?.sections ?? []).flatMap((section) => section.blocks.flatMap((block) => block.fields)),
+));
 const designFields = (fields: SyllabusField[]): DocumentField[] => fields.map((field) => ({
   ...field,
+  hidden: hiddenParts.value.has(field.key),
   rows: field.rows.map((row) => ({ id: row.id ?? null, data: row.data })),
 }));
 const tableRows = (field: SyllabusField): Array<{ id: string | null; data: TableRowData }> =>
@@ -540,7 +549,7 @@ onBeforeUnmount(() => {
               <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :layout="block.table" :editable="canEdit && !conflict" presentation="form" :planning-expectations="syllabus.planning_expectations ?? null" @value="(key, value) => updateDesignValue(block.fields, key, value)" @rows="(key, rows) => updateDesignRows(block.fields, key, rows)" />
               <template v-if="!usesTabularDocument(block)">
                 <FieldGroup>
-                <template v-for="field in block.fields.filter((item) => block.content_type !== 'institutional' || (item.teacher_editable && !item.inherited))" :key="field.id">
+                <template v-for="field in block.fields.filter((item) => !hiddenParts.has(item.key) && (block.content_type !== 'institutional' || (item.teacher_editable && !item.inherited)))" :key="field.id">
                 <Field v-if="canEdit && field.teacher_editable && !field.inherited && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" @update:model-value="updateScalar(field, String($event))" />
                 </Field>

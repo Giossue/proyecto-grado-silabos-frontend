@@ -152,6 +152,33 @@ describe("TeacherSyllabusDetailPage", () => {
     );
   });
 
+  it("muestra una parte solo cuando se cumple su condición y no borra lo escrito", async () => {
+    vi.useFakeTimers();
+    const detail = syllabus("borrador", "booleano");
+    detail.sections[0]!.blocks[0]!.fields.push({
+      id: "field-2", key: "detalle", label: "Tipo de discapacidad", help: null, type: "texto_corto",
+      options: [], show_when: { key: "contenido", value: "true" }, required: true, inherited: false,
+      teacher_editable: true, ai_enabled: false, value: "Visual", rows: [],
+    });
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find("#field-field-2").exists()).toBe(false);
+    const options = wrapper.findAll('.boolean-options [role="radio"]');
+    await options[0]!.trigger("click");
+    expect(wrapper.get("#input-field-2").element).toHaveProperty("value", "Visual");
+
+    await wrapper.findAll('.boolean-options [role="radio"]')[1]!.trigger("click");
+    expect(wrapper.find("#field-field-2").exists()).toBe(false);
+    await vi.advanceTimersByTimeAsync(700);
+    await flushPromises();
+    // Solo se guarda la respuesta Sí/No; la parte oculta conserva su valor.
+    expect(saveTeacherField).toHaveBeenCalledTimes(1);
+    expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, false);
+  });
+
   it("guarda una selección múltiple como una lista de valores", async () => {
     vi.useFakeTimers();
     const draft = syllabus("borrador", "seleccion_multiple");

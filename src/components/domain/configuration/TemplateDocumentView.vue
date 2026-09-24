@@ -185,6 +185,13 @@ const draw = (
     }
 
     if (['field', 'column'].includes(node.type)) {
+        // «Mostrar solo si»: una parte oculta no se dibuja; su valor se conserva.
+        if (
+            node.type === 'field' &&
+            props.fields.find((field) => field.key === attrs.key)?.hidden
+        ) {
+            return null;
+        }
         return input(node, context, path);
     }
 
