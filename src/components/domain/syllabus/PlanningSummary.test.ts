@@ -5,17 +5,17 @@ import type { TableLayout } from '@/lib/tableLayout';
 
 const layout: TableLayout = {
   columns: [
-    { key: 'semana', label: 'Semana', type: 'number', role: 'week' },
-    { key: 'acd', label: 'ACD', type: 'number', role: 'hours_acd' },
-    { key: 'ape', label: 'APE', type: 'number', role: 'hours_ape' },
-    { key: 'aa', label: 'AA', type: 'number', role: 'hours_aa' },
+    { key: 'semana', label: 'Semana', type: 'number', role: 'week', group: null, band: null },
+    { key: 'acd', label: 'ACD', type: 'number', role: 'hours_acd', group: null, band: null },
+    { key: 'ape', label: 'APE', type: 'number', role: 'hours_ape', group: null, band: null },
+    { key: 'aa', label: 'AA', type: 'number', role: 'hours_aa', group: null, band: null },
   ],
   groups: [],
   bands: [],
   header_fields: [],
   totals: { enabled: true },
   repeat: { enabled: false },
-} as TableLayout;
+};
 
 describe('PlanningSummary', () => {
   it('muestra filas sobrias con horas sin ceros sobrantes', () => {
