@@ -51,7 +51,7 @@ const rightNavItems: NavItem[] = [
                         <SheetTrigger as-child><Button variant="ghost" size="icon" class="mr-2 h-9 w-9"><Menu class="h-5 w-5" /><span class="sr-only">Abrir navegación</span></Button></SheetTrigger>
                         <SheetContent side="left" class="w-[300px] p-6">
                             <SheetTitle class="sr-only">Menú de navegación</SheetTitle>
-                            <SheetHeader class="flex justify-start text-left"><AppLogoIcon class="size-6 fill-current text-foreground" /></SheetHeader>
+                            <SheetHeader class="flex justify-start text-left"><AppLogoIcon class="size-6 object-contain" /></SheetHeader>
                             <div class="flex h-full flex-1 flex-col justify-between gap-4 py-6">
                                 <nav class="-mx-3 flex flex-col gap-1">
                                     <RouterLink v-for="item in mainNavItems" :key="item.title" :to="toUrl(item.href)" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent" :class="whenCurrentUrl(item.href, activeItemStyles)">
