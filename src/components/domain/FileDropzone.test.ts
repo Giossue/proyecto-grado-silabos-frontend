@@ -36,4 +36,15 @@ describe('FileDropzone', () => {
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([null]);
     expect(wrapper.emitted('validation-error')?.[0]).toEqual(['Seleccione un archivo PNG.']);
   });
+
+  it('acepta PDF y Excel juntos sin sustituir el modelo de un archivo de otros formularios', async () => {
+    const wrapper = mount(FileDropzone, { props: { modelValue: null, inputId: 'curricular-files', kind: 'curricular', multiple: true } });
+    const files = [new File(['pdf'], 'proyecto.pdf', { type: 'application/pdf' }), new File(['xlsx'], 'bibliografia.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })];
+    const input = wrapper.get('input[type="file"]');
+    Object.defineProperty(input.element, 'files', { configurable: true, value: files });
+    await input.trigger('change');
+    expect(wrapper.emitted('files-selected')?.[0]).toEqual([files]);
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined();
+    expect(input.attributes('multiple')).toBeDefined();
+  });
 });

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { UserRoundPlus } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import CurricularOptionsSourceSelect from '@/components/domain/configuration/CurricularOptionsSourceSelect.vue';
+import type { TemplateVariable } from '@/lib/templateDocument';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -20,6 +22,7 @@ import { Input } from '@/components/ui/input';
 import {
     Select,
     SelectContent,
+    SelectGroup,
     SelectItem,
     SelectTrigger,
     SelectValue,
@@ -29,7 +32,10 @@ export type NewTeacherField = {
     label: string;
     type: string;
     options: string[];
+    options_sources: string[];
 };
+
+defineProps<{ variables?: TemplateVariable[] }>();
 
 const emit = defineEmits<{
     create: [field: NewTeacherField];
@@ -40,12 +46,15 @@ const newFieldLabel = ref('');
 const newFieldType = ref('texto_largo');
 const newFieldOptions = ref('Sí, No');
 const newFieldError = ref('');
+const optionsSources = ref<string[]>([]);
+const isChoice = computed(() => ['seleccion_unica', 'seleccion_multiple'].includes(newFieldType.value));
 
 const open = (): void => {
     newFieldLabel.value = '';
     newFieldType.value = 'texto_largo';
     newFieldOptions.value = 'Sí, No';
     newFieldError.value = '';
+    optionsSources.value = [];
     newFieldOpen.value = true;
 };
 
@@ -61,7 +70,7 @@ const parsedOptions = (): string[] => [
 const createField = (): void => {
     const label = newFieldLabel.value.trim();
     const options =
-        newFieldType.value === 'seleccion_unica' ? parsedOptions() : [];
+        newFieldType.value === 'seleccion_unica' && !optionsSources.value.length ? parsedOptions() : [];
 
     if (!label) {
         newFieldError.value = 'Escriba el nombre que verá el docente.';
@@ -75,14 +84,19 @@ const createField = (): void => {
         return;
     }
 
-    if (newFieldType.value === 'seleccion_unica' && options.length < 2) {
+    if (newFieldType.value === 'seleccion_multiple' && !optionsSources.value.length) {
+        newFieldError.value = 'Selecciona la lista curricular que ofrecerá las opciones.';
+        return;
+    }
+
+    if (newFieldType.value === 'seleccion_unica' && !optionsSources.value.length && options.length < 2) {
         newFieldError.value =
             'Escriba al menos dos opciones separadas por comas.';
 
         return;
     }
 
-    emit('create', { label, type: newFieldType.value, options });
+    emit('create', { label, type: newFieldType.value, options, options_sources: isChoice.value ? optionsSources.value : [] });
     newFieldOpen.value = false;
 };
 
@@ -121,6 +135,7 @@ defineExpose({ open });
                             <SelectValue placeholder="Seleccione un tipo" />
                         </SelectTrigger>
                         <SelectContent>
+                            <SelectGroup>
                             <SelectItem value="texto_corto"
                                 >Texto corto</SelectItem
                             >
@@ -132,10 +147,13 @@ defineExpose({ open });
                             <SelectItem value="seleccion_unica"
                                 >Selección única</SelectItem
                             >
+                            <SelectItem value="seleccion_multiple">Selección múltiple desde una lista curricular</SelectItem>
+                            </SelectGroup>
                         </SelectContent>
                     </Select>
                 </Field>
-                <Field v-if="newFieldType === 'seleccion_unica'">
+                <CurricularOptionsSourceSelect v-if="isChoice" id="table-field-source" v-model="optionsSources" :variables="variables" :manual="newFieldType === 'seleccion_unica'" />
+                <Field v-if="newFieldType === 'seleccion_unica' && !optionsSources.length">
                     <FieldLabel for="table-field-options">Opciones</FieldLabel>
                     <Input
                         id="table-field-options"

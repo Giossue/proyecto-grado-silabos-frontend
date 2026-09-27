@@ -208,6 +208,8 @@ const inlineNode = (
                       kind: { default: 'texto_largo' },
                       choice: { default: null },
                       options: { default: null },
+                      options_source: { default: null },
+                      options_sources: { default: null },
                       listStyle: { default: null },
                       ...(name === 'column'
                           ? {

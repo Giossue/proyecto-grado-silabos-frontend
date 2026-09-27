@@ -2,6 +2,8 @@
 import { Blocks, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
+import CurricularOptionsSourceSelect from '@/components/domain/configuration/CurricularOptionsSourceSelect.vue';
+import type { TemplateVariable } from '@/lib/templateDocument';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
@@ -37,6 +39,7 @@ const props = withDefaults(
         blockTypes: { value: EditableContentType; label: string }[];
         empty?: boolean;
         choice?: boolean;
+        variables?: TemplateVariable[];
     }>(),
     {
         empty: false,
@@ -57,6 +60,7 @@ const newField = () => ({
     key: technicalKey('campo'),
     label: '',
     content_type: 'text' as EditableContentType,
+    options_sources: [] as string[],
 });
 
 const open = ref(false);
@@ -101,6 +105,10 @@ const submit = (): void => {
     if (form.title.trim() === '') {
         errors.title = 'Escriba el nombre de la sección.';
     }
+    form.fields.forEach((field, index) => {
+        if (field.content_type === 'multiple_choice' && !field.options_sources.length) errors[`fields.${index}.options_sources`] = 'Seleccione una lista curricular.';
+        if (field.content_type !== 'multiple_choice') field.options_sources = [];
+    });
 
     if (Object.keys(errors).length > 0) {
         form.errors = errors;
@@ -287,6 +295,8 @@ const updateOpen = (value: boolean): void => {
                                     ]"
                                 />
                             </Field>
+                            <CurricularOptionsSourceSelect v-if="field.content_type === 'multiple_choice'" :id="`new-section-options-${index}`" v-model="field.options_sources" :variables="variables" :disabled="form.processing" />
+                            <FieldError :errors="[errorFor(`fields.${index}.options_sources`)]" />
                         </FieldGroup>
                     </FieldGroup>
 

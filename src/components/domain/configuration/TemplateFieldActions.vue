@@ -2,6 +2,8 @@
 import { MoreHorizontal, Pencil, Save, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { pageOrientationPayload } from '@/api/template';
+import CurricularOptionsSourceSelect from '@/components/domain/configuration/CurricularOptionsSourceSelect.vue';
+import { documentOptionsSources, type TemplateVariable } from '@/lib/templateDocument';
 import TemplateController from '@/api/template-routes';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -64,6 +66,7 @@ const props = defineProps<{
     sectionTitle: string;
     field: TemplateFieldContainer;
     blockTypes: { value: EditableContentType; label: string }[];
+    variables?: TemplateVariable[];
     /** Partes Sí/No o de selección de la plantilla, para «Mostrar solo si». */
     choiceFields?: {
         key: string;
@@ -80,6 +83,8 @@ const conditionParts = computed(() =>
     ),
 );
 const conditions = ref<Record<string, { key: string; value: string }>>({});
+const optionSources = ref<Record<string, string[]>>({});
+const optionParts = computed(() => props.field.fields.filter((part) => ['seleccion_unica', 'seleccion_multiple'].includes(part.type ?? '')));
 const conditionTargets = (ownKey: string) =>
     (props.choiceFields ?? []).filter((item) => item.key !== ownKey);
 const targetOptions = (key: string) =>
@@ -112,6 +117,7 @@ const form = useForm({
     landscape: false,
     document: null as TemplateFieldContainer['document'],
     fingerprint: '',
+    options_sources: [] as string[],
 });
 
 const title = computed(() => props.field.title.trim() || 'sin nombre');
@@ -132,6 +138,8 @@ const openEdit = (): void => {
     form.fingerprint = props.field.fingerprint ?? '';
     form.label = props.field.title;
     form.landscape = props.field.page_orientation === 'landscape';
+    optionSources.value = Object.fromEntries(optionParts.value.map((part) => [part.key, documentOptionsSources(part)]));
+    form.options_sources = value ? documentOptionsSources(value) : [];
     conditions.value = Object.fromEntries(
         conditionParts.value.map((part) => [
             part.key,
@@ -159,6 +167,13 @@ const openEdit = (): void => {
 
 const save = (): void => {
     const value = primary.value;
+    const missingList = props.field.document
+        ? optionParts.value.some((part) => part.type === 'seleccion_multiple' && !optionSources.value[part.key]?.length)
+        : form.content_type === 'multiple_choice' && !form.options_sources.length;
+    if (missingList) {
+        form.errors = { options_sources: 'Seleccione al menos una lista curricular para cada pregunta de selección múltiple.' };
+        return;
+    }
 
     if (!value && !props.field.document) {
         toast.error(
@@ -218,6 +233,10 @@ const save = (): void => {
                     show_when: showWhen(part.key),
                 });
             }
+        }
+        for (const part of optionParts.value) {
+            const existing = properties.find((item) => item.key === part.key);
+            if (existing) existing.options_sources = optionSources.value[part.key] ?? [];
         }
 
         return {
@@ -328,6 +347,11 @@ defineExpose({
                 </DialogDescription>
             </DialogHeader>
             <form class="flex flex-col gap-4" @submit.prevent="save">
+                <template v-if="field.document">
+                    <CurricularOptionsSourceSelect v-for="part in optionParts" :key="part.key" :id="`edit-options-source-${part.key}`" :label="`Listas para ${part.label}`" v-model="optionSources[part.key]" :variables="variables" :disabled="form.processing" :manual="part.type === 'seleccion_unica'" />
+                </template>
+                <CurricularOptionsSourceSelect v-else-if="form.content_type === 'multiple_choice' || optionParts.length" id="edit-options-source" v-model="form.options_sources" :variables="variables" :disabled="form.processing" :manual="form.content_type !== 'multiple_choice' && primary?.type === 'seleccion_unica'" />
+                <FieldError :errors="Object.entries(form.errors).filter(([key]) => key.includes('options_source')).map(([, value]) => value)" />
                 <FieldGroup>
                     <Field :data-invalid="Boolean(form.errors.label)">
                         <FieldLabel for="edit-template-field-label">

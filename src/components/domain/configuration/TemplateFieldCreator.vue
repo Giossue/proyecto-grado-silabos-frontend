@@ -2,6 +2,8 @@
 import { ListPlus, Lock } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
+import CurricularOptionsSourceSelect from '@/components/domain/configuration/CurricularOptionsSourceSelect.vue';
+import type { TemplateVariable } from '@/lib/templateDocument';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
@@ -40,6 +42,7 @@ const props = withDefaults(
         choice?: boolean;
         /** Crea un texto fijo: lo escribe Administración y el docente no lo llena. */
         fixed?: boolean;
+        variables?: TemplateVariable[];
     }>(),
     { choice: false, fixed: false },
 );
@@ -70,6 +73,7 @@ const form = useForm({
     key: '',
     label: '',
     content_type: 'text' as EditableContentType,
+    options_sources: [] as string[],
 });
 
 const keyFor = (): string =>
@@ -82,6 +86,7 @@ const reset = (): void => {
     form.key = keyFor();
     form.label = '';
     form.content_type = props.fixed ? 'fixed' : 'text';
+    form.options_sources = [];
 };
 
 reset();
@@ -90,6 +95,11 @@ const errorFor = (path: string): string | undefined =>
     (form.errors as Record<string, string>)[path];
 
 const submit = (): void => {
+    if (form.content_type === 'multiple_choice' && !form.options_sources.length) {
+        form.errors = { options_sources: 'Seleccione una lista curricular para las opciones.' };
+        return;
+    }
+    if (form.content_type !== 'multiple_choice') form.options_sources = [];
     form.position = props.position + 1;
     form.post(TemplateController.storeField.url(props.templateId), {
         preserveScroll: true,
@@ -200,6 +210,8 @@ const updateOpen = (value: boolean): void => {
                         />
                     </Field>
                 </FieldGroup>
+                <CurricularOptionsSourceSelect v-if="form.content_type === 'multiple_choice'" id="new-field-options-source" v-model="form.options_sources" :variables="variables" :disabled="form.processing" />
+                <FieldError :errors="[errorFor('options_sources')]" />
                 <FormSheetActions
                     :label="texts.action"
                     :close="close"

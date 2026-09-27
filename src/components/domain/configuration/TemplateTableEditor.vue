@@ -221,12 +221,13 @@ const openNewField = (): void => {
     newFieldDialog.value?.open();
 };
 
-const createField = ({ label, type, options }: NewTeacherField): void => {
+const createField = ({ label, type, options, options_sources }: NewTeacherField): void => {
     insertField({
         key: keyFor(label),
         label,
         type,
         options: options.map((option) => ({ value: option, label: option })),
+        options_sources,
         inherited: false,
         teacher_editable: true,
         required: true,
@@ -505,7 +506,7 @@ defineExpose({ getDocument });
         @create="createRepeatedData"
     />
 
-    <TemplateTableNewFieldDialog ref="newFieldDialog" @create="createField" />
+    <TemplateTableNewFieldDialog ref="newFieldDialog" :variables="variables" @create="createField" />
 </template>
 
 <style>

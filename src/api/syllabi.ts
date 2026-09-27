@@ -136,6 +136,8 @@ export type SyllabusField = {
   help: string | null;
   type: string;
   options: Array<{ value: string; label: string }>;
+  options_source?: string | null;
+  options_sources?: string[];
   /** «Mostrar solo si»: otra parte de selección y su valor; null es «Siempre». */
   show_when?: { key: string; value: string } | null;
   required: boolean;

@@ -16,7 +16,7 @@ export type DocumentNode = {
     marks?: { type: string; attrs?: Record<string, string | null> }[];
     content?: DocumentNode[];
 };
-export type TemplateVariable = { key: string; label: string; sample: string };
+export type TemplateVariable = { key: string; label: string; sample: string; type?: 'texto' | 'lista' | 'tabla'; scope?: 'carrera' | 'asignatura' };
 export type DocumentField = {
     id?: string;
     key: string;
@@ -25,6 +25,8 @@ export type DocumentField = {
     value?: unknown;
     rows?: { id: string | null; data: TableRowData }[];
     options?: { value: string; label: string }[];
+    options_source?: string | null;
+    options_sources?: string[];
     inherited?: boolean;
     teacher_editable?: boolean;
     required?: boolean;
@@ -49,8 +51,9 @@ export const textNode = (text: string): DocumentNode => ({
     type: 'text',
     text,
 });
+export const documentOptionsSources = (field: Pick<DocumentField, 'options_source' | 'options_sources'>): string[] => field.options_sources ?? (field.options_source ? [field.options_source] : []);
 export const documentFieldOptions = (field: DocumentField): string[] | null =>
-    field.type === 'seleccion_unica'
+    !documentOptionsSources(field).length && ['seleccion_unica', 'seleccion_multiple'].includes(field.type ?? '')
         ? (field.options?.map((option) => option.value) ?? [])
         : null;
 export const fieldNode = (
@@ -64,6 +67,8 @@ export const fieldNode = (
         kind: field.type ?? 'texto_largo',
         choice: null,
         options: documentFieldOptions(field),
+        options_source: documentOptionsSources(field).length === 1 ? documentOptionsSources(field)[0]! : null,
+        options_sources: documentOptionsSources(field),
         ...(type === 'column'
             ? { role: field.role ?? null, sum: field.sum ?? null }
             : {}),

@@ -14,7 +14,7 @@ import type {
     DocumentNode,
     TemplateVariable,
 } from '@/lib/templateDocument';
-import { documentFieldOptions, nodesOfType } from '@/lib/templateDocument';
+import { documentFieldOptions, documentOptionsSources, nodesOfType } from '@/lib/templateDocument';
 
 type TemplateTableActionSource = {
     document: DocumentNode;
@@ -275,6 +275,8 @@ export function useTemplateTableActions(
                 kind: field.type ?? 'texto_largo',
                 choice,
                 options: documentFieldOptions(field),
+                options_source: documentOptionsSources(field).length === 1 ? documentOptionsSources(field)[0] : null,
+                options_sources: documentOptionsSources(field),
                 listStyle: null,
             },
         });

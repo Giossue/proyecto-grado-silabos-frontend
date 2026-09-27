@@ -703,6 +703,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                 >
                     <TemplateBlockCreator
                         v-if="!readonly"
+                        :variables="variables"
                         :template-id="template.id"
                         :position="0"
                         :block-types="blockTypes"
@@ -750,6 +751,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             :section="section"
                         />
                         <TemplateFieldActions
+                            :variables="variables"
                             v-for="block in section.blocks"
                             :key="block.id"
                             :ref="
@@ -874,6 +876,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             @click.stop
                         >
                             <TemplateInsertPopover
+                                :variables="variables"
                                 :template-id="template.id"
                                 :section-id="section.id"
                                 :field-position="fieldIndex + 1"
@@ -921,6 +924,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         @click.stop
                     >
                         <TemplateInsertPopover
+                            :variables="variables"
                             :template-id="template.id"
                             :section-id="section.id"
                             :field-position="section.blocks.length"

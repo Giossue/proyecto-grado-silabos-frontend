@@ -50,7 +50,7 @@ const props = withDefaults(
     },
 );
 const emit = defineEmits<{
-    value: [key: string, value: string | number | boolean];
+    value: [key: string, value: string | number | boolean | string[]];
     rows: [key: string, rows: Row[]];
 }>();
 const slots = useSlots();

@@ -6,6 +6,7 @@ import TemplateFieldCreator from '@/components/domain/configuration/TemplateFiel
 import TemplateIconPopover from '@/components/domain/configuration/TemplateIconPopover.vue';
 import { PopoverContent } from '@/components/ui/popover';
 import type { TemplateContentType } from '@/types/configuration';
+import type { TemplateVariable } from '@/lib/templateDocument';
 
 type EditableContentType = Exclude<
     TemplateContentType,
@@ -18,6 +19,7 @@ defineProps<{
     fieldPosition: number;
     blockPosition: number;
     blockTypes: { value: EditableContentType; label: string }[];
+    variables?: TemplateVariable[];
 }>();
 
 const open = ref(false);
@@ -40,6 +42,7 @@ const open = ref(false);
         <PopoverContent align="center" class="w-56 p-1.5">
             <div class="flex flex-col gap-1">
                 <TemplateFieldCreator
+                    :variables="variables"
                     :template-id="templateId"
                     :section-id="sectionId"
                     :position="fieldPosition"
@@ -57,6 +60,7 @@ const open = ref(false);
                     @closed="open = false"
                 />
                 <TemplateBlockCreator
+                    :variables="variables"
                     :template-id="templateId"
                     :position="blockPosition"
                     :block-types="blockTypes"

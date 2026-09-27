@@ -354,7 +354,7 @@ const designFields = (fields: SyllabusField[]): DocumentField[] => fields.map((f
 }));
 const tableRows = (field: SyllabusField): Array<{ id: string | null; data: TableRowData }> =>
   field.rows.map((row) => ({ id: row.id ?? null, data: row.data }));
-const updateDesignValue = (fields: SyllabusField[], key: string, value: string | number | boolean): void => {
+const updateDesignValue = (fields: SyllabusField[], key: string, value: string | number | boolean | string[]): void => {
   const field = fields.find((item) => item.key === key);
   if (field) { field.value = value; clearFieldValidation(field.id); scheduleSave(field); }
 };

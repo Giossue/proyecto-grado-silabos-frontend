@@ -81,6 +81,7 @@ describe('AppSidebarLayout', () => {
     expect(sidebar.get('a[href="/admin/panel"]').attributes('aria-current')).toBe('page');
     expect(wrapper.text()).toContain('Configuración');
     expect(wrapper.text()).not.toContain('Mis sílabos');
+    expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
     expect(wrapper.get('[aria-label="Notificaciones"]').text()).toContain('3');
   });
 
@@ -95,6 +96,7 @@ describe('AppSidebarLayout', () => {
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
     expect(sidebar.text()).toContain('Panel');
     expect(sidebar.find('a[href="/coordinacion/panel"]').exists()).toBe(true);
+    expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(true);
   });
 
   it('deja el checklist en el encabezado y retira el Panel del sidebar para docente', async () => {
@@ -109,6 +111,7 @@ describe('AppSidebarLayout', () => {
     expect(sidebar.text()).not.toContain('Panel');
     expect(sidebar.find('a[href="/dashboard"]').exists()).toBe(false);
     expect(wrapper.find('a[href="/dashboard"]').exists()).toBe(true);
+    expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
   });
 
   it('permite alternar el tema y conserva la preferencia', async () => {

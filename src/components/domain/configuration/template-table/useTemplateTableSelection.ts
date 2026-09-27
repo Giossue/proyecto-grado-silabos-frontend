@@ -198,6 +198,8 @@ export function useTemplateTableSelection(
                 key,
                 label: String(node.attrs?.label ?? key),
                 type: String(node.attrs?.kind ?? 'texto_largo'),
+                options_source: typeof node.attrs?.options_source === 'string' ? node.attrs.options_source : null,
+                options_sources: Array.isArray(node.attrs?.options_sources) ? node.attrs.options_sources.filter((value): value is string => typeof value === 'string') : undefined,
                 options: Array.isArray(rawOptions)
                     ? rawOptions.map((option) => ({
                           value: String(option),

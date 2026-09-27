@@ -1,6 +1,8 @@
 import { h } from 'vue';
 import type { VNodeChild } from 'vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Field, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
     Select,
@@ -33,7 +35,7 @@ type Options = {
     };
     prefix: string;
     emit: {
-        (event: 'value', key: string, value: string | number | boolean): void;
+        (event: 'value', key: string, value: string | number | boolean | string[]): void;
         (event: 'rows', key: string, rows: Row[]): void;
     };
     setColumn: (context: Context, key: string, value: string | number) => void;
@@ -243,6 +245,23 @@ export const createDocumentInput = (options: Options) => {
                     ),
                 ],
             );
+        }
+
+        if (!isColumn && kind === 'seleccion_multiple') {
+            const chosen = Array.isArray(value) ? value.map(String) : [];
+            return h(FieldSet, { style }, () => [
+                h(FieldLegend, { class: 'sr-only', required: field.required }, () => label),
+                ...(field.options ?? []).map((option, index) => {
+                    const id = `${options.prefix}-${path}-${index}`;
+                    return h(Field, { key: option.value, orientation: 'horizontal' }, () => [
+                        h(Checkbox, { id, modelValue: chosen.includes(option.value), 'onUpdate:modelValue': (checked: boolean | 'indeterminate') => {
+                            options.emit('value', key, checked === true ? [...new Set([...chosen, option.value])] : chosen.filter((item) => item !== option.value));
+                        } }),
+                        h(FieldLabel, { for: id }, () => option.label),
+                    ]);
+                }),
+                !(field.options ?? []).length ? h('p', { class: 'text-sm text-muted-foreground' }, 'No hay opciones curriculares disponibles para esta asignatura.') : null,
+            ]);
         }
 
         const control =

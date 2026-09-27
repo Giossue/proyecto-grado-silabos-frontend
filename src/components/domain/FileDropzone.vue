@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
 import { cn } from '@/lib/utils';
 
-type FileKind = 'pdf' | 'png';
+type FileKind = 'pdf' | 'png' | 'curricular';
 
 const props = withDefaults(defineProps<{
   modelValue: File | null;
@@ -14,6 +14,7 @@ const props = withDefaults(defineProps<{
   required?: boolean;
   maxBytes?: number;
   kind?: FileKind;
+  multiple?: boolean;
   state?: 'idle' | 'uploading' | 'processing' | 'error' | 'done';
 }>(), {
   disabled: false,
@@ -21,11 +22,13 @@ const props = withDefaults(defineProps<{
   required: false,
   maxBytes: 50 * 1024 * 1024,
   kind: 'pdf' as FileKind,
+  multiple: false,
   state: 'idle',
 });
 const emit = defineEmits<{
   'update:modelValue': [file: File | null];
   'validation-error': [message: string | null];
+  'files-selected': [files: File[]];
 }>();
 
 const input = ref<HTMLInputElement | null>(null);
@@ -42,7 +45,15 @@ const formatLimit = (bytes: number): string => {
   return Number.isInteger(megabytes) ? `${megabytes} MB` : formatBytes(bytes);
 };
 
-const copy = computed(() => props.kind === 'png' ? {
+const copy = computed(() => props.kind === 'curricular' ? {
+  accept: 'application/pdf,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx',
+  label: 'Documento', invalid: 'Seleccione documentos PDF o Excel (.xlsx).',
+  maxError: `Cada documento puede tener hasta ${formatLimit(props.maxBytes)}.`,
+  emptyTitle: 'Adjunta los documentos de la carrera',
+  selectedTitle: 'Documento seleccionado', selectedDescription: 'Arrastra otro documento o haz clic para reemplazarlo',
+  replaceLabel: 'Reemplazar documento', chooseLabel: 'Adjuntar PDF o Excel', removeLabel: 'Quitar documento',
+  dropAnnouncement: 'Suelta los documentos para adjuntarlos.',
+} : props.kind === 'png' ? {
   accept: 'image/png,.png',
   label: 'PNG',
   invalid: 'Seleccione un archivo PNG.',
@@ -80,32 +91,44 @@ const chooseFile = (): void => {
   if (!props.disabled) input.value?.click();
 };
 
+const isValidFile = (file: File): boolean => {
+  const isAccepted = props.kind === 'curricular'
+    ? /\.(pdf|xlsx)$/i.test(file.name)
+    : props.kind === 'png'
+      ? file.name.toLowerCase().endsWith('.png') || file.type === 'image/png'
+      : file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+  if (!isAccepted || file.size > props.maxBytes) {
+    emit('validation-error', !isAccepted ? copy.value.invalid : copy.value.maxError);
+    return false;
+  }
+  return true;
+};
+
 const setFile = (file: File | null): void => {
   if (!file) {
     emit('update:modelValue', null);
     emit('validation-error', null);
     return;
   }
-  const isAccepted = props.kind === 'png'
-    ? file.name.toLowerCase().endsWith('.png') || file.type === 'image/png'
-    : file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
-  if (!isAccepted) {
+  if (!isValidFile(file)) {
     emit('update:modelValue', null);
-    emit('validation-error', copy.value.invalid);
-    return;
-  }
-  if (file.size > props.maxBytes) {
-    emit('update:modelValue', null);
-    emit('validation-error', copy.value.maxError);
     return;
   }
   emit('update:modelValue', file);
   emit('validation-error', null);
 };
 
+const setFiles = (files: File[]): void => {
+  if (!props.multiple) { setFile(files[0] ?? null); return; }
+  if (!files.length || !files.every(isValidFile)) return;
+  emit('validation-error', null);
+  emit('files-selected', files);
+  if (input.value) input.value.value = '';
+};
+
 const selectFile = (event: Event): void => {
   const target = event.target as HTMLInputElement;
-  setFile(target.files?.[0] ?? null);
+  setFiles(Array.from(target.files ?? []));
 };
 
 const clearFile = (): void => {
@@ -129,7 +152,7 @@ const handleDrop = (event: DragEvent): void => {
   event.preventDefault();
   dragDepth.value = 0;
   isDragging.value = false;
-  setFile(event.dataTransfer?.files[0] ?? null);
+  setFiles(Array.from(event.dataTransfer?.files ?? []));
 };
 
 watch(() => props.modelValue, (file) => {
@@ -153,12 +176,12 @@ watch(() => props.modelValue, (file) => {
       @dragleave.prevent="handleDragLeave"
       @drop="handleDrop"
     >
-      <input ref="input" :id="inputId" class="sr-only" type="file" :accept="copy.accept" :disabled="props.disabled" :required="props.required" :aria-invalid="props.invalid" :aria-required="props.required" tabindex="-1" @click.stop @change="selectFile" />
+      <input ref="input" :id="inputId" class="sr-only" type="file" :multiple="multiple" :accept="copy.accept" :disabled="props.disabled" :required="props.required" :aria-invalid="props.invalid" :aria-required="props.required" tabindex="-1" @click.stop @change="selectFile" />
       <div v-if="!modelValue" class="flex flex-col items-center gap-2 text-center">
         <Upload class="size-8 text-muted-foreground" aria-hidden="true" />
         <div>
           <p class="font-medium">{{ copy.emptyTitle }}</p>
-          <p class="text-sm text-muted-foreground">o haz clic para seleccionarlo</p>
+          <p class="text-sm text-muted-foreground">{{ multiple ? 'o haz clic para adjuntarlos' : 'o haz clic para seleccionarlo' }}</p>
         </div>
       </div>
       <div v-else class="flex flex-col items-center gap-1 text-center">
