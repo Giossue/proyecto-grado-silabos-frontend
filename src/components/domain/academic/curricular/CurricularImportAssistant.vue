@@ -14,13 +14,19 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { curricularStatusLabel, useCurricularImports } from '@/composables/useCurricularImports';
 import { toast } from '@/lib/toast';
 
 const props = defineProps<{ careerId: string; careerName: string }>();
 const open = ref(false);
 const downloading = ref<string | null>(null);
-const { index, detail, loading, uploading, pending, error, errors, view, load, select, create, retry, history, confirmed, applied } = useCurricularImports(open, () => props.careerId);
+const { index, detail, loading, uploading, pending, error, errors, view, activeTab, load, select, create, retry, history, confirmed, applied } = useCurricularImports(open, () => props.careerId);
+const navigate = (target: string | number): void => {
+  if (target === 'new') void load(false);
+  if (target === 'history') void history();
+  if (target === 'confirmed') void confirmed();
+};
 const formatDate = (value: string) => new Intl.DateTimeFormat('es-EC', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value));
 const download = async (document: CurricularImportDetail['documents'][number]): Promise<void> => {
   if (!detail.value || !document.original_url || downloading.value) return;
@@ -46,23 +52,26 @@ const download = async (document: CurricularImportDetail['documents'][number]): 
         <Bot data-icon="inline-start" aria-hidden="true" /><span class="max-sm:hidden">Asistente curricular</span>
       </Button>
     </SheetTrigger>
-    <SheetContent side="right" class="w-full sm:max-w-3xl">
-      <SheetHeader>
+    <SheetContent side="right" class="w-full gap-0 sm:max-w-3xl">
+      <SheetHeader class="pb-3">
         <SheetTitle>Asistente curricular</SheetTitle>
-        <SheetDescription>{{ careerName }} · Importa documentos y revisa los datos que alimentarán sus sílabos.</SheetDescription>
+        <SheetDescription>Carrera: {{ careerName }}</SheetDescription>
       </SheetHeader>
-      <div class="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-6">
-        <div class="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" size="sm" :disabled="loading || uploading" @click="load(false)">Nueva importación</Button>
-          <Button type="button" variant="outline" size="sm" :disabled="loading || uploading" @click="history">Historial</Button>
-          <Button type="button" variant="outline" size="sm" :disabled="loading || uploading" @click="confirmed">Datos confirmados</Button>
-        </div>
+      <div class="overflow-x-auto border-b px-4 pb-3">
+        <Tabs :model-value="activeTab" @update:model-value="navigate">
+          <TabsList class="min-w-max sm:w-full">
+            <TabsTrigger value="new" :disabled="loading || uploading">Importar</TabsTrigger>
+            <TabsTrigger value="history" :disabled="loading || uploading">Historial</TabsTrigger>
+            <TabsTrigger value="confirmed" :disabled="loading || uploading">Datos confirmados</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      <div class="flex min-h-0 min-w-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4 pt-5">
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
         <template v-if="loading">
           <div role="status" aria-label="Cargando importaciones" class="flex flex-col gap-3"><Skeleton class="h-12 w-full" /><Skeleton class="h-40 w-full" /></div>
         </template>
         <template v-else-if="index && view === 'new'">
-          <Alert><Bot aria-hidden="true" /><AlertDescription>Adjunta el proyecto de carrera, las guías o la bibliografía. Organizaré los datos por asignatura y te mostraré de dónde salen para que los revises antes de guardarlos.</AlertDescription></Alert>
           <CurricularImportForm :index="index" :processing="uploading" :errors="errors" @submit="create" />
         </template>
         <template v-else-if="index && view === 'history'">

@@ -16,6 +16,9 @@ const button = (label: string) => {
   if (!found) throw new Error(`Botón no encontrado: ${label}`);
   return found;
 };
+const selectTab = (label: string) => {
+  button(label).dispatchEvent(new MouseEvent('mousedown', { bubbles: true, button: 0 }));
+};
 beforeEach(() => {
   vi.resetAllMocks();
   api.getCurricularImports.mockResolvedValue(structuredClone(index));
@@ -26,6 +29,26 @@ beforeEach(() => {
 afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('CurricularImportAssistant', () => {
+  it('muestra la vista activa y deja la indicación adicional a elección del usuario', async () => {
+    mountAssistant();
+    button('Asistente curricular').click();
+    await flushPromises();
+
+    expect(button('Importar').getAttribute('aria-selected')).toBe('true');
+    expect(document.querySelector('#curricular-import-instruction')).toBeNull();
+    expect(document.body.textContent).toContain('Selecciona un archivo o un documento anterior para continuar.');
+    expect(document.body.textContent).not.toContain('Organizaré los datos por asignatura');
+
+    button('Indicar qué buscar (opcional)').click();
+    await flushPromises();
+    expect(document.querySelector('#curricular-import-instruction')).not.toBeNull();
+
+    selectTab('Historial');
+    await flushPromises();
+    expect(button('Historial').getAttribute('aria-selected')).toBe('true');
+    expect(button('Importar').getAttribute('aria-selected')).toBe('false');
+  });
+
   it('consulta los resultados efectivos y su procedencia dentro del asistente', async () => {
     api.getCurricularImports.mockResolvedValue({ ...index, current_values: [{
       id: 'value-1', key: 'resultados_aprendizaje', concept_key: 'resultados_aprendizaje', label: 'Resultados de aprendizaje',
@@ -37,7 +60,7 @@ describe('CurricularImportAssistant', () => {
     mountAssistant();
     button('Asistente curricular').click();
     await flushPromises();
-    button('Datos confirmados').click();
+    selectTab('Datos confirmados');
     await flushPromises();
     expect(document.body.textContent).toContain('SW-1 · Calidad');
     expect(document.body.textContent).toContain('Evalúa la calidad del software.');
@@ -56,7 +79,7 @@ describe('CurricularImportAssistant', () => {
     mountAssistant();
     button('Asistente curricular').click();
     await flushPromises();
-    button('Datos confirmados').click();
+    selectTab('Datos confirmados');
     await flushPromises();
     expect(document.body.textContent).toContain('Registro anterior');
     expect(document.body.textContent).toContain('sin extracto digital');
@@ -72,7 +95,7 @@ describe('CurricularImportAssistant', () => {
     expect(api.getCurricularImports).not.toHaveBeenCalled();
     button('Asistente curricular').click();
     await flushPromises();
-    expect(document.body.textContent).toContain('Documentos de importaciones anteriores');
+    expect(document.body.textContent).toContain('Reutilizar documentos');
     const file = new File(['demo'], 'Proyecto.pdf', { type: 'application/pdf' });
     wrapper.findComponent(FileDropzone).vm.$emit('files-selected', [file]);
     document.querySelector<HTMLButtonElement>('#curricular-source-source-1')!.click();
@@ -81,6 +104,7 @@ describe('CurricularImportAssistant', () => {
     await flushPromises();
     expect(api.createCurricularImport).toHaveBeenCalledWith({ files: [file], source_ids: ['source-1'], instruction: '' });
     expect(document.body.textContent).toContain('Estoy leyendo los documentos');
+    expect(button('Importar').getAttribute('aria-selected')).toBe('true');
     await vi.advanceTimersByTimeAsync(1800);
     await flushPromises();
     expect(api.getCurricularImport).toHaveBeenCalledWith('import-1');
@@ -95,6 +119,7 @@ describe('CurricularImportAssistant', () => {
     expect(api.getCurricularImport).toHaveBeenCalledWith('import-1');
     expect(document.body.textContent).toContain('Proyecto.pdf');
     expect(document.body.textContent).toContain('Lista para revisar');
+    expect(button('Historial').getAttribute('aria-selected')).toBe('true');
   });
 
   it('descarga el original privado usando el nombre informado por el servidor', async () => {
@@ -144,7 +169,7 @@ describe('CurricularImportAssistant', () => {
     mountAssistant();
     button('Asistente curricular').click();
     await flushPromises();
-    button('Historial').click();
+    selectTab('Historial');
     await flushPromises();
     button('Abrir').click();
     await flushPromises();

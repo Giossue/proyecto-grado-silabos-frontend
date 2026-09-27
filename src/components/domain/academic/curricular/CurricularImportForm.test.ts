@@ -4,6 +4,14 @@ import CurricularImportForm from './CurricularImportForm.vue';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 
 describe('límites del lote curricular', () => {
+  it('muestra la indicación opcional cuando el servidor devuelve un error en ella', async () => {
+    const wrapper = mount(CurricularImportForm, { props: { index: { imports: [], subjects: [], sources: [], current_values: [], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null }, processing: false, errors: { instruction: ['Acorta la indicación.'] } } });
+    await flushPromises();
+    expect(wrapper.find('#curricular-import-instruction').exists()).toBe(true);
+    expect(wrapper.text()).toContain('Acorta la indicación.');
+    wrapper.unmount();
+  });
+
   it('no agrega documentos que superan 30 MB combinados y conserva el lote válido anterior', async () => {
     const wrapper = mount(CurricularImportForm, { props: { index: { imports: [], subjects: [], sources: [], current_values: [], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null }, processing: false, errors: {} } });
     const files = ['uno.pdf', 'dos.pdf'].map((name) => { const file = new File(['demo'], name, { type: 'application/pdf' }); Object.defineProperty(file, 'size', { value: 16 * 1024 * 1024 }); return file; });

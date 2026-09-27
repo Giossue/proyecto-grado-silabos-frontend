@@ -49,7 +49,7 @@ const copy = computed(() => props.kind === 'curricular' ? {
   accept: 'application/pdf,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx',
   label: 'Documento', invalid: 'Seleccione documentos PDF o Excel (.xlsx).',
   maxError: `Cada documento puede tener hasta ${formatLimit(props.maxBytes)}.`,
-  emptyTitle: 'Adjunta los documentos de la carrera',
+  emptyTitle: 'Arrastra archivos PDF o Excel aquí',
   selectedTitle: 'Documento seleccionado', selectedDescription: 'Arrastra otro documento o haz clic para reemplazarlo',
   replaceLabel: 'Reemplazar documento', chooseLabel: 'Adjuntar PDF o Excel', removeLabel: 'Quitar documento',
   dropAnnouncement: 'Suelta los documentos para adjuntarlos.',

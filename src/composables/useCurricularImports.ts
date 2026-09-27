@@ -14,6 +14,8 @@ export function useCurricularImports(open: Ref<boolean>, careerId: () => string)
   const error = ref<string | null>(null);
   const errors = ref<Record<string, string[]>>({});
   const view = ref<'new' | 'history' | 'detail' | 'confirmed'>('new');
+  const detailTab = ref<'new' | 'history'>('history');
+  const activeTab = computed(() => view.value === 'detail' ? detailTab.value : view.value);
   const pending = computed(() => detail.value?.status === 'pendiente' || detail.value?.status === 'en_ejecucion');
   let timer: ReturnType<typeof setTimeout> | null = null;
   let sequence = 0;
@@ -38,6 +40,7 @@ export function useCurricularImports(open: Ref<boolean>, careerId: () => string)
   const select = async (id: string): Promise<void> => {
     stop();
     const request = ++sequence;
+    detailTab.value = 'history';
     view.value = 'detail';
     loading.value = true;
     detail.value = null;
@@ -75,6 +78,7 @@ export function useCurricularImports(open: Ref<boolean>, careerId: () => string)
       if (request !== sequence) return;
       if (!accepts(result)) throw new Error('career mismatch');
       detail.value = result;
+      detailTab.value = 'new';
       view.value = 'detail';
       if (pending.value && open.value) timer = setTimeout(() => { void poll(result.id, request); }, 1800);
     } catch (reason) {
@@ -122,5 +126,5 @@ export function useCurricularImports(open: Ref<boolean>, careerId: () => string)
     if (isOpen) void load();
   });
   onUnmounted(() => { stop(); sequence += 1; });
-  return { index, detail, loading, uploading, pending, error, errors, view, load, select, create, retry, history, confirmed, newImport, applied };
+  return { index, detail, loading, uploading, pending, error, errors, view, activeTab, load, select, create, retry, history, confirmed, newImport, applied };
 }
