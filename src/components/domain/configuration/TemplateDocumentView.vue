@@ -362,9 +362,8 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 .template-document-view :deep(.document-table) {
     border-collapse: collapse;
     width: 100%;
-    /* auto: los anchos son preferencias y una columna crece lo justo para que una
-       palabra corta (Semana, APE) no se parta. */
-    table-layout: auto;
+    /* La vista previa usa la misma geometría que la edición sobre la hoja. */
+    table-layout: fixed;
     margin: 8px 0;
 }
 .template-document-view :deep(.document-table-container) {

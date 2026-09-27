@@ -30,8 +30,7 @@ export function useVariableSuggestions(options: VariableSuggestionOptions) {
                 .variables()
                 .filter((item) =>
                     normalize(item.label).includes(normalize(query)),
-                )
-                .slice(0, 8),
+                ),
         command: ({ editor: target, range, props: item }) => {
             target
                 .chain()

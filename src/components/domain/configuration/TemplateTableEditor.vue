@@ -17,7 +17,7 @@ import {
 } from '@lucide/vue';
 import { Extension } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { CSSProperties } from 'vue';
 import TemplateTableInsertMenu from '@/components/domain/configuration/template-table/TemplateTableInsertMenu.vue';
 import TemplateTableNewDataSheet from '@/components/domain/configuration/template-table/TemplateTableNewDataSheet.vue';
@@ -65,6 +65,7 @@ const emit = defineEmits<{
 }>();
 
 const editorShell = ref<HTMLElement | null>(null);
+const suggestionMenu = ref<HTMLElement | null>(null);
 
 const editorStyle = computed<CSSProperties & Record<string, string>>(() => ({
     fontFamily: props.fontFamily,
@@ -90,12 +91,62 @@ const { suggestions, selectedSuggestion, chooseVariable, suggestion } =
         variables: () => props.variables,
         enabled: () => !props.pending,
     });
-const suggestionStyle = computed<CSSProperties>(() => {
+const suggestionStyle = ref<CSSProperties>({ display: 'none' });
+const updateSuggestionPosition = (): void => {
     const rect = suggestions.value?.clientRect?.();
 
-    return rect
-        ? { position: 'fixed', left: `${rect.left}px`, top: `${rect.bottom + 4}px` }
-        : { display: 'none' };
+    if (!rect || rect.bottom < 0 || rect.top > window.innerHeight) {
+        suggestionStyle.value = { display: 'none' };
+
+        return;
+    }
+
+    const gap = 4;
+    const edge = 8;
+    const maximumHeight = 288;
+    const menuWidth = suggestionMenu.value?.offsetWidth || 288;
+    const desiredHeight = Math.min(
+        maximumHeight,
+        suggestionMenu.value?.scrollHeight ||
+            12 + Math.max(1, suggestions.value?.items.length ?? 0) * 36,
+    );
+    const roomBelow = window.innerHeight - rect.bottom - gap - edge;
+    const roomAbove = rect.top - gap - edge;
+    const above = roomBelow < desiredHeight && roomAbove > roomBelow;
+    const height = Math.max(
+        0,
+        Math.min(maximumHeight, above ? roomAbove : roomBelow),
+    );
+
+    suggestionStyle.value = {
+        position: 'fixed',
+        left: `${Math.max(edge, Math.min(rect.left, window.innerWidth - menuWidth - edge))}px`,
+        top: `${above ? Math.max(edge, rect.top - gap - height) : rect.bottom + gap}px`,
+        maxHeight: `${height}px`,
+    };
+};
+
+watch(
+    suggestions,
+    async () => {
+        await nextTick();
+        if (suggestionMenu.value) {
+            suggestionMenu.value.scrollTop = 0;
+        }
+        updateSuggestionPosition();
+    },
+    { flush: 'post' },
+);
+watch(selectedSuggestion, async (index) => {
+    await nextTick();
+    const options = suggestionMenu.value?.querySelectorAll<HTMLElement>(
+        '[role="option"]',
+    );
+    options?.[index]?.scrollIntoView?.({ block: 'nearest' });
+});
+onMounted(() => {
+    window.addEventListener('scroll', updateSuggestionPosition, true);
+    window.addEventListener('resize', updateSuggestionPosition);
 });
 const editor = useEditor({
     content: props.document,
@@ -142,6 +193,8 @@ const { resizeGuide, startCellResize } = useTableCellResize(
 );
 
 onBeforeUnmount(() => {
+    window.removeEventListener('scroll', updateSuggestionPosition, true);
+    window.removeEventListener('resize', updateSuggestionPosition);
     editor.value?.destroy();
 });
 
@@ -462,13 +515,14 @@ defineExpose({ getDocument });
 
         <EditorContent
             :editor="editor"
-            class="template-table-canvas min-w-0 overflow-x-clip"
+            class="template-table-canvas min-w-0 overflow-x-auto"
             @mousedown.capture="startCellResize"
         />
 
         <Teleport to="body">
             <div
                 v-if="suggestions"
+                ref="suggestionMenu"
                 class="z-50 flex max-h-72 w-72 flex-col gap-1 overflow-y-auto rounded-md border bg-popover p-1.5 text-popover-foreground shadow-md"
                 :style="suggestionStyle"
                 role="listbox"
@@ -526,9 +580,8 @@ defineExpose({ getDocument });
 }
 .template-table-editor table {
     border-collapse: collapse;
-    /* auto: los anchos son preferencias y una columna crece lo justo para que una
-       palabra corta (Semana, APE) no se parta. */
-    table-layout: auto;
+    /* Las columnas respetan el ancho de la hoja aun con etiquetas largas. */
+    table-layout: fixed;
     width: 100% !important;
 }
 .template-table-editor td,
