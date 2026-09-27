@@ -75,7 +75,6 @@ type CurriculumNodeOptions = Pick<
     savingLayout: boolean;
     draggingSubjectId: string | undefined;
     onEdit: (subjectId: string) => void;
-    onLearningOutcomes: (subjectId: string) => void;
     onSaved: (message?: string) => void;
 };
 
@@ -126,7 +125,6 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
                     unitStyle: options.unitStyleFor(subject.organization_unit),
                     editable: options.editable,
                     onEdit: () => options.onEdit(subject.id),
-                    onLearningOutcomes: () => options.onLearningOutcomes(subject.id),
                     onSaved: options.onSaved,
                 },
                 draggable: options.editable && !options.hasOpenEditor && !options.savingLayout,

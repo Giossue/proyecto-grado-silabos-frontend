@@ -142,6 +142,10 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByRole('heading', { name: 'Malla' })).toBeVisible();
     await page.getByRole('button', { name: 'Asistente curricular', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'Asistente curricular' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Datos confirmados' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: /Acciones para .+/ }).first().click();
+    await expect(page.getByRole('menuitem', { name: 'Resultados de aprendizaje' })).toHaveCount(0);
     await page.keyboard.press('Escape');
 
     await mainNavigation(page).getByRole('link', { name: 'Materias y paralelos', exact: true }).click();

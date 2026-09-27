@@ -1,4 +1,4 @@
-import { flushPromises, mount } from '@vue/test-utils';
+import { DOMWrapper, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/api/client';
 import type { CurricularImportDetail, CurricularImportIndex } from '@/api/curricular-imports';
@@ -7,7 +7,7 @@ import CurricularImportAssistant from './CurricularImportAssistant.vue';
 
 const api = vi.hoisted(() => ({ getCurricularImports: vi.fn(), getCurricularImport: vi.fn(), createCurricularImport: vi.fn(), applyCurricularImport: vi.fn(), retryCurricularImport: vi.fn(), getCurricularImportDocument: vi.fn() }));
 vi.mock('@/api/curricular-imports', () => api);
-const index: CurricularImportIndex = { imports: [], subjects: [{ id: 'subject-1', name: 'Calidad', code: 'SW-1' }], sources: [{ id: 'source-1', name: 'Guía institucional' }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null };
+const index: CurricularImportIndex = { imports: [], subjects: [{ id: 'subject-1', name: 'Calidad', code: 'SW-1' }], sources: [{ id: 'source-1', name: 'Guía institucional' }], current_values: [], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null };
 const detail: CurricularImportDetail = { id: 'import-1', career_id: 'career-1', status: 'en_ejecucion', documents: [{ source_id: 'source-1', name: 'Proyecto.pdf', kind: 'pdf', hash: 'hash', execution_id: 'execution' }], proposal: null, fingerprint: null, error: null, editable: false, lock_reason: null };
 const wrappers: Array<ReturnType<typeof mount>> = [];
 const mountAssistant = () => { const wrapper = mount(CurricularImportAssistant, { attachTo: document.body, props: { careerId: 'career-1', careerName: 'Software' } }); wrappers.push(wrapper); return wrapper; };
@@ -26,6 +26,46 @@ beforeEach(() => {
 afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('CurricularImportAssistant', () => {
+  it('consulta los resultados efectivos y su procedencia dentro del asistente', async () => {
+    api.getCurricularImports.mockResolvedValue({ ...index, current_values: [{
+      id: 'value-1', key: 'resultados_aprendizaje', concept_key: 'resultados_aprendizaje', label: 'Resultados de aprendizaje',
+      type: 'lista', scope: 'asignatura', columns: [], subject_id: 'subject-1', subject_name: 'Calidad',
+      subject_code: 'SW-1', value: ['Evalúa la calidad del software.'],
+      evidence: [{ source_name: 'Proyecto de carrera', locator: 'Página 22', quote: 'Evalúa la calidad del software.' }],
+      confirmed_at: '2026-09-27T10:00:00Z', origin: 'importacion',
+    }] });
+    mountAssistant();
+    button('Asistente curricular').click();
+    await flushPromises();
+    button('Datos confirmados').click();
+    await flushPromises();
+    expect(document.body.textContent).toContain('SW-1 · Calidad');
+    expect(document.body.textContent).toContain('Evalúa la calidad del software.');
+    expect(document.body.textContent).toContain('Proyecto de carrera · Página 22');
+    expect(api.getCurricularImports).toHaveBeenCalledTimes(2);
+  });
+
+  it('identifica los resultados anteriores sin fingir un extracto y permite buscar por materia', async () => {
+    api.getCurricularImports.mockResolvedValue({ ...index, current_values: [{
+      id: 'legacy-1', key: 'resultados_aprendizaje', concept_key: 'resultados_aprendizaje', label: 'Resultados de aprendizaje',
+      type: 'lista', scope: 'asignatura', columns: [], subject_id: 'subject-1', subject_name: 'Calidad',
+      subject_code: 'SW-1', value: ['Resultado anterior.'],
+      evidence: [{ source_name: 'Proyecto antiguo', locator: 'Página 12', quote: null }],
+      confirmed_at: '2026-09-27T10:00:00Z', origin: 'anterior',
+    }] });
+    mountAssistant();
+    button('Asistente curricular').click();
+    await flushPromises();
+    button('Datos confirmados').click();
+    await flushPromises();
+    expect(document.body.textContent).toContain('Registro anterior');
+    expect(document.body.textContent).toContain('sin extracto digital');
+    const search = new DOMWrapper(document.querySelector<HTMLInputElement>('#confirmed-curricular-search')!);
+    await search.setValue('otra materia');
+    expect(document.body.textContent).toContain('Sin coincidencias');
+    await search.setValue('Calidad');
+    expect(document.body.textContent).toContain('Resultado anterior.');
+  });
   it('no consulta hasta abrir y envía los archivos y documentos anteriores antes de consultar avance real', async () => {
     vi.useFakeTimers();
     const wrapper = mountAssistant();

@@ -13,7 +13,7 @@ export function useCurricularImports(open: Ref<boolean>, careerId: () => string)
   const uploading = ref(false);
   const error = ref<string | null>(null);
   const errors = ref<Record<string, string[]>>({});
-  const view = ref<'new' | 'history' | 'detail'>('new');
+  const view = ref<'new' | 'history' | 'detail' | 'confirmed'>('new');
   const pending = computed(() => detail.value?.status === 'pendiente' || detail.value?.status === 'en_ejecucion');
   let timer: ReturnType<typeof setTimeout> | null = null;
   let sequence = 0;
@@ -82,6 +82,21 @@ export function useCurricularImports(open: Ref<boolean>, careerId: () => string)
     } finally { if (request === sequence) uploading.value = false; }
   };
   const history = async () => { await load(false); view.value = 'history'; };
+  const confirmed = async (): Promise<void> => {
+    stop();
+    const request = ++sequence;
+    loading.value = true;
+    error.value = null;
+    try {
+      const result = await getCurricularImports();
+      if (request !== sequence || !open.value) return;
+      index.value = result;
+      detail.value = null;
+      view.value = 'confirmed';
+    } catch (reason) {
+      if (request === sequence) fail(reason, 'No se pudieron consultar los datos confirmados de esta carrera.');
+    } finally { if (request === sequence) loading.value = false; }
+  };
   const retry = async (): Promise<void> => {
     if (!detail.value || detail.value.status !== 'fallida' || uploading.value || !index.value?.capabilities.extraction || detail.value.lock_reason) return;
     const request = ++sequence;
@@ -107,5 +122,5 @@ export function useCurricularImports(open: Ref<boolean>, careerId: () => string)
     if (isOpen) void load();
   });
   onUnmounted(() => { stop(); sequence += 1; });
-  return { index, detail, loading, uploading, pending, error, errors, view, load, select, create, retry, history, newImport, applied };
+  return { index, detail, loading, uploading, pending, error, errors, view, load, select, create, retry, history, confirmed, newImport, applied };
 }

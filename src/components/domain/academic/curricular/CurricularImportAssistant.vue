@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client';
 import { getCurricularImportDocument, type CurricularImportDetail } from '@/api/curricular-imports';
 import CurricularImportForm from './CurricularImportForm.vue';
 import CurricularImportReview from './CurricularImportReview.vue';
+import CurricularConfirmedData from './CurricularConfirmedData.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -19,7 +20,7 @@ import { toast } from '@/lib/toast';
 const props = defineProps<{ careerId: string; careerName: string }>();
 const open = ref(false);
 const downloading = ref<string | null>(null);
-const { index, detail, loading, uploading, pending, error, errors, view, load, select, create, retry, history, applied } = useCurricularImports(open, () => props.careerId);
+const { index, detail, loading, uploading, pending, error, errors, view, load, select, create, retry, history, confirmed, applied } = useCurricularImports(open, () => props.careerId);
 const formatDate = (value: string) => new Intl.DateTimeFormat('es-EC', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value));
 const download = async (document: CurricularImportDetail['documents'][number]): Promise<void> => {
   if (!detail.value || !document.original_url || downloading.value) return;
@@ -54,6 +55,7 @@ const download = async (document: CurricularImportDetail['documents'][number]): 
         <div class="flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" :disabled="loading || uploading" @click="load(false)">Nueva importación</Button>
           <Button type="button" variant="outline" size="sm" :disabled="loading || uploading" @click="history">Historial</Button>
+          <Button type="button" variant="outline" size="sm" :disabled="loading || uploading" @click="confirmed">Datos confirmados</Button>
         </div>
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
         <template v-if="loading">
@@ -70,6 +72,7 @@ const download = async (document: CurricularImportDetail['documents'][number]): 
             <TableBody><TableRow v-for="item in index.imports" :key="item.id"><TableCell>{{ formatDate(item.created_at) }}</TableCell><TableCell><Badge variant="secondary">{{ curricularStatusLabel(item.status) }}</Badge></TableCell><TableCell><Button type="button" variant="outline" size="sm" :aria-label="`Abrir importación del ${formatDate(item.created_at)}`" @click="select(item.id)">Abrir</Button></TableCell></TableRow></TableBody>
           </Table>
         </template>
+        <CurricularConfirmedData v-else-if="index && view === 'confirmed'" :values="index.current_values" />
         <template v-else-if="index && detail && view === 'detail'">
           <div class="flex flex-col gap-2">
             <Badge variant="secondary" class="self-start">{{ curricularStatusLabel(detail.status) }}</Badge>

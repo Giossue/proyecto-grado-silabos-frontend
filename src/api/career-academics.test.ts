@@ -8,7 +8,7 @@ vi.mock('@/api/client', async (importOriginal) => ({
 }));
 
 import { ApiError } from '@/api/client';
-import { PURGE_CANCELLED_MESSAGE, saveSubjectLearningOutcomes, updateCurriculumConfiguration } from '@/api/career-academics';
+import { PURGE_CANCELLED_MESSAGE, updateCurriculumConfiguration } from '@/api/career-academics';
 import { usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
 
 const purgeError = () => new ApiError('purga', 422, {
@@ -47,20 +47,4 @@ describe('career academics API purge confirmation', () => {
     expect(api).toHaveBeenCalledTimes(1);
   });
 
-  it('conserva identidad, revisión y confirmación curricular al confirmar la regeneración', async () => {
-    api.mockRejectedValueOnce(purgeError()).mockResolvedValueOnce({ message: 'ok' });
-    const dialog = usePurgeConfirmation();
-    const payload = {
-      source_name: 'Proyecto de carrera', source_locator: 'Página 22',
-      outcomes: [{ id: 'outcome-1', text: 'Aplica métricas de calidad.' }],
-      confirmed: true as const, expected_fingerprint: 'a'.repeat(64),
-    };
-    const result = saveSubjectLearningOutcomes('subject-1', payload);
-    await vi.waitFor(() => expect(dialog.open.value).toBe(true));
-    await dialog.confirm();
-    await expect(result).resolves.toEqual({ message: 'ok' });
-    expect(api).toHaveBeenLastCalledWith('/coordination/academic/subjects/subject-1/learning-outcomes', {
-      method: 'PUT', body: JSON.stringify({ ...payload, confirm_purge: true }),
-    });
-  });
 });

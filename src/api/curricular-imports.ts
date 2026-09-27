@@ -28,9 +28,21 @@ export type CurricularImportSummary = {
   applied_at: string | null;
   error: string | null;
 };
+export type ConfirmedCurricularValue = CurricularDefinition & {
+  id: string;
+  concept_key: string;
+  subject_id: string | null;
+  subject_name: string | null;
+  subject_code: string | null;
+  value: CurricularProposedValue['value'];
+  evidence: Array<{ source_name: string; locator: string; quote: string | null }>;
+  confirmed_at: string;
+  origin: 'importacion' | 'anterior';
+};
 export type CurricularImportIndex = {
   imports: CurricularImportSummary[];
   subjects: Array<{ id: string; name: string; code: string }>;
+  current_values: ConfirmedCurricularValue[];
   sources: Array<{ id: string; name: string }>;
   capabilities: { pdf: boolean; xlsx: boolean; extraction: boolean };
   lock_reason: string | null;
