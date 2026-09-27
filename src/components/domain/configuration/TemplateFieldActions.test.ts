@@ -13,7 +13,7 @@ vi.mock('@/api/client', async (importOriginal) => ({
 const part = (key: string, label: string, extra: Partial<TemplateField> = {}): TemplateField => ({
     id: `field-${key}`, block_id: 'block-1', key, label, help: null, type: 'texto_corto',
     options: [], required: true, inherited: false, master_source: null, teacher_editable: true,
-    ai_enabled: false, document_marker: null, content_type: 'text', ...extra,
+    document_marker: null, content_type: 'text', ...extra,
 });
 
 const block = (fields: TemplateField[]): TemplateFieldContainer => ({

@@ -13,7 +13,7 @@ import {
   type SyllabusField,
 } from "@/api/syllabi";
 import { reconcileSavedRows } from '@/lib/repeatableRows';
-import SyllabusAiAssistantSheet from '@/components/domain/ai/SyllabusAiAssistantSheet.vue';
+import SyllabusUnitAssistant from '@/components/domain/ai/SyllabusUnitAssistant.vue';
 import SyllabusTableEditor from '@/components/domain/syllabus/SyllabusTableEditor.vue';
 import SyllabusTableView from '@/components/domain/syllabus/SyllabusTableView.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -59,8 +59,6 @@ const validationResults = ref<Array<{
 }>>([]);
 const validationRan = ref(false);
 const validationBlockingErrors = ref<number | null>(null);
-const aiMessage = ref<string | null>(null);
-const aiAssistant = ref<InstanceType<typeof SyllabusAiAssistantSheet> | null>(null);
 const conflict = ref(false);
 const processingAction = ref(false);
 const confirmSubmitOpen = ref(false);
@@ -83,8 +81,6 @@ const canEdit = computed(() =>
 const canStart = computed(() =>
   syllabus.value?.state === "sin_iniciar" && editBlockReason.value === null,
 );
-// La revisión con IA no depende de una validación previa: el servidor valida al enviar.
-const canReviewWithAi = computed(() => canEdit.value && !conflict.value);
 const validationFor = (fieldId: string) =>
   validationResults.value.filter((result) => result.field_id === fieldId);
 const visibleValidationMessages = (fieldId: string): string[] =>
@@ -502,21 +498,6 @@ const sectionHeading = (title: string, index: number): string =>
 
 const visibleSections = computed(() => syllabus.value?.sections ?? []);
 
-const recommendationApplied = (payload: {
-  fieldId: string;
-  value: string;
-  version: number;
-}): void => {
-  if (!syllabus.value) return;
-  const field = syllabus.value.sections
-    .flatMap((section) => section.blocks)
-    .flatMap((block) => block.fields)
-    .find((item) => item.id === payload.fieldId);
-  if (field) field.value = payload.value;
-  syllabus.value.version_bloqueo = payload.version;
-  invalidateValidation();
-};
-
 const warnBeforeUnload = (event: BeforeUnloadEvent): void => {
   if (!hasUnsavedChanges() && savingFieldId.value === null) return;
   event.preventDefault();
@@ -564,7 +545,6 @@ onBeforeUnmount(() => {
       <Card v-if="canStart"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar las partes del sílabo.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>
 
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
-      <Alert v-if="aiMessage"><AlertDescription>{{ aiMessage }}</AlertDescription></Alert>
 
       <div v-if="syllabus.state !== 'sin_iniciar'" class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)]">
         <main class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
@@ -624,14 +604,11 @@ onBeforeUnmount(() => {
 
         </main>
 
-        <aside class="min-w-0 self-start xl:fixed xl:right-4 xl:top-32 xl:bottom-4 xl:w-[28rem] xl:max-w-[calc(100vw-2rem)]" aria-label="Asistente IA">
-          <SyllabusAiAssistantSheet
-            ref="aiAssistant"
+        <aside class="min-w-0 self-start xl:fixed xl:right-4 xl:top-32 xl:h-[calc(100dvh-9rem)] xl:w-[28rem] xl:max-w-[calc(100vw-2rem)]" aria-label="Asistente de unidades">
+          <SyllabusUnitAssistant
             :syllabus-id="syllabus.id"
-            :syllabus-version="syllabus.version_bloqueo"
-            :can-review="canReviewWithAi"
-            :saving="processingAction || savingFieldId !== null"
-            @recommendation-applied="recommendationApplied"
+            :enabled="canEdit && !conflict"
+            :saving="processingAction || savingFieldId !== null || hasUnsavedChanges()"
           />
         </aside>
       </div>

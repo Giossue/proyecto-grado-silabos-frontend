@@ -32,7 +32,6 @@ const aliases = {
     'coordinacion-asignaciones-docentes': 'coordinacion-asignaciones-docentes',
     'coordinacion-materias-paralelos': 'coordinacion-materias-paralelos',
     'coordinacion-malla': 'coordinacion-malla',
-    'coordinacion-fuentes': 'coordinacion-fuentes',
     'configuracion-perfil': 'coordinacion-configuracion-perfil',
     'configuracion-seguridad': 'coordinacion-configuracion-seguridad',
     'configuracion-apariencia': 'coordinacion-configuracion-apariencia',

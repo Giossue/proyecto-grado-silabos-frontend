@@ -61,11 +61,11 @@ describe('navegación por ámbito activo', () => {
     expect(router.currentRoute.value.fullPath).toBe('/coordinacion/panel');
   });
 
-  it('conserva las entradas canónicas del monolito', async () => {
+  it.each(['/fuentes', '/fuentes/documento-1', '/coordinacion/fuentes', '/coordinacion/fuentes/documento-1'])('redirige la ruta retirada %s al panel activo', async (target) => {
     sessionState.replace(session('coordinador'));
-    await router.push('/fuentes');
+    await router.push(target);
 
-    expect(router.currentRoute.value.fullPath).toBe('/coordinacion/fuentes');
+    expect(router.currentRoute.value.fullPath).toBe('/coordinacion/panel');
   });
 
   it('resuelve la configuración genérica del monolito al área activa', async () => {
@@ -113,7 +113,7 @@ describe('navegación por ámbito activo', () => {
 
   it.each([
     ['administrador', '/admin/usuarios', '/admin/usuarios'],
-    ['coordinador', '/coordinacion/fuentes', '/coordinacion/fuentes'],
+    ['coordinador', '/coordinacion/malla', '/coordinacion/malla'],
     ['docente', '/docente/mis-silabos', '/docente/mis-silabos'],
   ] as const)('permite la ruta propia de %s y conserva sus parámetros', async (code, target, expected) => {
     sessionState.replace(session(code));
@@ -123,7 +123,7 @@ describe('navegación por ámbito activo', () => {
   });
 
   it.each([
-    ['administrador', '/coordinacion/fuentes'],
+    ['administrador', '/coordinacion/malla'],
     ['coordinador', '/admin/usuarios'],
     ['docente', '/admin/plantilla'],
   ] as const)('redirige una ruta de otro rol al panel de %s', async (code, target) => {

@@ -27,8 +27,6 @@ const CoordinationConvocationsPage = () => import("@/pages/CoordinationConvocati
 const CoordinationReviewsPage = () => import("@/pages/CoordinationReviewsPage.vue");
 const CoordinationReviewDetailPage = () => import("@/pages/CoordinationReviewDetailPage.vue");
 const CoordinationReviewComparisonPage = () => import("@/pages/CoordinationReviewComparisonPage.vue");
-const CoordinationSourcesPage = () => import("@/pages/CoordinationSourcesPage.vue");
-const CoordinationSourceDetailPage = () => import("@/pages/CoordinationSourceDetailPage.vue");
 const CoordinationAcademicStructurePage = () => import("@/pages/CoordinationAcademicStructurePage.vue");
 const DocumentsPage = () => import("@/pages/DocumentsPage.vue");
 const NotFoundPage = () => import("@/pages/NotFoundPage.vue");
@@ -70,8 +68,8 @@ export const router = createRouter({
     { path: "/panel", component: DashboardPage, meta: { requiresAuth: true, aliasTarget: "/dashboard", title: "Panel" } },
     { path: "/dashboard", component: DashboardPage, meta: { requiresAuth: true, shortcut: "panel", title: "Panel" } },
     { path: "/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, shortcut: "notifications", title: "Notificaciones" } },
-    { path: "/fuentes", component: CoordinationSourcesPage, meta: { requiresAuth: true, shortcut: "sources", title: "Fuentes académicas" } },
-    { path: "/fuentes/:source", component: CoordinationSourceDetailPage, meta: { requiresAuth: true, shortcut: "source", title: "Fuente académica" } },
+    { path: "/fuentes", redirect: "/dashboard" },
+    { path: "/fuentes/:source", redirect: "/dashboard" },
     { path: "/settings", redirect: "/settings/profile", meta: { requiresAuth: true } },
     { path: "/settings/profile", component: ProfilePage, meta: { requiresAuth: true, shortcut: "profile", title: "Perfil" } },
     { path: "/settings/security", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },
@@ -103,8 +101,8 @@ export const router = createRouter({
     { path: "/coordinacion/revisiones", component: CoordinationReviewsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Revisión" } },
     { path: "/coordinacion/revisiones/:revision", component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión" } },
     { path: "/coordinacion/revisiones/:before/comparar/:after", component: CoordinationReviewComparisonPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Comparar revisiones" } },
-    { path: "/coordinacion/fuentes", component: CoordinationSourcesPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Fuentes académicas" } },
-    { path: "/coordinacion/fuentes/:source", component: CoordinationSourceDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Fuente académica" } },
+    { path: "/coordinacion/fuentes", redirect: "/dashboard" },
+    { path: "/coordinacion/fuentes/:source", redirect: "/dashboard" },
     { path: "/coordinacion/estructura-academica", redirect: "/coordinacion/malla", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },
     { path: "/coordinacion/materias-paralelos", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y paralelos" } },
@@ -183,8 +181,6 @@ router.beforeEach(async (to) => {
       profile: roleSetting(code, 'profile'),
       security: roleSetting(code, 'security'),
       documents: code === "administrador" ? paths.admin.panel : code === "coordinador" ? paths.coordination.documents(String(to.params.revision)) : paths.teacher.documents(String(to.params.revision)),
-      sources: code === "coordinador" ? paths.coordination.sources : resolveRoleHome(code),
-      source: code === "coordinador" ? paths.coordination.source(String(to.params.source)) : resolveRoleHome(code),
     }[to.meta.shortcut];
     if (destination) return { path: destination, query: to.query };
   }

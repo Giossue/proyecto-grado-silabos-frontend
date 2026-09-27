@@ -143,48 +143,13 @@ export type SyllabusField = {
   required: boolean;
   inherited: boolean;
   teacher_editable: boolean;
-  ai_enabled: boolean;
   value: string | number | boolean | string[] | null;
   rows: RepeatableRow[];
 };
 
-export type AiRecommendation = {
-  id: string;
-  type: string;
-  title: string;
-  explanation: string;
-  suggested_text: string;
-  evidence_ids: string[];
-  my_decisions: string[];
-  applied: boolean;
-};
-
-export type AiFieldAnalysis = {
-  syllabus: {
-    id: string;
-    subject: string;
-    state: string;
-    version_bloqueo: number;
-  };
-  field: { id: string; key: string; label: string; content: string };
-  environment: { is_provisional_simulator: boolean };
-  executions: Array<{
-    id: string;
-    status: string;
-    requested_at: string;
-    completed_at: string | null;
-    analysis_label: string;
-    input_content: string;
-    reason: string | null;
-    mensaje_error: string | null;
-    evidence: Array<{ id: string; source: string; excerpt: string }>;
-    recommendations: AiRecommendation[];
-  }>;
-};
-
 export type AiChatCitation = {
   id: string;
-  type: "seccion_silabo" | "fuente_academica";
+  type: "seccion_silabo" | "contexto_academico" | "dato_curricular" | "fuente_academica";
   field_id: string | null;
   source_id: string | null;
   label: string;
@@ -212,46 +177,6 @@ export type AiChat = {
   } | null;
   suggested_questions: string[];
   available: boolean;
-  review: {
-    id: string;
-    status:
-      | "pendiente"
-      | "en_ejecucion"
-      | "completada"
-      | "no_concluyente"
-      | "parcial"
-      | "fallida";
-    draft_version: number;
-    stale: boolean;
-    total_fields: number;
-    completed_fields: number;
-    fields_with_recommendations: number;
-    failed_fields: number;
-    progress: number;
-    requested_at: string;
-    completed_at: string | null;
-    /** Pista opcional de expresión declarada por el agente. */
-    avatar?: AgentAvatarHint | null;
-  } | null;
-  review_results: Array<{
-    id: string;
-    field_id: string;
-    field_label: string;
-    section: { id: string; title: string };
-    status: string;
-    stale: boolean;
-    reason: string | null;
-    error: string | null;
-    recommendations: Array<{
-      id: string;
-      title: string;
-      explanation: string;
-      suggested_text: string;
-      applied: boolean;
-      decisions: string[];
-      citations: Array<{ id: string; label: string; excerpt: string }>;
-    }>;
-  }>;
 };
 
 export type SyllabusBlock = {
@@ -334,64 +259,6 @@ export const submitTeacherSyllabus = (syllabusId: string, version: number) =>
         version_bloqueo: version,
         idempotency_key: crypto.randomUUID(),
       }),
-    },
-  );
-export const requestAiReview = (syllabusId: string, version: number) =>
-  api<{
-    message: string;
-    review: {
-      id: string;
-      status: string;
-      draft_version: number;
-      total_fields: number;
-      completed_fields: number;
-      progress: number;
-    };
-  }>(`/teacher/syllabi/${syllabusId}/ai-review`, {
-    method: "POST",
-    body: JSON.stringify({
-      version_bloqueo: version,
-      idempotency_key: crypto.randomUUID(),
-    }),
-  });
-export const getFieldAiAnalysis = (syllabusId: string, fieldId: string) =>
-  api<AiFieldAnalysis>(`/teacher/syllabi/${syllabusId}/fields/${fieldId}/ai`);
-export const requestFieldAiAnalysis = (syllabusId: string, fieldId: string) =>
-  api<{ message: string }>(
-    `/teacher/syllabi/${syllabusId}/fields/${fieldId}/ai`,
-    {
-      method: "POST",
-      body: JSON.stringify({ idempotency_key: crypto.randomUUID() }),
-    },
-  );
-export const decideAiRecommendation = (
-  syllabusId: string,
-  fieldId: string,
-  recommendationId: string,
-  decision: "aceptada" | "ignorada" | "no_util",
-) =>
-  api<{ message: string }>(
-    `/teacher/syllabi/${syllabusId}/fields/${fieldId}/ai/${recommendationId}/decision`,
-    {
-      method: "POST",
-      body: JSON.stringify({ decision }),
-    },
-  );
-export const applyAiRecommendation = (
-  syllabusId: string,
-  fieldId: string,
-  recommendationId: string,
-  version: number,
-) =>
-  api<{
-    message: string;
-    version_bloqueo: number;
-    value: string;
-  }>(
-    `/teacher/syllabi/${syllabusId}/fields/${fieldId}/ai/${recommendationId}/apply`,
-    {
-      method: "POST",
-      body: JSON.stringify({ version_bloqueo: version }),
     },
   );
 export const getAiChat = (syllabusId: string) =>

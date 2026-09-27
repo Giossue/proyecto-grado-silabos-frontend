@@ -39,7 +39,6 @@ export type CoordinationConvocation = {
   period: string;
   convocation_id: string | null;
   can_open: boolean;
-  available_sources: Array<{ id: string; name: string }>;
 };
 
 export type Dashboard = {

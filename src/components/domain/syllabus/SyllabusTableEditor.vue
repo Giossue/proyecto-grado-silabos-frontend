@@ -294,7 +294,7 @@ const widths = computed(() => columnWidths(props.layout));
                 </div>
             </div>
 
-            <div class="max-w-full overflow-x-auto rounded-md">
+            <div class="relative max-w-full overflow-x-auto rounded-md">
                 <table class="w-full min-w-[48rem] border-collapse text-sm hyphens-auto [hyphenate-limit-chars:8_4_4] [&_td]:[overflow-wrap:break-word] [&_td]:[word-break:normal] [&_th]:[word-break:normal] [&_th]:[overflow-wrap:break-word]">
                     <colgroup v-if="widths">
                         <col

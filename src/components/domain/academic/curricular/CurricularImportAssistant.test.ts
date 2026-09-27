@@ -5,7 +5,7 @@ import type { CurricularImportDetail, CurricularImportIndex } from '@/api/curric
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import CurricularImportAssistant from './CurricularImportAssistant.vue';
 
-const api = vi.hoisted(() => ({ getCurricularImports: vi.fn(), getCurricularImport: vi.fn(), createCurricularImport: vi.fn(), applyCurricularImport: vi.fn(), retryCurricularImport: vi.fn() }));
+const api = vi.hoisted(() => ({ getCurricularImports: vi.fn(), getCurricularImport: vi.fn(), createCurricularImport: vi.fn(), applyCurricularImport: vi.fn(), retryCurricularImport: vi.fn(), getCurricularImportDocument: vi.fn() }));
 vi.mock('@/api/curricular-imports', () => api);
 const index: CurricularImportIndex = { imports: [], subjects: [{ id: 'subject-1', name: 'Calidad', code: 'SW-1' }], sources: [{ id: 'source-1', name: 'Guía institucional' }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null };
 const detail: CurricularImportDetail = { id: 'import-1', career_id: 'career-1', status: 'en_ejecucion', documents: [{ source_id: 'source-1', name: 'Proyecto.pdf', kind: 'pdf', hash: 'hash', execution_id: 'execution' }], proposal: null, fingerprint: null, error: null, editable: false, lock_reason: null };
@@ -23,15 +23,16 @@ beforeEach(() => {
   api.retryCurricularImport.mockResolvedValue(structuredClone(detail));
   api.getCurricularImport.mockResolvedValue({ ...detail, status: 'lista', fingerprint: 'f'.repeat(64), editable: true, proposal: { definitions: [], values: [], issues: [] } });
 });
-afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; vi.useRealTimers(); });
+afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('CurricularImportAssistant', () => {
-  it('no consulta hasta abrir y envía los archivos y fuentes existentes antes de consultar avance real', async () => {
+  it('no consulta hasta abrir y envía los archivos y documentos anteriores antes de consultar avance real', async () => {
     vi.useFakeTimers();
     const wrapper = mountAssistant();
     expect(api.getCurricularImports).not.toHaveBeenCalled();
     button('Asistente curricular').click();
     await flushPromises();
+    expect(document.body.textContent).toContain('Documentos de importaciones anteriores');
     const file = new File(['demo'], 'Proyecto.pdf', { type: 'application/pdf' });
     wrapper.findComponent(FileDropzone).vm.$emit('files-selected', [file]);
     document.querySelector<HTMLButtonElement>('#curricular-source-source-1')!.click();
@@ -54,6 +55,25 @@ describe('CurricularImportAssistant', () => {
     expect(api.getCurricularImport).toHaveBeenCalledWith('import-1');
     expect(document.body.textContent).toContain('Proyecto.pdf');
     expect(document.body.textContent).toContain('Lista para revisar');
+  });
+
+  it('descarga el original privado usando el nombre informado por el servidor', async () => {
+    api.getCurricularImports.mockResolvedValue({ ...index, imports: [{ id: 'import-1', status: 'pendiente', created_at: '2026-09-27T10:00:00Z', applied_at: null, error: null }] });
+    api.getCurricularImport.mockResolvedValue({ ...detail, status: 'lista', documents: [{ ...detail.documents[0]!, original_url: 'https://api.example.test/private/original', original_name: 'Plan original.xlsx' }] });
+    api.getCurricularImportDocument.mockResolvedValue(new Blob(['archivo']));
+    const createObjectURL = vi.fn(() => 'blob:private-download');
+    const revokeObjectURL = vi.fn();
+    vi.stubGlobal('URL', class extends URL { static createObjectURL = createObjectURL; static revokeObjectURL = revokeObjectURL; });
+    let filename = '';
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { filename = this.download; });
+    mountAssistant();
+    button('Asistente curricular').click();
+    await flushPromises();
+    button('Descargar Proyecto.pdf').click();
+    await flushPromises();
+    expect(api.getCurricularImportDocument).toHaveBeenCalledWith('import-1', 'source-1');
+    expect(filename).toBe('Plan original.xlsx');
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:private-download');
   });
 
   it('muestra la capacidad real y no permite enviar si la extracción está deshabilitada', async () => {

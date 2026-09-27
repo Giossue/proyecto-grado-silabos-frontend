@@ -95,7 +95,7 @@ test.describe('frontera distribuida de identidad', () => {
     if (!await protectedTemplate.isVisible()) await expect(editTemplate).toBeVisible();
 
     await mainNavigation(page).getByRole('link', { name: 'Convocatorias', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Convocatorias' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Convocatorias de sílabos' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Proceso' })).toBeVisible();
     const activeProcess = page.getByText('No se puede preparar otro proceso');
     if (!await activeProcess.isVisible()) {
@@ -113,7 +113,7 @@ test.describe('frontera distribuida de identidad', () => {
     }
 
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'Convocatorias' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Convocatorias de sílabos' })).toBeVisible();
     await expect(page.getByRole('columnheader', { name: 'Proceso' })).toBeVisible();
 
     await page.setViewportSize({ width: 360, height: 740 });
@@ -134,30 +134,11 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByText('Cargar el logo de la facultad')).toHaveCount(0);
 
     await mainNavigation(page).getByRole('link', { name: 'Convocatorias', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Convocatorias' })).toBeVisible();
-    await mainNavigation(page).getByRole('link', { name: 'Fuentes académicas', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Fuentes académicas' })).toBeVisible();
-    await expect(page.getByText('Cargando fuentes…')).toBeHidden();
-
-    const existingSource = page.getByRole('row', { name: /Fuente E2E/ });
-    if (await existingSource.count()) {
-      await existingSource.getByRole('button', { name: /Acciones para Fuente E2E/ }).click();
-      await page.getByRole('menuitem', { name: 'Ver fuente' }).click();
-    } else {
-      await page.getByRole('button', { name: 'Nueva fuente' }).click();
-      await page.getByLabel('Nombre').fill('Fuente E2E');
-      await page.getByLabel('Descripción').fill('Normativa sintética para verificar la integración distribuida.');
-      await page.getByRole('button', { name: 'Crear fuente' }).click();
-    }
-    await expect(page.getByRole('heading', { name: 'Fuente E2E' })).toBeVisible();
-    const sourceEditor = page.getByRole('textbox', { name: 'Contenido del documento' });
-    if (await sourceEditor.isEditable()) {
-      await sourceEditor.fill(`# Normativa E2E\n\nLa planificación debe ser coherente y verificable (${Date.now()}).`);
-      await page.getByRole('button', { name: 'Guardar contenido' }).click();
-      await expect(page.getByText(/actualizad|guardad/i)).toBeVisible();
-    } else {
-      await expect(page.getByText(/está en curso/)).toBeVisible();
-    }
+    await expect(page.getByRole('heading', { name: 'Convocatorias de sílabos' })).toBeVisible();
+    await expect(mainNavigation(page).getByRole('link', { name: 'Fuentes académicas', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Asistente curricular', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Asistente curricular' })).toBeVisible();
+    await page.keyboard.press('Escape');
 
     await mainNavigation(page).getByRole('link', { name: 'Materias y paralelos', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Materias y paralelos' })).toBeVisible();
@@ -170,15 +151,16 @@ test.describe('frontera distribuida de identidad', () => {
     if (await viewConvocation.count()) {
       await viewConvocation.click();
     } else {
-      await page.getByRole('menuitem', { name: 'Iniciar' }).click();
-      const dialog = page.getByRole('dialog', { name: 'Iniciar convocatoria de la carrera' });
-      await dialog.getByLabel('Fuente E2E').check();
-      await dialog.getByRole('button', { name: 'Iniciar convocatoria' }).click();
+      await page.getByRole('menuitem', { name: 'Abrir convocatoria' }).click();
+      const dialog = page.getByRole('dialog', { name: 'Abrir convocatoria de la carrera' });
+      await dialog.getByRole('button', { name: 'Abrir convocatoria' }).click();
+      await expect(dialog).toBeHidden();
+      await page.getByRole('button', { name: /Acciones para/ }).first().click();
+      await page.getByRole('menuitem', { name: 'Ver seguimiento' }).click();
     }
-    await expect(page).toHaveURL(/\/coordinacion\/convocatorias\/[0-9a-f-]+$/);
-    await expect(page.getByRole('heading', { level: 1, name: /Software/ })).toBeVisible();
-    await expect(page.getByText('Fuente E2E')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Seguimiento por expediente' })).toBeVisible();
     await expect(page.getByText('not_started', { exact: true })).toHaveCount(0);
+    await page.keyboard.press('Escape');
 
     await mainNavigation(page).getByRole('link', { name: 'Revisión', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Revisión' })).toBeVisible();

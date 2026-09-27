@@ -11,6 +11,8 @@ import {
   componentAdaptationRules,
   pages,
   reference,
+  retiredPages,
+  retiredComponents,
 } from './reference-parity-manifest.mjs';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -83,7 +85,7 @@ const transitiveComponentImports = (entryPath) => {
 };
 
 const canonicalPages = referenceFiles
-  .filter((path) => path.startsWith('pages/') && extname(path) === '.vue')
+  .filter((path) => path.startsWith('pages/') && extname(path) === '.vue' && !retiredPages.includes(path))
   .sort();
 const declaredPages = pages.map(({ source }) => source).sort();
 const undeclaredReferencePages = canonicalPages.filter((path) => !declaredPages.includes(path));
@@ -154,12 +156,12 @@ const pageRows = pages.map((page) => {
     template: digest(templateOf(source)) === digest(templateOf(target)) ? 'identico' : 'distinto',
     styles: digest(stylesOf(source)) === digest(stylesOf(target)) ? 'identico' : 'distinto',
     missingComponents: componentImports(source).filter((path) =>
-      !targetImports.has(path) && !replacements.has(path)),
+      !targetImports.has(path) && !replacements.has(path) && !retiredComponents.includes(path)),
   };
 });
 
 const canonicalComponentFiles = referenceFiles.filter((path) =>
-  path.startsWith('components/') && extname(path) === '.vue',
+  path.startsWith('components/') && extname(path) === '.vue' && !retiredComponents.includes(path),
 );
 const missingComponentFiles = canonicalComponentFiles.filter((path) =>
   !existsSync(join(destinationRoot, path)),

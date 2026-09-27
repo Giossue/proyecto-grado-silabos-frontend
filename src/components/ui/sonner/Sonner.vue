@@ -54,6 +54,10 @@ const props = withDefaults(defineProps<ToasterProps>(), {
 }
 
 @media (max-width: 600px) {
+  .toaster[data-sonner-toaster] {
+    max-width: calc(100vw - 2rem);
+  }
+
   .toaster[data-sonner-toaster] [data-sonner-toast] {
     width: fit-content;
     max-width: calc(100vw - 2rem);

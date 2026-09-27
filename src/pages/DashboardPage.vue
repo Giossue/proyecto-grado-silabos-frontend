@@ -36,7 +36,6 @@ const setupRoutes: Record<string, string> = {
   scheduled_subjects: paths.coordination.scheduledSubjects,
   parallels: paths.coordination.scheduledSubjects,
   teachers: paths.coordination.teacherAssignments,
-  sources: paths.coordination.sources,
   convocation: paths.coordination.convocations,
   assigned: paths.teacher.syllabi,
   started: paths.teacher.syllabi,
@@ -96,7 +95,6 @@ onMounted(() => { void load(); });
     v-model:open="openingOpen"
     :process-id="dashboard.coordination_convocation.process_id"
     :period="dashboard.coordination_convocation.period"
-    :available-sources="dashboard.coordination_convocation.available_sources"
     @opened="handleOpened"
   />
   <ConvocationTrackingSheet v-if="trackingId" v-model:open="trackingOpen" :convocation-id="trackingId" />

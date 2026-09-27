@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/api/client';
 import { createConvocation } from '@/api/convocations';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
 
@@ -15,14 +16,13 @@ describe('ConvocationOpeningDialog', () => {
     });
   });
 
-  it('usa todas las fuentes activas sin pedir selección y abre con el proceso institucional', async () => {
+  it('abre con el proceso institucional y los datos confirmados sin requerir fuentes', async () => {
     const wrapper = mount(ConvocationOpeningDialog, {
       attachTo: document.body,
       props: {
         open: true,
         processId: 'process-1',
         period: '2026-2027',
-        availableSources: [{ id: 'source-1', name: 'Reglamento académico' }],
       },
     });
     await flushPromises();
@@ -30,7 +30,8 @@ describe('ConvocationOpeningDialog', () => {
     const submit = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'))
       .find((button) => button.textContent?.includes('Abrir convocatoria'));
     expect(document.body.querySelector('[role="dialog"] [role="checkbox"]')).toBeNull();
-    expect(document.body.textContent).toContain('todas las fuentes académicas activas de la carrera');
+    expect(document.body.textContent).toContain('datos académicos confirmados');
+    expect(document.body.textContent).not.toContain('fuentes académicas');
     expect(submit?.disabled).toBe(false);
     submit?.click();
     await flushPromises();
@@ -41,17 +42,22 @@ describe('ConvocationOpeningDialog', () => {
     wrapper.unmount();
   });
 
-  it('no habilita la apertura si la carrera no tiene fuentes activas', async () => {
+  it('muestra el impedimento informado por el servidor y permite intentarlo otra vez', async () => {
+    vi.mocked(createConvocation).mockRejectedValueOnce(new ApiError('La plantilla institucional está incompleta.', 422));
     const wrapper = mount(ConvocationOpeningDialog, {
       attachTo: document.body,
-      props: { open: true, processId: 'process-1', period: '2026-2027', availableSources: [] },
+      props: { open: true, processId: 'process-1', period: '2026-2027' },
     });
     await flushPromises();
 
     const submit = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'))
       .find((button) => button.textContent?.includes('Abrir convocatoria'));
-    expect(submit?.disabled).toBe(true);
-    expect(document.body.textContent).toContain('Falta registrar al menos una fuente académica activa');
+    expect(submit?.disabled).toBe(false);
+    submit?.click();
+    await flushPromises();
+    expect(document.body.textContent).toContain('La plantilla institucional está incompleta.');
+    expect(wrapper.emitted('opened')).toBeUndefined();
+    expect(submit?.disabled).toBe(false);
     wrapper.unmount();
   });
 });

@@ -57,14 +57,14 @@ const submit = () => {
         <FieldError :errors="[fileError ?? undefined, ...fieldErrors]" />
       </Field>
       <FieldSet v-if="index.sources.length" :disabled="disabled">
-        <FieldLegend>O usa fuentes ya cargadas</FieldLegend>
+        <FieldLegend>Documentos de importaciones anteriores</FieldLegend>
         <FieldGroup class="max-h-44 gap-3 overflow-y-auto">
           <Field v-for="source in index.sources" :key="source.id" orientation="horizontal">
             <Checkbox :id="`curricular-source-${source.id}`" :model-value="sourceIds.includes(source.id)" :disabled="disabled || (sourceIds.length >= 10 && !sourceIds.includes(source.id))" @update:model-value="selectSource(source.id, $event)" />
             <FieldLabel :for="`curricular-source-${source.id}`" class="min-w-0 break-words">{{ source.name }}</FieldLabel>
           </Field>
         </FieldGroup>
-        <FieldDescription>Selecciona hasta 10 fuentes existentes.</FieldDescription>
+        <FieldDescription>Selecciona hasta 10 documentos anteriores.</FieldDescription>
       </FieldSet>
       <Field :data-invalid="Boolean(errors.instruction)">
         <FieldLabel for="curricular-import-instruction">Qué necesitas organizar <span class="text-muted-foreground">(opcional)</span></FieldLabel>

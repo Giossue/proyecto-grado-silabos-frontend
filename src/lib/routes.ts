@@ -24,8 +24,6 @@ export const paths = {
   panel: '/panel',
   dashboard: '/dashboard',
   notifications: '/notificaciones',
-  sources: '/fuentes',
-  source: (source: string): string => `/fuentes/${segment(source)}`,
   settings: {
     root: '/settings',
     profile: '/settings/profile',
@@ -67,8 +65,6 @@ export const paths = {
     review: (revision: string): string => `/coordinacion/revisiones/${segment(revision)}`,
     comparison: (before: string, after: string): string =>
       `/coordinacion/revisiones/${segment(before)}/comparar/${segment(after)}`,
-    sources: '/coordinacion/fuentes',
-    source: (source: string): string => `/coordinacion/fuentes/${segment(source)}`,
     academic: '/coordinacion/estructura-academica',
     curriculum: '/coordinacion/malla',
     scheduledSubjects: '/coordinacion/materias-paralelos',
@@ -143,7 +139,7 @@ export type RouteDefinition = {
   /** Estados lógicos que comparte una ruta física consolidada. */
   states?: readonly string[];
   breadcrumb?: string;
-  shortcut?: 'panel' | 'notifications' | 'sources' | 'source' | 'profile' | 'security' | 'documents';
+  shortcut?: 'panel' | 'notifications' | 'profile' | 'security' | 'documents';
   roles?: readonly RoleCode[];
   guest?: boolean;
   requiresAuth?: boolean;
@@ -169,8 +165,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'legacy-panel', path: paths.panel, component: 'DashboardPage', aliasOf: paths.dashboard, ...authenticated },
   { name: 'dashboard', path: paths.dashboard, component: 'DashboardPage', shortcut: 'panel', ...authenticated },
   { name: 'notifications', path: paths.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...authenticated },
-  { name: 'sources', path: paths.sources, component: 'CoordinationSourcesPage', shortcut: 'sources', ...authenticated },
-  { name: 'source', path: '/fuentes/:source', component: 'CoordinationSourceDetailPage', shortcut: 'source', ...authenticated },
   { name: 'settings-profile', path: paths.settings.profile, component: 'ProfilePage', shortcut: 'profile', ...authenticated },
   { name: 'settings-security', path: paths.settings.security, component: 'SecurityPage', shortcut: 'security', ...authenticated },
   { name: 'settings-root', path: paths.settings.root, aliasOf: paths.settings.profile, ...authenticated },
@@ -199,8 +193,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-reviews', path: paths.coordination.reviews, component: 'CoordinationReviewsPage', breadcrumb: 'Revisión', ...coordinator },
   { name: 'coordination-review', path: '/coordinacion/revisiones/:revision', component: 'CoordinationReviewDetailPage', breadcrumb: 'Detalle de revisión', ...coordinator },
   { name: 'coordination-comparison', path: '/coordinacion/revisiones/:before/comparar/:after', component: 'CoordinationReviewComparisonPage', breadcrumb: 'Comparar revisiones', ...coordinator },
-  { name: 'coordination-sources', path: paths.coordination.sources, component: 'CoordinationSourcesPage', breadcrumb: 'Fuentes académicas', ...coordinator },
-  { name: 'coordination-source', path: '/coordinacion/fuentes/:source', component: 'CoordinationSourceDetailPage', breadcrumb: 'Fuente académica', ...coordinator },
   { name: 'coordination-curriculum', path: paths.coordination.curriculum, component: 'CoordinationAcademicStructurePage', states: ['curriculum'], breadcrumb: 'Malla', ...coordinator },
   { name: 'coordination-scheduled-subjects', path: paths.coordination.scheduledSubjects, component: 'CoordinationAcademicStructurePage', states: ['schedule'], breadcrumb: 'Materias y paralelos', ...coordinator },
   { name: 'coordination-teacher-assignments', path: paths.coordination.teacherAssignments, component: 'CoordinationAcademicStructurePage', states: ['teachers'], breadcrumb: 'Asignación docente', ...coordinator },

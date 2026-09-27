@@ -4,6 +4,17 @@ export const reference = {
   frontendRoot: 'resources/js',
 };
 
+// Funciones retiradas por la nueva delimitación curricular; sus URLs recuperan el panel.
+export const retiredPages = ['pages/Sources/Index.vue', 'pages/Sources/Show.vue'];
+export const retiredComponents = [
+  'components/domain/AcademicSourceDocumentEditor.vue',
+  'components/domain/AcademicSourceImageNodeView.vue',
+  'components/domain/configuration/AcademicSourceActions.vue',
+  'components/domain/configuration/AcademicSourceCreationSheet.vue',
+  'components/domain/configuration/AcademicSourceEditSheet.vue',
+  'components/domain/ai/SyllabusAiAssistantSheet.vue',
+];
+
 export const pages = [
   { id: 'ADM-04', source: 'pages/Admin/Academic/Index.vue', target: 'pages/AcademicGovernancePage.vue', routes: ['/admin/estructura-academica'] },
   { id: 'ADM-10', source: 'pages/Admin/Operations/Audit.vue', target: 'pages/AdminAuditPage.vue', routes: ['/admin/auditoria'] },
@@ -24,8 +35,6 @@ export const pages = [
   { id: 'ADM-01/COR-01/DOC-01', source: 'pages/Dashboard.vue', target: 'pages/DashboardPage.vue', routes: ['/admin/panel'] },
   { id: 'UI-03', source: 'pages/Notifications/Index.vue', target: 'pages/NotificationsPage.vue', routes: ['/notificaciones'] },
   { id: 'UI-02', source: 'pages/Role/Select.vue', target: 'pages/WorkspacePage.vue', routes: ['/rol'] },
-  { id: 'COR-11', source: 'pages/Sources/Index.vue', target: 'pages/CoordinationSourcesPage.vue', routes: ['/coordinacion/fuentes'] },
-  { id: 'COR-11', source: 'pages/Sources/Show.vue', target: 'pages/CoordinationSourceDetailPage.vue', routes: ['/coordinacion/fuentes/:source'] },
   { id: 'COR-09/DOC-09', source: 'pages/Syllabi/Compare.vue', target: 'pages/CoordinationReviewComparisonPage.vue', routes: ['/coordinacion/revisiones/:before/comparar/:after'] },
   { id: 'DOC-10', source: 'pages/Syllabi/Documents.vue', target: 'pages/DocumentsPage.vue', routes: ['/revisiones/:revision/documentos'] },
   { id: 'DOC-06', source: 'pages/Teacher/Syllabi/Ai.vue', target: 'pages/TeacherSyllabusDetailPage.vue', routes: ['/docente/mis-silabos/:syllabus'], state: 'ia' },
@@ -61,8 +70,6 @@ export const pages = [
     'DashboardPage.vue': 'Conserva los tres estados por rol; el contexto procede de la sesión y del endpoint de panel.',
     'NotificationsPage.vue': 'Conserva listado y acciones; reemplaza la paginación Inertia por datos JSON.',
     'WorkspacePage.vue': 'Conserva la selección de ámbito; activa rol y carrera mediante Sanctum/API.',
-    'CoordinationSourcesPage.vue': 'Conserva listado y hojas de fuentes; carga y muta mediante API.',
-    'CoordinationSourceDetailPage.vue': 'Conserva el editor Markdown canónico con persistencia API.',
     'CoordinationReviewComparisonPage.vue': 'Conserva el comparador canónico y obtiene ambas revisiones por parámetros de Vue Router.',
     'DocumentsPage.vue': 'Conserva estados y descargas de documentos; usa URLs temporales entregadas por la API.',
     'TeacherSyllabusDetailPage.vue': 'Integra resumen, edición, envío e IA canónicos según estado del expediente; autoguarda y transiciona por API.',
@@ -84,6 +91,10 @@ export const pages = [
 }));
 
 export const allowedExtraComponents = [
+  {
+    path: 'components/domain/ai/SyllabusUnitAssistant.vue',
+    justification: 'Ayuda para generar contenido de unidades con contexto curricular confirmado; sustituye el revisor retirado.',
+  },
   {
     path: 'components/ApiForm.vue',
     justification: 'Adaptador interno de la frontera API que conserva el contrato de slots de los formularios canónicos sin introducir una superficie visible.',
@@ -141,6 +152,8 @@ export const componentAdaptationRules = [
 ];
 
 export const allowedAliasRoutes = [
+  '/coordinacion/fuentes',
+  '/coordinacion/fuentes/:source',
   '/seguridad',
   '/coordinacion/estructura-academica',
   '/administracion/usuarios',

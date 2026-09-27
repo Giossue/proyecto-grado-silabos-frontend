@@ -96,6 +96,8 @@ describe('AppSidebarLayout', () => {
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
     expect(sidebar.text()).toContain('Panel');
     expect(sidebar.find('a[href="/coordinacion/panel"]').exists()).toBe(true);
+    expect(sidebar.text()).not.toContain('Fuentes académicas');
+    expect(sidebar.find('a[href="/coordinacion/fuentes"]').exists()).toBe(false);
     expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(true);
   });
 

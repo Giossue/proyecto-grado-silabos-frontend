@@ -113,7 +113,6 @@ const form = useForm({
     label: '',
     content_type: 'text' as TemplateContentType,
     help: '',
-    ai_enabled: false,
     landscape: false,
     document: null as TemplateFieldContainer['document'],
     fingerprint: '',
@@ -161,7 +160,6 @@ const openEdit = (): void => {
     form.key = value.key;
     form.content_type = value.content_type;
     form.help = value.help ?? '';
-    form.ai_enabled = Boolean(value.ai_enabled);
     editOpen.value = true;
 };
 
@@ -217,7 +215,6 @@ const save = (): void => {
                       key: data.key,
                       label: data.label,
                       help: data.help,
-                      ai_enabled: data.ai_enabled,
                   },
               ]
             : [];
@@ -427,22 +424,6 @@ defineExpose({
                             <FieldDescription>
                                 Para tablas anchas. La sección de esta parte se
                                 imprime en una hoja horizontal.
-                            </FieldDescription>
-                        </FieldContent>
-                    </Field>
-                    <Field v-if="primary && !fixed" orientation="horizontal">
-                        <Checkbox
-                            id="edit-template-field-ai-enabled"
-                            v-model="form.ai_enabled"
-                            :disabled="form.processing"
-                        />
-                        <FieldContent>
-                            <FieldLabel for="edit-template-field-ai-enabled">
-                                Permitir que la IA lea esta parte
-                            </FieldLabel>
-                            <FieldDescription>
-                                La IA lo usará como referencia para sus
-                                sugerencias; el docente decide si las aplica.
                             </FieldDescription>
                         </FieldContent>
                     </Field>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Bot, FileSearch, RotateCw } from '@lucide/vue';
+import { Bot, Download, FileSearch, RotateCw } from '@lucide/vue';
 import { ref } from 'vue';
+import { ApiError } from '@/api/client';
+import { getCurricularImportDocument, type CurricularImportDetail } from '@/api/curricular-imports';
 import CurricularImportForm from './CurricularImportForm.vue';
 import CurricularImportReview from './CurricularImportReview.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -16,8 +18,24 @@ import { toast } from '@/lib/toast';
 
 const props = defineProps<{ careerId: string; careerName: string }>();
 const open = ref(false);
+const downloading = ref<string | null>(null);
 const { index, detail, loading, uploading, pending, error, errors, view, load, select, create, retry, history, applied } = useCurricularImports(open, () => props.careerId);
 const formatDate = (value: string) => new Intl.DateTimeFormat('es-EC', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(value));
+const download = async (document: CurricularImportDetail['documents'][number]): Promise<void> => {
+  if (!detail.value || !document.original_url || downloading.value) return;
+  downloading.value = document.source_id;
+  try {
+    const file = await getCurricularImportDocument(detail.value.id, document.source_id);
+    const url = URL.createObjectURL(file);
+    const anchor = window.document.createElement('a');
+    anchor.href = url;
+    anchor.download = document.original_name || document.name;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  } catch (reason) {
+    toast.error(reason instanceof ApiError ? reason.message : 'No se pudo descargar el documento.');
+  } finally { downloading.value = null; }
+};
 </script>
 
 <template>
@@ -55,7 +73,12 @@ const formatDate = (value: string) => new Intl.DateTimeFormat('es-EC', { dateSty
         <template v-else-if="index && detail && view === 'detail'">
           <div class="flex flex-col gap-2">
             <Badge variant="secondary" class="self-start">{{ curricularStatusLabel(detail.status) }}</Badge>
-            <ul class="flex flex-col gap-1 text-sm text-muted-foreground"><li v-for="document in detail.documents" :key="document.source_id" class="break-words">{{ document.name }}</li></ul>
+            <ul class="flex flex-col gap-2 text-sm text-muted-foreground">
+              <li v-for="document in detail.documents" :key="document.source_id" class="flex flex-wrap items-center justify-between gap-2">
+                <span class="min-w-0 break-words">{{ document.name }}</span>
+                <Button v-if="document.original_url" type="button" variant="outline" size="sm" :aria-label="`Descargar ${document.name}`" :disabled="Boolean(downloading)" @click="download(document)"><Spinner v-if="downloading === document.source_id" data-icon="inline-start" /><Download v-else data-icon="inline-start" aria-hidden="true" />Descargar documento</Button>
+              </li>
+            </ul>
           </div>
           <Alert v-if="pending"><Spinner /><AlertDescription aria-live="polite">{{ detail.status === 'pendiente' ? 'Los documentos están en espera para su análisis.' : 'Estoy leyendo los documentos y relacionando los datos con la carrera y sus asignaturas.' }} Puedes cerrar el asistente y volver desde el historial.</AlertDescription></Alert>
           <Alert v-else-if="detail.status === 'fallida'" variant="destructive"><AlertDescription>{{ detail.error ?? 'No se pudieron analizar estos documentos. Revisa los archivos y vuelve a enviarlos.' }}</AlertDescription></Alert>

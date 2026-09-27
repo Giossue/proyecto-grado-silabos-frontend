@@ -22,7 +22,7 @@ export type TemplateField = DocumentField & {
     content_type: TemplateContentType;
     page_orientation?: 'portrait' | 'landscape' | null;
     master_source: string | null;
-    ai_enabled: boolean;
+
     document_marker: string | null;
 };
 

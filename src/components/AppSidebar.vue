@@ -6,7 +6,6 @@ import {
     ClipboardCheck,
     FileStack,
     LayoutGrid,
-    LibraryBig,
     ScrollText,
     Settings,
     UsersRound,
@@ -67,7 +66,6 @@ const mainNavItems = computed<NavItem[]>(() => [
               { title: 'Asignación docente', href: paths.coordination.teacherAssignments, icon: UsersRound },
               { title: 'Materias y paralelos', href: paths.coordination.scheduledSubjects, icon: Building2 },
               { title: 'Malla', href: paths.coordination.curriculum, icon: BookOpenCheck },
-              { title: 'Fuentes académicas', href: paths.coordination.sources, icon: LibraryBig },
           ]
         : []),
     ...(activeRole.value?.code === 'docente'

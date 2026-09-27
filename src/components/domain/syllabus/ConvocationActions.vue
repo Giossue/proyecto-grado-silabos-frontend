@@ -14,7 +14,7 @@ import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOp
 import ConvocationTrackingSheet from '@/components/domain/syllabus/ConvocationTrackingSheet.vue';
 
 type Transition = 'pausar' | 'reanudar';
-const props = defineProps<{ convocation: ConvocationItem; availableSources: Array<{ id: string; name: string }> }>();
+const props = defineProps<{ convocation: ConvocationItem }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const pending = ref<Transition | null>(null);
 const processing = ref(false);
@@ -25,8 +25,8 @@ const trackingOpen = ref(false);
 const openingOpen = ref(false);
 const reasonCharacters = computed(() => reason.value.trim().length);
 const dialogs: Record<Transition, { title: string; description: string; label: string }> = {
-  pausar: { title: 'Pausar la convocatoria', description: 'Los docentes de su carrera no podrán editar ni enviar hasta que la reanude; sus borradores se conservan. Durante la pausa puede corregir la malla y las fuentes; la revisión de lo enviado continúa. El motivo queda en auditoría.', label: 'Pausar' },
-  reanudar: { title: 'Reanudar la convocatoria', description: 'Los docentes vuelven a trabajar, los paralelos creados durante la pausa reciben su sílabo y la malla y las fuentes de la carrera quedan protegidas de nuevo.', label: 'Reanudar' },
+  pausar: { title: 'Pausar la convocatoria', description: 'Los docentes de su carrera no podrán editar ni enviar hasta que la reanude; sus borradores se conservan. Durante la pausa puede corregir la malla y los datos curriculares; la revisión de lo enviado continúa. El motivo queda en auditoría.', label: 'Pausar' },
+  reanudar: { title: 'Reanudar la convocatoria', description: 'Los docentes vuelven a trabajar, los paralelos creados durante la pausa reciben su sílabo y la malla y los datos curriculares de la carrera quedan protegidos de nuevo.', label: 'Reanudar' },
 };
 const select = (value: Transition): void => {
   pending.value = value;
@@ -68,7 +68,6 @@ const opened = (message: string): void => emit('changed', message);
     v-model:open="openingOpen"
     :process-id="convocation.process_id"
     :period="convocation.period"
-    :available-sources="availableSources"
     @opened="opened"
   />
   <Dialog :open="pending !== null" @update:open="(open) => { if (!open && !processing) pending = null; }"><DialogContent v-if="pending"><DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader><form class="flex flex-col gap-4" @submit.prevent="submit">

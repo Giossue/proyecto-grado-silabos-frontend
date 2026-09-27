@@ -90,7 +90,7 @@ const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", t
         required: true,
         inherited: false,
         teacher_editable: true,
-        ai_enabled: false,
+
         value: type === "booleano" ? null : "Texto enviado",
         rows: [],
       }],
@@ -103,7 +103,7 @@ const mountPage = () => mount(TeacherSyllabusDetailPage, {
   global: {
     stubs: {
       RouterLink: { template: "<a><slot /></a>" },
-      SyllabusAiAssistantSheet: { template: "<div />" },
+      SyllabusUnitAssistant: { template: "<div />" },
     },
   },
 });
@@ -197,7 +197,7 @@ describe("TeacherSyllabusDetailPage", () => {
     detail.sections[0]!.blocks[0]!.fields.push({
       id: "field-2", key: "detalle", label: "Tipo de discapacidad", help: null, type: "texto_corto",
       options: [], show_when: { key: "contenido", value: "true" }, required: true, inherited: false,
-      teacher_editable: true, ai_enabled: false, value: "Visual", rows: [],
+      teacher_editable: true, value: "Visual", rows: [],
     });
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
@@ -387,14 +387,14 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("habilita la revisión con IA sin exigir una validación previa", async () => {
+  it("habilita la generación de unidades sin exigir una validación previa", async () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
     const wrapper = mount(TeacherSyllabusDetailPage, {
-      global: { stubs: { SyllabusAiAssistantSheet: { props: ["canReview"], template: '<div class="ai" :data-can-review="String(canReview)" />' } } },
+      global: { stubs: { SyllabusUnitAssistant: { props: ["enabled"], template: '<div class="ai" :data-enabled="String(enabled)" />' } } },
     });
     await flushPromises();
 
-    expect(wrapper.get(".ai").attributes("data-can-review")).toBe("true");
+    expect(wrapper.get(".ai").attributes("data-enabled")).toBe("true");
   });
 
   it("muestra el motivo y no ofrece iniciar cuando la convocatoria está en pausa", async () => {

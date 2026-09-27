@@ -1,4 +1,4 @@
-import { api } from '@/api/client';
+import { api, apiBlob } from '@/api/client';
 import { withPurgeConfirmation } from '@/api/career-academics';
 
 export type CurricularImportStatus = 'pendiente' | 'en_ejecucion' | 'lista' | 'aplicada' | 'fallida';
@@ -39,7 +39,7 @@ export type CurricularImportDetail = {
   id: string;
   career_id?: string;
   status: CurricularImportStatus;
-  documents: Array<{ source_id: string; name: string; hash: string; kind: string; execution_id: string | null }>;
+  documents: Array<{ source_id: string; name: string; hash: string; kind: string; execution_id: string | null; original_url?: string | null; original_name?: string | null }>;
   proposal: null | {
     definitions: CurricularDefinition[];
     values: CurricularProposedValue[];
@@ -53,6 +53,7 @@ export type CurricularImportDetail = {
 };
 export const getCurricularImports = () => api<CurricularImportIndex>('/coordination/curricular-imports');
 export const getCurricularImport = (id: string) => api<CurricularImportDetail>(`/coordination/curricular-imports/${id}`);
+export const getCurricularImportDocument = (id: string, sourceId: string) => apiBlob(`/coordination/curricular-imports/${id}/documents/${sourceId}/original`);
 export const retryCurricularImport = (id: string) => api<CurricularImportDetail>(`/coordination/curricular-imports/${id}/retry`, { method: 'POST' });
 export const createCurricularImport = (input: { files: File[]; source_ids: string[]; instruction: string }) => {
   const body = new FormData();

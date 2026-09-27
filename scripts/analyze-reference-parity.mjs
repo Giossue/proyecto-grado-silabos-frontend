@@ -7,6 +7,7 @@ import {
   allowedCanonicalRoutes,
   pages,
   reference,
+  retiredPages,
 } from './reference-parity-manifest.mjs';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -31,7 +32,7 @@ const referencePageFile = (path) => referenceFile(`pages/${path}`);
 const section = (title, body) => `\n## ${title}\n\n${body}\n`;
 const unique = (values) => [...new Set(values)];
 
-const monolithPageFiles = sourceFiles(referenceRepository, 'resources/js/pages');
+const monolithPageFiles = sourceFiles(referenceRepository, 'resources/js/pages').filter((path) => !retiredPages.includes(`pages/${path}`));
 const spaPageFiles = sourceFiles(projectRoot, 'src/pages');
 const monolithComponentFiles = sourceFiles(referenceRepository, 'resources/js/components');
 const spaComponentFiles = sourceFiles(projectRoot, 'src/components');

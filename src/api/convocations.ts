@@ -15,7 +15,6 @@ export type ConvocationItem = {
 
 export type ConvocationsPage = {
   filters: { q: string | null; state: ConvocationState | null };
-  available_sources: Array<{ id: string; name: string }>;
   convocations: { data: ConvocationItem[]; current_page: number; last_page: number; per_page: number; from: number | null; to: number | null; total: number };
 };
 
@@ -27,7 +26,6 @@ export type ConvocationDetail = {
     process: { name: string; state: string };
     period: string;
     template: string;
-    sources: string[];
     start_date: string | null;
     draft_deadline: string | null;
     counts: { total: number; not_started: number; draft: number; in_review: number; approved: number };

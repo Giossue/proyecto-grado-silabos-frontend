@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Play } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { createConvocation } from '@/api/convocations';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -12,7 +12,6 @@ const props = defineProps<{
   open: boolean;
   processId: string;
   period: string;
-  availableSources: Array<{ id: string; name: string }>;
 }>();
 
 const emit = defineEmits<{
@@ -22,7 +21,6 @@ const emit = defineEmits<{
 
 const processing = ref(false);
 const error = ref<string | null>(null);
-const hasSources = computed(() => props.availableSources.length > 0);
 
 watch(() => props.open, (open) => {
   if (!open) return;
@@ -54,22 +52,16 @@ const submit = async (): Promise<void> => {
       <DialogHeader>
         <DialogTitle>Abrir convocatoria de la carrera</DialogTitle>
         <DialogDescription>
-          Se usarán la plantilla, las fechas institucionales del período {{ period }} y todas las fuentes académicas activas de la carrera.
+          Se usarán la plantilla, las fechas institucionales del período {{ period }} y los datos académicos confirmados.
         </DialogDescription>
       </DialogHeader>
       <form class="flex flex-col gap-4" @submit.prevent="submit">
-        <p v-if="hasSources" class="text-sm text-muted-foreground">
-          Fuentes que usará la IA: {{ availableSources.map((source) => source.name).join(', ') }}.
-        </p>
-        <Alert v-else variant="destructive">
-          <AlertDescription>Falta registrar al menos una fuente académica activa en la carrera.</AlertDescription>
-        </Alert>
         <Alert v-if="error" variant="destructive">
           <AlertDescription>{{ error }}</AlertDescription>
         </Alert>
         <DialogFooter>
           <DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose>
-          <Button type="submit" :disabled="processing || !hasSources">
+          <Button type="submit" :disabled="processing">
             <Spinner v-if="processing" data-icon="inline-start" />
             <Play v-else data-icon="inline-start" aria-hidden="true" />
             Abrir convocatoria

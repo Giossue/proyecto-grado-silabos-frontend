@@ -39,7 +39,6 @@ describe("CoordinationConvocationsPage", () => {
     vi.mocked(getConvocation).mockReset();
     vi.mocked(getConvocations).mockResolvedValue({
       filters: { q: null, state: null },
-      available_sources: [{ id: "source-1", name: "Reglamento académico" }],
       convocations: {
         data: [{
           id: null,
@@ -94,7 +93,6 @@ describe("CoordinationConvocationsPage", () => {
   it("abre el seguimiento en un Sheet sin configuración fijada", async () => {
     vi.mocked(getConvocations).mockResolvedValue({
       filters: { q: null, state: null },
-      available_sources: [],
       convocations: {
         data: [{
           id: "convocation-1",
@@ -122,7 +120,6 @@ describe("CoordinationConvocationsPage", () => {
         process: { name: "Proceso institucional", state: "abierto" },
         period: "2026-2",
         template: "Plantilla institucional",
-        sources: [],
         start_date: "2026-09-09T00:00:00Z",
         draft_deadline: "2026-09-15T00:00:00Z",
         counts: { total: 1, not_started: 0, draft: 1, in_review: 0, approved: 0 },
