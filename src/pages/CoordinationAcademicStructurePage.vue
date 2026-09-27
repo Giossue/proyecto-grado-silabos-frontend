@@ -19,6 +19,7 @@ import ManagedUserSheet from "@/components/domain/identity/ManagedUserSheet.vue"
 import CurriculumActions from "@/components/domain/academic/CurriculumActions.vue";
 import CurriculumCanvas from "@/components/domain/academic/curriculum/CurriculumCanvas.vue";
 import CurriculumConfigurationSheet from "@/components/domain/academic/curriculum/CurriculumConfigurationSheet.vue";
+import CurricularImportAssistant from "@/components/domain/academic/curricular/CurricularImportAssistant.vue";
 import PeriodPreparationSheet from "@/components/domain/academic/PeriodPreparationSheet.vue";
 import ScheduledSubjectsTab from "@/components/domain/academic/ScheduledSubjectsTab.vue";
 import TeacherAssignmentSheet from "@/components/domain/academic/TeacherAssignmentSheet.vue";
@@ -207,4 +208,10 @@ onMounted(() => {
       @saved="handleAssignmentChanged"
     />
   </PageFrame>
+  <CurricularImportAssistant
+    v-if="mode === 'curriculum' && curriculum"
+    :key="curriculum.career.id"
+    :career-id="curriculum.career.id"
+    :career-name="curriculum.career.name"
+  />
 </template>

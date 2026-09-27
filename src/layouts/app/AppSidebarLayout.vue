@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, provide, ref, toRef } from 'vue';
+import { provide, ref, toRef } from 'vue';
 import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
@@ -7,8 +7,6 @@ import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { breadcrumbsKey, pageTitleKey } from '@/composables/usePageBreadcrumbs';
 import { templateEditorState } from '@/state/templateEditor';
-import { sessionState } from '@/state/session';
-import CurricularImportAssistant from '@/components/domain/academic/curricular/CurricularImportAssistant.vue';
 import type { BreadcrumbItem } from '@/types';
 
 type Props = {
@@ -27,7 +25,6 @@ provide(breadcrumbsKey, toRef(props, 'breadcrumbs'));
  */
 const pageTitle = ref('');
 const templateEditorOpen = templateEditorState.open;
-const activeRole = computed(() => sessionState.current.value?.active_role);
 
 provide(pageTitleKey, pageTitle);
 </script>
@@ -44,11 +41,5 @@ provide(pageTitleKey, pageTitle);
             <slot />
         </AppContent>
     </AppShell>
-    <CurricularImportAssistant
-        v-if="activeRole?.code === 'coordinador' && activeRole.career_id"
-        :key="activeRole.id"
-        :career-id="activeRole.career_id"
-        :career-name="activeRole.career_name ?? 'Carrera activa'"
-    />
     <Toaster />
 </template>
