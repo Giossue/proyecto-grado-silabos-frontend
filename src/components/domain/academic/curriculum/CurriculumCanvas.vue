@@ -32,6 +32,7 @@ import type { CurriculumRequirement } from "@/components/domain/academic/curricu
 import CurriculumCycleNode from "@/components/domain/academic/curriculum/CurriculumCycleNode.vue";
 import CurriculumLegend from "@/components/domain/academic/curriculum/CurriculumLegend.vue";
 import CurriculumLegendPanel from "@/components/domain/academic/curriculum/CurriculumLegendPanel.vue";
+import CurriculumLearningOutcomesDialog from "@/components/domain/academic/curriculum/CurriculumLearningOutcomesDialog.vue";
 import CurriculumRequirementDialogs from "@/components/domain/academic/curriculum/CurriculumRequirementDialogs.vue";
 import CurriculumRequirementEdge from "@/components/domain/academic/curriculum/CurriculumRequirementEdge.vue";
 import CurriculumSubjectNode from "@/components/domain/academic/curriculum/CurriculumSubjectNode.vue";
@@ -122,6 +123,7 @@ const flowId = `curriculum-${props.curriculum.id}`;
 const { setEdges, setNodes, updateNode } = useVueFlow({ id: flowId });
 
 const editingSubjectId = ref<string | null>(null);
+const learningOutcomesSubjectId = ref<string | null>(null);
 const draftCycle = ref<number | null>(null);
 const dragPreview = ref<{
   subjectId: string;
@@ -195,6 +197,11 @@ const editorSubject = computed(() =>
     ? (subjectById.value.get(editingSubjectId.value) ?? null)
     : null,
 );
+const learningOutcomesSubject = computed(() =>
+  learningOutcomesSubjectId.value
+    ? (subjectById.value.get(learningOutcomesSubjectId.value) ?? null)
+    : null,
+);
 const editorCycle = computed(
   () => editorSubject.value?.cycle ?? draftCycle.value ?? 1,
 );
@@ -233,10 +240,11 @@ const buildNodes = (): Node[] =>
     unitStyleFor,
     laneWidth: laneWidth.value,
     editable: editable.value,
-    hasOpenEditor: hasOpenEditor.value,
+    hasOpenEditor: hasOpenEditor.value || learningOutcomesSubjectId.value !== null,
     savingLayout: savingLayout.value,
     draggingSubjectId: dragPreview.value?.subjectId,
     onEdit: beginSubjectEdit,
+    onLearningOutcomes: (subjectId) => { learningOutcomesSubjectId.value = subjectId; },
     onSaved: (message) => {
       if (message) emit("changed", message);
     },
@@ -279,6 +287,7 @@ watch(
     () => props.organizationUnits,
     () => props.curriculum.cycle_count,
     editingSubjectId,
+    learningOutcomesSubjectId,
     draftCycle,
   ],
   () => {
@@ -556,6 +565,13 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         />
       </DialogContent>
     </Dialog>
+    <CurriculumLearningOutcomesDialog
+      v-if="learningOutcomesSubject"
+      :open="true"
+      :subject="learningOutcomesSubject"
+      @update:open="(open) => { if (!open) learningOutcomesSubjectId = null; }"
+      @saved="(message) => emit('changed', message)"
+    />
   </div>
 </template>
 

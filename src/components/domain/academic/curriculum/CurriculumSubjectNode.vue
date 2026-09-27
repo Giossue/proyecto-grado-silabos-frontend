@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Pencil, Trash2 } from "@lucide/vue";
+import { ListChecks, Pencil, Trash2 } from "@lucide/vue";
 import { Handle, Position } from "@vue-flow/core";
 import { computed, ref } from "vue";
 import { ApiError } from "@/api/client";
@@ -34,6 +34,7 @@ const props = defineProps<{
     unitStyle: { backgroundColor: string; color: string };
     editable: boolean;
     onEdit: () => void;
+    onLearningOutcomes: () => void;
     onSaved: (message?: string) => void;
   };
   dragging?: boolean;
@@ -115,13 +116,16 @@ const totalFields = computed(
       >
         <TableActionsMenu
           :label="`Acciones para ${data.subject.name}`"
-          :disabled="!data.editable"
         >
-          <DropdownMenuItem @select="data.onEdit">
+          <DropdownMenuItem @select="data.onLearningOutcomes">
+            <ListChecks aria-hidden="true" />
+            Resultados de aprendizaje
+          </DropdownMenuItem>
+          <DropdownMenuItem v-if="data.editable" @select="data.onEdit">
             <Pencil aria-hidden="true" />
             Editar
           </DropdownMenuItem>
-          <DropdownMenuItem variant="destructive" @select="deleteOpen = true">
+          <DropdownMenuItem v-if="data.editable" variant="destructive" @select="deleteOpen = true">
             <Trash2 aria-hidden="true" />
             Eliminar
           </DropdownMenuItem>

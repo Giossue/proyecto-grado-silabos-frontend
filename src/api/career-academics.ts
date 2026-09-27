@@ -159,6 +159,43 @@ export type TeacherAssignments = {
 
 export const getCurriculum = (careerId: string) =>
   api<Curriculum>(`/coordination/academic/curriculum/${careerId}`);
+
+export type SubjectLearningOutcomes = {
+  subject_id: string;
+  source_name: string;
+  source_locator: string;
+  outcomes: Array<{ id: string; text: string; position: number }>;
+  confirmed_at: string | null;
+  confirmed_by: { id: string; name: string } | null;
+  fingerprint: string | null;
+  editable: boolean;
+  lock_reason: string | null;
+};
+
+export type SubjectLearningOutcomesInput = {
+  source_name: string;
+  source_locator: string;
+  outcomes: Array<{ id?: string; text: string }>;
+  confirmed: true;
+  expected_fingerprint: string | null;
+};
+
+export const getSubjectLearningOutcomes = (subjectId: string) =>
+  api<SubjectLearningOutcomes>(
+    `/coordination/academic/subjects/${subjectId}/learning-outcomes`,
+  );
+
+export const saveSubjectLearningOutcomes = (
+  subjectId: string,
+  payload: SubjectLearningOutcomesInput,
+) =>
+  withPurgeConfirmation((confirm) =>
+    api<SubjectLearningOutcomes & { message: string }>(
+      `/coordination/academic/subjects/${subjectId}/learning-outcomes`,
+      { method: "PUT", body: jsonBody(payload, confirm) },
+    ),
+  );
+
 export const getScheduledSubjects = (periodId?: string) => {
   const query = periodId ? `?period=${encodeURIComponent(periodId)}` : "";
 

@@ -44,6 +44,29 @@ const subject = (id: string, position: number): CurriculumBuilderSubject => ({
 });
 
 describe('CurriculumCanvas', () => {
+    it('abre los resultados de la materia seleccionada incluso cuando la malla es de consulta', async () => {
+        const wrapper = shallowMount(CurriculumCanvas, {
+            props: {
+                career: { id: 'career', name: 'Software', modality: null },
+                curriculum: { id: 'career', cycle_count: 2, editable: false, lock_reason: 'Convocatoria abierta' },
+                fixedFields: [], fixedFieldTotals: [], subjects: [subject('a', 0), subject('b', 1)],
+                requirements: [], organizationUnits: [], modalityOptions: [],
+            },
+        });
+        const flow = wrapper.findComponent({ name: 'VueFlow' });
+        const nodes = flow.props('nodes') as Array<{ id: string; data: { onLearningOutcomes: () => void } }>;
+        nodes.find((node) => node.id === 'b')!.data.onLearningOutcomes();
+        await nextTick();
+        const dialog = wrapper.findComponent({ name: 'CurriculumLearningOutcomesDialog' });
+        expect(dialog.props('subject').id).toBe('b');
+        expect(dialog.props('open')).toBe(true);
+        expect(wrapper.findComponent({ name: 'Dialog' }).props('open')).toBe(false);
+        dialog.vm.$emit('update:open', false);
+        await nextTick();
+        expect(wrapper.findComponent({ name: 'CurriculumLearningOutcomesDialog' }).exists()).toBe(false);
+        wrapper.unmount();
+    });
+
     it('previsualiza el nuevo orden dentro del ciclo y envía ese ciclo al guardar', async () => {
         updateSubjectLayout.mockClear();
         const wrapper = shallowMount(CurriculumCanvas, {
