@@ -50,6 +50,7 @@ describe('CurriculumCanvas', () => {
             props: {
                 career: { id: 'career', name: 'Software', modality: null },
                 curriculum: { id: 'career', cycle_count: 2, editable: true, lock_reason: null },
+                editing: true,
                 fixedFields: [],
                 fixedFieldTotals: [],
                 subjects: [subject('a', 0), subject('b', 1), subject('c', 2)],
@@ -101,5 +102,39 @@ describe('CurriculumCanvas', () => {
         });
         await nextTick();
         expect(wrapper.findComponent({ name: 'Dialog' }).props('open')).toBe(true);
+    });
+
+    it('solo permite modificar nodos y relaciones dentro del modo de edición autorizado', async () => {
+        updateSubjectLayout.mockClear();
+        const wrapper = shallowMount(CurriculumCanvas, {
+            props: {
+                career: { id: 'career', name: 'Software', modality: null },
+                curriculum: { id: 'career', cycle_count: 1, editable: true, lock_reason: null },
+                editing: false,
+                fixedFields: [],
+                fixedFieldTotals: [],
+                subjects: [subject('a', 0)],
+                requirements: [],
+                organizationUnits: [],
+                modalityOptions: [],
+            },
+        });
+        const flow = wrapper.findComponent({ name: 'VueFlow' });
+        const nodes = () => flow.props('nodes') as Array<{ id: string; data: { editable?: boolean } }>;
+
+        expect(nodes().some((node) => node.id === 'add-subject-1')).toBe(false);
+        expect(nodes().find((node) => node.id === 'a')?.data.editable).toBe(false);
+        expect(flow.attributes('nodes-draggable')).toBe('false');
+        flow.vm.$emit('node-drag-stop', { node: { id: 'a', type: 'subject' } });
+        await flushPromises();
+        expect(updateSubjectLayout).not.toHaveBeenCalled();
+
+        await wrapper.setProps({ editing: true });
+        expect(nodes().some((node) => node.id === 'add-subject-1')).toBe(true);
+        expect(nodes().find((node) => node.id === 'a')?.data.editable).toBe(true);
+
+        await wrapper.setProps({ curriculum: { id: 'career', cycle_count: 1, editable: false, lock_reason: 'Convocatoria activa' } });
+        expect(nodes().some((node) => node.id === 'add-subject-1')).toBe(false);
+        expect(nodes().find((node) => node.id === 'a')?.data.editable).toBe(false);
     });
 });

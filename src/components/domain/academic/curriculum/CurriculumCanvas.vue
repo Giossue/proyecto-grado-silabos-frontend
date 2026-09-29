@@ -70,6 +70,7 @@ const props = defineProps<
     | "requirements"
     | "career"
   > & {
+    editing: boolean;
     organizationUnits: CurriculumBuilderProps["organizationUnitOptions"];
     modalityOptions: CurriculumBuilderProps["modalityOptions"];
   }
@@ -133,7 +134,7 @@ const hasOpenEditor = computed(
   () => editingSubjectId.value !== null || draftCycle.value !== null,
 );
 const editable = computed(
-  () => props.curriculum.editable && !props.curriculum.lock_reason,
+  () => props.editing && props.curriculum.editable && !props.curriculum.lock_reason,
 );
 
 const subjectsForCycle = (cycle: number): CurriculumBuilderSubject[] =>
@@ -278,6 +279,7 @@ watch(
     () => props.requirements,
     () => props.organizationUnits,
     () => props.curriculum.cycle_count,
+    editable,
     editingSubjectId,
     draftCycle,
   ],
@@ -328,6 +330,14 @@ const onConnect = (connection: Connection): void => {
 };
 
 const selectedRequirement = ref<CurriculumRequirement | null>(null);
+
+watch(editable, (canEdit) => {
+  if (canEdit) return;
+  closeEditor();
+  pendingConnection.value = null;
+  selectedRequirement.value = null;
+  dragPreview.value = null;
+});
 
 const onEdgeClick = ({ edge }: EdgeMouseEvent): void => {
   if (!editable.value || hasOpenEditor.value) {
@@ -438,7 +448,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
 <template>
   <div
     class="curriculum-canvas relative h-[76vh] min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
-    aria-label="Modo interactivo de la malla"
+    :aria-label="editing ? 'Editor interactivo de la malla' : 'Vista de la malla'"
   >
     <!--
             Panel al estilo del pie de la malla institucional: leyenda de

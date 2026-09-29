@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Pencil, Trash2 } from "@lucide/vue";
 import { Handle, Position } from "@vue-flow/core";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
 import { deleteCurriculumSubject } from "@/api/career-academics";
 import TableActionsMenu from "@/components/domain/TableActionsMenu.vue";
@@ -19,6 +19,7 @@ import {
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { formatNumericDisplay } from "@/lib/numberDisplay";
+import { cn } from "@/lib/utils";
 import type {
   CurriculumBuilderProps,
   CurriculumBuilderSubject,
@@ -42,9 +43,12 @@ const props = defineProps<{
 const deleteOpen = ref(false);
 const deleting = ref(false);
 const deleteError = ref<string | null>(null);
+watch(() => props.data.editable, (editable) => {
+  if (!editable) deleteOpen.value = false;
+});
 const deleteSubject = async (): Promise<void> => {
   const subject = props.data.subject;
-  if (!subject) return;
+  if (!subject || !props.data.editable) return;
   deleting.value = true;
   deleteError.value = null;
   try {
@@ -104,11 +108,13 @@ const totalFields = computed(
             dentro y las líneas de relación conservan el suyo de pulsación.
         -->
     <article
-      class="relative w-[17.125rem] cursor-grab overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring active:cursor-grabbing data-[dragging=true]:shadow-menu data-[dragging=true]:ring-2 data-[dragging=true]:ring-ring"
+      class="relative w-[17.125rem] overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-2 data-[dragging=true]:ring-ring"
+      :class="cn(data.editable && 'cursor-grab active:cursor-grabbing')"
       :data-dragging="dragging"
       :aria-label="`${data.subject.code}: ${data.subject.name}`"
     >
       <div
+        v-if="data.editable"
         class="nodrag nopan absolute top-1 right-1"
         @click.stop
         @mousedown.stop
@@ -116,11 +122,11 @@ const totalFields = computed(
         <TableActionsMenu
           :label="`Acciones para ${data.subject.name}`"
         >
-          <DropdownMenuItem v-if="data.editable" @select="data.onEdit">
+          <DropdownMenuItem @select="data.onEdit">
             <Pencil aria-hidden="true" />
             Editar
           </DropdownMenuItem>
-          <DropdownMenuItem v-if="data.editable" variant="destructive" @select="deleteOpen = true">
+          <DropdownMenuItem variant="destructive" @select="deleteOpen = true">
             <Trash2 aria-hidden="true" />
             Eliminar
           </DropdownMenuItem>
@@ -138,7 +144,8 @@ const totalFields = computed(
           </span>
         </div>
         <div
-          class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 p-2 pr-9 text-center"
+          class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 p-2 text-center"
+          :class="cn(data.editable && 'pr-9')"
         >
           <Badge
             v-if="data.subject.organization_unit_label"

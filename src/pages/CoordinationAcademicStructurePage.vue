@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import { ChevronDown, UserPlus } from "@lucide/vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { ChevronDown, Pencil, UserPlus } from "@lucide/vue";
 import { useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
 import {
@@ -26,6 +26,7 @@ import TeacherAssignmentsPanel from "@/components/domain/academic/TeacherAssignm
 import ProcessLockAlert from "@/components/domain/ProcessLockAlert.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,7 +47,7 @@ const pageTitle = computed(() => ({
 const pageDescription = computed(() => {
   const career = curriculum.value?.career.name ?? 'la carrera activa';
   return {
-    curriculum: `Malla curricular de ${career}. Gestione las materias y sus relaciones en el constructor interactivo.`,
+    curriculum: `Malla curricular de ${career}. Consulte las materias y sus relaciones; pulse Editar malla para modificarlas.`,
     schedule: `Prepare cada período con la malla completa de ${career}, sus paralelos y docentes.`,
     teachers: `Quién dicta cada paralelo en ${career}.`,
   }[props.mode];
@@ -60,6 +61,20 @@ const actionError = ref<string | null>(null);
 const teacherOpen = ref(false);
 const assignmentOpen = ref(false);
 const configurationOpen = ref(false);
+const editingCurriculum = ref(false);
+const openingEditor = ref(false);
+watch(() => curriculum.value?.curriculum, (current) => {
+  if (current && (!current.editable || current.lock_reason)) {
+    editingCurriculum.value = false;
+    configurationOpen.value = false;
+  }
+});
+watch(() => props.mode, (mode) => {
+  if (mode !== 'curriculum') {
+    editingCurriculum.value = false;
+    configurationOpen.value = false;
+  }
+});
 const removeLegacyBreakdownMode = () => {
   const url = new URL(window.location.href);
   if (url.searchParams.get('modo') !== 'desglose') return;
@@ -137,6 +152,25 @@ const handleCurriculumChanged = async (notice: string) => {
   toast.success(notice);
   await reloadCurriculum();
 };
+const openCurriculumEditor = async () => {
+  const careerId = curriculum.value?.career.id;
+  if (!careerId || openingEditor.value) return;
+  openingEditor.value = true;
+  actionError.value = null;
+  try {
+    const current = await getCurriculum(careerId);
+    curriculum.value = current;
+    editingCurriculum.value = current.curriculum.editable && !current.curriculum.lock_reason;
+  } catch (reason) {
+    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo comprobar si la malla puede editarse.";
+  } finally {
+    openingEditor.value = false;
+  }
+};
+const closeCurriculumEditor = () => {
+  configurationOpen.value = false;
+  editingCurriculum.value = false;
+};
 onMounted(() => {
   if (props.mode === 'curriculum') removeLegacyBreakdownMode();
   void load();
@@ -173,17 +207,27 @@ onMounted(() => {
         @saved="handleAssignmentChanged"
       />
       <CurriculumActions
-        v-if="mode === 'curriculum' && curriculum"
+        v-if="mode === 'curriculum' && curriculum && editingCurriculum"
         :curriculum="curriculum.curriculum"
         @configure="configurationOpen = true"
       />
+      <Button
+        v-if="mode === 'curriculum' && curriculum && !editingCurriculum"
+        :disabled="openingEditor || !curriculum.curriculum.editable || Boolean(curriculum.curriculum.lock_reason)"
+        @click="openCurriculumEditor"
+      ><Spinner v-if="openingEditor" data-icon="inline-start" /><Pencil v-else data-icon="inline-start" aria-hidden="true" />{{ openingEditor ? 'Comprobando…' : 'Editar malla' }}</Button>
+      <Button
+        v-if="mode === 'curriculum' && curriculum && editingCurriculum"
+        variant="outline"
+        @click="closeCurriculumEditor"
+      >Volver a la vista</Button>
     </template>
     <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <template v-if="curriculum && schedule && assignments"
       >
       <template v-if="mode === 'curriculum'">
         <ProcessLockAlert v-if="curriculum.curriculum.lock_reason" />
-        <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" @changed="handleCurriculumChanged" />
+        <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" :editing="editingCurriculum" @changed="handleCurriculumChanged" />
         <CurriculumConfigurationSheet v-model:open="configurationOpen" :curriculum="curriculum.curriculum" @saved="handleCurriculumChanged" />
       </template>
       <ProcessLockAlert v-if="mode === 'schedule' && schedule.career.lock_reason" />
