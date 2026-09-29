@@ -19,8 +19,6 @@ import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { CSSProperties } from 'vue';
 import TemplateTableInsertMenu from '@/components/domain/configuration/template-table/TemplateTableInsertMenu.vue';
-import TemplateTableNewDataSheet from '@/components/domain/configuration/template-table/TemplateTableNewDataSheet.vue';
-import type { NewRepeatedData } from '@/components/domain/configuration/template-table/TemplateTableNewDataSheet.vue';
 import TemplateTableRowsMenu from '@/components/domain/configuration/template-table/TemplateTableRowsMenu.vue';
 import { templateTableExtensions } from '@/components/domain/configuration/template-table/templateTableExtensions';
 import type { CellAlignment } from '@/components/domain/configuration/template-table/types';
@@ -33,14 +31,13 @@ import TemplateToolbarSelect from '@/components/domain/configuration/TemplateToo
 import { SelectItem } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import type { TableLayout } from '@/lib/tableLayout';
-import { tableKeyFor } from '@/lib/tableLayout';
 import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import type {
     DocumentField,
     DocumentNode,
     TemplateVariable,
 } from '@/lib/templateDocument';
-import { demoteEmptyRepeatedTables, nodesOfType } from '@/lib/templateDocument';
+import { demoteEmptyRepeatedTables } from '@/lib/templateDocument';
 
 const props = defineProps<{
     document: DocumentNode;
@@ -73,12 +70,7 @@ const editorStyle = computed<CSSProperties & Record<string, string>>(() => ({
     '--table-body-alignment': props.bodyAlignment,
 }));
 const initial = JSON.stringify(props.document);
-// Un párrafo o una lista no muestran las herramientas de celdas (I-155).
-const hasTable = nodesOfType(props.document, 'table').length > 0;
 const version = ref(0);
-const newDataSheet = ref<InstanceType<typeof TemplateTableNewDataSheet> | null>(
-    null,
-);
 // Datos del Proyecto de carrera creados mientras se edita; al guardar llegan con la plantilla.
 const declared = ref<TemplateVariable[]>([]);
 const allVariables = computed(() => [
@@ -145,12 +137,9 @@ const {
     inCell,
     selectedRowRole,
     repeatedColumns,
-    selectedRowHasColumns,
-    usedColumnRoles,
     can,
 } = selection;
 const {
-    setRowRole,
     deleteSelectedRow,
     setCell,
     background,
@@ -162,8 +151,6 @@ const {
     resetCell,
     insertNode,
     insertVariable,
-    canInsertRepeatedColumn,
-    insertRepeatedColumn,
     keyFor,
 } = useTemplateTableActions(editor, props, selection);
 const marks = useSheetMarks({
@@ -177,44 +164,24 @@ const marks = useSheetMarks({
     declared,
 });
 
-const openNewData = (): void => {
-    if (selectedRowRole.value === 'total') {
-        return;
-    }
+// Las herramientas de celdas solo aparecen cuando la hoja tiene una tabla (I-155).
+const hasTable = computed(() => {
+    void version.value;
+    let found = false;
+    editor.value?.state.doc.descendants((node) => {
+        found ||= node.type.name === 'table';
 
-    newDataSheet.value?.open(
-        selectedRowRole.value === 'unit' ? 'unit' : 'record',
-    );
-};
-
-const createRepeatedData = ({
-    label,
-    type,
-    role,
-    scope,
-}: NewRepeatedData): void => {
-    const document =
-        (editor.value?.getJSON() as DocumentNode | undefined) ?? props.document;
-    const key = tableKeyFor(label, [
-        ...repeatedColumns.value.map((column) => column.key),
-        ...(props.layout?.header_fields ?? []).map((field) => field.key),
-        ...nodesOfType(document, 'column').map((node) =>
-            String(node.attrs?.key ?? ''),
-        ),
-    ]);
-
-    setRowRole(scope);
-    insertNode({
-        type: 'column',
-        attrs: {
-            key,
-            label,
-            kind:
-                scope === 'unit' || type === 'text' ? 'texto_largo' : 'numero',
-            role: scope === 'record' && role !== 'none' ? role : null,
-            sum: false,
-        },
+        return !found;
     });
+
+    return found;
+});
+// Tabla y lista de Contenido de la plantilla (I-156): la tabla nace con 2 × 2 celdas fijas.
+const insertTable = (): void => {
+    state.value?.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: false }).run();
+};
+const insertList = (): void => {
+    state.value?.chain().focus().toggleBulletList().run();
 };
 
 const getDocument = (): DocumentNode | null => {
@@ -252,19 +219,13 @@ defineExpose({ getDocument });
             >
                 <TemplateTableInsertMenu
                     :disabled="pending"
-                    :in-table="inCell"
                     :variables="allVariables"
-                    :repeated-columns="repeatedColumns"
-                    :can-insert-repeated-column="canInsertRepeatedColumn"
-                    :selected-row-role="selectedRowRole"
-                    :selected-row-has-columns="selectedRowHasColumns"
                     @insert-variable="insertVariable"
                     @teacher="marks.insertTeacher()"
                     @yes-no="marks.insertYesNo()"
                     @project="marks.insertProject()"
-                    @insert-repeated-column="insertRepeatedColumn"
-                    @new-data="openNewData"
-                    @row-role="setRowRole"
+                    @table="insertTable"
+                    @list="insertList"
                 />
 
                 <template v-if="hasTable">
@@ -442,12 +403,6 @@ defineExpose({ getDocument });
             @mousedown.capture="startCellResize"
         />
     </div>
-
-    <TemplateTableNewDataSheet
-        ref="newDataSheet"
-        :used-column-roles="usedColumnRoles"
-        @create="createRepeatedData"
-    />
 </template>
 
 <style>
