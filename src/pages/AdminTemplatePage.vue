@@ -182,16 +182,7 @@ onBeforeUnmount(() => {
     </PageFrame>
 
     <div v-else-if="editing && builder && previewAppearance" class="min-h-dvh min-w-0">
-        <header class="sticky top-0 z-30 border-b bg-background/95 shadow-sm backdrop-blur" aria-label="Herramientas del editor de plantilla">
-            <div class="grid h-12 min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 sm:px-5">
-                <Button variant="link" size="sm" class="h-auto justify-self-start px-0" @click="editing = false">Volver a la vista</Button>
-                <div id="template-editor-header-selection" class="min-w-0 justify-self-center" />
-                <div aria-hidden="true" />
-            </div>
-            <div class="min-h-14 min-w-0 border-t" aria-hidden="true" />
-        </header>
-
-        <main class="min-w-0 py-5 sm:py-6">
+        <main class="min-w-0 pb-5 pt-19 sm:pb-6 sm:pt-20">
             <TemplateVisualBuilder
                 :template="builder.template"
                 :appearance="previewAppearance"
@@ -203,9 +194,12 @@ onBeforeUnmount(() => {
                 :readonly="false"
                 ribbon
                 fixed-ribbon
-                selection-target="#template-editor-header-selection"
                 @personalize="appearanceOpen = true"
-            />
+            >
+                <template #ribbon-start>
+                    <Button variant="link" size="sm" class="h-auto px-0" @click="editing = false">Volver a la vista</Button>
+                </template>
+            </TemplateVisualBuilder>
         </main>
 
         <TemplateAppearanceSheet

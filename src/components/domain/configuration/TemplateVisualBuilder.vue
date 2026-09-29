@@ -19,13 +19,7 @@ import TemplateTableDesigner from '@/components/domain/configuration/TemplateTab
 import TemplateTitleActions from '@/components/domain/configuration/TemplateTitleActions.vue';
 import TemplateToolbarButton from '@/components/domain/configuration/TemplateToolbarButton.vue';
 import PaginatedDocument from '@/components/domain/PaginatedDocument.vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Tooltip,
-    TooltipContent,
-    TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { defaultDocument, nodesOfType } from '@/lib/templateDocument';
 import { partTypeLabel, sectionOrientation } from '@/lib/templateParts';
 import { templatePreviewFields } from '@/lib/templatePreview';
@@ -52,7 +46,6 @@ const props = withDefaults(
         readonly: boolean;
         ribbon?: boolean;
         fixedRibbon?: boolean;
-        selectionTarget?: string;
     }>(),
     { ribbon: false },
 );
@@ -131,24 +124,6 @@ const selectedField = computed<TemplateFieldContainer | null>(() => {
             (block) => block.id === current.blockId,
         ) ?? null
     );
-});
-
-const selectionLabel = computed(() => {
-    if (selection.value.kind === 'title') {
-        return `Título · ${props.template.titleBlock.text}`;
-    }
-
-    if (selectedField.value) {
-        const name = selectedField.value.title.trim() || 'sin nombre';
-
-        return `${partTypeLabel(selectedField.value)} · ${name}`;
-    }
-
-    if (selectedSection.value) {
-        return `Sección · ${selectedSection.value.title}`;
-    }
-
-    return 'Ningún elemento seleccionado';
 });
 
 const variableSamples = computed(() =>
@@ -439,7 +414,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                     cn(
                         'min-w-0 bg-background/95 backdrop-blur',
                         fixedRibbon
-                            ? 'fixed inset-x-0 top-12 z-40 border-b shadow-sm'
+                            ? 'fixed inset-x-0 top-0 z-40 border-b shadow-sm'
                             : 'sticky top-2 z-20 mb-4 rounded-lg border shadow-sm',
                     )
                 "
@@ -450,36 +425,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                     <div
                         class="flex min-w-0 flex-1 items-center overflow-hidden"
                     >
-                        <Teleport
-                            :to="selectionTarget ?? 'body'"
-                            :disabled="!selectionTarget"
-                            defer
-                        >
-                            <div
-                                class="flex min-w-0 items-center justify-center"
-                            >
-                                <Tooltip>
-                                    <TooltipTrigger as-child>
-                                        <Badge
-                                            variant="secondary"
-                                            class="max-w-64 shrink-0 gap-1.5 px-2.5 py-1 font-normal"
-                                        >
-                                            <span class="text-muted-foreground">
-                                                Selección:
-                                            </span>
-                                            <span
-                                                class="truncate font-medium text-foreground"
-                                            >
-                                                {{ selectionLabel }}
-                                            </span>
-                                        </Badge>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        {{ selectionLabel }}
-                                    </TooltipContent>
-                                </Tooltip>
-                            </div>
-                        </Teleport>
+                        <slot name="ribbon-start" />
                     </div>
 
                     <div
