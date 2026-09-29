@@ -2,7 +2,7 @@
 import { ListPlus, Lock } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
-import CurricularOptionsSourceSelect from '@/components/domain/configuration/CurricularOptionsSourceSelect.vue';
+import TemplatePartKindPicker from '@/components/domain/configuration/TemplatePartKindPicker.vue';
 import type { TemplateVariable } from '@/lib/templateDocument';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
@@ -15,15 +15,7 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { choosableTypes } from '@/lib/templateParts';
+import { emptyPartChoice, partChoiceErrors, partChoicePayload } from '@/lib/templateParts';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type { TemplateContentType } from '@/types/configuration';
@@ -47,7 +39,6 @@ const props = withDefaults(
     { choice: false, fixed: false },
 );
 
-const typeOptions = computed(() => choosableTypes(props.blockTypes));
 const texts = computed(() =>
     props.fixed
         ? {
@@ -72,8 +63,7 @@ const form = useForm({
     position: props.position + 1,
     key: '',
     label: '',
-    content_type: 'text' as EditableContentType,
-    options_sources: [] as string[],
+    ...emptyPartChoice(),
 });
 
 const keyFor = (): string =>
@@ -85,8 +75,7 @@ const reset = (): void => {
     form.position = props.position + 1;
     form.key = keyFor();
     form.label = '';
-    form.content_type = props.fixed ? 'fixed' : 'text';
-    form.options_sources = [];
+    Object.assign(form, emptyPartChoice(props.fixed ? 'fixed' : 'text'));
 };
 
 reset();
@@ -95,12 +84,19 @@ const errorFor = (path: string): string | undefined =>
     (form.errors as Record<string, string>)[path];
 
 const submit = (): void => {
-    if (form.content_type === 'multiple_choice' && !form.options_sources.length) {
-        form.errors = { options_sources: 'Seleccione una lista curricular para las opciones.' };
+    const errors = partChoiceErrors(form);
+    if (Object.keys(errors).length) {
+        form.errors = errors;
         return;
     }
-    if (form.content_type !== 'multiple_choice') form.options_sources = [];
     form.position = props.position + 1;
+    form.transform((data) => ({
+        section_id: data.section_id,
+        position: data.position,
+        key: data.key,
+        label: data.label,
+        ...partChoicePayload(data),
+    }));
     form.post(TemplateController.storeField.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {
@@ -172,46 +168,18 @@ const updateOpen = (value: boolean): void => {
                             :errors="[errorFor('label')]"
                         />
                     </Field>
-                    <Field
-                        v-if="!fixed"
-                        :data-invalid="Boolean(errorFor('content_type'))"
-                    >
-                        <FieldLabel for="new-field-content-type" required>
-                            Tipo de parte
-                        </FieldLabel>
-                        <Select
-                            v-model="form.content_type"
-                            :disabled="form.processing"
-                        >
-                            <SelectTrigger
-                                id="new-field-content-type"
-                                class="w-full"
-                                :aria-invalid="
-                                    Boolean(errorFor('content_type'))
-                                "
-                            >
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    <SelectItem
-                                        v-for="type in typeOptions"
-                                        :key="type.value"
-                                        :value="type.value"
-                                    >
-                                        {{ type.label }}
-                                    </SelectItem>
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                        <FieldError
-                            v-if="errorFor('content_type')"
-                            :errors="[errorFor('content_type')]"
-                        />
-                    </Field>
                 </FieldGroup>
-                <CurricularOptionsSourceSelect v-if="form.content_type === 'multiple_choice'" id="new-field-options-source" v-model="form.options_sources" :variables="variables" :disabled="form.processing" />
-                <FieldError :errors="[errorFor('options_sources')]" />
+                <TemplatePartKindPicker
+                    v-if="!fixed"
+                    id-prefix="new-field"
+                    v-model="form.content_type"
+                    v-model:options-sources="form.options_sources"
+                    v-model:concept-key="form.concept_key"
+                    v-model:concept="form.concept"
+                    :variables="variables"
+                    :disabled="form.processing"
+                    :errors="{ content_type: errorFor('content_type'), options_sources: errorFor('options_sources'), concept: errorFor('concept') ?? errorFor('concept.label') }"
+                />
                 <FormSheetActions
                     :label="texts.action"
                     :close="close"

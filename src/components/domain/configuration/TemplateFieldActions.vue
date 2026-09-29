@@ -3,6 +3,7 @@ import { MoreHorizontal, Pencil, Save, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { pageOrientationPayload } from '@/api/template';
 import CurricularOptionsSourceSelect from '@/components/domain/configuration/CurricularOptionsSourceSelect.vue';
+import TemplatePartKindPicker from '@/components/domain/configuration/TemplatePartKindPicker.vue';
 import { documentOptionsSources, type TemplateVariable } from '@/lib/templateDocument';
 import TemplateController from '@/api/template-routes';
 import { Button } from '@/components/ui/button';
@@ -48,7 +49,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { ShowWhen } from '@/lib/fieldConditions';
-import { choosableTypes, isFixedPart } from '@/lib/templateParts';
+import { isFixedPart } from '@/lib/templateParts';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type {
@@ -138,7 +139,6 @@ const form = useForm({
 });
 
 const title = computed(() => props.field.title.trim() || 'sin nombre');
-const typeOptions = computed(() => choosableTypes(props.blockTypes));
 const typeCanChange = computed(
     () => !fixed.value && !props.field.document && !primary.value?.inherited,
 );
@@ -384,51 +384,21 @@ defineExpose({
                         />
                     </Field>
 
-                    <Field
+                    <TemplatePartKindPicker
                         v-if="typeCanChange"
-                        :data-invalid="Boolean(form.errors.content_type)"
-                    >
-                        <FieldLabel
-                            for="edit-template-field-content-type"
-                            required
-                        >
-                            Tipo de parte
-                        </FieldLabel>
-                        <Select
-                            v-model="form.content_type"
-                            :disabled="form.processing"
-                        >
-                            <SelectTrigger
-                                id="edit-template-field-content-type"
-                                class="w-full"
-                                :aria-invalid="
-                                    Boolean(form.errors.content_type)
-                                "
-                            >
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectGroup>
-                                    <SelectItem
-                                        v-for="type in typeOptions"
-                                        :key="type.value"
-                                        :value="type.value"
-                                    >
-                                        {{ type.label }}
-                                    </SelectItem>
-                                </SelectGroup>
-                            </SelectContent>
-                        </Select>
-                        <FieldError
-                            v-if="form.errors.content_type"
-                            :errors="[form.errors.content_type]"
-                        />
-                    </Field>
+                        id-prefix="edit-template-field"
+                        v-model="form.content_type"
+                        v-model:options-sources="form.options_sources"
+                        :allow-automatic="false"
+                        :variables="variables"
+                        :disabled="form.processing"
+                        :errors="{ content_type: form.errors.content_type, options_sources: form.errors.options_sources }"
+                    />
                     <template v-if="!institutional">
                         <template v-if="field.document">
                             <CurricularOptionsSourceSelect v-for="part in optionParts" :key="part.key" :id="`edit-options-source-${part.key}`" :label="`Listas para ${part.label}`" v-model="optionSources[part.key]" :variables="variables" :disabled="form.processing" :manual="part.type === 'seleccion_unica'" />
                         </template>
-                        <CurricularOptionsSourceSelect v-else-if="form.content_type === 'multiple_choice' || optionParts.length" id="edit-options-source" v-model="form.options_sources" :variables="variables" :disabled="form.processing" :manual="form.content_type !== 'multiple_choice' && primary?.type === 'seleccion_unica'" />
+                        <CurricularOptionsSourceSelect v-else-if="!typeCanChange && (form.content_type === 'multiple_choice' || optionParts.length)" id="edit-options-source" v-model="form.options_sources" :variables="variables" :disabled="form.processing" :manual="form.content_type !== 'multiple_choice' && primary?.type === 'seleccion_unica'" />
                         <FieldError :errors="Object.entries(form.errors).filter(([key]) => key.includes('options_source')).map(([, value]) => value)" />
                     </template>
                     <Field v-if="!fixed && !institutional" orientation="horizontal">

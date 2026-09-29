@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Blocks, Trash2 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import TemplateController from '@/api/template-routes';
-import CurricularOptionsSourceSelect from '@/components/domain/configuration/CurricularOptionsSourceSelect.vue';
+import TemplatePartKindPicker from '@/components/domain/configuration/TemplatePartKindPicker.vue';
 import type { TemplateVariable } from '@/lib/templateDocument';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
@@ -14,15 +14,7 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { choosableTypes } from '@/lib/templateParts';
+import { emptyPartChoice, partChoiceErrors, partChoicePayload } from '@/lib/templateParts';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type { TemplateContentType } from '@/types/configuration';
@@ -47,7 +39,6 @@ const props = withDefaults(
     },
 );
 
-const typeOptions = computed(() => choosableTypes(props.blockTypes));
 
 let sequence = 0;
 const technicalKey = (prefix: string): string => {
@@ -59,8 +50,7 @@ const technicalKey = (prefix: string): string => {
 const newField = () => ({
     key: technicalKey('campo'),
     label: '',
-    content_type: 'text' as EditableContentType,
-    options_sources: [] as string[],
+    ...emptyPartChoice(),
 });
 
 const open = ref(false);
@@ -106,8 +96,7 @@ const submit = (): void => {
         errors.title = 'Escriba el nombre de la sección.';
     }
     form.fields.forEach((field, index) => {
-        if (field.content_type === 'multiple_choice' && !field.options_sources.length) errors[`fields.${index}.options_sources`] = 'Seleccione una lista curricular.';
-        if (field.content_type !== 'multiple_choice') field.options_sources = [];
+        for (const [key, message] of Object.entries(partChoiceErrors(field))) errors[`fields.${index}.${key}`] = message;
     });
 
     if (Object.keys(errors).length > 0) {
@@ -117,6 +106,10 @@ const submit = (): void => {
     }
 
     form.position = props.position + 1;
+    form.transform((data) => ({
+        ...data,
+        fields: data.fields.map((field) => ({ key: field.key, label: field.label, ...partChoicePayload(field) })),
+    }));
     form.post(TemplateController.storeSection.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {
@@ -240,63 +233,16 @@ const updateOpen = (value: boolean): void => {
                                 />
                             </Field>
 
-                            <Field
-                                :data-invalid="
-                                    Boolean(
-                                        errorFor(
-                                            `fields.${index}.content_type`,
-                                        ),
-                                    )
-                                "
-                            >
-                                <FieldLabel
-                                    :for="`new-template-field-type-${index}`"
-                                    required
-                                >
-                                    Tipo de parte
-                                </FieldLabel>
-                                <Select
-                                    v-model="field.content_type"
-                                    :disabled="form.processing"
-                                >
-                                    <SelectTrigger
-                                        :id="`new-template-field-type-${index}`"
-                                        class="w-full"
-                                        :aria-invalid="
-                                            Boolean(
-                                                errorFor(
-                                                    `fields.${index}.content_type`,
-                                                ),
-                                            )
-                                        "
-                                    >
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectItem
-                                                v-for="type in typeOptions"
-                                                :key="type.value"
-                                                :value="type.value"
-                                            >
-                                                {{ type.label }}
-                                            </SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                                <FieldError
-                                    v-if="
-                                        errorFor(`fields.${index}.content_type`)
-                                    "
-                                    :errors="[
-                                        errorFor(
-                                            `fields.${index}.content_type`,
-                                        ),
-                                    ]"
-                                />
-                            </Field>
-                            <CurricularOptionsSourceSelect v-if="field.content_type === 'multiple_choice'" :id="`new-section-options-${index}`" v-model="field.options_sources" :variables="variables" :disabled="form.processing" />
-                            <FieldError :errors="[errorFor(`fields.${index}.options_sources`)]" />
+                            <TemplatePartKindPicker
+                                :id-prefix="`new-section-field-${index}`"
+                                v-model="field.content_type"
+                                v-model:options-sources="field.options_sources"
+                                v-model:concept-key="field.concept_key"
+                                v-model:concept="field.concept"
+                                :variables="variables"
+                                :disabled="form.processing"
+                                :errors="{ content_type: errorFor(`fields.${index}.content_type`), options_sources: errorFor(`fields.${index}.options_sources`), concept: errorFor(`fields.${index}.concept`) ?? errorFor(`fields.${index}.concept.label`) }"
+                            />
                         </FieldGroup>
                     </FieldGroup>
 

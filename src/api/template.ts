@@ -1,7 +1,7 @@
 import { api } from '@/api/client';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 
-export type TemplateContentType = "text" | "table" | "bulleted_list" | "numbered_list" | "boolean" | "multiple_choice" | "institutional" | "fixed";
+export type TemplateContentType = "text" | "table" | "bulleted_list" | "numbered_list" | "boolean" | "multiple_choice" | "institutional" | "fixed" | "automatic";
 /**
  * Orientación de la hoja de una parte. Viaja en la misma petición que guarda la
  * parte (Editar parte); si el servidor cambia el nombre del dato, se ajusta aquí.

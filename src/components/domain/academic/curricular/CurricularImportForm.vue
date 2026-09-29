@@ -4,6 +4,7 @@ import { computed, nextTick, ref, watch } from 'vue';
 import type { CurricularImportIndex } from '@/api/curricular-imports';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -19,7 +20,9 @@ const instruction = ref('');
 const instructionOpen = ref(false);
 const formContent = ref<HTMLElement | null>(null);
 const fileError = ref<string | null>(null);
-const disabled = computed(() => props.processing || Boolean(props.index.lock_reason) || !props.index.capabilities.extraction);
+// La plantilla manda (I-151): sin datos declarados por Administración no hay nada que buscar.
+const noConcepts = computed(() => !props.index.concepts.length);
+const disabled = computed(() => props.processing || Boolean(props.index.lock_reason) || !props.index.capabilities.extraction || noConcepts.value);
 const selectedCount = computed(() => files.value.length + sourceIds.value.length);
 const fieldErrors = computed(() => Object.entries(props.errors).filter(([key]) => key.startsWith('files') || key.startsWith('source_ids')).flatMap(([, values]) => values));
 const addFiles = (incoming: File[]) => {
@@ -58,6 +61,14 @@ watch(() => props.errors.instruction, (messages) => {
   <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submit">
     <div ref="formContent" class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-5">
       <p class="text-sm text-muted-foreground">Podrás revisar los datos encontrados antes de guardarlos.</p>
+      <Alert v-if="noConcepts"><AlertDescription>Administración aún no definió en la plantilla qué datos salen de los documentos de la carrera. Cuando lo haga, podrás importarlos aquí.</AlertDescription></Alert>
+      <div v-else class="flex flex-col gap-2">
+        <p class="text-sm font-medium">La plantilla pide estos datos</p>
+        <ul class="flex flex-wrap gap-2" aria-label="Datos que se buscarán">
+          <li v-for="concept in index.concepts" :key="concept.key"><Badge variant="secondary">{{ concept.label }} · {{ concept.scope === 'carrera' ? 'carrera' : 'por asignatura' }}</Badge></li>
+        </ul>
+        <p class="text-sm text-muted-foreground">Se buscarán solo estos. Si un documento trae otra información, se avisará sin importarla.</p>
+      </div>
       <FieldGroup class="gap-5">
         <Alert v-if="index.lock_reason || !index.capabilities.extraction">
           <AlertDescription>{{ index.lock_reason ?? 'La extracción de documentos no está disponible en este momento. Las importaciones anteriores siguen disponibles en el historial.' }}</AlertDescription>
@@ -102,7 +113,8 @@ watch(() => props.errors.instruction, (messages) => {
       </FieldGroup>
     </div>
     <div class="flex shrink-0 flex-col gap-2 border-t bg-card py-3">
-      <p v-if="!disabled && !selectedCount" class="text-sm text-muted-foreground">Selecciona un archivo o un documento anterior para continuar.</p>
+      <p v-if="noConcepts" class="text-sm text-muted-foreground">La importación se habilita cuando la plantilla pida datos de los documentos.</p>
+      <p v-else-if="!disabled && !selectedCount" class="text-sm text-muted-foreground">Selecciona un archivo o un documento anterior para continuar.</p>
       <p v-else-if="selectedCount" class="text-sm text-muted-foreground">{{ selectedCount }} {{ selectedCount === 1 ? 'documento seleccionado' : 'documentos seleccionados' }}</p>
       <Button type="submit" class="w-full" :disabled="disabled || !selectedCount">
         <Spinner v-if="processing" data-icon="inline-start" /><FileSearch v-else data-icon="inline-start" aria-hidden="true" />
