@@ -9,9 +9,9 @@ type PageOrientation = TemplateAppearance['orientation'];
 
 /** Nombre simple del tipo de una parte, tal como se muestra en pantalla. */
 const TYPE_LABELS: Record<TemplateContentType, string> = {
-    text: 'Texto',
+    text: 'Párrafo',
     table: 'Tabla',
-    bulleted_list: 'Lista con viñetas',
+    bulleted_list: 'Lista',
     numbered_list: 'Lista numerada',
     boolean: 'Sí/No',
     multiple_choice: 'Selección múltiple',
@@ -27,8 +27,9 @@ export const isFixedPart = (block: TemplateFieldContainer): boolean =>
         nodesOfType(block.document!, 'field').length === 0 &&
         nodesOfType(block.document!, 'column').length === 0);
 
-export const partTypeLabel = (block: TemplateFieldContainer): string =>
-    isFixedPart(block) ? TYPE_LABELS.fixed : TYPE_LABELS[block.content_type];
+/** Forma con la que se creó la parte; no cambia después (I-155). */
+export const partFormLabel = (block: TemplateFieldContainer): string =>
+    TYPE_LABELS[block.content_type];
 
 /**
  * Orientación de la hoja de una sección. Igual que el documento Word: manda la

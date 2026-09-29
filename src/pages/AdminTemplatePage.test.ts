@@ -99,7 +99,7 @@ describe("AdminTemplatePage", () => {
     await wrapper.get('[aria-label="Parte Descripción"]').trigger("pointerdown");
     await flushPromises();
 
-    expect(document.querySelector('#template-editor-ribbon-tools')?.textContent).toContain('Editar parte');
+    expect(document.querySelector('#template-editor-ribbon-tools')?.textContent).toContain('Propiedades');
     expect(document.body.textContent).not.toContain('Selección:');
     expect(document.querySelector('#template-editor-ribbon')?.classList.contains('top-0')).toBe(true);
     expect(wrapper.find('#template-editor-header-selection').exists()).toBe(false);
@@ -145,7 +145,7 @@ describe("AdminTemplatePage", () => {
     await wrapper.get('[aria-label="Parte Firmas"]').trigger("pointerdown");
     await flushPromises();
 
-    expect(document.querySelector('#template-editor-ribbon-tools')?.textContent).toContain("Editar texto fijo");
+    expect(document.querySelector('#template-editor-ribbon-tools')?.textContent).toContain('Propiedades');
     expect(document.body.textContent).not.toContain("Selección:");
     wrapper.unmount();
   });

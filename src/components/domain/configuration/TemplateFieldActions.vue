@@ -3,7 +3,6 @@ import { MoreHorizontal, Pencil, Save, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { pageOrientationPayload } from '@/api/template';
 import CurricularOptionsSourceSelect from '@/components/domain/configuration/CurricularOptionsSourceSelect.vue';
-import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
 import { documentOptionsSources, type TemplateVariable } from '@/lib/templateDocument';
 import TemplateController from '@/api/template-routes';
 import { Button } from '@/components/ui/button';
@@ -49,7 +48,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { ShowWhen } from '@/lib/fieldConditions';
-import { isFixedPart, partTypeLabel } from '@/lib/templateParts';
+import { isFixedPart, partFormLabel } from '@/lib/templateParts';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type {
@@ -155,11 +154,8 @@ const form = useForm({
 });
 
 const title = computed(() => props.field.title.trim() || 'sin nombre');
-const typeCanChange = computed(
-    () => !fixed.value && !props.field.document && !primary.value?.inherited,
-);
 const dialogTitle = computed(() =>
-    fixed.value ? 'Editar texto fijo' : 'Editar parte',
+    'Propiedades de la parte',
 );
 
 const openEdit = (): void => {
@@ -389,7 +385,7 @@ defineExpose({
                     {{
                         fixed
                             ? 'Cambie el nombre de este texto fijo. El docente no lo llena.'
-                            : 'Ajuste el nombre y cómo lo completará el docente.'
+                            : 'Ajuste el nombre y las opciones de la parte.'
                     }}
                 </DialogDescription>
             </DialogHeader>
@@ -416,15 +412,11 @@ defineExpose({
                         />
                     </Field>
 
-                    <TemplatePartFormSelect
-                        v-if="typeCanChange"
-                        id="edit-template-field-form"
-                        v-model="form.content_type"
-                        :forms="blockTypes.filter((type) => type.value !== 'fixed')"
-                        :current-label="partTypeLabel(field)"
-                        :disabled="form.processing"
-                        :error="form.errors.content_type"
-                    />
+                    <!-- La forma se elige al crear la parte y no cambia (I-155). -->
+                    <p v-if="!institutional" class="text-sm text-muted-foreground">
+                        Forma: <span class="font-medium text-foreground">{{ partFormLabel(field) }}</span>.
+                        Para usar otra forma, elimine la parte y cree una nueva.
+                    </p>
                     <template v-if="!institutional">
                         <template v-if="field.document">
                             <CurricularOptionsSourceSelect v-for="part in optionParts" :key="part.key" :id="`edit-options-source-${part.key}`" :label="`Listas para ${part.label}`" v-model="optionSources[part.key]" :variables="variables" :disabled="form.processing" :manual="part.type === 'seleccion_unica'" />

@@ -77,4 +77,27 @@ describe('TemplateTableEditor', () => {
         expect(root.querySelector('[data-page-unit] > [data-page-spacer]')).toBeNull();
         wrapper.unmount();
     });
+
+    it('en un párrafo solo ofrece Insertar y deshacer, sin herramientas de celdas', async () => {
+        const wrapper = mount(TemplateTableEditor, {
+            global: { stubs: {
+                teleport: true, TemplateTableInsertMenu: true, TemplateTableNewDataSheet: true, TemplateTableRowsMenu: true,
+                TemplateToolbarButton: { props: ['label'], template: '<button :aria-label="label" />' },
+                TemplateToolbarSelect: { props: ['label'], template: '<div :aria-label="label" />' },
+            } },
+            props: {
+                document: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Texto fijo' }] }] } as never,
+                pending: false, fontFamily: 'Arial', fontSize: 11, textColor: '#000', bodyAlignment: 'left',
+                colors: [], fields: [], variables: [], templateId: 'plantilla-1', sectionTitle: 'Descripción',
+            },
+        });
+        await flushPromises();
+        const toolbar = wrapper.get('[role="toolbar"]');
+
+        expect(toolbar.find('template-table-insert-menu-stub').exists()).toBe(true);
+        expect(toolbar.find('[aria-label="Combinar celdas"]').exists()).toBe(false);
+        expect(toolbar.find('[aria-label="Fondo de celda"]').exists()).toBe(false);
+        expect(toolbar.find('[aria-label="Deshacer"]').exists()).toBe(true);
+        wrapper.unmount();
+    });
 });

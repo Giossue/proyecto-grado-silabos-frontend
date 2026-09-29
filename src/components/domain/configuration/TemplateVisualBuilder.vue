@@ -4,7 +4,7 @@ import {
     ArrowUp,
     Pencil,
     Settings,
-    TableProperties,
+    Settings2,
     Trash2,
 } from '@lucide/vue';
 import { computed, ref } from 'vue';
@@ -21,7 +21,7 @@ import TemplateToolbarButton from '@/components/domain/configuration/TemplateToo
 import PaginatedDocument from '@/components/domain/PaginatedDocument.vue';
 import { Button } from '@/components/ui/button';
 import { defaultDocument, nodesOfType } from '@/lib/templateDocument';
-import { partTypeLabel, sectionOrientation } from '@/lib/templateParts';
+import { sectionOrientation } from '@/lib/templateParts';
 import { templatePreviewFields } from '@/lib/templatePreview';
 import { choiceOptions, isChoiceField } from '@/lib/fieldConditions';
 import { toast } from '@/lib/toast';
@@ -495,11 +495,11 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                         ]?.start()
                                     "
                                 >
-                                    <TableProperties
+                                    <Pencil
                                         data-icon="inline-start"
                                         aria-hidden="true"
                                     />
-                                    Editar en la hoja
+                                    Editar
                                 </Button>
                                 <Button
                                     type="button"
@@ -511,16 +511,11 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                         ]?.openEdit()
                                     "
                                 >
-                                    <Pencil
+                                    <Settings2
                                         data-icon="inline-start"
                                         aria-hidden="true"
                                     />
-                                    {{
-                                        partTypeLabel(selectedField) ===
-                                        'Texto fijo'
-                                            ? 'Editar texto fijo'
-                                            : 'Editar parte'
-                                    }}
+                                    Propiedades
                                 </Button>
                                 <Button
                                     type="button"

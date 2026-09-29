@@ -78,6 +78,8 @@ const editorStyle = computed<CSSProperties & Record<string, string>>(() => ({
     '--table-body-alignment': props.bodyAlignment,
 }));
 const initial = JSON.stringify(props.document);
+// Un párrafo o una lista no muestran las herramientas de celdas (I-155).
+const hasTable = nodesOfType(props.document, 'table').length > 0;
 const version = ref(0);
 const newDataSheet = ref<InstanceType<typeof TemplateTableNewDataSheet> | null>(
     null,
@@ -364,6 +366,7 @@ defineExpose({ getDocument });
                     @row-role="setRowRole"
                 />
 
+                <template v-if="hasTable">
                 <Separator orientation="vertical" class="h-7" />
 
                 <TemplateToolbarSelect
@@ -511,6 +514,7 @@ defineExpose({ getDocument });
                 >
                     <Eraser aria-hidden="true" />
                 </TemplateToolbarButton>
+                </template>
 
                 <div class="ms-auto flex gap-1">
                     <TemplateToolbarButton
@@ -679,31 +683,34 @@ defineExpose({ getDocument });
 .template-table-editor[data-resizing] th:not(:last-child)::before {
     display: none;
 }
-.template-table-editor .template-table-field {
-    background: var(--document-field-background);
-    border-radius: 2px;
-    color: var(--document-editor-foreground) !important;
-    outline: 1px dashed var(--document-table-header-strong-background);
-    padding: 1px 3px;
-}
-/* Dato automático: violeta con borde continuo; !Docente: azul punteado;
-   @ProyectoCarrera: ámbar con borde continuo (I-155). */
+/* Marcas de la hoja (I-155). Borde punteado: lo llena el docente; continuo: llega lleno. */
+.template-table-editor .template-table-variable,
+.template-table-editor .template-table-field,
+.template-table-editor .template-table-yes-no,
 .template-table-editor .template-table-project {
-    background: var(--document-project-background);
     border-radius: 2px;
     color: var(--document-editor-foreground) !important;
-    outline: 1px solid var(--document-project-border);
     padding: 1px 3px;
 }
 .template-table-editor .template-table-variable {
-    background: var(--document-variable-background);
-    border-radius: 2px;
-    color: var(--document-editor-foreground) !important;
-    outline: 1px solid var(--document-variable-border);
-    padding: 1px 3px;
+    background: var(--document-mark-automatic-background);
+    outline: 1px solid var(--document-mark-automatic-border);
+}
+.template-table-editor .template-table-field {
+    background: var(--document-mark-teacher-background);
+    outline: 1px dashed var(--document-mark-teacher-border);
+}
+.template-table-editor .template-table-yes-no {
+    background: var(--document-mark-yes-no-background);
+    outline: 1px dashed var(--document-mark-yes-no-border);
+}
+.template-table-editor .template-table-project {
+    background: var(--document-mark-project-background);
+    outline: 1px solid var(--document-mark-project-border);
 }
 .template-table-editor .tiptap .template-table-field,
 .template-table-editor .tiptap .template-table-variable,
+.template-table-editor .tiptap .template-table-yes-no,
 .template-table-editor .tiptap .template-table-project {
     display: inline-block;
     max-width: 100%;

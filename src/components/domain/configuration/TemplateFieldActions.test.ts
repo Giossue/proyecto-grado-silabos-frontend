@@ -55,6 +55,16 @@ describe('TemplateFieldActions', () => {
         expect(body.show_when).toBeNull();
     });
 
+    it('muestra la forma de la parte sin permitir cambiarla', async () => {
+        const wrapper = mountActions(block([part('discapacidad_tipo', 'Tipo de discapacidad')]));
+        (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
+        await flushPromises();
+
+        expect(document.body.textContent).toContain('Forma: Párrafo.');
+        expect(document.body.textContent).toContain('Para usar otra forma, elimine la parte y cree una nueva.');
+        expect(document.getElementById('edit-template-field-form')).toBeNull();
+    });
+
     it('muestra la respuesta configurada y la guarda en la parte dependiente', async () => {
         const wrapper = mountActions(block([part('discapacidad_tipo', 'Tipo de discapacidad', {
             show_when: { key: 'discapacidad_tiene', value: 'Sí' },

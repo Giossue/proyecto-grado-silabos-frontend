@@ -24,7 +24,7 @@ export const sheetMark = (name: string, attrs: Record<string, unknown>): SheetMa
 export const markClass: Record<SheetMark, string> = {
     automatic: 'template-table-variable',
     teacher: 'template-table-field',
-    yesNo: 'template-table-field',
+    yesNo: 'template-table-yes-no',
     project: 'template-table-project',
 };
 

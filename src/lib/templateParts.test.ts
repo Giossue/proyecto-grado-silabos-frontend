@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { inlineNodeLabel, inlineNodeName } from '@/components/domain/configuration/template-table/inlineNodeLabel';
-import { partTypeLabel, sectionOrientation } from '@/lib/templateParts';
+import { partFormLabel, sectionOrientation } from '@/lib/templateParts';
 import type { TemplateFieldContainer } from '@/types/configuration';
 
 const part = (overrides: Partial<TemplateFieldContainer>): TemplateFieldContainer => ({
@@ -9,9 +9,10 @@ const part = (overrides: Partial<TemplateFieldContainer>): TemplateFieldContaine
 });
 
 describe('templateParts', () => {
-    it('nombra el tipo real de la parte', () => {
-        expect(partTypeLabel(part({ content_type: 'fixed' }))).toBe('Texto fijo');
-        expect(partTypeLabel(part({ content_type: 'table', fields: [{} as never] }))).toBe('Tabla');
+    it('nombra la forma con la que se creó la parte', () => {
+        expect(partFormLabel(part({ content_type: 'text' }))).toBe('Párrafo');
+        expect(partFormLabel(part({ content_type: 'bulleted_list' }))).toBe('Lista');
+        expect(partFormLabel(part({ content_type: 'table', fields: [{} as never] }))).toBe('Tabla');
     });
 
     it('usa hoja horizontal cuando una parte de la sección la pide', () => {

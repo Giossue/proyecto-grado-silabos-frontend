@@ -176,11 +176,15 @@
     --document-muted-text: hsl(0 0% 35%);
     --document-accent: hsl(205 100% 38%);
     --document-editor-foreground: hsl(218 28% 17%);
-    --document-field-background: hsl(214 100% 97%);
-    --document-variable-background: hsl(262 83% 96%);
-    --document-variable-border: hsl(262 52% 62%);
-    --document-project-background: hsl(38 100% 94%);
-    --document-project-border: hsl(32 80% 50%);
+    /* Marcas de la hoja (I-155): cuatro tonos suaves y distinguibles. */
+    --document-mark-automatic-background: hsl(172 55% 93%);
+    --document-mark-automatic-border: hsl(174 60% 36%);
+    --document-mark-teacher-background: hsl(214 100% 95%);
+    --document-mark-teacher-border: hsl(214 75% 52%);
+    --document-mark-yes-no-background: hsl(340 85% 95%);
+    --document-mark-yes-no-border: hsl(340 65% 50%);
+    --document-mark-project-background: hsl(40 100% 92%);
+    --document-mark-project-border: hsl(32 85% 45%);
     --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
     --curriculum-unit-1-background: hsl(213 55% 47%);
     --curriculum-unit-1-foreground: hsl(0 0% 100%);
@@ -264,11 +268,15 @@
     --document-muted-text: hsl(0 0% 35%);
     --document-accent: hsl(205 100% 38%);
     --document-editor-foreground: hsl(218 28% 17%);
-    --document-field-background: hsl(214 100% 97%);
-    --document-variable-background: hsl(262 83% 96%);
-    --document-variable-border: hsl(262 52% 62%);
-    --document-project-background: hsl(38 100% 94%);
-    --document-project-border: hsl(32 80% 50%);
+    /* Marcas de la hoja (I-155): cuatro tonos suaves y distinguibles. */
+    --document-mark-automatic-background: hsl(172 55% 93%);
+    --document-mark-automatic-border: hsl(174 60% 36%);
+    --document-mark-teacher-background: hsl(214 100% 95%);
+    --document-mark-teacher-border: hsl(214 75% 52%);
+    --document-mark-yes-no-background: hsl(340 85% 95%);
+    --document-mark-yes-no-border: hsl(340 65% 50%);
+    --document-mark-project-background: hsl(40 100% 92%);
+    --document-mark-project-border: hsl(32 85% 45%);
     --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
     --curriculum-unit-1-background: hsl(213 55% 47%);
     --curriculum-unit-1-foreground: hsl(0 0% 100%);
