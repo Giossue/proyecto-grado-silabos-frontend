@@ -78,7 +78,7 @@ describe('TemplateTableEditor', () => {
         wrapper.unmount();
     });
 
-    it('en un párrafo solo ofrece Insertar y deshacer, sin herramientas de celdas', async () => {
+    it('en un párrafo solo ofrece Insertar y deshacer; con una tabla, sus herramientas', async () => {
         const wrapper = mount(TemplateTableEditor, {
             global: { stubs: {
                 teleport: true, TemplateTableInsertMenu: true, TemplateTableRowsMenu: true,
@@ -98,6 +98,11 @@ describe('TemplateTableEditor', () => {
         expect(toolbar.find('[aria-label="Combinar celdas"]').exists()).toBe(false);
         expect(toolbar.find('[aria-label="Fondo de celda"]').exists()).toBe(false);
         expect(toolbar.find('[aria-label="Deshacer"]').exists()).toBe(true);
+
+        // Insertar → Tabla (I-156): con una tabla en la hoja aparecen sus herramientas.
+        toolbar.findComponent({ name: 'TemplateTableInsertMenu' }).vm.$emit('table');
+        await flushPromises();
+        expect(wrapper.get('[role="toolbar"]').find('[aria-label="Combinar celdas"]').exists()).toBe(true);
         wrapper.unmount();
     });
 });

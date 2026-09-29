@@ -562,4 +562,23 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
     :deep(.document-table td textarea.document-input) {
     min-width: 12rem;
 }
+/* Texto libre del docente en modo lectura (I-156). */
+.template-document-view :deep(.free-text-view p) {
+    margin: 0 0 0.35em;
+}
+.template-document-view :deep(.free-text-table) {
+    border-collapse: collapse;
+    margin: 0.35em 0;
+    table-layout: fixed;
+    width: 100%;
+}
+.template-document-view :deep(.free-text-table td),
+.template-document-view :deep(.free-text-table th) {
+    border: 1px solid var(--document-table-border);
+    padding: 2px 4px;
+    vertical-align: top;
+}
+.template-document-view :deep(.free-text-table th) {
+    font-weight: 700;
+}
 </style>
