@@ -6,6 +6,7 @@ import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { onBeforeUnmount, ref, watch } from 'vue';
 import TemplateToolbarButton from '@/components/domain/configuration/TemplateToolbarButton.vue';
 import { Separator } from '@/components/ui/separator';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 /**
@@ -69,7 +70,9 @@ const chain = () => editor.value?.chain().focus();
 
 <template>
     <div class="free-text-editor flex min-w-0 flex-col rounded-md border bg-background" :data-disabled="disabled || undefined">
-        <div v-if="!disabled" class="flex flex-wrap items-center gap-1 border-b p-1" role="toolbar" :aria-label="`Formato de ${label}`">
+        <!-- Los botones usan Tooltip; el editor trae su propio proveedor porque el formulario del docente no tiene uno. -->
+        <TooltipProvider v-if="!disabled" :delay-duration="150">
+        <div class="flex flex-wrap items-center gap-1 border-b p-1" role="toolbar" :aria-label="`Formato de ${label}`">
             <TemplateToolbarButton label="Negrita" :pressed="active('bold')" :variant="active('bold') ? 'secondary' : 'ghost'" @click="chain()?.toggleBold().run()">
                 <Bold aria-hidden="true" />
             </TemplateToolbarButton>
@@ -105,6 +108,7 @@ const chain = () => editor.value?.chain().focus();
                 </TemplateToolbarButton>
             </template>
         </div>
+        </TooltipProvider>
         <EditorContent :editor="editor" class="min-h-32 px-3 py-2 text-sm" />
     </div>
 </template>
