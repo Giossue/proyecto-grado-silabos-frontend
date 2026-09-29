@@ -7,7 +7,7 @@ import { Conversation, ConversationContent, ConversationScrollButton } from '@/c
 import { Message, MessageContent } from '@/components/ai-elements/message';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { InputGroup, InputGroupAddon, InputGroupTextarea } from '@/components/ui/input-group';
 import { Separator } from '@/components/ui/separator';
@@ -81,7 +81,6 @@ onBeforeUnmount(() => { generation += 1; stop(); });
     <Card class="h-[38rem] min-h-[30rem] gap-0 overflow-hidden py-0 xl:h-full xl:min-h-0">
         <CardHeader class="shrink-0 py-4">
             <CardTitle>Asistente de unidades</CardTitle>
-            <CardDescription>Propón contenidos y actividades con el contexto de tu carrera y los datos curriculares confirmados.</CardDescription>
         </CardHeader>
         <Separator />
         <Conversation aria-label="Conversación para generar contenido de las unidades" class="min-h-0 flex-1">
@@ -91,7 +90,6 @@ onBeforeUnmount(() => { generation += 1; stop(); });
                 <Alert v-else-if="chat && !chat.available"><AlertDescription>El asistente no está disponible en este momento. Puedes continuar elaborando tu sílabo.</AlertDescription></Alert>
                 <div v-if="chat && !messages.length" class="flex flex-col items-center gap-3 text-center">
                     <RobotAvatar v-bind="avatar.state.value" class="h-28 w-36" />
-                    <p class="text-sm text-muted-foreground">Describe la unidad o el tema que quieres trabajar. Revisa las propuestas antes de incorporarlas al sílabo.</p>
                     <div v-if="chat.available && chat.suggested_questions.length" class="flex w-full flex-col gap-2">
                         <Button v-for="question in chat.suggested_questions" :key="question" type="button" variant="outline" class="h-auto whitespace-normal text-left" :disabled="!enabled || saving || waiting" @click="message = question">{{ question }}</Button>
                     </div>
@@ -116,16 +114,15 @@ onBeforeUnmount(() => { generation += 1; stop(); });
         <CardContent class="shrink-0 px-4 pt-4">
             <form @submit.prevent="send">
                 <Field>
-                    <FieldLabel :for="`unit-assistant-${syllabusId}`">Consulta sobre una unidad</FieldLabel>
+                    <FieldLabel :for="`unit-assistant-${syllabusId}`" class="sr-only">Consulta sobre una unidad</FieldLabel>
                     <InputGroup>
-                        <InputGroupTextarea :id="`unit-assistant-${syllabusId}`" v-model="message" maxlength="4000" rows="3" :disabled="!enabled || !chat?.available || waiting" placeholder="Ej. Propón contenidos y actividades para una unidad sobre pruebas de software." @focus="engaged = true" @blur="engaged = false" />
-                        <InputGroupAddon align="block-end" class="justify-end"><Button type="submit" size="sm" :disabled="!canSend"><Spinner v-if="waiting" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar consulta</Button></InputGroupAddon>
+                        <InputGroupTextarea :id="`unit-assistant-${syllabusId}`" v-model="message" maxlength="4000" rows="3" :disabled="!enabled || !chat?.available || waiting" placeholder="Escribe la unidad o el tema…" @focus="engaged = true" @blur="engaged = false" />
+                        <InputGroupAddon align="block-end" class="justify-end"><Button type="submit" size="sm" :disabled="!canSend"><Spinner v-if="waiting" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar</Button></InputGroupAddon>
                     </InputGroup>
                     <FieldDescription v-if="saving">Espera a que se guarden los cambios del sílabo antes de consultar.</FieldDescription>
                     <FieldDescription v-else-if="!enabled">La generación está disponible mientras puedes editar este sílabo.</FieldDescription>
                 </Field>
             </form>
         </CardContent>
-        <CardFooter class="px-4 py-3 text-xs text-muted-foreground">Las propuestas se incorporan al sílabo cuando tú las eliges.</CardFooter>
     </Card>
 </template>

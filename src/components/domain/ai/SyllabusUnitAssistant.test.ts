@@ -30,7 +30,8 @@ describe('SyllabusUnitAssistant', () => {
     vi.mocked(getAiChat).mockResolvedValueOnce(empty).mockResolvedValueOnce(conversation({ ...assistant, status: 'pendiente', content: '', citations: [] })).mockResolvedValueOnce(conversation(assistant));
     const wrapper = render();
     await flushPromises();
-    expect(wrapper.text()).toContain('datos curriculares confirmados');
+    expect(wrapper.text()).toContain('Asistente de unidades');
+    expect(wrapper.text()).not.toContain('datos curriculares confirmados');
     await wrapper.get('textarea').setValue('  Ayúdame con la unidad de pruebas.  ');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
