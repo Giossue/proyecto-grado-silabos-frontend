@@ -9,7 +9,7 @@ export type DocumentNode = {
     marks?: { type: string; attrs?: Record<string, string | null> }[];
     content?: DocumentNode[];
 };
-export type TemplateVariable = { key: string; label: string; sample: string; type?: 'texto' | 'lista' | 'tabla'; scope?: 'carrera' | 'asignatura' };
+export type TemplateVariable = { key: string; label: string; sample: string; type?: 'texto' | 'lista' | 'tabla' };
 export type DocumentField = {
     id?: string;
     key: string;
