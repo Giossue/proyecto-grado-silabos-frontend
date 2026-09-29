@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3';
 import { computed } from 'vue';
-import { inlineNodeLabel } from '@/components/domain/configuration/template-table/inlineNodeLabel';
+import { inlineNodeLabel, markClass, SHEET_MARK_HINTS, sheetMark } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import {
     Tooltip,
     TooltipContent,
@@ -20,11 +20,8 @@ const label = computed(() =>
             | undefined,
     ),
 );
-const tokenClass = computed(() =>
-    kind.value === 'variable'
-        ? 'template-table-variable'
-        : 'template-table-field',
-);
+const mark = computed(() => sheetMark(kind.value, props.node.attrs));
+const tokenClass = computed(() => markClass[mark.value]);
 const dataAttributes = computed(() => ({
     [kind.value === 'variable'
         ? 'data-template-variable'
@@ -46,7 +43,7 @@ const dataAttributes = computed(() => ({
                     {{ label }}
                 </span>
             </TooltipTrigger>
-            <TooltipContent>{{ label }}</TooltipContent>
+            <TooltipContent>{{ label }} · {{ SHEET_MARK_HINTS[mark] }}</TooltipContent>
         </Tooltip>
     </NodeViewWrapper>
 </template>

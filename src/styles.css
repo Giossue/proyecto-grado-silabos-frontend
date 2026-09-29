@@ -179,6 +179,8 @@
     --document-field-background: hsl(214 100% 97%);
     --document-variable-background: hsl(262 83% 96%);
     --document-variable-border: hsl(262 52% 62%);
+    --document-project-background: hsl(38 100% 94%);
+    --document-project-border: hsl(32 80% 50%);
     --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
     --curriculum-unit-1-background: hsl(213 55% 47%);
     --curriculum-unit-1-foreground: hsl(0 0% 100%);
@@ -265,6 +267,8 @@
     --document-field-background: hsl(214 100% 97%);
     --document-variable-background: hsl(262 83% 96%);
     --document-variable-border: hsl(262 52% 62%);
+    --document-project-background: hsl(38 100% 94%);
+    --document-project-border: hsl(32 80% 50%);
     --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
     --curriculum-unit-1-background: hsl(213 55% 47%);
     --curriculum-unit-1-foreground: hsl(0 0% 100%);

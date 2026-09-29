@@ -11,21 +11,20 @@ import TextAlign from '@tiptap/extension-text-align';
 import { Color, FontFamily, TextStyle } from '@tiptap/extension-text-style';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import type { EditorView } from '@tiptap/pm/view';
-import { PluginKey } from '@tiptap/pm/state';
 import StarterKit from '@tiptap/starter-kit';
 import Suggestion from '@tiptap/suggestion';
 import type { SuggestionOptions } from '@tiptap/suggestion';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
-import { inlineNodeLabel } from '@/components/domain/configuration/template-table/inlineNodeLabel';
+import { inlineNodeLabel, markClass, sheetMark } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import TemplateTableInlineNode from '@/components/domain/configuration/TemplateTableInlineNode.vue';
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
-import type { TemplateVariable } from '@/lib/templateDocument';
+import type { SheetSuggestionItem } from '@/composables/useSheetSuggestions';
 
 export type TemplateTableExtensionOptions = {
     /** Nombre visible de un dato automático; nunca se muestra su clave. */
     variableLabel?: (id: string) => string | undefined;
-    /** Lista que se abre al escribir «@» dentro de una celda. */
-    suggestion?: Omit<SuggestionOptions<TemplateVariable>, 'editor'>;
+    /** Listas que se abren al escribir «{», «!» o «@» en la hoja (I-155). */
+    suggestions?: Omit<SuggestionOptions<SheetSuggestionItem>, 'editor'>[];
 };
 
 
@@ -236,10 +235,7 @@ const inlineNode = (
                         ? 'data-template-variable'
                         : `data-template-${name}`]:
                         name === 'variable' ? node.attrs.id : node.attrs.key,
-                    class:
-                        name === 'variable'
-                            ? 'template-table-variable'
-                            : 'template-table-field',
+                    class: markClass[sheetMark(name, node.attrs)],
                     contenteditable: 'false',
                 }),
                 label,
@@ -250,16 +246,16 @@ const inlineNode = (
         },
     });
 
-const variableSuggestion = (
-    suggestion: NonNullable<TemplateTableExtensionOptions['suggestion']>,
+const sheetSuggestion = (
+    suggestion: Omit<SuggestionOptions<SheetSuggestionItem>, 'editor'>,
+    index: number,
 ) =>
     Extension.create({
-        name: 'variableSuggestion',
+        name: `sheetSuggestion${index}`,
         addProseMirrorPlugins() {
             return [
-                Suggestion<TemplateVariable>({
+                Suggestion<SheetSuggestionItem>({
                     editor: this.editor,
-                    pluginKey: new PluginKey('variableSuggestion'),
                     ...suggestion,
                 }),
             ];
@@ -312,5 +308,5 @@ export const templateTableExtensions = (
     inlineNode('field'),
     inlineNode('column'),
     inlineNode('variable', options.variableLabel),
-    ...(options.suggestion ? [variableSuggestion(options.suggestion)] : []),
+    ...(options.suggestions ?? []).map(sheetSuggestion),
 ];

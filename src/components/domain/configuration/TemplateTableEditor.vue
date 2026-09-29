@@ -656,7 +656,15 @@ defineExpose({ getDocument });
     outline: 1px dashed var(--document-table-header-strong-background);
     padding: 1px 3px;
 }
-/* Dato automático: violeta con borde continuo; el campo del docente es azul punteado. */
+/* Dato automático: violeta con borde continuo; !Docente: azul punteado;
+   @ProyectoCarrera: ámbar con borde continuo (I-155). */
+.template-table-editor .template-table-project {
+    background: var(--document-project-background);
+    border-radius: 2px;
+    color: var(--document-editor-foreground) !important;
+    outline: 1px solid var(--document-project-border);
+    padding: 1px 3px;
+}
 .template-table-editor .template-table-variable {
     background: var(--document-variable-background);
     border-radius: 2px;
@@ -665,7 +673,8 @@ defineExpose({ getDocument });
     padding: 1px 3px;
 }
 .template-table-editor .tiptap .template-table-field,
-.template-table-editor .tiptap .template-table-variable {
+.template-table-editor .tiptap .template-table-variable,
+.template-table-editor .tiptap .template-table-project {
     display: inline-block;
     max-width: 100%;
     overflow: hidden;
