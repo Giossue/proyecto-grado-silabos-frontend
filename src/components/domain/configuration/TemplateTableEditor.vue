@@ -16,7 +16,7 @@ import {
 } from '@lucide/vue';
 import { Extension } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import type { CSSProperties } from 'vue';
 import TemplateTableInsertMenu from '@/components/domain/configuration/template-table/TemplateTableInsertMenu.vue';
 import TemplateTableNewDataSheet from '@/components/domain/configuration/template-table/TemplateTableNewDataSheet.vue';
@@ -31,10 +31,7 @@ import { useTemplateTableSelection } from '@/components/domain/configuration/tem
 import { useSheetMarks } from '@/components/domain/configuration/template-table/useSheetMarks';
 import TemplateToolbarButton from '@/components/domain/configuration/TemplateToolbarButton.vue';
 import TemplateToolbarSelect from '@/components/domain/configuration/TemplateToolbarSelect.vue';
-import { Button } from '@/components/ui/button';
 import { SelectItem } from '@/components/ui/select';
-import { useSheetSuggestions } from '@/composables/useSheetSuggestions';
-import type { SheetSuggestionItem } from '@/composables/useSheetSuggestions';
 import { Separator } from '@/components/ui/separator';
 import type { TableLayout } from '@/lib/tableLayout';
 import { tableKeyFor } from '@/lib/tableLayout';
@@ -69,7 +66,6 @@ const emit = defineEmits<{
 }>();
 
 const editorShell = ref<HTMLElement | null>(null);
-const suggestionMenu = ref<HTMLElement | null>(null);
 
 const editorStyle = computed<CSSProperties & Record<string, string>>(() => ({
     fontFamily: props.fontFamily,
@@ -84,7 +80,7 @@ const version = ref(0);
 const newDataSheet = ref<InstanceType<typeof TemplateTableNewDataSheet> | null>(
     null,
 );
-// Datos @ProyectoCarrera creados mientras se edita; al guardar llegan con la plantilla.
+// Datos del Proyecto de carrera creados mientras se edita; al guardar llegan con la plantilla.
 const declared = ref<TemplateVariable[]>([]);
 const allVariables = computed(() => [
     ...props.variables,
@@ -96,97 +92,6 @@ const variableLabels = computed(
     () =>
         new Map(allVariables.value.map((variable) => [variable.key, variable.label])),
 );
-const variableItem = (variable: TemplateVariable): SheetSuggestionItem => ({
-    key: variable.key,
-    label: variable.label,
-    node: { type: 'variable', attrs: { id: variable.key, label: variable.label } },
-});
-// Atajos de la hoja (I-155): «{» dato automático; «!», «?» y «@» ponen su marca.
-const triggers = [
-    useSheetSuggestions({
-        char: '{',
-        enabled: () => !props.pending,
-        items: () => allVariables.value.filter((variable) => !variable.key.startsWith(PROJECT_PREFIX)).map(variableItem),
-    }),
-    useSheetSuggestions({
-        char: '!',
-        enabled: () => !props.pending,
-        items: () => [{ key: 'docente', label: 'Docente', open: () => marks.insertTeacher(), always: true }],
-    }),
-    useSheetSuggestions({
-        char: '?',
-        enabled: () => !props.pending,
-        items: () => [{ key: 'si-no', label: 'Docente: Sí o No', open: () => marks.insertYesNo(), always: true }],
-    }),
-    useSheetSuggestions({
-        char: '@',
-        enabled: () => !props.pending,
-        items: () => [{ key: 'proyecto', label: 'Proyecto de carrera', open: () => void marks.insertProject(), always: true }],
-    }),
-];
-const active = computed(() => triggers.find((trigger) => trigger.suggestions.value));
-const suggestions = computed(() => active.value?.suggestions.value ?? null);
-const selectedSuggestion = computed(() => active.value?.selectedSuggestion.value ?? 0);
-const chooseSuggestion = (item: SheetSuggestionItem): void => {
-    active.value?.choose(item);
-};
-const suggestionStyle = ref<CSSProperties>({ display: 'none' });
-const updateSuggestionPosition = (): void => {
-    const rect = suggestions.value?.clientRect?.();
-
-    if (!rect || rect.bottom < 0 || rect.top > window.innerHeight) {
-        suggestionStyle.value = { display: 'none' };
-
-        return;
-    }
-
-    const gap = 4;
-    const edge = 8;
-    const maximumHeight = 288;
-    const menuWidth = suggestionMenu.value?.offsetWidth || 288;
-    const desiredHeight = Math.min(
-        maximumHeight,
-        suggestionMenu.value?.scrollHeight ||
-            12 + Math.max(1, suggestions.value?.items.length ?? 0) * 36,
-    );
-    const roomBelow = window.innerHeight - rect.bottom - gap - edge;
-    const roomAbove = rect.top - gap - edge;
-    const above = roomBelow < desiredHeight && roomAbove > roomBelow;
-    const height = Math.max(
-        0,
-        Math.min(maximumHeight, above ? roomAbove : roomBelow),
-    );
-
-    suggestionStyle.value = {
-        position: 'fixed',
-        left: `${Math.max(edge, Math.min(rect.left, window.innerWidth - menuWidth - edge))}px`,
-        top: `${above ? Math.max(edge, rect.top - gap - height) : rect.bottom + gap}px`,
-        maxHeight: `${height}px`,
-    };
-};
-
-watch(
-    suggestions,
-    async () => {
-        await nextTick();
-        if (suggestionMenu.value) {
-            suggestionMenu.value.scrollTop = 0;
-        }
-        updateSuggestionPosition();
-    },
-    { flush: 'post' },
-);
-watch(selectedSuggestion, async (index) => {
-    await nextTick();
-    const options = suggestionMenu.value?.querySelectorAll<HTMLElement>(
-        '[role="option"]',
-    );
-    options?.[index]?.scrollIntoView?.({ block: 'nearest' });
-});
-onMounted(() => {
-    window.addEventListener('scroll', updateSuggestionPosition, true);
-    window.addEventListener('resize', updateSuggestionPosition);
-});
 const editor = useEditor({
     content: props.document,
     editorProps: {
@@ -200,7 +105,6 @@ const editor = useEditor({
     extensions: [
         ...templateTableExtensions({
             variableLabel: (id) => variableLabels.value.get(id),
-            suggestions: triggers.map((trigger) => trigger.suggestion),
         }),
         // Page breaks between rows drawn by the sheet view; presentation only.
         Extension.create({
@@ -232,8 +136,6 @@ const { resizeGuide, startCellResize } = useTableCellResize(
 );
 
 onBeforeUnmount(() => {
-    window.removeEventListener('scroll', updateSuggestionPosition, true);
-    window.removeEventListener('resize', updateSuggestionPosition);
     editor.value?.destroy();
 });
 
@@ -540,40 +442,6 @@ defineExpose({ getDocument });
             class="template-table-canvas min-w-0 overflow-x-auto"
             @mousedown.capture="startCellResize"
         />
-
-        <Teleport to="body">
-            <div
-                v-if="suggestions"
-                ref="suggestionMenu"
-                class="z-50 flex max-h-72 w-72 flex-col gap-1 overflow-y-auto rounded-md border bg-popover p-1.5 text-popover-foreground shadow-md"
-                :style="suggestionStyle"
-                role="listbox"
-                aria-label="Insertar en la hoja"
-            >
-                <p
-                    v-if="!suggestions.items.length"
-                    class="px-2 py-1.5 text-sm text-muted-foreground"
-                >
-                    No hay datos con ese nombre.
-                </p>
-                <Button
-                    v-for="(item, index) in suggestions.items"
-                    :key="item.key"
-                    type="button"
-                    size="sm"
-                    :variant="
-                        selectedSuggestion === index ? 'secondary' : 'ghost'
-                    "
-                    class="justify-start"
-                    role="option"
-                    :aria-selected="selectedSuggestion === index"
-                    @mousedown.prevent
-                    @click="chooseSuggestion(item)"
-                >
-                    <span class="truncate">{{ item.label }}</span>
-                </Button>
-            </div>
-        </Teleport>
     </div>
 
     <TemplateTableNewDataSheet
@@ -581,8 +449,6 @@ defineExpose({ getDocument });
         :used-column-roles="usedColumnRoles"
         @create="createRepeatedData"
     />
-
-
 </template>
 
 <style>

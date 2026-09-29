@@ -9,8 +9,9 @@ const isYesNo = (attrs: Record<string, unknown>): boolean =>
     attrs.options.map(String).join('|') === 'Sí|No';
 
 /**
- * Marcas de la hoja (I-155): dato automático, !Docente (lo escribe el docente),
- * ?Docente (responde Sí o No) y @ProyectoCarrera (lo llena Coordinación al importar).
+ * Marcas de la hoja (I-155): dato automático, Docente (lo escribe el docente), Docente:
+ * Sí o No y Proyecto de carrera (lo llena Coordinación al importar). Se insertan solo
+ * desde Insertar de la cinta; en la ficha se ve el tipo y su color, sin símbolos.
  */
 export const sheetMark = (name: string, attrs: Record<string, unknown>): SheetMark =>
     name !== 'variable'
@@ -64,8 +65,8 @@ export const inlineNodeLabel = (
 
     return {
         automatic: () => inlineNodeName(name, attrs, variableLabel),
-        teacher: () => '!Docente',
-        yesNo: () => '?Docente',
-        project: () => '@ProyectoCarrera',
+        teacher: () => 'Docente',
+        yesNo: () => 'Docente: Sí o No',
+        project: () => 'Proyecto de carrera',
     }[sheetMark(name, attrs)]();
 };

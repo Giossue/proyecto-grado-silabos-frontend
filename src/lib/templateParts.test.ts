@@ -24,11 +24,11 @@ describe('templateParts', () => {
         expect(inlineNodeLabel('variable', { id: 'carrera', label: 'carrera' }, () => 'Nombre de la carrera')).toBe('Nombre de la carrera');
         expect(inlineNodeLabel('variable', { id: 'carrera', label: 'carrera' })).toBe('');
         // Marcas de la hoja (I-155): se ven por su tipo; el nombre interno queda en la ayuda.
-        expect(inlineNodeLabel('column', { key: 'horas_acd', label: 'Horas ACD' })).toBe('!Docente');
-        expect(inlineNodeLabel('field', { key: 'formacion', label: 'Formación', kind: 'texto_largo' })).toBe('!Docente');
-        expect(inlineNodeLabel('field', { key: 'discapacidad', label: 'Discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'] })).toBe('?Docente');
+        expect(inlineNodeLabel('column', { key: 'horas_acd', label: 'Horas ACD' })).toBe('Docente');
+        expect(inlineNodeLabel('field', { key: 'formacion', label: 'Formación', kind: 'texto_largo' })).toBe('Docente');
+        expect(inlineNodeLabel('field', { key: 'discapacidad', label: 'Discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'] })).toBe('Docente: Sí o No');
         expect(inlineNodeLabel('field', { key: 'discapacidad', label: 'Discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'], choice: 'Sí' })).toBe('X si Discapacidad = Sí');
-        expect(inlineNodeLabel('variable', { id: 'curricular_resultados', label: 'curricular_resultados' }, () => 'Resultados')).toBe('@ProyectoCarrera');
+        expect(inlineNodeLabel('variable', { id: 'curricular_resultados', label: 'curricular_resultados' }, () => 'Resultados')).toBe('Proyecto de carrera');
         expect(inlineNodeName('variable', { id: 'curricular_resultados', label: 'curricular_resultados' }, () => 'Resultados')).toBe('Resultados');
     });
 });

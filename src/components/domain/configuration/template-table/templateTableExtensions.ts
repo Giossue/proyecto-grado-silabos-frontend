@@ -12,19 +12,14 @@ import { Color, FontFamily, TextStyle } from '@tiptap/extension-text-style';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import type { EditorView } from '@tiptap/pm/view';
 import StarterKit from '@tiptap/starter-kit';
-import Suggestion from '@tiptap/suggestion';
-import type { SuggestionOptions } from '@tiptap/suggestion';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { inlineNodeLabel, markClass, sheetMark } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import TemplateTableInlineNode from '@/components/domain/configuration/TemplateTableInlineNode.vue';
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
-import type { SheetSuggestionItem } from '@/composables/useSheetSuggestions';
 
 export type TemplateTableExtensionOptions = {
     /** Nombre visible de un dato automático; nunca se muestra su clave. */
     variableLabel?: (id: string) => string | undefined;
-    /** Listas que se abren al escribir «{», «!» o «@» en la hoja (I-155). */
-    suggestions?: Omit<SuggestionOptions<SheetSuggestionItem>, 'editor'>[];
 };
 
 
@@ -247,22 +242,6 @@ const inlineNode = (
         },
     });
 
-const sheetSuggestion = (
-    suggestion: Omit<SuggestionOptions<SheetSuggestionItem>, 'editor'>,
-    index: number,
-) =>
-    Extension.create({
-        name: `sheetSuggestion${index}`,
-        addProseMirrorPlugins() {
-            return [
-                Suggestion<SheetSuggestionItem>({
-                    editor: this.editor,
-                    ...suggestion,
-                }),
-            ];
-        },
-    });
-
 export const templateTableExtensions = (
     options: TemplateTableExtensionOptions = {},
 ): Extensions => [
@@ -309,5 +288,4 @@ export const templateTableExtensions = (
     inlineNode('field'),
     inlineNode('column'),
     inlineNode('variable', options.variableLabel),
-    ...(options.suggestions ?? []).map(sheetSuggestion),
 ];
