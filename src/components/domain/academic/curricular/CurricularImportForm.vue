@@ -57,7 +57,7 @@ watch(() => props.errors.instruction, (messages) => {
       <Alert v-if="noConcepts"><AlertDescription>La plantilla del sílabo todavía no tiene datos del Proyecto de carrera. Cuando Administración los agregue, podrás importarlos aquí.</AlertDescription></Alert>
       <FieldGroup class="gap-5">
         <Alert v-if="index.lock_reason || !index.capabilities.extraction">
-          <AlertDescription>{{ index.lock_reason ?? 'La extracción de documentos no está disponible en este momento. Las importaciones anteriores siguen disponibles en el historial.' }}</AlertDescription>
+          <AlertDescription>{{ index.lock_reason ?? 'La extracción de documentos no está disponible en este momento. Los datos de la tabla siguen vigentes.' }}</AlertDescription>
         </Alert>
         <Field :data-invalid="Boolean(fileError || fieldErrors.length)" :data-disabled="disabled">
           <FieldLabel for="curricular-import-files">Archivos nuevos</FieldLabel>
