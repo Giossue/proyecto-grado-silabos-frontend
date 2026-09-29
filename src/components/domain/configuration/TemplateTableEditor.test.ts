@@ -29,7 +29,7 @@ describe('TemplateTableEditor', () => {
                     TemplateToolbarSelect: true,
                     TemplateTableInsertMenu: true,
                     TemplateTableRowsMenu: true,
-                    TemplateTableNewDataSheet: true,
+                   
                 },
             },
             props: {
@@ -81,7 +81,7 @@ describe('TemplateTableEditor', () => {
     it('en un párrafo solo ofrece Insertar y deshacer, sin herramientas de celdas', async () => {
         const wrapper = mount(TemplateTableEditor, {
             global: { stubs: {
-                teleport: true, TemplateTableInsertMenu: true, TemplateTableNewDataSheet: true, TemplateTableRowsMenu: true,
+                teleport: true, TemplateTableInsertMenu: true, TemplateTableRowsMenu: true,
                 TemplateToolbarButton: { props: ['label'], template: '<button :aria-label="label" />' },
                 TemplateToolbarSelect: { props: ['label'], template: '<div :aria-label="label" />' },
             } },
