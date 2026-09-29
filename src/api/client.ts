@@ -63,8 +63,6 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   let response = await sendApiRequest(path, init, method);
 
-  // Una cookie CSRF puede caducar mientras la SPA sigue abierta. Renovarla una sola
-  // vez hace la recuperación transparente sin esconder errores persistentes.
   if (response.status === 419 && !isReadOnlyRequest(method)) {
     await initializeCsrfProtection();
     response = await sendApiRequest(path, init, method);

@@ -4,12 +4,10 @@ import type {
     TemplateVariable,
 } from '@/lib/templateDocument';
 
-/** Forma de una parte nueva (I-156): la escribe el docente o la arma Administración. */
 export type PartForm = 'free_text' | 'template';
 
 export type TemplateContentType =
     | 'text'
-    // Formas anteriores a I-156; se conservan para mostrar partes ya guardadas.
     | 'table'
     | 'bulleted_list'
     | 'numbered_list'

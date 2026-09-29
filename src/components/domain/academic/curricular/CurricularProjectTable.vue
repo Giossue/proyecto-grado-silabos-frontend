@@ -5,10 +5,6 @@ import CurricularValuePreview from './CurricularValuePreview.vue';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-/**
- * Proyecto de carrera como una sola tabla (COR-16, I-160): una fila por asignatura y una
- * columna por cada dato que pide la plantilla. Todo dato es de una asignatura.
- */
 const props = defineProps<{
   subjects: CurricularImportIndex['subjects'];
   concepts: CurricularImportIndex['concepts'];

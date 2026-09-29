@@ -15,7 +15,6 @@ const { isMobile, state, toggleSidebar } = useSidebar();
 
 const collapsed = computed(() => isMobile.value || state.value === 'collapsed');
 
-// Dice lo que va a pasar al pulsar, no lo que hay ahora.
 const label = computed(() => (collapsed.value ? 'Mostrar menú' : 'Ocultar menú'));
 </script>
 

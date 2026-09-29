@@ -102,11 +102,6 @@ const totalFields = computed(
       :connectable="data.editable"
       aria-label="Recibir relación académica"
     />
-    <!--
-            El puntero dice qué se puede hacer donde está: mano abierta sobre el
-            cuerpo de la tarjeta y cerrada mientras se arrastra. Los botones de
-            dentro y las líneas de relación conservan el suyo de pulsación.
-        -->
     <article
       class="relative w-[17.125rem] overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-2 data-[dragging=true]:ring-ring"
       :class="cn(data.editable && 'cursor-grab active:cursor-grabbing')"
@@ -160,7 +155,6 @@ const totalFields = computed(
         </div>
       </div>
 
-      <!-- Modalidad efectiva: la propia de la materia o la base de la carrera. -->
       <p
         class="border-t px-2 py-0.5 text-center text-[0.65rem] tracking-wide text-muted-foreground uppercase"
       >

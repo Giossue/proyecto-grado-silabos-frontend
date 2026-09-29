@@ -28,7 +28,6 @@ const stateLabel = computed(() => ({
   closed: 'Cerrada',
 })[props.deadline.state]);
 
-/** Cuánto del plazo ya pasó, de 0 a 100. Se calcula con los días que envía el servidor. */
 const elapsed = computed(() => {
   if (['overdue', 'closed'].includes(props.deadline.state)) return 100;
   if (props.deadline.state === 'upcoming') return 0;

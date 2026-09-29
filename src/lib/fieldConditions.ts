@@ -1,9 +1,3 @@
-/**
- * «Mostrar solo si»: una parte del docente depende de otra parte Sí/No o de
- * selección (una sola condición). Mientras no se cumple, la parte se oculta y no se
- * pide; su valor guardado no se borra. Es el mismo criterio del servidor
- * (FieldConditions.php).
- */
 export type ShowWhen = { key: string; value: string } | null;
 
 type Choice = { value: string; label: string };
@@ -15,7 +9,6 @@ type ConditionField = {
     show_when?: ShowWhen;
 };
 
-/** Tipos de parte que pueden servir de condición. */
 export const CHOICE_TYPES = ['seleccion_unica', 'booleano'];
 
 export const isChoiceField = (field: { type?: string }): boolean =>
@@ -28,10 +21,6 @@ const conditionText = (value: unknown): string =>
           ? String(value).trim()
           : '';
 
-/**
- * Claves de las partes ocultas con los valores actuales. Una condición que apunta a
- * una parte que ya no existe o que no es de selección no oculta nada.
- */
 export const hiddenKeys = (fields: ConditionField[]): Set<string> => {
     const byKey = new Map(fields.map((field) => [field.key, field]));
     const hidden = new Set<string>();

@@ -3,12 +3,6 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import type { EditorView } from '@tiptap/pm/view';
 import { registerPageEditor } from './documentPagination';
 
-/**
- * Page breaks inside a ProseMirror editor. The document paginator cannot insert
- * its own spacer nodes inside a contenteditable (ProseMirror would treat them as
- * content), so it asks this plugin to draw them as widget decorations. They are
- * presentation only and never reach the document JSON.
- */
 type Spacer = { pos: number; height: number; tag: 'div' | 'tr' | 'li'; colspan: number };
 
 const key = new PluginKey<DecorationSet>('pageSpacers');
@@ -42,7 +36,6 @@ function widget(spacer: Spacer) {
     );
 }
 
-/** Start position of the node rendered by `element`, or null when it is not a node view. */
 function nodePosition(view: EditorView, element: HTMLElement): number | null {
     let inside: number;
 
@@ -89,7 +82,6 @@ export function pageSpacersPlugin() {
             let current: Spacer[] = [];
 
             const set = (spacers: Spacer[]) => {
-                // Rewriting DOM mid-composition would break IME input.
                 if (view.isDestroyed || view.composing) {
                     return;
                 }

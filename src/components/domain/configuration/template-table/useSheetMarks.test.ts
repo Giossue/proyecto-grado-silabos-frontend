@@ -43,7 +43,6 @@ describe('useSheetMarks', () => {
     });
 
     it('en una celda, !Docente toma el nombre de lo escrito en las líneas de arriba de esa celda', () => {
-        // Ficha UEB: la etiqueta va en la primera línea de la celda y la marca en la siguiente.
         const cell = (paragraphs: string[]): DocumentNode => ({ type: 'tableCell', content: paragraphs.map((text) => ({ type: 'paragraph', content: text ? [{ type: 'text', text }] : [] })) });
         const table: DocumentNode = { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [cell(['FORMACIÓN Y EXPERIENCIA ACADÉMICA – INVESTIGATIVA:', ''])] }] }] };
         const { marks, inserted } = setup(table);

@@ -2,12 +2,10 @@
 import { Check } from '@lucide/vue';
 import { cn } from '@/lib/utils';
 
-/** Progreso de una importación en cuatro pasos; solo informa, no permite saltar pasos. */
 const props = withDefaults(defineProps<{ current: 1 | 2 | 3 | 4; failed?: boolean }>(), { failed: false });
 const STEPS = ['Documentos', 'Análisis', 'Revisión', 'Listo'] as const;
 const state = (index: number): 'done' | 'current' | 'pending' => {
   const step = index + 1;
-  // El último paso se muestra completo: no queda nada por hacer.
   if (step < props.current || (step === 4 && props.current === 4)) return 'done';
   return step === props.current ? 'current' : 'pending';
 };

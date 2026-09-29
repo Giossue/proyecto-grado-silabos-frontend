@@ -10,7 +10,6 @@ const cell = (content: unknown[], rowspan = 1) => ({ type: 'tableCell', attrs: {
 const text = (value: string) => ({ type: 'text', text: value });
 const keys = (doc: ProseMirrorNode, trigger: string) => followUpCandidates(doc, trigger).map((item) => item.key);
 
-// Ficha tipo UEB: «ESTUDIANTES CON DISCAPACIDAD» ocupa tres filas; «Formación» va aparte.
 const card = (formationShowWhen: unknown = null) => ProseMirrorNode.fromJSON(schema, { type: 'doc', content: [{ type: 'table', content: [
     { type: 'tableRow', content: [cell([text('Asignatura')]), cell([text('Redes')])] },
     { type: 'tableRow', content: [cell([text('ESTUDIANTES CON DISCAPACIDAD')], 3), cell([text('Sí '), field('discapacidad', 'Estudiantes con discapacidad', { kind: 'seleccion_unica', choice: 'Sí' })]), cell([text('Tipo: '), field('tipo', 'Tipo de discapacidad')])] },

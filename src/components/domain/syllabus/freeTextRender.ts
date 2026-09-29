@@ -10,11 +10,9 @@ const TAGS: Record<string, string> = {
 export const isFreeTextDocument = (value: unknown): value is DocumentNode =>
     typeof value === 'object' && value !== null && (value as DocumentNode).type === 'doc';
 
-/** Texto sin formato de un Texto libre: sirve para saber si quedó vacío (I-156). */
 export const freeTextPlain = (node: DocumentNode): string =>
     node.type === 'text' ? (node.text ?? '') : (node.content ?? []).map(freeTextPlain).join(' ');
 
-/** Texto legible de un Texto libre: una línea por párrafo, elemento o fila (I-156). */
 export const freeTextLines = (node: DocumentNode): string => {
     if (node.type === 'text') return node.text ?? '';
     if (node.type === 'hardBreak') return '\n';
@@ -26,7 +24,6 @@ export const freeTextLines = (node: DocumentNode): string => {
     return children.join('\n');
 };
 
-/** Dibuja el Texto libre del docente en modo lectura (I-156). */
 export const renderFreeText = (node: DocumentNode): VNodeChild => {
     if (node.type === 'text') {
         const marks = new Set((node.marks ?? []).map((mark) => mark.type));

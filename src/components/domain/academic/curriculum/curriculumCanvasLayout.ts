@@ -7,8 +7,6 @@ import type {
 
 export type CurriculumRequirement = CurriculumBuilderProps['requirements'][number];
 
-// Cada unidad de organización curricular recibe un color en la leyenda, el badge y los
-// encabezados académicos de su materia. El resto de la tarjeta conserva el tema.
 export const UNIT_PALETTE = [
     { backgroundColor: 'var(--curriculum-unit-1-background)', color: 'var(--curriculum-unit-1-foreground)' },
     { backgroundColor: 'var(--curriculum-unit-2-background)', color: 'var(--curriculum-unit-2-foreground)' },
@@ -20,7 +18,6 @@ export const FALLBACK_UNIT_STYLE = {
     backgroundColor: 'var(--primary)',
     color: 'var(--primary-foreground)',
 };
-
 
 const ROMAN_NUMERALS = [
     ['X', 10],
@@ -43,11 +40,8 @@ export const toRoman = (value: number): string => {
     return roman || String(value);
 };
 
-// El carril se dibuja un 30 % más bajo que los 340 px originales; con menos aire
-// sobrante, las tarjetas se centran en él en vez de colgar del borde superior.
 export const laneHeight = 238;
 export const laneInset = 16;
-// La tarjeta incluye la fila de modalidad sobre las horas.
 export const subjectHeight = 158;
 export const addSubjectHeight = 36;
 export const subjectOffset = Math.round(
@@ -57,10 +51,7 @@ export const addSubjectOffset = Math.round(
     (laneHeight - laneInset - addSubjectHeight) / 2,
 );
 export const laneStart = 109;
-// Tarjeta de 274 px (un 7 % más ancha que las 256 originales) más 34 px de aire.
 export const subjectStep = 308;
-// El viewport termina donde termina la malla. El margen permite respirar alrededor
-// del primer y último ciclo sin dejar que el lienzo navegue hacia espacio infinito.
 export const navigationPadding = 48;
 
 type CurriculumNodeOptions = Pick<
@@ -128,9 +119,6 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
                     onSaved: options.onSaved,
                 },
                 draggable: options.editable && !options.hasOpenEditor && !options.savingLayout,
-                // Vue Flow descuenta las dimensiones medidas del nodo del límite
-                // superior. Darle solo la coordenada final de la tarjeta la empuja
-                // fuera del carril al empezar a arrastrarla.
                 extent: [
                     [laneStart, cycleY],
                     [laneStart + cycleSubjects.length * subjectStep, cycleY + laneHeight - laneInset],
@@ -166,18 +154,8 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
     return nodes;
 };
 
-// Reparte las conexiones que comparten conector. La primera se queda en el centro de
-// la materia —que es de donde se espera que salga una línea— y las siguientes se
-// apartan hacia un lado para no pisarla.
 const EDGE_SPACING = 18;
 
-/*
- * Reparto de las líneas en cada conector. Por abajo salen prerrequisitos y
- * correquisitos hacia otros niveles; por arriba llegan todas las líneas y, además,
- * apoyan sus dos extremos los correquisitos del mismo nivel (van por encima). Todo lo
- * que toca el borde superior de una tarjeta se reparte en un mismo grupo: si el extremo
- * de salida de un correquisito se repartiera aparte, caería sobre una llegada.
- */
 const edgeOffsets = (
     requirements: CurriculumRequirement[],
     subjectById: Map<string, CurriculumBuilderSubject>,
@@ -255,8 +233,6 @@ export const buildRequirementEdges = (
     const cycleOf = new Map(
         subjects.map((subject) => [subject.id, subject.cycle]),
     );
-    // Un correquisito del mismo nivel se dibuja por encima de las tarjetas, como en la
-    // malla oficial, con punta en los dos extremos; por debajo cruzaba las horas.
     const sameLevelIds = new Set(
         requirements
             .filter(
@@ -307,8 +283,6 @@ export const buildRequirementEdges = (
                 sourceOffset: offset?.source ?? 0,
                 targetOffset: offset?.target ?? 0,
                 sameLevel,
-                // Con varias líneas en el borde superior, cada una conserva su reparto:
-                // si una se recentrara, caería sobre la vecina.
                 targetShared: offset?.topShared ?? false,
             },
         };

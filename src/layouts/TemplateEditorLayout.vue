@@ -10,7 +10,6 @@ import { TooltipProvider } from '@/components/ui/tooltip';
             <slot />
         </div>
         <Toaster />
-        <!-- La confirmación global también protege los cambios hechos desde el editor. -->
         <PurgeConfirmationDialog />
     </TooltipProvider>
 </template>

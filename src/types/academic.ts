@@ -17,7 +17,6 @@ export type Option = {
   planning_enabled?: boolean;
   subject_id?: string;
   period_id?: string;
-  /** Materias de la carrera activa: para agruparlas por ciclo al preparar un período. */
   ciclo?: number | null;
 };
 
@@ -25,9 +24,7 @@ export type CatalogRecord = {
   id: string;
   nombre: string;
   activo: boolean;
-  /** Solo facultades: logo que encabeza el sílabo de sus carreras. */
   logo_url?: string | null;
-  /** Solo facultades: campus institucional obligatorio. */
   campus?: string | null;
 };
 
@@ -40,20 +37,16 @@ export type AcademicStructureProps = {
   career: {
     id: string;
     name: string;
-    /** Convocatoria abierta: la estructura queda congelada hasta pausarla. */
     lock_reason?: string | null;
   };
-  /** Proceso institucional abierto: catálogos globales congelados hasta pausarlo. */
   lock_reason?: string | null;
   catalogs: {
     faculties: CatalogRecord[];
     careers: {
       id: string;
       faculty_id: string;
-      /** Modalidad base elegida por Administración. */
       modality: string | null;
       modality_label: string | null;
-      /** Quién coordina hoy; nulo si la carrera no tiene coordinación activa. */
       coordinator: { id: string; name: string } | null;
       campus_name: string | null;
       code: string;
@@ -72,7 +65,6 @@ export type AcademicStructureProps = {
         id: string;
         state: "abierto" | "pausado" | "cerrado";
       } | null;
-      /** «Convocatoria activa» cuando alguna carrera tiene la convocatoria en curso en este período. */
       lock_reason?: string | null;
     }[];
   };
@@ -173,10 +165,8 @@ export type CurriculumBuilderSubject = {
   name: string;
   cycle: number | null;
   position: number;
-  /** Valor fijo del reglamento: basica, profesional o integracion_curricular. */
   organization_unit: string | null;
   organization_unit_label: string | null;
-  /** Vacío = la de la carrera. Con valor, la materia tiene una excepción de modalidad. */
   modality: string | null;
   modality_label: string | null;
   credits: string | null;
@@ -194,7 +184,6 @@ export type CurriculumBuilderProps = {
   career: {
     id: string;
     name: string;
-    /** Modalidad base aprobada por Administración. */
     modality: { value: string; label: string } | null;
   };
   curriculum: {

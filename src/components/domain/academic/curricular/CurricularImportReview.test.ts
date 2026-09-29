@@ -28,7 +28,6 @@ const mountReview = (detail = proposal()) => {
 };
 type Wrapper = ReturnType<typeof mountReview>;
 const button = (wrapper: Wrapper, label: string) => wrapper.findAll('button').find((item) => item.text() === label)!;
-/** Paso de materias: relaciona el nombre del documento (opcional) y continúa a los datos. */
 const continueToData = async (wrapper: Wrapper, subject?: string) => {
   if (subject) {
     wrapper.findComponent(Select).vm.$emit('update:modelValue', subject);
@@ -107,7 +106,6 @@ describe('CurricularImportReview', () => {
     expect(wrapper.find('#proposal-known').exists()).toBe(false);
     await button(wrapper, 'Volver a las materias').trigger('click');
     await continueToData(wrapper, 'subject-2');
-    // Ya no quedan pendientes: se quita el filtro para ver los datos relacionados.
     await wrapper.get('#curricular-only-pending').trigger('click');
     expect(wrapper.get('#proposal-unmatched').attributes('data-state')).toBe('checked');
     expect(wrapper.get('#proposal-unmatched-2').attributes('data-state')).toBe('checked');

@@ -13,10 +13,6 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/lib/toast';
 
-/**
- * I-139. Tarjeta «Firma electrónica» de una revisión aprobada. La firma se hace en este
- * navegador: el archivo .p12/.pfx y su clave solo se leen en memoria y nunca se envían.
- */
 const props = withDefaults(defineProps<{ revisionId: string; fileName?: string }>(), { fileName: 'silabo' });
 
 const status = ref<SignatureStatus | null>(null);
@@ -102,7 +98,6 @@ const sign = async (): Promise<void> => {
   if (!role) return;
   signing.value = true;
   try {
-    // El módulo de firma (node-forge, pdf-lib) se carga solo al firmar.
     const [{ signPdf, sha256Hex }, { SignatureError }] = await Promise.all([import('@/lib/signature/signPdf'), import('@/lib/signature/certificate')]);
     try {
       const p12 = new Uint8Array(await certificate.value.arrayBuffer());

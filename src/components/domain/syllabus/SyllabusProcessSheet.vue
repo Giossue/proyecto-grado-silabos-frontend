@@ -39,7 +39,6 @@ watch(open, (value) => {
     errors.value = {};
   }
 });
-// La elaboración va de hoy al último día del período; la entrega, después del inicio.
 const todayIso = today(getLocalTimeZone()).toString();
 const periodEnd = computed(() => props.period?.ends_on?.slice(0, 10));
 const dueMinimum = computed(() => (form.value.starts_at > todayIso ? form.value.starts_at : todayIso));

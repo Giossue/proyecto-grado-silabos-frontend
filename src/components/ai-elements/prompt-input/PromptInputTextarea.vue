@@ -39,7 +39,6 @@ function handleKeyDown(e: KeyboardEvent) {
         textarea?.form?.requestSubmit();
     }
 
-    // Remove last attachment on backspace if input is empty
     if (
         e.key === 'Backspace' &&
         textInput.value === '' &&

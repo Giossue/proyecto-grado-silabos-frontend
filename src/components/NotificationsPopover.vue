@@ -14,7 +14,6 @@ import { paths } from '@/lib/routes';
 import { relativeTime } from '@/lib/relativeTime';
 import { sessionState } from '@/state/session';
 
-/** El panel es un vistazo rápido; el historial completo vive en la página de notificaciones. */
 const PREVIEW_LIMIT = 10;
 
 const route = useRoute();
@@ -27,7 +26,6 @@ const unreadCount = ref(0);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
-/** Sin ámbito elegido no existe la página de notificaciones: solo este panel. */
 const hasActiveRole = computed(() => sessionState.current.value?.active_role != null);
 const isNotificationsPage = computed(() => route.path.endsWith('/notificaciones') || route.path === paths.notifications);
 
@@ -66,11 +64,9 @@ const refreshCount = async (): Promise<void> => {
 const select = async (notification: Notification): Promise<void> => {
     const unread = notification.leido_en === null;
     if (notification.has_destination) {
-        // El servidor marca el aviso, activa el rol que corresponde y devuelve el destino.
         open.value = false;
         await openDestination(notification);
     } else if (unread) {
-        // Se marca en pantalla de inmediato; si la API falla, la próxima carga lo corrige.
         notification.leido_en = new Date().toISOString();
         void markNotificationRead(notification.id).catch(() => undefined);
     }
@@ -93,15 +89,11 @@ watch(open, (value) => {
 watch(status, () => {
     if (open.value) void load();
 });
-// La página de notificaciones puede cambiar el estado de lectura: al salir de ella se
-// sincroniza el contador de la campana.
 watch(isNotificationsPage, (current, previous) => {
     if (previous && !current) void refreshCount();
 });
 onMounted(refreshCount);
 
-// Un clic sobre la campana ya alterna el panel; sin esto el panel lo tomaría como clic
-// exterior, se cerraría y el botón lo volvería a abrir.
 const ignoreBell = (event: Event): void => {
     const target = event.target as Node | null;
     if (target && anchor.value?.contains(target)) event.preventDefault();
@@ -111,8 +103,6 @@ const ignoreBell = (event: Event): void => {
 <template>
     <Popover v-model:open="open">
         <TooltipProvider :delay-duration="150">
-            <!-- La campana no usa PopoverTrigger: anidar dos triggers as-child sobre el mismo botón
-                 impedía abrir el panel. El botón alterna `open` y PopoverAnchor posiciona el panel. -->
             <PopoverAnchor as-child>
                 <span ref="anchor" class="inline-flex">
                     <Tooltip>

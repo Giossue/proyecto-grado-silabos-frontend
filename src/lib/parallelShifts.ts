@@ -1,4 +1,3 @@
-/** Jornadas del paralelo, tal como las nombra el formato oficial del sílabo. */
 export const PARALLEL_SHIFTS = [
     { value: 'matutina', label: 'Matutina' },
     { value: 'vespertina', label: 'Vespertina' },

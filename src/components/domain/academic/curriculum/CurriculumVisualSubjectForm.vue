@@ -41,7 +41,6 @@ const props = defineProps<{
   organizationUnits: CurriculumBuilderProps["organizationUnitOptions"];
 }>();
 
-/** Por defecto la de la carrera; una excepción no modifica la modalidad base. */
 const modality = ref(props.subject?.modality ?? INHERITED_MODALITY);
 watch(
   () => props.subject?.modality,

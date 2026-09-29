@@ -32,8 +32,6 @@ const submit = async (): Promise<void> => {
     errors.value = {};
     try {
         const result = await activateAccount(token.value, password.value, passwordConfirmation.value);
-        // Si el navegador tenía otra sesión abierta (o la misma cuenta pendiente), se cierra:
-        // la persona debe ingresar con la contraseña que acaba de definir.
         if (sessionState.current.value) {
             await logout().catch(() => undefined);
             sessionState.clear();

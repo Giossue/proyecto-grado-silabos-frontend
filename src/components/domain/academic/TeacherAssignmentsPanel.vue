@@ -41,7 +41,6 @@ const resendError = ref<string | null>(null);
 const rows = computed<TeacherRow[]>(() => {
   const pendingIds = new Set(props.data.pendingTeachers.map((teacher) => teacher.id));
   const assignedUserIds = new Set(props.data.teacherAssignments.map((item) => item.user_id));
-  // Todo docente activo de la carrera aparece: sin paralelo, la fila muestra el estado de su rol.
   const teachersWithoutAssignment = props.data.careerTeachers
     .filter((teacher) => !assignedUserIds.has(teacher.id))
     .map((teacher): TeacherRow => ({

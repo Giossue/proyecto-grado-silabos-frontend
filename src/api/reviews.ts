@@ -85,7 +85,6 @@ export type ReviewDetail = {
   }>;
   observations: ReviewObservation[];
   correction_request: { justification: string; requested_at: string } | null;
-  /** Falso con la convocatoria cerrada: la revisión queda solo para consulta. */
   decisions_allowed: boolean;
   reset: { allowed: boolean };
   reopening: { cause: string; reopened_at: string; reopened_by: string } | null;

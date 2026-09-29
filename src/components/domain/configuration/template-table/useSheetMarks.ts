@@ -17,18 +17,12 @@ type Options = {
     props: Source;
     insertNode: (node: DocumentNode) => void;
     keyFor: (label: string) => string;
-    /** Datos @ProyectoCarrera creados en esta edición, para mostrar su nombre en la ficha. */
     declared: Ref<TemplateVariable[]>;
 };
 
 const clean = (value: string): string =>
     value.replace(/\s+/g, ' ').replace(/[\s:;,\-–—]+$/u, '').trim().slice(-120).trim();
 
-/**
- * Marcas de la hoja sin preguntas (I-155): !Docente, ?Docente y @ProyectoCarrera. Su
- * nombre interno sale del contexto: lo escrito antes en la misma línea o celda, la
- * primera celda de la fila, el nombre de la parte o el de la sección.
- */
 export function useSheetMarks(options: Options) {
     const { editor, props } = options;
 
@@ -44,7 +38,6 @@ export function useSheetMarks(options: Options) {
         }
         for (let depth = $from.depth; depth > 0; depth--) {
             const node = $from.node(depth);
-            // Lo escrito antes en la misma celda (por ejemplo, la etiqueta en la línea de arriba).
             if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
                 const inCell = clean(node.textBetween(0, $from.pos - $from.start(depth), ' ', ' '));
                 if (inCell) {
@@ -70,7 +63,6 @@ export function useSheetMarks(options: Options) {
     };
     const teacherLabel = (): string => context() || props.partTitle?.trim() || props.sectionTitle;
 
-    /** Docente: el docente escribe aquí; en una lista, sus líneas son elementos. */
     const insertTeacher = (): void => {
         const label = teacherLabel();
         options.insertNode({
@@ -83,7 +75,6 @@ export function useSheetMarks(options: Options) {
         });
     };
 
-    /** ?Docente: el docente responde Sí o No; otras partes pueden depender de la respuesta. */
     const insertYesNo = (): void => {
         const label = teacherLabel();
         options.insertNode({
@@ -95,7 +86,6 @@ export function useSheetMarks(options: Options) {
         });
     };
 
-    /** @ProyectoCarrera: se declara al insertarlo; en una lista se busca como lista. */
     const insertProject = async (): Promise<void> => {
         const list = inList();
         const label = [...new Set([props.sectionTitle.trim(), context() || props.partTitle?.trim() || ''])]

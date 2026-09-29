@@ -4,11 +4,6 @@ import { openNotification, type Notification } from '@/api/notifications';
 import { toast } from '@/lib/toast';
 import { sessionState } from '@/state/session';
 
-/**
- * Abre un aviso sin confiar en rutas calculadas para otro rol (I-121): el servidor lo
- * marca como leído, activa si hace falta el rol que le corresponde y devuelve el destino.
- * Solo después se navega, con la sesión ya actualizada.
- */
 export function useOpenNotification() {
     const router = useRouter();
     const openingId = ref<string | null>(null);

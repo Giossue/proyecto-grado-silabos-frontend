@@ -14,7 +14,6 @@ type TableCommand =
     | 'deleteRow'
     | 'deleteColumn';
 
-/** Lee la celda seleccionada y qué acciones de tabla están disponibles. */
 export function useTemplateTableSelection(
     editor: ShallowRef<Editor | undefined>,
     version: Ref<number>,

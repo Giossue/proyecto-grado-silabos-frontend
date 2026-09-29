@@ -1,4 +1,3 @@
-/** Presentation only: these breaks never enter a template or a syllabus snapshot. */
 export const LETTER_PAGE = {
     width: (21.59 * 96) / 2.54,
     height: (27.94 * 96) / 2.54,
@@ -26,11 +25,6 @@ type PageEditor = {
     apply: (requests: PageSpacerRequest[]) => void;
 };
 
-/**
- * Rich text editors own their DOM: foreign nodes inside them would be read back as
- * content. An editor registers here so the paginator can split its blocks and table
- * rows by asking the editor to draw the spacers itself (as decorations).
- */
 const pageEditors = new Map<HTMLElement, PageEditor>();
 
 export function registerPageEditor(element: HTMLElement, editor: PageEditor) {
@@ -103,7 +97,6 @@ type Unit = {
     repeatHeader?: HTMLTableRowElement[];
 };
 
-/** A rowspan, including rowspan=0, must stay with all the rows it covers. */
 function tableUnits(table: HTMLTableElement): Unit[] {
     const rows = Array.from(table.rows).filter(
         (row) =>
@@ -259,8 +252,6 @@ function collectUnits(root: HTMLElement): Unit[] {
             return markdownFlowThroughUnits(element);
         }
 
-        // Un editor reinterpreta cualquier fila ajena como contenido propio: su
-        // tabla se desplaza entera y nunca recibe espaciadores internos.
         if (
             element.hasAttribute('data-page-flow-through') &&
             !element.querySelector('[contenteditable="true"]')
@@ -291,11 +282,6 @@ function collectUnits(root: HTMLElement): Unit[] {
     });
 }
 
-/**
- * Keep a page spacer outside presentation wrappers when the unit is their first visible
- * child. Otherwise an outline on a selected section or field would also surround the
- * artificial empty space used to reach the following sheet.
- */
 function spacerAnchor(first: HTMLElement, root: HTMLElement): HTMLElement {
     if (first instanceof HTMLTableRowElement || first.tagName === 'LI') {
         return first;
@@ -333,11 +319,6 @@ function spacerAnchor(first: HTMLElement, root: HTMLElement): HTMLElement {
     return anchor;
 }
 
-/**
- * Inserts only disposable layout spacers. Original Vue nodes, event listeners,
- * inputs and their selection stay in place. Cleanup before each measurement
- * means pages also disappear when content shrinks.
- */
 export function createDocumentPaginator(
     root: HTMLElement,
     metrics: () => DocumentPageMetrics = () => LETTER_PAGE,
@@ -435,7 +416,6 @@ export function createDocumentPaginator(
                 colspan: isRow ? columns() : 1,
             });
             editorRequests.set(editor, requests);
-            // Synchronous: later units are measured with this break applied.
             pageEditors.get(editor)?.apply([...requests]);
 
             return;
@@ -485,9 +465,6 @@ export function createDocumentPaginator(
         const { height, margin, gap } = metrics();
         const pitch = height + gap;
         const usable = height - 2 * margin;
-        // Always relative to the root's current position: inserting a spacer above
-        // the caret lets the browser's scroll anchoring scroll the page, which would
-        // shift every later viewport measurement by the spacer height.
         const topOf = (element: HTMLElement) =>
             element.getBoundingClientRect().top -
             root.getBoundingClientRect().top;
@@ -509,7 +486,6 @@ export function createDocumentPaginator(
             let bottom = bottomOf(units[last].last);
             const end = page * pitch + usable;
 
-            // A heading should accompany the first content, not an entire section.
             if (bottom - top > usable) {
                 bottom = bottomOf(unit.last);
             }
@@ -523,7 +499,6 @@ export function createDocumentPaginator(
                 spacerBefore(unit, Math.max(0, page * pitch - top));
             }
 
-            // Exceptionally tall indivisible content remains visible, never clipped.
             const actualBottom = bottomOf(unit.last);
             page = Math.max(page, Math.floor((actualBottom - 0.5) / pitch));
         }

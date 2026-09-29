@@ -1,12 +1,6 @@
 import { api, ApiError } from "@/api/client";
 import { requestPurgeConfirmation } from "@/composables/usePurgeConfirmation";
 
-/**
- * Los cambios estructurales de la malla durante una convocatoria pausada reemplazan
- * sílabos en curso. El servidor lo avisa con `purge_required`; aquí se pide la
- * confirmación con el diálogo común y se repite la misma petición con `confirm_purge`.
- * Cancelar rechaza la promesa sin guardar nada.
- */
 export const PURGE_CANCELLED_MESSAGE = "Cambio cancelado. No se guardó nada.";
 
 export function withPurgeConfirmation<T>(
@@ -244,7 +238,6 @@ export const deleteSubjectRequirement = (
   requirementId: string,
 ) =>
   withPurgeConfirmation((confirm) =>
-    // @openapi-method DELETE: la confirmación solo agrega cuerpo a la misma operación.
     api<{ message: string }>(
       `/coordination/academic/curriculum/${curriculumId}/requirements/${requirementId}`,
       { method: "DELETE", ...(confirm ? { body: jsonBody({}, true) } : {}) },

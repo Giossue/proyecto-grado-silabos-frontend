@@ -27,13 +27,10 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 
-// La conexión no se guarda de inmediato: primero se pregunta el tipo, porque un
-// mismo gesto de arrastre puede ser prerrequisito o correquisito.
 const pendingConnection = defineModel<{
     sourceId: string;
     targetId: string;
 } | null>('pendingConnection', { required: true });
-// Clic sobre una línea: permite revisar la relación y eliminarla si se creó mal.
 const selectedRequirement = defineModel<CurriculumRequirement | null>(
     'selectedRequirement',
     { required: true },

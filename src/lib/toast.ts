@@ -12,7 +12,6 @@ const show = (
     options?: ToastOptions,
 ): string | number => sonnerToast[type](normalizeMessage(message), options);
 
-/** Toast del sistema: posición global en `Sonner.vue` y texto sin punto final. */
 export const toast = {
     success: (message: ToastMessage, options?: ToastOptions) =>
         show('success', message, options),

@@ -1,7 +1,3 @@
-/**
- * Colores del formato académico. Son datos del documento, no colores del tema de la
- * aplicación; por eso se mantienen en un catálogo único y estable.
- */
 export const DOCUMENT_COLORS = Object.freeze({
     text: '#000000',
     paper: '#FFFFFF',

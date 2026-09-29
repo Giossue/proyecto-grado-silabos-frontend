@@ -25,10 +25,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { TemplateVariable } from '@/lib/templateDocument';
 
-/*
- * Insertar en la hoja (I-155, I-156): estructura (tabla y lista) y marcas. Las marcas
- * se ponen sin preguntas; su nombre sale del contexto.
- */
 const props = defineProps<{
     disabled: boolean;
     variables: TemplateVariable[];

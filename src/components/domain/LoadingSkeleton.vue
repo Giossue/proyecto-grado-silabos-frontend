@@ -51,7 +51,6 @@ const gridColumns = (): string =>
     >
         <span class="sr-only">Cargando contenido…</span>
         <div aria-hidden="true" class="contents">
-            <!-- Listados que todavía no tienen su Card ni su barra de filtros. -->
             <template v-if="variant === 'table'">
                 <div class="overflow-hidden rounded-xl border bg-card">
                     <div class="border-b p-4">
@@ -90,7 +89,6 @@ const gridColumns = (): string =>
                 </div>
             </template>
 
-            <!-- Tablas dentro de una Card que ya dibujó filtros y encabezado. -->
             <template v-else-if="variant === 'table-body'">
                 <div class="overflow-x-auto">
                     <div class="min-w-[48rem] overflow-hidden rounded-lg border">
@@ -139,7 +137,6 @@ const gridColumns = (): string =>
                 </div>
             </template>
 
-            <!-- Historiales que muestran el título de la Card antes de la tabla. -->
             <template v-else-if="variant === 'table-detail'">
                 <div class="overflow-hidden rounded-xl border bg-card">
                     <div class="grid gap-1.5 px-6 py-6">
@@ -233,7 +230,6 @@ const gridColumns = (): string =>
                 </div>
             </template>
 
-            <!-- Catálogos institucionales: la página solo añade una Card con filtro y tabla. -->
             <template v-else-if="variant === 'catalog'">
                 <div class="overflow-hidden rounded-xl border bg-card p-6">
                     <div class="flex flex-col gap-4">
@@ -269,7 +265,6 @@ const gridColumns = (): string =>
                 </div>
             </template>
 
-            <!-- Estructura académica: cambia la superficie según el modo solicitado. -->
             <template v-else-if="variant === 'academic-structure'">
                 <template v-if="props.mode === 'curriculum'">
                     <div
@@ -463,7 +458,6 @@ const gridColumns = (): string =>
                 </div>
             </template>
 
-            <!-- Comparación: resumen y tarjetas de cambios con dos columnas. -->
             <template v-else-if="variant === 'comparison'">
                 <div class="rounded-xl border bg-card p-6">
                     <div class="flex flex-col gap-2"><Skeleton class="h-6 w-72 max-w-full" /><Skeleton class="h-4 w-96 max-w-full" /></div>
@@ -474,7 +468,6 @@ const gridColumns = (): string =>
                 </div>
             </template>
 
-            <!-- Formulario simple y detalle pequeño, conservados para pantallas menores. -->
             <template v-else-if="variant === 'form'">
                 <div v-for="row in props.rows" :key="`form-${row}`" class="flex flex-col gap-2">
                     <Skeleton class="h-4 w-32" />

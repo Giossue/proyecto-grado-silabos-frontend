@@ -62,7 +62,6 @@ describe('ScheduledSubjectsTab', () => {
     it('filtra por ciclo, paralelo y jornada por separado', async () => {
         const wrapper = mountTab();
         const selects = wrapper.findAllComponents(SelectStub);
-        // 0: período, 1: ciclo, 2: paralelo, 3: jornada.
         await selects[3].vm.$emit('update:modelValue', 'nocturna');
         expect(wrapper.text()).not.toContain('Arquitectura de Software');
         expect(wrapper.text()).toContain('Bases de Datos');

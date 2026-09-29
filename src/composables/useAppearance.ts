@@ -10,10 +10,6 @@ export type UseAppearanceReturn = {
     updateAppearance: (value: Appearance) => void;
 };
 
-/**
- * El tema por defecto es claro y no se consulta la preferencia del sistema: la persona
- * elige claro u oscuro desde el control del encabezado o desde Configuración.
- */
 export const DEFAULT_APPEARANCE: Appearance = 'light';
 
 const isAppearance = (value: unknown): value is Appearance =>
@@ -37,7 +33,6 @@ const setCookie = (name: string, value: string, days = 365) => {
     document.cookie = `${name}=${value};path=/;max-age=${maxAge};SameSite=Lax`;
 };
 
-/** Cualquier valor guardado que no sea claro u oscuro (p. ej. «system») vuelve a claro. */
 const getStoredAppearance = (): Appearance => {
     if (typeof window === 'undefined') {
         return DEFAULT_APPEARANCE;
@@ -70,10 +65,8 @@ export function useAppearance(): UseAppearanceReturn {
     function updateAppearance(value: Appearance) {
         appearance.value = value;
 
-        // Store in localStorage for client-side persistence...
         localStorage.setItem('appearance', value);
 
-        // Store in cookie for SSR...
         setCookie('appearance', value);
 
         updateTheme(value);

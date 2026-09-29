@@ -15,7 +15,6 @@ const props = withDefaults(
         fontSize?: number;
         textColor?: string;
         showPageNumbers?: boolean;
-        /** Número de la primera hoja, cuando el documento sigue de otro anterior. */
         startPage?: number;
     }>(),
     {
@@ -80,7 +79,6 @@ const schedule = () => {
 
     frame = requestAnimationFrame(() => {
         frame = 0;
-        // Our own spacers must not schedule another pagination pass.
         mutations?.disconnect();
         pages.value = paginator?.paginate() ?? 1;
         rememberContentSize();
@@ -103,8 +101,6 @@ const observeContent = () => {
         childList: true,
         characterData: true,
         attributes: true,
-        // Selection, focus and drag classes never change document geometry.
-        // Observing them caused a full repagination on every editor click.
         attributeFilter: ['style', 'src', 'rowspan', 'colspan'],
     });
 };
@@ -185,7 +181,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* Fixed paper colors are intentional; this is the document, not app chrome. */
 .paged-document {
     position: relative;
     width: var(--page-width);

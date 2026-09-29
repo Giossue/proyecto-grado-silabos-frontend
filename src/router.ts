@@ -55,9 +55,6 @@ export const router = createRouter({
     { path: "/ingresar", component: LoginPage, meta: { guest: true, aliasTarget: "/login" } },
     { path: "/recuperar-contrasena", component: PasswordRecoveryPage, meta: { guest: true } },
     { path: "/restablecer-contrasena", component: ResetPasswordPage, meta: { guest: true } },
-    // Los enlaces que llegan por correo se abren con o sin sesión: quien los recibe puede
-    // tener abierta otra cuenta (o la misma, pendiente) en el navegador. Cada página
-    // decide qué hacer con esa sesión; el guard no debe desviarlos.
     { path: "/activar-cuenta", component: ActivateAccountPage, meta: { shell: false } },
     { path: "/api/v1/authentication/email-verification/:user/:hash", component: VerifyEmailPage, meta: { shell: false } },
     { path: "/verificar-correo", component: VerifyEmailPage, meta: { requiresAuth: true, shell: false } },
@@ -65,7 +62,6 @@ export const router = createRouter({
     { path: "/", redirect: "/login" },
     { path: "/rol", component: WorkspacePage, meta: { requiresAuth: true, layout: "workspace", title: "Seleccionar ámbito de trabajo" } },
 
-    // Direcciones cortas compartidas: el guard las resuelve al área activa.
     { path: "/panel", component: DashboardPage, meta: { requiresAuth: true, aliasTarget: "/dashboard", title: "Panel" } },
     { path: "/dashboard", component: DashboardPage, meta: { requiresAuth: true, shortcut: "panel", title: "Panel" } },
     { path: "/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, shortcut: "notifications", title: "Notificaciones" } },
@@ -79,7 +75,6 @@ export const router = createRouter({
     { path: "/seguridad", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },
     { path: "/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, shortcut: "documents", title: "Documentos" } },
 
-    // Administración — rutas canónicas del monolito.
     { path: "/admin/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Panel" } },
     { path: "/admin/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Usuarios y roles" } },
     { path: "/admin/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Estructura académica" } },
@@ -92,7 +87,6 @@ export const router = createRouter({
     { path: "/admin/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Seguridad" } },
     { path: "/admin/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Notificaciones" } },
 
-    // Coordinación.
     { path: "/coordinacion/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Panel" } },
     { path: "/coordinacion/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Notificaciones" } },
     { path: "/coordinacion/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Perfil" } },
@@ -111,7 +105,6 @@ export const router = createRouter({
     { path: "/coordinacion/asignaciones-docentes", component: CoordinationAcademicStructurePage, props: { mode: "teachers" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Asignación docente" } },
     { path: "/coordinacion/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Documentos" } },
 
-    // Docencia.
     { path: "/docente/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["docente"], title: "Panel" } },
     { path: "/docente/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Notificaciones" } },
     { path: "/docente/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["docente"], title: "Perfil" } },
@@ -120,7 +113,6 @@ export const router = createRouter({
     { path: "/docente/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", layout: "syllabus-editor" } },
     { path: "/docente/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos" } },
 
-    // URLs publicadas por la SPA anterior: se normalizan con replace.
     { path: "/administracion/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/usuarios" } },
     { path: "/administracion/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/estructura-academica" } },
     { path: "/administracion/procesos", component: AdminProcessesPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/convocatorias" } },

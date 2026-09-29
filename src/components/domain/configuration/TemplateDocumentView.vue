@@ -45,11 +45,6 @@ const emit = defineEmits<{
 }>();
 const slots = useSlots();
 const prefix = useId();
-/**
- * En la vista temática, las cabeceras usan el color de texto de cabecera (blanco sobre
- * azul fuerte). Si la celda trae su propio fondo claro, ese blanco no se leería: como en
- * el formato UEB, se usa el azul oscuro de cabecera.
- */
 const readableHeaderText = (background: unknown): string | undefined => {
     if (!props.preview || typeof background !== 'string') {
         return undefined;
@@ -145,7 +140,6 @@ const draw = (
     }
 
     if (node.type === 'variable' && attrs.listStyle) {
-        // Un @ProyectoCarrera en una lista se ve como sus elementos (I-155).
         const value = props.variables[String(attrs.id)] ||
             (props.preview ? '' : 'Pendiente de Coordinación');
         const items = value.split(/\r?\n/).map((line) => line.replace(/^\d+\.\s+/, '').trim()).filter(Boolean);
@@ -166,15 +160,12 @@ const draw = (
                 'data-page-fragment': '',
                 class: 'document-variable',
             },
-            // Un dato automático se muestra con su valor, nunca con su clave. En la
-            // vista previa, si no tiene valor, la celda queda vacía como en la hoja.
             props.variables[String(attrs.id)] ||
                 (props.preview ? '' : 'Pendiente de Coordinación'),
         );
     }
 
     if (node.type === 'field') {
-        // «Mostrar solo si»: una parte oculta no se dibuja; su valor se conserva.
         if (props.fields.find((field) => field.key === attrs.key)?.hidden) {
             return null;
         }
@@ -273,8 +264,6 @@ const draw = (
         );
     }
 
-    // Un elemento que solo lleva la lista de una marca aporta sus elementos a esta
-    // misma lista, igual que en el Word (I-155).
     const mark = listItemMark(node);
     if (mark) {
         const rendered = draw(mark, context, `${path}-0-0`);
@@ -310,21 +299,15 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
     background: var(--document-paper);
     overflow-wrap: break-word;
 }
-/*
- * Las celdas no desbordan: primero se separa en sílabas con guion (español) y,
- * solo si una palabra aún no cabe, se corta donde haga falta.
- */
 .template-document-view :deep(td),
 .template-document-view :deep(th) {
     overflow-wrap: break-word;
     word-break: normal;
     hyphens: auto;
     -webkit-hyphens: auto;
-    /* Solo se silabean palabras de 8+ letras. */
     hyphenate-limit-chars: 8 4 4;
 }
 .template-document-view[data-preview] {
-    /* The page surfaces supply white; the space between them stays transparent. */
     background: transparent;
 }
 .template-document-view :deep(.document-paragraph) {
@@ -342,7 +325,6 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 .template-document-view :deep(.document-table) {
     border-collapse: collapse;
     width: 100%;
-    /* La vista previa usa la misma geometría que la edición sobre la hoja. */
     table-layout: fixed;
     margin: 8px 0;
 }
@@ -482,8 +464,6 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
     :deep(textarea.document-input) {
     min-height: 4rem;
 }
-/* En el formulario del docente las casillas no se encogen hasta volverse
-   ilegibles: si la tabla no cabe, se desplaza dentro de su marco. */
 .template-document-view[data-presentation='form']
     :deep(.document-table td input.document-input[type='number']) {
     min-width: 4rem;
@@ -499,7 +479,6 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
     :deep(.document-table td textarea.document-input) {
     min-width: 12rem;
 }
-/* Texto libre del docente en modo lectura (I-156). */
 .template-document-view :deep(.free-text-view p) {
     margin: 0 0 0.35em;
 }

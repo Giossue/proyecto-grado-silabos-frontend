@@ -18,11 +18,8 @@ import TemplateTableInlineNode from '@/components/domain/configuration/TemplateT
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
 
 export type TemplateTableExtensionOptions = {
-    /** Nombre visible de un dato automático; nunca se muestra su clave. */
     variableLabel?: (id: string) => string | undefined;
 };
-
-
 
 class ResponsiveTableView extends TableView {
     constructor(
@@ -258,8 +255,6 @@ export const templateTableExtensions = (
         resizable: false,
         renderWrapper: true,
         View: ResponsiveTableView,
-        // Las celdas visibles conservan 20 px por CSS. Una división lógica
-        // puede ser menor cuando otra fila mantiene un borde cercano.
         cellMinWidth: 1,
         lastColumnResizable: false,
     }),

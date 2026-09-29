@@ -30,7 +30,6 @@ export function usePromptInputProvider(props: {
         items.forEach(revokeObjectUrl);
     };
 
-    // Cleanup object URLs to avoid memory leaks
     onBeforeUnmount(() => {
         revokeObjectUrls(files.value);
     });
@@ -70,7 +69,6 @@ export function usePromptInputProvider(props: {
     const addFiles = (incoming: File[] | FileList) => {
         const fileList = Array.from(incoming);
 
-        // Validate Accept
         const accepted = fileList.filter(matchesAccept);
 
         if (fileList.length && accepted.length === 0) {
@@ -82,7 +80,6 @@ export function usePromptInputProvider(props: {
             return;
         }
 
-        // Validate Size
         const withinSize = (f: File) =>
             props.maxFileSize ? f.size <= props.maxFileSize : true;
         const sized = accepted.filter(withinSize);
@@ -96,7 +93,6 @@ export function usePromptInputProvider(props: {
             return;
         }
 
-        // Validate Count
         const currentCount = files.value.length;
         const capacity = props.maxFiles
             ? Math.max(0, props.maxFiles - currentCount)
@@ -194,7 +190,6 @@ export function usePromptInputProvider(props: {
 
         try {
             isLoading.value = true;
-            // Process files (convert blobs to base64 if needed for AI SDK)
             const processedFiles = await Promise.all(
                 submittedFiles.map(async (item) => {
                     if (item.url && item.url.startsWith('blob:')) {

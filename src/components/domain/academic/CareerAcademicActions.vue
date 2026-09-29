@@ -10,8 +10,6 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 
-// Coordinación no edita en sitio: la materia programada se prepara por período. El
-// docente de un paralelo se quita y se asigna otro; el sílabo sigue al paralelo (I-130).
 type CareerAcademicEntity = 'programacion_asignatura' | 'asignacion_docente';
 type CareerAcademicRecord = { id: string; parallels?: { id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }[] };
 

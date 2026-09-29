@@ -161,7 +161,6 @@ describe('academic catalog code fields', () => {
 
     expect(document.body.querySelector<HTMLImageElement>('img[alt="Logo actual de la facultad"]')?.src)
       .toContain('/logos/facultad/faculty-with-logo?v=1');
-    // Con logo no hay zona de arrastre: primero se quita el logo actual.
     expect(document.body.querySelector('#edit-faculty-logo-faculty-with-logo')).toBeNull();
     withLogo.unmount();
   });

@@ -27,7 +27,6 @@ const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const logo = ref<File | null>(null);
-// Quitar el logo actual solo destapa la zona para subir otro; si se cancela, no pasa nada.
 const removeLogo = ref(false);
 const currentLogo = computed(() => Boolean(props.logoUrl) && !removeLogo.value);
 const form = ref({ nombre: '', code: '', faculty_id: '', campus: '', modality: '', starts_on: '', ends_on: '' });
@@ -75,8 +74,6 @@ const submit = async (confirmPurge = false): Promise<void> => {
         emit('saved', result.message);
     } catch (reason) {
         errors.value = reason instanceof ApiError ? reason.errors : {};
-        // Solo el período (semanas lectivas) reinicia sílabos; facultad y carrera son
-        // datos de presentación y se guardan sin confirmar purga (I-127).
         const purgeMessage = props.entity === 'periodo' ? errors.value.purge_required?.[0] : undefined;
         if (purgeMessage) {
             requestPurgeConfirmation(

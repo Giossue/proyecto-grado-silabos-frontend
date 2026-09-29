@@ -14,8 +14,6 @@ import {
 import { cn } from '@/lib/utils';
 import { tableSectionKey } from './context';
 
-// Dos raíces —la fila y su panel—, así que los atributos sueltos se dirigen a mano a la
-// fila; el panel no es parte de la tabla y no debe heredarlos.
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{
@@ -24,8 +22,6 @@ const props = defineProps<{
 
 const section = inject(tableSectionKey, 'header');
 
-// El corte de Tailwind para `sm`. En pantalla ancha la fila es una fila y nada de lo de
-// abajo llega a existir: ni botón, ni panel, ni celdas escondidas.
 const narrow = useMediaQuery('(max-width: 639px)');
 
 const isCard = computed(() => section === 'body' && narrow.value);
@@ -43,13 +39,10 @@ const rowClasses = computed(() =>
 const row = useTemplateRef<HTMLTableRowElement>('row');
 const detail = useTemplateRef<HTMLElement>('detail');
 
-/** Hay datos que la tarjeta no muestra: merece un «Ver más». */
 const expandable = ref(false);
 const open = ref(false);
-/** Primer dato de la fila; encabeza el panel para saber de qué registro se habla. */
 const title = ref('');
 
-/** Nombres de columna, en el orden en que aparecen en el encabezado. */
 const headings = (node: HTMLElement): string[] =>
     Array.from(
         node
@@ -64,13 +57,6 @@ const cellsOf = (node: HTMLElement): HTMLTableCellElement[] =>
         node.querySelectorAll<HTMLTableCellElement>(':scope > td'),
     ).filter((cell) => !('cardMore' in cell.dataset));
 
-/**
- * Copia a cada celda el nombre de su columna y decide cuáles se quedan en la tabla.
- *
- * El nombre ya está escrito una vez en el encabezado; repetirlo en cada celda de las
- * dieciocho tablas sería copiar cien veces algo que puede leerse de donde ya está, y
- * dejaría a la siguiente tabla dependiendo de que alguien se acuerde de hacerlo.
- */
 const annotate = (): void => {
     const node = row.value;
 
@@ -81,15 +67,12 @@ const annotate = (): void => {
     const cells = cellsOf(node);
     const names = headings(node);
 
-    // Fila de «no hay resultados»: ocupa todas las columnas y no describe un registro.
     if (cells.length === 1 && cells[0].hasAttribute('colspan')) {
         expandable.value = false;
 
         return;
     }
 
-    // Las dos primeras columnas se quedan: la primera identifica la fila y la segunda es
-    // la que suele decidir si esa fila interesa. El resto cabe de sobra en el panel.
     const KEPT = 2;
     const hidden = cells.filter(
         (cell, index) =>
@@ -97,10 +80,6 @@ const annotate = (): void => {
             cell.querySelector('[data-slot="table-actions"]') === null,
     ).length;
 
-    /*
-     * El menú de acciones se va al panel solo si ya hay algo que ir a ver. En una tabla
-     * corta, esconderlo obligaría a abrir el panel para llegar a lo único que había.
-     */
     const foldActions = hidden > 0;
 
     cells.forEach((cell, index) => {
@@ -117,8 +96,6 @@ const annotate = (): void => {
         cell.dataset.cardHidden = index >= KEPT ? 'true' : 'false';
     });
 
-    // El encabezado esconde las mismas columnas: una cabecera sin celdas debajo dejaría
-    // la tabla descuadrada.
     Array.from(
         node
             .closest('table')
@@ -133,7 +110,6 @@ const annotate = (): void => {
     title.value = cells[0]?.textContent?.trim() ?? '';
 };
 
-/** El panel repite las celdas: las suyas necesitan su propio rótulo y sin esconder nada. */
 const annotateDetail = (): void => {
     const node = detail.value;
 
@@ -161,7 +137,6 @@ onMounted(() => {
     void nextTick(annotate);
 });
 
-// Llega otra página de resultados o cambia un filtro: las celdas son otras.
 onUpdated(annotate);
 
 watch(open, (isOpen) => {
@@ -180,10 +155,6 @@ watch(open, (isOpen) => {
     >
         <slot />
 
-        <!--
-            Columna que solo existe en pantalla estrecha, al final de la fila y sin
-            encabezado propio: no es un dato, es la puerta al resto de la fila.
-        -->
         <td v-if="isCard && expandable" data-card-more class="p-1">
             <Button
                 type="button"
@@ -198,11 +169,6 @@ watch(open, (isOpen) => {
         </td>
     </tr>
 
-    <!--
-        El panel vuelve a dibujar las mismas celdas en vez de copiar su texto. Copiarlo
-        dejaría los enlaces muertos y el menú de acciones sin efecto: lo que se vería
-        sería una fotografía de la fila, no la fila.
-    -->
     <Sheet v-if="isCard && expandable" v-model:open="open">
         <SheetContent
             side="bottom"
@@ -214,11 +180,6 @@ watch(open, (isOpen) => {
                     Todos los datos de la fila y sus acciones.
                 </SheetDescription>
             </SheetHeader>
-            <!--
-                Fuera de la tabla las celdas pierden el tamaño de letra que les daba la
-                tabla y cada dato se dibujaba más grande que en la lista. Aquí se les
-                devuelve, para que el panel y la fila se lean igual.
-            -->
             <div ref="detail" data-card-detail class="text-sm">
                 <slot />
             </div>

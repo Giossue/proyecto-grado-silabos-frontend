@@ -3,11 +3,6 @@ import { useMediaQuery } from '@vueuse/core';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { clampIntensity, type AvatarEmotion, type AvatarMode } from './types';
 
-/**
- * Avatar SVG del asistente. El SVG va inline para animar sus grupos por ID;
- * el diseño y los colores son los de robot_icon_rive_ready.svg sin cambios.
- * Solo se añade el grupo envolvente `robot_motion` para los rebotes únicos.
- */
 const props = withDefaults(defineProps<{
     mode?: AvatarMode;
     emotion?: AvatarEmotion;
@@ -120,10 +115,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/*
- * Todas las transformaciones usan el sistema de coordenadas del viewBox para
- * que los orígenes coincidan con las piezas del diseño original.
- */
 .robot-avatar {
     --i: var(--avatar-intensity, 0.6);
     overflow: visible;
@@ -158,7 +149,6 @@ onBeforeUnmount(() => {
     transform-box: view-box;
 }
 
-/* Bocas: solo una visible a la vez */
 #mouth > * {
     opacity: 0;
     transition: opacity 140ms ease-out;
@@ -178,13 +168,11 @@ onBeforeUnmount(() => {
     animation: talk-open 360ms steps(1, end) infinite;
 }
 
-/* Parpadeo: scaleY 1 → 0.08 → 1 en ~190 ms */
 [data-blinking] #eye_left,
 [data-blinking] #eye_right {
     animation: blink 190ms ease-in-out;
 }
 
-/* Modos */
 [data-mode='idle'] #robot_root {
     animation: idle-float 4s ease-in-out infinite;
 }
@@ -217,7 +205,6 @@ onBeforeUnmount(() => {
     animation: speak-nod 720ms ease-in-out infinite;
 }
 
-/* Emociones */
 [data-emotion='happy'] #robot_motion {
     animation: bounce 520ms cubic-bezier(0.3, 0.7, 0.4, 1);
 }
@@ -328,7 +315,6 @@ onBeforeUnmount(() => {
     }
 }
 
-/* Movimiento reducido: sin movimiento continuo ni rebotes, solo expresiones */
 @media (prefers-reduced-motion: reduce) {
     .robot-avatar *,
     .robot-avatar *::before {

@@ -12,6 +12,5 @@ const { breadcrumbs = [] } = defineProps<{
     <AppLayout :breadcrumbs="breadcrumbs">
         <slot />
     </AppLayout>
-    <!-- Diálogo único: el servidor avisa cuando un cambio borra sílabos en curso. -->
     <PurgeConfirmationDialog />
 </template>

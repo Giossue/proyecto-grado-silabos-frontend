@@ -1,7 +1,3 @@
-/**
- * Contrato público del avatar del asistente. El resto de la aplicación solo
- * conoce estos tipos; la implementación (SVG hoy, Rive mañana) queda oculta.
- */
 export type AvatarMode = 'idle' | 'listening' | 'thinking' | 'speaking';
 
 export type AvatarEmotion = 'neutral' | 'happy' | 'surprised' | 'confused';
@@ -12,7 +8,6 @@ export interface AvatarState {
     intensity?: number;
 }
 
-/** Pista opcional que el agente puede incluir en su respuesta. */
 export interface AgentAvatarHint {
     emotion?: AvatarEmotion | string | null;
     intensity?: number | null;

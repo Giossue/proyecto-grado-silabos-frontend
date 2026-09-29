@@ -2,7 +2,6 @@
 
 @import 'tw-animate-css';
 
-/* Instrument Sans empaquetada: sin descargas en el build ni en el navegador. */
 @import '@fontsource/instrument-sans/400.css';
 @import '@fontsource/instrument-sans/500.css';
 @import '@fontsource/instrument-sans/600.css';
@@ -72,25 +71,14 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
 
-    /* Contorno de las superficies: cada tema decide su intensidad. */
     --color-surface-ring: var(--surface-ring);
 
-    /* Escala de sombra del sistema: cada tema define la sombra completa de cada
-       nivel, así que ajustarla o apagarla es cambiar un valor. */
     --shadow-control: var(--shadow-control-value);
     --shadow-surface: var(--shadow-surface-value);
     --shadow-menu: var(--shadow-menu-value);
     --shadow-modal: var(--shadow-modal-value);
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
 @layer base {
     *,
     ::after,
@@ -118,10 +106,6 @@
     --card-foreground: hsl(0 0% 3.9%);
     --popover: hsl(0 0% 100%);
     --popover-foreground: hsl(0 0% 3.9%);
-    /*
-     * Azul institucional #002341, aclarado. El tono exacto es casi negro y el botón se
-     * veía gris oscuro, no azul. En HSL porque la prueba de contraste lee estos pares.
-     */
     --primary: hsl(207.7 100% 30%);
     --primary-foreground: hsl(0 0% 98%);
     --secondary: hsl(0 0% 92.1%);
@@ -164,7 +148,6 @@
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 94%);
 
-    /* Paleta fija del documento académico; no depende del tema de la aplicación. */
     --document-paper: hsl(0 0% 100%);
     --document-text: hsl(0 0% 0%);
     --document-border: hsl(0 0% 50%);
@@ -176,7 +159,6 @@
     --document-muted-text: hsl(0 0% 35%);
     --document-accent: hsl(205 100% 38%);
     --document-editor-foreground: hsl(218 28% 17%);
-    /* Marcas de la hoja (I-155): cuatro tonos suaves y distinguibles. */
     --document-mark-automatic-background: hsl(172 55% 93%);
     --document-mark-automatic-border: hsl(174 60% 36%);
     --document-mark-teacher-background: hsl(214 100% 95%);
@@ -210,10 +192,6 @@
     --card-foreground: hsl(0 0% 98%);
     --popover: hsl(0 0% 11%);
     --popover-foreground: hsl(0 0% 98%);
-    /*
-     * El mismo azul, aclarado. Sobre un fondo casi negro, #002341 se confunde con el
-     * fondo: el texto se leería, pero el botón no se vería como botón.
-     */
     --primary: hsl(207.7 100% 35%);
     --primary-foreground: hsl(0 0% 98%);
     --secondary: hsl(0 0% 14.9%);
@@ -234,7 +212,6 @@
     --border: hsl(0 0% 16%);
     --input: hsl(0 0% 24%);
     --ring: hsl(0 0% 83.1%);
-    /* En oscuro no se usan sombras: la separación la dan el color y el borde. */
     --surface-ring: rgb(255 255 255 / 0.1);
     --shadow-control-value: 0 0 #0000;
     --shadow-surface-value:
@@ -256,7 +233,6 @@
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 9%);
 
-    /* El contenido académico conserva su paleta aunque la interfaz esté en oscuro. */
     --document-paper: hsl(0 0% 100%);
     --document-text: hsl(0 0% 0%);
     --document-border: hsl(0 0% 50%);
@@ -268,7 +244,6 @@
     --document-muted-text: hsl(0 0% 35%);
     --document-accent: hsl(205 100% 38%);
     --document-editor-foreground: hsl(218 28% 17%);
-    /* Marcas de la hoja (I-155): cuatro tonos suaves y distinguibles. */
     --document-mark-automatic-background: hsl(172 55% 93%);
     --document-mark-automatic-border: hsl(174 60% 36%);
     --document-mark-teacher-background: hsl(214 100% 95%);
@@ -290,9 +265,6 @@
     --curriculum-unit-5-foreground: hsl(152 45% 14%);
 }
 
-/* En oscuro se conserva la misma jerarquía del tema claro: el lienzo contiene
-   ciclos apenas más oscuros que las tarjetas. Los laterales conservan el tinte
-   primario suave definido para ambos temas. */
 .dark .curriculum-canvas {
     --curriculum-canvas-background: hsl(0 0% 5.5%);
     --curriculum-lane: hsl(0 0% 6%);
@@ -327,41 +299,21 @@
 }
 
 @layer components {
-    /*
-     * Tablas resumidas en pantalla estrecha.
-     *
-     * Una tabla de siete columnas en un móvil deja fuera cinco: hay que arrastrar de lado
-     * para leer una fila y, al llegar al final, ya no se ve de quién se hablaba. Sigue
-     * siendo una tabla —con su encabezado y sus filas—, pero solo con las dos columnas
-     * que identifican el registro; el resto se consulta en un panel.
-     */
     @media (width < 40rem) {
         table[data-cards='true'] :is(th, td)[data-card-hidden='true'] {
             display: none;
         }
 
-        /*
-         * Con dos columnas hay sitio para que un nombre largo baje de línea. Mantener el
-         * texto en una sola línea es lo que devolvía el arrastre lateral que se quería
-         * evitar.
-         */
         table[data-cards='true'] > :is(thead, tbody) > tr > :is(th, td) {
             white-space: normal;
         }
 
-        /*
-         * «Ver más» acompaña siempre a su fila. La regla de más abajo solo fija la
-         * última columna en las tablas que tienen menú de acciones, y siete de las
-         * dieciocho no lo tienen: allí la puerta al detalle se iba de la pantalla al
-         * arrastrar, justo cuando ya no se veía de qué fila era.
-         */
         table[data-cards='true'][data-overflows='true']
             > tbody
             > tr
             > td[data-card-more] {
             position: sticky;
             right: 0;
-            /* Sin fondo propio, las celdas que pasan por debajo se transparentarían. */
             background-color: var(--color-card);
             border-left: 1px solid var(--color-surface-ring);
         }
@@ -385,14 +337,6 @@
         }
     }
 
-    /*
-     * Panel de detalle: las mismas celdas de la fila, una debajo de otra. Las celdas se
-     * dibujan fuera de una tabla, así que hay que devolverles un reparto propio.
-     *
-     * El rótulo va encima y el dato debajo, a todo lo ancho. Enfrentados en la misma
-     * línea, el dato se quedaba con lo que sobraba: un nombre con su cargo debajo se
-     * aplastaba contra el borde y cada fila parecía de un tamaño distinto.
-     */
     [data-card-detail] > td {
         display: block;
         border-bottom: 1px solid var(--color-surface-ring);
@@ -415,12 +359,10 @@
         line-height: var(--text-xs--line-height);
     }
 
-    /* El primer dato ya encabeza el panel: repetirlo debajo sobra. */
     [data-card-detail] > td[data-card-index='0'] {
         display: none;
     }
 
-    /* El menú de acciones no es un dato: no lleva rótulo y cierra el panel. */
     [data-card-detail] > td[data-card-role='actions'] {
         display: flex;
         justify-content: flex-end;
@@ -430,27 +372,10 @@
         content: none;
     }
 
-    /*
-     * Columna de acciones fija al desplazar la tabla en horizontal.
-     *
-     * En un móvil la tabla se sale de la pantalla y el menú de tres puntos queda fuera de
-     * vista: hay que arrastrar hasta el final para actuar sobre una fila, y al llegar ya
-     * no se ve de qué fila se trata. Anclada a la derecha, la acción acompaña siempre a
-     * su fila.
-     *
-     * Se aplica sola en las tablas que tienen menú de acciones, detectado con `:has()`.
-     * Así una tabla nueva lo hereda sin declarar nada, y una sin acciones no fija una
-     * columna de datos por error.
-     */
     table[data-overflows='true']:has([data-slot='table-actions'])
         :is(th, td):last-child {
         position: sticky;
         right: 0;
-        /*
-         * Separación de un píxel con el mismo anillo que usan las demás superficies. Un
-         * degradado ancho se leía como una mancha clara en tema oscuro: aquí se separa
-         * por color y anillo, no por sombra.
-         */
         border-left: 1px solid var(--color-surface-ring);
     }
 
@@ -486,27 +411,12 @@
         background-color: var(--color-muted);
     }
 
-    /*
-     * El degradado del borde derecho sobra cuando esa esquina la ocupa la columna fija:
-     * se pintaría encima y la dejaría apagada. El del borde izquierdo se conserva.
-     */
     div:has(> * > table[data-overflows='true']:has([data-slot='table-actions']))
         > [data-table-edge='right'] {
         display: none;
     }
 }
 
-/*
- * Puntero del lienzo de la malla.
- *
- * Desplazar el lienzo es moverlo en las cuatro direcciones, así que ahí va la cruz
- * de flechas; la mano abierta queda reservada para lo que de verdad se agarra y se
- * suelta, que son las tarjetas de materia.
- *
- * Fuera de `@layer` y con una clase de más: el CSS de Vue Flow tampoco está en una
- * capa, así que una regla en capa —cualquier utilidad de Tailwind— perdería contra
- * la suya por mucho que llegue después.
- */
 .vue-flow .vue-flow__pane.draggable,
 .vue-flow .vue-flow__pane.dragging {
     cursor: move;

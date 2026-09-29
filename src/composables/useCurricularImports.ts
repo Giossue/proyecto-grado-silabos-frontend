@@ -2,13 +2,8 @@ import { computed, onUnmounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { createCurricularImport, getCurricularImport, getCurricularImports, retryCurricularImport, type CurricularImportDetail, type CurricularImportIndex } from '@/api/curricular-imports';
 
-/** Una importación sigue en curso hasta guardarse o descartarse: se retoma al volver. */
 const IN_PROGRESS = ['pendiente', 'en_ejecucion', 'lista', 'fallida'];
 
-/**
- * Proyecto de carrera (COR-16): datos confirmados de la carrera y, como mucho, una
- * importación en curso. No hay historial: al entrar se retoma el paso donde quedó.
- */
 export function useCurricularImports(careerId: () => string) {
   const index = ref<CurricularImportIndex | null>(null);
   const detail = ref<CurricularImportDetail | null>(null);
@@ -17,7 +12,6 @@ export function useCurricularImports(careerId: () => string) {
   const error = ref<string | null>(null);
   const errors = ref<Record<string, string[]>>({});
   const pending = computed(() => detail.value?.status === 'pendiente' || detail.value?.status === 'en_ejecucion');
-  /** Paso del asistente: 1 documentos, 2 análisis, 3 revisión, 4 listo. */
   const step = computed<1 | 2 | 3 | 4>(() => {
     if (!detail.value) return 1;
     if (detail.value.status === 'lista') return 3;
@@ -45,7 +39,6 @@ export function useCurricularImports(careerId: () => string) {
       if (request === sequence) fail(reason, 'No se pudo consultar el procesamiento. Vuelva a abrir la importación para continuar.');
     }
   };
-  /** Carga los datos de la carrera y retoma la importación en curso, si la hay. */
   const load = async (): Promise<void> => {
     stop();
     const request = ++sequence;
@@ -63,7 +56,6 @@ export function useCurricularImports(careerId: () => string) {
       if (request === sequence) fail(reason, 'No se pudieron cargar los datos del Proyecto de carrera.');
     } finally { if (request === sequence) loading.value = false; }
   };
-  /** Vuelve a leer los datos confirmados sin tocar el paso del asistente. */
   const refresh = async (): Promise<void> => {
     try { index.value = await getCurricularImports(); } catch (reason) { fail(reason, 'No se pudieron actualizar los datos del Proyecto de carrera.'); }
   };
@@ -101,12 +93,10 @@ export function useCurricularImports(careerId: () => string) {
       if (request === sequence) fail(reason, 'No se pudo reintentar el análisis de estos documentos.');
     } finally { if (request === sequence) uploading.value = false; }
   };
-  /** Datos guardados: el asistente muestra «Listo» y la tabla se actualiza. */
   const applied = async (result: CurricularImportDetail): Promise<void> => {
     detail.value = result;
     await refresh();
   };
-  /** Tras guardar o descartar, el siguiente ingreso empieza por los documentos. */
   const startOver = (): void => { stop(); sequence += 1; detail.value = null; error.value = null; errors.value = {}; };
   onUnmounted(() => { stop(); sequence += 1; });
 

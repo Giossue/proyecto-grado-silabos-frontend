@@ -37,7 +37,6 @@ export const rememberIntendedRoute = (value: unknown, recognized = true): void =
   try {
     window.sessionStorage.setItem(STORAGE_KEY, value);
   } catch {
-    // Storage can be disabled by browser policy; navigation remains safe.
   }
 };
 
@@ -55,6 +54,5 @@ export const clearIntendedRoute = (): void => {
   try {
     window.sessionStorage.removeItem(STORAGE_KEY);
   } catch {
-    // Ignore unavailable storage during logout/bootstrap.
   }
 };

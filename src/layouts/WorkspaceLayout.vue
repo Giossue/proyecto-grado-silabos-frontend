@@ -17,10 +17,6 @@ import { pageTitleKey } from '@/composables/usePageBreadcrumbs';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
 
-/*
- * Antes de elegir un ámbito no hay menú lateral (I-121): solo se ofrece elegir, revisar
- * los avisos, cambiar el tema o cerrar la sesión. El título lo escribe la página.
- */
 const pageTitle = ref('');
 provide(pageTitleKey, pageTitle);
 

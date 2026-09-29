@@ -2,10 +2,6 @@
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-/**
- * Forma de una parte nueva (I-156): Texto libre del docente o Contenido de la plantilla
- * que arma Administración en la hoja con sus marcas.
- */
 withDefaults(defineProps<{
     id: string;
     forms: { value: string; label: string }[];

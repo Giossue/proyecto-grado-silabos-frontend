@@ -21,9 +21,6 @@ const normalizedValue = (value: unknown): number | string => {
     return value;
 };
 
-// La base de datos entrega los decimales como cadena («20.00»); convertirlos a
-// número descarta los ceros de relleno sin perder decimales reales («4.50» → 4.5).
-// Solo aplica al cargar: normalizar mientras se teclea borraría el punto de «4.».
 const storedValue = (
     field: FixedSubjectField,
     value: unknown,

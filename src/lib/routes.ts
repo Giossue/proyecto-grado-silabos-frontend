@@ -1,10 +1,3 @@
-/**
- * Contrato de navegación de la SPA.
- *
- * Los clientes de API mantienen sus propias rutas HTTP. Este módulo solo describe
- * destinos visibles del navegador y centraliza la construcción de parámetros para
- * evitar enlaces divergentes entre páginas y componentes.
- */
 export type RoleCode = 'administrador' | 'coordinador' | 'docente';
 
 const segment = (value: string): string => encodeURIComponent(value);
@@ -111,7 +104,6 @@ export const roleHome = (role: RoleCode | undefined): string => {
       : paths.teacher.panel;
 };
 
-/** Destino inicial después de autenticarse o seleccionar un rol. */
 export const roleEntry = (role: RoleCode | undefined): string => {
   if (!role) return paths.roleSelection;
   return role === 'docente' ? paths.teacher.syllabi : roleHome(role);
@@ -132,12 +124,10 @@ export const roleSetting = (role: RoleCode, setting: RoleScopedSetting): string 
   return `${prefix}/configuracion/${setting === 'profile' ? 'perfil' : 'seguridad'}`;
 };
 
-/** Metadatos mínimos compartidos por auditorías y guards. */
 export type RouteDefinition = {
   name: string;
   path: string;
   component?: string;
-  /** Estados lógicos que comparte una ruta física consolidada. */
   states?: readonly string[];
   breadcrumb?: string;
   shortcut?: 'panel' | 'notifications' | 'profile' | 'security' | 'documents';
@@ -153,7 +143,6 @@ const admin = { ...authenticated, roles: ['administrador'] as const };
 const coordinator = { ...authenticated, roles: ['coordinador'] as const };
 const teacher = { ...authenticated, roles: ['docente'] as const };
 
-/** Registro único de destinos visibles. Los patrones dinámicos usan la sintaxis de Vue Router. */
 export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'login', path: paths.login, component: 'LoginPage', guest: true },
   { name: 'password-recovery', path: paths.passwordRecovery, component: 'PasswordRecoveryPage', guest: true },

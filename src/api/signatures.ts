@@ -1,7 +1,6 @@
 import { api, apiBlob } from '@/api/client';
 import type { StampPosition } from '@/lib/signature/signPdf';
 
-/** I-139. Firma electrónica de la revisión aprobada (el .p12 y su clave nunca viajan). */
 export type SignatureRole = 'docente' | 'coordinacion';
 export type SignatureState = 'sin_documento' | 'pendiente_docente' | 'pendiente_coordinacion' | 'firmado' | 'anulado';
 export type SignatureStatus = {
@@ -11,13 +10,11 @@ export type SignatureStatus = {
   can_sign: boolean;
   artifact_id: string | null;
   document: { sha256: string; size: number } | null;
-  /** Posición del sello en puntos PDF (origen abajo a la izquierda); solo cuando puede firmar. */
   stamp: StampPosition | null;
   signatures: Array<{ role: SignatureRole; signer: string; certificate_holder: string; certificate_issuer: string; signed_at: string }>;
 };
 
 export const getSignatureStatus = (revisionId: string) => api<SignatureStatus>(`/revisions/${revisionId}/signature`);
-/** PDF vigente: el exportado o el último firmado. */
 export const downloadSignaturePdf = (revisionId: string) => apiBlob(`/revisions/${revisionId}/signature/pdf`);
 export const submitSignature = (revisionId: string, signedPdf: Blob, baseSha256: string) => {
   const body = new FormData();

@@ -68,13 +68,11 @@ describe('CoordinationCurricularProjectPage', () => {
 
     expect(document.querySelector('[role="tablist"]')).toBeNull();
     expect(document.body.textContent).not.toContain('Historial');
-    // Todo dato es por asignatura (I-160): una sola tabla, sin «Datos de toda la carrera».
     expect(document.querySelectorAll('table')).toHaveLength(1);
     expect(document.body.textContent).not.toContain('toda la carrera');
     const headers = Array.from(document.querySelectorAll('th')).map((cell) => cell.textContent?.trim());
     expect(headers).toEqual(['Asignatura', 'Bibliografía básica', 'Perfil de egreso']);
     const rows = Array.from(document.querySelectorAll('tbody tr')).map((row) => row.textContent ?? '');
-    // Asignaturas en orden alfabético; lo que falta se dice sin etiquetas.
     expect(rows.findIndex((row) => row.includes('Calidad'))).toBeLessThan(rows.findIndex((row) => row.includes('Redes')));
     expect(rows.find((row) => row.includes('Calidad'))).toContain('Pressman, Ingeniería del software.');
     expect(rows.find((row) => row.includes('Redes'))).toContain('Sin dato');

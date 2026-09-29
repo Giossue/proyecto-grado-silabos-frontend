@@ -1,4 +1,3 @@
-// @vitest-environment node
 import forge from 'node-forge';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -15,7 +14,6 @@ const samplePdf = async (useObjectStreams: boolean): Promise<Uint8Array> => {
   return document.save({ useObjectStreams });
 };
 
-/** Comprueba el CMS del `ByteRange` nuevo con node-forge (lo que hace OpenSSL en el backend). */
 const lastSignature = (signed: Uint8Array) => {
   const body = text(signed);
   const match = [...body.matchAll(/\/ByteRange \[(\d+) (\d+) (\d+) (\d+)\s*\]/g)].at(-1)!;
@@ -70,7 +68,6 @@ describe('firma incremental en el navegador', () => {
     expect(verifies(second.pdf)).toBe(true);
     expect([...text(second.pdf).matchAll(/\/FT \/Sig/g)]).toHaveLength(2);
 
-    // pdf-lib vuelve a abrir el resultado y ve ambos campos en el formulario.
     const reopened = await PDFDocument.load(second.pdf);
     expect(reopened.getForm().getFields()).toHaveLength(2);
   });

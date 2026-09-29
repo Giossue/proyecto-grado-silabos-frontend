@@ -144,12 +144,10 @@ const documentFor = (block: TemplateFieldContainer) =>
     block.document ?? defaultDocument(block, props.identificationDesign);
 const fieldsFor = (block: TemplateFieldContainer) =>
     templatePreviewFields(block.fields);
-/** Las partes sin nombre no llevan subtítulo ni número, igual que en el Word. */
 const partNumber = (section: TemplateSection, index: number): number =>
     section.blocks
         .slice(0, index + 1)
         .filter((block) => block.title.trim() !== '').length;
-/** Toda parte se edita sobre la hoja: texto, listas y tablas mezclan marcas (I-155). */
 const editableOnSheet = (block: TemplateFieldContainer): boolean =>
     block.content_type !== 'institutional' ||
     nodesOfType(documentFor(block), 'table').length > 0;
@@ -159,10 +157,6 @@ type SheetGroup = {
     sections: { section: TemplateSection; index: number }[];
 };
 
-/**
- * Secciones seguidas con la misma orientación comparten hojas. Una sección con
- * hoja horizontal abre su propio grupo, igual que en el documento Word.
- */
 const sheetGroups = computed<SheetGroup[]>(() => {
     const groups: SheetGroup[] = [];
 

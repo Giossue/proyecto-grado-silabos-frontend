@@ -39,10 +39,6 @@ import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type { TemplateFieldContainer } from '@/types/configuration';
 
-/**
- * Propiedades de una parte (I-158): solo su nombre y la orientación de la hoja. Lo que
- * llena el docente, sus nombres y sus condiciones se definen en la hoja misma.
- */
 const props = defineProps<{
     templateId: string;
     sectionTitle: string;
@@ -63,8 +59,6 @@ const openEdit = (): void => {
 
 const save = (): void => {
     const primary = props.field.fields[0];
-    // Una parte con hoja guarda nombre y orientación junto con su diseño; una parte
-    // anterior sin hoja los guarda en su pregunta.
     if (!props.field.document && !primary) {
         toast.error('Recargue la página e intente de nuevo.');
 

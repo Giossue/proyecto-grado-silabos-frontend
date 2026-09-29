@@ -95,8 +95,6 @@ const summaryLabel = (fieldId: string, label: string): string =>
   props.fixedFields.find((field) => field.id === fieldId)?.system_label ??
   label;
 
-// La leyenda y el resumen se arman una sola vez y se reparten entre el panel de
-// escritorio y el desplegable de móvil.
 const legendUnits = computed(() =>
   props.organizationUnits.map((option) => ({
     unit: option.label,
@@ -174,7 +172,6 @@ const laneWidth = computed(() => {
     },
   ).reduce((widest, width) => Math.max(widest, width), 0);
 
-  // Los 200px extra reservan espacio para las columnas de totales del nivel.
   return Math.max(1120, widestCycle + 200);
 });
 
@@ -256,8 +253,6 @@ const synchronizeNodePositions = async (): Promise<void> => {
   nodes.value = nextNodes;
   setNodes(nextNodes);
   await nextTick();
-  // setNodes conserva computedPosition de los nodos existentes. El mismo
-  // posicionamiento debe aplicarse al estado visual interno de Vue Flow.
   nextNodes
     .filter((item) => item.type === "subject")
     .forEach((item) => {
@@ -423,7 +418,6 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     return;
   }
 
-  // La vista previa se conserva hasta que la consulta refresque la malla.
   savingLayout.value = true;
   await synchronizeNodePositions();
   try {
@@ -453,12 +447,6 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     :class="cn(fullScreen && 'h-[calc(100dvh-5.5rem)]', !fullScreen && 'h-[76vh]')"
     :aria-label="editing ? 'Editor interactivo de la malla' : 'Vista de la malla'"
   >
-    <!--
-            Panel al estilo del pie de la malla institucional: leyenda de
-            relaciones y de unidades de organización curricular, más el resumen de
-            totales de la malla completa. En móvil taparía media malla, así que
-            ahí se repliega tras un botón y se consulta cuando hace falta.
-        -->
     <div class="absolute top-3 right-3 z-10 max-sm:hidden">
       <CurriculumLegendPanel :units="legendUnits" :rows="summaryRows" />
     </div>

@@ -49,10 +49,8 @@ export type SyllabusDetail = {
   period: string;
   state: SyllabusRow["state"];
   version_bloqueo: number;
-  /** El docente puede escribir ahora (convocatoria en curso y asignación vigente). */
   editable?: boolean;
   edit_block_reason?: string | null;
-  /** Revisión aprobada vigente (solo con el sílabo aprobado); se usa para la firma electrónica. */
   approved_revision_id?: string | null;
   iniciado_en: string | null;
   parallels: string[];
@@ -92,12 +90,10 @@ export type SyllabusField = {
   options: Array<{ value: string; label: string }>;
   options_source?: string | null;
   options_sources?: string[];
-  /** «Mostrar solo si»: otra parte de selección y su valor; null es «Siempre». */
   show_when?: { key: string; value: string } | null;
   required: boolean;
   inherited: boolean;
   teacher_editable: boolean;
-  /** Texto libre (I-156): documento con párrafos, listas y tablas simples. */
   value: string | number | boolean | string[] | DocumentNode | null;
 };
 
@@ -119,7 +115,6 @@ export type AiChatMessage = {
   error: string | null;
   created_at: string;
   citations: AiChatCitation[];
-  /** Pista opcional de expresión declarada por el agente. */
   avatar?: AgentAvatarHint | null;
 };
 

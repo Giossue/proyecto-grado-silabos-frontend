@@ -11,10 +11,6 @@ import {
 } from '@/components/ui/dialog';
 import { usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
 
-/*
- * Un solo diálogo para toda la aplicación: aparece cuando el servidor avisa que un
- * cambio va a reemplazar sílabos. Confirmar repite la petición ya confirmada.
- */
 const { open, message, confirm, cancel } = usePurgeConfirmation();
 </script>
 

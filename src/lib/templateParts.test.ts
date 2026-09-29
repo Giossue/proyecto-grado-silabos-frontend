@@ -25,7 +25,6 @@ describe('templateParts', () => {
     it('muestra los datos por su nombre, nunca por su clave', () => {
         expect(inlineNodeLabel('variable', { id: 'carrera', label: 'carrera' }, () => 'Nombre de la carrera')).toBe('Nombre de la carrera');
         expect(inlineNodeLabel('variable', { id: 'carrera', label: 'carrera' })).toBe('');
-        // Marcas de la hoja (I-155): se ven por su tipo; el nombre interno queda en la ayuda.
         expect(inlineNodeLabel('column', { key: 'horas_acd', label: 'Horas ACD' })).toBe('Docente');
         expect(inlineNodeLabel('field', { key: 'formacion', label: 'Formación', kind: 'texto_largo' })).toBe('Docente');
         expect(inlineNodeLabel('field', { key: 'discapacidad', label: 'Discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'] })).toBe('Docente: Sí o No');

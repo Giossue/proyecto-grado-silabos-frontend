@@ -21,8 +21,6 @@ const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false); const errors = ref<Record<string, string[]>>({});
 const form = ref({ nombre: '', correo_electronico: '', active: true, role_code: '', career_id: '' });
-// La coordinación se nombra solo desde Carreras (Asignar/Reemplazar coordinador); aquí
-// únicamente se agrega docencia, y nunca a una cuenta de Administración.
 const assignableRoles = computed(() => props.user.roles.some((role) => role.code === 'administrador')
     ? []
     : props.roles.filter((role) => role.codigo === 'docente'));

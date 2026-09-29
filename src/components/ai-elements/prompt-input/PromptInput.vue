@@ -43,7 +43,6 @@ function callListener<T>(listener: unknown, payload: T) {
     }
 }
 
-// --- Dual-mode context handling ---
 const inheritedContext = inject(PROMPT_INPUT_KEY, null);
 const localContext = inheritedContext
     ? null

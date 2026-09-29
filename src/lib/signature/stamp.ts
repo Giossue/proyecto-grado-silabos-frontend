@@ -1,16 +1,9 @@
 import QRCode from 'qrcode';
 
-/**
- * I-139. Sello visible como el de FirmaEC: QR a la izquierda y, a la derecha, en letra
- * monoespaciada, «Validar únicamente en FirmaEC.», «Firmado electrónicamente por:» y el
- * nombre del titular en negrita. Todo el texto va en WinAnsi como cadena hexadecimal,
- * así el flujo queda en ASCII.
- */
 export type StampText = {
   holder: string;
   reason: string;
   location: string;
-  /** Fecha ya formateada, p. ej. 2026-09-24T10:15:00-05:00. */
   date: string;
 };
 
@@ -29,7 +22,6 @@ const number = (value: number): string => {
   return fixed.replace(/\.?0+$/, '') || '0';
 };
 
-/** Texto a WinAnsi (Latin-1 coincide en los acentos del castellano) como `<hex>`. */
 export const winAnsiHex = (text: string): string => {
   let hex = '';
   for (const char of text.normalize('NFC')) {
@@ -54,7 +46,6 @@ const wrap = (text: string, perLine: number): string[] => {
 
 const COURIER_WIDTH = 0.6;
 
-/** Contenido del Form XObject del sello (espacio 0 0 width height). */
 export function stampContent(text: StampText, width: number, height: number): string {
   const ops: string[] = [];
   const qr = QRCode.create(stampQrText(text), { errorCorrectionLevel: 'M' });

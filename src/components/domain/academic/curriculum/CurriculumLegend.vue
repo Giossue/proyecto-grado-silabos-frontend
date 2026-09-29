@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue';
 
-/*
- * Leyenda de relaciones y de unidades de organización curricular, más el resumen
- * de totales. Vive aparte porque se dibuja en dos sitios: el panel flotante del
- * lienzo en pantalla ancha y el desplegable del botón en móvil.
- */
 defineProps<{
     units: { unit: string; style: CSSProperties }[];
     rows: { id: string; label: string; value: string }[];

@@ -9,7 +9,6 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 const wrappers: Array<ReturnType<typeof mount>> = [];
 afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
 
-// Sin TooltipProvider externo: el formulario del docente no tiene uno y los botones deben verse igual.
 const mountEditor = (modelValue: DocumentNode | null = null) => {
     const wrapper = mount({
         components: { FreeTextEditor },

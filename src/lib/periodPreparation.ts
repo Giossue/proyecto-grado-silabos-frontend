@@ -8,10 +8,8 @@ export type PreparationRow = {
   parallels: ParallelDraft[];
 };
 
-/** Jornada con la que nace cada paralelo nuevo: el coordinador solo corrige lo distinto. */
 export const DEFAULT_SHIFT = 'matutina';
 
-/** Todo paralelo necesita código y jornada, sin códigos repetidos en la misma materia. */
 export function preparationProblem(rows: PreparationRow[]): string | null {
   for (const row of rows) {
     if (row.parallels.length === 0) return `${row.name}: agregue al menos un paralelo.`;
@@ -23,7 +21,6 @@ export function preparationProblem(rows: PreparationRow[]): string | null {
   return null;
 }
 
-/** Siguiente letra libre para un paralelo nuevo (A, B, C…). */
 export function nextParallelCode(parallels: ParallelDraft[]): string {
   const used = new Set(parallels.map((parallel) => parallel.code.trim().toUpperCase()));
   for (let index = 0; index < 26; index++) {

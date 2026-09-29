@@ -34,7 +34,6 @@ const props = defineProps<{
   scheduledSubjectLabel: string;
   parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }>;
 }>();
-// saved cierra la hoja; changed refresca la tabla sin cerrarla.
 const emit = defineEmits<{ saved: [message: string]; changed: [message: string] }>();
 const open = defineModel<boolean>("open", { default: false });
 const code = ref("");
@@ -50,7 +49,6 @@ const reset = () => {
   editingId.value = null;
   rowError.value = null;
 };
-// Edición en línea de un paralelo registrado: código y jornada son obligatorios.
 const editingId = ref<string | null>(null);
 const editCode = ref("");
 const editShift = ref(DEFAULT_SHIFT);

@@ -10,7 +10,6 @@ const route = useRoute();
 const usesSyllabusEditorLayout = computed(() =>
     route.meta.requiresAuth === true && route.meta.layout === 'syllabus-editor',
 );
-// Elegir el ámbito ocurre antes del menú lateral: esa pantalla lleva solo una cabecera.
 const usesWorkspaceLayout = computed(() =>
     route.meta.requiresAuth === true && route.meta.layout === 'workspace',
 );

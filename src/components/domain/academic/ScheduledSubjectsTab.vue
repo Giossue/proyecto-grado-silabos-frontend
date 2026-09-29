@@ -37,7 +37,6 @@ const periodRows = computed(() => props.data.scheduledSubjects.filter((item) => 
 type ScheduledRow = ScheduledSubjects["scheduledSubjects"][number];
 const cycleKey = (item: ScheduledRow) => item.subject_cycle === null ? "none" : String(item.subject_cycle);
 const shiftKey = (shift: string | null | undefined) => shift ?? "none";
-// El buscador queda para materia y código; ciclo, paralelo y jornada tienen su propio selector.
 const filter = useClientFilter(periodRows, (item) => [item.subject_name, item.subject_code], {
   ciclo: { matches: (item, value) => cycleKey(item) === value },
   paralelo: { matches: (item, value) => item.parallels.some((parallel) => parallel.code === value) },

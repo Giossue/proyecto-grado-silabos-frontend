@@ -1,6 +1,5 @@
 import forge from 'node-forge';
 
-/** Solo para pruebas: crea un `.p12` autofirmado en memoria (nunca hay llaves reales en el repositorio). */
 export function makeTestP12(holder: string, password: string, validity: { from?: Date; to?: Date } = {}): Uint8Array {
   const keys = forge.pki.rsa.generateKeyPair({ bits: 1024, e: 0x10001 });
   const certificate = forge.pki.createCertificate();

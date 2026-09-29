@@ -46,25 +46,14 @@ onUnmounted(() => {
     if (pageTitle.value === props.title) pageTitle.value = '';
 });
 
-/*
- * El nombre de la pantalla se entrega al encabezado, que es quien lo dibuja. Aquí no se
- * pinta: decirlo en la miga y otra vez como título era decirlo dos veces seguidas.
- */
 const slots = useSlots();
 
-/**
- * Los fragmentos y los `v-if` que no se cumplen aparecen en el árbol del slot, así que
- * contar los nodos tal cual daría acciones que no existen. Se aplanan los fragmentos y se
- * descartan los comentarios, que es en lo que se convierte un `v-if` falso.
- */
 const countActions = (nodes: VNode[]): number =>
     nodes.reduce((total, node) => {
         if (node.type === Fragment) {
             return total + countActions((node.children ?? []) as VNode[]);
         }
 
-        // Un `v-if` sin cumplir deja un comentario, y los comentarios son símbolos igual
-        // que los fragmentos; descartados los fragmentos arriba, el resto no cuenta.
         if (typeof node.type === 'symbol') {
             return total;
         }
@@ -74,20 +63,16 @@ const countActions = (nodes: VNode[]): number =>
 
 const actionCount = computed(() => countActions(slots.actions?.() ?? []));
 
-// Con una sola acción el propio botón hace de botón flotante. Con varias hace falta un
-// disparador que las despliegue, o taparían media pantalla.
 const needsTrigger = computed(() => actionCount.value > 1);
 
 const expanded = ref(false);
 const { hidden } = useScrollDirection();
 const route = useRoute();
 
-// Navegar deja el desplegable abierto sobre una pantalla que ya no es la suya.
 watch(() => route.fullPath, () => {
     expanded.value = false;
 });
 
-// Mientras está desplegado no se esconde: taparía las opciones a medio elegir.
 const floatingHidden = computed(() => hidden.value && !expanded.value);
 </script>
 
@@ -122,11 +107,6 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 </div>
             </div>
 
-            <!--
-                Una sola instancia del slot para las dos presentaciones: duplicarlo
-                repetiría identificadores y estados de formulario. En pantalla ancha es una
-                fila en el encabezado; en móvil, una pila flotante abajo a la derecha.
-            -->
             <div
                 v-if="actionCount > 0"
                 :class="

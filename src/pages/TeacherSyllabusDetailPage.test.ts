@@ -94,7 +94,6 @@ const mountPage = () => mount(TeacherSyllabusDetailPage, {
     stubs: {
       RouterLink: { template: "<a><slot /></a>" },
       SyllabusUnitAssistant: { template: "<div />" },
-      // El editor de Texto libre se prueba aparte; aquí solo importa lo que emite.
       FreeTextEditor: { props: ["modelValue"], emits: ["update:modelValue"], template: "<div />" },
     },
   },
@@ -187,7 +186,6 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.find("#field-field-2").exists()).toBe(false);
     await vi.advanceTimersByTimeAsync(700);
     await flushPromises();
-    // Solo se guarda la respuesta Sí/No; la parte oculta conserva su valor.
     expect(saveTeacherField).toHaveBeenCalledTimes(1);
     expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, false);
   });
@@ -336,7 +334,6 @@ describe("TeacherSyllabusDetailPage", () => {
     await send!.trigger("click");
     await flushPromises();
 
-    // Enviar pide confirmación antes de mandar el sílabo a Coordinación.
     expect(submitTeacherSyllabus).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("¿Enviar a Coordinación?");
     const confirm = Array.from(document.body.querySelectorAll("button")).find((button) => button.textContent?.includes("Enviar a Coordinación"));
@@ -345,8 +342,6 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2);
-    // Sin avisos de validación arriba: la parte queda en rojo y lo que no es de
-    // ninguna parte va al aviso de error.
     expect(wrapper.find(".submit-feedback").exists()).toBe(false);
     expect(buttonNamed(wrapper, "Ir a la primera")).toBeUndefined();
     expect(wrapper.get(".feedback.error").text()).toContain("Falta el dato institucional de créditos.");
@@ -354,7 +349,6 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.text()).not.toContain("Pulse cada una");
     expect(wrapper.get("#field-field-1").attributes("data-invalid")).toBe("true");
 
-    // Al corregir la parte, su aviso rojo desaparece enseguida.
     await wrapper.get("#input-field-1").setValue("Contenido nuevo");
     expect(wrapper.get("#field-field-1").attributes("data-invalid")).toBe("false");
     wrapper.unmount();
@@ -379,7 +373,6 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(startTeacherSyllabus).toHaveBeenCalledWith(pending.id);
-    // Encabezado fijo con el botón para volver y el nombre de la materia.
     expect(wrapper.get("header").text()).toContain("Volver a mis sílabos");
     expect(wrapper.get("header").text()).toContain("Inteligencia Artificial");
     expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();

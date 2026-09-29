@@ -1,13 +1,7 @@
-// @vitest-environment node
 import { readFileSync, writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { signPdf } from '@/lib/signature/signPdf';
 
-/**
- * I-139. Paso de firma de `scripts/signature-e2e.sh`: firma con el módulo del navegador
- * un PDF real y un `.p12` creado con OpenSSL. Solo corre cuando el script define las
- * variables; en `vitest run` normal se omite.
- */
 const input = process.env.SIGN_E2E_INPUT;
 
 describe.skipIf(!input)('firma de extremo a extremo (script)', () => {

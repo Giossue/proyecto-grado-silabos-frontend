@@ -65,7 +65,6 @@ onMounted(load);
     <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 7 : entity === 'periodo' ? 6 : 5" />
 
-        <!-- Un período con convocatorias en curso no se edita: mismo aviso que en la malla y la plantilla. -->
         <ProcessLockAlert v-if="data && entity === 'periodo' && data.lock_reason" />
         <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" @changed="changed" />
     </PageFrame>

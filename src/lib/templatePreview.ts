@@ -1,6 +1,5 @@
 import type { DocumentField } from '@/lib/templateDocument';
 
-// Synthetic preview only: never seed a teacher's answers with these values.
 const samples: Record<string, string> = {
     discapacidad_tiene: 'No',
     discapacidad_tipo: 'No aplica.',
@@ -17,7 +16,6 @@ const sampleText = (key: string): string | undefined =>
 const sampleValue = (field: DocumentField): unknown => {
     const sample = sampleText(field.key);
 
-    // Texto libre (I-156): un párrafo de ejemplo con su formato de documento.
     if (field.type === 'texto_libre') {
         return {
             type: 'doc',
@@ -38,7 +36,6 @@ const sampleValue = (field: DocumentField): unknown => {
         case 'booleano':
             return false;
         case 'seleccion_unica':
-            // Docente: Sí o No se muestra como pregunta, no como una respuesta ya elegida.
             return field.options?.map((option) => option.value).join('|') === 'Sí|No'
                 ? 'Sí o No'
                 : (field.options?.[0]?.value ?? 'Opción de ejemplo');

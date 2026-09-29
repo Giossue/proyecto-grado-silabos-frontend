@@ -3,7 +3,6 @@ const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
 const WEEK = 7 * DAY;
 
-/** Antigüedad corta al estilo de una bandeja de avisos: «hace 5 min», «hace 2 días». */
 export const relativeTime = (value: string, now: Date = new Date()): string => {
   const date = new Date(value);
   const elapsed = Math.max(0, now.getTime() - date.getTime());

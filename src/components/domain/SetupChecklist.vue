@@ -29,10 +29,6 @@ export type Setup = {
     steps: SetupStep[];
 };
 
-/**
- * Puesta en marcha: qué falta, en orden. El siguiente paso lleva su botón; los
- * hechos quedan tachados; los demás esperan. Desaparece cuando todo está hecho.
- */
 const props = defineProps<{ setup: Setup }>();
 const emit = defineEmits<{ action: [action: string] }>();
 

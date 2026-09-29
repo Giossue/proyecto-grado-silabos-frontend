@@ -7,7 +7,6 @@ import type { PageSpacerRequest } from '@/lib/documentPagination';
 
 const PAGE = { width: 800, height: 100, margin: 0, gap: 0 };
 
-/** Coloca cada fila 60 px debajo de la anterior: la segunda cruza la hoja. */
 const tableWithRows = (editable: boolean): HTMLElement => {
     const root = document.createElement('div');
     root.innerHTML = `
@@ -67,7 +66,6 @@ describe('createDocumentPaginator', () => {
     });
 
     it('mide respecto de la hoja aunque el navegador desplace la vista al insertar un salto', () => {
-        // Bloques apilados: título 1, tabla alta, título 2 con su texto, título 3.
         const root = document.createElement('div');
         root.innerHTML = `
             <section data-page-unit data-page-keep-next data-h="10">1.</section>
@@ -81,8 +79,6 @@ describe('createDocumentPaginator', () => {
             element.hasAttribute('data-page-spacer')
                 ? parseFloat(element.style.height)
                 : Number(element.dataset.h);
-        // Anclaje de desplazamiento: cada salto insertado desplaza la vista lo mismo
-        // que mide, de modo que las coordenadas de la ventana cambian a mitad del cálculo.
         const scroll = () =>
             blocks()
                 .filter((block) => block.hasAttribute('data-page-spacer'))

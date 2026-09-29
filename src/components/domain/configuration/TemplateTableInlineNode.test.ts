@@ -37,7 +37,6 @@ describe('preguntas de seguimiento en la hoja (I-159)', () => {
     it('la regla se define en el Sí/No y la hoja numera la pregunta con sus dependientes', async () => {
         const editor = mountSheet();
         await flushPromises();
-        // Las fichas «Docente» no tienen menú; solo la pregunta que se responde.
         expect(chip('tipo').querySelector('button')).toBeNull();
         await openTrigger();
         expect(document.body.textContent).toContain('Si responde');
@@ -86,7 +85,6 @@ describe('preguntas de seguimiento en la hoja (I-159)', () => {
             await flushPromises();
         };
 
-        // La X bajo «Sí» no pregunta la respuesta: ya es la suya.
         await open(yes!);
         expect(document.body.textContent).toContain('Si marca «Sí», pedir también:');
         expect(document.body.textContent).not.toContain('Si responde');
@@ -94,11 +92,9 @@ describe('preguntas de seguimiento en la hoja (I-159)', () => {
         await flushPromises();
         expect(showWhen(editor, 1)).toEqual({ key: 'discapacidad', value: 'Sí' });
         expect(document.querySelectorAll('[data-condition-group="discapacidad"]')).toHaveLength(3);
-        // La X muestra su número aunque la celda sea angosta; el significado va en el aviso.
         expect(yes!.textContent?.trim()).toBe('X ①');
         expect(yes!.querySelector('button')!.title).toBe('Se marca con X si el docente responde Sí en «Estudiantes con discapacidad» (pregunta ①)');
 
-        // La X bajo «No» la muestra sin marcar y avisa a qué respuesta está atada.
         await open(no!);
         expect(document.body.textContent).toContain('Si marca «No», pedir también:');
         const checkbox = document.getElementById('follow-up-discapacidad-No-tipo')!;

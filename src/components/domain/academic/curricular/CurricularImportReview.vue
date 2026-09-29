@@ -56,7 +56,6 @@ const groups = computed(() => {
 const sourceName = (id: string): string => props.detail.documents.find((document) => document.source_id === id)?.name ?? 'Documento fuente';
 const needsSubject = (item: CurricularProposedValue): boolean => !item.subject_id
   && (item.issue_code === 'subject_unmatched' || item.issue_code === 'source_conflict');
-// Un mismo nombre del documento se relaciona una sola vez con su materia de la malla.
 const unmatchedNames = computed(() => [...new Set((props.detail.proposal?.values ?? []).filter(needsSubject).map((item) => item.subject_name ?? ''))]);
 const nameAssignment = (name: string): string | undefined => {
   const item = props.detail.proposal?.values.find((value) => needsSubject(value) && (value.subject_name ?? '') === name);
@@ -70,7 +69,6 @@ const assignName = async (name: string, subject: unknown) => {
   selected.value = [...new Set([...selected.value, ...items.filter((item) => !problem(item)).map((item) => item.id)])];
 };
 const onlyPending = ref(false);
-// Paso a paso: primero se relacionan las materias nombradas de otra forma y después se eligen los datos.
 const phase = ref<'subjects' | 'data'>('data');
 const attention = (item: CurricularProposedValue): boolean => Boolean(problem(item)) || item.issue_code === 'source_conflict';
 const pendingCount = computed(() => props.detail.proposal?.values.filter(attention).length ?? 0);

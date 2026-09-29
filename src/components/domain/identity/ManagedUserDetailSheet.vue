@@ -30,13 +30,10 @@ export type ManagedUserRow = {
     nombre: string;
     correo_electronico: string;
     active: boolean;
-    /** Aún no se ha consumido la invitación de activación. */
     pending_activation: boolean;
     two_factor_enabled: boolean;
     roles: { name: string; career_name: string | null }[];
-    /** Carreras en el mismo orden que los roles, para que ambas columnas casen fila a fila. */
     careers: (string | null)[];
-    /** Vigentes y finalizadas: el panel de lectura muestra el historial completo. */
     assignments: ManagedUserRoleAssignment[];
 };
 
@@ -71,7 +68,6 @@ const status = computed(() => {
 });
 
 const scopeOf = (assignment: ManagedUserRoleAssignment): string =>
-    // La administración gobierna todo el sistema, así que su rol no cuelga de una carrera.
     assignment.career_name ?? 'Todas las carreras';
 
 const currentAssignments = computed(() =>
@@ -93,10 +89,6 @@ const completedAssignments = computed(() =>
                 </SheetDescription>
             </SheetHeader>
 
-            <!--
-                El padding superior evita que el contenedor con scroll recorte el
-                anillo (`ring-1`) de la primera tarjeta.
-            -->
             <div class="flex flex-col gap-4 overflow-y-auto px-4 pt-1 pb-6">
                 <Card>
                     <CardHeader>
@@ -177,7 +169,6 @@ const completedAssignments = computed(() =>
                     </CardContent>
                 </Card>
 
-                <!-- Las asignaciones retiradas se conservan para trazabilidad. -->
                 <Card v-if="completedAssignments.length > 0">
                     <CardHeader>
                         <CardTitle>Roles finalizados</CardTitle>
@@ -207,10 +198,6 @@ const completedAssignments = computed(() =>
         </SheetContent>
     </Sheet>
 
-    <!--
-        La opción y el panel se declaran por separado: si el panel viviera dentro del
-        elemento del menú, cerrar el menú lo desmontaría con la ficha abierta.
-    -->
     <DropdownMenuItem
         @select="
             (event: Event) => {

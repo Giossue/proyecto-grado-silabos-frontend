@@ -30,7 +30,6 @@ export type CurricularImportSummary = {
 export type ConfirmedCurricularValue = CurricularDefinition & {
   id: string;
   concept_key: string;
-  /** Todo dato del Proyecto de carrera es de una asignatura (I-160). */
   subject_id: string;
   subject_name: string | null;
   subject_code: string | null;
@@ -43,7 +42,6 @@ export type CurricularImportIndex = {
   imports: CurricularImportSummary[];
   subjects: Array<{ id: string; name: string; code: string }>;
   current_values: ConfirmedCurricularValue[];
-  /** @ProyectoCarrera que usa la plantilla y las secciones donde aparece (I-155); la importación solo busca estos. */
   concepts: Array<{ key: string; label: string; type: 'texto' | 'lista' | 'tabla'; sections: string[] }>;
   capabilities: { pdf: boolean; xlsx: boolean; extraction: boolean };
   lock_reason: string | null;
@@ -68,14 +66,12 @@ export const getCurricularImports = () => api<CurricularImportIndex>('/coordinat
 export const getCurricularImport = (id: string) => api<CurricularImportDetail>(`/coordination/curricular-imports/${id}`);
 export const getCurricularImportDocument = (id: string, sourceId: string) => apiBlob(`/coordination/curricular-imports/${id}/documents/${sourceId}/original`);
 export const retryCurricularImport = (id: string) => api<CurricularImportDetail>(`/coordination/curricular-imports/${id}/retry`, { method: 'POST' });
-/** Cada importación trae sus archivos: los documentos son temporales (I-152). */
 export const createCurricularImport = (input: { files: File[]; instruction: string }) => {
   const body = new FormData();
   input.files.forEach((file) => body.append('files[]', file));
   if (input.instruction.trim()) body.append('instruction', input.instruction.trim());
   return api<CurricularImportDetail>('/coordination/curricular-imports', { method: 'POST', body });
 };
-/** Descarta la importación y elimina sus documentos temporales. */
 export const discardCurricularImport = (id: string) => api<{ message: string }>(`/coordination/curricular-imports/${id}`, { method: 'DELETE' });
 export const applyCurricularImport = (id: string, input: {
   expected_fingerprint: string;

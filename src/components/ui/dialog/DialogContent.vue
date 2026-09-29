@@ -28,8 +28,6 @@ const preventImplicitDismiss = (event: Event): void => {
   event.preventDefault()
 }
 
-// Escape cierra el diálogo salvo que el usuario ya haya escrito o cambiado algo en él:
-// así no se pierde trabajo sin guardar. El clic fuera nunca cierra.
 const hasUnsavedChanges = ref(false)
 const markChanged = (): void => {
   hasUnsavedChanges.value = true

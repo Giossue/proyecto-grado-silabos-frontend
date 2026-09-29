@@ -23,7 +23,6 @@ import {
 
 const props = defineProps(nodeViewProps);
 
-// La hoja cambia fuera de esta ficha: el número del grupo se recalcula en cada cambio.
 const version = ref(0);
 const bump = (): void => { version.value++; };
 onMounted(() => props.editor.on('update', bump));
@@ -40,14 +39,12 @@ const numbers = computed(() => {
     return conditionNumbers(props.editor.state.doc);
 });
 const trigger = computed(() => kind.value === 'field' && isTrigger(props.node.attrs));
-/** Grupo al que pertenece la ficha: el de su propia pregunta o el de la que depende. */
 const group = computed(() => (trigger.value && numbers.value.has(key.value) ? key.value : showWhen.value?.key) ?? null);
 const number = computed(() => (group.value ? numbers.value.get(group.value) : undefined));
 const label = computed(() => {
     const base = inlineNodeLabel(kind.value, props.node.attrs, variableLabel.value);
     if (number.value) return `${base} ${circled(number.value)}`;
 
-    // Depende de una pregunta de otra parte: se avisa sin número.
     return showWhen.value ? `${base} · condicional` : base;
 });
 const hint = computed(() => {
@@ -63,7 +60,6 @@ const hint = computed(() => {
     return base;
 });
 
-// Preguntas de seguimiento: solo en la pregunta que se responde (I-159).
 const editable = computed(() => trigger.value && props.editor.isEditable);
 const candidates = computed(() => {
     void version.value;
@@ -75,7 +71,6 @@ const answers = computed(() => {
 
     return answersOf(props.editor.state.doc, props.node.attrs);
 });
-/** Una casilla «X» (formato UEB) es una sola respuesta: su menú habla solo de ella. */
 const fixedAnswer = computed(() => (props.node.attrs.choice ? String(props.node.attrs.choice) : null));
 const answer = ref('');
 const openFollowUps = (open: boolean): void => {
@@ -104,14 +99,12 @@ const chooseAnswer = (value: unknown): void => {
 };
 const optionId = (suffix: string): string =>
     `follow-up-${key.value}${fixedAnswer.value ? `-${fixedAnswer.value}` : ''}-${suffix}`;
-/** En una casilla «X», avisa si la pregunta ya depende de la otra respuesta. */
 const otherAnswer = (candidate: string): string | null => {
     const condition = candidates.value.find((item) => item.key === candidate)?.showWhen;
 
     return fixedAnswer.value && condition?.key === key.value && condition.value !== fixedAnswer.value ? condition.value : null;
 };
 
-// Al pasar el mouse, la pregunta y sus preguntas de seguimiento se resaltan juntas.
 const highlight = (on: boolean): void => {
     if (!group.value) return;
     props.editor.view.dom

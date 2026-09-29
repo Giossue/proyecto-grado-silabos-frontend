@@ -46,12 +46,6 @@ const close = (): void => {
     <Sheet v-model:open="open">
         <SheetTrigger v-if="showTrigger" :as-child="true">
             <slot name="trigger">
-                <!--
-                    En móvil el disparador flota sobre el contenido, así que se reduce al
-                    icono y se vuelve circular: una píldora con texto taparía media
-                    pantalla. La etiqueta sigue disponible para lectores mediante
-                    `aria-label`.
-                -->
                 <Button
                     class="w-full max-sm:size-14 max-sm:rounded-full max-sm:p-0 sm:w-auto"
                     :aria-label="triggerLabel"
@@ -76,10 +70,6 @@ const close = (): void => {
                 <SheetTitle>{{ title }}</SheetTitle>
                 <SheetDescription>{{ description }}</SheetDescription>
             </SheetHeader>
-            <!--
-                El padding superior evita que el contenedor con scroll recorte el
-                anillo (`ring-1`) de la primera tarjeta del contenido.
-            -->
             <div class="flex-1 overflow-y-auto px-4 pt-1 pb-28">
                 <slot :close="close" />
             </div>

@@ -7,13 +7,7 @@ import { cn } from '@/lib/utils';
 const props = withDefaults(
     defineProps<{
         class?: HTMLAttributes['class'];
-        /** Describe la tabla para quien la recorra con teclado o lector de pantalla. */
         label?: string;
-        /**
-         * En pantalla estrecha cada fila se dibuja como una tarjeta. Se puede apagar en
-         * una tabla de dos o tres columnas cortas, que ya cabe entera y se lee mejor
-         * como tabla.
-         */
         cards?: boolean;
     }>(),
     {
@@ -32,11 +26,6 @@ const region = computed(
 
 <template>
     <div class="relative w-full">
-        <!--
-            `tabindex` solo cuando desborda: una región desplazable tiene que poder
-            recorrerse con el teclado, pero añadir una parada de tabulación en una tabla
-            que cabe entera sería ruido para quien navegue así.
-        -->
         <div
             ref="container"
             data-slot="table-container"
@@ -45,11 +34,6 @@ const region = computed(
             :role="overflows ? 'region' : undefined"
             :aria-label="overflows ? region : undefined"
         >
-            <!--
-                La marca de desbordamiento la lee la hoja de estilos para fijar la columna
-                de acciones. Sin ella, una tabla que cabe entera mostraba igual el
-                separador y parecía cortada sin estarlo.
-            -->
             <table
                 data-slot="table"
                 :data-overflows="overflows ? 'true' : 'false'"
@@ -60,12 +44,6 @@ const region = computed(
             </table>
         </div>
 
-        <!--
-            Degradados en los bordes por los que aún hay datos. En un móvil la barra de
-            desplazamiento no se dibuja hasta que alguien la arrastra, así que sin esta
-            señal una columna cortada parece un defecto y no una invitación a deslizar.
-            No capturan el puntero para no robarle el gesto a la tabla.
-        -->
         <div
             v-show="canScrollLeft"
             data-table-edge="left"

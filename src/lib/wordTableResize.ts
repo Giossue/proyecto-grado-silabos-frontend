@@ -81,10 +81,6 @@ export function cellBoundaryPosition(
         .reduce((total, width) => total + width, 0);
 }
 
-/**
- * Moves one visible cell boundary while retaining every other row boundary.
- * The resulting union grid mirrors Word: unaffected cells span any new logical column.
- */
 export function resizeCellBoundary(
     source: DocumentNode,
     gridWidths: number[],

@@ -84,7 +84,6 @@ describe('DocumentSignatureCard', () => {
     expect(revision).toBe('rev-1');
     expect(blob).toBeInstanceOf(Blob);
     expect(base).toBe('b'.repeat(64));
-    // Ni el .p12 ni la clave viajan al servidor.
     expect(JSON.stringify(submitSignature.mock.calls)).not.toContain('secreta');
     expect(toastSuccess).toHaveBeenCalledWith('Firma registrada. Coordinación ya puede firmar el sílabo.');
     expect(wrapper.text()).toContain('Pendiente coordinación');

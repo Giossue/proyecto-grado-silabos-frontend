@@ -18,8 +18,6 @@ import { useCurricularImports } from '@/composables/useCurricularImports';
 import { toast } from '@/lib/toast';
 import { sessionState } from '@/state/session';
 
-// Proyecto de carrera (COR-16): una tabla con los datos de la carrera y un asistente
-// paso a paso para actualizarlos. La importación en curso se retoma al volver.
 const careerId = computed(() => sessionState.current.value?.active_role?.career_id ?? '');
 const careerName = computed(() => sessionState.current.value?.active_role?.career_name ?? 'la carrera activa');
 const { index, detail, loading, uploading, pending, step, inProgress, error, errors, load, create, retry, applied, startOver } = useCurricularImports(() => careerId.value);
@@ -31,7 +29,6 @@ const downloading = ref<string | null>(null);
 const updateWizard = (value: boolean): void => {
   wizardOpen.value = value;
   confirmingDiscard.value = false;
-  // Lo guardado ya está en la tabla: la próxima vez se empieza por los documentos.
   if (!value && step.value === 4) startOver();
 };
 const onApplied = async (result: CurricularImportDetail, message: string): Promise<void> => {
@@ -53,7 +50,6 @@ const download = async (document: CurricularImportDetail['documents'][number]): 
     toast.error(reason instanceof ApiError ? reason.message : 'No se pudo descargar el documento.');
   } finally { downloading.value = null; }
 };
-// Descartar elimina la importación y sus documentos temporales (I-152).
 const discard = async (): Promise<void> => {
   if (!detail.value || discarding.value) return;
   discarding.value = true;

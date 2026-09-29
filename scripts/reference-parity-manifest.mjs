@@ -4,7 +4,6 @@ export const reference = {
   frontendRoot: 'resources/js',
 };
 
-// Funciones retiradas por la nueva delimitación curricular; sus URLs recuperan el panel.
 export const retiredPages = ['pages/Sources/Index.vue', 'pages/Sources/Show.vue'];
 export const retiredComponents = [
   'components/domain/AcademicSourceDocumentEditor.vue',
@@ -167,12 +166,9 @@ export const allowedAliasRoutes = [
   '/mis-silabos/:syllabus',
   '/ingresar',
   '/',
-  // Callback técnico firmado: no representa una pantalla de producto adicional.
   '/api/v1/authentication/email-verification/:user/:hash',
 ];
 
-// Rutas de área generadas por la SPA. Se declaran aquí para que la auditoría no las
-// confunda con páginas adicionales: cada una reutiliza una pantalla canónica.
 export const allowedCanonicalRoutes = [
   '/login',
   '/rol',

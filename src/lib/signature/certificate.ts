@@ -1,9 +1,5 @@
 import forge from 'node-forge';
 
-/**
- * I-139. Lee un certificado de firma `.p12`/`.pfx` en el navegador. El archivo y su clave
- * solo viven en memoria mientras se firma: nunca se envían ni se guardan.
- */
 export type SignatureErrorCode =
   | 'invalid_file'
   | 'wrong_password'
@@ -48,7 +44,6 @@ const toBinary = (bytes: Uint8Array): string => {
 const attribute = (subject: forge.pki.Certificate['subject'], name: string): string =>
   String(subject.getField(name)?.value ?? '').trim();
 
-/** Abre el `.p12` con su clave y devuelve el certificado que corresponde a la llave. */
 export function readCertificate(p12: Uint8Array, password: string, now: Date = new Date()): SignerCertificate {
   let asn1: forge.asn1.Asn1;
   try {
@@ -64,7 +59,6 @@ export function readCertificate(p12: Uint8Array, password: string, now: Date = n
     throw new SignatureError(/invalid password|mac could not be verified|decrypt/i.test(text) ? 'wrong_password' : 'invalid_file');
   }
 
-  // `@signpdf/signer-p12` usa la llave protegida (pkcs8ShroudedKeyBag), el formato de las CA.
   const keys = store.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag })[forge.pki.oids.pkcs8ShroudedKeyBag] ?? [];
   const key = keys[0]?.key as forge.pki.rsa.PrivateKey | undefined;
   if (!key) throw new SignatureError(keys.length === 0 && password === '' ? 'wrong_password' : 'no_key');

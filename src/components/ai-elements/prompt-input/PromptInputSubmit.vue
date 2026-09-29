@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// import type { InputGroupButtonVariants } from '@/components/ui/input-group'
 import {
     CornerDownLeftIcon,
     Loader2Icon,

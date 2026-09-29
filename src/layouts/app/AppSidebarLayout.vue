@@ -20,10 +20,6 @@ const props = withDefaults(defineProps<Props>(), {
 
 provide(breadcrumbsKey, toRef(props, 'breadcrumbs'));
 
-/*
- * El nombre de la pantalla lo escribe el contenido y lo dibuja el encabezado. Viaja por
- * aquí para que ninguna de las veintisiete pantallas tenga que declararlo dos veces.
- */
 const pageTitle = ref('');
 const templateEditorOpen = templateEditorState.open;
 const editorOpen = computed(() => templateEditorOpen.value || curriculumEditorState.open.value);

@@ -21,7 +21,6 @@ type TemplateTableActionSource = {
     fields: DocumentField[];
 };
 
-/** Aplica formato de celdas e inserciones sobre la hoja. */
 export function useTemplateTableActions(
     editor: ShallowRef<Editor | undefined>,
     props: TemplateTableActionSource,
@@ -83,14 +82,9 @@ export function useTemplateTableActions(
             .run();
     };
 
-    /**
-     * Lo insertado queda después de lo seleccionado; nunca lo reemplaza. Con
-     * varias celdas marcadas, entra al final de la última.
-     */
     const insertNode = (node: DocumentNode): void => {
         const current = state.value;
 
-        // Las marcas entran en cualquier parte de la hoja, no solo en celdas (I-155).
         if (!current || props.pending) {
             return;
         }

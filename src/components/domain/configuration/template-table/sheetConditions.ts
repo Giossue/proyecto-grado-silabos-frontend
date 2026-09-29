@@ -1,11 +1,6 @@
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import type { Editor } from '@tiptap/core';
 
-/**
- * Preguntas de seguimiento (I-159): la regla se define en la pregunta que se responde
- * («Si responde Sí, pedir también: …»), como en los formularios conocidos. Por dentro,
- * cada pregunta que depende guarda `showWhen` {key, value} en su ficha.
- */
 export type ShowWhen = { key: string; value: string };
 export type FollowUp = { key: string; label: string; showWhen: ShowWhen | null };
 
@@ -20,14 +15,9 @@ const fields = (doc: ProseMirrorNode): FieldAttrs[] => {
     return found;
 };
 
-/**
- * Una pregunta con opciones fijas (por ejemplo Sí o No) puede tener preguntas de
- * seguimiento, también cuando la hoja la muestra como casillas «X» (formato UEB).
- */
 export const isTrigger = (attrs: FieldAttrs): boolean =>
     attrs.kind === 'seleccion_unica' && ((Array.isArray(attrs.options) && attrs.options.length > 0) || Boolean(attrs.choice));
 
-/** Respuestas posibles: sus opciones o, en casillas «X», las marcadas en la hoja. */
 export const answersOf = (doc: ProseMirrorNode, attrs: FieldAttrs): string[] => {
     if (Array.isArray(attrs.options) && attrs.options.length) return attrs.options.map(String);
     const choices = fields(doc).filter((item) => item.key === attrs.key && item.choice).map((item) => String(item.choice));
@@ -35,10 +25,6 @@ export const answersOf = (doc: ProseMirrorNode, attrs: FieldAttrs): string[] => 
     return [...new Set(choices)];
 };
 
-/**
- * Bloques de filas de una tabla: filas unidas por celdas combinadas hacia abajo
- * (por ejemplo «ESTUDIANTES CON DISCAPACIDAD», que ocupa tres filas).
- */
 const rowBlocks = (table: ProseMirrorNode): ProseMirrorNode[][] => {
     const blocks: ProseMirrorNode[][] = [];
     let end = -1;
@@ -64,10 +50,6 @@ const hasTrigger = (node: ProseMirrorNode, triggerKey: string): boolean => {
     return found;
 };
 
-/**
- * Dónde se buscan preguntas de seguimiento: si la pregunta que se responde está en
- * una tabla, solo en su bloque de filas; si no, en toda la parte.
- */
 const followUpArea = (doc: ProseMirrorNode, triggerKey: string): ProseMirrorNode[] => {
     const area: ProseMirrorNode[] = [];
     doc.descendants((node) => {
@@ -82,11 +64,6 @@ const followUpArea = (doc: ProseMirrorNode, triggerKey: string): ProseMirrorNode
     return area.length ? area : [doc];
 };
 
-/**
- * Preguntas del docente que pueden depender de la respuesta: las que están junto a
- * ella (mismo bloque de filas o, fuera de tablas, la misma parte) y las que ya
- * dependen de ella, para poder quitarlas.
- */
 export const followUpCandidates = (doc: ProseMirrorNode, triggerKey: string): FollowUp[] => {
     const near = new Set<string>();
     for (const node of followUpArea(doc, triggerKey)) {
@@ -104,10 +81,6 @@ export const followUpCandidates = (doc: ProseMirrorNode, triggerKey: string): Fo
     return [...byKey.values()];
 };
 
-/**
- * Número que une en la hoja cada pregunta con sus preguntas de seguimiento (①, ②, …),
- * en el orden en que aparecen. Solo cuentan las que ya tienen alguna.
- */
 export const conditionNumbers = (doc: ProseMirrorNode): Map<string, number> => {
     const all = fields(doc);
     const withFollowUps = new Set(all.map((attrs) => (attrs.showWhen as ShowWhen | null)?.key).filter(Boolean));
@@ -123,7 +96,6 @@ export const conditionNumbers = (doc: ProseMirrorNode): Map<string, number> => {
 export const circled = (number: number): string =>
     number >= 1 && number <= 20 ? String.fromCodePoint(0x2460 + number - 1) : `(${number})`;
 
-/** Marca o desmarca una pregunta de seguimiento en todas sus fichas de la hoja. */
 export const setShowWhen = (editor: Editor, key: string, showWhen: ShowWhen | null): void => {
     const { tr, doc } = editor.state;
     doc.descendants((node, position) => {

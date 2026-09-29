@@ -32,7 +32,6 @@ type CellResizeSession = {
     previewed: boolean;
 };
 
-/** Ajusta el borde entre dos celdas arrastrándolo, como en un procesador de texto. */
 export function useTableCellResize(
     editor: ShallowRef<Editor | undefined>,
     editorShell: Ref<HTMLElement | null>,

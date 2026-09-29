@@ -28,8 +28,6 @@ const verifySignedLink = async (): Promise<void> => {
             if (typeof value === 'string') query.set(key, value);
         }
         toast.success((await verifyEmail(userId.value, hash.value, query)).message);
-        // El enlace puede abrirse con la sesión de la cuenta pendiente: se relee para que
-        // el guard deje de mandarla a «Verificación de correo».
         const session = await sessionState.load(true).catch(() => null);
         if (session?.user.email_verified) await router.replace(paths.dashboard);
     } catch (reason) {

@@ -4,7 +4,6 @@ import { Toaster } from '@/components/ui/sonner';
 </script>
 
 <template>
-    <!-- El encabezado (volver, materia y tema) lo pone la página del sílabo. -->
     <div class="min-h-dvh min-w-0 bg-background text-foreground">
         <main class="min-h-dvh w-full">
             <slot />

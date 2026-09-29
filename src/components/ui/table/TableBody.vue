@@ -8,7 +8,6 @@ const props = defineProps<{
   class?: HTMLAttributes["class"]
 }>()
 
-// Marca la sección para que las filas de dentro sepan que describen un registro.
 provide(tableSectionKey, 'body')
 </script>
 

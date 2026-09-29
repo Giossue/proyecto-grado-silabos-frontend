@@ -6,14 +6,11 @@ import { Card, CardContent } from '@/components/ui/card';
 const props = defineProps<{
     label: string;
     value: number;
-    /** Unidad corta detrás del número: «%», «días». */
     suffix?: string;
     hint?: string;
     icon?: Component;
 }>();
 
-// Figuras proporcionales y compactado solo cuando el número deja de leerse de un
-// vistazo; `tabular-nums` queda para columnas que deben alinearse.
 const formatted = computed(() =>
     new Intl.NumberFormat('es-EC', {
         notation: props.value >= 10000 ? 'compact' : 'standard',

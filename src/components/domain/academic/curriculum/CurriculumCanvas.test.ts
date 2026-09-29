@@ -87,8 +87,6 @@ describe('CurriculumCanvas', () => {
         await nextTick();
         expect((flow.props('nodes') as typeof preview).find((node) => node.id === 'a')?.position.y).toBe(32);
 
-        // Vue Flow puede entregar en drag-stop la posición anterior mientras sincroniza
-        // su modelo; el índice confirmado es el que mostró el último drag.
         flow.vm.$emit('node-drag-stop', {
             node: { ...dragged, position: { x: laneStart, y: 32 } },
         });

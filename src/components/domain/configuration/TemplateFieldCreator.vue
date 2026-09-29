@@ -29,7 +29,6 @@ const props = withDefaults(
     { choice: false },
 );
 
-// Solo la forma: quién llena cada cosa se marca en la hoja (I-155).
 const texts = {
     action: 'Agregar parte',
     title: 'Nueva parte',

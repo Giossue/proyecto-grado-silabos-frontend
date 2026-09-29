@@ -58,7 +58,6 @@ describe('TemplateTableEditor', () => {
         await flushPromises();
         await nextTick();
 
-        // Filas de 60 px en hojas de 100 px: la segunda cruza el borde.
         const rows = () =>
             Array.from(root.querySelectorAll<HTMLTableRowElement>('tr')).filter(
                 (row) => !row.hasAttribute('data-page-spacer'),
@@ -99,7 +98,6 @@ describe('TemplateTableEditor', () => {
         expect(toolbar.find('[aria-label="Fondo de celda"]').exists()).toBe(false);
         expect(toolbar.find('[aria-label="Deshacer"]').exists()).toBe(true);
 
-        // Insertar → Tabla (I-156): con una tabla en la hoja aparecen sus herramientas.
         toolbar.findComponent({ name: 'TemplateTableInsertMenu' }).vm.$emit('table');
         await flushPromises();
         expect(wrapper.get('[role="toolbar"]').find('[aria-label="Combinar celdas"]').exists()).toBe(true);

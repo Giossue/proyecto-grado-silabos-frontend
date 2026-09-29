@@ -1,4 +1,3 @@
-/** Prefijo de los datos del Proyecto de carrera en el catálogo de variables (I-155). */
 export const PROJECT_PREFIX = 'curricular_';
 
 export type SheetMark = 'automatic' | 'teacher' | 'yesNo' | 'project';
@@ -8,11 +7,6 @@ const isYesNo = (attrs: Record<string, unknown>): boolean =>
     Array.isArray(attrs.options) &&
     attrs.options.map(String).join('|') === 'Sí|No';
 
-/**
- * Marcas de la hoja (I-155): dato automático, Docente (lo escribe el docente), Docente:
- * Sí o No y Proyecto de carrera (lo llena Coordinación al importar). Se insertan solo
- * desde Insertar de la cinta; en la ficha se ve el tipo y su color, sin símbolos.
- */
 export const sheetMark = (name: string, attrs: Record<string, unknown>): SheetMark =>
     name !== 'variable'
         ? isYesNo(attrs) && !attrs.choice
@@ -36,7 +30,6 @@ export const SHEET_MARK_HINTS: Record<SheetMark, string> = {
     project: 'lo llena Coordinación al importar sus documentos',
 };
 
-/** Nombre interno de la ficha: el del dato o de la pregunta, nunca una clave. */
 export const inlineNodeName = (
     name: string,
     attrs: Record<string, unknown>,
@@ -46,21 +39,15 @@ export const inlineNodeName = (
         const id = String(attrs.id ?? '');
         const label = String(attrs.label ?? '');
 
-        // Sin nombre conocido queda vacío: nunca una clave ni un rótulo genérico.
         return variableLabel?.(id) ?? (label !== '' && label !== id ? label : '');
     }
 
     return String(attrs.label || attrs.key || '');
 };
 
-/**
- * Casilla «X» del formato UEB: en la ficha solo se ve «X» (cabe en celdas angostas);
- * lo que significa va en el aviso al pasar el cursor.
- */
 export const choiceHint = (attrs: Record<string, unknown>): string =>
     `Se marca con X si el docente responde ${String(attrs.choice)} en «${String(attrs.label || attrs.key || '')}»`;
 
-/** Texto visible de la ficha en la hoja. */
 export const inlineNodeLabel = (
     name: string,
     attrs: Record<string, unknown>,

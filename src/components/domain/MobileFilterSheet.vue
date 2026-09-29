@@ -5,29 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// Dos raíces —el disparador y el panel—, así que Vue no sabe a cuál aplicar la clase que
-// llega de fuera. Se dirige a mano al panel, que es quien define el reparto en ancho.
 defineOptions({ inheritAttrs: false });
 
 const attrs = useAttrs();
 
-/**
- * Agrupa los filtros de una tabla tras un botón cuando la pantalla es estrecha.
- *
- * No usa el `Sheet` de la librería a propósito: aquel lleva su contenido al `body`
- * mediante un portal, y los campos que viajan fuera del formulario dejan de enviarse.
- * Aquí el contenido permanece donde estaba y solo cambia cómo se presenta, así que sirve
- * igual para los filtros que consultan al servidor y para los que filtran en el navegador.
- */
 const open = ref(false);
 const activeCount = ref(0);
 const panel = useTemplateRef<HTMLElement>('panel');
 
-/**
- * Cuenta los filtros puestos mirando los campos que hay dentro. Los desplegables de la
- * interfaz dejan un `select` nativo oculto para poder enviarse, y `all` es el valor que
- * significa «sin filtrar».
- */
 const recount = (): void => {
     const node = panel.value;
 
@@ -56,7 +41,6 @@ watch(open, (isOpen) => {
     if (isOpen) {
         recount();
         window.addEventListener('keydown', onKey);
-        // Sin esto la lista de detrás sigue desplazándose bajo el panel.
         document.body.style.overflow = 'hidden';
 
         return;
@@ -73,7 +57,6 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <!-- En pantalla ancha no hay botón ni panel: los filtros se ven en fila. -->
     <div class="contents sm:hidden">
         <Button
             type="button"
@@ -141,12 +124,6 @@ onBeforeUnmount(() => {
             <slot />
         </div>
 
-        <!--
-            Los filtros ya se aplicaron al elegirlos, igual que en pantalla ancha. Este
-            botón solo cierra: mantener dos formas de aplicar llevaría a que alguien
-            eligiera, viera la lista cambiar detrás y aun así dudara de si hizo falta
-            confirmar.
-        -->
         <Button
             type="button"
             class="mt-2 w-full shrink-0 sm:hidden"

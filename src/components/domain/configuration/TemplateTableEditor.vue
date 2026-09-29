@@ -49,7 +49,6 @@ const props = defineProps<{
     variables: TemplateVariable[];
     toolbarTarget?: string;
     templateId: string;
-    /** Nombres de respaldo para las marcas sin texto al lado (I-155). */
     sectionTitle: string;
     partTitle?: string;
 }>();
@@ -68,7 +67,6 @@ const editorStyle = computed<CSSProperties & Record<string, string>>(() => ({
 }));
 const initial = JSON.stringify(props.document);
 const version = ref(0);
-// Datos del Proyecto de carrera creados mientras se edita; al guardar llegan con la plantilla.
 const declared = ref<TemplateVariable[]>([]);
 const allVariables = computed(() => [
     ...props.variables,
@@ -94,7 +92,6 @@ const editor = useEditor({
         ...templateTableExtensions({
             variableLabel: (id) => variableLabels.value.get(id),
         }),
-        // Page breaks between rows drawn by the sheet view; presentation only.
         Extension.create({
             name: 'pageSpacers',
             addProseMirrorPlugins: () => [pageSpacersPlugin()],
@@ -150,7 +147,6 @@ const {
 } = useTemplateTableActions(editor, props, selection);
 const marks = useSheetMarks({ editor, props, insertNode, keyFor, declared });
 
-// Las herramientas de celdas solo aparecen cuando la hoja tiene una tabla (I-155).
 const hasTable = computed(() => {
     void version.value;
     let found = false;
@@ -162,7 +158,6 @@ const hasTable = computed(() => {
 
     return found;
 });
-// Tabla y lista de Contenido de la plantilla (I-156): la tabla nace con 2 × 2 celdas fijas.
 const insertTable = (): void => {
     state.value?.chain().focus().insertTable({ rows: 2, cols: 2, withHeaderRow: false }).run();
 };
@@ -402,13 +397,10 @@ defineExpose({ getDocument });
     width: 100%;
 }
 .template-table-editor .template-table-canvas {
-    /* La hoja ya pinta el papel; un fondo propio taparía el hueco entre hojas
-       cuando la tabla se parte por filas. */
     background: transparent;
 }
 .template-table-editor table {
     border-collapse: collapse;
-    /* Las columnas respetan el ancho de la hoja aun con etiquetas largas. */
     table-layout: fixed;
     width: 100% !important;
 }
@@ -420,12 +412,10 @@ defineExpose({ getDocument });
     padding: 2px 4px;
     position: relative;
     vertical-align: top;
-    /* Las celdas no desbordan: sílabas con guion y, si no alcanza, corte. */
     overflow-wrap: break-word;
     word-break: normal;
     hyphens: auto;
     -webkit-hyphens: auto;
-    /* Solo se silabean palabras de 8+ letras. */
     hyphenate-limit-chars: 8 4 4;
 }
 .template-table-editor td *,
@@ -489,7 +479,6 @@ defineExpose({ getDocument });
 .template-table-editor[data-resizing] th:not(:last-child)::before {
     display: none;
 }
-/* Marcas de la hoja (I-155). Borde punteado: lo llena el docente; continuo: llega lleno. */
 .template-table-editor .template-table-variable,
 .template-table-editor .template-table-field,
 .template-table-editor .template-table-yes-no,
@@ -515,7 +504,6 @@ defineExpose({ getDocument });
     outline: 1px solid var(--document-mark-project-border);
 }
 .template-table-editor .is-linked {
-    /* Pregunta y preguntas de seguimiento se resaltan juntas (I-159). */
     box-shadow: 0 0 0 2px var(--primary);
 }
 .template-table-editor .tiptap .template-table-field,

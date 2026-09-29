@@ -12,8 +12,6 @@ const props = withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTit
     pageTitle: '',
 });
 const trail = computed<BreadcrumbItem[]>(() => {
-    // La miga representa únicamente la pantalla actual. No se construye una
-    // cadena padre > detalle, aunque la ruta aporte un contexto anterior.
     if (props.pageTitle.trim() !== '') return [{ title: props.pageTitle }];
     const last = props.breadcrumbs.at(-1);
     return last ? [last] : [];

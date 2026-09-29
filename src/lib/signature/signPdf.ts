@@ -4,15 +4,6 @@ import { PDFArray, PDFDict, PDFDocument, PDFName, PDFRef } from 'pdf-lib';
 import { readCertificate, SignatureError, type SignerCertificate } from '@/lib/signature/certificate';
 import { stampContent, STAMP_RESOURCES } from '@/lib/signature/stamp';
 
-/**
- * I-139. Firma un PDF en el navegador con una actualización INCREMENTAL propia: el
- * resultado empieza con los bytes exactos del PDF recibido (las firmas anteriores siguen
- * válidas) y agrega el campo de firma, el sello visible, la página y el formulario
- * actualizados, la tabla de referencias y un `/Sig` `adbe.pkcs7.detached` cuyo
- * `ByteRange` cubre todo el archivo salvo el propio `/Contents`.
- *
- * `pdf-lib` solo se usa para leer la estructura; nunca reescribe el documento.
- */
 export const CONTENTS_HEX_LENGTH = 32768;
 const BYTE_RANGE_PLACEHOLDER = '/ByteRange [0 ********** ********** **********]';
 
@@ -22,7 +13,6 @@ export type SignPdfInput = {
   pdf: Uint8Array;
   p12: Uint8Array;
   password: string;
-  /** Posición que calcula el backend (SignatureStampLocator); sin ella se usa un respaldo. */
   stamp: StampPosition | null;
   role: 'docente' | 'coordinacion';
   reason?: string;
@@ -46,7 +36,6 @@ const ascii = (text: string): Uint8Array => {
   return bytes;
 };
 
-/** Cadena PDF en UTF-16BE con BOM, para nombres con tildes. */
 const textString = (text: string): string => {
   let hex = 'FEFF';
   for (let index = 0; index < text.length; index++) hex += text.charCodeAt(index).toString(16).padStart(4, '0');
@@ -55,7 +44,6 @@ const textString = (text: string): string => {
 
 const pad = (value: number, size: number): string => String(value).padStart(size, '0');
 
-/** Hora de Ecuador continental (UTC−5, sin horario de verano). */
 const ecuadorParts = (date: Date): { stamp: string; pdf: string } => {
   const local = new Date(date.getTime() - 5 * 3600 * 1000);
   const y = local.getUTCFullYear();
@@ -126,7 +114,6 @@ export async function signPdf(input: SignPdfInput): Promise<SignPdfResult> {
   const location = input.location ?? '';
   const fieldName = `Firma ${input.role === 'docente' ? 'docente' : 'coordinacion'} ${now.getTime()}`;
 
-  // 1. Diccionario de firma con marcadores de ancho fijo.
   objects.push({
     ref: signatureRef,
     body: `<< /Type /Sig /Filter /Adobe.PPKLite /SubFilter /adbe.pkcs7.detached ${BYTE_RANGE_PLACEHOLDER} `
@@ -134,7 +121,6 @@ export async function signPdf(input: SignPdfInput): Promise<SignPdfResult> {
       + `/Reason ${textString(reason)} /Location ${textString(location)} >>`,
   });
 
-  // 2. Campo + anotación de firma visible (impresa y bloqueada).
   const x = box.x + position.x;
   const y = box.y + position.y;
   objects.push({
@@ -144,7 +130,6 @@ export async function signPdf(input: SignPdfInput): Promise<SignPdfResult> {
       + `/AP << /N ${appearanceRef.toString()} >> >>`,
   });
 
-  // 3. Apariencia (QR + texto).
   const content = stampContent({ holder: certificate.holder, reason, location, date: dates.stamp }, position.width, position.height);
   objects.push({
     ref: appearanceRef,
@@ -152,14 +137,12 @@ export async function signPdf(input: SignPdfInput): Promise<SignPdfResult> {
       + `/Resources ${STAMP_RESOURCES} /Length ${content.length} >>\nstream\n${content}\nendstream`,
   });
 
-  // 4. Página con la anotación nueva.
   const pageDict = page.node.clone(context);
   const annots = context.lookup(page.node.get(PDFName.of('Annots')));
   const annotItems = annots instanceof PDFArray ? annots.asArray() : [];
   pageDict.set(PDFName.of('Annots'), context.obj([...annotItems, widgetRef]));
   objects.push({ ref: page.ref, body: pageDict.toString() });
 
-  // 5. Formulario (AcroForm) con el campo nuevo y SigFlags 3.
   const catalogRef = trailer.Root;
   const catalog = context.lookup(catalogRef, PDFDict);
   const acroFormEntry = catalog.get(PDFName.of('AcroForm'));
@@ -178,7 +161,6 @@ export async function signPdf(input: SignPdfInput): Promise<SignPdfResult> {
     objects.push({ ref: catalogRef, body: updatedCatalog.toString() });
   }
 
-  // 6. Escritura de la actualización incremental.
   const separator = originalText.endsWith('\n') || originalText.endsWith('\r') ? '' : '\n';
   let increment = separator;
   const offsets = new Map<number, { offset: number; generation: number }>();
@@ -207,7 +189,6 @@ export async function signPdf(input: SignPdfInput): Promise<SignPdfResult> {
 
   const xrefOffset = original.length + increment.length;
   if (previousIsStream) {
-    // El original usa flujos de referencias: la actualización también (en ASCIIHex, sin binario).
     const xrefRef = allocate();
     offsets.set(xrefRef.objectNumber, { offset: xrefOffset, generation: 0 });
     const groups = sections(offsets);
@@ -235,7 +216,6 @@ export async function signPdf(input: SignPdfInput): Promise<SignPdfResult> {
   }
   increment += `startxref\n${xrefOffset}\n%%EOF\n`;
 
-  // 7. ByteRange y firma CMS separada.
   const contentsMarker = `/Contents <${'0'.repeat(CONTENTS_HEX_LENGTH)}>`;
   const contentsStart = original.length + increment.indexOf(contentsMarker) + '/Contents '.length;
   const contentsEnd = contentsStart + CONTENTS_HEX_LENGTH + 2;
@@ -258,7 +238,6 @@ export async function signPdf(input: SignPdfInput): Promise<SignPdfResult> {
   return { pdf: signed, certificate };
 }
 
-/** Huella SHA-256 en hexadecimal (la usa el backend para detectar firmas concurrentes). */
 export async function sha256Hex(bytes: Uint8Array): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', bytes as unknown as ArrayBuffer);
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');

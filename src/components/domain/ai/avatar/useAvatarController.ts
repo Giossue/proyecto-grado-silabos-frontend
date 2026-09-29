@@ -8,23 +8,15 @@ import {
     type AvatarState,
 } from './types';
 
-/** Señales reales del ciclo del chat; el controlador decide el modo. */
 export interface ChatLifecycleSignals {
-    /** El usuario interactúa con el asistente (escribe, habla o lo enfoca). */
     userEngaged: Ref<boolean>;
-    /** Se envió la solicitud y se espera al modelo. */
     awaitingModel: Ref<boolean>;
-    /** Cantidad de fragmentos/resultados recibidos del modelo. */
     receivedCount: Ref<number>;
 }
 
 const SPEAKING_MS = 1800;
 const EMOTION_HOLD_MS = 6000;
 
-/**
- * Controlador central del avatar. Nadie fuera de aquí manipula partes del SVG:
- * la app entrega señales del ciclo y pistas del agente, y recibe un AvatarState.
- */
 export function useAvatarController(signals: ChatLifecycleSignals) {
     const state = ref<AvatarState>({ mode: 'idle', emotion: 'neutral', intensity: 0.6 });
     let speakingTimer: ReturnType<typeof setTimeout> | null = null;
@@ -62,14 +54,12 @@ export function useAvatarController(signals: ChatLifecycleSignals) {
         }
     };
 
-    /** Aplica la emoción que declara el agente; nunca se infiere del texto. */
     const applyAgentHint = (hint: AgentAvatarHint | null | undefined): void => {
         const emotion = hint?.emotion;
         if (!emotion || !AVATAR_EMOTIONS.includes(emotion as AvatarEmotion)) return;
         setEmotion(emotion as AvatarEmotion, hint?.intensity ?? undefined);
     };
 
-    // Solo habla cuando llega respuesta a una solicitud real, no al cargar historial.
     watch(signals.awaitingModel, (awaiting, wasAwaiting) => {
         if (awaiting) {
             setEmotion('neutral');

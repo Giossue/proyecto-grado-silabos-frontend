@@ -11,7 +11,6 @@ defineOptions({
 
 const props = withDefaults(defineProps<TooltipContentProps & {
   class?: HTMLAttributes["class"]
-  /** El tooltip se muestra sobre papel blanco, no sobre la interfaz tematizada. */
   paper?: boolean
 }>(), {
   sideOffset: 4,

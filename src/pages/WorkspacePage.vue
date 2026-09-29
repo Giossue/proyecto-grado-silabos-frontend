@@ -72,7 +72,6 @@ const load = async (): Promise<void> => {
             await router.replace(paths.emailVerificationRequired);
             return;
         }
-        // Coordinación y Docencia eligen siempre su ámbito, aunque tengan uno solo (I-121).
         if (session.value.active_role) {
             await router.replace(consumeIntendedRoute() ?? roleEntry(session.value.active_role.code));
         }

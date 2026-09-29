@@ -28,7 +28,6 @@ const stop = watch(carouselApi, (api) => {
         return;
     }
 
-    // Watch only once
     nextTick(() => stop());
 
     updateState();

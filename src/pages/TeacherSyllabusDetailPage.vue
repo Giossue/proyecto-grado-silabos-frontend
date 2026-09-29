@@ -58,9 +58,7 @@ const validationBlockingErrors = ref<number | null>(null);
 const conflict = ref(false);
 const processingAction = ref(false);
 const confirmSubmitOpen = ref(false);
-/** Motivo local de bloqueo: un guardado rechazado con 403 (p. ej. la convocatoria se pausó). */
 const localBlockReason = ref<string | null>(null);
-/** Hay cambios que no llegaron al servidor tras un fallo; se ofrecen para reintentar. */
 const saveFailed = ref(false);
 const PAUSED_MESSAGE = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude.";
 
@@ -81,7 +79,6 @@ const validationFor = (fieldId: string) =>
   validationResults.value.filter((result) => result.field_id === fieldId);
 const visibleValidationMessages = (fieldId: string): string[] =>
   validationFor(fieldId).map((result) => result.message);
-/** Dónde está cada parte en la página, para llevar al docente con un clic. */
 const partTargets = computed(() => {
   const targets = new Map<string, string>();
   for (const section of syllabus.value?.sections ?? []) {
@@ -104,18 +101,15 @@ const blockingResults = computed(() => {
       return true;
     });
 });
-/** Partes de la página con al menos un error, en el orden en que aparecen. */
 const partsWithErrors = computed(() => {
   const failing = new Set(blockingResults.value.map((result) => result.field_id));
   return [...partTargets.value.keys()].filter((id) => failing.has(id));
 });
-/** Errores que no pertenecen a ninguna parte visible (p. ej. datos de Coordinación). */
 const orphanResults = computed(() =>
   blockingResults.value.filter((result) => !result.field_id || !partTargets.value.has(result.field_id)),
 );
 const blockErrors = (fields: SyllabusField[]): string[] =>
   [...new Set(fields.flatMap((field) => visibleValidationMessages(field.id)))];
-/** Parte del docente que aún no tiene contenido; el envío se habilita cuando no queda ninguna. */
 const isFieldEmpty = (field: SyllabusField): boolean => {
   if (field.type === "booleano") return typeof field.value !== "boolean";
   if (isFreeTextDocument(field.value)) return freeTextPlain(field.value).trim() === "";
@@ -140,7 +134,6 @@ const goToPart = (fieldId: string | null): void => {
   target.scrollIntoView({ behavior: "smooth", block: "center" });
   target.querySelector<HTMLElement>("input, textarea, button, [contenteditable='true']")?.focus({ preventScroll: true });
 };
-/** El aviso rojo de una parte se quita apenas el docente la cambia. */
 const clearFieldValidation = (fieldId: string): void => {
   if (validationResults.value.some((result) => result.field_id === fieldId)) {
     validationResults.value = validationResults.value.filter((result) => result.field_id !== fieldId);
@@ -164,7 +157,6 @@ const load = async (): Promise<void> => {
     validationResults.value = syllabus.value.validation?.results ?? [];
     conflict.value = false;
     error.value = null;
-    // Abrir el sílabo es empezar a llenarlo: el borrador se inicia solo, sin pantalla previa.
     if (canStart.value) await start();
   } catch (reason) {
     if (reason instanceof ApiError && reason.status === 401) {
@@ -199,8 +191,6 @@ const start = async (): Promise<void> => {
   }
 };
 
-// Tras guardar, la validación anterior deja de ser la última palabra, pero la lista de
-// partes pendientes se conserva: cada aviso se quita al corregir su parte.
 const invalidateValidation = (): void => {
   validationRan.value = false;
   validationBlockingErrors.value = null;
@@ -229,10 +219,6 @@ const handleSaveFailure = (reason: unknown): void => {
       : "No se pudo guardar el cambio.";
 };
 
-/**
- * Encola un guardado. Si falla (o ya no se puede escribir), el campo vuelve a quedar
- * pendiente para que «Reintentar» o la salida de la página lo vuelvan a enviar.
- */
 const queueSave = (markPending: () => void, operation: () => Promise<void>): void => {
   pendingSave = pendingSave.then(async () => {
     if (conflict.value || !canEdit.value) {
@@ -319,7 +305,6 @@ const masterValue = (value: unknown): string => {
   if (typeof value !== 'object') return typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value);
   if (Array.isArray(value)) return value.map(String).join(', ');
   if (isFreeTextDocument(value)) return freeTextPlain(value);
-  // Solo los valores: las claves internas no se muestran.
   return Object.values(value)
     .map((item) => String(item ?? '—'))
     .join(' · ');
@@ -331,18 +316,9 @@ const updateScalar = (field: SyllabusField, value: string): void => {
   scheduleSave(field);
 };
 
-/**
- * Una parte con hoja propia se llena sobre esa hoja: su texto fijo, sus datos y sus
- * !Docente se ven juntos, igual que en el Word (I-155). La ficha de identificación
- * mantiene su formulario.
- */
 const usesTabularDocument = (block: { content_type: string; document?: DocumentNode | null }): block is { content_type: string; document: DocumentNode } =>
   block.content_type !== 'institutional' && block.document != null;
 
-/**
- * «Mostrar solo si»: partes ocultas mientras su condición no se cumple. Solo se
- * ocultan; el valor ya escrito no se borra y vuelve a verse al cumplirse.
- */
 const hiddenParts = computed(() => hiddenKeys(
   (syllabus.value?.sections ?? []).flatMap((section) => section.blocks.flatMap((block) => block.fields)),
 ));
@@ -397,19 +373,14 @@ const submit = async (): Promise<void> => {
     invalidateValidation();
     validationResults.value = [];
   } catch (reason) {
-    // El servidor valida al enviar; si rechaza por errores bloqueantes, se piden los
-    // resultados para marcar los campos y listar los errores.
     if (reason instanceof ApiError && reason.status === 422 && reason.errors.validation) {
       try {
         await runValidation();
-        // Sin avisos arriba: se lleva al docente a la primera parte marcada en rojo.
-        // Lo que no pertenece a ninguna parte (p. ej. «Avise a Coordinación») va al aviso de error.
         await nextTick();
         goToPart(partsWithErrors.value[0] ?? null);
         if (orphanResults.value.length) error.value = orphanResults.value.map((result) => result.message).join(" ");
         return;
       } catch {
-        // Si la consulta de detalle falla, al menos queda el mensaje del envío.
       }
     }
     if (reason instanceof ApiError && reason.status === 403) {
@@ -422,7 +393,6 @@ const submit = async (): Promise<void> => {
   }
 };
 
-/** Numera la sección como en el documento, salvo que el título ya traiga número. */
 const sectionHeading = (title: string, index: number): string =>
   /^\s*\d+[.)]/.test(title) ? title : `${index + 1}. ${title}`;
 
@@ -438,8 +408,6 @@ onMounted(() => {
   window.addEventListener("beforeunload", warnBeforeUnload);
   void load();
 });
-// Al salir se envía lo pendiente en lugar de descartarlo; solo si no se pudo guardar
-// se pide confirmación para no perder cambios en silencio.
 onBeforeRouteLeave(async () => {
   if (!hasUnsavedChanges()) {
     await pendingSave;
@@ -456,7 +424,6 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <!-- Encabezado fijo como el del editor de malla: volver, materia y tema. -->
   <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-sm backdrop-blur sm:px-5" aria-label="Herramientas del sílabo">
     <Button variant="link" size="sm" class="h-auto px-0" as-child><RouterLink :to="paths.teacher.syllabi"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</RouterLink></Button>
     <span v-if="syllabus" class="hidden min-w-0 flex-1 truncate text-center text-sm font-medium sm:block">{{ syllabus.subject }}</span>
@@ -499,7 +466,6 @@ onBeforeUnmount(() => {
             </CardContent>
           </Card>
 
-          <!-- Cada sección es una tarjeta, como la ficha de identificación, separada de la siguiente. -->
           <template v-for="(section, sectionIndex) in visibleSections" :key="section.id">
           <Separator v-if="sectionIndex > 0" />
           <section :id="`section-${section.id}`" class="flex scroll-mt-6 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
@@ -507,7 +473,6 @@ onBeforeUnmount(() => {
             <SyllabusAcademicContext v-if="section.blocks.some((block) => block.content_type === 'institutional')" :variables="syllabus.template_variables ?? {}" />
 
             <FieldSet v-for="block in section.blocks" :id="`block-${block.id}`" :key="block.id" class="scroll-mt-6 gap-5">
-              <!-- Una parte con hoja no muestra el nombre de su pregunta: el título de la parte es lo único que ve el docente. -->
               <FieldLegend v-if="(block.title ?? '').trim() !== '' && section.blocks.length > 1 && (usesTabularDocument(block) || !(block.fields.length === 1 && block.title === block.fields[0]?.label))" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
               <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :editable="canEdit && !conflict" presentation="form" @value="(key, value) => updateDesignValue(block.fields, key, value)" />
               <FieldError v-if="usesTabularDocument(block)" class="block-errors" :errors="blockErrors(block.fields)" />
@@ -533,7 +498,6 @@ onBeforeUnmount(() => {
                 <FieldSet v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'seleccion_multiple'" :id="`field-${field.id}`" :aria-required="field.required"><FieldLegend class="text-sm" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLegend><Field v-for="option in field.options" :key="option.value" orientation="horizontal"><Checkbox :id="`field-${field.id}-${option.value}`" :model-value="selectedValues(field).includes(option.value)" @update:model-value="toggleChoice(field, option.value, Boolean($event))" /><FieldLabel :for="`field-${field.id}-${option.value}`">{{ option.label }}</FieldLabel></Field></FieldSet>
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><div class="boolean-options flex gap-2" role="radiogroup" :aria-label="field.label.trim() || section.title"><Button type="button" size="sm" :variant="field.value === true ? 'default' : 'outline'" role="radio" :aria-checked="field.value === true" @click="toggleBoolean(field, true)">Sí</Button><Button type="button" size="sm" :variant="field.value === false ? 'default' : 'outline'" role="radio" :aria-checked="field.value === false" @click="toggleBoolean(field, false)">No</Button></div><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
-
 
                 <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div v-if="field.label.trim() || field.inherited" class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Dato automático</Badge></div><span>{{ masterValue(field.value) }}</span></div>
                 <FieldError :errors="visibleValidationMessages(field.id)" />

@@ -2,11 +2,6 @@
 import { computed } from 'vue';
 import { Card, CardContent } from '@/components/ui/card';
 
-/**
- * Identificación institucional en la pantalla del docente: los datos que llegan de
- * la planificación académica, como lista de solo lectura. El Word/PDF conserva su
- * propia tabla; esto no la imita.
- */
 const props = defineProps<{
     variables: Record<string, string>;
 }>();
@@ -18,7 +13,6 @@ type ContextGroup = {
 
 const PENDING = 'Pendiente de Coordinación';
 
-/** «64.00» se muestra como «64»; «2.50», como «2.5». */
 const number = (raw: string): string =>
     /^\d+\.\d+$/.test(raw) ? raw.replace(/\.?0+$/, '') : raw;
 

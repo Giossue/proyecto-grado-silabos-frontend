@@ -17,7 +17,6 @@ const instruction = ref('');
 const instructionOpen = ref(false);
 const formContent = ref<HTMLElement | null>(null);
 const fileError = ref<string | null>(null);
-// La plantilla manda (I-151, I-155): sin @ProyectoCarrera en la plantilla no hay nada que buscar.
 const noConcepts = computed(() => !props.index.concepts.length);
 const disabled = computed(() => props.processing || Boolean(props.index.lock_reason) || !props.index.capabilities.extraction || noConcepts.value);
 const selectedCount = computed(() => files.value.length);
