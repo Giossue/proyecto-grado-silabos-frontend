@@ -6,7 +6,6 @@ import { PURGE_CANCELLED_MESSAGE } from '@/api/career-academics';
 import { applyCurricularImport, type CurricularDefinition, type CurricularImportDetail, type CurricularImportIndex, type CurricularProposedValue } from '@/api/curricular-imports';
 import CurricularValuePreview from './CurricularValuePreview.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
@@ -146,18 +145,17 @@ const apply = async () => {
     <details v-for="[key, group] in visibleGroups" :key="key" class="group/subject min-w-0 rounded-md border" :open="group.pending > 0 || visibleGroups.length <= 3">
       <summary class="flex cursor-pointer flex-wrap items-center gap-2 p-3">
         <h3 class="min-w-0 break-words font-medium">{{ group.label }}</h3>
-        <Badge variant="secondary">{{ group.items.length }} {{ group.items.length === 1 ? 'dato' : 'datos' }}</Badge>
-        <Badge v-if="group.pending" variant="outline">{{ group.pending }} por revisar</Badge>
+        <span class="text-sm text-muted-foreground">{{ group.items.length }} {{ group.items.length === 1 ? 'dato' : 'datos' }}<template v-if="group.pending"> · {{ group.pending }} por revisar</template></span>
       </summary>
       <FieldGroup class="gap-5 border-t p-3">
         <Field v-for="item in group.items" :key="item.id" class="min-w-0" :data-invalid="Boolean(problem(item))">
           <Field orientation="horizontal">
             <Checkbox v-if="detail.status === 'lista'" :id="`proposal-${item.id}`" :model-value="selected.includes(item.id)" :disabled="!editable || saving || Boolean(problem(item))" @update:model-value="choose(item.id, $event)" />
             <FieldLabel v-if="detail.status === 'lista'" :for="`proposal-${item.id}`">{{ definition(item)?.label ?? 'Dato por identificar' }}</FieldLabel>
-            <template v-else><h4 class="text-sm font-medium">{{ definition(item)?.label ?? 'Dato por identificar' }}</h4><Badge :variant="detail.applied_items?.some((applied) => applied.id === item.id) ? 'secondary' : 'outline'">{{ detail.applied_items?.some((applied) => applied.id === item.id) ? 'Guardado' : 'Sin aplicar' }}</Badge></template>
+            <template v-else><h4 class="text-sm font-medium">{{ definition(item)?.label ?? 'Dato por identificar' }}</h4><span class="text-sm text-muted-foreground">· {{ detail.applied_items?.some((applied) => applied.id === item.id) ? 'Guardado' : 'Sin aplicar' }}</span></template>
           </Field>
           <template v-if="detail.status === 'lista'">
-            <Badge v-if="item.change" :variant="item.change === 'replace' ? 'outline' : 'secondary'" class="w-fit">{{ { new: 'Dato nuevo', unchanged: 'Sin cambio de contenido', replace: 'Reemplaza el dato vigente' }[item.change] }}</Badge>
+            <p v-if="item.change" class="text-sm text-muted-foreground">{{ { new: 'Dato nuevo', unchanged: 'Sin cambio de contenido', replace: 'Reemplaza el dato vigente' }[item.change] }}</p>
             <div v-if="item.change === 'replace' && item.current_value !== null && item.current_value !== undefined" class="flex flex-col gap-2 border-l-2 pl-3">
               <p class="text-sm font-medium">Dato vigente</p>
               <CurricularValuePreview :definition="definition(item)" :value="item.current_value" />
