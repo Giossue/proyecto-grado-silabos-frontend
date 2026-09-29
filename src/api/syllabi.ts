@@ -10,16 +10,6 @@ export type DocumentPresentation = {
   logos: { institution: string; faculty: string };
 };
 
-export type IdentificationCell = {
-  text: string;
-  span: number;
-  rows: number;
-  style: "blue" | "shade" | "plain";
-  bold: boolean;
-  small: boolean;
-  center: boolean;
-};
-
 export type SyllabusRow = {
   id: string;
   subject: string;
@@ -84,7 +74,6 @@ export type SyllabusDetail = {
     results: Array<{ field_id: string | null; code: string; severity: string; message: string }>;
   } | null;
   presentation: DocumentPresentation;
-  identification: IdentificationCell[][];
   sections: Array<{
     id: string;
     key: string;

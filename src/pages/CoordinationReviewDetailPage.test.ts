@@ -69,7 +69,6 @@ const detail = (withObservation = false, decisionsAllowed = true): ReviewDetail 
     submitted_at: "2026-09-16T10:00:00Z",
     submitted_by: "Docente Demo",
     is_current: true,
-    identification: null,
     snapshot: {
       sections: [{
         key: "descripcion",

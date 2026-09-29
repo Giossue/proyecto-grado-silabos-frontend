@@ -1,7 +1,6 @@
 import { api } from "@/api/client";
 import type {
   DocumentPresentation,
-  IdentificationCell,
   TableLayout,
 } from "@/api/syllabi";
 import type { DocumentNode } from "@/lib/templateDocument";
@@ -95,7 +94,6 @@ export type ReviewDetail = {
         }>;
       }>;
     };
-    identification: IdentificationCell[][] | null;
     is_current: boolean;
   };
   history: Array<{

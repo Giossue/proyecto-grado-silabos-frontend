@@ -69,7 +69,6 @@ const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", t
     title: "PROGRAMA DE ASIGNATURA (SÍLABO)",
     logos: { institution: "/institution.png", faculty: "/faculty.png" },
   },
-  identification: [],
   sections: [{
     id: "section-1",
     key: "descripcion",

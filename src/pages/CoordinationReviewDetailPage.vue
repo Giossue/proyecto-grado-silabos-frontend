@@ -15,7 +15,6 @@ import TemplateDocumentView from '@/components/domain/configuration/TemplateDocu
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
-import IdentificationCard from '@/components/domain/syllabus/IdentificationCard.vue';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
 import ReviewObservationSheet from '@/components/domain/syllabus/ReviewObservationSheet.vue';
 import SyllabusResetDialog from '@/components/domain/syllabus/SyllabusResetDialog.vue';
@@ -142,8 +141,7 @@ onMounted(load);
               <dl v-else class="grid gap-4">
                 <div v-for="field in block.fields" :key="field.key" class="rounded-md border p-4">
                   <dt class="flex flex-wrap gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Institucional</Badge></dt>
-                  <dd v-if="block.content_type === 'institutional' && field.inherited && data.revision.identification" class="mt-3"><IdentificationCard :grid="data.revision.identification" /></dd>
-                  <dd v-else-if="field.rows.length === 0" class="mt-2 text-sm whitespace-pre-wrap">{{ formatValue(field.value) }}</dd>
+                  <dd v-if="field.rows.length === 0" class="mt-2 text-sm whitespace-pre-wrap">{{ formatValue(field.value) }}</dd>
                   <dd v-else-if="block.table" class="mt-3"><SyllabusTableView :layout="block.table" :rows="tableRows(field)" :planning-expectations="planningExpectations" /></dd>
                   <dd v-else class="mt-3 flex flex-col gap-2"><div v-for="(row, index) in field.rows" :key="row.id" class="rounded bg-muted p-3 text-sm whitespace-pre-wrap"><span class="font-medium">Fila {{ index + 1 }}:</span> {{ formatValue(row.data) }}</div></dd>
                 </div>
