@@ -92,8 +92,8 @@ export type AcademicStructureProps = {
     period_status: "proximo" | "en_curso" | "finalizado";
     period_status_label: string;
     period_planning_enabled: boolean;
-    campus_name: string;
-    modality_name: string;
+    campus_name: string | null;
+    modality_name: string | null;
     parallels: {
       id: string;
       code: string;
