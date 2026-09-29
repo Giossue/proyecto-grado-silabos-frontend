@@ -14,15 +14,12 @@ import type { EditorView } from '@tiptap/pm/view';
 import StarterKit from '@tiptap/starter-kit';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import { inlineNodeLabel, markClass, sheetMark } from '@/components/domain/configuration/template-table/inlineNodeLabel';
-import type { ConditionTrigger } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import TemplateTableInlineNode from '@/components/domain/configuration/TemplateTableInlineNode.vue';
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
 
 export type TemplateTableExtensionOptions = {
     /** Nombre visible de un dato automático; nunca se muestra su clave. */
     variableLabel?: (id: string) => string | undefined;
-    /** Preguntas Sí/No o de selección de las que puede depender una ficha (I-158). */
-    conditionTriggers?: () => ConditionTrigger[];
 };
 
 
@@ -186,11 +183,10 @@ const StyledTableHeader = TableHeader.extend({
 const inlineNode = (
     name: 'field' | 'variable',
     variableLabel?: (id: string) => string | undefined,
-    conditionTriggers?: () => ConditionTrigger[],
 ) =>
     Node.create({
         name,
-        addOptions: () => ({ variableLabel, conditionTriggers }),
+        addOptions: () => ({ variableLabel }),
         group: 'inline',
         inline: true,
         atom: true,
@@ -270,6 +266,6 @@ export const templateTableExtensions = (
     TableRow,
     StyledTableCell,
     StyledTableHeader,
-    inlineNode('field', undefined, options.conditionTriggers),
+    inlineNode('field'),
     inlineNode('variable', options.variableLabel),
 ];

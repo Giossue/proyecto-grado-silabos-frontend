@@ -36,9 +36,6 @@ export const SHEET_MARK_HINTS: Record<SheetMark, string> = {
     project: 'lo llena Coordinación al importar sus documentos',
 };
 
-/** Pregunta de la que puede depender otra ficha: «Pedir solo si…» (I-158). */
-export type ConditionTrigger = { key: string; label: string; options: string[] };
-
 /** Nombre interno de la ficha: el del dato o de la pregunta, nunca una clave. */
 export const inlineNodeName = (
     name: string,
@@ -66,13 +63,10 @@ export const inlineNodeLabel = (
         return `X si ${String(attrs.label)} = ${String(attrs.choice)}`;
     }
 
-    const shown = {
+    return {
         automatic: () => inlineNodeName(name, attrs, variableLabel),
         teacher: () => 'Docente',
         yesNo: () => 'Docente: Sí o No',
         project: () => 'Proyecto de carrera',
     }[sheetMark(name, attrs)]();
-
-    // Una ficha que se pide solo con cierta respuesta lo avisa en la hoja (I-158).
-    return attrs.showWhen ? `${shown} · condicional` : shown;
 };

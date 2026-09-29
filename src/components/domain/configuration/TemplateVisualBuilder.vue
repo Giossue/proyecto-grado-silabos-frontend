@@ -23,7 +23,6 @@ import { Button } from '@/components/ui/button';
 import { defaultDocument, nodesOfType } from '@/lib/templateDocument';
 import { sectionOrientation } from '@/lib/templateParts';
 import { templatePreviewFields } from '@/lib/templatePreview';
-import { choiceOptions, isChoiceField } from '@/lib/fieldConditions';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { apiRouter as router } from '@/lib/apiVisit';
@@ -62,20 +61,6 @@ type Selection =
     | { kind: 'field'; sectionId: string; blockId: string };
 
 const selection = ref<Selection>({ kind: 'document' });
-/** Preguntas Sí/No o de selección: las que sirven para «Pedir solo si…» en la hoja (I-158). */
-const conditionTriggers = computed(() =>
-    props.template.sections.flatMap((section) =>
-        section.blocks.flatMap((block) =>
-            block.fields
-                .filter((field) => !field.inherited && isChoiceField(field))
-                .map((field) => ({
-                    key: field.key,
-                    label: field.label.trim() || block.title.trim() || section.title,
-                    options: choiceOptions(field).map((option) => option.value),
-                })),
-        ),
-    ),
-);
 const activeTable = ref<string | null>(null);
 const reorderPending = ref(false);
 const sectionActions = ref<Record<string, Editable>>({});
@@ -781,7 +766,6 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             ribbon-target="#template-editor-ribbon"
                             :section-title="section.title"
                             :part-title="block.title"
-                            :condition-triggers="conditionTriggers"
                             @activate="selectField(section.id, block.id)"
                             @editing-change="
                                 updateTableEditing(section.id, block.id, $event)

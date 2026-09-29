@@ -21,7 +21,6 @@ import type { CSSProperties } from 'vue';
 import TemplateTableInsertMenu from '@/components/domain/configuration/template-table/TemplateTableInsertMenu.vue';
 import TemplateTableRowsMenu from '@/components/domain/configuration/template-table/TemplateTableRowsMenu.vue';
 import { templateTableExtensions } from '@/components/domain/configuration/template-table/templateTableExtensions';
-import type { ConditionTrigger } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import type { CellAlignment } from '@/components/domain/configuration/template-table/types';
 import { useTableCellResize } from '@/components/domain/configuration/template-table/useTableCellResize';
 import { useTemplateTableActions } from '@/components/domain/configuration/template-table/useTemplateTableActions';
@@ -37,7 +36,6 @@ import type {
     DocumentNode,
     TemplateVariable,
 } from '@/lib/templateDocument';
-import { nodesOfType } from '@/lib/templateDocument';
 
 const props = defineProps<{
     document: DocumentNode;
@@ -54,8 +52,6 @@ const props = defineProps<{
     /** Nombres de respaldo para las marcas sin texto al lado (I-155). */
     sectionTitle: string;
     partTitle?: string;
-    /** Preguntas Sí/No o de selección de la plantilla, para «Pedir solo si…» (I-158). */
-    conditionTriggers?: ConditionTrigger[];
 }>();
 
 const emit = defineEmits<{
@@ -84,20 +80,6 @@ const variableLabels = computed(
     () =>
         new Map(allVariables.value.map((variable) => [variable.key, variable.label])),
 );
-// Las de la plantilla más las recién insertadas en esta hoja, aún sin guardar.
-const conditionTriggers = (): ConditionTrigger[] => {
-    const byKey = new Map((props.conditionTriggers ?? []).map((trigger) => [trigger.key, trigger]));
-    const document = (editor.value?.getJSON() as DocumentNode | undefined) ?? props.document;
-    for (const node of nodesOfType(document, 'field')) {
-        const options = node.attrs?.options;
-        const key = String(node.attrs?.key ?? '');
-        if (node.attrs?.kind === 'seleccion_unica' && !node.attrs?.choice && Array.isArray(options) && options.length && !byKey.has(key)) {
-            byKey.set(key, { key, label: String(node.attrs?.label ?? key), options: options.map(String) });
-        }
-    }
-
-    return [...byKey.values()];
-};
 const editor = useEditor({
     content: props.document,
     editorProps: {
@@ -111,7 +93,6 @@ const editor = useEditor({
     extensions: [
         ...templateTableExtensions({
             variableLabel: (id) => variableLabels.value.get(id),
-            conditionTriggers: () => conditionTriggers(),
         }),
         // Page breaks between rows drawn by the sheet view; presentation only.
         Extension.create({
@@ -532,6 +513,10 @@ defineExpose({ getDocument });
 .template-table-editor .template-table-project {
     background: var(--document-mark-project-background);
     outline: 1px solid var(--document-mark-project-border);
+}
+.template-table-editor .is-linked {
+    /* Pregunta y preguntas de seguimiento se resaltan juntas (I-159). */
+    box-shadow: 0 0 0 2px var(--primary);
 }
 .template-table-editor .tiptap .template-table-field,
 .template-table-editor .tiptap .template-table-variable,

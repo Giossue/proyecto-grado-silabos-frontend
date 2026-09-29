@@ -4,7 +4,6 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import TemplateTableEditor from '@/components/domain/configuration/TemplateTableEditor.vue';
-import type { ConditionTrigger } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -34,7 +33,6 @@ const props = defineProps<{
     ribbonTarget?: string;
     sectionTitle: string;
     partTitle?: string;
-    conditionTriggers?: ConditionTrigger[];
 }>();
 
 const emit = defineEmits<{
@@ -295,7 +293,6 @@ defineExpose({ start });
                 :template-id="templateId"
                 :section-title="sectionTitle"
                 :part-title="partTitle"
-                :condition-triggers="conditionTriggers"
                 :toolbar-target="
                     ribbonTarget ? `${ribbonTarget}-tools` : undefined
                 "

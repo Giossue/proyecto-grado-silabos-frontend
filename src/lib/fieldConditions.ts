@@ -21,18 +21,6 @@ export const CHOICE_TYPES = ['seleccion_unica', 'booleano'];
 export const isChoiceField = (field: { type?: string }): boolean =>
     CHOICE_TYPES.includes(field.type ?? '');
 
-/** Opciones que puede tomar una parte de condición. */
-export const choiceOptions = (field: {
-    type?: string;
-    options?: Choice[];
-}): Choice[] =>
-    field.type === 'booleano'
-        ? [
-              { value: 'true', label: 'Sí' },
-              { value: 'false', label: 'No' },
-          ]
-        : (field.options ?? []);
-
 const conditionText = (value: unknown): string =>
     typeof value === 'boolean'
         ? String(value)

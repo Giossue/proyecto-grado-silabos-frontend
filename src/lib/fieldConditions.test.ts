@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { choiceOptions, hiddenKeys } from '@/lib/fieldConditions';
+import { hiddenKeys } from '@/lib/fieldConditions';
 
 describe('fieldConditions', () => {
     const fields = (value: unknown) => [
@@ -22,6 +22,5 @@ describe('fieldConditions', () => {
                 { key: 'y', show_when: { key: 'borrada', value: 'Sí' } },
             ]).size,
         ).toBe(0);
-        expect(choiceOptions({ type: 'booleano' }).map((o) => o.label)).toEqual(['Sí', 'No']);
     });
 });
