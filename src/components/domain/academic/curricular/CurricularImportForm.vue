@@ -5,16 +5,14 @@ import type { CurricularImportIndex } from '@/api/curricular-imports';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 
 const props = defineProps<{ index: CurricularImportIndex; processing: boolean; errors: Record<string, string[]> }>();
-const emit = defineEmits<{ submit: [input: { files: File[]; source_ids: string[]; instruction: string }] }>();
+const emit = defineEmits<{ submit: [input: { files: File[]; instruction: string }] }>();
 const files = ref<File[]>([]);
-const sourceIds = ref<string[]>([]);
 const instruction = ref('');
 const instructionOpen = ref(false);
 const formContent = ref<HTMLElement | null>(null);
@@ -22,8 +20,8 @@ const fileError = ref<string | null>(null);
 // La plantilla manda (I-151): sin datos declarados por Administración no hay nada que buscar.
 const noConcepts = computed(() => !props.index.concepts.length);
 const disabled = computed(() => props.processing || Boolean(props.index.lock_reason) || !props.index.capabilities.extraction || noConcepts.value);
-const selectedCount = computed(() => files.value.length + sourceIds.value.length);
-const fieldErrors = computed(() => Object.entries(props.errors).filter(([key]) => key.startsWith('files') || key.startsWith('source_ids')).flatMap(([, values]) => values));
+const selectedCount = computed(() => files.value.length);
+const fieldErrors = computed(() => Object.entries(props.errors).filter(([key]) => key.startsWith('files')).flatMap(([, values]) => values));
 const addFiles = (incoming: File[]) => {
   const unsupported = incoming.some((file) => file.name.toLowerCase().endsWith('.pdf') ? !props.index.capabilities.pdf : !props.index.capabilities.xlsx);
   if (unsupported) { fileError.value = 'Uno de los formatos adjuntos no está disponible para importar en este momento.'; return; }
@@ -35,12 +33,9 @@ const addFiles = (incoming: File[]) => {
     if (!files.value.some((item) => item.name === file.name && item.size === file.size && item.lastModified === file.lastModified)) files.value.push(file);
   }
 };
-const selectSource = (id: string, selected: boolean | 'indeterminate') => {
-  sourceIds.value = selected === true ? [...sourceIds.value, id] : sourceIds.value.filter((item) => item !== id);
-};
 const submit = () => {
   if (disabled.value || !selectedCount.value) return;
-  emit('submit', { files: files.value, source_ids: sourceIds.value, instruction: instruction.value });
+  emit('submit', { files: files.value, instruction: instruction.value });
 };
 const revealInstruction = (): void => {
   if (formContent.value) formContent.value.scrollTop = formContent.value.scrollHeight;
@@ -76,16 +71,6 @@ watch(() => props.errors.instruction, (messages) => {
           </ul>
           <FieldError :errors="[fileError ?? undefined, ...fieldErrors]" />
         </Field>
-        <FieldSet v-if="index.sources.length" :disabled="disabled">
-          <FieldLegend>Reutilizar documentos</FieldLegend>
-          <FieldGroup class="max-h-44 gap-2 overflow-y-auto rounded-md border p-3">
-            <Field v-for="source in index.sources" :key="source.id" orientation="horizontal">
-              <Checkbox :id="`curricular-source-${source.id}`" :model-value="sourceIds.includes(source.id)" :disabled="disabled || (sourceIds.length >= 10 && !sourceIds.includes(source.id))" @update:model-value="selectSource(source.id, $event)" />
-              <FieldLabel :for="`curricular-source-${source.id}`" class="min-w-0 break-words">{{ source.name }}</FieldLabel>
-            </Field>
-          </FieldGroup>
-          <FieldDescription v-if="index.sources.length > 10">Puedes elegir hasta 10 documentos anteriores.</FieldDescription>
-        </FieldSet>
         <Collapsible v-if="!noConcepts">
           <CollapsibleTrigger as-child>
             <Button type="button" variant="ghost" size="sm" class="group px-0">
@@ -117,8 +102,8 @@ watch(() => props.errors.instruction, (messages) => {
     </div>
     <div class="flex shrink-0 flex-col gap-2 border-t bg-card py-3">
       <p v-if="noConcepts" class="text-sm text-muted-foreground">La importación se habilita cuando la plantilla pida datos de los documentos.</p>
-      <p v-else-if="!disabled && !selectedCount" class="text-sm text-muted-foreground">Selecciona un archivo o un documento anterior para continuar.</p>
-      <p v-else-if="selectedCount" class="text-sm text-muted-foreground">{{ selectedCount }} {{ selectedCount === 1 ? 'documento seleccionado' : 'documentos seleccionados' }}</p>
+      <p v-else-if="!disabled && !selectedCount" class="text-sm text-muted-foreground">Adjunta al menos un archivo para continuar.</p>
+      <p v-else-if="selectedCount" class="text-sm text-muted-foreground">{{ selectedCount }} {{ selectedCount === 1 ? 'archivo adjunto' : 'archivos adjuntos' }}</p>
       <Button type="submit" class="w-full" :disabled="disabled || !selectedCount">
         <Spinner v-if="processing" data-icon="inline-start" /><FileSearch v-else data-icon="inline-start" aria-hidden="true" />
         {{ processing ? 'Enviando documentos…' : 'Analizar documentos' }}

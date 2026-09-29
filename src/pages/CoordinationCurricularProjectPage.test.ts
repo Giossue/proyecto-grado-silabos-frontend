@@ -6,10 +6,10 @@ import FileDropzone from '@/components/domain/FileDropzone.vue';
 import { ref } from 'vue';
 import CoordinationCurricularProjectPage from './CoordinationCurricularProjectPage.vue';
 
-const api = vi.hoisted(() => ({ getCurricularImports: vi.fn(), getCurricularImport: vi.fn(), createCurricularImport: vi.fn(), applyCurricularImport: vi.fn(), retryCurricularImport: vi.fn(), getCurricularImportDocument: vi.fn() }));
+const api = vi.hoisted(() => ({ getCurricularImports: vi.fn(), getCurricularImport: vi.fn(), createCurricularImport: vi.fn(), applyCurricularImport: vi.fn(), retryCurricularImport: vi.fn(), getCurricularImportDocument: vi.fn(), discardCurricularImport: vi.fn() }));
 vi.mock('@/api/curricular-imports', () => api);
 vi.mock('@/state/session', () => ({ sessionState: { current: ref({ active_role: { id: 'role-1', code: 'coordinador', career_id: 'career-1', career_name: 'Software' } }) } }));
-const index: CurricularImportIndex = { imports: [], subjects: [{ id: 'subject-1', name: 'Calidad', code: 'SW-1' }], sources: [{ id: 'source-1', name: 'Guía institucional' }], current_values: [], concepts: [{ key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista', scope: 'asignatura' }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null };
+const index: CurricularImportIndex = { imports: [], subjects: [{ id: 'subject-1', name: 'Calidad', code: 'SW-1' }], current_values: [], concepts: [{ key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista', scope: 'asignatura' }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null };
 const detail: CurricularImportDetail = { id: 'import-1', career_id: 'career-1', status: 'en_ejecucion', documents: [{ source_id: 'source-1', name: 'Proyecto.pdf', kind: 'pdf', hash: 'hash', execution_id: 'execution' }], proposal: null, fingerprint: null, error: null, editable: false, lock_reason: null };
 const wrappers: Array<ReturnType<typeof mount>> = [];
 const mountPage = () => { const wrapper = mount(CoordinationCurricularProjectPage, { attachTo: document.body, global: { stubs: { PageFrame: { props: ['title', 'description'], template: '<main><h1>{{ title }}</h1><p>{{ description }}</p><slot /></main>' } } } }); wrappers.push(wrapper); return wrapper; };
@@ -37,7 +37,7 @@ describe('CoordinationCurricularProjectPage', () => {
 
     expect(button('Importar').getAttribute('aria-selected')).toBe('true');
     expect(document.querySelector('#curricular-import-instruction')).toBeNull();
-    expect(document.body.textContent).toContain('Selecciona un archivo o un documento anterior para continuar.');
+    expect(document.body.textContent).toContain('Adjunta al menos un archivo para continuar.');
     expect(document.body.textContent).not.toContain('Organizaré los datos por asignatura');
 
     button('Agregar una indicación (opcional)').click();
@@ -90,18 +90,17 @@ describe('CoordinationCurricularProjectPage', () => {
     await search.setValue('Calidad');
     expect(document.body.textContent).toContain('Resultado anterior.');
   });
-  it('envía los archivos y documentos anteriores antes de consultar avance real', async () => {
+  it('envía solo archivos nuevos antes de consultar avance real', async () => {
     vi.useFakeTimers();
     const wrapper = mountPage();
     await flushPromises();
-    expect(document.body.textContent).toContain('Reutilizar documentos');
+    expect(document.body.textContent).not.toContain('Reutilizar documentos');
     const file = new File(['demo'], 'Proyecto.pdf', { type: 'application/pdf' });
     wrapper.findComponent(FileDropzone).vm.$emit('files-selected', [file]);
-    document.querySelector<HTMLButtonElement>('#curricular-source-source-1')!.click();
     await flushPromises();
     button('Analizar documentos').click();
     await flushPromises();
-    expect(api.createCurricularImport).toHaveBeenCalledWith({ files: [file], source_ids: ['source-1'], instruction: '' });
+    expect(api.createCurricularImport).toHaveBeenCalledWith({ files: [file], instruction: '' });
     expect(document.body.textContent).toContain('Estoy leyendo los documentos');
     expect(button('Importar').getAttribute('aria-selected')).toBe('true');
     await vi.advanceTimersByTimeAsync(1800);
@@ -193,5 +192,21 @@ describe('CoordinationCurricularProjectPage', () => {
     button('Ver datos confirmados').click();
     await flushPromises();
     expect(button('Datos confirmados').getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('descarta una importación con confirmación y vuelve a Importar', async () => {
+    api.getCurricularImports.mockResolvedValue({ ...index, imports: [{ id: 'import-1', status: 'lista', created_at: '2026-09-27T10:00:00Z', applied_at: null, error: null }] });
+    api.discardCurricularImport.mockResolvedValue({ message: 'Importación descartada. Sus documentos se eliminaron.' });
+    mountPage();
+    await flushPromises();
+    button('Descartar importación').click();
+    await flushPromises();
+    expect(document.body.textContent).toContain('¿Descartar esta importación?');
+    expect(api.discardCurricularImport).not.toHaveBeenCalled();
+    api.getCurricularImports.mockResolvedValue(structuredClone(index));
+    button('Descartar').click();
+    await flushPromises();
+    expect(api.discardCurricularImport).toHaveBeenCalledWith('import-1');
+    expect(document.querySelector('[aria-current="step"]')?.textContent).toContain('Documentos');
   });
 });

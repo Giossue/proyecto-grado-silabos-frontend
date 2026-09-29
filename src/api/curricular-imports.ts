@@ -45,7 +45,6 @@ export type CurricularImportIndex = {
   current_values: ConfirmedCurricularValue[];
   /** Datos que la plantilla pide a los documentos de carrera; la importación solo busca estos (I-151). */
   concepts: Array<{ key: string; label: string; type: 'texto' | 'lista' | 'tabla'; scope: 'carrera' | 'asignatura' }>;
-  sources: Array<{ id: string; name: string }>;
   capabilities: { pdf: boolean; xlsx: boolean; extraction: boolean };
   lock_reason: string | null;
 };
@@ -69,13 +68,15 @@ export const getCurricularImports = () => api<CurricularImportIndex>('/coordinat
 export const getCurricularImport = (id: string) => api<CurricularImportDetail>(`/coordination/curricular-imports/${id}`);
 export const getCurricularImportDocument = (id: string, sourceId: string) => apiBlob(`/coordination/curricular-imports/${id}/documents/${sourceId}/original`);
 export const retryCurricularImport = (id: string) => api<CurricularImportDetail>(`/coordination/curricular-imports/${id}/retry`, { method: 'POST' });
-export const createCurricularImport = (input: { files: File[]; source_ids: string[]; instruction: string }) => {
+/** Cada importación trae sus archivos: los documentos son temporales (I-152). */
+export const createCurricularImport = (input: { files: File[]; instruction: string }) => {
   const body = new FormData();
   input.files.forEach((file) => body.append('files[]', file));
-  input.source_ids.forEach((id) => body.append('source_ids[]', id));
   if (input.instruction.trim()) body.append('instruction', input.instruction.trim());
   return api<CurricularImportDetail>('/coordination/curricular-imports', { method: 'POST', body });
 };
+/** Descarta la importación y elimina sus documentos temporales. */
+export const discardCurricularImport = (id: string) => api<{ message: string }>(`/coordination/curricular-imports/${id}`, { method: 'DELETE' });
 export const applyCurricularImport = (id: string, input: {
   expected_fingerprint: string;
   confirmed: true;

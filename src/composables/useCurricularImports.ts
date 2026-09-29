@@ -67,7 +67,7 @@ export function useCurricularImports(open: Ref<boolean>, careerId: () => string)
       if (request === sequence) fail(reason, 'No se pudieron cargar las importaciones de esta carrera.');
     } finally { if (request === sequence) loading.value = false; }
   };
-  const create = async (payload: { files: File[]; source_ids: string[]; instruction: string }): Promise<void> => {
+  const create = async (payload: { files: File[]; instruction: string }): Promise<void> => {
     if (uploading.value || !index.value?.capabilities.extraction || index.value.lock_reason) return;
     const request = ++sequence;
     uploading.value = true;

@@ -2,7 +2,7 @@
 import { Download, FileSearch, RotateCw } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
-import { getCurricularImportDocument, type CurricularImportDetail } from '@/api/curricular-imports';
+import { discardCurricularImport, getCurricularImportDocument, type CurricularImportDetail } from '@/api/curricular-imports';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import CurricularConfirmedData from '@/components/domain/academic/curricular/CurricularConfirmedData.vue';
 import CurricularImportForm from '@/components/domain/academic/curricular/CurricularImportForm.vue';
@@ -11,6 +11,7 @@ import CurricularImportSteps from '@/components/domain/academic/curricular/Curri
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
@@ -53,6 +54,21 @@ const download = async (document: CurricularImportDetail['documents'][number]): 
   } catch (reason) {
     toast.error(reason instanceof ApiError ? reason.message : 'No se pudo descargar el documento.');
   } finally { downloading.value = null; }
+};
+// Descartar elimina la importación y sus documentos temporales (I-152).
+const discardOpen = ref(false);
+const discarding = ref(false);
+const discard = async (): Promise<void> => {
+  if (!detail.value || discarding.value) return;
+  discarding.value = true;
+  try {
+    const result = await discardCurricularImport(detail.value.id);
+    toast.success(result.message);
+    discardOpen.value = false;
+    await load(false);
+  } catch (reason) {
+    toast.error(reason instanceof ApiError ? reason.message : 'No se pudo descartar la importación.');
+  } finally { discarding.value = false; }
 };
 onMounted(async () => {
   await load();
@@ -99,7 +115,7 @@ onMounted(async () => {
           <Empty class="border">
             <EmptyHeader>
               <EmptyTitle>Datos guardados</EmptyTitle>
-              <EmptyDescription>Los sílabos nuevos de {{ careerName }} ya usan estos datos.</EmptyDescription>
+              <EmptyDescription>Los sílabos nuevos de {{ careerName }} ya usan estos datos. Los documentos se eliminaron; cada dato conserva su extracto y de dónde salió.</EmptyDescription>
             </EmptyHeader>
             <div class="flex flex-wrap justify-center gap-2">
               <Button type="button" @click="navigate('confirmed')">Ver datos confirmados</Button>
@@ -116,6 +132,19 @@ onMounted(async () => {
           <Alert v-if="detail.lock_reason || !index.capabilities.extraction"><AlertDescription>{{ detail.lock_reason ?? 'El análisis se podrá reintentar cuando el servicio de extracción esté disponible.' }}</AlertDescription></Alert>
           <Button type="button" variant="outline" class="self-start" :disabled="uploading || !index.capabilities.extraction || Boolean(detail.lock_reason)" @click="retry"><Spinner v-if="uploading" data-icon="inline-start" /><RotateCw v-else data-icon="inline-start" aria-hidden="true" />Reintentar análisis</Button>
         </template>
+        <Button v-if="detail.status === 'lista' || detail.status === 'fallida'" type="button" variant="ghost" class="self-start text-muted-foreground" :disabled="discarding" @click="discardOpen = true">Descartar importación</Button>
+        <Dialog v-model:open="discardOpen">
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>¿Descartar esta importación?</DialogTitle>
+              <DialogDescription>Se eliminarán la propuesta y sus documentos. Los datos ya confirmados de la carrera no cambian.</DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button type="button" variant="outline" :disabled="discarding" @click="discardOpen = false">Cancelar</Button>
+              <Button type="button" variant="destructive" :disabled="discarding" @click="discard"><Spinner v-if="discarding" data-icon="inline-start" />Descartar</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <Button v-if="error" type="button" variant="outline" class="self-start" @click="select(detail.id)"><RotateCw data-icon="inline-start" aria-hidden="true" />Consultar de nuevo</Button>
       </template>
       <Button v-else-if="error" type="button" class="self-start" @click="load()"><FileSearch data-icon="inline-start" aria-hidden="true" />Cargar importaciones</Button>
