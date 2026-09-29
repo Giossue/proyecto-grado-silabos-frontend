@@ -20,6 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
@@ -490,7 +491,10 @@ onBeforeUnmount(() => {
             </CardContent>
           </Card>
 
-          <section v-for="(section, sectionIndex) in visibleSections" :id="`section-${section.id}`" :key="section.id" class="flex scroll-mt-6 flex-col gap-6 border-t pt-8 first:border-t-0 first:pt-0">
+          <!-- Cada sección es una tarjeta, como la ficha de identificación, separada de la siguiente. -->
+          <template v-for="(section, sectionIndex) in visibleSections" :key="section.id">
+          <Separator v-if="sectionIndex > 0" />
+          <section :id="`section-${section.id}`" class="flex scroll-mt-6 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
             <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionHeading(section.title, sectionIndex) }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
             <SyllabusAcademicContext v-if="section.blocks.some((block) => block.content_type === 'institutional')" :variables="syllabus.template_variables ?? {}" />
 
@@ -530,6 +534,7 @@ onBeforeUnmount(() => {
               </template>
             </FieldSet>
           </section>
+          </template>
 
         </main>
 
