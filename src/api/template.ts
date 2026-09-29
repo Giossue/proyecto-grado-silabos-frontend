@@ -1,7 +1,7 @@
 import { api } from '@/api/client';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 
-export type TemplateContentType = "text" | "table" | "bulleted_list" | "numbered_list" | "boolean" | "multiple_choice" | "institutional" | "fixed" | "automatic";
+export type TemplateContentType = "text" | "table" | "bulleted_list" | "numbered_list" | "boolean" | "multiple_choice" | "institutional" | "fixed";
 /**
  * Orientación de la hoja de una parte. Viaja en la misma petición que guarda la
  * parte (Editar parte); si el servidor cambia el nombre del dato, se ajusta aquí.
@@ -35,6 +35,10 @@ export type TemplateBlock = { id: string; key: string; title: string; type: stri
 export type TemplateAppearance = { font_family: string; body_font_size: number; title_font_size: number; section_font_size: number; field_font_size: number; text_color: string; accent_color: string; table_header_background: string; table_header_color: string; margin_cm: number; orientation: string; title_bold: boolean; title_italic: boolean; title_alignment: string; section_bold: boolean; section_italic: boolean; section_alignment: string; body_alignment: string };
 export type TemplateOption = { value: string | number; label: string };
 export type TemplatePayload = { processLock: string | null; template: null | { id: string; name: string; description: string | null; appearance: TemplateAppearance; titleBlock: { text: string }; sections: Array<{ id: string; key: string; title: string; description: string | null; blocks: TemplateBlock[] }> }; identificationSample?: unknown[][]; blockTypes?: Array<{ value: Exclude<TemplateContentType, 'institutional'>; label: string }>; appearanceOptions?: { fonts: TemplateOption[]; body_sizes: TemplateOption[]; title_sizes: TemplateOption[]; section_sizes: TemplateOption[]; field_sizes: TemplateOption[]; margins: TemplateOption[]; colors: TemplateOption[]; alignments: TemplateOption[]; orientations: TemplateOption[] }; variables?: TemplateVariable[]; identificationDesign?: DocumentNode; logos?: { institution: string; faculty: string; institution_size: { width: number; height: number }; faculty_size: { width: number; height: number } } };
+/** @ProyectoCarrera nuevo (I-155): lo llena Coordinación al importar sus documentos. */
+export type NewProjectData = { label: string; type: 'texto' | 'lista'; scope: 'asignatura' | 'carrera' };
+export const declareProjectData = (templateId: string, input: NewProjectData) =>
+  api<{ message: string; variable: TemplateVariable }>(`/admin/template/${templateId}/project-data`, { method: 'POST', body: JSON.stringify(input) });
 export const getTemplate = () => api<TemplatePayload>('/admin/template');
 export const createTemplate = () => api<{ message: string; template_id: string }>('/admin/template', { method: 'POST', body: JSON.stringify({}) });
 export const formatTemplate = (id: string) => api<{ message: string }>(`/admin/template/${id}/format`, { method: 'POST', body: JSON.stringify({}) });
