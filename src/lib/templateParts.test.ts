@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { inlineNodeLabel, inlineNodeName } from '@/components/domain/configuration/template-table/inlineNodeLabel';
-import { partFormLabel, sectionOrientation } from '@/lib/templateParts';
+import { isFreeTextPart, partFormLabel, sectionOrientation } from '@/lib/templateParts';
 import type { TemplateFieldContainer } from '@/types/configuration';
 
 const part = (overrides: Partial<TemplateFieldContainer>): TemplateFieldContainer => ({
@@ -20,6 +20,11 @@ describe('templateParts', () => {
     it('usa hoja horizontal cuando una parte de la sección la pide', () => {
         expect(sectionOrientation([part({}), part({ page_orientation: 'landscape' })], 'portrait')).toBe('landscape');
         expect(sectionOrientation([part({})], 'portrait')).toBe('portrait');
+    });
+
+    it('una parte de Texto libre se reconoce por su pregunta texto_libre', () => {
+        expect(isFreeTextPart(part({ fields: [{ id: 'f', key: 'objetivo', label: 'Objetivo', type: 'texto_libre' }] } as never))).toBe(true);
+        expect(isFreeTextPart(part({}))).toBe(false);
     });
 
     it('muestra los datos por su nombre, nunca por su clave', () => {

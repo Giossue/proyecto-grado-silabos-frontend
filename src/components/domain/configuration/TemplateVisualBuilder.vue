@@ -21,7 +21,7 @@ import TemplateToolbarButton from '@/components/domain/configuration/TemplateToo
 import PaginatedDocument from '@/components/domain/PaginatedDocument.vue';
 import { Button } from '@/components/ui/button';
 import { defaultDocument, nodesOfType } from '@/lib/templateDocument';
-import { sectionOrientation } from '@/lib/templateParts';
+import { isFreeTextPart, sectionOrientation } from '@/lib/templateParts';
 import { templatePreviewFields } from '@/lib/templatePreview';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
@@ -148,9 +148,11 @@ const partNumber = (section: TemplateSection, index: number): number =>
     section.blocks
         .slice(0, index + 1)
         .filter((block) => block.title.trim() !== '').length;
+// Texto libre no tiene hoja que editar: el docente escribe ahí; el admin solo le pone nombre.
 const editableOnSheet = (block: TemplateFieldContainer): boolean =>
-    block.content_type !== 'institutional' ||
-    nodesOfType(documentFor(block), 'table').length > 0;
+    !isFreeTextPart(block) &&
+    (block.content_type !== 'institutional' ||
+        nodesOfType(documentFor(block), 'table').length > 0);
 
 type SheetGroup = {
     orientation: TemplateAppearance['orientation'];

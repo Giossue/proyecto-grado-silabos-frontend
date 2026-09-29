@@ -24,8 +24,12 @@ export const isFixedPart = (block: TemplateFieldContainer): boolean =>
         Boolean(block.document) &&
         nodesOfType(block.document!, 'field').length === 0);
 
+/** Texto libre: la escribe el docente con formato; el admin solo le pone nombre, sin hoja ni marcas. */
+export const isFreeTextPart = (block: TemplateFieldContainer): boolean =>
+    block.fields.some((field) => field.type === 'texto_libre');
+
 export const partFormLabel = (block: TemplateFieldContainer): string => {
-    if (block.fields.some((field) => field.type === 'texto_libre')) {
+    if (isFreeTextPart(block)) {
         return 'Texto libre';
     }
 
