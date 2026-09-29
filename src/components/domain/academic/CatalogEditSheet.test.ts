@@ -38,13 +38,20 @@ describe('CatalogEditSheet · logo de la facultad', () => {
     button('Quitar logo')!.click();
     await flushPromises();
 
+    // La zona nueva es obligatoria: el navegador no envía el formulario sin archivo.
+    expect(document.body.querySelector<HTMLInputElement>('#edit-faculty-logo-faculty-1')?.required).toBe(true);
     button('Guardar cambios')!.click();
     await flushPromises();
-    expect(document.body.textContent).toContain('El logo de la facultad es obligatorio.');
     expect(updateAcademicRecord).not.toHaveBeenCalled();
 
     // Cerrar y volver a abrir: como si nada hubiera pasado.
     await wrapper.setProps({ open: false });
+    await wrapper.setProps({ open: true });
+    await flushPromises();
+    expect(document.body.querySelector('img[alt="Logo actual de la facultad"]')).not.toBeNull();
+    expect(document.body.textContent).not.toContain('Arrastra tu PNG aquí');
+    wrapper.unmount();
+  });
     await wrapper.setProps({ open: true });
     await flushPromises();
     expect(document.body.querySelector('img[alt="Logo actual de la facultad"]')).not.toBeNull();
