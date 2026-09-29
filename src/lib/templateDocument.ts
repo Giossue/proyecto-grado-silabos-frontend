@@ -1,10 +1,3 @@
-import { columnWidths, headerRows } from '@/lib/tableLayout';
-import { DOCUMENT_COLORS } from '@/lib/documentPalette';
-import type {
-    TableColumnRole,
-    TableLayout,
-    TableRowData,
-} from '@/lib/tableLayout';
 
 export type DocumentNode = {
     type: string;
@@ -23,7 +16,6 @@ export type DocumentField = {
     label: string;
     type?: string;
     value?: unknown;
-    rows?: { id: string | null; data: TableRowData }[];
     options?: { value: string; label: string }[];
     options_source?: string | null;
     options_sources?: string[];
@@ -33,8 +25,6 @@ export type DocumentField = {
     /** «Mostrar solo si»: la condición no se cumple y la parte no se muestra. */
     hidden?: boolean;
     show_when?: { key: string; value: string } | null;
-    role?: TableColumnRole | null;
-    sum?: boolean | null;
 };
 export const DOCUMENT_FONTS = [
     'Arial',
@@ -47,20 +37,13 @@ export const paragraph = (content: DocumentNode[] = []): DocumentNode => ({
     type: 'paragraph',
     content,
 });
-export const textNode = (text: string): DocumentNode => ({
-    type: 'text',
-    text,
-});
 export const documentOptionsSources = (field: Pick<DocumentField, 'options_source' | 'options_sources'>): string[] => field.options_sources ?? (field.options_source ? [field.options_source] : []);
 export const documentFieldOptions = (field: DocumentField): string[] | null =>
     !documentOptionsSources(field).length && ['seleccion_unica', 'seleccion_multiple'].includes(field.type ?? '')
         ? (field.options?.map((option) => option.value) ?? [])
         : null;
-export const fieldNode = (
-    field: DocumentField,
-    type = 'field',
-): DocumentNode => ({
-    type,
+export const fieldNode = (field: DocumentField): DocumentNode => ({
+    type: 'field',
     attrs: {
         key: field.key,
         label: field.label,
@@ -69,21 +52,7 @@ export const fieldNode = (
         options: documentFieldOptions(field),
         options_source: documentOptionsSources(field).length === 1 ? documentOptionsSources(field)[0]! : null,
         options_sources: documentOptionsSources(field),
-        ...(type === 'column'
-            ? { role: field.role ?? null, sum: field.sum ?? null }
-            : {}),
     },
-});
-export const cellNode = (
-    content: DocumentNode[],
-    colspan = 1,
-    rowspan = 1,
-    backgroundColor: string | null = null,
-    colwidth: number[] | null = null,
-): DocumentNode => ({
-    type: 'tableCell',
-    attrs: { colspan, rowspan, backgroundColor, colwidth },
-    content: [paragraph(content)],
 });
 export const nodesOfType = (
     doc: DocumentNode,
@@ -93,45 +62,10 @@ export const nodesOfType = (
     ...(doc.content ?? []).flatMap((child) => nodesOfType(child, type)),
 ];
 
-/** Retirar el último dato de fila convierte la tabla en contenido estático. */
-export const demoteEmptyRepeatedTables = (
-    document: DocumentNode,
-): DocumentNode => {
-    const content = document.content?.map(demoteEmptyRepeatedTables);
-    const node = content ? { ...document, content } : { ...document };
-
-    if (
-        node.type !== 'table' ||
-        node.attrs?.repeatKey == null ||
-        nodesOfType(node, 'column').length > 0
-    ) {
-        return node;
-    }
-
-    return {
-        ...node,
-        attrs: {
-            ...node.attrs,
-            repeatKey: null,
-            repeatLabel: null,
-            groupByUnit: null,
-            visualStructure: null,
-        },
-        content: (node.content ?? []).map((row) =>
-            row.type === 'tableRow'
-                ? {
-                      ...row,
-                      attrs: { ...row.attrs, rowRole: 'fixed' },
-                  }
-                : row,
-        ),
-    };
-};
-
+/** Hoja de una parte sin diseño guardado: la ficha institucional o su primera pregunta. */
 export function defaultDocument(
     block: {
         content_type: string;
-        table: TableLayout | null;
         fields: DocumentField[];
     },
     identification: DocumentNode,
@@ -142,138 +76,7 @@ export function defaultDocument(
 
     const first = block.fields[0];
 
-    if (!first) {
-        return { type: 'doc', content: [paragraph()] };
-    }
-
-    if (block.content_type !== 'table' || !block.table) {
-        const field = fieldNode(first);
-
-        if (['bulleted_list', 'numbered_list'].includes(block.content_type)) {
-            field.attrs!.listStyle =
-                block.content_type === 'bulleted_list' ? 'bullet' : 'number';
-        }
-
-        return { type: 'doc', content: [paragraph([field])] };
-    }
-
-    const layout = block.table;
-    const widths = (
-        columnWidths(layout) ??
-        layout.columns.map(() => `${100 / layout.columns.length}%`)
-    ).map((w) => Math.max(20, Math.round(parseFloat(w) * 6)));
-    const row = (content: DocumentNode[], rowRole = 'fixed'): DocumentNode => ({
-        type: 'tableRow',
-        attrs: { rowRole },
-        content,
-    });
-    const count = layout.columns.length;
-    const unitRows = layout.header_fields.map((field) =>
-        row(
-            [
-                cellNode(
-                    [
-                        textNode(`${field.label}: `),
-                        fieldNode({ ...field, type: 'texto_largo' }, 'column'),
-                    ],
-                    count,
-                    1,
-                    DOCUMENT_COLORS.lightBlue,
-                ),
-            ],
-            'unit',
-        ),
-    );
-    const headers = headerRows(layout).map((cells) =>
-        row(
-            cells.map((cell) => ({
-                ...cellNode(
-                    [
-                        {
-                            ...textNode(cell.label),
-                            marks: [
-                                { type: 'bold' },
-                                {
-                                    type: 'textStyle',
-                                    attrs: {
-                                        color: DOCUMENT_COLORS.tableHeaderText,
-                                    },
-                                },
-                            ],
-                        },
-                    ],
-                    cell.colspan,
-                    cell.rowspan,
-                    DOCUMENT_COLORS.lightBlue,
-                    cell.columns.map((index) => widths[index]),
-                ),
-                type: 'tableHeader',
-            })),
-        ),
-    );
-    const record = row(
-        layout.columns.map((column, index) =>
-            cellNode(
-                [
-                    fieldNode(
-                        {
-                            ...column,
-                            type:
-                                column.type === 'number'
-                                    ? 'numero'
-                                    : 'texto_largo',
-                        },
-                        'column',
-                    ),
-                ],
-                1,
-                1,
-                null,
-                [widths[index]],
-            ),
-        ),
-        'record',
-    );
-    const totals = layout.totals.enabled
-        ? [
-              row(
-                  layout.columns.map((column, index) =>
-                      cellNode(
-                          index === 0
-                              ? [textNode(layout.totals.label ?? 'Total')]
-                              : column.type === 'number' && column.sum !== false
-                                ? [
-                                      fieldNode(
-                                          { ...column, type: 'numero' },
-                                          'column',
-                                      ),
-                                  ]
-                                : [],
-                          1,
-                          1,
-                          DOCUMENT_COLORS.total,
-                          [widths[index]],
-                      ),
-                  ),
-                  'total',
-              ),
-          ]
-        : [];
-
-    return {
-        type: 'doc',
-        content: [
-            {
-                type: 'table',
-                attrs: {
-                    repeatKey: first.key,
-                    groupByUnit: layout.repeat.enabled,
-                    visualStructure: true,
-                },
-                content: [...unitRows, ...headers, record, ...totals],
-            },
-        ],
-    };
+    return { type: 'doc', content: [paragraph(first ? [fieldNode(first)] : [])] };
 }
 
 export const displayDocumentValue = (value: unknown): string => {

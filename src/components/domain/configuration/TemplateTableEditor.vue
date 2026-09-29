@@ -30,14 +30,12 @@ import TemplateToolbarButton from '@/components/domain/configuration/TemplateToo
 import TemplateToolbarSelect from '@/components/domain/configuration/TemplateToolbarSelect.vue';
 import { SelectItem } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
-import type { TableLayout } from '@/lib/tableLayout';
 import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import type {
     DocumentField,
     DocumentNode,
     TemplateVariable,
 } from '@/lib/templateDocument';
-import { demoteEmptyRepeatedTables } from '@/lib/templateDocument';
 
 const props = defineProps<{
     document: DocumentNode;
@@ -49,7 +47,6 @@ const props = defineProps<{
     colors: { value: string; label: string }[];
     fields: DocumentField[];
     variables: TemplateVariable[];
-    layout?: TableLayout | null;
     toolbarTarget?: string;
     templateId: string;
     /** Nombres de respaldo para las marcas sin texto al lado (I-155). */
@@ -130,13 +127,11 @@ onBeforeUnmount(() => {
     editor.value?.destroy();
 });
 
-const selection = useTemplateTableSelection(editor, version, props);
+const selection = useTemplateTableSelection(editor, version);
 const {
     state,
     selectedCell,
     inCell,
-    selectedRowRole,
-    repeatedColumns,
     can,
 } = selection;
 const {
@@ -153,16 +148,7 @@ const {
     insertVariable,
     keyFor,
 } = useTemplateTableActions(editor, props, selection);
-const marks = useSheetMarks({
-    editor,
-    props,
-    selectedRowRole,
-    inCell,
-    repeatedColumns,
-    insertNode,
-    keyFor,
-    declared,
-});
+const marks = useSheetMarks({ editor, props, insertNode, keyFor, declared });
 
 // Las herramientas de celdas solo aparecen cuando la hoja tiene una tabla (I-155).
 const hasTable = computed(() => {
@@ -187,7 +173,7 @@ const insertList = (): void => {
 const getDocument = (): DocumentNode | null => {
     const document = editor.value?.getJSON() as DocumentNode | undefined;
 
-    return document ? demoteEmptyRepeatedTables(document) : null;
+    return document ?? null;
 };
 
 defineExpose({ getDocument });

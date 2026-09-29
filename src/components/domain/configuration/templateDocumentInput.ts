@@ -15,81 +15,45 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { freeTextPlain, isFreeTextDocument, renderFreeText } from '@/components/domain/syllabus/freeTextRender';
-import type { PlanningExpectations, TableLayout } from '@/lib/tableLayout';
 import { displayDocumentValue } from '@/lib/templateDocument';
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
 import {
     markStyle,
     textFragments,
 } from '@/components/domain/configuration/templateDocumentRender';
-import type {
-    Context,
-    Row,
-} from '@/components/domain/configuration/templateDocumentRender';
+import type { Context } from '@/components/domain/configuration/templateDocumentRender';
 
 type Options = {
     props: {
         fields: DocumentField[];
-        layout?: TableLayout | null;
         editable?: boolean;
         preview?: boolean;
-        planningExpectations?: PlanningExpectations | null;
     };
     prefix: string;
-    emit: {
-        (event: 'value', key: string, value: string | number | boolean | string[] | DocumentNode): void;
-        (event: 'rows', key: string, rows: Row[]): void;
-    };
-    setColumn: (context: Context, key: string, value: string | number) => void;
-    removeRecord: (field: DocumentField, row: Row) => void;
+    emit: (event: 'value', key: string, value: string | number | boolean | string[] | DocumentNode) => void;
 };
 
 export const createDocumentInput = (options: Options) => {
     return (node: DocumentNode, context: Context, path: string): VNodeChild => {
         const attrs = node.attrs ?? {};
         const key = String(attrs.key);
-        const field =
-            node.type === 'column'
-                ? context.field
-                : options.props.fields.find((item) => item.key === key);
+        const field = options.props.fields.find((item) => item.key === key);
         const choice = attrs.choice;
-        const isColumn = node.type === 'column';
-        const value = isColumn
-            ? context.role === 'total'
-                ? context.totals?.[key]
-                : context.row?.data[key]
-            : field?.value;
+        const value = field?.value;
         const canEdit =
             options.props.editable &&
             field &&
             !field.inherited &&
-            field.teacher_editable !== false &&
-            context.role !== 'total';
+            field.teacher_editable !== false;
         const label = String(attrs.label ?? field?.label ?? 'Contenido');
-        const kind = isColumn
-            ? String(attrs.kind)
-            : (field?.type ?? String(attrs.kind));
+        const kind = field?.type ?? String(attrs.kind);
         const change = (value: string | number | boolean) => {
-            if (!canEdit) {
-                return;
-            }
-
-            if (isColumn) {
-                options.setColumn(
-                    context,
-                    key,
-                    value === ''
-                        ? ''
-                        : kind === 'numero'
-                          ? Number(value)
-                          : String(value),
-                );
-            } else {
+            if (canEdit) {
                 options.emit('value', key, value);
             }
         };
         // Texto libre (I-156): el docente escribe con su propio formato.
-        if (!isColumn && kind === 'texto_libre') {
+        if (kind === 'texto_libre') {
             if (!canEdit) {
                 return isFreeTextDocument(value) && freeTextPlain(value).trim() !== ''
                     ? renderFreeText(value)
@@ -108,12 +72,7 @@ export const createDocumentInput = (options: Options) => {
 
         if (!canEdit) {
             if (attrs.listStyle) {
-                const items =
-                    field?.type === 'repetible' && !isColumn
-                        ? (field.rows ?? []).map((row) =>
-                              displayDocumentValue(row.data.texto),
-                          )
-                        : text.split(/\r?\n/).filter((line) => line.trim());
+                const items = text.split(/\r?\n/).filter((line) => line.trim());
 
                 return h(
                     attrs.listStyle === 'number' ? 'ol' : 'ul',
@@ -125,15 +84,7 @@ export const createDocumentInput = (options: Options) => {
                 );
             }
 
-            const content = choice
-                ? text === choice
-                    ? 'X'
-                    : ''
-                : field?.type === 'repetible' && !isColumn
-                  ? (field.rows ?? [])
-                        .map((row) => displayDocumentValue(row.data.texto))
-                        .join('\n')
-                  : text;
+            const content = choice ? (text === choice ? 'X' : '') : text;
 
             return h(
                 'span',
@@ -169,73 +120,6 @@ export const createDocumentInput = (options: Options) => {
                 },
                 () => (text === choice ? 'X' : '□'),
             );
-        }
-
-        if (!isColumn && kind === 'repetible') {
-            const rows = field.rows ?? [];
-
-            return h('div', { class: 'flex flex-col gap-2', style }, [
-                ...rows.map((row, index) =>
-                    h(
-                        'div',
-                        {
-                            class: 'flex items-start gap-1',
-                            key: row.id ?? index,
-                        },
-                        [
-                            h(Textarea, {
-                                ...attributes,
-                                id: `${options.prefix}-${path}-${index}`,
-                                modelValue: String(row.data.texto ?? ''),
-                                placeholder: `Ej. ${label}`,
-                                'onUpdate:modelValue': (
-                                    value: string | number,
-                                ) =>
-                                    options.emit(
-                                        'rows',
-                                        key,
-                                        rows.map((item, i) =>
-                                            i === index
-                                                ? {
-                                                      ...item,
-                                                      data: {
-                                                          ...item.data,
-                                                          texto: String(value),
-                                                      },
-                                                  }
-                                                : item,
-                                        ),
-                                    ),
-                            }),
-                            h(
-                                Button,
-                                {
-                                    variant: 'ghost',
-                                    type: 'button',
-                                    'aria-label': `Quitar elemento ${index + 1}`,
-                                    onClick: () =>
-                                        options.removeRecord(field, row),
-                                },
-                                () => 'Quitar',
-                            ),
-                        ],
-                    ),
-                ),
-                h(
-                    Button,
-                    {
-                        variant: 'outline',
-                        type: 'button',
-                        class: 'self-start',
-                        onClick: () =>
-                            options.emit('rows', key, [
-                                ...rows,
-                                { id: null, data: { texto: '' } },
-                            ]),
-                    },
-                    () => 'Agregar elemento',
-                ),
-            ]);
         }
 
         // ?Docente (I-155): Sí o No con dos botones, fácil de ver también dentro de una tabla.
@@ -282,7 +166,7 @@ export const createDocumentInput = (options: Options) => {
             );
         }
 
-        if (!isColumn && kind === 'seleccion_multiple') {
+        if (kind === 'seleccion_multiple') {
             const chosen = Array.isArray(value) ? value.map(String) : [];
             return h(FieldSet, { style }, () => [
                 h(FieldLegend, { class: 'sr-only', required: field.required }, () => label),
@@ -304,11 +188,6 @@ export const createDocumentInput = (options: Options) => {
             ['numero', 'fecha', 'texto_corto'].includes(kind)
                 ? Input
                 : Textarea;
-        const columnRole = isColumn
-            ? options.props.layout?.columns.find((column) => column.key === key)
-                  ?.role
-            : null;
-
         return h(control, {
             ...attributes,
             modelValue: text,
@@ -318,17 +197,6 @@ export const createDocumentInput = (options: Options) => {
                     : kind === 'fecha'
                       ? 'date'
                       : 'text',
-            step:
-                columnRole === 'week'
-                    ? 1
-                    : columnRole?.startsWith('hours_')
-                      ? 0.01
-                      : undefined,
-            min: columnRole ? 0 : undefined,
-            max:
-                columnRole === 'week'
-                    ? (options.props.planningExpectations?.teaching_weeks ?? 52)
-                    : undefined,
             // Un número no lleva «Ej.»: en una casilla angosta solo estorba.
             placeholder:
                 kind === 'numero'

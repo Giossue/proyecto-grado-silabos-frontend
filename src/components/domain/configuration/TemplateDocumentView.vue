@@ -2,11 +2,8 @@
 import { defineComponent, h, isVNode, useId, useSlots } from 'vue';
 import { computed } from 'vue';
 import type { VNodeChild, CSSProperties } from 'vue';
-import type { PlanningExpectations, TableLayout } from '@/lib/tableLayout';
 import type { DocumentNode, DocumentField } from '@/lib/templateDocument';
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
-import { useTemplateDocumentRows } from '@/composables/useTemplateDocumentRows';
-import { createRepeatTable } from '@/components/domain/configuration/templateDocumentRepeat';
 import { createDocumentInput } from '@/components/domain/configuration/templateDocumentInput';
 import {
     cellBorder,
@@ -14,17 +11,13 @@ import {
     markStyle,
     textFragments,
 } from '@/components/domain/configuration/templateDocumentRender';
-import type {
-    Context,
-    Row,
-} from '@/components/domain/configuration/templateDocumentRender';
+import type { Context } from '@/components/domain/configuration/templateDocumentRender';
 
 const props = withDefaults(
     defineProps<{
         document: DocumentNode;
         fields: DocumentField[];
         variables: Record<string, string>;
-        layout?: TableLayout | null;
         editable?: boolean;
         preview?: boolean;
         presentation?: 'document' | 'form';
@@ -34,10 +27,8 @@ const props = withDefaults(
         textAlign?: 'left' | 'center' | 'right' | 'justify';
         tableHeaderBackground?: string;
         tableHeaderColor?: string;
-        planningExpectations?: PlanningExpectations | null;
     }>(),
     {
-        layout: null,
         editable: false,
         preview: false,
         presentation: 'document',
@@ -51,7 +42,6 @@ const props = withDefaults(
 );
 const emit = defineEmits<{
     value: [key: string, value: string | number | boolean | string[] | DocumentNode];
-    rows: [key: string, rows: Row[]];
 }>();
 const slots = useSlots();
 const prefix = useId();
@@ -124,34 +114,13 @@ const tableWithAction = (
             : null,
     ]);
 };
-const { setColumn, addRecord, addUnit, removeUnit, removeRecord } =
-    useTemplateDocumentRows({
-        layout: () => props.layout,
-        planningExpectations: () => props.planningExpectations,
-        emit,
-    });
-const repeatTable = createRepeatTable({
-    props,
-    draw: (node, context, path) => draw(node, context, path),
-    tableWithAction,
-    addRecord,
-    addUnit,
-    removeUnit,
-    removeRecord,
-});
-const input = createDocumentInput({
-    props,
-    prefix,
-    emit,
-    setColumn,
-    removeRecord,
-});
+const input = createDocumentInput({ props, prefix, emit });
 
 const listItemMark = (node: DocumentNode): DocumentNode | null => {
     const paragraph = node.type === 'listItem' && node.content?.length === 1 ? node.content[0] : null;
     const only = paragraph?.type === 'paragraph' && paragraph.content?.length === 1 ? paragraph.content[0] : null;
 
-    return only && ['field', 'column', 'variable'].includes(only.type) && only.attrs?.listStyle ? only : null;
+    return only && ['field', 'variable'].includes(only.type) && only.attrs?.listStyle ? only : null;
 };
 
 const draw = (
@@ -204,12 +173,9 @@ const draw = (
         );
     }
 
-    if (['field', 'column'].includes(node.type)) {
+    if (node.type === 'field') {
         // «Mostrar solo si»: una parte oculta no se dibuja; su valor se conserva.
-        if (
-            node.type === 'field' &&
-            props.fields.find((field) => field.key === attrs.key)?.hidden
-        ) {
+        if (props.fields.find((field) => field.key === attrs.key)?.hidden) {
             return null;
         }
         return input(node, context, path);
@@ -235,28 +201,12 @@ const draw = (
         );
     }
 
-    if (node.type === 'table' && attrs.repeatKey && props.layout) {
-        const field = props.fields.find(
-            (field) => field.key === attrs.repeatKey,
-        );
-
-        if (!field) {
-            return null;
-        }
-
-        return repeatTable(node, field, props.layout, path);
-    }
-
     if (node.type === 'table') {
         return tableWithAction(node, children());
     }
 
     if (node.type === 'tableRow') {
-        return h(
-            'tr',
-            attrs.rowRole ? { 'data-row-role': String(attrs.rowRole) } : {},
-            children(),
-        );
+        return h('tr', {}, children());
     }
 
     if (node.type === 'tableCell' || node.type === 'tableHeader') {
@@ -431,21 +381,12 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 .template-document-view :deep(th .document-paragraph) {
     margin: 0;
 }
-.template-document-view[data-themed]
-    :deep(.document-table > tbody > tr[data-row-role='unit'] > *),
 .template-document-view[data-themed] :deep(.document-table th) {
     color: var(--document-table-header-color);
     background-color: var(--document-table-header-background);
 }
 .template-document-view[data-themed]
-    :deep(
-        .document-table
-            > tbody
-            > tr[data-row-role='unit']
-            > :not([data-cell-text-color])
-            *,
-        .document-table th:not([data-cell-text-color]) *
-    ) {
+    :deep(.document-table th:not([data-cell-text-color]) *) {
     color: var(--document-table-header-color) !important;
 }
 .template-document-view :deep([data-cell-text-color] *) {
@@ -520,11 +461,7 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 .template-document-view[data-presentation='form'] :deep(tr > :last-child) {
     border-right: 0 !important;
 }
-.template-document-view[data-presentation='form'] :deep(.document-table th),
-.template-document-view[data-presentation='form']
-    :deep(.document-table > tbody > tr[data-row-role='unit'] > *),
-.template-document-view[data-presentation='form']
-    :deep(.document-table > tbody > tr[data-row-role='total'] > *) {
+.template-document-view[data-presentation='form'] :deep(.document-table th) {
     color: var(--foreground) !important;
     background: var(--muted) !important;
     font-weight: 600 !important;

@@ -14,6 +14,18 @@ export const isFreeTextDocument = (value: unknown): value is DocumentNode =>
 export const freeTextPlain = (node: DocumentNode): string =>
     node.type === 'text' ? (node.text ?? '') : (node.content ?? []).map(freeTextPlain).join(' ');
 
+/** Texto legible de un Texto libre: una línea por párrafo, elemento o fila (I-156). */
+export const freeTextLines = (node: DocumentNode): string => {
+    if (node.type === 'text') return node.text ?? '';
+    if (node.type === 'hardBreak') return '\n';
+    const children = (node.content ?? []).map(freeTextLines);
+    if (node.type === 'paragraph') return children.join('');
+    if (node.type === 'tableRow') return children.join(' | ');
+    if (node.type === 'listItem') return `• ${children.join('\n')}`;
+
+    return children.join('\n');
+};
+
 /** Dibuja el Texto libre del docente en modo lectura (I-156). */
 export const renderFreeText = (node: DocumentNode): VNodeChild => {
     if (node.type === 'text') {

@@ -159,7 +159,7 @@ const fieldStyle = computed<CSSProperties>(() => ({
 const documentFor = (block: TemplateFieldContainer) =>
     block.document ?? defaultDocument(block, props.identificationDesign);
 const fieldsFor = (block: TemplateFieldContainer) =>
-    templatePreviewFields(block.fields, block.table);
+    templatePreviewFields(block.fields);
 /** Las partes sin nombre no llevan subtítulo ni número, igual que en el Word. */
 const partNumber = (section: TemplateSection, index: number): number =>
     section.blocks
@@ -780,7 +780,6 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             :fields="fieldsFor(block)"
                             :variables="variables"
                             :variable-samples="variableSamples"
-                            :layout="block.table"
                             :appearance="appearance"
                             :colors="colorOptions"
                             ribbon-target="#template-editor-ribbon"
@@ -796,7 +795,6 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             :document="documentFor(block)"
                             :fields="fieldsFor(block)"
                             :variables="variableSamples"
-                            :layout="block.table"
                             :font-family="appearance.font_family"
                             :font-size="appearance.body_font_size"
                             :text-color="appearance.text_color"

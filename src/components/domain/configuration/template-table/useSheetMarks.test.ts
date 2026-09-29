@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ref, shallowRef } from 'vue';
 import { declareProjectData } from '@/api/template';
 import { templateTableExtensions } from '@/components/domain/configuration/template-table/templateTableExtensions';
-import type { TableRowRole } from '@/components/domain/configuration/template-table/types';
 import { useSheetMarks } from '@/components/domain/configuration/template-table/useSheetMarks';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 
@@ -14,7 +13,7 @@ vi.mock('@/lib/toast', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 const editors: Editor[] = [];
 afterEach(() => { editors.splice(0).forEach((editor) => editor.destroy()); vi.mocked(declareProjectData).mockReset(); });
 
-const setup = (content: DocumentNode, role: TableRowRole = 'fixed', inCell = false) => {
+const setup = (content: DocumentNode) => {
     const editor = new Editor({ extensions: templateTableExtensions(), content });
     editors.push(editor);
     editor.commands.focus('end');
@@ -23,9 +22,6 @@ const setup = (content: DocumentNode, role: TableRowRole = 'fixed', inCell = fal
     const marks = useSheetMarks({
         editor: shallowRef(editor) as never,
         props: { templateId: 'plantilla-1', sectionTitle: 'Metodología', partTitle: '', pending: false, document: content },
-        selectedRowRole: ref(role),
-        inCell: ref(inCell),
-        repeatedColumns: ref([]),
         insertNode: (node) => inserted.push(node),
         keyFor: (label) => `campo_${label}`,
         declared,
@@ -60,19 +56,5 @@ describe('useSheetMarks', () => {
         expect(declareProjectData).toHaveBeenCalledWith('plantilla-1', { label: 'Metodología', type: 'lista' });
         expect(inserted[1]).toEqual({ type: 'variable', attrs: { id: 'curricular_metodologia', label: 'Metodología', listStyle: 'bullet' } });
         expect(declared.value).toEqual([variable]);
-    });
-
-    it('en una fila que agrega el docente, !Docente es un dato de la fila y Sí o No no se permite', () => {
-        const cell = (text: string) => ({ type: 'tableCell', content: [{ type: 'paragraph', content: text ? [{ type: 'text', text }] : [] }] });
-        const table: DocumentNode = { type: 'doc', content: [{ type: 'table', attrs: { repeatKey: 'filas' }, content: [
-            { type: 'tableRow', attrs: { rowRole: 'record' }, content: [cell('Semana'), cell('')] },
-        ] }] };
-        const { marks, inserted } = setup(table, 'record', true);
-
-        marks.insertTeacher();
-        marks.insertYesNo();
-
-        expect(inserted).toHaveLength(1);
-        expect(inserted[0]).toMatchObject({ type: 'column', attrs: { label: 'Semana', kind: 'texto_largo' } });
     });
 });

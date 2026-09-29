@@ -1,16 +1,9 @@
 import { h } from 'vue';
 import type { CSSProperties, VNodeChild } from 'vue';
-import type { TableRowData } from '@/lib/tableLayout';
-import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
+import type { DocumentNode } from '@/lib/templateDocument';
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
 
-export type Row = { id: string | null; data: TableRowData };
 export type Context = {
-    field?: DocumentField;
-    row?: Row;
-    unit?: number;
-    role?: string;
-    totals?: TableRowData;
     insideCell?: boolean;
     cellTextAlign?: string;
 };

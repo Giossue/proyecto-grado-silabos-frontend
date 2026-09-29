@@ -1,4 +1,3 @@
-import type { TableLayout, TableRowData } from '@/lib/tableLayout';
 import type { DocumentField } from '@/lib/templateDocument';
 
 // Synthetic preview only: never seed a teacher's answers with these values.
@@ -11,21 +10,20 @@ const samples: Record<string, string> = {
     descripcion: 'Introducción a los fundamentos de la asignatura.',
     objetivo_general: 'Aplicar los conceptos estudiados a problemas prácticos.',
     estado_revision: 'Pendiente de revisión.',
-    nombre: 'Unidad de ejemplo',
-    resultados: 'Aplicar los conceptos estudiados.',
-    contenidos: 'Introducción a la unidad.',
-    act_acd: 'Clase guiada.',
-    act_ape: 'Práctica.',
-    act_aa: 'Lectura.',
-    evaluacion: 'Ejercicio práctico.',
-    autor: 'Autor de ejemplo',
-    titulo: 'Obra de consulta',
 };
 const sampleText = (key: string): string | undefined =>
     Object.hasOwn(samples, key) ? samples[key] : undefined;
 
 const sampleValue = (field: DocumentField): unknown => {
     const sample = sampleText(field.key);
+
+    // Texto libre (I-156): un párrafo de ejemplo con su formato de documento.
+    if (field.type === 'texto_libre') {
+        return {
+            type: 'doc',
+            content: [{ type: 'paragraph', content: [{ type: 'text', text: sample ?? 'Texto de ejemplo.' }] }],
+        };
+    }
 
     if (sample !== undefined) {
         return sample;
@@ -40,7 +38,10 @@ const sampleValue = (field: DocumentField): unknown => {
         case 'booleano':
             return false;
         case 'seleccion_unica':
-            return field.options?.[0]?.value ?? 'Opción de ejemplo';
+            // Docente: Sí o No se muestra como pregunta, no como una respuesta ya elegida.
+            return field.options?.map((option) => option.value).join('|') === 'Sí|No'
+                ? 'Sí o No'
+                : (field.options?.[0]?.value ?? 'Opción de ejemplo');
         case 'seleccion_multiple':
             return field.options?.length ? [field.options[0].value] : [];
         default:
@@ -48,48 +49,5 @@ const sampleValue = (field: DocumentField): unknown => {
     }
 };
 
-export function templatePreviewFields(
-    fields: DocumentField[],
-    layout: TableLayout | null,
-): DocumentField[] {
-    return fields.map((field) => {
-        const rows: NonNullable<DocumentField['rows']> = [];
-
-        if (field.type === 'repetible') {
-            if (layout?.header_fields.length) {
-                rows.push({
-                    id: `sample-${field.key}-unit`,
-                    data: {
-                        _unit: 1,
-                        _kind: 'unit',
-                        ...Object.fromEntries(
-                            layout.header_fields.map((header) => [
-                                header.key,
-                                sampleText(header.key) ?? 'Ejemplo breve.',
-                            ]),
-                        ),
-                    },
-                });
-            }
-
-            const data: TableRowData = layout
-                ? Object.fromEntries(
-                      layout.columns.map((column) => [
-                          column.key,
-                          column.type === 'number'
-                              ? column.key === 'anio'
-                                  ? 2026
-                                  : column.key === 'semana'
-                                    ? 1
-                                    : 2
-                              : (sampleText(column.key) ?? 'Ejemplo'),
-                      ]),
-                  )
-                : { texto: 'Elemento de ejemplo.' };
-            rows.push({ id: `sample-${field.key}-row`, data });
-        }
-
-        return { ...field, value: sampleValue(field), rows };
-    });
-}
-
+export const templatePreviewFields = (fields: DocumentField[]): DocumentField[] =>
+    fields.map((field) => ({ ...field, value: sampleValue(field) }));

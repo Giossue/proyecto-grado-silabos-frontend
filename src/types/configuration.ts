@@ -1,4 +1,3 @@
-import type { TableLayout } from '@/lib/tableLayout';
 import type {
     DocumentField,
     DocumentNode,
@@ -10,6 +9,7 @@ export type PartForm = 'free_text' | 'template';
 
 export type TemplateContentType =
     | 'text'
+    // Formas anteriores a I-156; se conservan para mostrar partes ya guardadas.
     | 'table'
     | 'bulleted_list'
     | 'numbered_list'
@@ -36,7 +36,6 @@ export type TemplateFieldContainer = {
     type: string;
     content_type: TemplateContentType;
     page_orientation?: 'portrait' | 'landscape' | null;
-    table: TableLayout | null;
     document?: DocumentNode | null;
     fingerprint?: string;
     fields: TemplateField[];

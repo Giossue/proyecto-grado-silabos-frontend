@@ -9,6 +9,7 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { freeTextLines, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
 import { paths } from '@/lib/routes';
 
 const route = useRoute();
@@ -19,8 +20,8 @@ const changeLabel = (change: 'added' | 'removed' | 'modified'): string => ({ add
 type ChangeSide = ReviewComparison['comparison']['changes'][number]['before'];
 const formatSide = (side: ChangeSide): string => {
   if (side === null) return 'No existía en esta revisión.';
-  if (side.rows.length > 0) return JSON.stringify(side.rows, null, 2);
   if (side.value === null || side.value === '') return 'Sin contenido';
+  if (isFreeTextDocument(side.value)) return freeTextLines(side.value);
   if (typeof side.value === 'boolean') return side.value ? 'Sí' : 'No';
   if (typeof side.value === 'object') return JSON.stringify(side.value, null, 2);
   return String(side.value);

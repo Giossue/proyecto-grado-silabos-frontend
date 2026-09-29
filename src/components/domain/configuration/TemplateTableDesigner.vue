@@ -9,7 +9,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { registerLocalPurgeConfirmation } from '@/composables/usePurgeConfirmation';
-import type { TableLayout } from '@/lib/tableLayout';
 import type {
     DocumentField,
     DocumentNode,
@@ -29,7 +28,6 @@ const props = defineProps<{
     fields: DocumentField[];
     variables: TemplateVariable[];
     variableSamples: Record<string, string>;
-    layout: TableLayout | null;
     appearance: TemplateAppearance;
     colors: { value: string; label: string }[];
     ribbonTarget?: string;
@@ -238,7 +236,6 @@ defineExpose({ start });
                 :document="document"
                 :fields="fields"
                 :variables="variableSamples"
-                :layout="layout"
                 :font-family="appearance.font_family"
                 :font-size="appearance.body_font_size"
                 :text-color="appearance.text_color"
@@ -293,7 +290,6 @@ defineExpose({ start });
                 :colors="colors"
                 :fields="fields"
                 :variables="variables"
-                :layout="layout"
                 :template-id="templateId"
                 :section-title="sectionTitle"
                 :part-title="partTitle"

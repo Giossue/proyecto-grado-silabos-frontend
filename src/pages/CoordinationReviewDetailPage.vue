@@ -18,7 +18,6 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
 import ReviewObservationSheet from '@/components/domain/syllabus/ReviewObservationSheet.vue';
 import SyllabusResetDialog from '@/components/domain/syllabus/SyllabusResetDialog.vue';
-import SyllabusTableView from '@/components/domain/syllabus/SyllabusTableView.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,8 +25,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import type { PlanningExpectations, TableRowData } from '@/lib/tableLayout';
 import type { DocumentField } from '@/lib/templateDocument';
+import { freeTextLines, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -83,23 +82,12 @@ const openCurrentObservations = computed(() => data.value?.observations.filter(
 ) ?? []);
 const unresolvedCount = computed(() => data.value?.observations.filter((observation) => observation.state !== 'verificada').length ?? 0);
 const canReviewCurrent = computed(() => Boolean(data.value?.decisions_allowed && data.value?.revision.is_current && data.value?.syllabus.state === 'en_revision'));
-const planningExpectations = computed<PlanningExpectations>(() => ({
-  teaching_weeks: data.value?.revision.snapshot.academic_context?.scheduled_subject?.teaching_weeks
-    ?? data.value?.revision.snapshot.academic_context?.offering?.teaching_weeks ?? null,
-  credits: data.value?.revision.snapshot.academic_context?.subject?.credits ?? null,
-  total_hours: data.value?.revision.snapshot.academic_context?.subject?.total_hours ?? null,
-  hours_acd: data.value?.revision.snapshot.academic_context?.subject?.hours_ac ?? null,
-  hours_ape: data.value?.revision.snapshot.academic_context?.subject?.hours_pae ?? null,
-  hours_aa: data.value?.revision.snapshot.academic_context?.subject?.hours_aa ?? null,
-}));
 
-const tableRows = (field: SnapshotField): { id: string | null; data: TableRowData }[] => field.rows
-  .filter((row) => typeof row.data === 'object' && row.data !== null && !Array.isArray(row.data))
-  .map((row) => ({ id: row.id, data: row.data as TableRowData }));
-const documentFields = (fields: SnapshotField[]): DocumentField[] => fields.map((field) => ({ ...field, rows: tableRows(field) }));
+const documentFields = (fields: SnapshotField[]): DocumentField[] => fields.map((field) => ({ ...field }));
 const formatValue = (value: unknown): string => {
   if (value === null || value === '') return 'Sin contenido';
   if (typeof value === 'boolean') return value ? 'Sí' : 'No';
+  if (isFreeTextDocument(value)) return freeTextLines(value);
   if (typeof value === 'object') return JSON.stringify(value, null, 2);
   return String(value);
 };
@@ -137,13 +125,11 @@ onMounted(load);
           <CardContent class="flex flex-col gap-6">
             <section v-for="block in section.blocks" :key="block.key" class="flex flex-col gap-4">
               <h3 v-if="section.blocks.length > 1" class="font-medium">{{ block.title }}</h3>
-              <TemplateDocumentView v-if="block.document" :document="block.document" :fields="documentFields(block.fields)" :variables="data.revision.snapshot.template_variables ?? {}" :layout="block.table" :planning-expectations="planningExpectations" />
+              <TemplateDocumentView v-if="block.document" :document="block.document" :fields="documentFields(block.fields)" :variables="data.revision.snapshot.template_variables ?? {}" />
               <dl v-else class="grid gap-4">
                 <div v-for="field in block.fields" :key="field.key" class="rounded-md border p-4">
                   <dt class="flex flex-wrap gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Institucional</Badge></dt>
-                  <dd v-if="field.rows.length === 0" class="mt-2 text-sm whitespace-pre-wrap">{{ formatValue(field.value) }}</dd>
-                  <dd v-else-if="block.table" class="mt-3"><SyllabusTableView :layout="block.table" :rows="tableRows(field)" :planning-expectations="planningExpectations" /></dd>
-                  <dd v-else class="mt-3 flex flex-col gap-2"><div v-for="(row, index) in field.rows" :key="row.id" class="rounded bg-muted p-3 text-sm whitespace-pre-wrap"><span class="font-medium">Fila {{ index + 1 }}:</span> {{ formatValue(row.data) }}</div></dd>
+                  <dd class="mt-2 text-sm whitespace-pre-wrap">{{ formatValue(field.value) }}</dd>
                 </div>
               </dl>
             </section>

@@ -5,17 +5,13 @@ import { ApiError } from "@/api/client";
 import {
   getTeacherSyllabus,
   saveTeacherField,
-  saveTeacherRows,
   startTeacherSyllabus,
   submitTeacherSyllabus,
   validateTeacherSyllabus,
   type SyllabusDetail,
   type SyllabusField,
 } from "@/api/syllabi";
-import { reconcileSavedRows } from '@/lib/repeatableRows';
 import SyllabusUnitAssistant from '@/components/domain/ai/SyllabusUnitAssistant.vue';
-import SyllabusTableEditor from '@/components/domain/syllabus/SyllabusTableEditor.vue';
-import SyllabusTableView from '@/components/domain/syllabus/SyllabusTableView.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import SyllabusAcademicContext from '@/components/domain/syllabus/SyllabusAcademicContext.vue';
@@ -35,8 +31,6 @@ import TemplateDocumentView from '@/components/domain/configuration/TemplateDocu
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { freeTextPlain, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
-import type { TableLayout, TableRowData } from '@/lib/tableLayout';
-import { consecutiveUnits, isListLayout } from '@/lib/tableLayout';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { hiddenKeys } from '@/lib/fieldConditions';
@@ -49,9 +43,7 @@ const error = ref<string | null>(null);
 const starting = ref(false);
 const savingFieldId = ref<string | null>(null);
 const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
-const rowSaveTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const dirtyFields = new Map<string, SyllabusField>();
-const dirtyRows = new Map<string, SyllabusField>();
 let pendingSave: Promise<void> = Promise.resolve();
 const validationResults = ref<Array<{
   field_id: string | null;
@@ -123,7 +115,6 @@ const blockErrors = (fields: SyllabusField[]): string[] =>
   [...new Set(fields.flatMap((field) => visibleValidationMessages(field.id)))];
 /** Parte del docente que aún no tiene contenido; el envío se habilita cuando no queda ninguna. */
 const isFieldEmpty = (field: SyllabusField): boolean => {
-  if (field.type === "repetible") return field.rows.length === 0;
   if (field.type === "booleano") return typeof field.value !== "boolean";
   if (isFreeTextDocument(field.value)) return freeTextPlain(field.value).trim() === "";
   if (Array.isArray(field.value)) return field.value.length === 0;
@@ -153,7 +144,7 @@ const clearFieldValidation = (fieldId: string): void => {
     validationResults.value = validationResults.value.filter((result) => result.field_id !== fieldId);
   }
 };
-const hasUnsavedChanges = (): boolean => dirtyFields.size > 0 || dirtyRows.size > 0;
+const hasUnsavedChanges = (): boolean => dirtyFields.size > 0;
 
 const requestedObservations = computed(() =>
   (syllabus.value?.observations ?? []).filter(
@@ -166,7 +157,6 @@ const syllabusId = (): string => String(route.params.syllabus);
 const load = async (): Promise<void> => {
   try {
     syllabus.value = (await getTeacherSyllabus(syllabusId())).syllabus;
-    repairUnitNumbers();
     validationRan.value = Boolean(syllabus.value.validation && syllabus.value.validation.version_bloqueo === syllabus.value.version_bloqueo);
     validationBlockingErrors.value = syllabus.value.validation?.blocking_errors ?? null;
     validationResults.value = syllabus.value.validation?.results ?? [];
@@ -355,81 +345,14 @@ const hiddenParts = computed(() => hiddenKeys(
 const designFields = (fields: SyllabusField[]): DocumentField[] => fields.map((field) => ({
   ...field,
   hidden: hiddenParts.value.has(field.key),
-  rows: field.rows.map((row) => ({ id: row.id ?? null, data: row.data })),
 }));
-const tableRows = (field: SyllabusField): Array<{ id: string | null; data: TableRowData }> =>
-  field.rows.map((row) => ({ id: row.id ?? null, data: row.data }));
 const updateDesignValue = (fields: SyllabusField[], key: string, value: string | number | boolean | string[] | DocumentNode): void => {
   const field = fields.find((item) => item.key === key);
   if (field) { field.value = value; clearFieldValidation(field.id); scheduleSave(field); }
 };
-const updateDesignRows = (fields: SyllabusField[], key: string, rows: Array<{ id: string | null; data: TableRowData }>): void => {
-  const field = fields.find((item) => item.key === key);
-  if (field) { field.rows = consecutiveUnits(rows).map((row, index) => ({ id: row.id ?? undefined, data: row.data as Record<string, string | number | null>, position: index + 1 })); clearFieldValidation(field.id); scheduleRows(field); }
-};
-
-const updateRows = (field: SyllabusField, rows: Array<{ id?: string | null; data: TableRowData; position?: number }>): void => {
-  field.rows = consecutiveUnits(rows).map((row, index) => ({ id: row.id ?? undefined, data: row.data as Record<string, string | number | null>, position: row.position ?? index + 1 }));
-  clearFieldValidation(field.id);
-  scheduleRows(field);
-};
-
-const saveRows = (field: SyllabusField): void => {
-  dirtyRows.delete(field.id);
-  const timer = rowSaveTimers.get(field.id);
-  if (timer) clearTimeout(timer);
-  rowSaveTimers.delete(field.id);
-  queueSave(() => { if (!dirtyRows.has(field.id)) dirtyRows.set(field.id, field); }, async () => {
-    if (!syllabus.value) return;
-    savingFieldId.value = field.id;
-    try {
-      const sent = field.rows.map((row) => ({ ...row, id: row.id || undefined }));
-      const saved = await saveTeacherRows(
-        syllabus.value.id,
-        field.id,
-        syllabus.value.version_bloqueo,
-        sent,
-      );
-      field.rows = reconcileSavedRows(field.rows, sent, saved.rows);
-      syllabus.value.version_bloqueo = saved.version_bloqueo;
-      invalidateValidation();
-      if (!hasUnsavedChanges()) saveFailed.value = false;
-    } finally {
-      savingFieldId.value = null;
-    }
-  });
-};
-
-/**
- * Si una planificación llegó con unidades salteadas (p. ej. solo la «Unidad 2»),
- * se renumera 1, 2, 3… y se guarda, para que el docente no quede atascado con el
- * aviso de «numeración consecutiva» sin forma de corregirlo.
- */
-const repairUnitNumbers = (): void => {
-  for (const field of (syllabus.value?.sections ?? []).flatMap((section) => section.blocks.flatMap((block) => block.fields))) {
-    if (field.type !== 'repetible') continue;
-    const fixed = consecutiveUnits(field.rows);
-    if (fixed === field.rows) continue;
-    field.rows = fixed;
-    scheduleRows(field);
-  }
-};
-
-const scheduleRows = (field: SyllabusField): void => {
-  if (!canEdit.value || conflict.value) return;
-  const previous = rowSaveTimers.get(field.id);
-  if (previous) clearTimeout(previous);
-  dirtyRows.set(field.id, field);
-  rowSaveTimers.set(
-    field.id,
-    setTimeout(() => saveRows(field), 700),
-  );
-};
-
 const flushAutosave = async (): Promise<boolean> => {
   if (canEdit.value && !conflict.value) {
     for (const field of Array.from(dirtyFields.values())) saveField(field);
-    for (const field of Array.from(dirtyRows.values())) saveRows(field);
   }
   await pendingSave;
   if (!hasUnsavedChanges()) saveFailed.value = false;
@@ -449,12 +372,6 @@ const runValidation = async (): Promise<void> => {
   validationBlockingErrors.value = validation.blocking_errors;
   validationRan.value = true;
 };
-
-/** Una lista o tabla de una sola columna muestra el nombre de la parte, no «Contenido». */
-const partLayout = (layout: TableLayout, label: string): TableLayout =>
-  layout.columns.length === 1 && layout.columns[0].key === 'texto' && layout.header_fields.length === 0
-    ? { ...layout, columns: [{ ...layout.columns[0], label }] }
-    : layout;
 
 const confirmSubmit = (): void => {
   confirmSubmitOpen.value = false;
@@ -531,7 +448,6 @@ onBeforeRouteLeave(async () => {
 onBeforeUnmount(() => {
   window.removeEventListener("beforeunload", warnBeforeUnload);
   saveTimers.forEach((timer) => clearTimeout(timer));
-  rowSaveTimers.forEach((timer) => clearTimeout(timer));
 });
 </script>
 
@@ -580,7 +496,7 @@ onBeforeUnmount(() => {
 
             <FieldSet v-for="block in section.blocks" :id="`block-${block.id}`" :key="block.id" class="scroll-mt-6 gap-5">
               <FieldLegend v-if="(block.title ?? '').trim() !== '' && section.blocks.length > 1 && !(block.fields.length === 1 && block.title === block.fields[0]?.label)" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
-              <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :layout="block.table" :editable="canEdit && !conflict" presentation="form" :planning-expectations="syllabus.planning_expectations ?? null" @value="(key, value) => updateDesignValue(block.fields, key, value)" @rows="(key, rows) => updateDesignRows(block.fields, key, rows)" />
+              <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :editable="canEdit && !conflict" presentation="form" @value="(key, value) => updateDesignValue(block.fields, key, value)" />
               <FieldError v-if="usesTabularDocument(block)" class="block-errors" :errors="blockErrors(block.fields)" />
               <template v-if="!usesTabularDocument(block)">
                 <FieldGroup>
@@ -605,9 +521,8 @@ onBeforeUnmount(() => {
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><div class="boolean-options flex gap-2" role="radiogroup" :aria-label="field.label.trim() || section.title"><Button type="button" size="sm" :variant="field.value === true ? 'default' : 'outline'" role="radio" :aria-checked="field.value === true" @click="toggleBoolean(field, true)">Sí</Button><Button type="button" size="sm" :variant="field.value === false ? 'default' : 'outline'" role="radio" :aria-checked="field.value === false" @click="toggleBoolean(field, false)">No</Button></div><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
 
-                <div v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'repetible'" :id="`field-${field.id}`" class="flex flex-col gap-2"><template v-if="!block.table"><p v-if="field.label.trim()" class="text-sm font-medium">{{ field.label }}</p><p class="text-sm text-muted-foreground">Esta tabla no tiene una estructura configurada.</p></template><template v-else><FieldLabel :for="isListLayout(block.table) && field.rows.length > 0 ? `field-${field.id}-u1-r1-texto` : undefined" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><SyllabusTableEditor :field-id="field.id" :label="field.label.trim() || section.title" :layout="partLayout(block.table, field.label.trim() || section.title)" :rows="tableRows(field)" :required="field.required" :invalid="validationFor(field.id).length > 0" :planning-expectations="syllabus.planning_expectations ?? null" @update:rows="updateRows(field, $event)" /><span v-if="savingFieldId === field.id" class="text-xs text-muted-foreground">Guardando…</span></template></div>
 
-                <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div v-if="field.label.trim() || field.inherited" class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Dato automático</Badge></div><SyllabusTableView v-if="field.type === 'repetible' && block.table" :layout="partLayout(block.table, field.label.trim() || section.title)" :rows="tableRows(field)" /><span v-else>{{ masterValue(field.value) }}</span></div>
+                <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div v-if="field.label.trim() || field.inherited" class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Dato automático</Badge></div><span>{{ masterValue(field.value) }}</span></div>
                 <FieldError :errors="visibleValidationMessages(field.id)" />
                 </template>
                 </FieldGroup>

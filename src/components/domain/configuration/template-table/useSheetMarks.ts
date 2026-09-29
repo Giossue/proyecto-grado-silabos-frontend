@@ -1,11 +1,7 @@
 import type { Editor } from '@tiptap/vue-3';
 import type { Ref, ShallowRef } from 'vue';
 import { declareProjectData } from '@/api/template';
-import type { TableRowRole } from '@/components/domain/configuration/template-table/types';
-import type { TableColumn } from '@/lib/tableLayout';
-import { tableKeyFor } from '@/lib/tableLayout';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
-import { nodesOfType } from '@/lib/templateDocument';
 import { toast } from '@/lib/toast';
 
 type Source = {
@@ -19,9 +15,6 @@ type Source = {
 type Options = {
     editor: ShallowRef<Editor | undefined>;
     props: Source;
-    selectedRowRole: Ref<TableRowRole>;
-    inCell: Ref<boolean>;
-    repeatedColumns: Ref<TableColumn[]>;
     insertNode: (node: DocumentNode) => void;
     keyFor: (label: string) => string;
     /** Datos @ProyectoCarrera creados en esta edición, para mostrar su nombre en la ficha. */
@@ -69,30 +62,10 @@ export function useSheetMarks(options: Options) {
         return false;
     };
     const teacherLabel = (): string => context() || props.partTitle?.trim() || props.sectionTitle;
-    const inRepeatedRow = (): boolean =>
-        options.inCell.value && ['record', 'unit'].includes(options.selectedRowRole.value);
 
-    /** !Docente: en una fila que agrega el docente es un dato de esa fila. */
+    /** Docente: el docente escribe aquí; en una lista, sus líneas son elementos. */
     const insertTeacher = (): void => {
         const label = teacherLabel();
-        if (inRepeatedRow()) {
-            const document = (editor.value?.getJSON() as DocumentNode | undefined) ?? props.document;
-            options.insertNode({
-                type: 'column',
-                attrs: {
-                    key: tableKeyFor(label, [
-                        ...options.repeatedColumns.value.map((column) => column.key),
-                        ...nodesOfType(document, 'column').map((node) => String(node.attrs?.key ?? '')),
-                    ]),
-                    label,
-                    kind: 'texto_largo',
-                    role: null,
-                    sum: false,
-                },
-            });
-
-            return;
-        }
         options.insertNode({
             type: 'field',
             attrs: {
@@ -105,11 +78,6 @@ export function useSheetMarks(options: Options) {
 
     /** ?Docente: el docente responde Sí o No; otras partes pueden depender de la respuesta. */
     const insertYesNo = (): void => {
-        if (inRepeatedRow()) {
-            toast.error('Un Sí o No va en una fila fija, no en una fila que agrega el docente.');
-
-            return;
-        }
         const label = teacherLabel();
         options.insertNode({
             type: 'field',

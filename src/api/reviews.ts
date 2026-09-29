@@ -1,8 +1,5 @@
 import { api } from "@/api/client";
-import type {
-  DocumentPresentation,
-  TableLayout,
-} from "@/api/syllabi";
+import type { DocumentPresentation } from "@/api/syllabi";
 import type { DocumentNode } from "@/lib/templateDocument";
 
 export type ReviewQueueItem = {
@@ -46,11 +43,6 @@ export type SnapshotField = {
   type: string;
   inherited: boolean;
   value: unknown;
-  rows: Array<{
-    id: string;
-    position: number;
-    data: Record<string, string | number | boolean | null>;
-  }>;
 };
 export type ReviewDetail = {
   syllabus: {
@@ -70,17 +62,6 @@ export type ReviewDetail = {
     snapshot: {
       schema_version?: number;
       template_variables?: Record<string, string>;
-      academic_context?: {
-        scheduled_subject?: { teaching_weeks?: number | null };
-        offering?: { teaching_weeks?: number | null };
-        subject?: {
-          credits?: number | string | null;
-          total_hours?: number | string | null;
-          hours_ac?: number | string | null;
-          hours_pae?: number | string | null;
-          hours_aa?: number | string | null;
-        };
-      };
       sections: Array<{
         key: string;
         title: string;
@@ -88,7 +69,6 @@ export type ReviewDetail = {
           key: string;
           title: string;
           content_type: string;
-          table: TableLayout | null;
           document?: DocumentNode | null;
           fields: SnapshotField[];
         }>;
@@ -123,8 +103,8 @@ export type ReviewComparison = {
       label: string;
       type: string;
       change: "added" | "removed" | "modified";
-      before: { value: unknown; rows: SnapshotField["rows"] } | null;
-      after: { value: unknown; rows: SnapshotField["rows"] } | null;
+      before: { value: unknown } | null;
+      after: { value: unknown } | null;
     }>;
   };
 };

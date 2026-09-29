@@ -1,6 +1,5 @@
 import { api } from "@/api/client";
 import type { TemplateAppearance } from "@/api/template";
-import type { TableColumnRole } from "@/lib/tableLayout";
 import type { DocumentNode } from "@/lib/templateDocument";
 import type { AgentAvatarHint } from "@/components/domain/ai/avatar/types";
 
@@ -59,14 +58,6 @@ export type SyllabusDetail = {
   parallels: string[];
   teachers: string[];
   template_variables?: Record<string, string>;
-  planning_expectations?: {
-    teaching_weeks: number | null;
-    credits: number | string | null;
-    total_hours: number | string | null;
-    hours_acd: number | string | null;
-    hours_ape: number | string | null;
-    hours_aa: number | string | null;
-  };
   validation?: {
     version_bloqueo: number;
     blocking_errors: number;
@@ -92,32 +83,6 @@ export type SyllabusDetail = {
   }>;
 };
 
-export type RepeatableRow = {
-  id?: string;
-  data: Record<string, string | number | null>;
-  position: number;
-};
-
-export type TableColumn = {
-  key: string;
-  label: string;
-  type: "text" | "number";
-  group: string | null;
-  band: string | null;
-  sum: boolean;
-  width: number | null;
-  role: TableColumnRole | null;
-};
-
-export type TableLayout = {
-  columns: TableColumn[];
-  groups: Array<{ key: string; label: string }>;
-  bands: Array<{ key: string; label: string }>;
-  header_fields: Array<{ key: string; label: string }>;
-  totals: { enabled: boolean; label?: string };
-  repeat: { enabled: boolean; label?: string };
-};
-
 export type SyllabusField = {
   id: string;
   key: string;
@@ -134,7 +99,6 @@ export type SyllabusField = {
   teacher_editable: boolean;
   /** Texto libre (I-156): documento con párrafos, listas y tablas simples. */
   value: string | number | boolean | string[] | DocumentNode | null;
-  rows: RepeatableRow[];
 };
 
 export type AiChatCitation = {
@@ -173,7 +137,6 @@ export type SyllabusBlock = {
   id: string;
   title: string | null;
   content_type: string;
-  table: TableLayout | null;
   page_orientation?: string;
   document?: DocumentNode | null;
   fields: SyllabusField[];
@@ -210,19 +173,6 @@ export const saveTeacherField = (
     {
       method: "PATCH",
       body: JSON.stringify({ version_bloqueo: version, value }),
-    },
-  );
-export const saveTeacherRows = (
-  syllabusId: string,
-  fieldId: string,
-  version: number,
-  rows: RepeatableRow[],
-) =>
-  api<{ version_bloqueo: number; guardado_en: string | null; rows: RepeatableRow[] }>(
-    `/teacher/syllabi/${syllabusId}/fields/${fieldId}`,
-    {
-      method: "PATCH",
-      body: JSON.stringify({ version_bloqueo: version, rows }),
     },
   );
 export const validateTeacherSyllabus = (syllabusId: string) =>
