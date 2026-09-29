@@ -35,13 +35,70 @@ export const answersOf = (doc: ProseMirrorNode, attrs: FieldAttrs): string[] => 
     return [...new Set(choices)];
 };
 
-/** Preguntas del docente de esta misma parte que pueden depender de la respuesta. */
+/**
+ * Bloques de filas de una tabla: filas unidas por celdas combinadas hacia abajo
+ * (por ejemplo «ESTUDIANTES CON DISCAPACIDAD», que ocupa tres filas).
+ */
+const rowBlocks = (table: ProseMirrorNode): ProseMirrorNode[][] => {
+    const blocks: ProseMirrorNode[][] = [];
+    let end = -1;
+    table.forEach((row, _offset, index) => {
+        if (index > end) blocks.push([]);
+        blocks[blocks.length - 1]!.push(row);
+        row.forEach((cell) => {
+            end = Math.max(end, index + Math.max(1, Number(cell.attrs.rowspan ?? 1)) - 1);
+        });
+    });
+
+    return blocks;
+};
+
+const hasTrigger = (node: ProseMirrorNode, triggerKey: string): boolean => {
+    let found = false;
+    node.descendants((child) => {
+        if (child.type.name === 'field' && child.attrs.key === triggerKey) found = true;
+
+        return !found;
+    });
+
+    return found;
+};
+
+/**
+ * Dónde se buscan preguntas de seguimiento: si la pregunta que se responde está en
+ * una tabla, solo en su bloque de filas; si no, en toda la parte.
+ */
+const followUpArea = (doc: ProseMirrorNode, triggerKey: string): ProseMirrorNode[] => {
+    const area: ProseMirrorNode[] = [];
+    doc.descendants((node) => {
+        if (node.type.name !== 'table') return true;
+        for (const block of rowBlocks(node)) {
+            if (block.some((row) => hasTrigger(row, triggerKey))) area.push(...block);
+        }
+
+        return false;
+    });
+
+    return area.length ? area : [doc];
+};
+
+/**
+ * Preguntas del docente que pueden depender de la respuesta: las que están junto a
+ * ella (mismo bloque de filas o, fuera de tablas, la misma parte) y las que ya
+ * dependen de ella, para poder quitarlas.
+ */
 export const followUpCandidates = (doc: ProseMirrorNode, triggerKey: string): FollowUp[] => {
+    const near = new Set<string>();
+    for (const node of followUpArea(doc, triggerKey)) {
+        for (const attrs of fields(node)) near.add(String(attrs.key ?? ''));
+    }
     const byKey = new Map<string, FollowUp>();
     for (const attrs of fields(doc)) {
         const key = String(attrs.key ?? '');
+        const showWhen = (attrs.showWhen as ShowWhen | null) ?? null;
         if (!key || key === triggerKey || attrs.choice || byKey.has(key)) continue;
-        byKey.set(key, { key, label: String(attrs.label || key), showWhen: (attrs.showWhen as ShowWhen | null) ?? null });
+        if (!near.has(key) && showWhen?.key !== triggerKey) continue;
+        byKey.set(key, { key, label: String(attrs.label || key), showWhen });
     }
 
     return [...byKey.values()];
