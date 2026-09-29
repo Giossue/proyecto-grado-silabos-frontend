@@ -47,6 +47,17 @@ describe('TemplatePartKindPicker', () => {
         expect(wrapper.text()).toContain('¿De quién es?');
     });
 
+    it('el texto fijo es una respuesta más a quién llena la parte', async () => {
+        const { wrapper, choice } = mountPicker('text');
+        expect(wrapper.text()).toContain('Nadie, es un texto fijo');
+        await wrapper.get('#p-fixed').trigger('click');
+        await flushPromises();
+        expect(choice.value.content_type).toBe('fixed');
+        expect(wrapper.text()).toContain('escriba el texto directamente en la hoja');
+        expect(partChoicePayload(choice.value)).toEqual({ content_type: 'fixed', options_sources: [] });
+        expect(partChoiceErrors(choice.value)).toEqual({});
+    });
+
     it('sin listas declaradas, «elige de una lista» está deshabilitado y lo explica', () => {
         const { wrapper } = mountPicker('text', [lists[1]!]);
         expect(wrapper.get('#p-chooses').attributes('disabled')).toBeDefined();
@@ -57,6 +68,7 @@ describe('TemplatePartKindPicker', () => {
         const { wrapper } = mountPicker('boolean', lists, false);
         await flushPromises();
         expect(wrapper.find('#p-automatic').exists()).toBe(false);
+        expect(wrapper.find('#p-fixed').exists()).toBe(false);
         expect(wrapper.get('#p-form').text()).toContain('Una respuesta Sí / No');
     });
 });

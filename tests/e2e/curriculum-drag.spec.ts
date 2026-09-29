@@ -18,6 +18,7 @@ const mountCanvas = async (page: import('@playwright/test').Page): Promise<void>
             createApp(CurriculumCanvas, {
                 career: { id: 'career', name: 'Software', modality: null },
                 curriculum: { id: 'career', cycle_count: 2, editable: true, lock_reason: null },
+                editing: true,
                 fixedFields: [], fixedFieldTotals: [],
                 subjects: [1, 2, 3, 4, 5].map(subject),
                 requirements: [], organizationUnits: [], modalityOptions: [],
@@ -27,6 +28,30 @@ const mountCanvas = async (page: import('@playwright/test').Page): Promise<void>
     await page.locator('.vue-flow__node-subject[data-id="1"]').waitFor();
     await page.waitForTimeout(250);
 };
+
+test('el desplazamiento de dos dedos mueve la malla sin cambiar el zoom', async ({ page }) => {
+    await mountCanvas(page);
+    const pane = page.locator('.vue-flow__transformationpane');
+    const transform = () => pane.evaluate((element) => {
+        const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform);
+        return { x: matrix.m41, y: matrix.m42, zoom: matrix.a };
+    });
+
+    for (let index = 0; index < 5; index += 1) {
+        await page.locator('.vue-flow__controls-zoomin').click();
+    }
+    const before = await transform();
+    expect(before.zoom).toBeGreaterThan(1);
+    const canvas = await page.locator('.vue-flow').boundingBox();
+    expect(canvas).not.toBeNull();
+    if (!canvas) return;
+
+    await page.mouse.move(canvas.x + canvas.width / 2, canvas.y + canvas.height / 2);
+    await page.mouse.wheel(-100, -60);
+    await expect.poll(async () => (await transform()).x - before.x).toBeGreaterThan(40);
+    await expect.poll(async () => (await transform()).y - before.y).toBeGreaterThan(20);
+    expect((await transform()).zoom).toBeCloseTo(before.zoom, 3);
+});
 
 for (const responseStatus of [200, 500]) {
     test(`al arrastrar conserva el ciclo y ${responseStatus === 200 ? 'ajusta' : 'restaura'} la posición`, async ({ page, context }) => {
