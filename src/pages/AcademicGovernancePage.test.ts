@@ -33,6 +33,8 @@ describe('AcademicGovernancePage', () => {
 
     expect(wrapper.text()).toContain('Edición bloqueada');
     expect(wrapper.text()).toContain('Pause el proceso para editar');
+    // El botón «Nuevo periodo académico» se ve, pero queda deshabilitado como en la malla.
+    expect(wrapper.find('catalog-record-sheet-stub').attributes('disabled')).toBe('true');
     wrapper.unmount();
   });
 
@@ -43,6 +45,7 @@ describe('AcademicGovernancePage', () => {
     await flushPromises();
 
     expect(wrapper.text()).not.toContain('Edición bloqueada');
+    expect(wrapper.find('catalog-record-sheet-stub').attributes('disabled')).toBe('false');
     wrapper.unmount();
   });
 });

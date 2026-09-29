@@ -59,7 +59,7 @@ onMounted(load);
 <template>
     <PageFrame :title="sectionContent.title" :description="sectionContent.description">
         <template #actions>
-        <CatalogRecordSheet v-if="data" :entity="entity" :options="data.options" @saved="changed" />
+        <CatalogRecordSheet v-if="data" :entity="entity" :options="data.options" :disabled="entity === 'periodo' && Boolean(data.lock_reason)" @saved="changed" />
         </template>
 
     <LoadErrorState v-if="error" :message="error" @retry="load" />

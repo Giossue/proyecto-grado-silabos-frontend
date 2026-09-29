@@ -41,6 +41,7 @@ const setupRoutes: Record<string, string> = {
   assigned: paths.teacher.syllabi,
   started: paths.teacher.syllabi,
   submitted: paths.teacher.syllabi,
+  signed: paths.teacher.syllabi,
 };
 const setup = computed(() => dashboard.value?.setup ? {
   ...dashboard.value.setup,
