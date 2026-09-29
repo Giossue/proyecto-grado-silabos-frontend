@@ -40,7 +40,7 @@ describe('CoordinationCurricularProjectPage', () => {
     expect(document.body.textContent).toContain('Selecciona un archivo o un documento anterior para continuar.');
     expect(document.body.textContent).not.toContain('Organizaré los datos por asignatura');
 
-    button('Indicar qué buscar (opcional)').click();
+    button('Agregar una indicación (opcional)').click();
     await flushPromises();
     expect(document.querySelector('#curricular-import-instruction')).not.toBeNull();
 

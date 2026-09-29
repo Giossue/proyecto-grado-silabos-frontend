@@ -4,7 +4,6 @@ import { computed, nextTick, ref, watch } from 'vue';
 import type { CurricularImportIndex } from '@/api/curricular-imports';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -60,15 +59,7 @@ watch(() => props.errors.instruction, (messages) => {
 <template>
   <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submit">
     <div ref="formContent" class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-5">
-      <p class="text-sm text-muted-foreground">Podrás revisar los datos encontrados antes de guardarlos.</p>
       <Alert v-if="noConcepts"><AlertDescription>Administración aún no definió en la plantilla qué datos salen de los documentos de la carrera. Cuando lo haga, podrás importarlos aquí.</AlertDescription></Alert>
-      <div v-else class="flex flex-col gap-2">
-        <p class="text-sm font-medium">La plantilla pide estos datos</p>
-        <ul class="flex flex-wrap gap-2" aria-label="Datos que se buscarán">
-          <li v-for="concept in index.concepts" :key="concept.key"><Badge variant="secondary">{{ concept.label }} · {{ concept.scope === 'carrera' ? 'carrera' : 'por asignatura' }}</Badge></li>
-        </ul>
-        <p class="text-sm text-muted-foreground">Se buscarán solo estos. Si un documento trae otra información, se avisará sin importarla.</p>
-      </div>
       <FieldGroup class="gap-5">
         <Alert v-if="index.lock_reason || !index.capabilities.extraction">
           <AlertDescription>{{ index.lock_reason ?? 'La extracción de documentos no está disponible en este momento. Las importaciones anteriores siguen disponibles en el historial.' }}</AlertDescription>
@@ -95,10 +86,22 @@ watch(() => props.errors.instruction, (messages) => {
           </FieldGroup>
           <FieldDescription v-if="index.sources.length > 10">Puedes elegir hasta 10 documentos anteriores.</FieldDescription>
         </FieldSet>
+        <Collapsible v-if="!noConcepts">
+          <CollapsibleTrigger as-child>
+            <Button type="button" variant="ghost" size="sm" class="group px-0">
+              Se buscarán {{ index.concepts.length }} {{ index.concepts.length === 1 ? 'dato' : 'datos' }} de la plantilla
+              <ChevronDown data-icon="inline-end" class="group-data-[state=open]:rotate-180" aria-hidden="true" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent class="pt-2 text-sm text-muted-foreground">
+            <p>{{ index.concepts.map((concept) => concept.label).join(', ') }}.</p>
+            <p class="mt-1">Si un documento trae otra información, se avisará sin importarla.</p>
+          </CollapsibleContent>
+        </Collapsible>
         <Collapsible v-model:open="instructionOpen">
           <CollapsibleTrigger as-child>
             <Button type="button" variant="ghost" size="sm" class="px-0" :disabled="disabled">
-              Indicar qué buscar (opcional)
+              Agregar una indicación (opcional)
               <ChevronDown data-icon="inline-end" :class="instructionOpen ? 'rotate-180' : undefined" aria-hidden="true" />
             </Button>
           </CollapsibleTrigger>

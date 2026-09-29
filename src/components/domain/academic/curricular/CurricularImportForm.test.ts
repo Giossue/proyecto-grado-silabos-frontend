@@ -30,8 +30,7 @@ describe('límites del lote curricular', () => {
   it('muestra los datos que pide la plantilla y bloquea la importación si no hay ninguno', async () => {
     const index = { imports: [], subjects: [], sources: [], current_values: [], concepts: [{ key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista' as const, scope: 'asignatura' as const }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null };
     const wrapper = mount(CurricularImportForm, { props: { index, processing: false, errors: {} } });
-    expect(wrapper.text()).toContain('La plantilla pide estos datos');
-    expect(wrapper.text()).toContain('Bibliografía básica · por asignatura');
+    expect(wrapper.text()).toContain('Se buscarán 1 dato de la plantilla');
     await wrapper.setProps({ index: { ...index, concepts: [] } });
     expect(wrapper.text()).toContain('Administración aún no definió en la plantilla qué datos salen de los documentos de la carrera.');
     expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeDefined();
