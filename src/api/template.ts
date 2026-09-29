@@ -17,7 +17,7 @@ export type TemplateAppearance = { font_family: string; body_font_size: number; 
 export type TemplateOption = { value: string | number; label: string };
 export type TemplatePayload = { processLock: string | null; template: null | { id: string; name: string; description: string | null; appearance: TemplateAppearance; titleBlock: { text: string }; sections: Array<{ id: string; key: string; title: string; description: string | null; blocks: TemplateBlock[] }> }; identificationSample?: unknown[][]; blockTypes?: Array<{ value: 'free_text' | 'template'; label: string }>; appearanceOptions?: { fonts: TemplateOption[]; body_sizes: TemplateOption[]; title_sizes: TemplateOption[]; section_sizes: TemplateOption[]; field_sizes: TemplateOption[]; margins: TemplateOption[]; colors: TemplateOption[]; alignments: TemplateOption[]; orientations: TemplateOption[] }; variables?: TemplateVariable[]; identificationDesign?: DocumentNode; logos?: { institution: string; faculty: string; institution_size: { width: number; height: number }; faculty_size: { width: number; height: number } } };
 /** @ProyectoCarrera (I-155): se declara al insertarlo; por omisión es de cada asignatura. */
-export type NewProjectData = { label: string; type: 'texto' | 'lista'; scope?: 'asignatura' | 'carrera' };
+export type NewProjectData = { label: string; type: 'texto' | 'lista' };
 export const declareProjectData = (templateId: string, input: NewProjectData) =>
   api<{ message: string; variable: TemplateVariable }>(`/admin/template/${templateId}/project-data`, { method: 'POST', body: JSON.stringify(input) });
 export const getTemplate = () => api<TemplatePayload>('/admin/template');

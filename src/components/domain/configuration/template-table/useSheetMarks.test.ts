@@ -44,7 +44,7 @@ describe('useSheetMarks', () => {
 
     it('en una lista, !Docente y @ProyectoCarrera se vuelven elementos de la lista', async () => {
         const list: DocumentNode = { type: 'doc', content: [{ type: 'bulletList', content: [{ type: 'listItem', content: [{ type: 'paragraph' }] }] }] };
-        const variable = { key: 'curricular_metodologia', label: 'Metodología', sample: 'Metodología', type: 'lista' as const, scope: 'asignatura' as const };
+        const variable = { key: 'curricular_metodologia', label: 'Metodología', sample: 'Metodología', type: 'lista' as const };
         vi.mocked(declareProjectData).mockResolvedValue({ message: 'ok', variable });
         const { marks, inserted, declared } = setup(list);
 

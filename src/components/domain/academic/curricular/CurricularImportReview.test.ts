@@ -12,7 +12,7 @@ const proposal = (): CurricularImportDetail => ({
   id: 'import-1', career_id: 'career-1', status: 'lista', fingerprint: 'a'.repeat(64), error: null, editable: true, lock_reason: null,
   documents: [{ source_id: 'source-1', name: 'Proyecto de carrera.pdf', kind: 'pdf', hash: 'hash', execution_id: null }],
   proposal: {
-    definitions: [{ key: 'resultados', label: 'Resultados de aprendizaje', type: 'lista', scope: 'asignatura' }],
+    definitions: [{ key: 'resultados', label: 'Resultados de aprendizaje', type: 'lista' }],
     values: [
       { id: 'known', concept_key: 'resultados', subject_id: 'subject-1', subject_name: 'Calidad', value: ['Evalúa la calidad.'], evidence: [{ source_id: 'source-1', locator: 'Página 22', quote: 'Evalúa la calidad del software.' }], issue: null },
       { id: 'unmatched', concept_key: 'resultados', subject_id: null, subject_name: 'Calidad SW', value: ['Selecciona métricas.'], evidence: [{ source_id: 'source-1', locator: 'Página 23', quote: 'Selecciona métricas.' }], issue: 'Materia por identificar', issue_code: 'subject_unmatched' },
@@ -97,7 +97,7 @@ describe('CurricularImportReview', () => {
 
   it('relaciona una sola vez cada nombre del documento y filtra lo que requiere revisión', async () => {
     const detail = proposal();
-    detail.proposal!.definitions.push({ key: 'bibliografia', label: 'Bibliografía básica', type: 'lista', scope: 'asignatura' });
+    detail.proposal!.definitions.push({ key: 'bibliografia', label: 'Bibliografía básica', type: 'lista' });
     detail.proposal!.values.push({ ...detail.proposal!.values[1]!, id: 'unmatched-2', concept_key: 'bibliografia', value: ['Libro de métricas.'], evidence: [{ source_id: 'source-1', locator: 'Bibliografia!A5:C5', quote: 'Libro de métricas.' }] });
     const wrapper = mountReview(detail);
     expect(wrapper.findAllComponents(Select)).toHaveLength(1);

@@ -5,7 +5,7 @@ import FileDropzone from '@/components/domain/FileDropzone.vue';
 
 describe('límites del lote curricular', () => {
   it('muestra la indicación opcional cuando el servidor devuelve un error en ella', async () => {
-    const wrapper = mount(CurricularImportForm, { props: { index: { imports: [], subjects: [], current_values: [], concepts: [{ key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista', scope: 'asignatura', sections: ['Bibliografía'] }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null }, processing: false, errors: { instruction: ['Acorta la indicación.'] } } });
+    const wrapper = mount(CurricularImportForm, { props: { index: { imports: [], subjects: [], current_values: [], concepts: [{ key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista', sections: ['Bibliografía'] }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null }, processing: false, errors: { instruction: ['Acorta la indicación.'] } } });
     await flushPromises();
     expect(wrapper.find('#curricular-import-instruction').exists()).toBe(true);
     expect(wrapper.text()).toContain('Acorta la indicación.');
@@ -13,7 +13,7 @@ describe('límites del lote curricular', () => {
   });
 
   it('no agrega documentos que superan 30 MB combinados y conserva el lote válido anterior', async () => {
-    const wrapper = mount(CurricularImportForm, { props: { index: { imports: [], subjects: [], current_values: [], concepts: [{ key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista', scope: 'asignatura', sections: ['Bibliografía'] }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null }, processing: false, errors: {} } });
+    const wrapper = mount(CurricularImportForm, { props: { index: { imports: [], subjects: [], current_values: [], concepts: [{ key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista', sections: ['Bibliografía'] }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null }, processing: false, errors: {} } });
     const files = ['uno.pdf', 'dos.pdf'].map((name) => { const file = new File(['demo'], name, { type: 'application/pdf' }); Object.defineProperty(file, 'size', { value: 16 * 1024 * 1024 }); return file; });
     wrapper.findComponent(FileDropzone).vm.$emit('files-selected', [files[0]]);
     await flushPromises();
@@ -28,7 +28,7 @@ describe('límites del lote curricular', () => {
   });
 
   it('muestra los datos que pide la plantilla y bloquea la importación si no hay ninguno', async () => {
-    const index = { imports: [], subjects: [], current_values: [], concepts: [{ key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista' as const, scope: 'asignatura' as const, sections: ['Bibliografía'] }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null };
+    const index = { imports: [], subjects: [], current_values: [], concepts: [{ key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista' as const, sections: ['Bibliografía'] }], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null };
     const wrapper = mount(CurricularImportForm, { props: { index, processing: false, errors: {} } });
     expect(wrapper.text()).toContain('Se buscarán 1 dato de la plantilla');
     await wrapper.setProps({ index: { ...index, concepts: [] } });

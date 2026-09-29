@@ -16,8 +16,8 @@ const index: CurricularImportIndex = {
   subjects: [{ id: 'subject-2', name: 'Redes', code: 'SW-2' }, { id: 'subject-1', name: 'Calidad', code: 'SW-1' }],
   current_values: [],
   concepts: [
-    { key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista', scope: 'asignatura', sections: ['Bibliografía'] },
-    { key: 'perfil_egreso', label: 'Perfil de egreso', type: 'texto', scope: 'carrera', sections: ['Perfil'] },
+    { key: 'bibliografia_basica', label: 'Bibliografía básica', type: 'lista', sections: ['Bibliografía'] },
+    { key: 'perfil_egreso', label: 'Perfil de egreso', type: 'texto', sections: ['Perfil'] },
   ],
   capabilities: { pdf: true, xlsx: true, extraction: true },
   lock_reason: null,
@@ -55,10 +55,10 @@ beforeEach(() => {
 afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('CoordinationCurricularProjectPage', () => {
-  it('muestra el Proyecto de carrera como una tabla por asignatura, sin pestañas ni historial', async () => {
+  it('muestra el Proyecto de carrera como una sola tabla por asignatura, sin pestañas ni historial', async () => {
     api.getCurricularImports.mockResolvedValue({ ...index, current_values: [{
       id: 'value-1', key: 'bibliografia_basica', concept_key: 'bibliografia_basica', label: 'Bibliografía básica',
-      type: 'lista', scope: 'asignatura', columns: [], subject_id: 'subject-1', subject_name: 'Calidad',
+      type: 'lista', columns: [], subject_id: 'subject-1', subject_name: 'Calidad',
       subject_code: 'SW-1', value: ['Pressman, Ingeniería del software.'],
       evidence: [{ source_name: 'Proyecto de carrera', locator: 'Página 22', quote: 'Pressman' }],
       confirmed_at: '2026-09-27T10:00:00Z', origin: 'importacion',
@@ -68,14 +68,16 @@ describe('CoordinationCurricularProjectPage', () => {
 
     expect(document.querySelector('[role="tablist"]')).toBeNull();
     expect(document.body.textContent).not.toContain('Historial');
+    // Todo dato es por asignatura (I-160): una sola tabla, sin «Datos de toda la carrera».
+    expect(document.querySelectorAll('table')).toHaveLength(1);
+    expect(document.body.textContent).not.toContain('toda la carrera');
     const headers = Array.from(document.querySelectorAll('th')).map((cell) => cell.textContent?.trim());
-    expect(headers).toEqual(expect.arrayContaining(['Asignatura', 'Bibliografía básica', 'Dato', 'Contenido']));
+    expect(headers).toEqual(['Asignatura', 'Bibliografía básica', 'Perfil de egreso']);
     const rows = Array.from(document.querySelectorAll('tbody tr')).map((row) => row.textContent ?? '');
     // Asignaturas en orden alfabético; lo que falta se dice sin etiquetas.
     expect(rows.findIndex((row) => row.includes('Calidad'))).toBeLessThan(rows.findIndex((row) => row.includes('Redes')));
     expect(rows.find((row) => row.includes('Calidad'))).toContain('Pressman, Ingeniería del software.');
     expect(rows.find((row) => row.includes('Redes'))).toContain('Sin dato');
-    expect(rows.find((row) => row.includes('Perfil de egreso'))).toContain('Sin dato');
     expect(button('Importar documentos')).toBeTruthy();
   });
 

@@ -32,13 +32,13 @@ const problem = (item: CurricularProposedValue): string | null => {
   if (!concept) return 'No se pudo identificar el tipo de dato. Esta propuesta necesita revisión.';
   if (item.issue_code === 'source_conflict' && !acceptedConflicts.value[item.id]) return item.issue || 'La fuente discrepa de otro dato. Revisa la discrepancia antes de elegir esta propuesta.';
   if ((item.issue || item.issue_code) && !['subject_unmatched', 'source_conflict'].includes(item.issue_code ?? '')) return item.issue || 'Este dato requiere corregir su contenido o evidencia antes de aplicarlo.';
-  if (concept.scope === 'asignatura' && !props.subjects.some((subject) => subject.id === subjectId(item))) return 'Elige la asignatura de la malla a la que pertenece este dato.';
+  if (!props.subjects.some((subject) => subject.id === subjectId(item))) return 'Elige la asignatura de la malla a la que pertenece este dato.';
   if (!item.evidence.length) return 'La propuesta no incluye evidencia suficiente.';
   return null;
 };
 const selectedItems = computed(() => props.detail.proposal?.values.filter((item) => selected.value.includes(item.id)) ?? []);
 const duplicateSelection = computed(() => {
-  const identities = selectedItems.value.map((item) => `${item.concept_key}:${definition(item)?.scope === 'carrera' ? 'career' : subjectId(item)}`);
+  const identities = selectedItems.value.map((item) => `${item.concept_key}:${subjectId(item)}`);
   return new Set(identities).size !== identities.length;
 });
 const canApply = computed(() => editable.value && !saving.value && Boolean(props.detail.fingerprint) && confirmed.value && !duplicateSelection.value && selectedItems.value.length > 0 && selectedItems.value.every((item) => !problem(item)));
@@ -46,15 +46,15 @@ const groups = computed(() => {
   const result = new Map<string, { label: string; items: CurricularProposedValue[] }>();
   for (const item of props.detail.proposal?.values ?? []) {
     const subject = props.subjects.find((subject) => subject.id === subjectId(item));
-    const label = definition(item)?.scope === 'carrera' ? 'Datos de la carrera' : subject ? `${subject.code} · ${subject.name}` : item.subject_name || 'Asignatura por identificar';
-    const key = definition(item)?.scope === 'carrera' ? 'career' : subjectId(item) ?? `unmatched:${item.subject_name ?? item.id}`;
+    const label = subject ? `${subject.code} · ${subject.name}` : item.subject_name || 'Asignatura por identificar';
+    const key = subjectId(item) ?? `unmatched:${item.subject_name ?? item.id}`;
     if (!result.has(key)) result.set(key, { label, items: [] });
     result.get(key)!.items.push(item);
   }
   return [...result.entries()];
 });
 const sourceName = (id: string): string => props.detail.documents.find((document) => document.source_id === id)?.name ?? 'Documento fuente';
-const needsSubject = (item: CurricularProposedValue): boolean => definition(item)?.scope === 'asignatura' && !item.subject_id
+const needsSubject = (item: CurricularProposedValue): boolean => !item.subject_id
   && (item.issue_code === 'subject_unmatched' || item.issue_code === 'source_conflict');
 // Un mismo nombre del documento se relaciona una sola vez con su materia de la malla.
 const unmatchedNames = computed(() => [...new Set((props.detail.proposal?.values ?? []).filter(needsSubject).map((item) => item.subject_name ?? ''))]);
@@ -164,7 +164,7 @@ const apply = async () => {
             <p v-if="item.change === 'unchanged'" class="text-sm text-muted-foreground">El contenido coincide. Al aplicarlo se registrará la procedencia de esta importación.</p>
           </template>
           <CurricularValuePreview :definition="definition(item)" :value="item.value" />
-          <Alert v-if="detail.status === 'lista' && definition(item)?.scope === 'asignatura' && !item.subject_id && assignments[item.id]"><AlertDescription>El valor de la materia elegida se reemplazará si ya existe.</AlertDescription></Alert>
+          <Alert v-if="detail.status === 'lista' && !item.subject_id && assignments[item.id]"><AlertDescription>El valor de la materia elegida se reemplazará si ya existe.</AlertDescription></Alert>
           <Field v-if="item.issue_code === 'source_conflict' && detail.status === 'lista'" orientation="horizontal">
             <Checkbox :id="`proposal-conflict-${item.id}`" v-model="acceptedConflicts[item.id]" :disabled="!editable || saving" />
             <FieldLabel :for="`proposal-conflict-${item.id}`">Revisé la discrepancia y usaré este dato.</FieldLabel>

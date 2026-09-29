@@ -6,7 +6,6 @@ export type CurricularDefinition = {
   key: string;
   label: string;
   type: 'texto' | 'lista' | 'tabla';
-  scope: 'carrera' | 'asignatura';
   columns?: Array<{ key: string; label: string }>;
 };
 export type CurricularProposedValue = {
@@ -31,7 +30,8 @@ export type CurricularImportSummary = {
 export type ConfirmedCurricularValue = CurricularDefinition & {
   id: string;
   concept_key: string;
-  subject_id: string | null;
+  /** Todo dato del Proyecto de carrera es de una asignatura (I-160). */
+  subject_id: string;
   subject_name: string | null;
   subject_code: string | null;
   value: CurricularProposedValue['value'];
@@ -43,9 +43,8 @@ export type CurricularImportIndex = {
   imports: CurricularImportSummary[];
   subjects: Array<{ id: string; name: string; code: string }>;
   current_values: ConfirmedCurricularValue[];
-  /** Datos que la plantilla pide a los documentos de carrera; la importación solo busca estos (I-151). */
-  /** @ProyectoCarrera que usa la plantilla y las secciones donde aparece (I-155). */
-  concepts: Array<{ key: string; label: string; type: 'texto' | 'lista' | 'tabla'; scope: 'carrera' | 'asignatura'; sections: string[] }>;
+  /** @ProyectoCarrera que usa la plantilla y las secciones donde aparece (I-155); la importación solo busca estos. */
+  concepts: Array<{ key: string; label: string; type: 'texto' | 'lista' | 'tabla'; sections: string[] }>;
   capabilities: { pdf: boolean; xlsx: boolean; extraction: boolean };
   lock_reason: string | null;
 };

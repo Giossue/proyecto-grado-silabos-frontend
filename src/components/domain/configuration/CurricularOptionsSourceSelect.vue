@@ -15,7 +15,7 @@ const choose = (key: string, checked: boolean | 'indeterminate') => { model.valu
     <FieldGroup v-if="lists.length" class="max-h-48 gap-3 overflow-y-auto">
       <Field v-for="list in lists" :key="list.key" orientation="horizontal">
         <Checkbox :id="`${id}-${list.key}`" :model-value="model.includes(list.key)" :disabled="disabled" @update:model-value="choose(list.key, $event)" />
-        <FieldLabel :for="`${id}-${list.key}`">{{ list.label }} · {{ list.scope === 'carrera' ? 'Carrera' : 'Asignatura' }}</FieldLabel>
+        <FieldLabel :for="`${id}-${list.key}`">{{ list.label }}</FieldLabel>
       </Field>
     </FieldGroup>
     <FieldDescription>{{ lists.length ? 'Puedes unir varias listas; cada sílabo ofrece las opciones validadas para su carrera y asignatura, sin repetirlas.' : 'Coordinación debe importar y validar una lista curricular antes de vincularla aquí.' }}{{ manual ? ' Sin listas seleccionadas se usan las opciones escritas en la plantilla.' : '' }}</FieldDescription>
