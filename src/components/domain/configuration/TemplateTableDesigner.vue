@@ -33,6 +33,7 @@ const props = defineProps<{
     appearance: TemplateAppearance;
     colors: { value: string; label: string }[];
     ribbonTarget?: string;
+    sectionTitle: string;
 }>();
 
 const emit = defineEmits<{
@@ -161,13 +162,13 @@ const save = (): void => {
     form.patch(url.value, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success('Tabla guardada.');
+            toast.success('Parte guardada.');
             close(true);
         },
         onError: (errors) => {
             if (!('purge_required' in errors)) {
                 toast.error(
-                    Object.values(errors)[0] ?? 'No se pudo guardar la tabla.',
+                    Object.values(errors)[0] ?? 'No se pudo guardar la parte.',
                 );
             }
         },
@@ -275,7 +276,7 @@ defineExpose({ start });
                             data-icon="inline-start"
                             aria-hidden="true"
                         />
-                        Guardar tabla
+                        Guardar
                     </Button>
                 </div>
             </Teleport>
@@ -292,6 +293,8 @@ defineExpose({ start });
                 :fields="fields"
                 :variables="variables"
                 :layout="layout"
+                :template-id="templateId"
+                :section-title="sectionTitle"
                 :toolbar-target="
                     ribbonTarget ? `${ribbonTarget}-tools` : undefined
                 "
@@ -299,7 +302,7 @@ defineExpose({ start });
             />
 
             <Alert v-if="error" class="mt-4" variant="destructive">
-                <AlertTitle>No se pudo guardar la tabla</AlertTitle>
+                <AlertTitle>No se pudo guardar la parte</AlertTitle>
                 <AlertDescription>{{ error }}</AlertDescription>
             </Alert>
 
@@ -326,8 +329,8 @@ defineExpose({ start });
 
         <UnsavedChangesDialog
             :open="discardOpen"
-            title="Descartar cambios de tabla"
-            description="Hay cambios de tabla sin guardar. ¿Desea descartarlos?"
+            title="Descartar cambios"
+            description="Hay cambios sin guardar en esta parte. ¿Desea descartarlos?"
             @update:open="updateDiscardOpen"
             @continue="continueEditing"
             @discard="discardChanges"

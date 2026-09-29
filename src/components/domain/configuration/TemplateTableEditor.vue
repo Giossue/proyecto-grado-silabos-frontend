@@ -23,6 +23,8 @@ import TemplateTableNewDataSheet from '@/components/domain/configuration/templat
 import type { NewRepeatedData } from '@/components/domain/configuration/template-table/TemplateTableNewDataSheet.vue';
 import TemplateTableRowsMenu from '@/components/domain/configuration/template-table/TemplateTableRowsMenu.vue';
 import TemplateTableNewFieldDialog from '@/components/domain/configuration/template-table/TemplateTableNewFieldDialog.vue';
+import TemplateTableProjectDataDialog from '@/components/domain/configuration/template-table/TemplateTableProjectDataDialog.vue';
+import { PROJECT_PREFIX } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import type { NewTeacherField } from '@/components/domain/configuration/template-table/TemplateTableNewFieldDialog.vue';
 import { templateTableExtensions } from '@/components/domain/configuration/template-table/templateTableExtensions';
 import type { CellAlignment } from '@/components/domain/configuration/template-table/types';
@@ -33,7 +35,8 @@ import TemplateToolbarButton from '@/components/domain/configuration/TemplateToo
 import TemplateToolbarSelect from '@/components/domain/configuration/TemplateToolbarSelect.vue';
 import { Button } from '@/components/ui/button';
 import { SelectItem } from '@/components/ui/select';
-import { useVariableSuggestions } from '@/composables/useVariableSuggestions';
+import { useSheetSuggestions } from '@/composables/useSheetSuggestions';
+import type { SheetSuggestionItem } from '@/composables/useSheetSuggestions';
 import { Separator } from '@/components/ui/separator';
 import type { TableLayout } from '@/lib/tableLayout';
 import { tableKeyFor } from '@/lib/tableLayout';
@@ -57,6 +60,9 @@ const props = defineProps<{
     variables: TemplateVariable[];
     layout?: TableLayout | null;
     toolbarTarget?: string;
+    templateId: string;
+    /** Nombre propuesto para un @ProyectoCarrera nuevo (I-155). */
+    sectionTitle: string;
 }>();
 
 const emit = defineEmits<{
@@ -80,16 +86,56 @@ const newFieldDialog = ref<InstanceType<
 const newDataSheet = ref<InstanceType<typeof TemplateTableNewDataSheet> | null>(
     null,
 );
+const projectDataDialog = ref<InstanceType<
+    typeof TemplateTableProjectDataDialog
+> | null>(null);
+// Datos @ProyectoCarrera creados mientras se edita; al guardar llegan con la plantilla.
+const declared = ref<TemplateVariable[]>([]);
+const allVariables = computed(() => [
+    ...props.variables,
+    ...declared.value.filter(
+        (item) => !props.variables.some((variable) => variable.key === item.key),
+    ),
+]);
 const variableLabels = computed(
     () =>
-        new Map(props.variables.map((variable) => [variable.key, variable.label])),
+        new Map(allVariables.value.map((variable) => [variable.key, variable.label])),
 );
-// «@» dentro de una celda abre la lista de datos automáticos.
-const { suggestions, selectedSuggestion, chooseVariable, suggestion } =
-    useVariableSuggestions({
-        variables: () => props.variables,
+const variableItem = (variable: TemplateVariable): SheetSuggestionItem => ({
+    key: variable.key,
+    label: variable.label,
+    node: { type: 'variable', attrs: { id: variable.key, label: variable.label } },
+});
+// Atajos de la hoja (I-155): «{» dato automático, «!» docente, «@» Proyecto de carrera.
+const triggers = [
+    useSheetSuggestions({
+        char: '{',
         enabled: () => !props.pending,
-    });
+        items: () => allVariables.value.filter((variable) => !variable.key.startsWith(PROJECT_PREFIX)).map(variableItem),
+    }),
+    useSheetSuggestions({
+        char: '!',
+        enabled: () => !props.pending,
+        items: () => [
+            ...teacherFields.value.map((field) => ({ key: field.key, label: field.label, open: () => insertField(field) })),
+            { key: 'nueva-pregunta', label: 'Nueva pregunta…', open: () => openNewField(), always: true },
+        ],
+    }),
+    useSheetSuggestions({
+        char: '@',
+        enabled: () => !props.pending,
+        items: () => [
+            ...allVariables.value.filter((variable) => variable.key.startsWith(PROJECT_PREFIX) && variable.type !== 'tabla').map(variableItem),
+            { key: 'nuevo-dato', label: 'Nuevo dato del Proyecto de carrera…', open: () => projectDataDialog.value?.open(), always: true },
+        ],
+    }),
+];
+const active = computed(() => triggers.find((trigger) => trigger.suggestions.value));
+const suggestions = computed(() => active.value?.suggestions.value ?? null);
+const selectedSuggestion = computed(() => active.value?.selectedSuggestion.value ?? 0);
+const chooseSuggestion = (item: SheetSuggestionItem): void => {
+    active.value?.choose(item);
+};
 const suggestionStyle = ref<CSSProperties>({ display: 'none' });
 const updateSuggestionPosition = (): void => {
     const rect = suggestions.value?.clientRect?.();
@@ -151,7 +197,7 @@ const editor = useEditor({
     content: props.document,
     editorProps: {
         attributes: {
-            'aria-label': 'Editar tabla de la plantilla',
+            'aria-label': 'Editar parte de la plantilla',
             role: 'textbox',
             'aria-multiline': 'true',
             spellcheck: 'true',
@@ -160,7 +206,7 @@ const editor = useEditor({
     extensions: [
         ...templateTableExtensions({
             variableLabel: (id) => variableLabels.value.get(id),
-            suggestion,
+            suggestions: triggers.map((trigger) => trigger.suggestion),
         }),
         // Page breaks between rows drawn by the sheet view; presentation only.
         Extension.create({
@@ -272,6 +318,11 @@ const openNewField = (): void => {
     newFieldDialog.value?.open();
 };
 
+const createProjectData = (variable: TemplateVariable): void => {
+    declared.value = [...declared.value.filter((item) => item.key !== variable.key), variable];
+    insertVariable(variable);
+};
+
 const createField = ({ label, type, options, options_sources }: NewTeacherField): void => {
     insertField({
         key: keyFor(label),
@@ -319,8 +370,9 @@ defineExpose({ getDocument });
                 aria-label="Formato de celdas"
             >
                 <TemplateTableInsertMenu
-                    :disabled="!inCell || pending"
-                    :variables="variables"
+                    :disabled="pending"
+                    :in-table="inCell"
+                    :variables="allVariables"
                     :teacher-fields="teacherFields"
                     :repeated-columns="repeatedColumns"
                     :can-insert-repeated-column="canInsertRepeatedColumn"
@@ -329,6 +381,7 @@ defineExpose({ getDocument });
                     @insert-variable="insertVariable"
                     @insert-field="insertField($event)"
                     @new-field="openNewField"
+                    @new-project-data="projectDataDialog?.open()"
                     @insert-repeated-column="insertRepeatedColumn"
                     @new-data="openNewData"
                     @row-role="setRowRole"
@@ -514,13 +567,13 @@ defineExpose({ getDocument });
                 class="z-50 flex max-h-72 w-72 flex-col gap-1 overflow-y-auto rounded-md border bg-popover p-1.5 text-popover-foreground shadow-md"
                 :style="suggestionStyle"
                 role="listbox"
-                aria-label="Datos automáticos"
+                aria-label="Insertar en la hoja"
             >
                 <p
                     v-if="!suggestions.items.length"
                     class="px-2 py-1.5 text-sm text-muted-foreground"
                 >
-                    No hay datos automáticos con ese nombre.
+                    No hay datos con ese nombre.
                 </p>
                 <Button
                     v-for="(item, index) in suggestions.items"
@@ -534,7 +587,7 @@ defineExpose({ getDocument });
                     role="option"
                     :aria-selected="selectedSuggestion === index"
                     @mousedown.prevent
-                    @click="chooseVariable(item)"
+                    @click="chooseSuggestion(item)"
                 >
                     <span class="truncate">{{ item.label }}</span>
                 </Button>
@@ -548,7 +601,14 @@ defineExpose({ getDocument });
         @create="createRepeatedData"
     />
 
-    <TemplateTableNewFieldDialog ref="newFieldDialog" :variables="variables" @create="createField" />
+    <TemplateTableNewFieldDialog ref="newFieldDialog" :variables="allVariables" @create="createField" />
+
+    <TemplateTableProjectDataDialog
+        ref="projectDataDialog"
+        :template-id="templateId"
+        :section-title="sectionTitle"
+        @create="createProjectData"
+    />
 </template>
 
 <style>

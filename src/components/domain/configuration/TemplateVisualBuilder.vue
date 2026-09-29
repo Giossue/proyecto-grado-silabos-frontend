@@ -165,7 +165,9 @@ const partNumber = (section: TemplateSection, index: number): number =>
     section.blocks
         .slice(0, index + 1)
         .filter((block) => block.title.trim() !== '').length;
-const hasTable = (block: TemplateFieldContainer): boolean =>
+/** Toda parte se edita sobre la hoja: texto, listas y tablas mezclan marcas (I-155). */
+const editableOnSheet = (block: TemplateFieldContainer): boolean =>
+    block.content_type !== 'institutional' ||
     nodesOfType(documentFor(block), 'table').length > 0;
 
 type SheetGroup = {
@@ -483,7 +485,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
 
                             <template v-if="selectedField && selectedSection">
                                 <Button
-                                    v-if="hasTable(selectedField)"
+                                    v-if="editableOnSheet(selectedField)"
                                     type="button"
                                     variant="ghost"
                                     size="sm"
@@ -497,7 +499,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                         data-icon="inline-start"
                                         aria-hidden="true"
                                     />
-                                    Editar tabla
+                                    Editar en la hoja
                                 </Button>
                                 <Button
                                     type="button"
@@ -769,7 +771,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         </h3>
 
                         <TemplateTableDesigner
-                            v-if="!readonly && hasTable(block)"
+                            v-if="!readonly && editableOnSheet(block)"
                             :ref="
                                 (instance) =>
                                     bindHandle(
@@ -789,6 +791,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             :appearance="appearance"
                             :colors="colorOptions"
                             ribbon-target="#template-editor-ribbon"
+                            :section-title="section.title"
                             @activate="selectField(section.id, block.id)"
                             @editing-change="
                                 updateTableEditing(section.id, block.id, $event)
