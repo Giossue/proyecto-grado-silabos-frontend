@@ -71,10 +71,12 @@ const assignName = async (name: string, subject: unknown) => {
   selected.value = [...new Set([...selected.value, ...items.filter((item) => !problem(item)).map((item) => item.id)])];
 };
 const onlyPending = ref(false);
+// Paso a paso: primero se relacionan las materias nombradas de otra forma y después se eligen los datos.
+const phase = ref<'subjects' | 'data'>('data');
 const attention = (item: CurricularProposedValue): boolean => Boolean(problem(item)) || item.issue_code === 'source_conflict';
 const pendingCount = computed(() => props.detail.proposal?.values.filter(attention).length ?? 0);
 const visibleGroups = computed(() => groups.value
-  .map(([key, group]) => [key, { ...group, items: onlyPending.value ? group.items.filter(attention) : group.items, pending: group.items.filter(attention).length }] as const)
+  .map(([key, group]) => [key, { ...group, items: onlyPending.value && pendingCount.value ? group.items.filter(attention) : group.items, pending: group.items.filter(attention).length }] as const)
   .filter(([, group]) => group.items.length > 0));
 const choose = (id: string, value: boolean | 'indeterminate') => {
   selected.value = value === true ? [...selected.value.filter((item) => item !== id), id] : selected.value.filter((item) => item !== id);
@@ -84,6 +86,7 @@ watch(() => [props.detail.id, props.detail.fingerprint], () => {
   acceptedConflicts.value = Object.fromEntries((props.detail.applied_items ?? []).map((item) => [item.id, item.accept_conflict]));
   selected.value = props.detail.proposal?.values.filter((item) => !problem(item)).map((item) => item.id) ?? [];
   onlyPending.value = false;
+  phase.value = props.detail.status === 'lista' && unmatchedNames.value.length ? 'subjects' : 'data';
   confirmed.value = false;
   conflict.value = false;
   error.value = null;
@@ -114,16 +117,10 @@ const apply = async () => {
 <template>
   <FieldGroup>
     <Alert v-if="detail.lock_reason || detail.status === 'aplicada'"><AlertDescription>{{ detail.lock_reason ?? 'Los datos seleccionados de esta propuesta ya se guardaron en la carrera.' }}</AlertDescription></Alert>
-    <Alert v-if="detail.proposal?.issues.length"><AlertDescription><ul class="flex list-disc flex-col gap-1 pl-4"><li v-for="(issue, index) in detail.proposal.issues" :key="index">{{ issue }}</li></ul></AlertDescription></Alert>
-    <div v-if="detail.proposal?.definitions.length" class="flex flex-col gap-2">
-      <h3 class="text-sm font-medium">Datos encontrados</h3>
-      <div class="flex flex-wrap gap-2"><Badge v-for="concept in detail.proposal.definitions" :key="concept.key" variant="secondary">{{ concept.label }} · {{ { texto: 'Texto', lista: 'Lista', tabla: 'Tabla' }[concept.type] }} · {{ concept.scope === 'carrera' ? 'Carrera' : 'Asignatura' }}</Badge></div>
-    </div>
-    <template v-if="detail.status === 'lista' && detail.proposal?.values.length">
-      <p class="text-sm text-muted-foreground" aria-live="polite">{{ detail.proposal.values.length }} datos encontrados · {{ detail.proposal.values.length - pendingCount }} listos · {{ pendingCount }} requieren revisión</p>
-      <FieldSet v-if="unmatchedNames.length" :disabled="!editable || saving">
-        <FieldLegend>Materias por identificar</FieldLegend>
-        <FieldDescription>El documento nombra estas materias de otra forma. Elige una vez la materia de la malla y se aplicará a todos sus datos.</FieldDescription>
+    <template v-if="phase === 'subjects'">
+      <FieldSet :disabled="!editable || saving">
+        <FieldLegend>¿A qué materia corresponde cada nombre?</FieldLegend>
+        <FieldDescription>El documento nombra {{ unmatchedNames.length === 1 ? 'esta materia' : `estas ${unmatchedNames.length} materias` }} de otra forma. Elige una vez la materia de la malla y se aplicará a todos sus datos.</FieldDescription>
         <FieldGroup class="gap-3">
           <Field v-for="(name, index) in unmatchedNames" :key="name" class="sm:grid sm:grid-cols-2 sm:items-center sm:gap-3">
             <FieldLabel :for="`proposal-name-${index}`" class="break-words">{{ name || 'Materia sin nombre' }}</FieldLabel>
@@ -131,6 +128,18 @@ const apply = async () => {
           </Field>
         </FieldGroup>
       </FieldSet>
+      <div class="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
+        <p class="text-sm text-muted-foreground">Las que no elijas quedarán sin guardar.</p>
+        <Button type="button" @click="phase = 'data'">Continuar</Button>
+      </div>
+    </template>
+    <template v-else>
+    <Alert v-if="detail.proposal?.issues.length"><AlertDescription><ul class="flex list-disc flex-col gap-1 pl-4"><li v-for="(issue, index) in detail.proposal.issues" :key="index">{{ issue }}</li></ul></AlertDescription></Alert>
+    <template v-if="detail.status === 'lista' && detail.proposal?.values.length">
+      <div class="flex flex-wrap items-center justify-between gap-2">
+        <p class="text-sm text-muted-foreground" aria-live="polite">{{ detail.proposal.values.length }} datos encontrados · {{ detail.proposal.values.length - pendingCount }} listos · {{ pendingCount }} requieren revisión</p>
+        <Button v-if="unmatchedNames.length" type="button" variant="link" size="sm" class="px-0" @click="phase = 'subjects'">Volver a las materias</Button>
+      </div>
       <Field v-if="pendingCount" orientation="horizontal"><Checkbox id="curricular-only-pending" v-model="onlyPending" /><FieldLabel for="curricular-only-pending">Mostrar solo los datos que requieren revisión</FieldLabel></Field>
     </template>
     <Empty v-if="!groups.length"><EmptyHeader><EmptyTitle>Sin datos propuestos</EmptyTitle><EmptyDescription>Los documentos no produjeron datos que puedan asociarse a la carrera o sus asignaturas.</EmptyDescription></EmptyHeader></Empty>
@@ -178,5 +187,6 @@ const apply = async () => {
       <Field orientation="horizontal"><Checkbox id="curricular-import-confirmed" v-model="confirmed" :disabled="!editable || saving" /><FieldLabel for="curricular-import-confirmed">Revisé los datos seleccionados, las asignaturas y sus fuentes.</FieldLabel></Field>
       <Button type="button" :disabled="!canApply" @click="apply"><Spinner v-if="saving" data-icon="inline-start" /><Check v-else data-icon="inline-start" aria-hidden="true" />Guardar datos seleccionados</Button>
     </div>
+    </template>
   </FieldGroup>
 </template>

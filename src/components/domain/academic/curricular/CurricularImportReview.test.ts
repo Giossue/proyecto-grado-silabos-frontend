@@ -26,40 +26,53 @@ const mountReview = (detail = proposal()) => {
   wrappers.push(wrapper);
   return wrapper;
 };
+type Wrapper = ReturnType<typeof mountReview>;
+const button = (wrapper: Wrapper, label: string) => wrapper.findAll('button').find((item) => item.text() === label)!;
+/** Paso de materias: relaciona el nombre del documento (opcional) y continúa a los datos. */
+const continueToData = async (wrapper: Wrapper, subject?: string) => {
+  if (subject) {
+    wrapper.findComponent(Select).vm.$emit('update:modelValue', subject);
+    await flushPromises();
+  }
+  await button(wrapper, 'Continuar').trigger('click');
+  await flushPromises();
+};
 beforeEach(() => { applyCurricularImport.mockReset().mockResolvedValue({ ...proposal(), status: 'aplicada', message: 'Datos aplicados.' }); });
 afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
 
 describe('CurricularImportReview', () => {
-  it('muestra materia, tipos y citas; excluye propuestas con excepciones de la selección inicial', async () => {
+  it('primero pide relacionar las materias y luego muestra datos, citas y la selección inicial', async () => {
     const wrapper = mountReview();
+    expect(wrapper.text()).toContain('¿A qué materia corresponde cada nombre?');
+    expect(wrapper.text()).toContain('Calidad SW');
+    expect(wrapper.find('#proposal-known').exists()).toBe(false);
+    await continueToData(wrapper);
     expect(wrapper.text()).toContain('SW-801 · Calidad de Software');
-    expect(wrapper.text()).toContain('Resultados de aprendizaje · Lista · Asignatura');
+    expect(wrapper.text()).toContain('Resultados de aprendizaje');
     expect(wrapper.text()).toContain('Proyecto de carrera.pdf · Página 22');
     expect(wrapper.get('blockquote').text()).toBe('Evalúa la calidad del software.');
     expect(wrapper.get('#proposal-known').attributes('data-state')).toBe('checked');
     expect(wrapper.get('#proposal-unmatched').attributes('disabled')).toBeDefined();
     expect(wrapper.get('#proposal-invalid').attributes('disabled')).toBeDefined();
-    expect(wrapper.findAll('button').find((button) => button.text() === 'Guardar datos seleccionados')!.attributes('disabled')).toBeDefined();
+    expect(button(wrapper, 'Guardar datos seleccionados').attributes('disabled')).toBeDefined();
     expect(applyCurricularImport).not.toHaveBeenCalled();
   });
 
   it('permite relacionar la materia ambigua y aplica solo las filas confirmadas con control de concurrencia', async () => {
     const wrapper = mountReview();
-    wrapper.findComponent(Select).vm.$emit('update:modelValue', 'subject-2');
-    await flushPromises();
+    await continueToData(wrapper, 'subject-2');
     expect(wrapper.get('#proposal-unmatched').attributes('data-state')).toBe('checked');
     await wrapper.get('#curricular-import-confirmed').trigger('click');
     await flushPromises();
-    const save = wrapper.findAll('button').find((button) => button.text() === 'Guardar datos seleccionados')!;
-    expect(save.attributes('disabled')).toBeUndefined();
-    wrapper.findComponent(Select).vm.$emit('update:modelValue', 'subject-1');
-    await flushPromises();
-    expect(save.attributes('disabled')).toBeDefined();
+    expect(button(wrapper, 'Guardar datos seleccionados').attributes('disabled')).toBeUndefined();
+    await button(wrapper, 'Volver a las materias').trigger('click');
+    await continueToData(wrapper, 'subject-1');
+    expect(button(wrapper, 'Guardar datos seleccionados').attributes('disabled')).toBeDefined();
     expect(wrapper.text()).toContain('Hay más de una propuesta para el mismo dato y asignatura.');
-    wrapper.findComponent(Select).vm.$emit('update:modelValue', 'subject-2');
-    await flushPromises();
+    await button(wrapper, 'Volver a las materias').trigger('click');
+    await continueToData(wrapper, 'subject-2');
     await wrapper.get('#curricular-import-confirmed').trigger('click');
-    await save.trigger('click');
+    await button(wrapper, 'Guardar datos seleccionados').trigger('click');
     await flushPromises();
     expect(applyCurricularImport).toHaveBeenCalledWith('import-1', { expected_fingerprint: 'a'.repeat(64), confirmed: true, items: [{ id: 'known' }, { id: 'unmatched', subject_id: 'subject-2' }] });
     expect(wrapper.emitted('applied')).toHaveLength(1);
@@ -69,16 +82,14 @@ describe('CurricularImportReview', () => {
     const detail = proposal();
     detail.proposal!.values = [{ ...detail.proposal!.values[1]!, issue_code: 'source_conflict', issue: 'Esta fuente discrepa de otro documento.' }];
     const wrapper = mountReview(detail);
+    await continueToData(wrapper, 'subject-2');
     expect(wrapper.get('#proposal-unmatched').attributes('disabled')).toBeDefined();
     await wrapper.get('#proposal-conflict-unmatched').trigger('click');
-    expect(wrapper.get('#proposal-unmatched').attributes('disabled')).toBeDefined();
-    wrapper.findComponent(Select).vm.$emit('update:modelValue', 'subject-2');
-    await flushPromises();
     expect(wrapper.get('#proposal-unmatched').attributes('disabled')).toBeUndefined();
     expect(wrapper.text()).toContain('El valor de la materia elegida se reemplazará si ya existe.');
-    expect(wrapper.get('#proposal-unmatched').attributes('data-state')).toBe('checked');
+    await wrapper.get('#proposal-unmatched').trigger('click');
     await wrapper.get('#curricular-import-confirmed').trigger('click');
-    await wrapper.findAll('button').find((button) => button.text() === 'Guardar datos seleccionados')!.trigger('click');
+    await button(wrapper, 'Guardar datos seleccionados').trigger('click');
     await flushPromises();
     expect(wrapper.text()).toContain('Esta fuente discrepa de otro documento.');
     expect(applyCurricularImport).toHaveBeenCalledWith('import-1', { expected_fingerprint: 'a'.repeat(64), confirmed: true, items: [{ id: 'unmatched', subject_id: 'subject-2', accept_conflict: true }] });
@@ -89,13 +100,14 @@ describe('CurricularImportReview', () => {
     detail.proposal!.definitions.push({ key: 'bibliografia', label: 'Bibliografía básica', type: 'lista', scope: 'asignatura' });
     detail.proposal!.values.push({ ...detail.proposal!.values[1]!, id: 'unmatched-2', concept_key: 'bibliografia', value: ['Libro de métricas.'], evidence: [{ source_id: 'source-1', locator: 'Bibliografia!A5:C5', quote: 'Libro de métricas.' }] });
     const wrapper = mountReview(detail);
-    expect(wrapper.text()).toContain('4 datos encontrados · 1 listos · 3 requieren revisión');
-    expect(wrapper.text()).toContain('Materias por identificar');
     expect(wrapper.findAllComponents(Select)).toHaveLength(1);
+    await continueToData(wrapper);
+    expect(wrapper.text()).toContain('4 datos encontrados · 1 listos · 3 requieren revisión');
     await wrapper.get('#curricular-only-pending').trigger('click');
     expect(wrapper.find('#proposal-known').exists()).toBe(false);
-    wrapper.findComponent(Select).vm.$emit('update:modelValue', 'subject-2');
-    await flushPromises();
+    await button(wrapper, 'Volver a las materias').trigger('click');
+    await continueToData(wrapper, 'subject-2');
+    // Ya no quedan pendientes: se quita el filtro para ver los datos relacionados.
     await wrapper.get('#curricular-only-pending').trigger('click');
     expect(wrapper.get('#proposal-unmatched').attributes('data-state')).toBe('checked');
     expect(wrapper.get('#proposal-unmatched-2').attributes('data-state')).toBe('checked');
@@ -105,8 +117,9 @@ describe('CurricularImportReview', () => {
   it('conserva la propuesta ante un conflicto y bloquea un segundo intento obsoleto', async () => {
     applyCurricularImport.mockRejectedValue(new ApiError('La propuesta cambió. Vuelva a consultarla.', 409));
     const wrapper = mountReview();
+    await continueToData(wrapper);
     await wrapper.get('#curricular-import-confirmed').trigger('click');
-    const save = wrapper.findAll('button').find((button) => button.text() === 'Guardar datos seleccionados')!;
+    const save = button(wrapper, 'Guardar datos seleccionados');
     await save.trigger('click');
     await flushPromises();
     expect(wrapper.text()).toContain('La propuesta cambió');
@@ -117,9 +130,10 @@ describe('CurricularImportReview', () => {
 
   it('no permite aplicar cuando el servidor bloquea la carrera o cuando la selección está vacía', async () => {
     const wrapper = mountReview();
+    await continueToData(wrapper);
     await wrapper.get('#proposal-known').trigger('click');
     await wrapper.get('#curricular-import-confirmed').trigger('click');
-    expect(wrapper.findAll('button').find((button) => button.text() === 'Guardar datos seleccionados')!.attributes('disabled')).toBeDefined();
+    expect(button(wrapper, 'Guardar datos seleccionados').attributes('disabled')).toBeDefined();
     await wrapper.setProps({ detail: { ...proposal(), editable: false, lock_reason: 'Convocatoria abierta.' } });
     expect(wrapper.text()).toContain('Convocatoria abierta.');
     expect(wrapper.findAllComponents(Checkbox).filter((checkbox) => checkbox.props('id') !== 'curricular-only-pending').every((checkbox) => checkbox.props('disabled'))).toBe(true);
@@ -135,10 +149,11 @@ describe('CurricularImportReview', () => {
     expect(applyCurricularImport).not.toHaveBeenCalled();
   });
 
-  it('muestra el dato vigente y el propuesto cuando aplicar reemplazará contenido', () => {
+  it('muestra el dato vigente y el propuesto cuando aplicar reemplazará contenido', async () => {
     const detail = proposal();
     Object.assign(detail.proposal!.values[0]!, { current_value: ['Resultado curricular anterior.'], change: 'replace' });
     const wrapper = mountReview(detail);
+    await continueToData(wrapper);
     expect(wrapper.text()).toContain('Reemplaza el dato vigente');
     expect(wrapper.text()).toContain('Dato vigente');
     expect(wrapper.text()).toContain('Resultado curricular anterior.');

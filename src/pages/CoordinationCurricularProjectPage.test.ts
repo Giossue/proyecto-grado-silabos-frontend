@@ -116,7 +116,7 @@ describe('CoordinationCurricularProjectPage', () => {
     await flushPromises();
     expect(api.getCurricularImport).toHaveBeenCalledWith('import-1');
     expect(document.body.textContent).toContain('Proyecto.pdf');
-    expect(document.body.textContent).toContain('Lista para revisar');
+    expect(document.querySelector('[aria-current="step"]')?.textContent).toContain('Revisión');
     expect(button('Historial').getAttribute('aria-selected')).toBe('true');
   });
 
@@ -175,6 +175,23 @@ describe('CoordinationCurricularProjectPage', () => {
     await vi.advanceTimersByTimeAsync(1800);
     await flushPromises();
     expect(api.getCurricularImport).toHaveBeenLastCalledWith('retry-2');
-    expect(document.body.textContent).toContain('Lista para revisar');
+    expect(document.querySelector('[aria-current="step"]')?.textContent).toContain('Revisión');
+  });
+
+  it('guía la importación por pasos y al terminar ofrece ver los datos confirmados', async () => {
+    mountPage();
+    await flushPromises();
+    expect(document.querySelector('[aria-current="step"]')?.textContent).toContain('Documentos');
+    api.getCurricularImports.mockResolvedValue({ ...index, imports: [{ id: 'import-1', status: 'aplicada', created_at: '2026-09-27T10:00:00Z', applied_at: '2026-09-27T11:00:00Z', error: null }] });
+    api.getCurricularImport.mockResolvedValue({ ...detail, status: 'aplicada', fingerprint: null, editable: false, proposal: { definitions: [], values: [], issues: [] }, applied_items: [] });
+    selectTab('Historial');
+    await flushPromises();
+    button('Abrir').click();
+    await flushPromises();
+    expect(document.querySelector('[aria-current="step"]')?.textContent).toContain('Listo');
+    expect(document.body.textContent).toContain('Datos guardados');
+    button('Ver datos confirmados').click();
+    await flushPromises();
+    expect(button('Datos confirmados').getAttribute('aria-selected')).toBe('true');
   });
 });
