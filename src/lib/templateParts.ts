@@ -24,8 +24,7 @@ export const isFixedPart = (block: TemplateFieldContainer): boolean =>
     block.content_type === 'fixed' ||
     (block.fields.length === 0 &&
         Boolean(block.document) &&
-        nodesOfType(block.document!, 'field').length === 0 &&
-        nodesOfType(block.document!, 'column').length === 0);
+        nodesOfType(block.document!, 'field').length === 0);
 
 /**
  * Forma con la que se creó la parte; no cambia después (I-155, I-156). Una parte con

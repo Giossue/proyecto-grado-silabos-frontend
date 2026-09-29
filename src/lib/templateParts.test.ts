@@ -5,7 +5,7 @@ import type { TemplateFieldContainer } from '@/types/configuration';
 
 const part = (overrides: Partial<TemplateFieldContainer>): TemplateFieldContainer => ({
     id: 'block', key: 'block', title: 'Parte', type: 'narrativa', content_type: 'text',
-    table: null, document: null, fields: [], ...overrides,
+    document: null, fields: [], ...overrides,
 });
 
 describe('templateParts', () => {

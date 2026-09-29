@@ -181,7 +181,7 @@ const StyledTableHeader = TableHeader.extend({
 });
 
 const inlineNode = (
-    name: 'field' | 'column' | 'variable',
+    name: 'field' | 'variable',
     variableLabel?: (id: string) => string | undefined,
 ) =>
     Node.create({
@@ -206,12 +206,6 @@ const inlineNode = (
                       options_source: { default: null },
                       options_sources: { default: null },
                       listStyle: { default: null },
-                      ...(name === 'column'
-                          ? {
-                                role: { default: null },
-                                sum: { default: null },
-                            }
-                          : {}),
                   },
         parseHTML: () => [
             {
@@ -259,17 +253,7 @@ export const templateTableExtensions = (
     FontFamily,
     Color,
     TextAlign.configure({ types: ['paragraph'] }),
-    Table.extend({
-        addAttributes() {
-            return {
-                ...this.parent?.(),
-                repeatKey: { default: null },
-                repeatLabel: { default: null },
-                groupByUnit: { default: null },
-                visualStructure: { default: null },
-            };
-        },
-    }).configure({
+    Table.configure({
         resizable: false,
         renderWrapper: true,
         View: ResponsiveTableView,
@@ -278,14 +262,9 @@ export const templateTableExtensions = (
         cellMinWidth: 1,
         lastColumnResizable: false,
     }),
-    TableRow.extend({
-        addAttributes() {
-            return { ...this.parent?.(), rowRole: { default: 'fixed' } };
-        },
-    }),
+    TableRow,
     StyledTableCell,
     StyledTableHeader,
     inlineNode('field'),
-    inlineNode('column'),
     inlineNode('variable', options.variableLabel),
 ];

@@ -18,7 +18,7 @@ const part = (key: string, label: string, extra: Partial<TemplateField> = {}): T
 
 const block = (fields: TemplateField[]): TemplateFieldContainer => ({
     id: 'block-1', key: 'bloque', title: 'Tipo de discapacidad', type: 'narrativa',
-    content_type: 'text', table: null, document: null, fingerprint: 'a'.repeat(64), fields,
+    content_type: 'text', document: null, fingerprint: 'a'.repeat(64), fields,
 });
 
 const mountActions = (field: TemplateFieldContainer, sectionId = 'identificacion') => mount({

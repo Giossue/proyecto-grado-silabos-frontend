@@ -1,10 +1,10 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
+import FreeTextEditor from "@/components/domain/syllabus/FreeTextEditor.vue";
 import {
   getTeacherSyllabus,
   saveTeacherField,
-  saveTeacherRows,
   submitTeacherSyllabus,
   validateTeacherSyllabus,
   type SyllabusDetail,
@@ -26,7 +26,6 @@ vi.mock("@/api/syllabi", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/syllabi")>()),
   getTeacherSyllabus: vi.fn(),
   saveTeacherField: vi.fn(),
-  saveTeacherRows: vi.fn(),
   startTeacherSyllabus: vi.fn(),
   submitTeacherSyllabus: vi.fn(),
   validateTeacherSyllabus: vi.fn(),
@@ -78,7 +77,6 @@ const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", t
       id: "block-1",
       title: "Contenido",
       content_type: "text",
-      table: null,
       fields: [{
         id: "field-1",
         key: "contenido",
@@ -91,7 +89,6 @@ const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", t
         teacher_editable: true,
 
         value: type === "booleano" ? null : "Texto enviado",
-        rows: [],
       }],
     }],
   }],
@@ -103,6 +100,8 @@ const mountPage = () => mount(TeacherSyllabusDetailPage, {
     stubs: {
       RouterLink: { template: "<a><slot /></a>" },
       SyllabusUnitAssistant: { template: "<div />" },
+      // El editor de Texto libre se prueba aparte; aquí solo importa lo que emite.
+      FreeTextEditor: { props: ["modelValue"], emits: ["update:modelValue"], template: "<div />" },
     },
   },
 });
@@ -112,7 +111,6 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.useRealTimers();
     vi.mocked(getTeacherSyllabus).mockReset();
     vi.mocked(saveTeacherField).mockReset();
-    vi.mocked(saveTeacherRows).mockReset();
     vi.mocked(submitTeacherSyllabus).mockReset();
     vi.mocked(validateTeacherSyllabus).mockReset();
     vi.mocked(handleUnauthorized).mockReset();
@@ -129,41 +127,23 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.get(".syllabus-readonly-field").text()).toContain("Texto enviado");
   });
 
-  it("mantiene la fila agregada tras guardarla aunque esté vacía y no pisa lo escrito durante el guardado", async () => {
+  it("el Texto libre se escribe con su editor y se guarda como documento", async () => {
     vi.useFakeTimers();
-    const detail = syllabus("borrador", "repetible");
-    const block = detail.sections[0]!.blocks[0]!;
-    block.content_type = "table";
-    block.table = {
-      columns: [{ key: "texto", label: "Elemento", type: "text", group: null, band: null, sum: false, width: null, role: null }],
-      groups: [], bands: [], header_fields: [], totals: { enabled: false }, repeat: { enabled: false },
-    };
-    block.fields[0]!.label = "Objetivos específicos";
-    block.fields[0]!.value = null;
+    const detail = syllabus("borrador", "texto_libre");
+    detail.sections[0]!.blocks[0]!.fields[0]!.value = null;
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
-    let resolveSave: (value: Awaited<ReturnType<typeof saveTeacherRows>>) => void = () => {};
-    vi.mocked(saveTeacherRows).mockImplementation(() => new Promise((resolve) => { resolveSave = resolve; }));
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.find("table").exists()).toBe(false);
-    expect(wrapper.text()).toContain("Objetivos específicos");
-    const add = wrapper.findAll("button").find((button) => button.text() === "Agregar elemento")!;
-    await add.trigger("click");
-    await vi.advanceTimersByTimeAsync(700);
-    expect(saveTeacherRows).toHaveBeenCalledTimes(1);
-
-    await wrapper.get("textarea").setValue("Escrito mientras se guarda");
-    // El servidor guarda la celda vacía como null.
-    resolveSave({ version_bloqueo: 3, guardado_en: null, rows: [{ id: "row-1", data: { texto: null }, position: 1 }] });
-    await flushPromises();
-
-    expect(wrapper.findAll("textarea")).toHaveLength(1);
-    expect((wrapper.get("textarea").element as HTMLTextAreaElement).value).toBe("Escrito mientras se guarda");
-    vi.mocked(saveTeacherRows).mockResolvedValue({ version_bloqueo: 4, guardado_en: null, rows: [{ id: "row-1", data: { texto: "Escrito mientras se guarda" }, position: 1 }] });
+    const editor = wrapper.findComponent(FreeTextEditor);
+    expect(editor.exists()).toBe(true);
+    const document = { type: "doc", content: [{ type: "bulletList", content: [{ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "Semana 1" }] }] }] }] };
+    editor.vm.$emit("update:modelValue", document);
     await vi.advanceTimersByTimeAsync(700);
     await flushPromises();
-    expect(saveTeacherRows).toHaveBeenLastCalledWith("syllabus-1", "field-1", 3, [{ id: "row-1", data: { texto: "Escrito mientras se guarda" }, position: 1 }]);
+
+    expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, document);
   });
 
   it("guarda No como booleano explícito y no como campo vacío", async () => {
@@ -196,7 +176,7 @@ describe("TeacherSyllabusDetailPage", () => {
     detail.sections[0]!.blocks[0]!.fields.push({
       id: "field-2", key: "detalle", label: "Tipo de discapacidad", help: null, type: "texto_corto",
       options: [], show_when: { key: "contenido", value: "true" }, required: true, inherited: false,
-      teacher_editable: true, value: "Visual", rows: [],
+      teacher_editable: true, value: "Visual",
     });
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
@@ -288,8 +268,7 @@ describe("TeacherSyllabusDetailPage", () => {
         id: "review-block",
         title: "Firmas",
         content_type: "fixed",
-        table: null,
-        document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Firma del coordinador" }] }] },
+          document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Firma del coordinador" }] }] },
         fields: [],
       }],
     });

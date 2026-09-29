@@ -58,7 +58,7 @@ const payload: TemplatePayload = {
       id: "section-1", key: "descripcion", title: "Descripción de la asignatura", description: null,
       blocks: [{
         id: "block-1", key: "descripcion_principal", title: "Descripción", type: "narrativa",
-        content_type: "text", table: null, fingerprint: "a".repeat(64),
+        content_type: "text", fingerprint: "a".repeat(64),
         document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Fundamentos de la asignatura. " }, { type: "field", attrs: { key: "descripcion", label: "Descripción de la asignatura", kind: "texto_largo", choice: null } }] }] },
         fields: [{
           id: "field-1", block_id: "block-1", key: "descripcion", label: "Descripción de la asignatura",
@@ -124,7 +124,7 @@ describe("AdminTemplatePage", () => {
             ...payload.template!.sections[0]!.blocks,
             {
               id: "block-2", key: "firmas", title: "Firmas", type: "fijo", content_type: "fixed",
-              table: null, fingerprint: "b".repeat(64), fields: [],
+              fingerprint: "b".repeat(64), fields: [],
               document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Firma" }] }] },
             },
           ],
@@ -160,8 +160,8 @@ describe("AdminTemplatePage", () => {
           {
             id: "section-2", key: "planificacion", title: "Planificación", description: null,
             blocks: [{
-              id: "block-plan", key: "plan", title: "Planificación", type: "repetible", content_type: "table",
-              page_orientation: "landscape", table: null, document: null, fingerprint: "c".repeat(64), fields: [],
+              id: "block-plan", key: "plan", title: "Planificación", type: "narrativa", content_type: "text",
+              page_orientation: "landscape", document: null, fingerprint: "c".repeat(64), fields: [],
             }],
           },
         ],
