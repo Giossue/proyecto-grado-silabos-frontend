@@ -11,121 +11,73 @@ vi.mock('@/api/client', async (importOriginal) => ({
 }));
 
 const part = (key: string, label: string, extra: Partial<TemplateField> = {}): TemplateField => ({
-    id: `field-${key}`, block_id: 'block-1', key, label, help: null, type: 'texto_corto',
+    id: `field-${key}`, block_id: 'block-1', key, label, help: null, type: 'texto_libre',
     options: [], required: true, inherited: false, master_source: null, teacher_editable: true,
     document_marker: null, content_type: 'text', ...extra,
 });
-
-const block = (fields: TemplateField[]): TemplateFieldContainer => ({
-    id: 'block-1', key: 'bloque', title: 'Tipo de discapacidad', type: 'narrativa',
-    content_type: 'text', document: null, fingerprint: 'a'.repeat(64), fields,
+const document = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'field', attrs: { key: 'metodologia', label: 'Metodología', kind: 'texto_libre' } }] }] };
+const block = (extra: Partial<TemplateFieldContainer> = {}): TemplateFieldContainer => ({
+    id: 'block-1', key: 'bloque', title: 'Metodología', type: 'narrativa',
+    content_type: 'text', document, fingerprint: 'a'.repeat(64), fields: [part('metodologia', 'Metodología')], ...extra,
 });
 
-const mountActions = (field: TemplateFieldContainer, sectionId = 'identificacion') => mount({
+const mountActions = (field: TemplateFieldContainer) => mount({
     components: { TemplateFieldActions, TooltipProvider },
-    setup: () => ({
-        field,
-        sectionId,
-        choiceFields: [{
-            key: 'discapacidad_tiene', label: 'Estudiantes con discapacidad', sectionId: 'identificacion',
-            options: [{ value: 'Sí', label: 'Sí' }, { value: 'No', label: 'No' }],
-        }],
-    }),
-    template: '<TooltipProvider><TemplateFieldActions ref="actions" template-id="template-1" section-title="Datos" :section-id="sectionId" :field="field" :choice-fields="choiceFields" /></TooltipProvider>',
-}, { attachTo: document.body });
+    setup: () => ({ field }),
+    template: '<TooltipProvider><TemplateFieldActions ref="actions" template-id="template-1" section-title="Metodología" :field="field" /></TooltipProvider>',
+}, { attachTo: window.document.body });
+const open = async (wrapper: ReturnType<typeof mountActions>) => {
+    (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
+    await flushPromises();
+};
+const submit = async () => {
+    (window.document.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+    await flushPromises();
+};
 
 describe('TemplateFieldActions', () => {
     afterEach(() => {
-        document.body.innerHTML = '';
+        window.document.body.innerHTML = '';
         vi.mocked(api).mockClear();
     });
 
-    it('sin marcar, la parte se pide siempre y se guarda sin condición', async () => {
-        const wrapper = mountActions(block([part('discapacidad_tipo', 'Tipo de discapacidad')]));
-        (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
-        await flushPromises();
+    it('Propiedades solo pide el nombre y la hoja horizontal (I-158)', async () => {
+        const wrapper = mountActions(block());
+        await open(wrapper);
 
-        expect(document.body.textContent).toContain('Si en «Estudiantes con discapacidad» responden');
-        expect(document.body.textContent).not.toContain('Mostrar solo si');
-        expect(document.getElementById('depends-discapacidad_tiene-discapacidad_tipo')?.getAttribute('data-state')).toBe('unchecked');
-
-        (document.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
-        await flushPromises();
-        const body = JSON.parse(String(vi.mocked(api).mock.calls[0]![1]!.body));
-        expect(body.show_when).toBeNull();
+        const text = window.document.body.textContent ?? '';
+        expect(text).toContain('Nombre (opcional)');
+        expect(text).toContain('Hoja horizontal');
+        expect(text).not.toContain('Preguntas que llena el docente');
+        expect(text).not.toContain('dependen de una respuesta');
+        expect(text).not.toContain('Forma:');
+        expect(window.document.querySelectorAll('input:not([type="hidden"]), button[role="checkbox"]')).toHaveLength(2);
     });
 
-    it('muestra la forma de la parte sin permitir cambiarla', async () => {
-        const wrapper = mountActions(block([part('discapacidad_tipo', 'Tipo de discapacidad')]));
-        (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
+    it('guarda nombre y orientación junto con la hoja de la parte', async () => {
+        const wrapper = mountActions(block());
+        await open(wrapper);
+        const input = window.document.getElementById('edit-template-field-label') as HTMLInputElement;
+        input.value = 'Metodología activa';
+        input.dispatchEvent(new Event('input'));
+        (window.document.getElementById('edit-template-field-landscape') as HTMLButtonElement).click();
         await flushPromises();
+        await submit();
 
-        expect(document.body.textContent).toContain('Forma: Párrafo.');
-        expect(document.body.textContent).toContain('Para usar otra forma, elimine la parte y cree una nueva.');
-        expect(document.getElementById('edit-template-field-form')).toBeNull();
+        const [url, init] = vi.mocked(api).mock.calls[0]!;
+        expect(url).toBe('/admin/template/template-1/blocks/block-1/document');
+        expect(JSON.parse(String(init!.body))).toEqual({
+            page_orientation: 'landscape', document, fingerprint: 'a'.repeat(64), title: 'Metodología activa',
+        });
     });
 
-    it('muestra la respuesta configurada y la guarda en la parte dependiente', async () => {
-        const wrapper = mountActions(block([part('discapacidad_tipo', 'Tipo de discapacidad', {
-            show_when: { key: 'discapacidad_tiene', value: 'Sí' },
-        })]));
-        (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
-        await flushPromises();
+    it('una parte anterior sin hoja guarda nombre y orientación en su pregunta', async () => {
+        const wrapper = mountActions(block({ document: null, content_type: 'multiple_choice', fields: [part('habilidades', 'Habilidades', { type: 'seleccion_multiple' })] }));
+        await open(wrapper);
+        await submit();
 
-        expect(document.getElementById('depends-discapacidad_tiene-discapacidad_tipo')?.getAttribute('data-state')).toBe('checked');
-        expect(document.getElementById('trigger-value-discapacidad_tiene')?.textContent).toContain('Sí');
-
-        (document.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
-        await flushPromises();
-        const body = JSON.parse(String(vi.mocked(api).mock.calls[0]![1]!.body));
-        expect(body.show_when).toEqual({ key: 'discapacidad_tiene', value: 'Sí' });
-    });
-
-    it('no ofrece preguntas de otra sección', async () => {
-        const wrapper = mountActions(block([part('confirmacion', 'Confirmación', { type: 'booleano', content_type: 'boolean' })]), 'descripcion');
-        (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
-        await flushPromises();
-
-        expect(document.body.textContent).not.toContain('Preguntas que dependen de una respuesta');
-        expect(document.body.textContent).not.toContain('Estudiantes con discapacidad');
-    });
-
-    const identification = () => ({
-        ...block([
-            part('discapacidad_tiene', 'Estudiantes con discapacidad', { type: 'seleccion_unica', content_type: 'multiple_choice' }),
-            part('discapacidad_tipo', 'Tipo de discapacidad'),
-            part('formacion_experiencia', 'Formación y experiencia', { type: 'texto_largo' }),
-        ]),
-        title: 'Identificación institucional',
-        content_type: 'institutional' as const,
-        document: { type: 'doc', content: [] },
-    });
-
-    it('en la ficha de identificación permite renombrar cada pregunta y elegir qué pedir según la respuesta', async () => {
-        const wrapper = mountActions(identification());
-        (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
-        await flushPromises();
-
-        expect(document.body.textContent).toContain('Preguntas que llena el docente');
-        expect(document.body.textContent?.match(/Preguntas que dependen de una respuesta/g)).toHaveLength(1);
-        expect(document.body.textContent).not.toContain('Listas para');
-        expect(document.body.textContent).not.toContain('Hoja horizontal');
-        // La pregunta no depende de sí misma.
-        expect(document.getElementById('depends-discapacidad_tiene-discapacidad_tiene')).toBeNull();
-
-        const rename = document.getElementById('edit-part-label-formacion_experiencia') as HTMLInputElement;
-        rename.value = 'Formación académica y experiencia';
-        rename.dispatchEvent(new Event('input'));
-        (document.getElementById('depends-discapacidad_tiene-discapacidad_tipo') as HTMLButtonElement).click();
-        await flushPromises();
-        (document.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
-        await flushPromises();
-
-        const body = JSON.parse(String(vi.mocked(api).mock.calls[0]![1]!.body));
-        const byKey = Object.fromEntries(body.properties.map((item: { key: string }) => [item.key, item]));
-        expect(byKey.formacion_experiencia).toMatchObject({ label: 'Formación académica y experiencia', show_when: null });
-        expect(byKey.discapacidad_tipo).toMatchObject({ label: 'Tipo de discapacidad', show_when: { key: 'discapacidad_tiene', value: 'Sí' } });
-        expect(byKey.discapacidad_tiene).toMatchObject({ label: 'Estudiantes con discapacidad', show_when: null });
-        expect(body.title).toBe('Identificación institucional');
+        const [url, init] = vi.mocked(api).mock.calls[0]!;
+        expect(url).toBe('/admin/template/template-1/fields/field-habilidades');
+        expect(JSON.parse(String(init!.body))).toMatchObject({ block_id: 'block-1', key: 'habilidades', content_type: 'multiple_choice', page_orientation: 'portrait' });
     });
 });
