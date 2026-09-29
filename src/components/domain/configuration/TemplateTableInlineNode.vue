@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { inlineNodeLabel, inlineNodeName, markClass, SHEET_MARK_HINTS, sheetMark } from '@/components/domain/configuration/template-table/inlineNodeLabel';
+import { choiceHint, inlineNodeLabel, inlineNodeName, markClass, SHEET_MARK_HINTS, sheetMark } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import {
     answersOf,
     circled,
@@ -52,6 +52,11 @@ const label = computed(() => {
 });
 const hint = computed(() => {
     const name = inlineNodeName(kind.value, props.node.attrs, variableLabel.value);
+    if (kind.value !== 'variable' && props.node.attrs.choice) {
+        const base = choiceHint(props.node.attrs);
+
+        return number.value ? `${base} (pregunta ${circled(number.value)})` : base;
+    }
     const base = `${name ? `${name}: ` : ''}${SHEET_MARK_HINTS[mark.value]}`;
     if (showWhen.value) return `${base}; se pide solo si la pregunta ${number.value ? circled(number.value) : 'elegida'} es ${showWhen.value.value}`;
 

@@ -94,6 +94,9 @@ describe('preguntas de seguimiento en la hoja (I-159)', () => {
         await flushPromises();
         expect(showWhen(editor, 1)).toEqual({ key: 'discapacidad', value: 'Sí' });
         expect(document.querySelectorAll('[data-condition-group="discapacidad"]')).toHaveLength(3);
+        // La X muestra su número aunque la celda sea angosta; el significado va en el aviso.
+        expect(yes!.textContent?.trim()).toBe('X ①');
+        expect(yes!.querySelector('button')!.title).toBe('Se marca con X si el docente responde Sí en «Estudiantes con discapacidad» (pregunta ①)');
 
         // La X bajo «No» la muestra sin marcar y avisa a qué respuesta está atada.
         await open(no!);

@@ -53,15 +53,20 @@ export const inlineNodeName = (
     return String(attrs.label || attrs.key || '');
 };
 
+/**
+ * Casilla «X» del formato UEB: en la ficha solo se ve «X» (cabe en celdas angostas);
+ * lo que significa va en el aviso al pasar el cursor.
+ */
+export const choiceHint = (attrs: Record<string, unknown>): string =>
+    `Se marca con X si el docente responde ${String(attrs.choice)} en «${String(attrs.label || attrs.key || '')}»`;
+
 /** Texto visible de la ficha en la hoja. */
 export const inlineNodeLabel = (
     name: string,
     attrs: Record<string, unknown>,
     variableLabel?: (id: string) => string | undefined,
 ): string => {
-    if (name !== 'variable' && attrs.choice) {
-        return `X si ${String(attrs.label)} = ${String(attrs.choice)}`;
-    }
+    if (name !== 'variable' && attrs.choice) return 'X';
 
     return {
         automatic: () => inlineNodeName(name, attrs, variableLabel),
