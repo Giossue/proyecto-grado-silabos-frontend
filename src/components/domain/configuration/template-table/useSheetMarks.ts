@@ -44,6 +44,13 @@ export function useSheetMarks(options: Options) {
         }
         for (let depth = $from.depth; depth > 0; depth--) {
             const node = $from.node(depth);
+            // Lo escrito antes en la misma celda (por ejemplo, la etiqueta en la línea de arriba).
+            if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
+                const inCell = clean(node.textBetween(0, $from.pos - $from.start(depth), ' ', ' '));
+                if (inCell) {
+                    return inCell;
+                }
+            }
             if (node.type.name === 'tableRow') {
                 return $from.index(depth) > 0 ? clean(node.child(0).textContent) : '';
             }
