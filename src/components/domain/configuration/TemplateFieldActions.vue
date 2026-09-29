@@ -88,7 +88,8 @@ const conditionParts = computed(() =>
 );
 const conditions = ref<Record<string, { key: string; value: string }>>({});
 const optionSources = ref<Record<string, string[]>>({});
-const optionParts = computed(() => props.field.fields.filter((part) => ['seleccion_unica', 'seleccion_multiple'].includes(part.type ?? '')));
+// Solo las preguntas que ya toman opciones de listas curriculares; un Sí/No no las usa (I-155).
+const optionParts = computed(() => props.field.fields.filter((part) => part.type === 'seleccion_multiple' || documentOptionsSources(part).length > 0));
 const targetOptions = (key: string) =>
     (props.choiceFields ?? []).find((item) => item.key === key)?.options ?? [];
 /**

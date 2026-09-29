@@ -29,9 +29,7 @@ describe('TemplateTableEditor', () => {
                     TemplateToolbarSelect: true,
                     TemplateTableInsertMenu: true,
                     TemplateTableRowsMenu: true,
-                    TemplateTableNewFieldDialog: true,
                     TemplateTableNewDataSheet: true,
-                    TemplateTableProjectDataDialog: true,
                 },
             },
             props: {

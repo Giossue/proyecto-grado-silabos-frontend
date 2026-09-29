@@ -71,6 +71,8 @@ const errorFor = (path: string): string | undefined =>
 
 const submit = (): void => {
     form.position = props.position + 1;
+    // Párrafo y lista nacen con la hoja vacía; la tabla trae su estructura (I-155).
+    form.transform((data) => ({ ...data, blank: data.content_type !== 'table' }));
     form.post(TemplateController.storeField.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {

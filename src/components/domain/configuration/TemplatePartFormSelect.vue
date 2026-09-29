@@ -32,7 +32,7 @@ const options = computed(() => props.forms.some((form) => form.value === model.v
             </SelectGroup></SelectContent>
         </Select>
         <FieldDescription>
-            Después, en la hoja, use Insertar para marcar quién llena cada cosa: dato automático, !Docente o @ProyectoCarrera.
+            Lo que escriba en la hoja es fijo. Con Insertar marca lo que llena el docente o lo que viene del Proyecto de carrera.
         </FieldDescription>
         <FieldError :errors="[error]" />
     </Field>

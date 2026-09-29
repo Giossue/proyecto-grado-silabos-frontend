@@ -707,6 +707,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             "
                             :template-id="template.id"
                             :section-title="section.title"
+                            :part-title="block.title"
                             :section-id="section.id"
                             :field="block"
                             :block-types="blockTypes"

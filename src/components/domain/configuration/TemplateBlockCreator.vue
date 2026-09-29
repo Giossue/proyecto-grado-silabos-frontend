@@ -99,6 +99,11 @@ const submit = (): void => {
     }
 
     form.position = props.position + 1;
+    // Párrafo y lista nacen con la hoja vacía; la tabla trae su estructura (I-155).
+    form.transform((data) => ({
+        ...data,
+        fields: data.fields.map((field) => ({ ...field, blank: field.content_type !== 'table' })),
+    }));
     form.post(TemplateController.storeSection.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {

@@ -34,6 +34,7 @@ const props = defineProps<{
     colors: { value: string; label: string }[];
     ribbonTarget?: string;
     sectionTitle: string;
+    partTitle?: string;
 }>();
 
 const emit = defineEmits<{
@@ -295,6 +296,7 @@ defineExpose({ start });
                 :layout="layout"
                 :template-id="templateId"
                 :section-title="sectionTitle"
+                :part-title="partTitle"
                 :toolbar-target="
                     ribbonTarget ? `${ribbonTarget}-tools` : undefined
                 "

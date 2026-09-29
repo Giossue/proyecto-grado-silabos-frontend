@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineComponent, h, useId, useSlots } from 'vue';
+import { defineComponent, h, isVNode, useId, useSlots } from 'vue';
 import { computed } from 'vue';
 import type { VNodeChild, CSSProperties } from 'vue';
 import type { PlanningExpectations, TableLayout } from '@/lib/tableLayout';
@@ -147,6 +147,13 @@ const input = createDocumentInput({
     removeRecord,
 });
 
+const listItemMark = (node: DocumentNode): DocumentNode | null => {
+    const paragraph = node.type === 'listItem' && node.content?.length === 1 ? node.content[0] : null;
+    const only = paragraph?.type === 'paragraph' && paragraph.content?.length === 1 ? paragraph.content[0] : null;
+
+    return only && ['field', 'column', 'variable'].includes(only.type) && only.attrs?.listStyle ? only : null;
+};
+
 const draw = (
     node: DocumentNode,
     context: Context = {},
@@ -166,6 +173,19 @@ const draw = (
 
     if (node.type === 'hardBreak') {
         return h('br');
+    }
+
+    if (node.type === 'variable' && attrs.listStyle) {
+        // Un @ProyectoCarrera en una lista se ve como sus elementos (I-155).
+        const value = props.variables[String(attrs.id)] ||
+            (props.preview ? '' : 'Pendiente de Coordinación');
+        const items = value.split(/\r?\n/).map((line) => line.replace(/^\d+\.\s+/, '').trim()).filter(Boolean);
+
+        return h(
+            attrs.listStyle === 'number' ? 'ol' : 'ul',
+            { style: markStyle(node, context.insideCell === true), class: 'document-variable' },
+            items.map((item) => h('li', {}, item)),
+        );
     }
 
     if (node.type === 'variable') {
@@ -301,6 +321,16 @@ const draw = (
                 draw(child, cellContext, `${path}-${index}`),
             ),
         );
+    }
+
+    // Un elemento que solo lleva la lista de una marca aporta sus elementos a esta
+    // misma lista, igual que en el Word (I-155).
+    const mark = listItemMark(node);
+    if (mark) {
+        const rendered = draw(mark, context, `${path}-0-0`);
+        if (isVNode(rendered) && (rendered.type === 'ul' || rendered.type === 'ol')) {
+            return rendered.children as VNodeChild;
+        }
     }
 
     const tag =

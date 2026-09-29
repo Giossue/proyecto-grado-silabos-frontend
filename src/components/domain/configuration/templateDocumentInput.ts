@@ -221,6 +221,24 @@ export const createDocumentInput = (options: Options) => {
             ]);
         }
 
+        // ?Docente (I-155): Sí o No con dos botones, fácil de ver también dentro de una tabla.
+        const choices = (field.options ?? []).map((option) => option.value);
+        if (kind === 'seleccion_unica' && choices.join('|') === 'Sí|No') {
+            return h('span', { class: 'inline-flex gap-1', role: 'radiogroup', 'aria-label': label }, ['Sí', 'No'].map((option) => h(
+                Button,
+                {
+                    key: option,
+                    type: 'button',
+                    size: 'sm',
+                    variant: text === option ? 'default' : 'outline',
+                    role: 'radio',
+                    'aria-checked': text === option,
+                    onClick: () => change(option),
+                },
+                () => option,
+            )));
+        }
+
         if (kind === 'seleccion_unica') {
             return h(
                 Select,

@@ -22,15 +22,13 @@ import TemplateTableInsertMenu from '@/components/domain/configuration/template-
 import TemplateTableNewDataSheet from '@/components/domain/configuration/template-table/TemplateTableNewDataSheet.vue';
 import type { NewRepeatedData } from '@/components/domain/configuration/template-table/TemplateTableNewDataSheet.vue';
 import TemplateTableRowsMenu from '@/components/domain/configuration/template-table/TemplateTableRowsMenu.vue';
-import TemplateTableNewFieldDialog from '@/components/domain/configuration/template-table/TemplateTableNewFieldDialog.vue';
-import TemplateTableProjectDataDialog from '@/components/domain/configuration/template-table/TemplateTableProjectDataDialog.vue';
 import { PROJECT_PREFIX } from '@/components/domain/configuration/template-table/inlineNodeLabel';
-import type { NewTeacherField } from '@/components/domain/configuration/template-table/TemplateTableNewFieldDialog.vue';
 import { templateTableExtensions } from '@/components/domain/configuration/template-table/templateTableExtensions';
 import type { CellAlignment } from '@/components/domain/configuration/template-table/types';
 import { useTableCellResize } from '@/components/domain/configuration/template-table/useTableCellResize';
 import { useTemplateTableActions } from '@/components/domain/configuration/template-table/useTemplateTableActions';
 import { useTemplateTableSelection } from '@/components/domain/configuration/template-table/useTemplateTableSelection';
+import { useSheetMarks } from '@/components/domain/configuration/template-table/useSheetMarks';
 import TemplateToolbarButton from '@/components/domain/configuration/TemplateToolbarButton.vue';
 import TemplateToolbarSelect from '@/components/domain/configuration/TemplateToolbarSelect.vue';
 import { Button } from '@/components/ui/button';
@@ -61,8 +59,9 @@ const props = defineProps<{
     layout?: TableLayout | null;
     toolbarTarget?: string;
     templateId: string;
-    /** Nombre propuesto para un @ProyectoCarrera nuevo (I-155). */
+    /** Nombres de respaldo para las marcas sin texto al lado (I-155). */
     sectionTitle: string;
+    partTitle?: string;
 }>();
 
 const emit = defineEmits<{
@@ -80,15 +79,9 @@ const editorStyle = computed<CSSProperties & Record<string, string>>(() => ({
 }));
 const initial = JSON.stringify(props.document);
 const version = ref(0);
-const newFieldDialog = ref<InstanceType<
-    typeof TemplateTableNewFieldDialog
-> | null>(null);
 const newDataSheet = ref<InstanceType<typeof TemplateTableNewDataSheet> | null>(
     null,
 );
-const projectDataDialog = ref<InstanceType<
-    typeof TemplateTableProjectDataDialog
-> | null>(null);
 // Datos @ProyectoCarrera creados mientras se edita; al guardar llegan con la plantilla.
 const declared = ref<TemplateVariable[]>([]);
 const allVariables = computed(() => [
@@ -106,7 +99,7 @@ const variableItem = (variable: TemplateVariable): SheetSuggestionItem => ({
     label: variable.label,
     node: { type: 'variable', attrs: { id: variable.key, label: variable.label } },
 });
-// Atajos de la hoja (I-155): «{» dato automático, «!» docente, «@» Proyecto de carrera.
+// Atajos de la hoja (I-155): «{» dato automático; «!», «?» y «@» ponen su marca.
 const triggers = [
     useSheetSuggestions({
         char: '{',
@@ -116,18 +109,17 @@ const triggers = [
     useSheetSuggestions({
         char: '!',
         enabled: () => !props.pending,
-        items: () => [
-            ...teacherFields.value.map((field) => ({ key: field.key, label: field.label, open: () => insertField(field) })),
-            { key: 'nueva-pregunta', label: 'Nueva pregunta…', open: () => openNewField(), always: true },
-        ],
+        items: () => [{ key: 'docente', label: 'Docente', open: () => marks.insertTeacher(), always: true }],
+    }),
+    useSheetSuggestions({
+        char: '?',
+        enabled: () => !props.pending,
+        items: () => [{ key: 'si-no', label: 'Docente: Sí o No', open: () => marks.insertYesNo(), always: true }],
     }),
     useSheetSuggestions({
         char: '@',
         enabled: () => !props.pending,
-        items: () => [
-            ...allVariables.value.filter((variable) => variable.key.startsWith(PROJECT_PREFIX) && variable.type !== 'tabla').map(variableItem),
-            { key: 'nuevo-dato', label: 'Nuevo dato del Proyecto de carrera…', open: () => projectDataDialog.value?.open(), always: true },
-        ],
+        items: () => [{ key: 'proyecto', label: 'Proyecto de carrera', open: () => void marks.insertProject(), always: true }],
     }),
 ];
 const active = computed(() => triggers.find((trigger) => trigger.suggestions.value));
@@ -252,7 +244,6 @@ const {
     repeatedColumns,
     selectedRowHasColumns,
     usedColumnRoles,
-    teacherFields,
     can,
 } = selection;
 const {
@@ -268,11 +259,20 @@ const {
     resetCell,
     insertNode,
     insertVariable,
-    insertField,
     canInsertRepeatedColumn,
     insertRepeatedColumn,
     keyFor,
 } = useTemplateTableActions(editor, props, selection);
+const marks = useSheetMarks({
+    editor,
+    props,
+    selectedRowRole,
+    inCell,
+    repeatedColumns,
+    insertNode,
+    keyFor,
+    declared,
+});
 
 const openNewData = (): void => {
     if (selectedRowRole.value === 'total') {
@@ -314,28 +314,6 @@ const createRepeatedData = ({
     });
 };
 
-const openNewField = (): void => {
-    newFieldDialog.value?.open();
-};
-
-const createProjectData = (variable: TemplateVariable): void => {
-    declared.value = [...declared.value.filter((item) => item.key !== variable.key), variable];
-    insertVariable(variable);
-};
-
-const createField = ({ label, type, options, options_sources }: NewTeacherField): void => {
-    insertField({
-        key: keyFor(label),
-        label,
-        type,
-        options: options.map((option) => ({ value: option, label: option })),
-        options_sources,
-        inherited: false,
-        teacher_editable: true,
-        required: true,
-    });
-};
-
 const getDocument = (): DocumentNode | null => {
     const document = editor.value?.getJSON() as DocumentNode | undefined;
 
@@ -373,15 +351,14 @@ defineExpose({ getDocument });
                     :disabled="pending"
                     :in-table="inCell"
                     :variables="allVariables"
-                    :teacher-fields="teacherFields"
                     :repeated-columns="repeatedColumns"
                     :can-insert-repeated-column="canInsertRepeatedColumn"
                     :selected-row-role="selectedRowRole"
                     :selected-row-has-columns="selectedRowHasColumns"
                     @insert-variable="insertVariable"
-                    @insert-field="insertField($event)"
-                    @new-field="openNewField"
-                    @new-project-data="projectDataDialog?.open()"
+                    @teacher="marks.insertTeacher()"
+                    @yes-no="marks.insertYesNo()"
+                    @project="marks.insertProject()"
                     @insert-repeated-column="insertRepeatedColumn"
                     @new-data="openNewData"
                     @row-role="setRowRole"
@@ -601,14 +578,7 @@ defineExpose({ getDocument });
         @create="createRepeatedData"
     />
 
-    <TemplateTableNewFieldDialog ref="newFieldDialog" :variables="allVariables" @create="createField" />
 
-    <TemplateTableProjectDataDialog
-        ref="projectDataDialog"
-        :template-id="templateId"
-        :section-title="sectionTitle"
-        @create="createProjectData"
-    />
 </template>
 
 <style>

@@ -200,6 +200,7 @@ const inlineNode = (
                 ? {
                       id: { default: null },
                       label: { default: '' },
+                      listStyle: { default: null },
                   }
                 : {
                       key: { default: null },

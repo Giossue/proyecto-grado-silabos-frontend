@@ -1,48 +1,40 @@
-import { flushPromises, mount } from '@vue/test-utils';
+import { mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 import TemplateDocumentView from './TemplateDocumentView.vue';
-import TemplateTableNewFieldDialog from './template-table/TemplateTableNewFieldDialog.vue';
-import CurricularOptionsSourceSelect from './CurricularOptionsSourceSelect.vue';
-import { Select } from '@/components/ui/select';
-import { fieldNode, type DocumentField, type TemplateVariable } from '@/lib/templateDocument';
+import { fieldNode, type DocumentField } from '@/lib/templateDocument';
 
-const variables: TemplateVariable[] = [
-  { key: 'curricular_habilidades', label: 'Habilidades blandas', sample: '', type: 'lista', scope: 'asignatura' },
-  { key: 'curricular_transversales', label: 'Transversales', sample: '', type: 'lista', scope: 'carrera' },
-  { key: 'curricular_descripcion', label: 'Descripción', sample: '', type: 'texto', scope: 'carrera' },
-];
 const wrappers: Array<ReturnType<typeof mount>> = [];
 afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
 
 describe('selección curricular en la plantilla', () => {
-  it('crea una pregunta múltiple con un origen explícito y conserva ese vínculo en el documento', async () => {
-    const wrapper = mount(TemplateTableNewFieldDialog, { attachTo: document.body, props: { variables } });
-    wrappers.push(wrapper);
-    wrapper.vm.open();
-    await flushPromises();
-    const input = document.querySelector<HTMLInputElement>('#table-field-label')!;
-    input.value = 'Habilidades que trabajaré';
-    input.dispatchEvent(new Event('input'));
-    wrapper.findComponent(Select).vm.$emit('update:modelValue', 'seleccion_multiple');
-    await flushPromises();
-    const submit = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent?.includes('Insertar pregunta'))!;
-    submit.click();
-    await flushPromises();
-    expect(wrapper.emitted('create')).toBeUndefined();
-    expect(document.body.textContent).toContain('Selecciona la lista curricular');
-    const lists = wrapper.findComponent(CurricularOptionsSourceSelect);
-    expect(lists.text()).not.toContain('Descripción');
-    expect(lists.text()).toContain('Habilidades blandas · Asignatura');
-    expect(lists.text()).toContain('Transversales · Carrera');
-    document.querySelector<HTMLButtonElement>('#table-field-source-curricular_habilidades')!.click();
-    await flushPromises();
-    document.querySelector<HTMLButtonElement>('#table-field-source-curricular_transversales')!.click();
-    await flushPromises();
-    submit.click();
-    await flushPromises();
-    expect(wrapper.emitted('create')?.[0]).toEqual([{ label: 'Habilidades que trabajaré', type: 'seleccion_multiple', options: [], options_sources: ['curricular_habilidades', 'curricular_transversales'] }]);
+  it('conserva el vínculo de una selección existente con sus listas curriculares', () => {
     expect(fieldNode({ key: 'habilidades', label: 'Habilidades', type: 'seleccion_multiple', options_source: 'curricular_habilidades', options: [{ value: 'Anterior', label: 'Anterior' }] }).attrs).toMatchObject({ kind: 'seleccion_multiple', options_source: 'curricular_habilidades', options: null });
     expect(fieldNode({ key: 'habilidades', label: 'Habilidades', type: 'seleccion_multiple', options_sources: ['curricular_habilidades', 'curricular_transversales'] }).attrs).toMatchObject({ options_source: null, options_sources: ['curricular_habilidades', 'curricular_transversales'], options: null });
+  });
+
+  it('?Docente se responde con dos botones Sí y No, también dentro de una tabla', async () => {
+    const field: DocumentField = { key: 'discapacidad', label: 'Estudiantes con discapacidad', type: 'seleccion_unica', options: [{ value: 'Sí', label: 'Sí' }, { value: 'No', label: 'No' }], value: 'No', teacher_editable: true };
+    const cell = { type: 'tableCell', content: [{ type: 'paragraph', content: [fieldNode(field)] }] };
+    const wrapper = mount(TemplateDocumentView, { props: { document: { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [cell] }] }] }, fields: [field], variables: {}, editable: true, presentation: 'form' } });
+    wrappers.push(wrapper);
+    const buttons = wrapper.findAll('[role="radio"]');
+    expect(buttons.map((button) => button.text())).toEqual(['Sí', 'No']);
+    expect(buttons[1]!.attributes('aria-checked')).toBe('true');
+    await buttons[0]!.trigger('click');
+    expect(wrapper.emitted('value')?.[0]).toEqual(['discapacidad', 'Sí']);
+  });
+
+  it('en una lista, lo fijo, lo del docente y el Proyecto de carrera forman una sola lista', () => {
+    const field: DocumentField = { key: 'normas', label: 'Normas', type: 'texto_largo', value: 'Puntualidad', teacher_editable: true };
+    const item = (content: object) => ({ type: 'listItem', content: [{ type: 'paragraph', content: [content] }] });
+    const wrapper = mount(TemplateDocumentView, { props: { document: { type: 'doc', content: [{ type: 'bulletList', content: [
+      item({ type: 'text', text: 'Respeto en clase' }),
+      item({ ...fieldNode(field), attrs: { ...fieldNode(field).attrs, listStyle: 'bullet' } }),
+      item({ type: 'variable', attrs: { id: 'curricular_normas', label: 'curricular_normas', listStyle: 'bullet' } }),
+    ] }] } as never, fields: [field], variables: { curricular_normas: '1. Trabajo en equipo\n2. Ética profesional' } } });
+    wrappers.push(wrapper);
+    expect(wrapper.findAll('ul')).toHaveLength(1);
+    expect(wrapper.findAll('li').map((li) => li.text())).toEqual(['Respeto en clase', 'Puntualidad', 'Trabajo en equipo', 'Ética profesional']);
   });
 
   it('el docente elige varias opciones resueltas para su sílabo y la vista de lectura conserva el contenido', async () => {

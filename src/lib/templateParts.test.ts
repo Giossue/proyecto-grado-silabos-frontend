@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inlineNodeLabel } from '@/components/domain/configuration/template-table/inlineNodeLabel';
+import { inlineNodeLabel, inlineNodeName } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import { partTypeLabel, sectionOrientation } from '@/lib/templateParts';
 import type { TemplateFieldContainer } from '@/types/configuration';
 
@@ -22,8 +22,12 @@ describe('templateParts', () => {
     it('muestra los datos por su nombre, nunca por su clave', () => {
         expect(inlineNodeLabel('variable', { id: 'carrera', label: 'carrera' }, () => 'Nombre de la carrera')).toBe('Nombre de la carrera');
         expect(inlineNodeLabel('variable', { id: 'carrera', label: 'carrera' })).toBe('');
-        expect(inlineNodeLabel('column', { key: 'horas_acd', label: 'Horas ACD' })).toBe('!Horas ACD');
-        expect(inlineNodeLabel('field', { key: 'formacion', label: 'Formación' })).toBe('!Formación');
-        expect(inlineNodeLabel('variable', { id: 'curricular_resultados', label: 'curricular_resultados' }, () => 'Resultados')).toBe('@Resultados');
+        // Marcas de la hoja (I-155): se ven por su tipo; el nombre interno queda en la ayuda.
+        expect(inlineNodeLabel('column', { key: 'horas_acd', label: 'Horas ACD' })).toBe('!Docente');
+        expect(inlineNodeLabel('field', { key: 'formacion', label: 'Formación', kind: 'texto_largo' })).toBe('!Docente');
+        expect(inlineNodeLabel('field', { key: 'discapacidad', label: 'Discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'] })).toBe('?Docente');
+        expect(inlineNodeLabel('field', { key: 'discapacidad', label: 'Discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'], choice: 'Sí' })).toBe('X si Discapacidad = Sí');
+        expect(inlineNodeLabel('variable', { id: 'curricular_resultados', label: 'curricular_resultados' }, () => 'Resultados')).toBe('@ProyectoCarrera');
+        expect(inlineNodeName('variable', { id: 'curricular_resultados', label: 'curricular_resultados' }, () => 'Resultados')).toBe('Resultados');
     });
 });

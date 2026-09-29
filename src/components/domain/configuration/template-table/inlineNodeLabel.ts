@@ -1,15 +1,22 @@
 /** Prefijo de los datos del Proyecto de carrera en el catálogo de variables (I-155). */
 export const PROJECT_PREFIX = 'curricular_';
 
-export type SheetMark = 'automatic' | 'teacher' | 'project';
+export type SheetMark = 'automatic' | 'teacher' | 'yesNo' | 'project';
+
+const isYesNo = (attrs: Record<string, unknown>): boolean =>
+    attrs.kind === 'seleccion_unica' &&
+    Array.isArray(attrs.options) &&
+    attrs.options.map(String).join('|') === 'Sí|No';
 
 /**
- * Tres marcas en la hoja (I-155): dato automático, !Docente (lo llena el docente) y
- * @ProyectoCarrera (lo llena Coordinación al importar sus documentos).
+ * Marcas de la hoja (I-155): dato automático, !Docente (lo escribe el docente),
+ * ?Docente (responde Sí o No) y @ProyectoCarrera (lo llena Coordinación al importar).
  */
 export const sheetMark = (name: string, attrs: Record<string, unknown>): SheetMark =>
     name !== 'variable'
-        ? 'teacher'
+        ? isYesNo(attrs) && !attrs.choice
+            ? 'yesNo'
+            : 'teacher'
         : String(attrs.id ?? '').startsWith(PROJECT_PREFIX)
           ? 'project'
           : 'automatic';
@@ -17,17 +24,19 @@ export const sheetMark = (name: string, attrs: Record<string, unknown>): SheetMa
 export const markClass: Record<SheetMark, string> = {
     automatic: 'template-table-variable',
     teacher: 'template-table-field',
+    yesNo: 'template-table-field',
     project: 'template-table-project',
 };
 
 export const SHEET_MARK_HINTS: Record<SheetMark, string> = {
-    automatic: 'Dato automático: lo pone el sistema.',
-    teacher: '!Docente: lo llena el docente.',
-    project: '@ProyectoCarrera: lo llena Coordinación al importar sus documentos.',
+    automatic: 'lo pone el sistema',
+    teacher: 'lo escribe el docente',
+    yesNo: 'el docente responde Sí o No',
+    project: 'lo llena Coordinación al importar sus documentos',
 };
 
-/** Texto visible de una ficha dentro de la celda: siempre un nombre, nunca una clave. */
-export const inlineNodeLabel = (
+/** Nombre interno de la ficha: el del dato o de la pregunta, nunca una clave. */
+export const inlineNodeName = (
     name: string,
     attrs: Record<string, unknown>,
     variableLabel?: (id: string) => string | undefined,
@@ -35,17 +44,28 @@ export const inlineNodeLabel = (
     if (name === 'variable') {
         const id = String(attrs.id ?? '');
         const label = String(attrs.label ?? '');
-        // Sin nombre conocido la ficha queda vacía: nunca una clave ni un rótulo genérico.
-        const shown = variableLabel?.(id) ?? (label !== '' && label !== id ? label : '');
 
-        return shown !== '' && id.startsWith(PROJECT_PREFIX) ? `@${shown}` : shown;
+        // Sin nombre conocido queda vacío: nunca una clave ni un rótulo genérico.
+        return variableLabel?.(id) ?? (label !== '' && label !== id ? label : '');
     }
 
-    if (name === 'column') {
-        return `!${String(attrs.label || attrs.key || '')}`;
+    return String(attrs.label || attrs.key || '');
+};
+
+/** Texto visible de la ficha en la hoja. */
+export const inlineNodeLabel = (
+    name: string,
+    attrs: Record<string, unknown>,
+    variableLabel?: (id: string) => string | undefined,
+): string => {
+    if (name !== 'variable' && attrs.choice) {
+        return `X si ${String(attrs.label)} = ${String(attrs.choice)}`;
     }
 
-    return attrs.choice
-        ? `X si ${String(attrs.label)} = ${String(attrs.choice)}`
-        : `!${String(attrs.label ?? '')}`;
+    return {
+        automatic: () => inlineNodeName(name, attrs, variableLabel),
+        teacher: () => '!Docente',
+        yesNo: () => '?Docente',
+        project: () => '@ProyectoCarrera',
+    }[sheetMark(name, attrs)]();
 };
