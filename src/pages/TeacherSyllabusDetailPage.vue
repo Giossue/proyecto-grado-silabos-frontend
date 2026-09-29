@@ -35,7 +35,8 @@ import { freeTextPlain, isFreeTextDocument } from '@/components/domain/syllabus/
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { hiddenKeys } from '@/lib/fieldConditions';
-import { Send } from '@lucide/vue';
+import { ArrowLeft, Send } from '@lucide/vue';
+import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -455,6 +456,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <!-- Encabezado fijo como el del editor de malla: volver, materia y tema. -->
+  <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-sm backdrop-blur sm:px-5" aria-label="Herramientas del sílabo">
+    <Button variant="link" size="sm" class="h-auto px-0" as-child><RouterLink :to="paths.teacher.syllabi"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</RouterLink></Button>
+    <span v-if="syllabus" class="hidden min-w-0 flex-1 truncate text-center text-sm font-medium sm:block">{{ syllabus.subject }}</span>
+    <span v-else class="flex-1" />
+    <AppearanceToggle />
+  </header>
   <PageFrame
     title=""
     :description="syllabus ? `${syllabus.code} · ${syllabus.convocation} · Paralelo(s) ${syllabus.parallels.join(', ')}` : 'Complete las partes del sílabo institucional.'"

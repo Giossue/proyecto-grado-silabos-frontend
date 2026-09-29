@@ -379,6 +379,9 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(startTeacherSyllabus).toHaveBeenCalledWith(pending.id);
+    // Encabezado fijo con el botón para volver y el nombre de la materia.
+    expect(wrapper.get("header").text()).toContain("Volver a mis sílabos");
+    expect(wrapper.get("header").text()).toContain("Inteligencia Artificial");
     expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();
     expect(wrapper.text()).not.toContain("Listo para iniciar");
     expect(wrapper.find("textarea, [contenteditable='true'], input").exists()).toBe(true);

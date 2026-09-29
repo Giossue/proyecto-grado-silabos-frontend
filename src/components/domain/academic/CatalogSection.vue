@@ -340,6 +340,7 @@ const {
                                 :starts-on="period.starts_on"
                                 :ends-on="period.ends_on"
                                 :institutional-process="period.institutional_process"
+                                :lock-reason="period.lock_reason"
                                 :faculties="catalogs.faculties"
                                 :campus-options="options.campusOptions"
                                 @changed="emit('changed', $event)"

@@ -72,6 +72,8 @@ export type AcademicStructureProps = {
         id: string;
         state: "abierto" | "pausado" | "cerrado";
       } | null;
+      /** «Convocatoria activa» cuando alguna carrera tiene la convocatoria en curso en este período. */
+      lock_reason?: string | null;
     }[];
   };
   subjects: {
