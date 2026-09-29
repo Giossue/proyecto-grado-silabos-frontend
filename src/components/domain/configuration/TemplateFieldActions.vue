@@ -89,22 +89,40 @@ const conditionParts = computed(() =>
 const conditions = ref<Record<string, { key: string; value: string }>>({});
 const optionSources = ref<Record<string, string[]>>({});
 const optionParts = computed(() => props.field.fields.filter((part) => ['seleccion_unica', 'seleccion_multiple'].includes(part.type ?? '')));
-// Una condición guardada hacia otra sección se conserva visible para poder quitarla.
-const conditionTargets = (ownKey: string) =>
-    (props.choiceFields ?? []).filter(
-        (item) =>
-            item.key !== ownKey &&
-            (item.sectionId === props.sectionId ||
-                item.key === conditions.value[ownKey]?.key),
-    );
 const targetOptions = (key: string) =>
     (props.choiceFields ?? []).find((item) => item.key === key)?.options ?? [];
-const chooseTarget = (ownKey: string, key: string): void => {
-    conditions.value[ownKey] = {
-        key,
-        value: key === ALWAYS ? '' : (targetOptions(key)[0]?.value ?? ''),
-    };
+/**
+ * «Si en <pregunta> responden <valor>, pedir también…»: la condición se configura desde
+ * la pregunta, como la piensa Administración. Se guarda igual que antes, en cada parte
+ * dependiente (`mostrar_si`). Solo participan preguntas de la misma sección.
+ */
+const triggers = computed(() =>
+    (props.choiceFields ?? []).filter(
+        (item) =>
+            item.options.length > 0 &&
+            (item.sectionId === props.sectionId ||
+                conditionParts.value.some((part) => conditions.value[part.key]?.key === item.key)),
+    ),
+);
+const triggerValues = ref<Record<string, string>>({});
+const dependents = (trigger: string) =>
+    conditionParts.value.filter((part) => part.key !== trigger);
+const dependsOn = (part: string, trigger: string): boolean =>
+    conditions.value[part]?.key === trigger;
+const toggleDependent = (part: string, trigger: string, checked: boolean | 'indeterminate'): void => {
+    conditions.value[part] = checked === true
+        ? { key: trigger, value: triggerValues.value[trigger] ?? targetOptions(trigger)[0]?.value ?? '' }
+        : { key: ALWAYS, value: '' };
 };
+const chooseTriggerValue = (trigger: string, value: unknown): void => {
+    if (typeof value !== 'string') return;
+    triggerValues.value[trigger] = value;
+    for (const part of conditionParts.value) {
+        if (dependsOn(part.key, trigger)) conditions.value[part.key] = { key: trigger, value };
+    }
+};
+// Nombres de las preguntas internas de una parte con varias (p. ej., la ficha de identificación).
+const partLabels = ref<Record<string, string>>({});
 const showWhen = (key: string): ShowWhen => {
     const condition = conditions.value[key];
 
@@ -117,12 +135,9 @@ const primary = computed(() => props.field.fields[0] ?? null);
 const fixed = computed(() => isFixedPart(props.field));
 // La ficha de identificación no usa listas curriculares ni cambia de orientación.
 const institutional = computed(() => props.field.content_type === 'institutional');
-const conditionRows = computed(() =>
-    fixed.value
-        ? []
-        : conditionParts.value.filter(
-              (part) => conditionTargets(part.key).length > 0,
-          ),
+const multiPart = computed(() => Boolean(props.field.document) && conditionParts.value.length > 1);
+const conditionRules = computed(() =>
+    fixed.value ? [] : triggers.value.filter((trigger) => dependents(trigger.key).length > 0),
 );
 const editOpen = ref(false);
 const deleteOpen = ref(false);
@@ -164,6 +179,15 @@ const openEdit = (): void => {
                 key: part.show_when?.key ?? ALWAYS,
                 value: part.show_when?.value ?? '',
             },
+        ]),
+    );
+    partLabels.value = Object.fromEntries(conditionParts.value.map((part) => [part.key, part.label]));
+    // Cada pregunta abre con la respuesta que ya usan sus dependientes, o con la primera.
+    triggerValues.value = Object.fromEntries(
+        (props.choiceFields ?? []).map((item) => [
+            item.key,
+            conditionParts.value.find((part) => part.show_when?.key === item.key)?.show_when?.value
+                ?? item.options[0]?.value ?? '',
         ]),
     );
 
@@ -227,7 +251,14 @@ const save = (): void => {
 
         // Una parte con documento guarda sus propiedades junto con el documento;
         // las demás partes del docente solo agregan su «Mostrar solo si».
-        const properties: Record<string, unknown>[] = value
+        const properties: Record<string, unknown>[] = multiPart.value
+            ? conditionParts.value.map((part) => ({
+                  key: part.key,
+                  label: partLabels.value[part.key] ?? part.label,
+                  help: part.help ?? '',
+                  show_when: showWhen(part.key),
+              }))
+            : value
             ? [
                   {
                       key: data.key,
@@ -419,96 +450,64 @@ defineExpose({
                     </Field>
                 </FieldGroup>
 
-                <FieldSet v-if="conditionRows.length" class="gap-4">
-                    <FieldLegend>Cuándo se muestra</FieldLegend>
-                    <FieldDescription>
-                        Por defecto, siempre. También puede aparecer solo cuando
-                        otra pregunta de «{{ sectionTitle }}» tenga cierta
-                        respuesta.
-                    </FieldDescription>
-                    <div class="flex flex-col divide-y rounded-md border">
-                        <div
-                            v-for="part in conditionRows"
-                            :key="part.key"
-                            class="flex flex-col gap-3 p-3"
-                            :data-condition="part.key"
-                        >
-                            <p
-                                v-if="conditionParts.length > 1"
-                                class="text-sm font-medium break-words"
+                <FieldSet v-if="multiPart && !fixed" class="gap-3">
+                    <FieldLegend>Preguntas que llena el docente</FieldLegend>
+                    <FieldDescription>Así se llaman en el sílabo. Puede cambiar su nombre.</FieldDescription>
+                    <Field v-for="(part, index) in conditionParts" :key="part.key">
+                        <FieldLabel :for="`edit-part-label-${part.key}`" class="sr-only">Nombre de la pregunta {{ index + 1 }}</FieldLabel>
+                        <Input :id="`edit-part-label-${part.key}`" v-model="partLabels[part.key]" maxlength="180" placeholder="Ej. Formación y experiencia" :disabled="form.processing" />
+                    </Field>
+                </FieldSet>
+
+                <FieldSet v-if="conditionRules.length" class="gap-3">
+                    <FieldLegend>Preguntas que dependen de una respuesta</FieldLegend>
+                    <FieldDescription>Lo que marque se pide solo con esa respuesta. Lo demás se pide siempre.</FieldDescription>
+                    <div
+                        v-for="trigger in conditionRules"
+                        :key="trigger.key"
+                        class="flex flex-col gap-3 rounded-md border p-3"
+                        :data-trigger="trigger.key"
+                    >
+                        <Field class="sm:grid sm:grid-cols-[minmax(0,1fr)_10rem] sm:items-center sm:gap-3">
+                            <FieldLabel :for="`trigger-value-${trigger.key}`" class="break-words font-normal">
+                                Si en «{{ trigger.label }}» responden
+                            </FieldLabel>
+                            <Select
+                                :model-value="triggerValues[trigger.key]"
+                                :disabled="form.processing"
+                                @update:model-value="chooseTriggerValue(trigger.key, $event)"
                             >
-                                {{ part.label.trim() || title }}
-                            </p>
-                            <div class="grid gap-3 sm:grid-cols-2">
-                                <Field>
-                                    <FieldLabel :for="`condition-part-${part.key}`">
-                                        Mostrar solo si
-                                    </FieldLabel>
-                                    <Select
-                                        :model-value="conditions[part.key]?.key ?? ALWAYS"
-                                        :disabled="form.processing"
-                                        @update:model-value="
-                                            chooseTarget(part.key, String($event))
-                                        "
-                                    >
-                                        <SelectTrigger
-                                            :id="`condition-part-${part.key}`"
-                                            class="w-full"
-                                        >
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                <SelectItem :value="ALWAYS">
-                                                    Siempre
-                                                </SelectItem>
-                                                <SelectItem
-                                                    v-for="target in conditionTargets(part.key)"
-                                                    :key="target.key"
-                                                    :value="target.key"
-                                                >
-                                                    {{ target.label }}
-                                                </SelectItem>
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                </Field>
-                                <Field
-                                    v-if="
-                                        conditions[part.key] &&
-                                        conditions[part.key].key !== ALWAYS
-                                    "
-                                >
-                                    <FieldLabel :for="`condition-value-${part.key}`">
-                                        es igual a
-                                    </FieldLabel>
-                                    <Select
-                                        v-model="conditions[part.key].value"
-                                        :disabled="form.processing"
-                                    >
-                                        <SelectTrigger
-                                            :id="`condition-value-${part.key}`"
-                                            class="w-full"
-                                        >
-                                            <SelectValue placeholder="Elija un valor" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                <SelectItem
-                                                    v-for="option in targetOptions(
-                                                        conditions[part.key].key,
-                                                    )"
-                                                    :key="option.value"
-                                                    :value="option.value"
-                                                >
-                                                    {{ option.label }}
-                                                </SelectItem>
-                                            </SelectGroup>
-                                        </SelectContent>
-                                    </Select>
-                                </Field>
-                            </div>
-                        </div>
+                                <SelectTrigger :id="`trigger-value-${trigger.key}`" class="w-full">
+                                    <SelectValue placeholder="Elija un valor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem v-for="option in trigger.options" :key="option.value" :value="option.value">
+                                            {{ option.label }}
+                                        </SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                        <FieldSet class="gap-2">
+                            <FieldLegend variant="label">pedir también:</FieldLegend>
+                            <Field
+                                v-for="part in dependents(trigger.key)"
+                                :key="part.key"
+                                orientation="horizontal"
+                                :data-condition="part.key"
+                            >
+                                <Checkbox
+                                    :id="`depends-${trigger.key}-${part.key}`"
+                                    :model-value="dependsOn(part.key, trigger.key)"
+                                    :disabled="form.processing"
+                                    @update:model-value="toggleDependent(part.key, trigger.key, $event)"
+                                />
+                                <FieldLabel :for="`depends-${trigger.key}-${part.key}`" class="font-normal">
+                                    {{ (partLabels[part.key] ?? part.label).trim() || title }}
+                                </FieldLabel>
+                            </Field>
+                        </FieldSet>
                     </div>
                 </FieldSet>
                 <DialogFooter>

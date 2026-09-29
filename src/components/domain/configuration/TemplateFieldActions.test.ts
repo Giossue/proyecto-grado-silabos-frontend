@@ -40,14 +40,14 @@ describe('TemplateFieldActions', () => {
         vi.mocked(api).mockClear();
     });
 
-    it('ofrece «Siempre» por defecto y guarda «Siempre» como sin condición', async () => {
+    it('sin marcar, la parte se pide siempre y se guarda sin condición', async () => {
         const wrapper = mountActions(block([part('discapacidad_tipo', 'Tipo de discapacidad')]));
         (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
         await flushPromises();
 
-        expect(document.body.textContent).toContain('Mostrar solo si');
-        expect(document.getElementById('condition-part-discapacidad_tipo')?.textContent).toContain('Siempre');
-        expect(document.getElementById('condition-value-discapacidad_tipo')).toBeNull();
+        expect(document.body.textContent).toContain('Si en «Estudiantes con discapacidad» responden');
+        expect(document.body.textContent).not.toContain('Mostrar solo si');
+        expect(document.getElementById('depends-discapacidad_tiene-discapacidad_tipo')?.getAttribute('data-state')).toBe('unchecked');
 
         (document.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
         await flushPromises();
@@ -55,15 +55,15 @@ describe('TemplateFieldActions', () => {
         expect(body.show_when).toBeNull();
     });
 
-    it('muestra y guarda la condición configurada', async () => {
+    it('muestra la respuesta configurada y la guarda en la parte dependiente', async () => {
         const wrapper = mountActions(block([part('discapacidad_tipo', 'Tipo de discapacidad', {
             show_when: { key: 'discapacidad_tiene', value: 'Sí' },
         })]));
         (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
         await flushPromises();
 
-        expect(document.getElementById('condition-part-discapacidad_tipo')?.textContent).toContain('Estudiantes con discapacidad');
-        expect(document.getElementById('condition-value-discapacidad_tipo')?.textContent).toContain('Sí');
+        expect(document.getElementById('depends-discapacidad_tiene-discapacidad_tipo')?.getAttribute('data-state')).toBe('checked');
+        expect(document.getElementById('trigger-value-discapacidad_tiene')?.textContent).toContain('Sí');
 
         (document.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
         await flushPromises();
@@ -71,33 +71,51 @@ describe('TemplateFieldActions', () => {
         expect(body.show_when).toEqual({ key: 'discapacidad_tiene', value: 'Sí' });
     });
 
-    it('no ofrece preguntas de otra sección ni muestra condiciones sin opciones', async () => {
+    it('no ofrece preguntas de otra sección', async () => {
         const wrapper = mountActions(block([part('confirmacion', 'Confirmación', { type: 'booleano', content_type: 'boolean' })]), 'descripcion');
         (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
         await flushPromises();
 
-        expect(document.body.textContent).not.toContain('Cuándo se muestra');
-        expect(document.getElementById('condition-part-confirmacion')).toBeNull();
+        expect(document.body.textContent).not.toContain('Preguntas que dependen de una respuesta');
         expect(document.body.textContent).not.toContain('Estudiantes con discapacidad');
     });
 
-    it('en la ficha de identificación agrupa las condiciones y no ofrece listas curriculares', async () => {
-        const identification = {
-            ...block([
-                part('discapacidad_tiene', 'Estudiantes con discapacidad', { type: 'seleccion_unica', content_type: 'multiple_choice' }),
-                part('discapacidad_tipo', 'Tipo de discapacidad'),
-            ]),
-            content_type: 'institutional' as const,
-            document: { type: 'doc', content: [] },
-        };
-        const wrapper = mountActions(identification);
+    const identification = () => ({
+        ...block([
+            part('discapacidad_tiene', 'Estudiantes con discapacidad', { type: 'seleccion_unica', content_type: 'multiple_choice' }),
+            part('discapacidad_tipo', 'Tipo de discapacidad'),
+            part('formacion_experiencia', 'Formación y experiencia', { type: 'texto_largo' }),
+        ]),
+        title: 'Identificación institucional',
+        content_type: 'institutional' as const,
+        document: { type: 'doc', content: [] },
+    });
+
+    it('en la ficha de identificación permite renombrar cada pregunta y elegir qué pedir según la respuesta', async () => {
+        const wrapper = mountActions(identification());
         (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
         await flushPromises();
 
-        expect(document.body.textContent).toContain('Cuándo se muestra');
-        expect(document.body.textContent?.match(/Por defecto, siempre/g)).toHaveLength(1);
-        expect(document.getElementById('condition-part-discapacidad_tipo')).not.toBeNull();
+        expect(document.body.textContent).toContain('Preguntas que llena el docente');
+        expect(document.body.textContent?.match(/Preguntas que dependen de una respuesta/g)).toHaveLength(1);
         expect(document.body.textContent).not.toContain('Listas para');
         expect(document.body.textContent).not.toContain('Hoja horizontal');
+        // La pregunta no depende de sí misma.
+        expect(document.getElementById('depends-discapacidad_tiene-discapacidad_tiene')).toBeNull();
+
+        const rename = document.getElementById('edit-part-label-formacion_experiencia') as HTMLInputElement;
+        rename.value = 'Formación académica y experiencia';
+        rename.dispatchEvent(new Event('input'));
+        (document.getElementById('depends-discapacidad_tiene-discapacidad_tipo') as HTMLButtonElement).click();
+        await flushPromises();
+        (document.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit'));
+        await flushPromises();
+
+        const body = JSON.parse(String(vi.mocked(api).mock.calls[0]![1]!.body));
+        const byKey = Object.fromEntries(body.properties.map((item: { key: string }) => [item.key, item]));
+        expect(byKey.formacion_experiencia).toMatchObject({ label: 'Formación académica y experiencia', show_when: null });
+        expect(byKey.discapacidad_tipo).toMatchObject({ label: 'Tipo de discapacidad', show_when: { key: 'discapacidad_tiene', value: 'Sí' } });
+        expect(byKey.discapacidad_tiene).toMatchObject({ label: 'Estudiantes con discapacidad', show_when: null });
+        expect(body.title).toBe('Identificación institucional');
     });
 });

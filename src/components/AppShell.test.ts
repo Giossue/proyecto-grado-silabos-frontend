@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { createMemoryHistory, createRouter } from 'vue-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
+import { curriculumEditorState } from '@/state/curriculumEditor';
 import { sessionState } from '@/state/session';
 
 const { getNotifications, logout, selectActiveRole } = vi.hoisted(() => ({
@@ -58,6 +59,7 @@ const mountShell = async () => {
 
 describe('AppSidebarLayout', () => {
   afterEach(() => {
+    curriculumEditorState.setOpen(false);
     mountedWrappers.splice(0).forEach((wrapper) => wrapper.unmount());
     document.body.innerHTML = '';
   });
@@ -123,6 +125,23 @@ describe('AppSidebarLayout', () => {
 
     expect(document.documentElement.classList.contains('dark')).toBe(true);
     expect(localStorage.getItem('appearance')).toBe('dark');
+  });
+
+  it('oculta sidebar y encabezado global durante la edición de malla', async () => {
+    const wrapper = await mountShell();
+    expect(wrapper.find('[data-sidebar="sidebar"]').exists()).toBe(true);
+    expect(wrapper.find('[data-sidebar="trigger"]').exists()).toBe(true);
+
+    curriculumEditorState.setOpen(true);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-sidebar="sidebar"]').exists()).toBe(false);
+    expect(wrapper.find('[data-sidebar="trigger"]').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Contenido');
+
+    curriculumEditorState.setOpen(false);
+    await wrapper.vm.$nextTick();
+    expect(wrapper.find('[data-sidebar="sidebar"]').exists()).toBe(true);
+    expect(wrapper.find('[data-sidebar="trigger"]').exists()).toBe(true);
   });
 
   it('expone el cambio de ámbito desde el menú de la cuenta', async () => {

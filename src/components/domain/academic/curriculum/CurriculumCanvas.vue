@@ -71,6 +71,7 @@ const props = defineProps<
     | "career"
   > & {
     editing: boolean;
+    fullScreen?: boolean;
     organizationUnits: CurriculumBuilderProps["organizationUnitOptions"];
     modalityOptions: CurriculumBuilderProps["modalityOptions"];
   }
@@ -447,7 +448,8 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
 
 <template>
   <div
-    class="curriculum-canvas relative h-[76vh] min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
+    class="curriculum-canvas relative overflow-hidden rounded-lg border bg-background shadow-surface"
+    :class="fullScreen ? 'h-[calc(100dvh-5.5rem)] min-h-[34rem]' : 'h-[76vh] min-h-[34rem]'"
     :aria-label="editing ? 'Editor interactivo de la malla' : 'Vista de la malla'"
   >
     <!--

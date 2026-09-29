@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { ChevronDown, Pencil, UserPlus } from "@lucide/vue";
 import { useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
+import AppearanceToggle from "@/components/AppearanceToggle.vue";
 import {
   getCurriculum,
   getScheduledSubjects,
@@ -36,6 +37,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { paths } from "@/lib/routes";
 import { toast } from "@/lib/toast";
+import { curriculumEditorState } from "@/state/curriculumEditor";
 
 const router = useRouter();
 const props = defineProps<{ mode: 'curriculum' | 'schedule' | 'teachers' }>();
@@ -63,6 +65,7 @@ const assignmentOpen = ref(false);
 const configurationOpen = ref(false);
 const editingCurriculum = ref(false);
 const openingEditor = ref(false);
+watch(editingCurriculum, (editing) => curriculumEditorState.setOpen(editing), { immediate: true });
 watch(() => curriculum.value?.curriculum, (current) => {
   if (current && (!current.editable || current.lock_reason)) {
     editingCurriculum.value = false;
@@ -175,9 +178,24 @@ onMounted(() => {
   if (props.mode === 'curriculum') removeLegacyBreakdownMode();
   void load();
 });
+onBeforeUnmount(() => curriculumEditorState.setOpen(false));
 </script>
 <template>
+  <div v-if="mode === 'curriculum' && editingCurriculum && curriculum && schedule && assignments" class="flex min-h-dvh min-w-0 flex-col bg-background">
+    <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-sm backdrop-blur sm:px-5" aria-label="Herramientas del editor de malla">
+      <Button variant="link" size="sm" class="h-auto px-0" @click="closeCurriculumEditor">Volver a la vista</Button>
+      <span class="hidden min-w-0 flex-1 truncate text-center text-sm font-medium sm:block">Malla de {{ curriculum.career.name }}</span>
+      <CurriculumActions :curriculum="curriculum.curriculum" @configure="configurationOpen = true" />
+      <AppearanceToggle />
+    </header>
+    <main class="min-w-0 flex-1 p-3 sm:p-4">
+      <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
+      <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" editing full-screen @changed="handleCurriculumChanged" />
+      <CurriculumConfigurationSheet v-model:open="configurationOpen" :curriculum="curriculum.curriculum" @saved="handleCurriculumChanged" />
+    </main>
+  </div>
   <PageFrame
+    v-else
     :title="pageTitle"
     :description="pageDescription"
   >
@@ -206,29 +224,18 @@ onMounted(() => {
         :show-trigger="false"
         @saved="handleAssignmentChanged"
       />
-      <CurriculumActions
-        v-if="mode === 'curriculum' && curriculum && editingCurriculum"
-        :curriculum="curriculum.curriculum"
-        @configure="configurationOpen = true"
-      />
       <Button
-        v-if="mode === 'curriculum' && curriculum && !editingCurriculum"
+        v-if="mode === 'curriculum' && curriculum"
         :disabled="openingEditor || !curriculum.curriculum.editable || Boolean(curriculum.curriculum.lock_reason)"
         @click="openCurriculumEditor"
       ><Spinner v-if="openingEditor" data-icon="inline-start" /><Pencil v-else data-icon="inline-start" aria-hidden="true" />{{ openingEditor ? 'Comprobando…' : 'Editar malla' }}</Button>
-      <Button
-        v-if="mode === 'curriculum' && curriculum && editingCurriculum"
-        variant="outline"
-        @click="closeCurriculumEditor"
-      >Volver a la vista</Button>
     </template>
     <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <template v-if="curriculum && schedule && assignments"
       >
       <template v-if="mode === 'curriculum'">
         <ProcessLockAlert v-if="curriculum.curriculum.lock_reason" />
-        <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" :editing="editingCurriculum" @changed="handleCurriculumChanged" />
-        <CurriculumConfigurationSheet v-model:open="configurationOpen" :curriculum="curriculum.curriculum" @saved="handleCurriculumChanged" />
+        <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" :editing="false" @changed="handleCurriculumChanged" />
       </template>
       <ProcessLockAlert v-if="mode === 'schedule' && schedule.career.lock_reason" />
       <ScheduledSubjectsTab

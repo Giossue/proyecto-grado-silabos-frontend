@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getCurriculum, getScheduledSubjects, getTeacherAssignments, type Curriculum } from '@/api/career-academics';
 import { getSession } from '@/api/session';
 import CoordinationAcademicStructurePage from '@/pages/CoordinationAcademicStructurePage.vue';
+import { curriculumEditorState } from '@/state/curriculumEditor';
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ replace: vi.fn() }),
@@ -40,6 +41,8 @@ const mountPage = () => mount(CoordinationAcademicStructurePage, {
 describe('CoordinationAcademicStructurePage, edición de malla', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.setItem('appearance', 'light');
+    document.documentElement.classList.remove('dark');
     vi.mocked(getSession).mockResolvedValue({
       user: { id: 'user-1', name: 'Coordinador', email: 'coordinador@test.local', email_verified: true, can_edit_identity: false },
       active_role: { id: 'role-1', code: 'coordinador', career_id: 'career-1', career_name: 'Software' },
@@ -61,9 +64,16 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     expect(getCurriculum).toHaveBeenCalledTimes(2);
     expect(wrapper.get('[data-testid="canvas"]').attributes('data-editing')).toBe('true');
     expect(wrapper.text()).toContain('Configurar ciclos');
+    expect(curriculumEditorState.open.value).toBe(true);
+    expect(wrapper.find('[aria-label="Herramientas del editor de malla"]').exists()).toBe(true);
+
+    await wrapper.get('[aria-label="Tema visual: Claro. Cambiar a Oscuro"]').trigger('click');
+    expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(localStorage.getItem('appearance')).toBe('dark');
 
     await wrapper.findAll('button').find((button) => button.text().includes('Volver a la vista'))!.trigger('click');
     expect(wrapper.get('[data-testid="canvas"]').attributes('data-editing')).toBe('false');
+    expect(curriculumEditorState.open.value).toBe(false);
     wrapper.unmount();
   });
 
