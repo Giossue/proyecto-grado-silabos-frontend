@@ -50,15 +50,6 @@ const open = ref(false);
                     choice
                     @closed="open = false"
                 />
-                <TemplateFieldCreator
-                    :template-id="templateId"
-                    :section-id="sectionId"
-                    :position="fieldPosition"
-                    :block-types="blockTypes"
-                    choice
-                    fixed
-                    @closed="open = false"
-                />
                 <TemplateBlockCreator
                     :variables="variables"
                     :template-id="templateId"

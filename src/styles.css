@@ -177,7 +177,8 @@
     --document-accent: hsl(205 100% 38%);
     --document-editor-foreground: hsl(218 28% 17%);
     --document-field-background: hsl(214 100% 97%);
-    --document-variable-background: hsl(120 33% 95%);
+    --document-variable-background: hsl(262 83% 96%);
+    --document-variable-border: hsl(262 52% 62%);
     --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
     --curriculum-unit-1-background: hsl(213 55% 47%);
     --curriculum-unit-1-foreground: hsl(0 0% 100%);
@@ -262,7 +263,8 @@
     --document-accent: hsl(205 100% 38%);
     --document-editor-foreground: hsl(218 28% 17%);
     --document-field-background: hsl(214 100% 97%);
-    --document-variable-background: hsl(120 33% 95%);
+    --document-variable-background: hsl(262 83% 96%);
+    --document-variable-border: hsl(262 52% 62%);
     --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
     --curriculum-unit-1-background: hsl(213 55% 47%);
     --curriculum-unit-1-foreground: hsl(0 0% 100%);

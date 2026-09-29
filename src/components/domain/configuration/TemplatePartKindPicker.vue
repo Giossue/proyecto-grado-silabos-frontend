@@ -15,7 +15,7 @@ import { NEW_CONCEPT } from '@/lib/templateParts';
  * documentos de la carrera (dato declarado aquí mismo).
  */
 export type NewConcept = { label: string; type: 'texto' | 'lista'; scope: 'asignatura' | 'carrera' };
-type Kind = 'writes' | 'chooses' | 'automatic';
+type Kind = 'writes' | 'chooses' | 'automatic' | 'fixed';
 
 const NEW = NEW_CONCEPT;
 const PREFIX = 'curricular_';
@@ -30,7 +30,7 @@ const props = withDefaults(defineProps<{
     idPrefix: string;
     variables?: TemplateVariable[];
     disabled?: boolean;
-    /** Solo al crear: una parte existente no se convierte en dato automático. */
+    /** Solo al crear: una parte existente no se convierte en dato automático ni en texto fijo. */
     allowAutomatic?: boolean;
     errors?: Partial<Record<'content_type' | 'options_sources' | 'concept', string>>;
 }>(), { variables: () => [], disabled: false, allowAutomatic: true, errors: () => ({}) });
@@ -44,7 +44,7 @@ const declared = computed(() => props.variables
     .filter((variable) => variable.key.startsWith(PREFIX) && variable.type && variable.type !== 'tabla')
     .map((variable) => ({ key: variable.key.slice(PREFIX.length), label: variable.label, type: variable.type!, scope: variable.scope ?? 'asignatura' })));
 const hasLists = computed(() => declared.value.some((item) => item.type === 'lista'));
-const kind = computed<Kind>(() => contentType.value === 'automatic' ? 'automatic' : contentType.value === 'multiple_choice' ? 'chooses' : 'writes');
+const kind = computed<Kind>(() => contentType.value === 'automatic' ? 'automatic' : contentType.value === 'fixed' ? 'fixed' : contentType.value === 'multiple_choice' ? 'chooses' : 'writes');
 // Una parte Sí/No anterior se conserva, pero ya no se ofrece para partes nuevas.
 const writeForms = computed(() => contentType.value === 'boolean'
     ? [...WRITE_FORMS, { value: 'boolean', label: 'Una respuesta Sí / No' }]
@@ -54,6 +54,7 @@ const scopeLabel = (scope: string): string => scope === 'carrera' ? 'uno para to
 const chooseKind = (value: unknown): void => {
     if (value === 'writes') contentType.value = 'text';
     if (value === 'chooses') contentType.value = 'multiple_choice';
+    if (value === 'fixed') contentType.value = 'fixed';
     if (value === 'automatic') {
         contentType.value = 'automatic';
         if (!conceptKey.value) conceptKey.value = declared.value[0]?.key ?? NEW;
@@ -86,6 +87,13 @@ const chooseKind = (value: unknown): void => {
                     <FieldDescription>Coordinación la llena al importar sus documentos. El docente solo la ve.</FieldDescription>
                 </FieldContent>
             </Field>
+            <Field v-if="allowAutomatic" orientation="horizontal" class="rounded-md border p-3">
+                <RadioGroupItem :id="`${idPrefix}-fixed`" value="fixed" />
+                <FieldContent>
+                    <FieldLabel :for="`${idPrefix}-fixed`">Nadie, es un texto fijo</FieldLabel>
+                    <FieldDescription>Lo escribe Administración y es igual en todos los sílabos, por ejemplo la conducta ética.</FieldDescription>
+                </FieldContent>
+            </Field>
         </RadioGroup>
         <FieldError :errors="[errors.content_type]" />
 
@@ -103,6 +111,8 @@ const chooseKind = (value: unknown): void => {
             <CurricularOptionsSourceSelect :id="`${idPrefix}-options`" v-model="optionsSources" :variables="variables" :disabled="disabled" label="Listas con las opciones" />
             <FieldError :errors="[errors.options_sources]" />
         </template>
+
+        <p v-else-if="kind === 'fixed'" class="text-sm text-muted-foreground">Después de crearla, escriba el texto directamente en la hoja.</p>
 
         <template v-else>
             <Field :data-invalid="Boolean(errors.concept) || undefined">

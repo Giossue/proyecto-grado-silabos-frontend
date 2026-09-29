@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ListPlus, Lock } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { ListPlus } from '@lucide/vue';
+import { ref } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplatePartKindPicker from '@/components/domain/configuration/TemplatePartKindPicker.vue';
 import type { TemplateVariable } from '@/lib/templateDocument';
@@ -32,29 +32,18 @@ const props = withDefaults(
         position: number;
         blockTypes: { value: EditableContentType; label: string }[];
         choice?: boolean;
-        /** Crea un texto fijo: lo escribe Administración y el docente no lo llena. */
-        fixed?: boolean;
         variables?: TemplateVariable[];
     }>(),
-    { choice: false, fixed: false },
+    { choice: false },
 );
 
-const texts = computed(() =>
-    props.fixed
-        ? {
-              action: 'Agregar texto fijo',
-              title: 'Nuevo texto fijo',
-              description:
-                  'Texto que escribe Administración dentro de esta sección. El docente no lo llena.',
-              done: 'Texto fijo agregado.',
-          }
-        : {
-              action: 'Agregar parte',
-              title: 'Nueva parte',
-              description: 'Se añadirá dentro de esta sección.',
-              done: 'Parte agregada.',
-          },
-);
+// El texto fijo es una respuesta más de «¿Quién llena esta parte?» (I-154).
+const texts = {
+    action: 'Agregar parte',
+    title: 'Nueva parte',
+    description: 'Se añadirá dentro de esta sección.',
+    done: 'Parte agregada.',
+};
 
 const open = ref(false);
 const emit = defineEmits<{ closed: [] }>();
@@ -75,7 +64,7 @@ const reset = (): void => {
     form.position = props.position + 1;
     form.key = keyFor();
     form.label = '';
-    Object.assign(form, emptyPartChoice(props.fixed ? 'fixed' : 'text'));
+    Object.assign(form, emptyPartChoice());
 };
 
 reset();
@@ -100,7 +89,7 @@ const submit = (): void => {
     form.post(TemplateController.storeField.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success(texts.value.done);
+            toast.success(texts.done);
             open.value = false;
             reset();
             emit('closed');
@@ -140,8 +129,7 @@ const updateOpen = (value: boolean): void => {
                 size="sm"
                 :class="choice ? 'w-full justify-start' : undefined"
             >
-                <Lock v-if="fixed" data-icon="inline-start" aria-hidden="true" />
-                <ListPlus v-else data-icon="inline-start" aria-hidden="true" />
+                <ListPlus data-icon="inline-start" aria-hidden="true" />
                 {{ texts.action }}
             </Button>
         </template>
@@ -170,7 +158,6 @@ const updateOpen = (value: boolean): void => {
                     </Field>
                 </FieldGroup>
                 <TemplatePartKindPicker
-                    v-if="!fixed"
                     id-prefix="new-field"
                     v-model="form.content_type"
                     v-model:options-sources="form.options_sources"
@@ -184,7 +171,7 @@ const updateOpen = (value: boolean): void => {
                     :label="texts.action"
                     :close="close"
                     :processing="form.processing"
-                    :icon="fixed ? Lock : ListPlus"
+                    :icon="ListPlus"
                 />
             </form>
         </template>

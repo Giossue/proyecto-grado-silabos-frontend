@@ -200,63 +200,6 @@ export function useTemplateTableActions(
             .run();
     };
 
-    /**
-     * Convierte la tabla seleccionada en texto fijo: quita lo que llena el
-     * docente y deja todas las filas fijas. Es un solo paso para poder
-     * deshacerlo de una vez.
-     */
-    const convertTableToFixed = (): void => {
-        const current = state.value;
-
-        if (!current) {
-            return;
-        }
-
-        const { state: editorState, view } = current;
-        const { $from } = editorState.selection;
-        let depth = $from.depth;
-
-        while (depth > 0 && $from.node(depth).type.name !== 'table') {
-            depth--;
-        }
-
-        if (depth === 0) {
-            return;
-        }
-
-        const table = $from.node(depth);
-        const tablePos = $from.before(depth);
-        const tr = editorState.tr;
-        const removals: { from: number; to: number }[] = [];
-
-        table.descendants((node, offset) => {
-            const pos = tablePos + 1 + offset;
-
-            if (node.type.name === 'field' || node.type.name === 'column') {
-                removals.push({ from: pos, to: pos + node.nodeSize });
-            } else if (node.type.name === 'tableRow') {
-                tr.setNodeMarkup(pos, undefined, {
-                    ...node.attrs,
-                    rowRole: 'fixed',
-                });
-            }
-        });
-        tr.setNodeMarkup(tablePos, undefined, {
-            ...table.attrs,
-            repeatKey: null,
-            repeatLabel: null,
-            groupByUnit: null,
-            visualStructure: null,
-        });
-
-        // Borrar de atrás hacia adelante mantiene válidas las posiciones previas.
-        for (const range of removals.reverse()) {
-            tr.delete(range.from, range.to);
-        }
-
-        view.dispatch(tr);
-    };
-
     const insertVariable = (variable: TemplateVariable): void =>
         insertNode({
             type: 'variable',
@@ -352,7 +295,6 @@ export function useTemplateTableActions(
         alignmentTooltip,
         resetCell,
         insertNode,
-        convertTableToFixed,
         insertVariable,
         insertField,
         canInsertRepeatedColumn,

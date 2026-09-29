@@ -28,7 +28,7 @@ const curriculum = (editable = true): Curriculum => ({
 
 const stubs = {
   PageFrame: { template: '<main><slot name="actions" /><slot /></main>' },
-  CurriculumCanvas: { name: 'CurriculumCanvas', props: ['editing'], template: '<div data-testid="canvas" :data-editing="editing" />' },
+  CurriculumCanvas: { name: 'CurriculumCanvas', props: { editing: Boolean, fullScreen: Boolean }, template: '<div data-testid="canvas" :data-editing="editing" />' },
   CurriculumConfigurationSheet: { template: '<div />' },
   ProcessLockAlert: { template: '<div>Pause la convocatoria para editar</div>' },
 };
@@ -56,13 +56,14 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
   it('abre en lectura y entra a editar solo después de consultar nuevamente la malla', async () => {
     const wrapper = mountPage();
     await flushPromises();
-    expect(wrapper.get('[data-testid="canvas"]').attributes('data-editing')).toBe('false');
+    expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(false);
     expect(wrapper.text()).not.toContain('Configurar ciclos');
 
     await wrapper.get('button').trigger('click');
     await flushPromises();
     expect(getCurriculum).toHaveBeenCalledTimes(2);
-    expect(wrapper.get('[data-testid="canvas"]').attributes('data-editing')).toBe('true');
+    expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(true);
+    expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('fullScreen')).toBe(true);
     expect(wrapper.text()).toContain('Configurar ciclos');
     expect(curriculumEditorState.open.value).toBe(true);
     expect(wrapper.find('[aria-label="Herramientas del editor de malla"]').exists()).toBe(true);
@@ -72,7 +73,7 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     expect(localStorage.getItem('appearance')).toBe('dark');
 
     await wrapper.findAll('button').find((button) => button.text().includes('Volver a la vista'))!.trigger('click');
-    expect(wrapper.get('[data-testid="canvas"]').attributes('data-editing')).toBe('false');
+    expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(false);
     expect(curriculumEditorState.open.value).toBe(false);
     wrapper.unmount();
   });
@@ -82,7 +83,7 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     const wrapper = mountPage();
     await flushPromises();
     expect(wrapper.get('button').attributes('disabled')).toBeDefined();
-    expect(wrapper.get('[data-testid="canvas"]').attributes('data-editing')).toBe('false');
+    expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(false);
     expect(wrapper.text()).toContain('Pause la convocatoria para editar');
     wrapper.unmount();
   });
@@ -93,7 +94,7 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     await flushPromises();
     await wrapper.get('button').trigger('click');
     await flushPromises();
-    expect(wrapper.get('[data-testid="canvas"]').attributes('data-editing')).toBe('false');
+    expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(false);
     expect(wrapper.get('button').attributes('disabled')).toBeDefined();
     expect(wrapper.text()).toContain('Pause la convocatoria para editar');
     wrapper.unmount();
@@ -105,11 +106,11 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     await flushPromises();
     await wrapper.get('button').trigger('click');
     await flushPromises();
-    expect(wrapper.get('[data-testid="canvas"]').attributes('data-editing')).toBe('true');
+    expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(true);
 
     wrapper.findComponent({ name: 'CurriculumCanvas' }).vm.$emit('changed', 'Malla actualizada.');
     await flushPromises();
-    expect(wrapper.get('[data-testid="canvas"]').attributes('data-editing')).toBe('false');
+    expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(false);
     expect(wrapper.get('button').attributes('disabled')).toBeDefined();
     wrapper.unmount();
   });

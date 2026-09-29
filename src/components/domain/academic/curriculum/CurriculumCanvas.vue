@@ -51,6 +51,7 @@ import {
 } from "@/components/ui/popover";
 import { formatNumericDisplay } from "@/lib/numberDisplay";
 import { toast } from "@/lib/toast";
+import { cn } from "@/lib/utils";
 import type {
   CurriculumBuilderProps,
   CurriculumBuilderSubject,
@@ -448,8 +449,8 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
 
 <template>
   <div
-    class="curriculum-canvas relative overflow-hidden rounded-lg border bg-background shadow-surface"
-    :class="fullScreen ? 'h-[calc(100dvh-5.5rem)] min-h-[34rem]' : 'h-[76vh] min-h-[34rem]'"
+    class="curriculum-canvas relative min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
+    :class="cn(fullScreen && 'h-[calc(100dvh-5.5rem)]', !fullScreen && 'h-[76vh]')"
     :aria-label="editing ? 'Editor interactivo de la malla' : 'Vista de la malla'"
   >
     <!--

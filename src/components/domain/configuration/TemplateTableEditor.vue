@@ -8,7 +8,6 @@ import {
     Bold,
     Eraser,
     Italic,
-    Lock,
     PaintBucket,
     Redo2,
     Split,
@@ -222,7 +221,6 @@ const {
     alignmentTooltip,
     resetCell,
     insertNode,
-    convertTableToFixed,
     insertVariable,
     insertField,
     canInsertRepeatedColumn,
@@ -335,16 +333,6 @@ defineExpose({ getDocument });
                     @new-data="openNewData"
                     @row-role="setRowRole"
                 />
-
-                <TemplateToolbarButton
-                    label="Hacer texto fijo"
-                    tooltip="Hacer texto fijo (el docente no lo llena)"
-                    text="Hacer texto fijo"
-                    :disabled="!state?.isActive('table') || pending"
-                    @click="convertTableToFixed"
-                >
-                    <Lock aria-hidden="true" />
-                </TemplateToolbarButton>
 
                 <Separator orientation="vertical" class="h-7" />
 
@@ -668,10 +656,12 @@ defineExpose({ getDocument });
     outline: 1px dashed var(--document-table-header-strong-background);
     padding: 1px 3px;
 }
+/* Dato automático: violeta con borde continuo; el campo del docente es azul punteado. */
 .template-table-editor .template-table-variable {
     background: var(--document-variable-background);
     border-radius: 2px;
     color: var(--document-editor-foreground) !important;
+    outline: 1px solid var(--document-variable-border);
     padding: 1px 3px;
 }
 .template-table-editor .tiptap .template-table-field,
