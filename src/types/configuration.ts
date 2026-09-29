@@ -13,9 +13,7 @@ export type TemplateContentType =
     | 'boolean'
     | 'multiple_choice'
     | 'institutional'
-    | 'fixed'
-    /** Solo al crear: sale sola de los documentos de carrera y se guarda como texto fijo (I-151). */
-    | 'automatic';
+    | 'fixed';
 
 export type TemplateField = DocumentField & {
     id: string;
