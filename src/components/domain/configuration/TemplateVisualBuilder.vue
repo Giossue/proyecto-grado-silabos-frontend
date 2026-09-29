@@ -62,17 +62,16 @@ type Selection =
     | { kind: 'field'; sectionId: string; blockId: string };
 
 const selection = ref<Selection>({ kind: 'document' });
-/** Partes Sí/No o de selección: las que sirven para «Mostrar solo si». */
-const choiceFields = computed(() =>
+/** Preguntas Sí/No o de selección: las que sirven para «Pedir solo si…» en la hoja (I-158). */
+const conditionTriggers = computed(() =>
     props.template.sections.flatMap((section) =>
         section.blocks.flatMap((block) =>
             block.fields
                 .filter((field) => !field.inherited && isChoiceField(field))
                 .map((field) => ({
                     key: field.key,
-                    sectionId: section.id,
                     label: field.label.trim() || block.title.trim() || section.title,
-                    options: choiceOptions(field),
+                    options: choiceOptions(field).map((option) => option.value),
                 })),
         ),
     ),
@@ -693,7 +692,6 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             :section="section"
                         />
                         <TemplateFieldActions
-                            :variables="variables"
                             v-for="block in section.blocks"
                             :key="block.id"
                             :ref="
@@ -702,9 +700,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             "
                             :template-id="template.id"
                             :section-title="section.title"
-                            :section-id="section.id"
                             :field="block"
-                            :choice-fields="choiceFields"
                         />
                     </div>
 
@@ -785,6 +781,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             ribbon-target="#template-editor-ribbon"
                             :section-title="section.title"
                             :part-title="block.title"
+                            :condition-triggers="conditionTriggers"
                             @activate="selectField(section.id, block.id)"
                             @editing-change="
                                 updateTableEditing(section.id, block.id, $event)
