@@ -28,6 +28,7 @@ const CoordinationReviewsPage = () => import("@/pages/CoordinationReviewsPage.vu
 const CoordinationReviewDetailPage = () => import("@/pages/CoordinationReviewDetailPage.vue");
 const CoordinationReviewComparisonPage = () => import("@/pages/CoordinationReviewComparisonPage.vue");
 const CoordinationAcademicStructurePage = () => import("@/pages/CoordinationAcademicStructurePage.vue");
+const CoordinationCurricularProjectPage = () => import("@/pages/CoordinationCurricularProjectPage.vue");
 const DocumentsPage = () => import("@/pages/DocumentsPage.vue");
 const NotFoundPage = () => import("@/pages/NotFoundPage.vue");
 
@@ -105,6 +106,7 @@ export const router = createRouter({
     { path: "/coordinacion/fuentes/:source", redirect: "/dashboard" },
     { path: "/coordinacion/estructura-academica", redirect: "/coordinacion/malla", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },
+    { path: "/coordinacion/proyecto-carrera", component: CoordinationCurricularProjectPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Proyecto de carrera" } },
     { path: "/coordinacion/materias-paralelos", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y paralelos" } },
     { path: "/coordinacion/asignaciones-docentes", component: CoordinationAcademicStructurePage, props: { mode: "teachers" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Asignación docente" } },
     { path: "/coordinacion/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Documentos" } },

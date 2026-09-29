@@ -5,6 +5,7 @@ import {
     CalendarRange,
     ClipboardCheck,
     FileStack,
+    FileText,
     LayoutGrid,
     ScrollText,
     Settings,
@@ -66,6 +67,7 @@ const mainNavItems = computed<NavItem[]>(() => [
               { title: 'Asignación docente', href: paths.coordination.teacherAssignments, icon: UsersRound },
               { title: 'Materias y paralelos', href: paths.coordination.scheduledSubjects, icon: Building2 },
               { title: 'Malla', href: paths.coordination.curriculum, icon: BookOpenCheck },
+              { title: 'Proyecto de carrera', href: paths.coordination.curricularProject, icon: FileText },
           ]
         : []),
     ...(activeRole.value?.code === 'docente'

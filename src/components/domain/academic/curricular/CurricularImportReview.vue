@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Check } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { PURGE_CANCELLED_MESSAGE } from '@/api/career-academics';
 import { applyCurricularImport, type CurricularDefinition, type CurricularImportDetail, type CurricularImportIndex, type CurricularProposedValue } from '@/api/curricular-imports';
@@ -10,9 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 
 const props = defineProps<{ detail: CurricularImportDetail; subjects: CurricularImportIndex['subjects'] }>();
@@ -56,6 +55,27 @@ const groups = computed(() => {
   return [...result.entries()];
 });
 const sourceName = (id: string): string => props.detail.documents.find((document) => document.source_id === id)?.name ?? 'Documento fuente';
+const needsSubject = (item: CurricularProposedValue): boolean => definition(item)?.scope === 'asignatura' && !item.subject_id
+  && (item.issue_code === 'subject_unmatched' || item.issue_code === 'source_conflict');
+// Un mismo nombre del documento se relaciona una sola vez con su materia de la malla.
+const unmatchedNames = computed(() => [...new Set((props.detail.proposal?.values ?? []).filter(needsSubject).map((item) => item.subject_name ?? ''))]);
+const nameAssignment = (name: string): string | undefined => {
+  const item = props.detail.proposal?.values.find((value) => needsSubject(value) && (value.subject_name ?? '') === name);
+  return item ? assignments.value[item.id] : undefined;
+};
+const assignName = async (name: string, subject: unknown) => {
+  if (typeof subject !== 'string') return;
+  const items = props.detail.proposal?.values.filter((item) => needsSubject(item) && (item.subject_name ?? '') === name) ?? [];
+  for (const item of items) assignments.value[item.id] = subject;
+  await nextTick();
+  selected.value = [...new Set([...selected.value, ...items.filter((item) => !problem(item)).map((item) => item.id)])];
+};
+const onlyPending = ref(false);
+const attention = (item: CurricularProposedValue): boolean => Boolean(problem(item)) || item.issue_code === 'source_conflict';
+const pendingCount = computed(() => props.detail.proposal?.values.filter(attention).length ?? 0);
+const visibleGroups = computed(() => groups.value
+  .map(([key, group]) => [key, { ...group, items: onlyPending.value ? group.items.filter(attention) : group.items, pending: group.items.filter(attention).length }] as const)
+  .filter(([, group]) => group.items.length > 0));
 const choose = (id: string, value: boolean | 'indeterminate') => {
   selected.value = value === true ? [...selected.value.filter((item) => item !== id), id] : selected.value.filter((item) => item !== id);
 };
@@ -63,6 +83,7 @@ watch(() => [props.detail.id, props.detail.fingerprint], () => {
   assignments.value = Object.fromEntries((props.detail.applied_items ?? []).filter((item) => item.subject_id).map((item) => [item.id, item.subject_id!]));
   acceptedConflicts.value = Object.fromEntries((props.detail.applied_items ?? []).map((item) => [item.id, item.accept_conflict]));
   selected.value = props.detail.proposal?.values.filter((item) => !problem(item)).map((item) => item.id) ?? [];
+  onlyPending.value = false;
   confirmed.value = false;
   conflict.value = false;
   error.value = null;
@@ -98,10 +119,28 @@ const apply = async () => {
       <h3 class="text-sm font-medium">Datos encontrados</h3>
       <div class="flex flex-wrap gap-2"><Badge v-for="concept in detail.proposal.definitions" :key="concept.key" variant="secondary">{{ concept.label }} · {{ { texto: 'Texto', lista: 'Lista', tabla: 'Tabla' }[concept.type] }} · {{ concept.scope === 'carrera' ? 'Carrera' : 'Asignatura' }}</Badge></div>
     </div>
+    <template v-if="detail.status === 'lista' && detail.proposal?.values.length">
+      <p class="text-sm text-muted-foreground" aria-live="polite">{{ detail.proposal.values.length }} datos encontrados · {{ detail.proposal.values.length - pendingCount }} listos · {{ pendingCount }} requieren revisión</p>
+      <FieldSet v-if="unmatchedNames.length" :disabled="!editable || saving">
+        <FieldLegend>Materias por identificar</FieldLegend>
+        <FieldDescription>El documento nombra estas materias de otra forma. Elige una vez la materia de la malla y se aplicará a todos sus datos.</FieldDescription>
+        <FieldGroup class="gap-3">
+          <Field v-for="(name, index) in unmatchedNames" :key="name" class="sm:grid sm:grid-cols-2 sm:items-center sm:gap-3">
+            <FieldLabel :for="`proposal-name-${index}`" class="break-words">{{ name || 'Materia sin nombre' }}</FieldLabel>
+            <Select :model-value="nameAssignment(name)" :disabled="!editable || saving" @update:model-value="assignName(name, $event)"><SelectTrigger :id="`proposal-name-${index}`" class="w-full"><SelectValue placeholder="Selecciona la asignatura" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="subject in subjects" :key="subject.id" :value="subject.id">{{ subject.code }} · {{ subject.name }}</SelectItem></SelectGroup></SelectContent></Select>
+          </Field>
+        </FieldGroup>
+      </FieldSet>
+      <Field v-if="pendingCount" orientation="horizontal"><Checkbox id="curricular-only-pending" v-model="onlyPending" /><FieldLabel for="curricular-only-pending">Mostrar solo los datos que requieren revisión</FieldLabel></Field>
+    </template>
     <Empty v-if="!groups.length"><EmptyHeader><EmptyTitle>Sin datos propuestos</EmptyTitle><EmptyDescription>Los documentos no produjeron datos que puedan asociarse a la carrera o sus asignaturas.</EmptyDescription></EmptyHeader></Empty>
-    <section v-for="[key, group] in groups" :key="key" class="flex min-w-0 flex-col gap-4">
-      <h3 class="break-words font-medium">{{ group.label }}</h3>
-      <FieldGroup class="gap-5">
+    <details v-for="[key, group] in visibleGroups" :key="key" class="group/subject min-w-0 rounded-md border" :open="group.pending > 0 || visibleGroups.length <= 3">
+      <summary class="flex cursor-pointer flex-wrap items-center gap-2 p-3">
+        <h3 class="min-w-0 break-words font-medium">{{ group.label }}</h3>
+        <Badge variant="secondary">{{ group.items.length }} {{ group.items.length === 1 ? 'dato' : 'datos' }}</Badge>
+        <Badge v-if="group.pending" variant="outline">{{ group.pending }} por revisar</Badge>
+      </summary>
+      <FieldGroup class="gap-5 border-t p-3">
         <Field v-for="item in group.items" :key="item.id" class="min-w-0" :data-invalid="Boolean(problem(item))">
           <Field orientation="horizontal">
             <Checkbox v-if="detail.status === 'lista'" :id="`proposal-${item.id}`" :model-value="selected.includes(item.id)" :disabled="!editable || saving || Boolean(problem(item))" @update:model-value="choose(item.id, $event)" />
@@ -118,10 +157,6 @@ const apply = async () => {
             <p v-if="item.change === 'unchanged'" class="text-sm text-muted-foreground">El contenido coincide. Al aplicarlo se registrará la procedencia de esta importación.</p>
           </template>
           <CurricularValuePreview :definition="definition(item)" :value="item.value" />
-          <Field v-if="(item.issue_code === 'subject_unmatched' || (item.issue_code === 'source_conflict' && definition(item)?.scope === 'asignatura' && !item.subject_id)) && detail.status === 'lista'">
-            <FieldLabel :for="`proposal-subject-${item.id}`">Asignatura en la malla</FieldLabel>
-            <Select v-model="assignments[item.id]" :disabled="!editable || saving"><SelectTrigger :id="`proposal-subject-${item.id}`"><SelectValue placeholder="Selecciona la asignatura" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="subject in subjects" :key="subject.id" :value="subject.id">{{ subject.code }} · {{ subject.name }}</SelectItem></SelectGroup></SelectContent></Select>
-          </Field>
           <Alert v-if="detail.status === 'lista' && definition(item)?.scope === 'asignatura' && !item.subject_id && assignments[item.id]"><AlertDescription>El valor de la materia elegida se reemplazará si ya existe.</AlertDescription></Alert>
           <Field v-if="item.issue_code === 'source_conflict' && detail.status === 'lista'" orientation="horizontal">
             <Checkbox :id="`proposal-conflict-${item.id}`" v-model="acceptedConflicts[item.id]" :disabled="!editable || saving" />
@@ -135,14 +170,13 @@ const apply = async () => {
           </details>
         </Field>
       </FieldGroup>
-      <Separator />
-    </section>
+    </details>
     <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}<FieldError :errors="errors" /></AlertDescription></Alert>
-    <template v-if="detail.status === 'lista'">
+    <div v-if="detail.status === 'lista'" class="sticky bottom-0 z-10 flex flex-col gap-3 border-t bg-background py-3">
       <Alert v-if="duplicateSelection" variant="destructive"><AlertDescription>Hay más de una propuesta para el mismo dato y asignatura. Selecciona únicamente la que corresponde.</AlertDescription></Alert>
       <p class="text-sm text-muted-foreground" aria-live="polite">{{ selectedItems.length }} datos seleccionados. Los datos con observaciones pendientes se conservan sin aplicar.</p>
       <Field orientation="horizontal"><Checkbox id="curricular-import-confirmed" v-model="confirmed" :disabled="!editable || saving" /><FieldLabel for="curricular-import-confirmed">Revisé los datos seleccionados, las asignaturas y sus fuentes.</FieldLabel></Field>
       <Button type="button" :disabled="!canApply" @click="apply"><Spinner v-if="saving" data-icon="inline-start" /><Check v-else data-icon="inline-start" aria-hidden="true" />Guardar datos seleccionados</Button>
-    </template>
+    </div>
   </FieldGroup>
 </template>

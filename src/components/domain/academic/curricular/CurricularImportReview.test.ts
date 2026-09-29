@@ -47,7 +47,7 @@ describe('CurricularImportReview', () => {
     const wrapper = mountReview();
     wrapper.findComponent(Select).vm.$emit('update:modelValue', 'subject-2');
     await flushPromises();
-    await wrapper.get('#proposal-unmatched').trigger('click');
+    expect(wrapper.get('#proposal-unmatched').attributes('data-state')).toBe('checked');
     await wrapper.get('#curricular-import-confirmed').trigger('click');
     await flushPromises();
     const save = wrapper.findAll('button').find((button) => button.text() === 'Guardar datos seleccionados')!;
@@ -76,12 +76,30 @@ describe('CurricularImportReview', () => {
     await flushPromises();
     expect(wrapper.get('#proposal-unmatched').attributes('disabled')).toBeUndefined();
     expect(wrapper.text()).toContain('El valor de la materia elegida se reemplazará si ya existe.');
-    await wrapper.get('#proposal-unmatched').trigger('click');
+    expect(wrapper.get('#proposal-unmatched').attributes('data-state')).toBe('checked');
     await wrapper.get('#curricular-import-confirmed').trigger('click');
     await wrapper.findAll('button').find((button) => button.text() === 'Guardar datos seleccionados')!.trigger('click');
     await flushPromises();
     expect(wrapper.text()).toContain('Esta fuente discrepa de otro documento.');
     expect(applyCurricularImport).toHaveBeenCalledWith('import-1', { expected_fingerprint: 'a'.repeat(64), confirmed: true, items: [{ id: 'unmatched', subject_id: 'subject-2', accept_conflict: true }] });
+  });
+
+  it('relaciona una sola vez cada nombre del documento y filtra lo que requiere revisión', async () => {
+    const detail = proposal();
+    detail.proposal!.definitions.push({ key: 'bibliografia', label: 'Bibliografía básica', type: 'lista', scope: 'asignatura' });
+    detail.proposal!.values.push({ ...detail.proposal!.values[1]!, id: 'unmatched-2', concept_key: 'bibliografia', value: ['Libro de métricas.'], evidence: [{ source_id: 'source-1', locator: 'Bibliografia!A5:C5', quote: 'Libro de métricas.' }] });
+    const wrapper = mountReview(detail);
+    expect(wrapper.text()).toContain('4 datos encontrados · 1 listos · 3 requieren revisión');
+    expect(wrapper.text()).toContain('Materias por identificar');
+    expect(wrapper.findAllComponents(Select)).toHaveLength(1);
+    await wrapper.get('#curricular-only-pending').trigger('click');
+    expect(wrapper.find('#proposal-known').exists()).toBe(false);
+    wrapper.findComponent(Select).vm.$emit('update:modelValue', 'subject-2');
+    await flushPromises();
+    await wrapper.get('#curricular-only-pending').trigger('click');
+    expect(wrapper.get('#proposal-unmatched').attributes('data-state')).toBe('checked');
+    expect(wrapper.get('#proposal-unmatched-2').attributes('data-state')).toBe('checked');
+    expect(wrapper.text()).toContain('4 datos encontrados · 3 listos · 1 requieren revisión');
   });
 
   it('conserva la propuesta ante un conflicto y bloquea un segundo intento obsoleto', async () => {
@@ -104,7 +122,7 @@ describe('CurricularImportReview', () => {
     expect(wrapper.findAll('button').find((button) => button.text() === 'Guardar datos seleccionados')!.attributes('disabled')).toBeDefined();
     await wrapper.setProps({ detail: { ...proposal(), editable: false, lock_reason: 'Convocatoria abierta.' } });
     expect(wrapper.text()).toContain('Convocatoria abierta.');
-    expect(wrapper.findAllComponents(Checkbox).every((checkbox) => checkbox.props('disabled'))).toBe(true);
+    expect(wrapper.findAllComponents(Checkbox).filter((checkbox) => checkbox.props('id') !== 'curricular-only-pending').every((checkbox) => checkbox.props('disabled'))).toBe(true);
     expect(applyCurricularImport).not.toHaveBeenCalled();
   });
 

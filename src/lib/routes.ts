@@ -67,6 +67,7 @@ export const paths = {
       `/coordinacion/revisiones/${segment(before)}/comparar/${segment(after)}`,
     academic: '/coordinacion/estructura-academica',
     curriculum: '/coordinacion/malla',
+    curricularProject: '/coordinacion/proyecto-carrera',
     scheduledSubjects: '/coordinacion/materias-paralelos',
     teacherAssignments: '/coordinacion/asignaciones-docentes',
     documents: (revision: string): string =>

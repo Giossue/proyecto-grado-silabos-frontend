@@ -114,6 +114,7 @@ describe('navegación por ámbito activo', () => {
   it.each([
     ['administrador', '/admin/usuarios', '/admin/usuarios'],
     ['coordinador', '/coordinacion/malla', '/coordinacion/malla'],
+    ['coordinador', '/coordinacion/proyecto-carrera', '/coordinacion/proyecto-carrera'],
     ['docente', '/docente/mis-silabos', '/docente/mis-silabos'],
   ] as const)('permite la ruta propia de %s y conserva sus parámetros', async (code, target, expected) => {
     sessionState.replace(session(code));

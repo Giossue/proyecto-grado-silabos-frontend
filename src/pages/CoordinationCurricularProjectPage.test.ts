@@ -3,14 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/api/client';
 import type { CurricularImportDetail, CurricularImportIndex } from '@/api/curricular-imports';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
-import CurricularImportAssistant from './CurricularImportAssistant.vue';
+import { ref } from 'vue';
+import CoordinationCurricularProjectPage from './CoordinationCurricularProjectPage.vue';
 
 const api = vi.hoisted(() => ({ getCurricularImports: vi.fn(), getCurricularImport: vi.fn(), createCurricularImport: vi.fn(), applyCurricularImport: vi.fn(), retryCurricularImport: vi.fn(), getCurricularImportDocument: vi.fn() }));
 vi.mock('@/api/curricular-imports', () => api);
+vi.mock('@/state/session', () => ({ sessionState: { current: ref({ active_role: { id: 'role-1', code: 'coordinador', career_id: 'career-1', career_name: 'Software' } }) } }));
 const index: CurricularImportIndex = { imports: [], subjects: [{ id: 'subject-1', name: 'Calidad', code: 'SW-1' }], sources: [{ id: 'source-1', name: 'Guía institucional' }], current_values: [], capabilities: { pdf: true, xlsx: true, extraction: true }, lock_reason: null };
 const detail: CurricularImportDetail = { id: 'import-1', career_id: 'career-1', status: 'en_ejecucion', documents: [{ source_id: 'source-1', name: 'Proyecto.pdf', kind: 'pdf', hash: 'hash', execution_id: 'execution' }], proposal: null, fingerprint: null, error: null, editable: false, lock_reason: null };
 const wrappers: Array<ReturnType<typeof mount>> = [];
-const mountAssistant = () => { const wrapper = mount(CurricularImportAssistant, { attachTo: document.body, props: { careerId: 'career-1', careerName: 'Software' } }); wrappers.push(wrapper); return wrapper; };
+const mountPage = () => { const wrapper = mount(CoordinationCurricularProjectPage, { attachTo: document.body, global: { stubs: { PageFrame: { props: ['title', 'description'], template: '<main><h1>{{ title }}</h1><p>{{ description }}</p><slot /></main>' } } } }); wrappers.push(wrapper); return wrapper; };
 const button = (label: string) => {
   const found = Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((button) => button.textContent?.trim() === label || button.getAttribute('aria-label') === label);
   if (!found) throw new Error(`Botón no encontrado: ${label}`);
@@ -28,10 +30,9 @@ beforeEach(() => {
 });
 afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; vi.useRealTimers(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
-describe('CurricularImportAssistant', () => {
-  it('muestra la vista activa y deja la indicación adicional a elección del usuario', async () => {
-    mountAssistant();
-    button('Asistente curricular').click();
+describe('CoordinationCurricularProjectPage', () => {
+  it('sin datos confirmados abre Importar, muestra la vista activa y deja la indicación adicional a elección del usuario', async () => {
+    mountPage();
     await flushPromises();
 
     expect(button('Importar').getAttribute('aria-selected')).toBe('true');
@@ -49,7 +50,7 @@ describe('CurricularImportAssistant', () => {
     expect(button('Importar').getAttribute('aria-selected')).toBe('false');
   });
 
-  it('consulta los resultados efectivos y su procedencia dentro del asistente', async () => {
+  it('abre en los datos confirmados con su procedencia cuando la carrera ya tiene datos', async () => {
     api.getCurricularImports.mockResolvedValue({ ...index, current_values: [{
       id: 'value-1', key: 'resultados_aprendizaje', concept_key: 'resultados_aprendizaje', label: 'Resultados de aprendizaje',
       type: 'lista', scope: 'asignatura', columns: [], subject_id: 'subject-1', subject_name: 'Calidad',
@@ -57,9 +58,10 @@ describe('CurricularImportAssistant', () => {
       evidence: [{ source_name: 'Proyecto de carrera', locator: 'Página 22', quote: 'Evalúa la calidad del software.' }],
       confirmed_at: '2026-09-27T10:00:00Z', origin: 'importacion',
     }] });
-    mountAssistant();
-    button('Asistente curricular').click();
+    mountPage();
     await flushPromises();
+    expect(button('Datos confirmados').getAttribute('aria-selected')).toBe('true');
+    expect(document.body.textContent).toContain('SW-1 · Calidad');
     selectTab('Datos confirmados');
     await flushPromises();
     expect(document.body.textContent).toContain('SW-1 · Calidad');
@@ -76,8 +78,7 @@ describe('CurricularImportAssistant', () => {
       evidence: [{ source_name: 'Proyecto antiguo', locator: 'Página 12', quote: null }],
       confirmed_at: '2026-09-27T10:00:00Z', origin: 'anterior',
     }] });
-    mountAssistant();
-    button('Asistente curricular').click();
+    mountPage();
     await flushPromises();
     selectTab('Datos confirmados');
     await flushPromises();
@@ -89,11 +90,9 @@ describe('CurricularImportAssistant', () => {
     await search.setValue('Calidad');
     expect(document.body.textContent).toContain('Resultado anterior.');
   });
-  it('no consulta hasta abrir y envía los archivos y documentos anteriores antes de consultar avance real', async () => {
+  it('envía los archivos y documentos anteriores antes de consultar avance real', async () => {
     vi.useFakeTimers();
-    const wrapper = mountAssistant();
-    expect(api.getCurricularImports).not.toHaveBeenCalled();
-    button('Asistente curricular').click();
+    const wrapper = mountPage();
     await flushPromises();
     expect(document.body.textContent).toContain('Reutilizar documentos');
     const file = new File(['demo'], 'Proyecto.pdf', { type: 'application/pdf' });
@@ -111,10 +110,9 @@ describe('CurricularImportAssistant', () => {
     expect(document.body.textContent).toContain('Sin datos propuestos');
   });
 
-  it('recupera una importación pendiente al volver a abrir el asistente', async () => {
+  it('recupera una importación pendiente al volver a la pantalla', async () => {
     api.getCurricularImports.mockResolvedValue({ ...index, imports: [{ id: 'import-1', status: 'pendiente', created_at: '2026-09-27T10:00:00Z', applied_at: null, error: null }] });
-    mountAssistant();
-    button('Asistente curricular').click();
+    mountPage();
     await flushPromises();
     expect(api.getCurricularImport).toHaveBeenCalledWith('import-1');
     expect(document.body.textContent).toContain('Proyecto.pdf');
@@ -131,8 +129,7 @@ describe('CurricularImportAssistant', () => {
     vi.stubGlobal('URL', class extends URL { static createObjectURL = createObjectURL; static revokeObjectURL = revokeObjectURL; });
     let filename = '';
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) { filename = this.download; });
-    mountAssistant();
-    button('Asistente curricular').click();
+    mountPage();
     await flushPromises();
     button('Descargar Proyecto.pdf').click();
     await flushPromises();
@@ -143,8 +140,7 @@ describe('CurricularImportAssistant', () => {
 
   it('muestra la capacidad real y no permite enviar si la extracción está deshabilitada', async () => {
     api.getCurricularImports.mockResolvedValue({ ...index, capabilities: { pdf: false, xlsx: true, extraction: false } });
-    mountAssistant();
-    button('Asistente curricular').click();
+    mountPage();
     await flushPromises();
     expect(document.body.textContent).toContain('La extracción de documentos no está disponible');
     expect(button('Analizar documentos').disabled).toBe(true);
@@ -153,8 +149,7 @@ describe('CurricularImportAssistant', () => {
 
   it('muestra errores de acceso sin presentarlos como historial vacío', async () => {
     api.getCurricularImports.mockRejectedValue(new ApiError('No tiene permiso para esta carrera.', 403));
-    mountAssistant();
-    button('Asistente curricular').click();
+    mountPage();
     await flushPromises();
     expect(document.body.textContent).toContain('No tiene permiso para esta carrera.');
     expect(document.body.textContent).not.toContain('Aún no hay importaciones');
@@ -166,8 +161,7 @@ describe('CurricularImportAssistant', () => {
     api.getCurricularImports.mockResolvedValue({ ...index, imports: [{ id: 'import-1', status: 'fallida', created_at: '2026-09-27T10:00:00Z', applied_at: null, error: 'Servicio temporalmente indisponible.' }] });
     api.getCurricularImport.mockResolvedValueOnce({ ...detail, status: 'fallida', error: 'Servicio temporalmente indisponible.' });
     api.retryCurricularImport.mockResolvedValue({ ...detail, id: 'retry-2' });
-    mountAssistant();
-    button('Asistente curricular').click();
+    mountPage();
     await flushPromises();
     selectTab('Historial');
     await flushPromises();
