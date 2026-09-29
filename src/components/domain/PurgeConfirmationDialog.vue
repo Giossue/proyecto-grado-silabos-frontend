@@ -27,7 +27,7 @@ const { open, message, confirm, cancel } = usePurgeConfirmation();
             }
         "
     >
-        <DialogContent>
+        <DialogContent class="z-[60]" overlay-class="z-[60]">
             <DialogHeader>
                 <DialogTitle>Este cambio reemplaza los sílabos afectados</DialogTitle>
                 <DialogDescription>

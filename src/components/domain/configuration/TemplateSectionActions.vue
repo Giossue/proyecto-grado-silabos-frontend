@@ -204,8 +204,10 @@ defineExpose({
                 <DialogTitle>Eliminar sección</DialogTitle>
                 <DialogDescription>
                     Se quitará «{{ section.title }}» con sus
-                    {{ section.blocks.length }} partes. Los sílabos entregados
-                    conservan su copia.
+                    {{ section.blocks.length }} partes. Si hay sílabos en curso
+                    afectados, se pedirá confirmar su regeneración. Las
+                    sílabos con una aprobación conservada y los procesos
+                    cerrados se mantienen.
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter>

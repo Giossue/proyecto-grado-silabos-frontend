@@ -547,8 +547,10 @@ defineExpose({
             <DialogHeader>
                 <DialogTitle>Eliminar parte</DialogTitle>
                 <DialogDescription>
-                    Se quitará «{{ title }}» de «{{ sectionTitle }}». Los
-                    sílabos entregados conservan su copia.
+                    Se quitará «{{ title }}» de «{{ sectionTitle }}». Si hay
+                    sílabos en curso afectados, se pedirá confirmar su
+                    regeneración. Los sílabos con una aprobación conservada y
+                    los procesos cerrados se mantienen.
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter>
