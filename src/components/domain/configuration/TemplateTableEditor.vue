@@ -22,7 +22,6 @@ import TemplateTableInsertMenu from '@/components/domain/configuration/template-
 import TemplateTableNewDataSheet from '@/components/domain/configuration/template-table/TemplateTableNewDataSheet.vue';
 import type { NewRepeatedData } from '@/components/domain/configuration/template-table/TemplateTableNewDataSheet.vue';
 import TemplateTableRowsMenu from '@/components/domain/configuration/template-table/TemplateTableRowsMenu.vue';
-import { PROJECT_PREFIX } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import { templateTableExtensions } from '@/components/domain/configuration/template-table/templateTableExtensions';
 import type { CellAlignment } from '@/components/domain/configuration/template-table/types';
 import { useTableCellResize } from '@/components/domain/configuration/template-table/useTableCellResize';

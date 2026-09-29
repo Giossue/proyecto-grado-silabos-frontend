@@ -1,4 +1,4 @@
-import { Extension, mergeAttributes, Node } from '@tiptap/core';
+import { mergeAttributes, Node } from '@tiptap/core';
 import type { Extensions } from '@tiptap/core';
 import {
     Table,
