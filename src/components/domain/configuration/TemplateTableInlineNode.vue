@@ -70,15 +70,21 @@ const answers = computed(() => {
 
     return answersOf(props.editor.state.doc, props.node.attrs);
 });
+/** Una casilla «X» (formato UEB) es una sola respuesta: su menú habla solo de ella. */
+const fixedAnswer = computed(() => (props.node.attrs.choice ? String(props.node.attrs.choice) : null));
 const answer = ref('');
 const openFollowUps = (open: boolean): void => {
     if (!open) return;
     bump();
-    answer.value = candidates.value.find((item) => item.showWhen?.key === key.value)?.showWhen?.value
-        ?? String(props.node.attrs.choice ?? answers.value[0] ?? '');
+    answer.value = fixedAnswer.value
+        ?? candidates.value.find((item) => item.showWhen?.key === key.value)?.showWhen?.value
+        ?? String(answers.value[0] ?? '');
 };
-const linked = (candidate: string): boolean =>
-    candidates.value.find((item) => item.key === candidate)?.showWhen?.key === key.value;
+const linked = (candidate: string): boolean => {
+    const condition = candidates.value.find((item) => item.key === candidate)?.showWhen;
+
+    return condition?.key === key.value && (!fixedAnswer.value || condition.value === fixedAnswer.value);
+};
 const toggle = (candidate: string, checked: boolean | 'indeterminate'): void => {
     setShowWhen(props.editor, candidate, checked === true ? { key: key.value, value: answer.value } : null);
     bump();
@@ -91,7 +97,14 @@ const chooseAnswer = (value: unknown): void => {
     }
     bump();
 };
-const optionId = (suffix: string): string => `follow-up-${key.value}-${suffix}`;
+const optionId = (suffix: string): string =>
+    `follow-up-${key.value}${fixedAnswer.value ? `-${fixedAnswer.value}` : ''}-${suffix}`;
+/** En una casilla «X», avisa si la pregunta ya depende de la otra respuesta. */
+const otherAnswer = (candidate: string): string | null => {
+    const condition = candidates.value.find((item) => item.key === candidate)?.showWhen;
+
+    return fixedAnswer.value && condition?.key === key.value && condition.value !== fixedAnswer.value ? condition.value : null;
+};
 
 // Al pasar el mouse, la pregunta y sus preguntas de seguimiento se resaltan juntas.
 const highlight = (on: boolean): void => {
@@ -129,7 +142,7 @@ const dataAttributes = computed(() => ({
                 </button>
             </PopoverTrigger>
             <PopoverContent align="start" class="w-80">
-                <FieldSet class="gap-3">
+                <FieldSet v-if="!fixedAnswer" class="mb-4 gap-3">
                     <FieldLegend variant="label">Si responde</FieldLegend>
                     <RadioGroup :model-value="answer" class="flex gap-4" @update:model-value="chooseAnswer">
                         <Field v-for="option in answers" :key="option" orientation="horizontal" class="w-auto">
@@ -138,15 +151,18 @@ const dataAttributes = computed(() => ({
                         </Field>
                     </RadioGroup>
                 </FieldSet>
-                <FieldSet class="mt-4 gap-3">
-                    <FieldLegend variant="label">pedir también:</FieldLegend>
+                <FieldSet class="gap-3">
+                    <FieldLegend variant="label">{{ fixedAnswer ? `Si marca «${fixedAnswer}», pedir también:` : 'pedir también:' }}</FieldLegend>
                     <Field v-for="candidate in candidates" :key="candidate.key" orientation="horizontal">
                         <Checkbox
                             :id="optionId(candidate.key)"
                             :model-value="linked(candidate.key)"
                             @update:model-value="toggle(candidate.key, $event)"
                         />
-                        <FieldLabel :for="optionId(candidate.key)" class="font-normal">{{ candidate.label }}</FieldLabel>
+                        <FieldLabel :for="optionId(candidate.key)" class="font-normal">
+                            {{ candidate.label }}
+                            <span v-if="otherAnswer(candidate.key)" class="text-muted-foreground">(ahora con «{{ otherAnswer(candidate.key) }}»)</span>
+                        </FieldLabel>
                     </Field>
                     <FieldDescription>
                         {{ candidates.length ? 'Lo que no marque se pide siempre. Se guarda con la hoja.' : 'Inserte en esta parte las preguntas «Docente» que dependen de esta respuesta.' }}

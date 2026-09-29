@@ -65,7 +65,7 @@ describe('preguntas de seguimiento en la hoja (I-159)', () => {
         expect(chip('tipo').textContent?.trim()).toBe('Docente');
     });
 
-    it('en el formato UEB las casillas «X» bajo Sí y No también definen las preguntas de seguimiento', async () => {
+    it('en el formato UEB cada casilla «X» define las preguntas de su propia respuesta', async () => {
         const editor = new Editor({
             extensions: templateTableExtensions(),
             content: { type: 'doc', content: [
@@ -78,14 +78,31 @@ describe('preguntas de seguimiento en la hoja (I-159)', () => {
         mount(defineComponent({ setup: () => { const current = shallowRef(editor); return () => h(TooltipProvider, () => h(EditorContent, { editor: current.value })); } }), { attachTo: document.body });
         await flushPromises();
 
-        document.querySelector<HTMLButtonElement>('[data-template-field="discapacidad"] button')!.click();
-        await flushPromises();
-        expect(document.getElementById('follow-up-discapacidad-answer-Sí')).not.toBeNull();
-        expect(document.getElementById('follow-up-discapacidad-answer-No')).not.toBeNull();
-        document.getElementById('follow-up-discapacidad-tipo')!.click();
-        await flushPromises();
+        const [yes, no] = document.querySelectorAll<HTMLElement>('[data-template-field="discapacidad"]');
+        const open = async (target: HTMLElement) => {
+            document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+            await flushPromises();
+            target.querySelector('button')!.click();
+            await flushPromises();
+        };
 
+        // La X bajo «Sí» no pregunta la respuesta: ya es la suya.
+        await open(yes!);
+        expect(document.body.textContent).toContain('Si marca «Sí», pedir también:');
+        expect(document.body.textContent).not.toContain('Si responde');
+        document.getElementById('follow-up-discapacidad-Sí-tipo')!.click();
+        await flushPromises();
         expect(showWhen(editor, 1)).toEqual({ key: 'discapacidad', value: 'Sí' });
         expect(document.querySelectorAll('[data-condition-group="discapacidad"]')).toHaveLength(3);
+
+        // La X bajo «No» la muestra sin marcar y avisa a qué respuesta está atada.
+        await open(no!);
+        expect(document.body.textContent).toContain('Si marca «No», pedir también:');
+        const checkbox = document.getElementById('follow-up-discapacidad-No-tipo')!;
+        expect(checkbox.getAttribute('aria-checked')).toBe('false');
+        expect(document.body.textContent).toContain('(ahora con «Sí»)');
+        checkbox.click();
+        await flushPromises();
+        expect(showWhen(editor, 1)).toEqual({ key: 'discapacidad', value: 'No' });
     });
 });
