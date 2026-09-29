@@ -88,7 +88,7 @@ describe('SyllabusProcessActions', () => {
   it('explains that a process with teacher activity is preserved', () => {
     const wrapper = mountActions(false);
 
-    expect(wrapper.text()).toContain('Conservado por actividad docente');
+    expect(wrapper.text()).toContain('No se puede eliminar: ya hay sílabos iniciados');
     expect(wrapper.find('.menu-item').attributes('disabled')).toBeDefined();
   });
 });

@@ -22,7 +22,7 @@ const model = defineModel<string>({ required: true });
             </SelectGroup></SelectContent>
         </Select>
         <FieldDescription>
-            Texto libre: lo escribe el docente como quiera. Contenido de la plantilla: lo arma usted en la hoja con texto, listas, tablas y lo que se inserta desde Insertar.
+            Texto libre: lo escribe el docente como quiera. Personalizado: lo arma usted en la hoja con texto, listas, tablas y lo que se inserta desde Insertar.
         </FieldDescription>
         <FieldError :errors="[error]" />
     </Field>

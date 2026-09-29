@@ -115,7 +115,7 @@ const remove = async (): Promise<void> => {
     </template>
     <DropdownMenuSeparator v-if="process.state !== 'cerrado'" />
     <DropdownMenuItem v-if="process.deletable" variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
-    <DropdownMenuItem v-else disabled><Lock aria-hidden="true" />Conservado por actividad docente</DropdownMenuItem>
+    <DropdownMenuItem v-else disabled><Lock aria-hidden="true" />No se puede eliminar: ya hay sílabos iniciados</DropdownMenuItem>
   </TableActionsMenu>
 
   <Dialog :open="pending !== null" @update:open="(value) => { if (!value) pending = null; }">

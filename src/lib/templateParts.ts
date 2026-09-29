@@ -34,7 +34,7 @@ export const partFormLabel = (block: TemplateFieldContainer): string => {
     }
 
     return block.document && ['text', 'fixed'].includes(block.content_type)
-        ? 'Contenido de la plantilla'
+        ? 'Personalizado'
         : TYPE_LABELS[block.content_type];
 };
 

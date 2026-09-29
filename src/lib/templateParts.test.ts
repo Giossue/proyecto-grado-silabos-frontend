@@ -11,7 +11,7 @@ const part = (overrides: Partial<TemplateFieldContainer>): TemplateFieldContaine
 describe('templateParts', () => {
     it('nombra la forma con la que se creó la parte', () => {
         expect(partFormLabel(part({ content_type: 'text', document: { type: 'doc' }, fields: [{ key: 'libre', label: 'Libre', type: 'texto_libre' } as never] }))).toBe('Texto libre');
-        expect(partFormLabel(part({ content_type: 'text', document: { type: 'doc' } }))).toBe('Contenido de la plantilla');
+        expect(partFormLabel(part({ content_type: 'text', document: { type: 'doc' } }))).toBe('Personalizado');
         expect(partFormLabel(part({ content_type: 'text' }))).toBe('Párrafo');
         expect(partFormLabel(part({ content_type: 'bulleted_list' }))).toBe('Lista');
         expect(partFormLabel(part({ content_type: 'table', fields: [{} as never] }))).toBe('Tabla');
