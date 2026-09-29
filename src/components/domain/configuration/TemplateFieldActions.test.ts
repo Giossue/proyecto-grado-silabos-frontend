@@ -21,16 +21,17 @@ const block = (fields: TemplateField[]): TemplateFieldContainer => ({
     content_type: 'text', table: null, document: null, fingerprint: 'a'.repeat(64), fields,
 });
 
-const mountActions = (field: TemplateFieldContainer) => mount({
+const mountActions = (field: TemplateFieldContainer, sectionId = 'identificacion') => mount({
     components: { TemplateFieldActions, TooltipProvider },
     setup: () => ({
         field,
+        sectionId,
         choiceFields: [{
-            key: 'discapacidad_tiene', label: 'Estudiantes con discapacidad',
+            key: 'discapacidad_tiene', label: 'Estudiantes con discapacidad', sectionId: 'identificacion',
             options: [{ value: 'Sí', label: 'Sí' }, { value: 'No', label: 'No' }],
         }],
     }),
-    template: '<TooltipProvider><TemplateFieldActions ref="actions" template-id="template-1" section-title="Datos" :field="field" :block-types="[]" :choice-fields="choiceFields" /></TooltipProvider>',
+    template: '<TooltipProvider><TemplateFieldActions ref="actions" template-id="template-1" section-title="Datos" :section-id="sectionId" :field="field" :block-types="[]" :choice-fields="choiceFields" /></TooltipProvider>',
 }, { attachTo: document.body });
 
 describe('TemplateFieldActions', () => {
@@ -68,5 +69,35 @@ describe('TemplateFieldActions', () => {
         await flushPromises();
         const body = JSON.parse(String(vi.mocked(api).mock.calls[0]![1]!.body));
         expect(body.show_when).toEqual({ key: 'discapacidad_tiene', value: 'Sí' });
+    });
+
+    it('no ofrece preguntas de otra sección ni muestra condiciones sin opciones', async () => {
+        const wrapper = mountActions(block([part('confirmacion', 'Confirmación', { type: 'booleano', content_type: 'boolean' })]), 'descripcion');
+        (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
+        await flushPromises();
+
+        expect(document.body.textContent).not.toContain('Cuándo se muestra');
+        expect(document.getElementById('condition-part-confirmacion')).toBeNull();
+        expect(document.body.textContent).not.toContain('Estudiantes con discapacidad');
+    });
+
+    it('en la ficha de identificación agrupa las condiciones y no ofrece listas curriculares', async () => {
+        const identification = {
+            ...block([
+                part('discapacidad_tiene', 'Estudiantes con discapacidad', { type: 'seleccion_unica', content_type: 'multiple_choice' }),
+                part('discapacidad_tipo', 'Tipo de discapacidad'),
+            ]),
+            content_type: 'institutional' as const,
+            document: { type: 'doc', content: [] },
+        };
+        const wrapper = mountActions(identification);
+        (wrapper.vm.$refs.actions as { openEdit: () => void }).openEdit();
+        await flushPromises();
+
+        expect(document.body.textContent).toContain('Cuándo se muestra');
+        expect(document.body.textContent?.match(/Por defecto, siempre/g)).toHaveLength(1);
+        expect(document.getElementById('condition-part-discapacidad_tipo')).not.toBeNull();
+        expect(document.body.textContent).not.toContain('Listas para');
+        expect(document.body.textContent).not.toContain('Hoja horizontal');
     });
 });

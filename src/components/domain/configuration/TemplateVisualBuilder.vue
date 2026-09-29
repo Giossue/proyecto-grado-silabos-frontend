@@ -77,6 +77,7 @@ const choiceFields = computed(() =>
                 .filter((field) => !field.inherited && isChoiceField(field))
                 .map((field) => ({
                     key: field.key,
+                    sectionId: section.id,
                     label: field.label.trim() || block.title.trim() || section.title,
                     options: choiceOptions(field),
                 })),
@@ -760,6 +761,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             "
                             :template-id="template.id"
                             :section-title="section.title"
+                            :section-id="section.id"
                             :field="block"
                             :block-types="blockTypes"
                             :choice-fields="choiceFields"

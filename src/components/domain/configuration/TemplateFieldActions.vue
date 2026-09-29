@@ -64,6 +64,8 @@ type EditableContentType = Exclude<
 const props = defineProps<{
     templateId: string;
     sectionTitle: string;
+    /** Sección de la parte: «Mostrar solo si» se limita a preguntas de la misma sección. */
+    sectionId?: string;
     field: TemplateFieldContainer;
     blockTypes: { value: EditableContentType; label: string }[];
     variables?: TemplateVariable[];
@@ -71,6 +73,7 @@ const props = defineProps<{
     choiceFields?: {
         key: string;
         label: string;
+        sectionId?: string;
         options: { value: string; label: string }[];
     }[];
 }>();
@@ -85,8 +88,14 @@ const conditionParts = computed(() =>
 const conditions = ref<Record<string, { key: string; value: string }>>({});
 const optionSources = ref<Record<string, string[]>>({});
 const optionParts = computed(() => props.field.fields.filter((part) => ['seleccion_unica', 'seleccion_multiple'].includes(part.type ?? '')));
+// Una condición guardada hacia otra sección se conserva visible para poder quitarla.
 const conditionTargets = (ownKey: string) =>
-    (props.choiceFields ?? []).filter((item) => item.key !== ownKey);
+    (props.choiceFields ?? []).filter(
+        (item) =>
+            item.key !== ownKey &&
+            (item.sectionId === props.sectionId ||
+                item.key === conditions.value[ownKey]?.key),
+    );
 const targetOptions = (key: string) =>
     (props.choiceFields ?? []).find((item) => item.key === key)?.options ?? [];
 const chooseTarget = (ownKey: string, key: string): void => {
@@ -105,6 +114,15 @@ const showWhen = (key: string): ShowWhen => {
 
 const primary = computed(() => props.field.fields[0] ?? null);
 const fixed = computed(() => isFixedPart(props.field));
+// La ficha de identificación no usa listas curriculares ni cambia de orientación.
+const institutional = computed(() => props.field.content_type === 'institutional');
+const conditionRows = computed(() =>
+    fixed.value
+        ? []
+        : conditionParts.value.filter(
+              (part) => conditionTargets(part.key).length > 0,
+          ),
+);
 const editOpen = ref(false);
 const deleteOpen = ref(false);
 const form = useForm({
@@ -343,12 +361,7 @@ defineExpose({
                     }}
                 </DialogDescription>
             </DialogHeader>
-            <form class="flex flex-col gap-4" @submit.prevent="save">
-                <template v-if="field.document">
-                    <CurricularOptionsSourceSelect v-for="part in optionParts" :key="part.key" :id="`edit-options-source-${part.key}`" :label="`Listas para ${part.label}`" v-model="optionSources[part.key]" :variables="variables" :disabled="form.processing" :manual="part.type === 'seleccion_unica'" />
-                </template>
-                <CurricularOptionsSourceSelect v-else-if="form.content_type === 'multiple_choice' || optionParts.length" id="edit-options-source" v-model="form.options_sources" :variables="variables" :disabled="form.processing" :manual="form.content_type !== 'multiple_choice' && primary?.type === 'seleccion_unica'" />
-                <FieldError :errors="Object.entries(form.errors).filter(([key]) => key.includes('options_source')).map(([, value]) => value)" />
+            <form class="flex flex-col gap-6" @submit.prevent="save">
                 <FieldGroup>
                     <Field :data-invalid="Boolean(form.errors.label)">
                         <FieldLabel for="edit-template-field-label">
@@ -411,7 +424,14 @@ defineExpose({
                             :errors="[form.errors.content_type]"
                         />
                     </Field>
-                    <Field v-if="!fixed" orientation="horizontal">
+                    <template v-if="!institutional">
+                        <template v-if="field.document">
+                            <CurricularOptionsSourceSelect v-for="part in optionParts" :key="part.key" :id="`edit-options-source-${part.key}`" :label="`Listas para ${part.label}`" v-model="optionSources[part.key]" :variables="variables" :disabled="form.processing" :manual="part.type === 'seleccion_unica'" />
+                        </template>
+                        <CurricularOptionsSourceSelect v-else-if="form.content_type === 'multiple_choice' || optionParts.length" id="edit-options-source" v-model="form.options_sources" :variables="variables" :disabled="form.processing" :manual="form.content_type !== 'multiple_choice' && primary?.type === 'seleccion_unica'" />
+                        <FieldError :errors="Object.entries(form.errors).filter(([key]) => key.includes('options_source')).map(([, value]) => value)" />
+                    </template>
+                    <Field v-if="!fixed && !institutional" orientation="horizontal">
                         <Checkbox
                             id="edit-template-field-landscape"
                             v-model="form.landscape"
@@ -427,95 +447,100 @@ defineExpose({
                             </FieldDescription>
                         </FieldContent>
                     </Field>
-                    <FieldSet
-                        v-for="part in fixed ? [] : conditionParts"
-                        :key="part.key"
-                        class="gap-3"
-                        :data-condition="part.key"
-                    >
-                        <FieldLegend variant="label">
-                            Mostrar
-                            {{
-                                conditionParts.length > 1
-                                    ? `«${part.label.trim() || title}»`
-                                    : 'esta parte'
-                            }}
-                        </FieldLegend>
-                        <FieldDescription>
-                            Elija «Siempre» o que aparezca solo cuando otra
-                            parte tenga cierta respuesta.
-                        </FieldDescription>
-                        <div class="grid gap-2 sm:grid-cols-2">
-                            <Field>
-                                <FieldLabel :for="`condition-part-${part.key}`">
-                                    Mostrar solo si
-                                </FieldLabel>
-                                <Select
-                                    :model-value="conditions[part.key]?.key ?? ALWAYS"
-                                    :disabled="form.processing"
-                                    @update:model-value="
-                                        chooseTarget(part.key, String($event))
+                </FieldGroup>
+
+                <FieldSet v-if="conditionRows.length" class="gap-4">
+                    <FieldLegend>Cuándo se muestra</FieldLegend>
+                    <FieldDescription>
+                        Por defecto, siempre. También puede aparecer solo cuando
+                        otra pregunta de «{{ sectionTitle }}» tenga cierta
+                        respuesta.
+                    </FieldDescription>
+                    <div class="flex flex-col divide-y rounded-md border">
+                        <div
+                            v-for="part in conditionRows"
+                            :key="part.key"
+                            class="flex flex-col gap-3 p-3"
+                            :data-condition="part.key"
+                        >
+                            <p
+                                v-if="conditionParts.length > 1"
+                                class="text-sm font-medium break-words"
+                            >
+                                {{ part.label.trim() || title }}
+                            </p>
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                <Field>
+                                    <FieldLabel :for="`condition-part-${part.key}`">
+                                        Mostrar solo si
+                                    </FieldLabel>
+                                    <Select
+                                        :model-value="conditions[part.key]?.key ?? ALWAYS"
+                                        :disabled="form.processing"
+                                        @update:model-value="
+                                            chooseTarget(part.key, String($event))
+                                        "
+                                    >
+                                        <SelectTrigger
+                                            :id="`condition-part-${part.key}`"
+                                            class="w-full"
+                                        >
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem :value="ALWAYS">
+                                                    Siempre
+                                                </SelectItem>
+                                                <SelectItem
+                                                    v-for="target in conditionTargets(part.key)"
+                                                    :key="target.key"
+                                                    :value="target.key"
+                                                >
+                                                    {{ target.label }}
+                                                </SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </Field>
+                                <Field
+                                    v-if="
+                                        conditions[part.key] &&
+                                        conditions[part.key].key !== ALWAYS
                                     "
                                 >
-                                    <SelectTrigger
-                                        :id="`condition-part-${part.key}`"
-                                        class="w-full"
+                                    <FieldLabel :for="`condition-value-${part.key}`">
+                                        es igual a
+                                    </FieldLabel>
+                                    <Select
+                                        v-model="conditions[part.key].value"
+                                        :disabled="form.processing"
                                     >
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectItem :value="ALWAYS">
-                                                Siempre
-                                            </SelectItem>
-                                            <SelectItem
-                                                v-for="target in conditionTargets(part.key)"
-                                                :key="target.key"
-                                                :value="target.key"
-                                            >
-                                                {{ target.label }}
-                                            </SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                            </Field>
-                            <Field
-                                v-if="
-                                    conditions[part.key] &&
-                                    conditions[part.key].key !== ALWAYS
-                                "
-                            >
-                                <FieldLabel :for="`condition-value-${part.key}`">
-                                    es igual a
-                                </FieldLabel>
-                                <Select
-                                    v-model="conditions[part.key].value"
-                                    :disabled="form.processing"
-                                >
-                                    <SelectTrigger
-                                        :id="`condition-value-${part.key}`"
-                                        class="w-full"
-                                    >
-                                        <SelectValue placeholder="Elija un valor" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectGroup>
-                                            <SelectItem
-                                                v-for="option in targetOptions(
-                                                    conditions[part.key].key,
-                                                )"
-                                                :key="option.value"
-                                                :value="option.value"
-                                            >
-                                                {{ option.label }}
-                                            </SelectItem>
-                                        </SelectGroup>
-                                    </SelectContent>
-                                </Select>
-                            </Field>
+                                        <SelectTrigger
+                                            :id="`condition-value-${part.key}`"
+                                            class="w-full"
+                                        >
+                                            <SelectValue placeholder="Elija un valor" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectItem
+                                                    v-for="option in targetOptions(
+                                                        conditions[part.key].key,
+                                                    )"
+                                                    :key="option.value"
+                                                    :value="option.value"
+                                                >
+                                                    {{ option.label }}
+                                                </SelectItem>
+                                            </SelectGroup>
+                                        </SelectContent>
+                                    </Select>
+                                </Field>
+                            </div>
                         </div>
-                    </FieldSet>
-                </FieldGroup>
+                    </div>
+                </FieldSet>
                 <DialogFooter>
                     <Button
                         type="button"
