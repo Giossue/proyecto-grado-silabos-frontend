@@ -1,20 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
-import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import NotificationsPopover from '@/components/NotificationsPopover.vue';
 import SetupProgress from '@/components/SetupProgress.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
 
-const props = withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTitle?: string }>(), {
+// La cabecera ya no muestra el título de la página: solo el botón del menú y los accesos.
+withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTitle?: string }>(), {
     breadcrumbs: () => [],
     pageTitle: '',
-});
-const trail = computed<BreadcrumbItem[]>(() => {
-    if (props.pageTitle.trim() !== '') return [{ title: props.pageTitle }];
-    const last = props.breadcrumbs.at(-1);
-    return last ? [last] : [];
 });
 </script>
 
@@ -24,7 +18,6 @@ const trail = computed<BreadcrumbItem[]>(() => {
     >
         <div class="flex items-center gap-2">
             <SidebarTrigger class="-ml-1" />
-            <Breadcrumbs v-if="trail.length > 0" :breadcrumbs="trail" />
         </div>
         <div class="ml-auto flex items-center gap-2">
             <SetupProgress />
