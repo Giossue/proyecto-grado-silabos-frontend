@@ -495,7 +495,8 @@ onBeforeUnmount(() => {
             <SyllabusAcademicContext v-if="section.blocks.some((block) => block.content_type === 'institutional')" :variables="syllabus.template_variables ?? {}" />
 
             <FieldSet v-for="block in section.blocks" :id="`block-${block.id}`" :key="block.id" class="scroll-mt-6 gap-5">
-              <FieldLegend v-if="(block.title ?? '').trim() !== '' && section.blocks.length > 1 && !(block.fields.length === 1 && block.title === block.fields[0]?.label)" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
+              <!-- Una parte con hoja no muestra el nombre de su pregunta: el título de la parte es lo único que ve el docente. -->
+              <FieldLegend v-if="(block.title ?? '').trim() !== '' && section.blocks.length > 1 && (usesTabularDocument(block) || !(block.fields.length === 1 && block.title === block.fields[0]?.label))" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
               <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :editable="canEdit && !conflict" presentation="form" @value="(key, value) => updateDesignValue(block.fields, key, value)" />
               <FieldError v-if="usesTabularDocument(block)" class="block-errors" :errors="blockErrors(block.fields)" />
               <template v-if="!usesTabularDocument(block)">
