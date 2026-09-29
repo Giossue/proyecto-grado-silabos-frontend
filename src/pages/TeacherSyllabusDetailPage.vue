@@ -162,6 +162,8 @@ const load = async (): Promise<void> => {
     validationResults.value = syllabus.value.validation?.results ?? [];
     conflict.value = false;
     error.value = null;
+    // Abrir el sílabo es empezar a llenarlo: el borrador se inicia solo, sin pantalla previa.
+    if (canStart.value) await start();
   } catch (reason) {
     if (reason instanceof ApiError && reason.status === 401) {
       await router.replace(paths.login);
@@ -458,16 +460,14 @@ onBeforeUnmount(() => {
   >
     <template #actions>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
-      <Button v-if="canStart" :disabled="starting" @click="start"><Spinner v-if="starting" />{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button>
-      <span v-else-if="syllabus && canEdit" class="flex items-center gap-2"><span v-if="submitHint" class="submit-hint text-xs text-muted-foreground">{{ submitHint }}</span><Button :disabled="processingAction || conflict || emptyParts > 0" :title="submitHint || undefined" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />Enviar sílabo</Button></span>
+      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><span v-if="submitHint" class="submit-hint text-xs text-muted-foreground">{{ submitHint }}</span><Button :disabled="processingAction || conflict || emptyParts > 0" :title="submitHint || undefined" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />Enviar sílabo</Button></span>
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
-    <LoadingSkeleton v-if="!syllabus && !error" variant="syllabus" />
+    <LoadingSkeleton v-if="(!syllabus || canStart) && !error" variant="syllabus" />
 
     <template v-if="syllabus">
       <Alert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked"><AlertTitle>Edición no disponible</AlertTitle><AlertDescription>{{ editBlockReason }}</AlertDescription></Alert>
-      <Card v-if="canStart"><CardHeader><CardTitle>Listo para iniciar</CardTitle><CardDescription>Inicie el borrador para completar las partes del sílabo.</CardDescription></CardHeader><CardContent><Button :disabled="starting" @click="start">{{ starting ? 'Iniciando…' : 'Iniciar borrador' }}</Button></CardContent></Card>
 
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
 

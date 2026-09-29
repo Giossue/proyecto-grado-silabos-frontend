@@ -2,13 +2,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import FreeTextEditor from "@/components/domain/syllabus/FreeTextEditor.vue";
-import {
-  getTeacherSyllabus,
-  saveTeacherField,
-  submitTeacherSyllabus,
-  validateTeacherSyllabus,
-  type SyllabusDetail,
-} from "@/api/syllabi";
+import { getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, startTeacherSyllabus } from "@/api/syllabi";
 import { ApiError } from "@/api/client";
 import { handleUnauthorized } from "@/lib/unauthorized";
 
@@ -110,6 +104,7 @@ describe("TeacherSyllabusDetailPage", () => {
   beforeEach(() => {
     vi.useRealTimers();
     vi.mocked(getTeacherSyllabus).mockReset();
+    vi.mocked(startTeacherSyllabus).mockReset();
     vi.mocked(saveTeacherField).mockReset();
     vi.mocked(submitTeacherSyllabus).mockReset();
     vi.mocked(validateTeacherSyllabus).mockReset();
@@ -373,6 +368,20 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.get(".ai").attributes("data-enabled")).toBe("true");
+  });
+
+  it("al abrir un sílabo sin iniciar, inicia el borrador solo y muestra el formulario", async () => {
+    const pending = syllabus("borrador");
+    pending.state = "sin_iniciar" as SyllabusDetail["state"];
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: pending });
+    vi.mocked(startTeacherSyllabus).mockResolvedValue({ message: "Borrador iniciado.", syllabus: syllabus("borrador") });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(startTeacherSyllabus).toHaveBeenCalledWith(pending.id);
+    expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();
+    expect(wrapper.text()).not.toContain("Listo para iniciar");
+    expect(wrapper.find("textarea, [contenteditable='true'], input").exists()).toBe(true);
   });
 
   it("muestra el motivo y no ofrece iniciar cuando la convocatoria está en pausa", async () => {
