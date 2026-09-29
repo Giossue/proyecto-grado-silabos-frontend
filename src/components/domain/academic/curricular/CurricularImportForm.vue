@@ -17,7 +17,7 @@ const instruction = ref('');
 const instructionOpen = ref(false);
 const formContent = ref<HTMLElement | null>(null);
 const fileError = ref<string | null>(null);
-// La plantilla manda (I-151): sin datos declarados por Administración no hay nada que buscar.
+// La plantilla manda (I-151, I-155): sin @ProyectoCarrera en la plantilla no hay nada que buscar.
 const noConcepts = computed(() => !props.index.concepts.length);
 const disabled = computed(() => props.processing || Boolean(props.index.lock_reason) || !props.index.capabilities.extraction || noConcepts.value);
 const selectedCount = computed(() => files.value.length);
@@ -54,7 +54,7 @@ watch(() => props.errors.instruction, (messages) => {
 <template>
   <form class="flex min-h-0 flex-1 flex-col" @submit.prevent="submit">
     <div ref="formContent" class="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-5">
-      <Alert v-if="noConcepts"><AlertDescription>Administración aún no definió en la plantilla qué datos salen de los documentos de la carrera. Cuando lo haga, podrás importarlos aquí.</AlertDescription></Alert>
+      <Alert v-if="noConcepts"><AlertDescription>La plantilla del sílabo todavía no tiene datos del Proyecto de carrera. Cuando Administración los agregue, podrás importarlos aquí.</AlertDescription></Alert>
       <FieldGroup class="gap-5">
         <Alert v-if="index.lock_reason || !index.capabilities.extraction">
           <AlertDescription>{{ index.lock_reason ?? 'La extracción de documentos no está disponible en este momento. Las importaciones anteriores siguen disponibles en el historial.' }}</AlertDescription>
@@ -79,7 +79,12 @@ watch(() => props.errors.instruction, (messages) => {
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent class="pt-2 text-sm text-muted-foreground">
-            <p>{{ index.concepts.map((concept) => concept.label).join(', ') }}.</p>
+            <ul class="flex flex-col gap-1">
+              <li v-for="concept in index.concepts" :key="concept.key">
+                <span class="font-medium text-foreground">{{ concept.label }}</span>
+                <template v-if="concept.sections.length"> · en {{ concept.sections.join(', ') }}</template>
+              </li>
+            </ul>
             <p class="mt-1">Si un documento trae otra información, se avisará sin importarla.</p>
           </CollapsibleContent>
         </Collapsible>
@@ -101,7 +106,7 @@ watch(() => props.errors.instruction, (messages) => {
       </FieldGroup>
     </div>
     <div class="flex shrink-0 flex-col gap-2 border-t bg-card py-3">
-      <p v-if="noConcepts" class="text-sm text-muted-foreground">La importación se habilita cuando la plantilla pida datos de los documentos.</p>
+      <p v-if="noConcepts" class="text-sm text-muted-foreground">La importación se habilita cuando la plantilla tenga datos del Proyecto de carrera.</p>
       <p v-else-if="!disabled && !selectedCount" class="text-sm text-muted-foreground">Adjunta al menos un archivo para continuar.</p>
       <p v-else-if="selectedCount" class="text-sm text-muted-foreground">{{ selectedCount }} {{ selectedCount === 1 ? 'archivo adjunto' : 'archivos adjuntos' }}</p>
       <Button type="submit" class="w-full" :disabled="disabled || !selectedCount">

@@ -44,7 +44,8 @@ export type CurricularImportIndex = {
   subjects: Array<{ id: string; name: string; code: string }>;
   current_values: ConfirmedCurricularValue[];
   /** Datos que la plantilla pide a los documentos de carrera; la importación solo busca estos (I-151). */
-  concepts: Array<{ key: string; label: string; type: 'texto' | 'lista' | 'tabla'; scope: 'carrera' | 'asignatura' }>;
+  /** @ProyectoCarrera que usa la plantilla y las secciones donde aparece (I-155). */
+  concepts: Array<{ key: string; label: string; type: 'texto' | 'lista' | 'tabla'; scope: 'carrera' | 'asignatura'; sections: string[] }>;
   capabilities: { pdf: boolean; xlsx: boolean; extraction: boolean };
   lock_reason: string | null;
 };

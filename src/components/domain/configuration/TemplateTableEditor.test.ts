@@ -31,6 +31,7 @@ describe('TemplateTableEditor', () => {
                     TemplateTableRowsMenu: true,
                     TemplateTableNewFieldDialog: true,
                     TemplateTableNewDataSheet: true,
+                    TemplateTableProjectDataDialog: true,
                 },
             },
             props: {
@@ -52,6 +53,8 @@ describe('TemplateTableEditor', () => {
                 colors: [],
                 fields: [],
                 variables: [],
+                templateId: 'plantilla-1',
+                sectionTitle: 'Resultados de aprendizaje',
             },
         });
         await flushPromises();

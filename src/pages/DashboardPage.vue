@@ -36,6 +36,7 @@ const setupRoutes: Record<string, string> = {
   scheduled_subjects: paths.coordination.scheduledSubjects,
   parallels: paths.coordination.scheduledSubjects,
   teachers: paths.coordination.teacherAssignments,
+  project_data: paths.coordination.curricularProject,
   convocation: paths.coordination.convocations,
   assigned: paths.teacher.syllabi,
   started: paths.teacher.syllabi,

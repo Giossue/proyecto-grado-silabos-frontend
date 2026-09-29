@@ -2,8 +2,7 @@
 import { Blocks, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
 import TemplateController from '@/api/template-routes';
-import TemplatePartKindPicker from '@/components/domain/configuration/TemplatePartKindPicker.vue';
-import type { TemplateVariable } from '@/lib/templateDocument';
+import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,6 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { emptyPartChoice, partChoiceErrors, partChoicePayload } from '@/lib/templateParts';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type { TemplateContentType } from '@/types/configuration';
@@ -31,7 +29,6 @@ const props = withDefaults(
         blockTypes: { value: EditableContentType; label: string }[];
         empty?: boolean;
         choice?: boolean;
-        variables?: TemplateVariable[];
     }>(),
     {
         empty: false,
@@ -50,7 +47,7 @@ const technicalKey = (prefix: string): string => {
 const newField = () => ({
     key: technicalKey('campo'),
     label: '',
-    ...emptyPartChoice(),
+    content_type: 'text',
 });
 
 const open = ref(false);
@@ -95,10 +92,6 @@ const submit = (): void => {
     if (form.title.trim() === '') {
         errors.title = 'Escriba el nombre de la sección.';
     }
-    form.fields.forEach((field, index) => {
-        for (const [key, message] of Object.entries(partChoiceErrors(field))) errors[`fields.${index}.${key}`] = message;
-    });
-
     if (Object.keys(errors).length > 0) {
         form.errors = errors;
 
@@ -106,10 +99,6 @@ const submit = (): void => {
     }
 
     form.position = props.position + 1;
-    form.transform((data) => ({
-        ...data,
-        fields: data.fields.map((field) => ({ key: field.key, label: field.label, ...partChoicePayload(field) })),
-    }));
     form.post(TemplateController.storeSection.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {
@@ -233,15 +222,12 @@ const updateOpen = (value: boolean): void => {
                                 />
                             </Field>
 
-                            <TemplatePartKindPicker
-                                :id-prefix="`new-section-field-${index}`"
+                            <TemplatePartFormSelect
+                                :id="`new-section-field-${index}-form`"
                                 v-model="field.content_type"
-                                v-model:options-sources="field.options_sources"
-                                v-model:concept-key="field.concept_key"
-                                v-model:concept="field.concept"
-                                :variables="variables"
+                                :forms="blockTypes"
                                 :disabled="form.processing"
-                                :errors="{ content_type: errorFor(`fields.${index}.content_type`), options_sources: errorFor(`fields.${index}.options_sources`), concept: errorFor(`fields.${index}.concept`) ?? errorFor(`fields.${index}.concept.label`) }"
+                                :error="errorFor(`fields.${index}.content_type`)"
                             />
                         </FieldGroup>
                     </FieldGroup>

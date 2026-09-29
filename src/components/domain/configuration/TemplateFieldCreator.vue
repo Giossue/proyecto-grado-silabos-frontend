@@ -2,8 +2,7 @@
 import { ListPlus } from '@lucide/vue';
 import { ref } from 'vue';
 import TemplateController from '@/api/template-routes';
-import TemplatePartKindPicker from '@/components/domain/configuration/TemplatePartKindPicker.vue';
-import type { TemplateVariable } from '@/lib/templateDocument';
+import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
@@ -15,7 +14,6 @@ import {
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { emptyPartChoice, partChoiceErrors, partChoicePayload } from '@/lib/templateParts';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type { TemplateContentType } from '@/types/configuration';
@@ -32,12 +30,11 @@ const props = withDefaults(
         position: number;
         blockTypes: { value: EditableContentType; label: string }[];
         choice?: boolean;
-        variables?: TemplateVariable[];
     }>(),
     { choice: false },
 );
 
-// El texto fijo es una respuesta más de «¿Quién llena esta parte?» (I-154).
+// Solo la forma: quién llena cada cosa se marca en la hoja (I-155).
 const texts = {
     action: 'Agregar parte',
     title: 'Nueva parte',
@@ -52,7 +49,7 @@ const form = useForm({
     position: props.position + 1,
     key: '',
     label: '',
-    ...emptyPartChoice(),
+    content_type: 'text',
 });
 
 const keyFor = (): string =>
@@ -64,7 +61,7 @@ const reset = (): void => {
     form.position = props.position + 1;
     form.key = keyFor();
     form.label = '';
-    Object.assign(form, emptyPartChoice());
+    form.content_type = 'text';
 };
 
 reset();
@@ -73,19 +70,7 @@ const errorFor = (path: string): string | undefined =>
     (form.errors as Record<string, string>)[path];
 
 const submit = (): void => {
-    const errors = partChoiceErrors(form);
-    if (Object.keys(errors).length) {
-        form.errors = errors;
-        return;
-    }
     form.position = props.position + 1;
-    form.transform((data) => ({
-        section_id: data.section_id,
-        position: data.position,
-        key: data.key,
-        label: data.label,
-        ...partChoicePayload(data),
-    }));
     form.post(TemplateController.storeField.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {
@@ -157,15 +142,12 @@ const updateOpen = (value: boolean): void => {
                         />
                     </Field>
                 </FieldGroup>
-                <TemplatePartKindPicker
-                    id-prefix="new-field"
+                <TemplatePartFormSelect
+                    id="new-field-form"
                     v-model="form.content_type"
-                    v-model:options-sources="form.options_sources"
-                    v-model:concept-key="form.concept_key"
-                    v-model:concept="form.concept"
-                    :variables="variables"
+                    :forms="blockTypes"
                     :disabled="form.processing"
-                    :errors="{ content_type: errorFor('content_type'), options_sources: errorFor('options_sources'), concept: errorFor('concept') ?? errorFor('concept.label') }"
+                    :error="errorFor('content_type')"
                 />
                 <FormSheetActions
                     :label="texts.action"

@@ -333,8 +333,13 @@ const updateScalar = (field: SyllabusField, value: string): void => {
   scheduleSave(field);
 };
 
+/**
+ * Una parte con hoja propia se llena sobre esa hoja: su texto fijo, sus datos y sus
+ * !Docente se ven juntos, igual que en el Word (I-155). La ficha de identificación
+ * mantiene su formulario.
+ */
 const usesTabularDocument = (block: { content_type: string; document?: DocumentNode | null }): block is { content_type: string; document: DocumentNode } =>
-  ['table', 'fixed'].includes(block.content_type) && block.document != null;
+  block.content_type !== 'institutional' && block.document != null;
 
 /**
  * «Mostrar solo si»: partes ocultas mientras su condición no se cumple. Solo se

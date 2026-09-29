@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { inlineNodeLabel } from '@/components/domain/configuration/template-table/inlineNodeLabel';
-import { choosableTypes, partTypeLabel, sectionOrientation } from '@/lib/templateParts';
+import { partTypeLabel, sectionOrientation } from '@/lib/templateParts';
 import type { TemplateFieldContainer } from '@/types/configuration';
 
 const part = (overrides: Partial<TemplateFieldContainer>): TemplateFieldContainer => ({
@@ -17,10 +17,6 @@ describe('templateParts', () => {
     it('usa hoja horizontal cuando una parte de la sección la pide', () => {
         expect(sectionOrientation([part({}), part({ page_orientation: 'landscape' })], 'portrait')).toBe('landscape');
         expect(sectionOrientation([part({})], 'portrait')).toBe('portrait');
-    });
-
-    it('deja el texto fijo fuera de la lista de tipos', () => {
-        expect(choosableTypes([{ value: 'text' }, { value: 'fixed' }])).toEqual([{ value: 'text' }]);
     });
 
     it('muestra los datos por su nombre, nunca por su clave', () => {

@@ -3,7 +3,7 @@ import { MoreHorizontal, Pencil, Save, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { pageOrientationPayload } from '@/api/template';
 import CurricularOptionsSourceSelect from '@/components/domain/configuration/CurricularOptionsSourceSelect.vue';
-import TemplatePartKindPicker from '@/components/domain/configuration/TemplatePartKindPicker.vue';
+import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
 import { documentOptionsSources, type TemplateVariable } from '@/lib/templateDocument';
 import TemplateController from '@/api/template-routes';
 import { Button } from '@/components/ui/button';
@@ -49,7 +49,7 @@ import {
     TooltipTrigger,
 } from '@/components/ui/tooltip';
 import type { ShowWhen } from '@/lib/fieldConditions';
-import { isFixedPart } from '@/lib/templateParts';
+import { isFixedPart, partTypeLabel } from '@/lib/templateParts';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type {
@@ -415,21 +415,20 @@ defineExpose({
                         />
                     </Field>
 
-                    <TemplatePartKindPicker
+                    <TemplatePartFormSelect
                         v-if="typeCanChange"
-                        id-prefix="edit-template-field"
+                        id="edit-template-field-form"
                         v-model="form.content_type"
-                        v-model:options-sources="form.options_sources"
-                        :allow-automatic="false"
-                        :variables="variables"
+                        :forms="blockTypes.filter((type) => type.value !== 'fixed')"
+                        :current-label="partTypeLabel(field)"
                         :disabled="form.processing"
-                        :errors="{ content_type: form.errors.content_type, options_sources: form.errors.options_sources }"
+                        :error="form.errors.content_type"
                     />
                     <template v-if="!institutional">
                         <template v-if="field.document">
                             <CurricularOptionsSourceSelect v-for="part in optionParts" :key="part.key" :id="`edit-options-source-${part.key}`" :label="`Listas para ${part.label}`" v-model="optionSources[part.key]" :variables="variables" :disabled="form.processing" :manual="part.type === 'seleccion_unica'" />
                         </template>
-                        <CurricularOptionsSourceSelect v-else-if="!typeCanChange && (form.content_type === 'multiple_choice' || optionParts.length)" id="edit-options-source" v-model="form.options_sources" :variables="variables" :disabled="form.processing" :manual="form.content_type !== 'multiple_choice' && primary?.type === 'seleccion_unica'" />
+                        <CurricularOptionsSourceSelect v-else-if="form.content_type === 'multiple_choice' || optionParts.length" id="edit-options-source" v-model="form.options_sources" :variables="variables" :disabled="form.processing" :manual="form.content_type !== 'multiple_choice' && primary?.type === 'seleccion_unica'" />
                         <FieldError :errors="Object.entries(form.errors).filter(([key]) => key.includes('options_source')).map(([, value]) => value)" />
                     </template>
                     <Field v-if="!fixed && !institutional" orientation="horizontal">

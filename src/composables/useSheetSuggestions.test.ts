@@ -13,7 +13,8 @@ describe('useSheetSuggestions', () => {
 
         expect(suggestion.char).toBe('@');
         expect(suggestion.items?.({ query: '' } as never)).toHaveLength(18);
-        expect(suggestion.items?.({ query: 'academica' } as never)?.map((item) => item.key)).toEqual(['habilidad', 'nuevo']);
+        const found = suggestion.items?.({ query: 'academica' } as never) as { key: string }[];
+        expect(found.map((item) => item.key)).toEqual(['habilidad', 'nuevo']);
 
         const menu = suggestion.render?.();
         menu?.onStart?.({ items } as never);
