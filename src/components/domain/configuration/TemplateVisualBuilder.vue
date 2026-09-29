@@ -407,9 +407,10 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
         @pointerdown.capture="clearSelectionFromBackground"
     >
         <Teleport to="body" :disabled="!fixedRibbon">
-            <div
+            <header
                 v-if="ribbon && !readonly"
                 id="template-editor-ribbon"
+                aria-label="Herramientas del editor de plantilla"
                 :class="
                     cn(
                         'min-w-0 bg-background/95 backdrop-blur',
@@ -422,15 +423,13 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                 <div
                     class="flex min-h-14 min-w-0 items-center gap-2 overflow-hidden px-3 py-2 sm:px-5"
                 >
-                    <div
-                        class="flex min-w-0 flex-1 items-center overflow-hidden"
-                    >
+                    <div class="flex min-w-fit flex-1 items-center">
                         <slot name="ribbon-start" />
                     </div>
 
                     <div
                         id="template-editor-ribbon-tools"
-                        class="flex min-w-0 shrink-0 items-center justify-center gap-2 overflow-x-auto"
+                        class="flex min-w-0 items-center gap-2 overflow-x-auto"
                     >
                         <template v-if="!activeTable">
                             <Button
@@ -544,7 +543,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
 
                     <div
                         id="template-editor-ribbon-actions"
-                        class="flex min-w-0 flex-1 items-center justify-end gap-2 overflow-x-auto"
+                        class="flex min-w-fit flex-1 items-center justify-end gap-2"
                     >
                         <Button
                             v-if="!activeTable"
@@ -561,7 +560,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         </Button>
                     </div>
                 </div>
-            </div>
+            </header>
         </Teleport>
 
         <div class="flex min-w-0 flex-col gap-6 overflow-x-auto p-1 pb-4">
