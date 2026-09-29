@@ -32,7 +32,6 @@ export function useTemplateTableActions(
     const {
         state,
         selectedCell,
-        inCell,
         ancestorAttributes,
         selectedRowRole,
         selectedRowHasColumns,
@@ -177,7 +176,8 @@ export function useTemplateTableActions(
     const insertNode = (node: DocumentNode): void => {
         const current = state.value;
 
-        if (!current || !inCell.value || props.pending) {
+        // Las marcas entran en cualquier parte de la hoja, no solo en celdas (I-155).
+        if (!current || props.pending) {
             return;
         }
 

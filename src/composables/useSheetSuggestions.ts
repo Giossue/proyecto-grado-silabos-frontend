@@ -3,12 +3,14 @@ import type { SuggestionOptions, SuggestionProps } from '@tiptap/suggestion';
 import { ref, shallowRef } from 'vue';
 import type { DocumentNode } from '@/lib/templateDocument';
 
-/** Elemento del atajo: inserta su ficha o, si es «Nuevo…», abre su diálogo. */
+/** Elemento del atajo: inserta su ficha o, tras borrar lo escrito, ejecuta `open`. */
 export type SheetSuggestionItem = {
     key: string;
     label: string;
     node?: DocumentNode;
     open?: () => void;
+    /** «Nuevo…» se ofrece siempre, escriba lo que escriba. */
+    always?: boolean;
 };
 
 type SheetSuggestionOptions = {
@@ -34,7 +36,7 @@ export function useSheetSuggestions(options: SheetSuggestionOptions) {
         pluginKey: new PluginKey(`sheetSuggestion${options.char}`),
         allow: () => options.enabled?.() ?? true,
         items: ({ query }) =>
-            options.items().filter((item) => item.open || normalizeSearch(item.label).includes(normalizeSearch(query))),
+            options.items().filter((item) => item.always || normalizeSearch(item.label).includes(normalizeSearch(query))),
         command: ({ editor: target, range, props: item }) => {
             if (item.node) {
                 target.chain().focus().insertContentAt(range, [item.node, { type: 'text', text: ' ' }]).run();

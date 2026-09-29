@@ -6,12 +6,13 @@ describe('useSheetSuggestions', () => {
         const items = [
             ...Array.from({ length: 15 }, (_, index) => ({ key: `dato_${index}`, label: `Dato ${index}`, node: { type: 'variable' } })),
             { key: 'habilidad', label: 'Habilidad académica', node: { type: 'variable' } },
-            { key: 'nuevo', label: 'Nuevo dato…', open: vi.fn() },
+            { key: 'pregunta', label: 'Formación', open: vi.fn() },
+            { key: 'nuevo', label: 'Nuevo dato…', open: vi.fn(), always: true },
         ];
         const { suggestion, selectedSuggestion } = useSheetSuggestions({ char: '@', items: () => items });
 
         expect(suggestion.char).toBe('@');
-        expect(suggestion.items?.({ query: '' } as never)).toHaveLength(17);
+        expect(suggestion.items?.({ query: '' } as never)).toHaveLength(18);
         expect(suggestion.items?.({ query: 'academica' } as never)?.map((item) => item.key)).toEqual(['habilidad', 'nuevo']);
 
         const menu = suggestion.render?.();

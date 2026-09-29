@@ -2,10 +2,13 @@
 import {
     Braces,
     ChevronDown,
+    FileText,
     MessageCircleQuestionMark,
     Plus,
     Rows3,
 } from '@lucide/vue';
+import { computed } from 'vue';
+import { PROJECT_PREFIX } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import type { TableRowRole } from '@/components/domain/configuration/template-table/types';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +17,7 @@ import {
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuSeparator,
+    DropdownMenuShortcut,
     DropdownMenuSub,
     DropdownMenuSubContent,
     DropdownMenuSubTrigger,
@@ -23,11 +27,13 @@ import type { TableColumn } from '@/lib/tableLayout';
 import type { DocumentField, TemplateVariable } from '@/lib/templateDocument';
 
 /*
- * Tres opciones y nada más. Lo propio de Planificación (unidades, horas y
- * totales) viene de fábrica y no se configura aquí.
+ * Las tres marcas de la hoja (I-155) y, dentro de una tabla, las filas que agrega
+ * el docente. Lo propio de Planificación (unidades, horas y totales) viene de
+ * fábrica y no se configura aquí.
  */
-defineProps<{
+const props = defineProps<{
     disabled: boolean;
+    inTable: boolean;
     variables: TemplateVariable[];
     teacherFields: DocumentField[];
     repeatedColumns: TableColumn[];
@@ -40,10 +46,14 @@ const emit = defineEmits<{
     insertVariable: [variable: TemplateVariable];
     insertField: [field: DocumentField];
     newField: [];
+    newProjectData: [];
     insertRepeatedColumn: [column: TableColumn];
     newData: [];
     rowRole: [value: TableRowRole];
 }>();
+
+const automatic = computed(() => props.variables.filter((variable) => !variable.key.startsWith(PROJECT_PREFIX)));
+const project = computed(() => props.variables.filter((variable) => variable.key.startsWith(PROJECT_PREFIX) && variable.type !== 'tabla'));
 </script>
 
 <template>
@@ -54,32 +64,29 @@ const emit = defineEmits<{
                 size="sm"
                 variant="ghost"
                 :disabled="disabled"
-                aria-label="Insertar en la celda"
+                aria-label="Insertar en la hoja"
             >
                 <Plus data-icon="inline-start" aria-hidden="true" />
                 Insertar
                 <ChevronDown data-icon="inline-end" aria-hidden="true" />
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" class="w-64">
+        <DropdownMenuContent align="start" class="w-72">
             <DropdownMenuGroup>
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                         <Braces />
                         Dato automático
+                        <DropdownMenuShortcut>{</DropdownMenuShortcut>
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent
-                        class="max-h-80 w-72 overflow-y-auto"
-                    >
+                    <DropdownMenuSubContent class="max-h-80 w-72 overflow-y-auto">
                         <DropdownMenuGroup>
                             <DropdownMenuItem
-                                v-for="variable in variables"
+                                v-for="variable in automatic"
                                 :key="variable.key"
                                 @select="emit('insertVariable', variable)"
                             >
-                                <span class="truncate">
-                                    {{ variable.label }}
-                                </span>
+                                <span class="truncate">{{ variable.label }}</span>
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                     </DropdownMenuSubContent>
@@ -88,11 +95,10 @@ const emit = defineEmits<{
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                         <MessageCircleQuestionMark />
-                        Pregunta al docente
+                        !Docente: lo llena el docente
+                        <DropdownMenuShortcut>!</DropdownMenuShortcut>
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent
-                        class="max-h-80 w-72 overflow-y-auto"
-                    >
+                    <DropdownMenuSubContent class="max-h-80 w-72 overflow-y-auto">
                         <DropdownMenuGroup>
                             <DropdownMenuItem
                                 v-for="field in teacherFields"
@@ -112,12 +118,34 @@ const emit = defineEmits<{
 
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
+                        <FileText />
+                        @ProyectoCarrera: lo llena Coordinación
+                        <DropdownMenuShortcut>@</DropdownMenuShortcut>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent class="max-h-80 w-72 overflow-y-auto">
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem
+                                v-for="variable in project"
+                                :key="variable.key"
+                                @select="emit('insertVariable', variable)"
+                            >
+                                <span class="truncate">{{ variable.label }}</span>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator v-if="project.length" />
+                        <DropdownMenuItem @select="emit('newProjectData')">
+                            <Plus />
+                            Nuevo dato…
+                        </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                <DropdownMenuSub v-if="inTable">
+                    <DropdownMenuSubTrigger>
                         <Rows3 />
                         Filas que agrega el docente
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent
-                        class="max-h-80 w-80 overflow-y-auto"
-                    >
+                    <DropdownMenuSubContent class="max-h-80 w-80 overflow-y-auto">
                         <DropdownMenuGroup>
                             <DropdownMenuItem
                                 v-if="selectedRowRole === 'fixed'"
@@ -140,13 +168,9 @@ const emit = defineEmits<{
                                     v-for="column in repeatedColumns"
                                     :key="column.key"
                                     :disabled="!canInsertRepeatedColumn(column)"
-                                    @select="
-                                        emit('insertRepeatedColumn', column)
-                                    "
+                                    @select="emit('insertRepeatedColumn', column)"
                                 >
-                                    <span class="truncate">
-                                        {{ column.label }}
-                                    </span>
+                                    <span class="truncate">{{ column.label }}</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                     :disabled="selectedRowRole === 'total'"
