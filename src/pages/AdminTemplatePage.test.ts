@@ -99,11 +99,21 @@ describe("AdminTemplatePage", () => {
     await wrapper.get('[aria-label="Parte Descripción"]').trigger("pointerdown");
     await flushPromises();
 
-    expect(document.body.textContent).toContain('Texto · Descripción');
-    expect(document.body.textContent).toContain('Editar parte');
+    expect(wrapper.get('#template-editor-ribbon-tools').text()).toContain('Editar parte');
+    expect(document.body.textContent).not.toContain('Selección:');
+    expect(document.querySelector('#template-editor-ribbon')?.classList.contains('top-0')).toBe(true);
+    expect(wrapper.find('#template-editor-header-selection').exists()).toBe(false);
+
+    const back = document.querySelector<HTMLButtonElement>('#template-editor-ribbon button');
+    expect(back?.textContent).toContain('Volver a la vista');
+    back!.click();
+    await flushPromises();
+
+    expect(document.querySelector('#template-editor-ribbon')).toBeNull();
+    expect(wrapper.get('[aria-label="Plantilla del sílabo, solo lectura"]')).toBeDefined();
   });
 
-  it("muestra el tipo real de un texto fijo en la barra, sin etiqueta sobre el lienzo", async () => {
+  it("mantiene la acción contextual del texto fijo sin la etiqueta de selección", async () => {
     const withFixed: TemplatePayload = {
       ...payload,
       template: {
@@ -135,8 +145,8 @@ describe("AdminTemplatePage", () => {
     await wrapper.get('[aria-label="Parte Firmas"]').trigger("pointerdown");
     await flushPromises();
 
-    expect(document.body.textContent).toContain("Texto fijo · Firmas");
-    expect(document.body.textContent).toContain("Editar texto fijo");
+    expect(wrapper.get('#template-editor-ribbon-tools').text()).toContain("Editar texto fijo");
+    expect(document.body.textContent).not.toContain("Selección:");
     wrapper.unmount();
   });
 
