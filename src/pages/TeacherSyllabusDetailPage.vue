@@ -33,6 +33,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Spinner } from '@/components/ui/spinner';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
+import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
+import { freeTextPlain, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
 import type { TableLayout, TableRowData } from '@/lib/tableLayout';
 import { consecutiveUnits, isListLayout } from '@/lib/tableLayout';
 import { paths } from '@/lib/routes';
@@ -123,6 +125,7 @@ const blockErrors = (fields: SyllabusField[]): string[] =>
 const isFieldEmpty = (field: SyllabusField): boolean => {
   if (field.type === "repetible") return field.rows.length === 0;
   if (field.type === "booleano") return typeof field.value !== "boolean";
+  if (isFreeTextDocument(field.value)) return freeTextPlain(field.value).trim() === "";
   if (Array.isArray(field.value)) return field.value.length === 0;
   if (typeof field.value === "number") return false;
   return typeof field.value !== "string" || field.value.trim() === "";
@@ -321,6 +324,7 @@ const masterValue = (value: unknown): string => {
   if (value === null || value === undefined || value === '') return 'Pendiente de Coordinación';
   if (typeof value !== 'object') return typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value);
   if (Array.isArray(value)) return value.map(String).join(', ');
+  if (isFreeTextDocument(value)) return freeTextPlain(value);
   // Solo los valores: las claves internas no se muestran.
   return Object.values(value)
     .map((item) => String(item ?? '—'))
@@ -355,7 +359,7 @@ const designFields = (fields: SyllabusField[]): DocumentField[] => fields.map((f
 }));
 const tableRows = (field: SyllabusField): Array<{ id: string | null; data: TableRowData }> =>
   field.rows.map((row) => ({ id: row.id ?? null, data: row.data }));
-const updateDesignValue = (fields: SyllabusField[], key: string, value: string | number | boolean | string[]): void => {
+const updateDesignValue = (fields: SyllabusField[], key: string, value: string | number | boolean | string[] | DocumentNode): void => {
   const field = fields.find((item) => item.key === key);
   if (field) { field.value = value; clearFieldValidation(field.id); scheduleSave(field); }
 };
@@ -583,6 +587,10 @@ onBeforeUnmount(() => {
                 <template v-for="field in block.fields.filter((item) => !hiddenParts.has(item.key) && (block.content_type !== 'institutional' || (item.teacher_editable && !item.inherited)))" :key="field.id">
                 <Field v-if="canEdit && field.teacher_editable && !field.inherited && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" @update:model-value="updateScalar(field, String($event))" />
+                </Field>
+
+                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'texto_libre'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                  <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><FreeTextEditor :id="`input-${field.id}`" :label="field.label.trim() || section.title" :model-value="isFreeTextDocument(field.value) ? field.value : null" @update:model-value="updateDesignValue([field], field.key, $event)" />
                 </Field>
 
                 <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'texto_largo'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">

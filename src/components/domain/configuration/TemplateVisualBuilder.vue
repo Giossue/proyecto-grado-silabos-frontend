@@ -702,10 +702,8 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             "
                             :template-id="template.id"
                             :section-title="section.title"
-                            :part-title="block.title"
                             :section-id="section.id"
                             :field="block"
-                            :block-types="blockTypes"
                             :choice-fields="choiceFields"
                         />
                     </div>
@@ -787,6 +785,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             :colors="colorOptions"
                             ribbon-target="#template-editor-ribbon"
                             :section-title="section.title"
+                            :part-title="block.title"
                             @activate="selectField(section.id, block.id)"
                             @editing-change="
                                 updateTableEditing(section.id, block.id, $event)

@@ -56,18 +56,12 @@ import type {
     TemplateFieldContainer,
 } from '@/types/configuration';
 
-type EditableContentType = Exclude<
-    TemplateContentType,
-    'institutional'
->;
-
 const props = defineProps<{
     templateId: string;
     sectionTitle: string;
     /** Sección de la parte: «Mostrar solo si» se limita a preguntas de la misma sección. */
     sectionId?: string;
     field: TemplateFieldContainer;
-    blockTypes: { value: EditableContentType; label: string }[];
     variables?: TemplateVariable[];
     /** Partes Sí/No o de selección de la plantilla, para «Mostrar solo si». */
     choiceFields?: {

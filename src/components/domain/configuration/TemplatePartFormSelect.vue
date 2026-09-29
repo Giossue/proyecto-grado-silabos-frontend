@@ -3,8 +3,8 @@ import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 /**
- * Forma de una parte (I-155). Quién llena cada cosa ya no se pregunta aquí: se marca
- * en la hoja con un dato automático, !Docente o @ProyectoCarrera.
+ * Forma de una parte nueva (I-156): Texto libre del docente o Contenido de la plantilla
+ * que arma Administración en la hoja con sus marcas.
  */
 withDefaults(defineProps<{
     id: string;
@@ -26,7 +26,7 @@ const model = defineModel<string>({ required: true });
             </SelectGroup></SelectContent>
         </Select>
         <FieldDescription>
-            Lo que escriba en la hoja es fijo. Con Insertar marca lo que llena el docente o lo que viene del Proyecto de carrera.
+            Texto libre: lo escribe el docente como quiera. Contenido de la plantilla: lo arma usted en la hoja con texto, listas, tablas y lo que se inserta desde Insertar.
         </FieldDescription>
         <FieldError :errors="[error]" />
     </Field>

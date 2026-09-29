@@ -132,7 +132,8 @@ export type SyllabusField = {
   required: boolean;
   inherited: boolean;
   teacher_editable: boolean;
-  value: string | number | boolean | string[] | null;
+  /** Texto libre (I-156): documento con párrafos, listas y tablas simples. */
+  value: string | number | boolean | string[] | DocumentNode | null;
   rows: RepeatableRow[];
 };
 

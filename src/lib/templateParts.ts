@@ -27,9 +27,20 @@ export const isFixedPart = (block: TemplateFieldContainer): boolean =>
         nodesOfType(block.document!, 'field').length === 0 &&
         nodesOfType(block.document!, 'column').length === 0);
 
-/** Forma con la que se creó la parte; no cambia después (I-155). */
-export const partFormLabel = (block: TemplateFieldContainer): string =>
-    TYPE_LABELS[block.content_type];
+/**
+ * Forma con la que se creó la parte; no cambia después (I-155, I-156). Una parte con
+ * hoja propia es Texto libre si solo lleva el espacio del docente; si no, Contenido de
+ * la plantilla.
+ */
+export const partFormLabel = (block: TemplateFieldContainer): string => {
+    if (block.fields.some((field) => field.type === 'texto_libre')) {
+        return 'Texto libre';
+    }
+
+    return block.document && ['text', 'fixed'].includes(block.content_type)
+        ? 'Contenido de la plantilla'
+        : TYPE_LABELS[block.content_type];
+};
 
 /**
  * Orientación de la hoja de una sección. Igual que el documento Word: manda la

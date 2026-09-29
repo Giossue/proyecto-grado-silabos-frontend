@@ -5,19 +5,14 @@ import TemplateBlockCreator from '@/components/domain/configuration/TemplateBloc
 import TemplateFieldCreator from '@/components/domain/configuration/TemplateFieldCreator.vue';
 import TemplateIconPopover from '@/components/domain/configuration/TemplateIconPopover.vue';
 import { PopoverContent } from '@/components/ui/popover';
-import type { TemplateContentType } from '@/types/configuration';
-
-type EditableContentType = Exclude<
-    TemplateContentType,
-    'institutional'
->;
+import type { PartForm } from '@/types/configuration';
 
 defineProps<{
     templateId: string;
     sectionId: string;
     fieldPosition: number;
     blockPosition: number;
-    blockTypes: { value: EditableContentType; label: string }[];
+    blockTypes: { value: PartForm; label: string }[];
 }>();
 
 const open = ref(false);

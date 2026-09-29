@@ -31,7 +31,7 @@ const mountActions = (field: TemplateFieldContainer, sectionId = 'identificacion
             options: [{ value: 'Sí', label: 'Sí' }, { value: 'No', label: 'No' }],
         }],
     }),
-    template: '<TooltipProvider><TemplateFieldActions ref="actions" template-id="template-1" section-title="Datos" :section-id="sectionId" :field="field" :block-types="[]" :choice-fields="choiceFields" /></TooltipProvider>',
+    template: '<TooltipProvider><TemplateFieldActions ref="actions" template-id="template-1" section-title="Datos" :section-id="sectionId" :field="field" :choice-fields="choiceFields" /></TooltipProvider>',
 }, { attachTo: document.body });
 
 describe('TemplateFieldActions', () => {

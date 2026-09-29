@@ -30,7 +30,7 @@ const payload: TemplatePayload = {
     institution: '/logo.png', faculty: '/faculty.png',
     institution_size: { width: 120, height: 40 }, faculty_size: { width: 120, height: 40 },
   },
-  blockTypes: [{ value: 'text', label: 'Texto' }],
+  blockTypes: [{ value: 'free_text', label: 'Texto libre' }],
   appearanceOptions: {
     fonts: [{ value: 'Arial', label: 'Arial' }],
     body_sizes: [{ value: 11, label: '11' }],

@@ -4,13 +4,13 @@ import {
     ChevronDown,
     CircleHelp,
     FileText,
+    List,
     Plus,
-    Rows3,
+    Table2,
     UserPen,
 } from '@lucide/vue';
 import { computed } from 'vue';
 import { PROJECT_PREFIX } from '@/components/domain/configuration/template-table/inlineNodeLabel';
-import type { TableRowRole } from '@/components/domain/configuration/template-table/types';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -23,22 +23,15 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { TableColumn } from '@/lib/tableLayout';
 import type { TemplateVariable } from '@/lib/templateDocument';
 
 /*
- * Las marcas de la hoja (I-155) se ponen sin preguntas: su nombre sale del contexto.
- * Dentro de una tabla se agregan las filas que agrega el docente. Lo propio de
- * Planificación (unidades, horas y totales) viene de fábrica y no se configura aquí.
+ * Insertar en la hoja (I-155, I-156): estructura (tabla y lista) y marcas. Las marcas
+ * se ponen sin preguntas; su nombre sale del contexto.
  */
 const props = defineProps<{
     disabled: boolean;
-    inTable: boolean;
     variables: TemplateVariable[];
-    repeatedColumns: TableColumn[];
-    canInsertRepeatedColumn: (column: TableColumn) => boolean;
-    selectedRowRole: TableRowRole;
-    selectedRowHasColumns: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -46,9 +39,8 @@ const emit = defineEmits<{
     teacher: [];
     yesNo: [];
     project: [];
-    insertRepeatedColumn: [column: TableColumn];
-    newData: [];
-    rowRole: [value: TableRowRole];
+    table: [];
+    list: [];
 }>();
 
 const automatic = computed(() => props.variables.filter((variable) => !variable.key.startsWith(PROJECT_PREFIX)));
@@ -69,7 +61,18 @@ const automatic = computed(() => props.variables.filter((variable) => !variable.
                 <ChevronDown data-icon="inline-end" aria-hidden="true" />
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" class="w-72">
+        <DropdownMenuContent align="start" class="w-64">
+            <DropdownMenuGroup>
+                <DropdownMenuItem @select="emit('table')">
+                    <Table2 />
+                    Tabla
+                </DropdownMenuItem>
+                <DropdownMenuItem @select="emit('list')">
+                    <List />
+                    Lista
+                </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
             <DropdownMenuGroup>
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
@@ -88,7 +91,6 @@ const automatic = computed(() => props.variables.filter((variable) => !variable.
                         </DropdownMenuGroup>
                     </DropdownMenuSubContent>
                 </DropdownMenuSub>
-
                 <DropdownMenuItem @select="emit('teacher')">
                     <UserPen />
                     Docente
@@ -101,50 +103,6 @@ const automatic = computed(() => props.variables.filter((variable) => !variable.
                     <FileText />
                     Proyecto de carrera
                 </DropdownMenuItem>
-
-                <DropdownMenuSub v-if="inTable">
-                    <DropdownMenuSubTrigger>
-                        <Rows3 />
-                        Filas que agrega el docente
-                    </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent class="max-h-80 w-80 overflow-y-auto">
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem
-                                v-if="selectedRowRole === 'fixed'"
-                                @select="emit('rowRole', 'record')"
-                            >
-                                El docente repite esta fila
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                v-else-if="selectedRowRole === 'record'"
-                                :disabled="selectedRowHasColumns"
-                                @select="emit('rowRole', 'fixed')"
-                            >
-                                Esta fila ya no la repite el docente
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        <template v-if="selectedRowRole !== 'fixed'">
-                            <DropdownMenuSeparator />
-                            <DropdownMenuGroup>
-                                <DropdownMenuItem
-                                    v-for="column in repeatedColumns"
-                                    :key="column.key"
-                                    :disabled="!canInsertRepeatedColumn(column)"
-                                    @select="emit('insertRepeatedColumn', column)"
-                                >
-                                    <span class="truncate">{{ column.label }}</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                    :disabled="selectedRowRole === 'total'"
-                                    @select="emit('newData')"
-                                >
-                                    <Plus />
-                                    Nuevo dato que llena el docente…
-                                </DropdownMenuItem>
-                            </DropdownMenuGroup>
-                        </template>
-                    </DropdownMenuSubContent>
-                </DropdownMenuSub>
             </DropdownMenuGroup>
         </DropdownMenuContent>
     </DropdownMenu>

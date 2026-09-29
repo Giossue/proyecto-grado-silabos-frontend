@@ -16,19 +16,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
-import type { TemplateContentType } from '@/types/configuration';
-
-type EditableContentType = Exclude<
-    TemplateContentType,
-    'institutional'
->;
+import type { PartForm } from '@/types/configuration';
 
 const props = withDefaults(
     defineProps<{
         templateId: string;
         sectionId: string;
         position: number;
-        blockTypes: { value: EditableContentType; label: string }[];
+        blockTypes: { value: PartForm; label: string }[];
         choice?: boolean;
     }>(),
     { choice: false },
@@ -49,7 +44,7 @@ const form = useForm({
     position: props.position + 1,
     key: '',
     label: '',
-    content_type: 'text',
+    content_type: 'free_text',
 });
 
 const keyFor = (): string =>
@@ -61,7 +56,7 @@ const reset = (): void => {
     form.position = props.position + 1;
     form.key = keyFor();
     form.label = '';
-    form.content_type = 'text';
+    form.content_type = 'free_text';
 };
 
 reset();
@@ -71,8 +66,6 @@ const errorFor = (path: string): string | undefined =>
 
 const submit = (): void => {
     form.position = props.position + 1;
-    // Párrafo y lista nacen con la hoja vacía; la tabla trae su estructura (I-155).
-    form.transform((data) => ({ ...data, blank: data.content_type !== 'table' }));
     form.post(TemplateController.storeField.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {

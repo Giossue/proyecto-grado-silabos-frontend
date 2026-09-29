@@ -13,6 +13,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
+import { freeTextPlain, isFreeTextDocument, renderFreeText } from '@/components/domain/syllabus/freeTextRender';
 import type { PlanningExpectations, TableLayout } from '@/lib/tableLayout';
 import { displayDocumentValue } from '@/lib/templateDocument';
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
@@ -35,7 +37,7 @@ type Options = {
     };
     prefix: string;
     emit: {
-        (event: 'value', key: string, value: string | number | boolean | string[]): void;
+        (event: 'value', key: string, value: string | number | boolean | string[] | DocumentNode): void;
         (event: 'rows', key: string, rows: Row[]): void;
     };
     setColumn: (context: Context, key: string, value: string | number) => void;
@@ -86,6 +88,21 @@ export const createDocumentInput = (options: Options) => {
                 options.emit('value', key, value);
             }
         };
+        // Texto libre (I-156): el docente escribe con su propio formato.
+        if (!isColumn && kind === 'texto_libre') {
+            if (!canEdit) {
+                return isFreeTextDocument(value) && freeTextPlain(value).trim() !== ''
+                    ? renderFreeText(value)
+                    : h('span', { class: 'document-value' }, options.props.preview ? label : '');
+            }
+
+            return h(FreeTextEditor, {
+                id: `${options.prefix}-${path}`,
+                label,
+                modelValue: isFreeTextDocument(value) ? value : null,
+                'onUpdate:modelValue': (document: DocumentNode) => options.emit('value', key, document),
+            });
+        }
         const style = markStyle(node, context.insideCell === true);
         const text = displayDocumentValue(value);
 

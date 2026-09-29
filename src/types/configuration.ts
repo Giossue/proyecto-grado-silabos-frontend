@@ -5,6 +5,9 @@ import type {
     TemplateVariable,
 } from '@/lib/templateDocument';
 
+/** Forma de una parte nueva (I-156): la escribe el docente o la arma Administración. */
+export type PartForm = 'free_text' | 'template';
+
 export type TemplateContentType =
     | 'text'
     | 'table'
@@ -105,7 +108,7 @@ export type TemplateBuilderProps = {
         sections: TemplateSection[];
     };
     blockTypes: {
-        value: Exclude<TemplateContentType, 'institutional'>;
+        value: PartForm;
         label: string;
     }[];
     appearanceOptions: TemplateAppearanceOptions;
