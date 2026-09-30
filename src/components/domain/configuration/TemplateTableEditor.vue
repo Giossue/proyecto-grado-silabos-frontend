@@ -436,6 +436,14 @@ defineExpose({ getDocument });
 </template>
 
 <style>
+.template-table-editor ul {
+    list-style: disc;
+    padding-left: 24px;
+}
+.template-table-editor ol {
+    list-style: decimal;
+    padding-left: 24px;
+}
 .template-table-editor .tiptap {
     min-width: 0;
     width: 100%;
