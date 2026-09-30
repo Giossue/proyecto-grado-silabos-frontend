@@ -8,14 +8,13 @@ import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Textarea } from '@/components/ui/textarea';
 
 const props = withDefaults(defineProps<{ processId: string; display?: 'button' | 'menu' }>(), { display: 'button' });
 const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
-const form = ref({ due_at: '', reason: '' });
+const form = ref({ due_at: '' });
 
 const submit = async (): Promise<void> => {
   processing.value = true;
@@ -23,7 +22,7 @@ const submit = async (): Promise<void> => {
   try {
     const result = await extendProcessDeadline(props.processId, form.value);
     open.value = false;
-    form.value = { due_at: '', reason: '' };
+    form.value = { due_at: '' };
     emit('saved', result.message);
   } catch (reason) {
     errors.value = reason instanceof ApiError ? reason.errors : {};
@@ -39,7 +38,7 @@ const submit = async (): Promise<void> => {
     trigger-label="Prorrogar plazo"
     :show-trigger="display !== 'menu'"
     title="Prorrogar el plazo de entrega"
-    description="La prórroga mueve únicamente la fecha límite de entrega hacia adelante, alcanza a todas las convocatorias del proceso y conserva el motivo y la fecha anterior en auditoría."
+    description="La prórroga mueve únicamente la fecha límite de entrega hacia adelante, alcanza a todas las convocatorias del proceso y conserva la fecha anterior en auditoría."
   >
     <template #trigger><Button variant="outline">Prorrogar plazo</Button></template>
     <template #default="{ close }">
@@ -49,19 +48,7 @@ const submit = async (): Promise<void> => {
             <FieldLabel for="extension-due" required>Nueva fecha límite de entrega</FieldLabel>
             <DatePicker id="extension-due" v-model="form.due_at" required :aria-invalid="Boolean(errors.due_at)" />
             <p class="text-sm text-muted-foreground">Debe ser posterior a la fecha límite vigente.</p>
-            <FieldError :errors="errors.due_at" />
-          </Field>
-          <Field :data-invalid="Boolean(errors.reason)">
-            <FieldLabel for="extension-reason" required>Motivo</FieldLabel>
-            <Textarea
-              id="extension-reason"
-              v-model="form.reason"
-              rows="3"
-              placeholder="Relevo de docente por licencia; el reemplazo asumió el 12 de octubre."
-              required
-              :aria-invalid="Boolean(errors.reason)"
-            />
-            <FieldError :errors="[...(errors.reason ?? []), ...(errors.process ?? [])]" />
+            <FieldError :errors="[...(errors.due_at ?? []), ...(errors.process ?? [])]" />
           </Field>
           <FormSheetActions :close="close" :processing="processing" :icon="CalendarClock" label="Prorrogar entrega" />
         </FieldGroup>

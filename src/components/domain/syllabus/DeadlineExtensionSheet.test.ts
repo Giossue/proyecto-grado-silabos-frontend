@@ -28,19 +28,13 @@ describe('DeadlineExtensionSheet', () => {
     expect(document.body.textContent).not.toContain('Etapa');
 
     wrapper.findComponent(DatePicker).vm.$emit('update:modelValue', '2027-02-15');
-    const reason = document.body.querySelector<HTMLTextAreaElement>('#extension-reason');
-    expect(reason).not.toBeNull();
-    reason!.value = 'Ampliación institucional por relevo de docentes.';
-    reason!.dispatchEvent(new Event('input'));
     await flushPromises();
+    expect(document.body.querySelector('#extension-reason')).toBeNull();
 
     document.body.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
     await flushPromises();
 
-    expect(extendProcessDeadline).toHaveBeenCalledWith('process-1', {
-      due_at: '2027-02-15',
-      reason: 'Ampliación institucional por relevo de docentes.',
-    });
+    expect(extendProcessDeadline).toHaveBeenCalledWith('process-1', { due_at: '2027-02-15' });
     expect(wrapper.emitted('saved')).toEqual([['Plazo prorrogado.']]);
     wrapper.unmount();
   });

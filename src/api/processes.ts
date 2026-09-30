@@ -38,5 +38,5 @@ export const deleteProcess = (processId: string) =>
 export const transitionProcess = (processId: string, transition: 'pausar' | 'reanudar' | 'cerrar') =>
   api<{ message: string }>(`/admin/processes/${processId}/${transition}`, { method: 'POST' });
 
-export const extendProcessDeadline = (processId: string, payload: { due_at: string; reason: string }) =>
+export const extendProcessDeadline = (processId: string, payload: { due_at: string }) =>
   api<{ message: string }>(`/admin/processes/${processId}/deadline`, { method: 'POST', body: JSON.stringify(payload) });

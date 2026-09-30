@@ -150,8 +150,5 @@ export const reopenSyllabus = (syllabusId: string, cause: string) =>
     method: "POST",
     body: JSON.stringify({ cause, idempotency_key: crypto.randomUUID() }),
   });
-export const resetSyllabus = (syllabusId: string, reason: string) =>
-  api<{ message: string }>(`/coordination/syllabi/${syllabusId}/reset`, {
-    method: "POST",
-    body: JSON.stringify({ reason }),
-  });
+export const resetSyllabus = (syllabusId: string) =>
+  api<{ message: string }>(`/coordination/syllabi/${syllabusId}/reset`, { method: "POST" });
