@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { ChevronDown, Pencil, UserPlus } from "@lucide/vue";
+import { ArrowLeft, ChevronDown, Pencil, UserPlus } from "@lucide/vue";
 import { useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
 import AppearanceToggle from "@/components/AppearanceToggle.vue";
@@ -183,7 +183,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
 <template>
   <div v-if="mode === 'curriculum' && editingCurriculum && curriculum && schedule && assignments" class="flex min-h-dvh min-w-0 flex-col bg-background">
     <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-sm backdrop-blur sm:px-5" aria-label="Herramientas del editor de malla">
-      <Button variant="link" size="sm" class="h-auto px-0" @click="closeCurriculumEditor">Volver a la vista</Button>
+      <Button variant="link" size="sm" class="h-auto px-0" @click="closeCurriculumEditor"><ArrowLeft aria-hidden="true" />Volver a la vista</Button>
       <span class="hidden min-w-0 flex-1 truncate text-center text-sm font-medium sm:block">Malla de {{ curriculum.career.name }}</span>
       <CurriculumActions :curriculum="curriculum.curriculum" @configure="configurationOpen = true" />
       <AppearanceToggle />

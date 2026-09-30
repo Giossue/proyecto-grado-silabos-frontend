@@ -3,7 +3,7 @@ import CommentEntry from '@/components/domain/CommentEntry.vue';
 import EmptyState from '@/components/domain/EmptyState.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
-import { BookCheck, CircleSlash, MessageSquareText } from '@lucide/vue';
+import { ArrowLeft, BookCheck, CircleSlash, MessageSquareText } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -139,7 +139,7 @@ onMounted(load);
     :title="review.subject"
     :description="`${review.code} · ${review.career} · ${review.period} · Paralelo(s) ${review.parallels.join(', ')} · ${review.teachers.join(', ')}`"
   >
-    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.library.reviews">← Volver a revisiones</RouterLink></Button></template>
+    <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="paths.library.reviews"><ArrowLeft aria-hidden="true" />Volver a revisiones</RouterLink></Button></template>
     <template #meta>
       <Badge variant="secondary">Revisión {{ review.revision_number }}</Badge>
       <Badge :variant="libraryStateVariant(review.state)">{{ libraryStateLabel(review.state) }}</Badge>

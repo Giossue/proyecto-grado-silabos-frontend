@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ArrowLeft } from '@lucide/vue';
 import { onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -43,7 +44,7 @@ onMounted(() => { void load(); });
     title="Comparar revisiones"
     :description="data ? `${data.syllabus.subject} · ${data.syllabus.code} · ${data.syllabus.period}` : 'Contenido enviado en dos revisiones del expediente.'"
   >
-    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.coordination.review(String(route.params.after))">← Volver al expediente</RouterLink></Button></template>
+    <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="paths.coordination.review(String(route.params.after))"><ArrowLeft aria-hidden="true" />Volver al expediente</RouterLink></Button></template>
     <template v-if="data" #meta><Badge variant="secondary">{{ data.comparison.changed_fields }} campo(s) con cambios</Badge></template>
 
     <LoadErrorState v-if="error" :message="error" @retry="load" />

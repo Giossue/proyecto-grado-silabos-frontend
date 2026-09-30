@@ -2,7 +2,7 @@
 import EvidenceDisclosure from '@/components/domain/EvidenceDisclosure.vue';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { ArrowRight, Check } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Check } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { PURGE_CANCELLED_MESSAGE } from '@/api/career-academics';
@@ -138,7 +138,7 @@ const apply = async () => {
     <template v-if="detail.status === 'lista' && detail.proposal?.values.length">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <p class="text-sm text-muted-foreground" aria-live="polite">{{ detail.proposal.values.length }} datos encontrados · {{ detail.proposal.values.length - pendingCount }} listos · {{ pendingCount }} requieren revisión</p>
-        <Button v-if="unmatchedNames.length" type="button" variant="link" size="sm" class="px-0" @click="phase = 'subjects'">Volver a las materias</Button>
+        <Button v-if="unmatchedNames.length" type="button" variant="link" size="sm" class="h-auto px-0" @click="phase = 'subjects'"><ArrowLeft aria-hidden="true" />Volver a las materias</Button>
       </div>
       <Field v-if="pendingCount" orientation="horizontal"><Checkbox id="curricular-only-pending" v-model="onlyPending" /><FieldLabel for="curricular-only-pending">Mostrar solo los datos que requieren revisión</FieldLabel></Field>
     </template>

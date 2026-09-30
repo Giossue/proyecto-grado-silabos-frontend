@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
-import { Inbox, LoaderCircle, Pencil, Plus, Sparkles } from '@lucide/vue';
+import { ArrowLeft, Inbox, LoaderCircle, Pencil, Plus, Sparkles } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { createTemplate, formatTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
@@ -197,7 +197,7 @@ onBeforeUnmount(() => {
                 @personalize="appearanceOpen = true"
             >
                 <template #ribbon-start>
-                    <Button variant="link" size="sm" class="h-auto px-0" @click="editing = false">Volver a la vista</Button>
+                    <Button variant="link" size="sm" class="h-auto px-0" @click="editing = false"><ArrowLeft aria-hidden="true" />Volver a la vista</Button>
                 </template>
             </TemplateVisualBuilder>
         </main>

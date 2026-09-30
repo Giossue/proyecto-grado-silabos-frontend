@@ -4,7 +4,7 @@ import EmptyState from '@/components/domain/EmptyState.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { syllabusStateLabel } from '@/lib/syllabusStates';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
-import { LockKeyhole, RotateCcw, ShieldCheck, Undo2 } from '@lucide/vue';
+import { ArrowLeft, LockKeyhole, RotateCcw, ShieldCheck, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -106,7 +106,7 @@ onMounted(load);
 
 <template>
   <PageFrame v-if="data && !loadError" :title="data.syllabus.subject" :description="`${data.syllabus.code} · ${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
-    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.coordination.reviews">← Volver a la cola</RouterLink></Button></template>
+    <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="paths.coordination.reviews"><ArrowLeft aria-hidden="true" />Volver a la cola</RouterLink></Button></template>
     <template #meta>
       <Badge variant="secondary">Revisión {{ data.revision.number }}</Badge>
       <Badge variant="outline">{{ syllabusStateLabel(data.syllabus.state) }}</Badge>
