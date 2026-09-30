@@ -77,12 +77,12 @@ const save = (): void => {
     form.patch(url, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success('Parte guardada.');
+            toast.success('Campo guardado.');
             editOpen.value = false;
         },
         onError: (errors) => {
             if (!('purge_required' in errors)) {
-                toast.error(Object.values(errors)[0] ?? 'No se pudo guardar la parte.');
+                toast.error(Object.values(errors)[0] ?? 'No se pudo guardar el campo.');
             }
         },
     });
@@ -97,14 +97,14 @@ const destroy = (): void => {
         {
             preserveScroll: true,
             onSuccess: () => {
-                toast.success('Parte eliminada.');
+                toast.success('Campo eliminado.');
                 deleteOpen.value = false;
             },
             onError: (errors) => {
                 if (!('purge_required' in errors)) {
                     toast.error(
                         Object.values(errors)[0] ??
-                            'No se pudo eliminar la parte.',
+                            'No se pudo eliminar el campo.',
                     );
                 }
             },
@@ -131,7 +131,7 @@ defineExpose({
                             variant="outline"
                             size="icon-sm"
                             class="size-7 text-foreground"
-                            :aria-label="`Acciones de la parte ${title}`"
+                            :aria-label="`Acciones del campo ${title}`"
                         >
                             <MoreHorizontal aria-hidden="true" />
                         </Button>
@@ -139,7 +139,7 @@ defineExpose({
                     <DropdownMenuContent align="end">
                         <DropdownMenuItem @select="openEdit">
                             <Pencil aria-hidden="true" />
-                            Propiedades de la parte
+                            Propiedades del campo
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -147,21 +147,21 @@ defineExpose({
                             @select="deleteOpen = true"
                         >
                             <Trash2 aria-hidden="true" />
-                            Eliminar parte
+                            Eliminar campo
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </span>
         </TooltipTrigger>
         <TooltipContent paper side="left" :side-offset="8">
-            Acciones de la parte
+            Acciones del campo
         </TooltipContent>
     </Tooltip>
 
     <Dialog v-model:open="editOpen">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Propiedades de la parte</DialogTitle>
+                <DialogTitle>Propiedades del campo</DialogTitle>
                 <DialogDescription>
                     Lo que llena el docente y cuándo se pide se define en la hoja.
                 </DialogDescription>
@@ -180,7 +180,7 @@ defineExpose({
                             :disabled="form.processing"
                         />
                         <FieldDescription>
-                            Si lo deja vacío, la parte no lleva subtítulo.
+                            Si lo deja vacío, el campo no lleva subtítulo.
                         </FieldDescription>
                         <FieldError :errors="[form.errors.label ?? form.errors.title]" />
                     </Field>
@@ -195,7 +195,7 @@ defineExpose({
                                 Hoja horizontal
                             </FieldLabel>
                             <FieldDescription>
-                                Para tablas anchas. La sección de esta parte se
+                                Para tablas anchas. La sección de este campo se
                                 imprime en una hoja horizontal.
                             </FieldDescription>
                         </FieldContent>
@@ -223,7 +223,7 @@ defineExpose({
     <Dialog v-model:open="deleteOpen">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Eliminar parte</DialogTitle>
+                <DialogTitle>Eliminar campo</DialogTitle>
                 <DialogDescription>
                     Se quitará «{{ title }}» de «{{ sectionTitle }}». Si hay
                     sílabos en curso afectados, se pedirá confirmar su
@@ -252,7 +252,7 @@ defineExpose({
                         data-icon="inline-start"
                         aria-hidden="true"
                     />
-                    Eliminar parte
+                    Eliminar campo
                 </Button>
             </DialogFooter>
         </DialogContent>

@@ -167,7 +167,7 @@ const dataAttributes = computed(() => ({
                         </FieldLabel>
                     </Field>
                     <FieldDescription>
-                        {{ candidates.length ? 'Lo que no marque se pide siempre. Se guarda con la hoja.' : 'Inserte en esta parte las preguntas «Docente» que dependen de esta respuesta.' }}
+                        {{ candidates.length ? 'Lo que no marque se pide siempre. Se guarda con la hoja.' : 'Inserte en este campo las preguntas «Docente» que dependen de esta respuesta.' }}
                     </FieldDescription>
                 </FieldSet>
             </PopoverContent>

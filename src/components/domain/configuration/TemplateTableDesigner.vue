@@ -161,13 +161,13 @@ const save = (): void => {
     form.patch(url.value, {
         preserveScroll: true,
         onSuccess: () => {
-            toast.success('Parte guardada.');
+            toast.success('Campo guardado.');
             close(true);
         },
         onError: (errors) => {
             if (!('purge_required' in errors)) {
                 toast.error(
-                    Object.values(errors)[0] ?? 'No se pudo guardar la parte.',
+                    Object.values(errors)[0] ?? 'No se pudo guardar el campo.',
                 );
             }
         },
@@ -300,7 +300,7 @@ defineExpose({ start });
             />
 
             <Alert v-if="error" class="mt-4" variant="destructive">
-                <AlertTitle>No se pudo guardar la parte</AlertTitle>
+                <AlertTitle>No se pudo guardar el campo</AlertTitle>
                 <AlertDescription>{{ error }}</AlertDescription>
             </Alert>
 
@@ -328,7 +328,7 @@ defineExpose({ start });
         <UnsavedChangesDialog
             :open="discardOpen"
             title="Descartar cambios"
-            description="Hay cambios sin guardar en esta parte. ¿Desea descartarlos?"
+            description="Hay cambios sin guardar en este campo. ¿Desea descartarlos?"
             @update:open="updateDiscardOpen"
             @continue="continueEditing"
             @discard="discardChanges"

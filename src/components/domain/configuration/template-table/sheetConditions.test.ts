@@ -27,7 +27,7 @@ describe('preguntas de seguimiento que ofrece la hoja (I-159)', () => {
         expect(keys(card({ key: 'discapacidad', value: 'Sí' }), 'discapacidad')).toEqual(['tipo', 'adaptacion', 'formacion']);
     });
 
-    it('fuera de tablas ofrece todas las preguntas del docente de la parte', () => {
+    it('fuera de tablas ofrece todas las preguntas del docente del campo', () => {
         const doc = ProseMirrorNode.fromJSON(schema, { type: 'doc', content: [
             { type: 'paragraph', content: [field('evalua', 'Evalúa en línea', { kind: 'seleccion_unica', options: ['Sí', 'No'] })] },
             { type: 'paragraph', content: [field('plataforma', 'Plataforma')] },

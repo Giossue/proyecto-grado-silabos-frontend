@@ -160,7 +160,7 @@ onBeforeUnmount(() => {
     <PageFrame
         v-else-if="!payload?.template"
         title="Plantilla de sílabo"
-        description="El formato del sílabo: qué secciones y partes tiene, y en qué orden. Se edita en el sitio; cada sílabo entregado conserva su propia copia."
+        description="El formato del sílabo: qué secciones y campos tiene, y en qué orden. Se edita en el sitio; cada sílabo entregado conserva su propia copia."
     >
         <template #actions>
             <Button :disabled="creating || Boolean(payload?.processLock)" @click="create">

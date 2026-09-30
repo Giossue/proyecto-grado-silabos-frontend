@@ -276,11 +276,11 @@ const moveField = (
         {
             preserveScroll: true,
             preserveState: true,
-            onSuccess: () => toast.success('Parte movida'),
+            onSuccess: () => toast.success('Campo movido'),
             onError: (errors) =>
                 toast.error(
                     Object.values(errors)[0] ??
-                        'No se pudo cambiar el orden de la parte',
+                        'No se pudo cambiar el orden del campo',
                 ),
             onFinish: () => {
                 reorderPending.value = false;
@@ -512,7 +512,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                         data-icon="inline-start"
                                         aria-hidden="true"
                                     />
-                                    Eliminar parte
+                                    Eliminar campo
                                 </Button>
                             </template>
                         </template>
@@ -707,7 +707,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         class="mb-3 text-sm text-muted-foreground"
                         data-page-unit
                     >
-                        Esta sección todavía no tiene partes.
+                        Esta sección todavía no tiene campos.
                     </p>
 
                     <article
@@ -723,7 +723,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                 selection.kind === 'field' &&
                                 selection.blockId === block.id,
                         }"
-                        :aria-label="`Parte ${block.title.trim() || 'sin nombre'}`"
+                        :aria-label="`Campo ${block.title.trim() || 'sin nombre'}`"
                         :role="readonly || activeTable ? undefined : 'button'"
                         :aria-pressed="
                             readonly || activeTable
@@ -811,7 +811,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                 class="absolute top-1/2 left-full ms-1 flex -translate-y-1/2 items-center gap-1"
                             >
                                 <TemplateToolbarButton
-                                    label="Mover parte arriba"
+                                    label="Mover campo arriba"
                                     variant="outline"
                                     :disabled="
                                         reorderPending || fieldIndex === 0
@@ -821,7 +821,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                     <ArrowUp aria-hidden="true" />
                                 </TemplateToolbarButton>
                                 <TemplateToolbarButton
-                                    label="Mover parte abajo"
+                                    label="Mover campo abajo"
                                     variant="outline"
                                     :disabled="
                                         reorderPending ||

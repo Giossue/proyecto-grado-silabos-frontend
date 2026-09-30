@@ -82,7 +82,7 @@ const editor = useEditor({
     content: props.document,
     editorProps: {
         attributes: {
-            'aria-label': 'Editar parte de la plantilla',
+            'aria-label': 'Editar campo de la plantilla',
             role: 'textbox',
             'aria-multiline': 'true',
             spellcheck: 'true',

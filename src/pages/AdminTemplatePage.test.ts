@@ -96,7 +96,7 @@ describe("AdminTemplatePage", () => {
     expect(edit).toBeDefined();
     await edit!.trigger("click");
     await flushPromises();
-    await wrapper.get('[aria-label="Parte Descripción"]').trigger("pointerdown");
+    await wrapper.get('[aria-label="Campo Descripción"]').trigger("pointerdown");
     await flushPromises();
 
     expect(document.querySelector('#template-editor-ribbon-tools')?.textContent).toContain('Propiedades');
@@ -142,7 +142,7 @@ describe("AdminTemplatePage", () => {
     const edit = wrapper.findAll("button").find((button) => button.text() === "Editar");
     await edit!.trigger("click");
     await flushPromises();
-    await wrapper.get('[aria-label="Parte Firmas"]').trigger("pointerdown");
+    await wrapper.get('[aria-label="Campo Firmas"]').trigger("pointerdown");
     await flushPromises();
 
     expect(document.querySelector('#template-editor-ribbon-tools')?.textContent).toContain('Propiedades');
@@ -150,7 +150,7 @@ describe("AdminTemplatePage", () => {
     wrapper.unmount();
   });
 
-  it("muestra horizontal la hoja de una sección con una parte en hoja horizontal", async () => {
+  it("muestra horizontal la hoja de una sección con un campo en hoja horizontal", async () => {
     const landscape: TemplatePayload = {
       ...payload,
       template: {

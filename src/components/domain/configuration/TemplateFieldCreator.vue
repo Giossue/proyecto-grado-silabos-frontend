@@ -31,10 +31,10 @@ const props = withDefaults(
 );
 
 const texts = {
-    action: 'Agregar parte',
-    title: 'Nueva parte',
+    action: 'Agregar campo',
+    title: 'Nuevo campo',
     description: 'Se añadirá dentro de esta sección.',
-    done: 'Parte agregada.',
+    done: 'Campo agregado.',
 };
 
 const open = ref(false);
@@ -77,7 +77,7 @@ const submit = (): void => {
         onError: (errors) => {
             if (!('purge_required' in errors)) {
                 toast.error(
-                    Object.values(errors)[0] ?? 'No se pudo agregar la parte.',
+                    Object.values(errors)[0] ?? 'No se pudo agregar el campo.',
                 );
             }
         },
@@ -129,7 +129,7 @@ const updateOpen = (value: boolean): void => {
                             :aria-invalid="Boolean(errorFor('label'))"
                         />
                         <FieldDescription>
-                            Si lo deja vacío, la parte no lleva subtítulo.
+                            Si lo deja vacío, el campo no lleva subtítulo.
                         </FieldDescription>
                         <FieldError
                             v-if="errorFor('label')"

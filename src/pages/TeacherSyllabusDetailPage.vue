@@ -147,8 +147,8 @@ const emptyParts = computed(() =>
     .filter(isFieldEmpty).length,
 );
 const submitHint = computed(() => {
-  if (emptyParts.value === 1) return "Falta 1 parte por completar";
-  if (emptyParts.value > 1) return `Faltan ${emptyParts.value} partes por completar`;
+  if (emptyParts.value === 1) return "Falta 1 campo por completar";
+  if (emptyParts.value > 1) return `Faltan ${emptyParts.value} campos por completar`;
   return "";
 });
 const goToPart = (fieldId: string | null): void => {
@@ -455,7 +455,7 @@ onBeforeUnmount(() => {
   </header>
   <PageFrame
     title=""
-    :description="syllabus ? `${syllabus.code} · ${syllabus.convocation} · Paralelo(s) ${syllabus.parallels.join(', ')}` : 'Complete las partes del sílabo institucional.'"
+    :description="syllabus ? `${syllabus.code} · ${syllabus.convocation} · Paralelo(s) ${syllabus.parallels.join(', ')}` : 'Complete los campos del sílabo institucional.'"
   >
     <template #actions>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
@@ -468,7 +468,7 @@ onBeforeUnmount(() => {
     <template v-if="syllabus">
       <Alert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked"><AlertTitle>Edición no disponible</AlertTitle><AlertDescription>{{ editBlockReason }}</AlertDescription></Alert>
 
-      <Alert v-if="syllabus.state === 'correccion_solicitada' && libraryCorrection" class="library-correction"><Library aria-hidden="true" /><AlertTitle>Biblioteca pidió corregir la bibliografía</AlertTitle><AlertDescription>Solo puede cambiar la sección Bibliografía. Las demás partes quedan como las aprobó coordinación.</AlertDescription></Alert>
+      <Alert v-if="syllabus.state === 'correccion_solicitada' && libraryCorrection" class="library-correction"><Library aria-hidden="true" /><AlertTitle>Biblioteca pidió corregir la bibliografía</AlertTitle><AlertDescription>Solo puede cambiar la sección Bibliografía. Los demás campos quedan como los aprobó coordinación.</AlertDescription></Alert>
       <Alert v-else-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
 
       <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar'" variant="syllabus">

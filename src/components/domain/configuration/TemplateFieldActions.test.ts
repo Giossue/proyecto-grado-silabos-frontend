@@ -54,7 +54,7 @@ describe('TemplateFieldActions', () => {
         expect(window.document.querySelectorAll('input:not([type="hidden"]), button[role="checkbox"]')).toHaveLength(2);
     });
 
-    it('guarda nombre y orientación junto con la hoja de la parte', async () => {
+    it('guarda nombre y orientación junto con la hoja del campo', async () => {
         const wrapper = mountActions(block());
         await open(wrapper);
         const input = window.document.getElementById('edit-template-field-label') as HTMLInputElement;
@@ -71,7 +71,7 @@ describe('TemplateFieldActions', () => {
         });
     });
 
-    it('una parte anterior sin hoja guarda nombre y orientación en su pregunta', async () => {
+    it('un campo anterior sin hoja guarda nombre y orientación en su pregunta', async () => {
         const wrapper = mountActions(block({ document: null, content_type: 'multiple_choice', fields: [part('habilidades', 'Habilidades', { type: 'seleccion_multiple' })] }));
         await open(wrapper);
         await submit();

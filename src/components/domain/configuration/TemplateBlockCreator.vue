@@ -128,7 +128,7 @@ const updateOpen = (value: boolean): void => {
         :open="open"
         :trigger-label="empty ? 'Agregar primera sección' : 'Agregar sección'"
         title="Nueva sección"
-        description="La sección es un título numerado del sílabo. Dentro van sus partes."
+        description="La sección es un título numerado del sílabo. Dentro van sus campos."
         @update:open="updateOpen"
     >
         <template #trigger>
@@ -173,7 +173,7 @@ const updateOpen = (value: boolean): void => {
                                 class="flex items-center justify-between gap-2"
                             >
                                 <p class="text-sm font-medium">
-                                    Parte {{ index + 1 }}
+                                    Campo {{ index + 1 }}
                                 </p>
                                 <Button
                                     v-if="form.fields.length > 1"
@@ -181,7 +181,7 @@ const updateOpen = (value: boolean): void => {
                                     variant="ghost"
                                     size="icon-sm"
                                     :disabled="form.processing"
-                                    :aria-label="`Quitar parte ${index + 1}`"
+                                    :aria-label="`Quitar campo ${index + 1}`"
                                     @click="removeField(index)"
                                 >
                                     <Trash2 aria-hidden="true" />
@@ -235,7 +235,7 @@ const updateOpen = (value: boolean): void => {
                         :disabled="form.processing || form.fields.length >= 20"
                         @click="addField"
                     >
-                        Agregar otra parte
+                        Agregar otro campo
                     </Button>
                 </div>
                 <FormSheetActions

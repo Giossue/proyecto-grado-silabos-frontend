@@ -8,13 +8,13 @@ describe('fieldConditions', () => {
         { key: 'libre', type: 'texto_corto', value: '' },
     ];
 
-    it('oculta la parte mientras la condición no se cumple', () => {
+    it('oculta el campo mientras la condición no se cumple', () => {
         expect([...hiddenKeys(fields('No'))]).toEqual(['tipo']);
         expect([...hiddenKeys(fields(null))]).toEqual(['tipo']);
         expect([...hiddenKeys(fields('Sí'))]).toEqual([]);
     });
 
-    it('compara Sí/No y no oculta si la parte referida ya no existe', () => {
+    it('compara Sí/No y no oculta si el campo referido ya no existe', () => {
         expect(
             hiddenKeys([
                 { key: 'b', type: 'booleano', value: true },

@@ -4,12 +4,12 @@ import { isFreeTextPart, partFormLabel, sectionOrientation } from '@/lib/templat
 import type { TemplateFieldContainer } from '@/types/configuration';
 
 const part = (overrides: Partial<TemplateFieldContainer>): TemplateFieldContainer => ({
-    id: 'block', key: 'block', title: 'Parte', type: 'narrativa', content_type: 'text',
+    id: 'block', key: 'block', title: 'Campo', type: 'narrativa', content_type: 'text',
     document: null, fields: [], ...overrides,
 });
 
 describe('templateParts', () => {
-    it('nombra la forma con la que se creó la parte', () => {
+    it('nombra la forma con la que se creó el campo', () => {
         expect(partFormLabel(part({ content_type: 'text', document: { type: 'doc' }, fields: [{ key: 'libre', label: 'Libre', type: 'texto_libre' } as never] }))).toBe('Texto libre');
         expect(partFormLabel(part({ content_type: 'text', document: { type: 'doc' } }))).toBe('Personalizado');
         expect(partFormLabel(part({ content_type: 'text' }))).toBe('Párrafo');
@@ -17,12 +17,12 @@ describe('templateParts', () => {
         expect(partFormLabel(part({ content_type: 'table', fields: [{} as never] }))).toBe('Tabla');
     });
 
-    it('usa hoja horizontal cuando una parte de la sección la pide', () => {
+    it('usa hoja horizontal cuando un campo de la sección la pide', () => {
         expect(sectionOrientation([part({}), part({ page_orientation: 'landscape' })], 'portrait')).toBe('landscape');
         expect(sectionOrientation([part({})], 'portrait')).toBe('portrait');
     });
 
-    it('una parte de Texto libre se reconoce por su pregunta texto_libre', () => {
+    it('un campo de Texto libre se reconoce por su pregunta texto_libre', () => {
         expect(isFreeTextPart(part({ fields: [{ id: 'f', key: 'objetivo', label: 'Objetivo', type: 'texto_libre' }] } as never))).toBe(true);
         expect(isFreeTextPart(part({}))).toBe(false);
     });

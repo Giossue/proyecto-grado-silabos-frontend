@@ -167,7 +167,7 @@ describe("TeacherSyllabusDetailPage", () => {
     );
   });
 
-  it("muestra una parte solo cuando se cumple su condición y no borra lo escrito", async () => {
+  it("muestra un campo solo cuando se cumple su condición y no borra lo escrito", async () => {
     vi.useFakeTimers();
     const detail = syllabus("borrador", "booleano");
     detail.sections[0]!.blocks[0]!.fields.push({
@@ -294,7 +294,7 @@ describe("TeacherSyllabusDetailPage", () => {
   const buttonNamed = (wrapper: ReturnType<typeof mountPage>, name: string) =>
     wrapper.findAll("button").find((button) => button.text().includes(name));
 
-  it("deshabilita Enviar mientras alguna parte del docente sigue vacía", async () => {
+  it("deshabilita Enviar mientras algún campo del docente sigue vacío", async () => {
     const draft = syllabus("borrador");
     draft.sections[0].blocks[0].fields[0].value = "";
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
@@ -304,7 +304,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const send = buttonNamed(wrapper, "Enviar sílabo");
     expect(send).toBeDefined();
     expect(send!.attributes("disabled")).toBeDefined();
-    expect(wrapper.get(".submit-hint").text()).toBe("Falta 1 parte por completar");
+    expect(wrapper.get(".submit-hint").text()).toBe("Falta 1 campo por completar");
 
     await wrapper.get("#input-field-1").setValue("Contenido");
     expect(send!.attributes("disabled")).toBeUndefined();
