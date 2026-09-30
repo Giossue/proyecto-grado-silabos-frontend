@@ -42,7 +42,6 @@ const builder = computed<TemplateBuilderProps | null>(() => {
 
     return {
         processLock: value.processLock,
-        identificationSample: value.identificationSample ?? [],
         variables: value.variables,
         identificationDesign: value.identificationDesign,
         logos: value.logos,

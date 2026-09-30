@@ -85,7 +85,6 @@ export type TemplateAppearanceOptions = {
 
 export type TemplateBuilderProps = {
     processLock: string | null;
-    identificationSample: unknown[][];
     variables: TemplateVariable[];
     identificationDesign: DocumentNode;
     logos: {

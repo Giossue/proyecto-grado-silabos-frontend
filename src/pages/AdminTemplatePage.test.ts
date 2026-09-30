@@ -23,7 +23,6 @@ vi.mock("@/api/template", async (importOriginal) => ({
 
 const payload: TemplatePayload = {
   processLock: null,
-  identificationSample: [],
   variables: [{ key: "nombre_asignatura", label: "Asignatura", sample: "Inteligencia Artificial" }],
   identificationDesign: { type: "doc", content: [] },
   logos: {

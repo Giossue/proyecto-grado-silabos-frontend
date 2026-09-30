@@ -20,7 +20,7 @@ import TemplateTitleActions from '@/components/domain/configuration/TemplateTitl
 import TemplateToolbarButton from '@/components/domain/configuration/TemplateToolbarButton.vue';
 import PaginatedDocument from '@/components/domain/PaginatedDocument.vue';
 import { Button } from '@/components/ui/button';
-import { defaultDocument, nodesOfType } from '@/lib/templateDocument';
+import { defaultDocument } from '@/lib/templateDocument';
 import { isFreeTextPart, sectionOrientation } from '@/lib/templateParts';
 import { templatePreviewFields } from '@/lib/templatePreview';
 import { toast } from '@/lib/toast';
@@ -141,7 +141,9 @@ const fieldStyle = computed<CSSProperties>(() => ({
 }));
 
 const documentFor = (block: TemplateFieldContainer) =>
-    block.document ?? defaultDocument(block, props.identificationDesign);
+    block.content_type === 'institutional'
+        ? defaultDocument(block, props.identificationDesign)
+        : (block.document ?? defaultDocument(block, props.identificationDesign));
 const fieldsFor = (block: TemplateFieldContainer) =>
     templatePreviewFields(block.fields);
 const partNumber = (section: TemplateSection, index: number): number =>
@@ -150,9 +152,7 @@ const partNumber = (section: TemplateSection, index: number): number =>
         .filter((block) => block.title.trim() !== '').length;
 // Texto libre no tiene hoja que editar: el docente escribe ahí; el admin solo le pone nombre.
 const editableOnSheet = (block: TemplateFieldContainer): boolean =>
-    !isFreeTextPart(block) &&
-    (block.content_type !== 'institutional' ||
-        nodesOfType(documentFor(block), 'table').length > 0);
+    !isFreeTextPart(block) && block.content_type !== 'institutional';
 
 type SheetGroup = {
     orientation: TemplateAppearance['orientation'];
