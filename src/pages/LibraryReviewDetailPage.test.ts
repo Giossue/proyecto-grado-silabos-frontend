@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/api/client';
-import { commentLibraryReview, getLibraryReview, type LibraryReviewDetail } from '@/api/library';
+import { commentLibraryReview, getLibraryReview, verifyLibraryReview, type LibraryReviewDetail } from '@/api/library';
 import LibraryReviewDetailPage from '@/pages/LibraryReviewDetailPage.vue';
 
 const { toastSuccess } = vi.hoisted(() => ({ toastSuccess: vi.fn() }));
@@ -15,6 +15,7 @@ vi.mock('@/api/library', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/library')>()),
   getLibraryReview: vi.fn(),
   commentLibraryReview: vi.fn(),
+  verifyLibraryReview: vi.fn(),
 }));
 vi.mock('@/lib/toast', () => ({ toast: { success: toastSuccess, error: vi.fn(), info: vi.fn() } }));
 
@@ -32,6 +33,9 @@ const detail = (overrides: Partial<LibraryReviewDetail> = {}): LibraryReviewDeta
   sent_by: 'Docente Demo',
   state: 'pendiente',
   can_comment: true,
+  can_verify: true,
+  verified_at: null,
+  verified_by: null,
   template_variables: {},
   sections: [{
     key: 'bibliografia',
@@ -61,11 +65,36 @@ describe('LibraryReviewDetailPage', () => {
   beforeEach(() => {
     vi.mocked(getLibraryReview).mockReset();
     vi.mocked(commentLibraryReview).mockReset();
+    vi.mocked(verifyLibraryReview).mockReset();
     toastSuccess.mockReset();
     document.body.innerHTML = '';
   });
 
-  it('muestra solo la bibliografía en lectura y la firma de la revisión', async () => {
+  it('aprueba la bibliografía con confirmación y luego muestra la firma', async () => {
+    vi.mocked(getLibraryReview)
+      .mockResolvedValueOnce({ review: detail() })
+      .mockResolvedValueOnce({ review: detail({ state: 'por_firmar', can_verify: false, can_comment: false, verified_at: '2026-09-29T10:00:00-05:00', verified_by: 'Biblioteca Demo' }) });
+    vi.mocked(verifyLibraryReview).mockResolvedValue({ message: 'Bibliografía aprobada.' });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="signature-card"]').exists()).toBe(false);
+    await wrapper.findAll('button').find((item) => item.text().includes('Aprobar bibliografía'))!.trigger('click');
+    await flushPromises();
+    expect(verifyLibraryReview).not.toHaveBeenCalled();
+    const confirm = [...document.body.querySelectorAll('[role="dialog"] button')]
+      .find((item) => item.textContent?.includes('Aprobar bibliografía')) as HTMLButtonElement;
+    confirm.click();
+    await flushPromises();
+
+    expect(verifyLibraryReview).toHaveBeenCalledWith('revision-2', expect.any(String));
+    expect(toastSuccess).toHaveBeenCalledWith('Bibliografía aprobada.');
+    expect(wrapper.text()).toContain('Por firmar');
+    expect(wrapper.get('[data-testid="signature-card"]').text()).toBe('revision-2');
+    wrapper.unmount();
+  });
+
+  it('muestra solo la bibliografía en lectura, sin firma mientras falta verificar', async () => {
     vi.mocked(getLibraryReview).mockResolvedValue({ review: detail() });
     const wrapper = mountPage();
     await flushPromises();
@@ -74,7 +103,7 @@ describe('LibraryReviewDetailPage', () => {
     expect(wrapper.text()).toContain('Bibliografía básica');
     expect(wrapper.text()).toContain('Sommerville, Ingeniería de software');
     expect(wrapper.text()).toContain('Por verificar');
-    expect(wrapper.get('[data-testid="signature-card"]').text()).toBe('revision-2');
+    expect(wrapper.find('[data-testid="signature-card"]').exists()).toBe(false);
     expect(wrapper.find('#library-comment').exists()).toBe(true);
     wrapper.unmount();
   });
@@ -85,6 +114,7 @@ describe('LibraryReviewDetailPage', () => {
       .mockResolvedValueOnce({ review: detail({
         state: 'comentado',
         can_comment: false,
+        can_verify: false,
         comments: [{ comment: 'No está disponible la 10.ª edición.', commented_at: '2026-09-29T09:00:00-05:00', commented_by: 'Biblioteca Demo', revision_number: 2 }],
       }) });
     vi.mocked(commentLibraryReview).mockResolvedValue({ message: 'Comentario enviado al docente.' });

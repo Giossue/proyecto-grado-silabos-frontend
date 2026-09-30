@@ -3,7 +3,7 @@ import { BookCheck, CircleSlash, MessageSquareText } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { commentLibraryReview, getLibraryReview, type LibraryReviewDetail } from '@/api/library';
+import { commentLibraryReview, getLibraryReview, verifyLibraryReview, type LibraryReviewDetail } from '@/api/library';
 import type { SnapshotField } from '@/api/reviews';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -34,6 +34,9 @@ const actionError = ref('');
 const confirmOpen = ref(false);
 const sending = ref(false);
 const idempotencyKey = ref('');
+const verifyOpen = ref(false);
+const verifying = ref(false);
+const verifyKey = ref('');
 
 const formatDate = (value: string): string =>
   new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
@@ -99,6 +102,29 @@ const sendComment = async (): Promise<void> => {
   }
 };
 
+const askVerify = (): void => {
+  actionError.value = '';
+  verifyKey.value = crypto.randomUUID();
+  verifyOpen.value = true;
+};
+
+const verify = async (): Promise<void> => {
+  if (!review.value) return;
+  verifying.value = true;
+  actionError.value = '';
+  try {
+    const result = await verifyLibraryReview(review.value.revision_id, verifyKey.value);
+    verifyOpen.value = false;
+    toast.success(result.message);
+    await load();
+  } catch (failure) {
+    actionError.value = failure instanceof ApiError ? failure.message : 'No se pudo aprobar la bibliografía.';
+    verifyOpen.value = false;
+  } finally {
+    verifying.value = false;
+  }
+};
+
 watch(() => route.params.revision, (current, previous) => { if (current !== previous) void load(); });
 onMounted(load);
 </script>
@@ -116,9 +142,10 @@ onMounted(load);
       <span class="text-sm text-muted-foreground">Enviado por {{ review.sent_by }} · {{ formatDate(review.sent_at) }}</span>
     </template>
 
-    <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo enviar el comentario</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
+    <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo completar la acción</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <Alert v-if="review.state === 'firmado'"><BookCheck aria-hidden="true" /><AlertTitle>Bibliografía verificada</AlertTitle><AlertDescription>Biblioteca ya firmó este sílabo.</AlertDescription></Alert>
-    <Alert v-else-if="review.state === 'comentado'"><MessageSquareText aria-hidden="true" /><AlertTitle>Comentario enviado al docente</AlertTitle><AlertDescription>El docente corregirá la bibliografía. El sílabo volverá a esta bandeja con un PDF nuevo, firmado otra vez por docente y coordinación.</AlertDescription></Alert>
+    <Alert v-else-if="review.state === 'por_firmar'"><BookCheck aria-hidden="true" /><AlertTitle>Bibliografía aprobada</AlertTitle><AlertDescription>Aprobada<template v-if="review.verified_by"> por {{ review.verified_by }}</template><template v-if="review.verified_at"> el {{ formatDate(review.verified_at) }}</template>. Firme el PDF cuando docente y coordinación hayan firmado.</AlertDescription></Alert>
+    <Alert v-else-if="review.state === 'comentado'"><MessageSquareText aria-hidden="true" /><AlertTitle>Comentario enviado al docente</AlertTitle><AlertDescription>El docente corregirá la bibliografía. El sílabo volverá a esta bandeja para una nueva verificación.</AlertDescription></Alert>
     <Alert v-else-if="review.state === 'anulado'"><CircleSlash aria-hidden="true" /><AlertTitle>Envío anulado</AlertTitle><AlertDescription>El sílabo se reabrió después de este envío. Esta revisión queda solo para consulta.</AlertDescription></Alert>
 
     <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
@@ -144,7 +171,12 @@ onMounted(load);
       </main>
 
       <aside class="flex min-w-0 flex-col gap-6">
-        <DocumentSignatureCard :key="review.revision_id" :revision-id="review.revision_id" :file-name="`silabo-${review.code}-revision-${review.revision_number}`" @changed="load" />
+        <Card v-if="review.can_verify">
+          <CardHeader><CardTitle>Aprobar bibliografía</CardTitle><CardDescription>Si todos los libros están en biblioteca, apruebe la bibliografía. Después el docente genera el PDF y lo firman docente, coordinación y biblioteca.</CardDescription></CardHeader>
+          <CardContent><Button type="button" :disabled="verifying" @click="askVerify"><BookCheck data-icon="inline-start" aria-hidden="true" />Aprobar bibliografía</Button></CardContent>
+        </Card>
+
+        <DocumentSignatureCard v-if="['por_firmar', 'firmado'].includes(review.state)" :key="review.revision_id" :revision-id="review.revision_id" :file-name="`silabo-${review.code}-revision-${review.revision_number}`" @changed="load" />
 
         <Card v-if="review.can_comment">
           <CardHeader><CardTitle>Enviar comentario</CardTitle><CardDescription>Si algún libro no está en biblioteca, explíquelo al docente. El sílabo vuelve al docente para que corrija solo la bibliografía.</CardDescription></CardHeader>
@@ -179,11 +211,23 @@ onMounted(load);
       <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Enviar comentario al docente?</DialogTitle>
-          <DialogDescription>El sílabo vuelve al docente para que corrija solo la bibliografía. Las firmas de este PDF quedan anuladas: cuando el docente reenvíe, se generará un PDF nuevo que firmarán otra vez docente y coordinación antes de volver a biblioteca.</DialogDescription>
+          <DialogDescription>El sílabo vuelve al docente para que corrija solo la bibliografía. Cuando el docente la reenvíe, volverá a esta bandeja para una nueva verificación, sin pasar por coordinación.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose as-child><Button type="button" variant="outline" :disabled="sending">Cancelar</Button></DialogClose>
           <Button type="button" variant="destructive" :disabled="sending" @click="sendComment"><Spinner v-if="sending" data-icon="inline-start" /><MessageSquareText v-else data-icon="inline-start" aria-hidden="true" />Enviar comentario</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    <Dialog v-model:open="verifyOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>¿Aprobar la bibliografía?</DialogTitle>
+          <DialogDescription>Confirma que los libros están disponibles en biblioteca. El docente podrá generar el PDF y empezar las firmas; biblioteca firmará al final.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose as-child><Button type="button" variant="outline" :disabled="verifying">Cancelar</Button></DialogClose>
+          <Button type="button" :disabled="verifying" @click="verify"><Spinner v-if="verifying" data-icon="inline-start" /><BookCheck v-else data-icon="inline-start" aria-hidden="true" />Aprobar bibliografía</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

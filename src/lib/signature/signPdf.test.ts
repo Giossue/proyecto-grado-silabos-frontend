@@ -92,9 +92,9 @@ describe('firma incremental en el navegador', () => {
     const [teacherStamp, coordinationStamp, libraryStamp] = (['docente', 'coordinacion', 'biblioteca'] as const)
       .map((role) => fallbackStamp(role, 0, width));
 
-    expect(teacherStamp!.x).toBe(60);
+    expect(teacherStamp!.x).toBe(30);
     expect(coordinationStamp!.x + coordinationStamp!.width / 2).toBeCloseTo(width / 2);
-    expect(libraryStamp!.x + libraryStamp!.width).toBe(width - 60);
+    expect(libraryStamp!.x + libraryStamp!.width).toBe(width - 30);
     expect(teacherStamp!.x + teacherStamp!.width).toBeLessThan(coordinationStamp!.x);
     expect(coordinationStamp!.x + coordinationStamp!.width).toBeLessThan(libraryStamp!.x);
   });

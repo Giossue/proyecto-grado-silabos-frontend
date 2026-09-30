@@ -7,6 +7,7 @@ export type SignatureState =
   | 'pendiente_docente'
   | 'pendiente_coordinacion'
   | 'pendiente_envio_biblioteca'
+  | 'pendiente_verificacion_biblioteca'
   | 'pendiente_biblioteca'
   | 'firmado'
   | 'anulado';
@@ -16,7 +17,7 @@ export type SignatureStatus = {
   my_role: SignatureRole | null;
   can_sign: boolean;
   can_send_to_library: boolean;
-  library: { sent_at: string; sent_by: string } | null;
+  library: { sent_at: string; sent_by: string; verified_at: string | null; verified_by: string | null } | null;
   artifact_id: string | null;
   document: { sha256: string; size: number } | null;
   stamp: StampPosition | null;

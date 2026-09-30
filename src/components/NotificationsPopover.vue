@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
+import EmptyState from '@/components/domain/EmptyState.vue';
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Bell, BookOpen, CalendarClock, CheckCheck, ClipboardCheck, FileText, Library, MoreHorizontal, Sparkles, UserRound } from '@lucide/vue';
 import { computed, onMounted, ref, watch, type Component } from 'vue';
 import { useRoute } from 'vue-router';
@@ -15,6 +18,8 @@ import { relativeTime } from '@/lib/relativeTime';
 import { sessionState } from '@/state/session';
 
 const PREVIEW_LIMIT = 10;
+const statusOptions = [{ value: 'all', label: 'Todas' }, { value: 'unread', label: 'No leídas' }];
+const updateStatus = (value: string): void => { if (value === 'all' || value === 'unread') status.value = value; };
 
 const route = useRoute();
 const { open: openDestination } = useOpenNotification();
@@ -147,42 +152,18 @@ const ignoreBell = (event: Event): void => {
                 </DropdownMenu>
             </div>
 
-            <div class="flex gap-2 px-4" role="group" aria-label="Filtrar notificaciones">
-                <Button
-                    type="button"
-                    size="sm"
-                    class="rounded-full"
-                    :variant="status === 'all' ? 'secondary' : 'ghost'"
-                    :aria-pressed="status === 'all'"
-                    @click="status = 'all'"
-                >
-                    Todas
-                </Button>
-                <Button
-                    type="button"
-                    size="sm"
-                    class="rounded-full"
-                    :variant="status === 'unread' ? 'secondary' : 'ghost'"
-                    :aria-pressed="status === 'unread'"
-                    @click="status = 'unread'"
-                >
-                    No leídas
-                </Button>
-            </div>
+            <ChoiceGroup :model-value="status" :options="statusOptions" label="Filtrar notificaciones" class="px-4" @update:model-value="updateStatus" />
 
             <div class="max-h-[min(26rem,60vh)] overflow-y-auto px-2" :class="{ 'pb-3': !hasActiveRole }" aria-live="polite">
                 <div v-if="loading && items.length === 0" class="flex justify-center py-10">
                     <Spinner />
                 </div>
-                <p v-else-if="error" class="px-2 py-10 text-center text-sm text-destructive" role="alert">{{ error }}</p>
-                <p v-else-if="items.length === 0" class="px-2 py-10 text-center text-sm text-muted-foreground">
-                    {{ status === 'unread' ? 'No tiene notificaciones sin leer.' : 'No tiene notificaciones.' }}
-                </p>
+                <FeedbackAlert v-else-if="error" :message="error" />
+                <EmptyState v-else-if="items.length === 0" :title="status === 'unread' ? 'No tiene notificaciones sin leer.' : 'No tiene notificaciones.'" />
                 <ul v-else class="flex flex-col">
                     <li v-for="notification in items" :key="notification.id">
-                        <button
-                            type="button"
-                            class="flex w-full items-start gap-3 rounded-md px-2 py-2.5 text-left transition-colors hover:bg-muted focus-visible:bg-muted focus-visible:outline-hidden"
+                        <Button
+                            type="button" variant="ghost" size="row"
                             @click="select(notification)"
                         >
                             <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -206,7 +187,7 @@ const ignoreBell = (event: Event): void => {
                                 class="mt-4 size-2.5 shrink-0 rounded-full bg-primary"
                                 aria-label="Sin leer"
                             />
-                        </button>
+                        </Button>
                     </li>
                 </ul>
             </div>

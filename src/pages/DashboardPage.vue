@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BookOpenCheck, Building2, CalendarRange, CircleAlert, ClipboardCheck, FileSignature, FileStack, Library, MessageSquareText, PencilLine, UsersRound } from '@lucide/vue';
+import { BookOpenCheck, Building2, CalendarRange, CircleAlert, ClipboardCheck, FileSignature, FilePen, FileStack, Library, MessageSquareText, PencilLine, UsersRound } from '@lucide/vue';
 import type { Component } from 'vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -23,7 +23,7 @@ const error = ref<string | null>(null);
 const openingOpen = ref(false);
 const trackingOpen = ref(false);
 
-const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, correction_requested: CircleAlert, teachers_pending: UsersRound, library_pending: Library, library_signed: FileSignature, library_commented: MessageSquareText };
+const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, correction_requested: CircleAlert, teachers_pending: UsersRound, library_pending: Library, library_to_sign: FilePen, library_signed: FileSignature, library_commented: MessageSquareText };
 const setupRoutes: Record<string, string> = {
   faculties: paths.admin.academicSection('facultades'),
   careers: paths.admin.academicSection('carreras'),

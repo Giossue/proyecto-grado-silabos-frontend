@@ -536,7 +536,7 @@ describe("TeacherSyllabusDetailPage", () => {
 
     expect(document.body.textContent).toContain("¿Reenviar la bibliografía?");
     expect(document.body.textContent).toContain("no vuelve a revisión de coordinación");
-    expect(document.body.textContent).toContain("Se generará un PDF nuevo");
+    expect(document.body.textContent).toContain("vuelve a biblioteca para su verificación");
     const confirm = Array.from(document.body.querySelectorAll('[role="dialog"] button')).find((button) => button.textContent?.includes("Reenviar bibliografía"));
     (confirm as HTMLButtonElement).click();
     await flushPromises();

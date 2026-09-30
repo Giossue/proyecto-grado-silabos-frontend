@@ -2,7 +2,7 @@ import { api } from '@/api/client';
 import type { SnapshotSection } from '@/api/reviews';
 import type { PaginationMeta } from '@/types/pagination';
 
-export type LibraryReviewState = 'pendiente' | 'firmado' | 'comentado' | 'anulado';
+export type LibraryReviewState = 'pendiente' | 'por_firmar' | 'firmado' | 'comentado' | 'anulado';
 
 export type LibraryReviewItem = {
   revision_id: string;
@@ -28,6 +28,9 @@ export type LibraryComment = {
 
 export type LibraryReviewDetail = LibraryReviewItem & {
   can_comment: boolean;
+  can_verify: boolean;
+  verified_at: string | null;
+  verified_by: string | null;
   template_variables: Record<string, string>;
   sections: SnapshotSection[];
   comments: LibraryComment[];
@@ -53,4 +56,10 @@ export const commentLibraryReview = (revisionId: string, payload: { comment: str
   api<{ message: string }>(`/library/reviews/${revisionId}/comments`, {
     method: 'POST',
     body: JSON.stringify(payload),
+  });
+
+export const verifyLibraryReview = (revisionId: string, idempotencyKey: string) =>
+  api<{ message: string }>(`/library/reviews/${revisionId}/verify`, {
+    method: 'POST',
+    body: JSON.stringify({ idempotency_key: idempotencyKey }),
   });

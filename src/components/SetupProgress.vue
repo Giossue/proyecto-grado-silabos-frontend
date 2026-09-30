@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { computed, onMounted, ref } from 'vue';
 import { getDashboard, type SetupChecklist } from '@/api/dashboard';
 import { paths } from '@/lib/routes';
@@ -19,10 +21,10 @@ const visible = computed(() =>
 );
 const tone = computed(() =>
     percent.value < 34
-        ? { bar: 'bg-destructive', text: 'text-destructive' }
+        ? { bar: 'destructive' as const, text: 'text-destructive' }
         : percent.value < 67
-          ? { bar: 'bg-warning', text: 'text-warning' }
-          : { bar: 'bg-success', text: 'text-success' },
+          ? { bar: 'warning' as const, text: 'text-warning' }
+          : { bar: 'success' as const, text: 'text-success' },
 );
 
 onMounted(async () => {
@@ -37,16 +39,11 @@ onMounted(async () => {
 <template>
     <Tooltip v-if="visible && progress">
         <TooltipTrigger as-child>
-            <RouterLink
-                :to="paths.dashboard"
-                class="flex h-8 items-center gap-2 rounded-md px-2 text-xs text-muted-foreground tabular-nums hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-            >
-                <span class="h-1.5 w-20 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-                    <span class="block h-full rounded-full transition-[width]" :class="tone.bar" :style="{ width: `${percent}%` }" />
-                </span>
+            <Button as-child variant="ghost" size="sm"><RouterLink :to="paths.dashboard" class="tabular-nums">
+                <Progress :model-value="progress.done" :max="progress.total" :tone="tone.bar" class="h-1.5 w-20" :aria-label="`${progress.done} de ${progress.total} pasos de configuración`" />
                 <span class="font-medium" :class="tone.text">{{ progress.done }}/{{ progress.total }}</span>
                 <span class="sr-only">pasos de configuración del sistema completados</span>
-            </RouterLink>
+            </RouterLink></Button>
         </TooltipTrigger>
         <TooltipContent>Configuración del sistema</TooltipContent>
     </Tooltip>

@@ -1,4 +1,5 @@
 import { h } from 'vue';
+import BooleanChoice from '@/components/domain/BooleanChoice.vue';
 import type { VNodeChild } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -123,19 +124,11 @@ export const createDocumentInput = (options: Options) => {
 
         const choices = (field.options ?? []).map((option) => option.value);
         if (kind === 'seleccion_unica' && choices.join('|') === 'Sí|No') {
-            return h('span', { class: 'inline-flex gap-1', role: 'radiogroup', 'aria-label': label }, ['Sí', 'No'].map((option) => h(
-                Button,
-                {
-                    key: option,
-                    type: 'button',
-                    size: 'sm',
-                    variant: text === option ? 'default' : 'outline',
-                    role: 'radio',
-                    'aria-checked': text === option,
-                    onClick: () => change(option),
-                },
-                () => option,
-            )));
+            return h(BooleanChoice, {
+                label,
+                modelValue: text === 'Sí' ? true : text === 'No' ? false : null,
+                'onUpdate:modelValue': (selected: boolean) => change(selected ? 'Sí' : 'No'),
+            });
         }
 
         if (kind === 'seleccion_unica') {

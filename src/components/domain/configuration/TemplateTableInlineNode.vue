@@ -12,6 +12,7 @@ import {
     type ShowWhen,
 } from '@/components/domain/configuration/template-table/sheetConditions';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -134,11 +135,14 @@ const dataAttributes = computed(() => ({
         @focusout="highlight(false)"
     >
         <Popover v-if="editable" @update:open="openFollowUps">
-            <PopoverTrigger as-child>
-                <button type="button" class="inline-block max-w-full cursor-pointer truncate" :aria-label="`${label}: preguntas de seguimiento`" :title="hint">
-                    {{ label }}
-                </button>
-            </PopoverTrigger>
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <PopoverTrigger as-child>
+                        <Button type="button" variant="document" size="inline" class="truncate" :aria-label="`${label}: preguntas de seguimiento`">{{ label }}</Button>
+                    </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>{{ hint }}</TooltipContent>
+            </Tooltip>
             <PopoverContent align="start" class="w-80">
                 <FieldSet v-if="!fixedAnswer" class="mb-4 gap-3">
                     <FieldLegend variant="label">Si responde</FieldLegend>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import EvidenceDisclosure from '@/components/domain/EvidenceDisclosure.vue';
+import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Send } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
@@ -88,22 +90,18 @@ onBeforeUnmount(() => { generation += 1; stop(); });
                 <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}<Button type="button" variant="outline" size="sm" :disabled="loading || sending" @click="load">Consultar de nuevo</Button></AlertDescription></Alert>
                 <p v-if="loading && !chat" role="status" class="text-sm text-muted-foreground">Cargando conversación…</p>
                 <Alert v-else-if="chat && !chat.available"><AlertDescription>El asistente no está disponible en este momento. Puedes continuar elaborando tu sílabo.</AlertDescription></Alert>
-                <div v-if="chat && !messages.length" class="flex flex-col items-center gap-3 text-center">
-                    <RobotAvatar v-bind="avatar.state.value" class="h-28 w-36" />
-                    <div v-if="chat.available && chat.suggested_questions.length" class="flex w-full flex-col gap-2">
+                <Empty v-if="chat && !messages.length"><EmptyHeader><EmptyMedia><RobotAvatar v-bind="avatar.state.value" class="h-28 w-36" /></EmptyMedia><EmptyTitle>Comienza una conversación</EmptyTitle></EmptyHeader>
+                    <EmptyContent v-if="chat.available && chat.suggested_questions.length">
                         <Button v-for="question in chat.suggested_questions" :key="question" type="button" variant="outline" class="h-auto whitespace-normal text-left" :disabled="!enabled || saving || waiting" @click="message = question">{{ question }}</Button>
-                    </div>
-                </div>
+                    </EmptyContent>
+                </Empty>
                 <Message v-for="item in messages" :key="item.id" :from="item.role === 'usuario' ? 'user' : 'assistant'" class="min-w-0 max-w-full">
                     <MessageContent class="min-w-0 max-w-full">
                         <p class="text-xs font-medium text-muted-foreground">{{ item.role === 'usuario' ? 'Tú' : 'Asistente' }}</p>
                         <p v-if="item.content" class="whitespace-pre-wrap break-words">{{ item.content }}</p>
                         <p v-if="['pendiente', 'en_ejecucion'].includes(item.status)" role="status" class="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />Preparando una propuesta…</p>
                         <Alert v-if="item.status === 'fallido'" variant="destructive"><AlertDescription>{{ item.error ?? 'No se pudo generar una respuesta. Envía la consulta otra vez.' }}</AlertDescription></Alert>
-                        <details v-for="citation in item.citations" :key="citation.id" class="text-sm">
-                            <summary class="cursor-pointer break-words text-muted-foreground">{{ citation.label }}</summary>
-                            <blockquote class="mt-2 whitespace-pre-wrap break-words border-l-2 pl-3">{{ citation.excerpt }}</blockquote>
-                        </details>
+                        <EvidenceDisclosure v-for="citation in item.citations" :key="citation.id" :label="citation.label" :excerpt="citation.excerpt" />
                         <Button v-if="item.role === 'asistente' && item.status === 'completado' && item.content" type="button" variant="outline" size="sm" class="self-start" @click="copy(item.content)">Copiar respuesta</Button>
                     </MessageContent>
                 </Message>

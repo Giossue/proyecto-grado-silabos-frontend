@@ -6,9 +6,12 @@ import { reactiveOmit } from "@vueuse/core"
 import { RadioGroupIndicator, RadioGroupItem, useForwardProps } from "reka-ui"
 import { cn } from "@/lib/utils"
 
-const props = defineProps<RadioGroupItemProps & { class?: HTMLAttributes["class"] }>()
+const props = withDefaults(defineProps<RadioGroupItemProps & {
+  class?: HTMLAttributes["class"]
+  variant?: "default" | "choice"
+}>(), { variant: "default" })
 
-const delegatedProps = reactiveOmit(props, "class")
+const delegatedProps = reactiveOmit(props, "class", "variant")
 
 const forwardedProps = useForwardProps(delegatedProps)
 </script>
@@ -18,10 +21,15 @@ const forwardedProps = useForwardProps(delegatedProps)
     data-slot="radio-group-item"
     v-bind="forwardedProps"
     :class="
-      cn('peer border-input text-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive data-[state=checked]:border-primary aspect-square size-4 shrink-0 rounded-full border shadow-control transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+      cn('peer border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive shrink-0 border shadow-control transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+         variant === 'choice'
+           ? 'inline-flex h-8 items-center justify-center rounded-md bg-background px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground'
+           : 'aspect-square size-4 rounded-full text-primary data-[state=checked]:border-primary',
          props.class)"
   >
+    <slot v-if="variant === 'choice'" />
     <RadioGroupIndicator
+      v-else
       data-slot="radio-group-indicator"
       class="relative flex items-center justify-center"
     >

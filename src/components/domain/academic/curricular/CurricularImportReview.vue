@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import EvidenceDisclosure from '@/components/domain/EvidenceDisclosure.vue';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Separator } from '@/components/ui/separator';
 import { Check } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
@@ -140,12 +143,12 @@ const apply = async () => {
       <Field v-if="pendingCount" orientation="horizontal"><Checkbox id="curricular-only-pending" v-model="onlyPending" /><FieldLabel for="curricular-only-pending">Mostrar solo los datos que requieren revisión</FieldLabel></Field>
     </template>
     <Empty v-if="!groups.length"><EmptyHeader><EmptyTitle>Sin datos propuestos</EmptyTitle><EmptyDescription>Los documentos no produjeron datos que puedan asociarse a la carrera o sus asignaturas.</EmptyDescription></EmptyHeader></Empty>
-    <details v-for="[key, group] in visibleGroups" :key="key" class="group/subject min-w-0 rounded-md border" :open="group.pending > 0 || visibleGroups.length <= 3">
-      <summary class="flex cursor-pointer flex-wrap items-center gap-2 p-3">
-        <h3 class="min-w-0 break-words font-medium">{{ group.label }}</h3>
+    <Collapsible v-for="[key, group] in visibleGroups" :key="key" class="group/subject min-w-0 rounded-md border" :default-open="group.pending > 0 || visibleGroups.length <= 3">
+      <CollapsibleTrigger as-child><Button type="button" variant="ghost" size="row" class="flex-wrap p-3">
+        <span class="min-w-0 break-words font-medium">{{ group.label }}</span>
         <span class="text-sm text-muted-foreground">{{ group.items.length }} {{ group.items.length === 1 ? 'dato' : 'datos' }}<template v-if="group.pending"> · {{ group.pending }} por revisar</template></span>
-      </summary>
-      <FieldGroup class="gap-5 border-t p-3">
+      </Button></CollapsibleTrigger>
+      <CollapsibleContent><Separator /><FieldGroup class="gap-5 p-3">
         <Field v-for="item in group.items" :key="item.id" class="min-w-0" :data-invalid="Boolean(problem(item))">
           <Field orientation="horizontal">
             <Checkbox v-if="detail.status === 'lista'" :id="`proposal-${item.id}`" :model-value="selected.includes(item.id)" :disabled="!editable || saving || Boolean(problem(item))" @update:model-value="choose(item.id, $event)" />
@@ -169,13 +172,10 @@ const apply = async () => {
           </Field>
           <p v-if="item.issue_code === 'source_conflict' && acceptedConflicts[item.id] && item.issue" class="text-sm text-muted-foreground">{{ item.issue }}</p>
           <FieldError :errors="[problem(item) ?? undefined]" />
-          <details v-for="(evidence, index) in item.evidence" :key="index" class="min-w-0 text-sm">
-            <summary class="cursor-pointer break-words text-muted-foreground">{{ sourceName(evidence.source_id) }} · {{ evidence.locator }}</summary>
-            <blockquote class="mt-2 whitespace-pre-wrap break-words border-l-2 pl-3">{{ evidence.quote }}</blockquote>
-          </details>
+          <EvidenceDisclosure v-for="(evidence, index) in item.evidence" :key="index" :label="`${sourceName(evidence.source_id)} · ${evidence.locator}`" :excerpt="evidence.quote" />
         </Field>
-      </FieldGroup>
-    </details>
+      </FieldGroup></CollapsibleContent>
+    </Collapsible>
     <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}<FieldError :errors="errors" /></AlertDescription></Alert>
     <div v-if="detail.status === 'lista'" class="sticky bottom-0 z-10 flex flex-col gap-3 border-t bg-background py-3">
       <Alert v-if="duplicateSelection" variant="destructive"><AlertDescription>Hay más de una propuesta para el mismo dato y asignatura. Selecciona únicamente la que corresponde.</AlertDescription></Alert>

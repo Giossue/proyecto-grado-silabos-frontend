@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import BooleanChoice from '@/components/domain/BooleanChoice.vue';
+import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
+import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
@@ -38,6 +42,7 @@ import { hiddenKeys } from '@/lib/fieldConditions';
 import { ArrowLeft, Library, Send } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
+const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
 const route = useRoute();
 const router = useRouter();
 const syllabus = ref<SyllabusDetail | null>(null);
@@ -433,7 +438,7 @@ onBeforeRouteLeave(async () => {
   }
   if (await flushAutosave()) return true;
 
-  return window.confirm("Hay cambios sin guardar. ¿Desea salir de todos modos?");
+  return askToDiscard();
 });
 onBeforeUnmount(() => {
   window.removeEventListener("beforeunload", warnBeforeUnload);
@@ -454,7 +459,7 @@ onBeforeUnmount(() => {
   >
     <template #actions>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
-      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><span v-if="submitHint" class="submit-hint text-xs text-muted-foreground">{{ submitHint }}</span><Button :disabled="processingAction || conflict || emptyParts > 0" :title="submitHint || undefined" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />{{ libraryCorrection ? 'Reenviar bibliografía' : 'Enviar sílabo' }}</Button></span>
+      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><span v-if="submitHint" class="submit-hint text-xs text-muted-foreground">{{ submitHint }}</span><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />{{ libraryCorrection ? 'Reenviar bibliografía' : 'Enviar sílabo' }}</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || 'Enviar la revisión del sílabo' }}</TooltipContent></Tooltip></span>
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
@@ -529,7 +534,7 @@ onBeforeUnmount(() => {
 
                 <FieldSet v-else-if="sectionEditable(section) && field.teacher_editable && !field.inherited && field.type === 'seleccion_multiple'" :id="`field-${field.id}`" :aria-required="field.required"><FieldLegend class="text-sm" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLegend><Field v-for="option in field.options" :key="option.value" orientation="horizontal"><Checkbox :id="`field-${field.id}-${option.value}`" :model-value="selectedValues(field).includes(option.value)" @update:model-value="toggleChoice(field, option.value, Boolean($event))" /><FieldLabel :for="`field-${field.id}-${option.value}`">{{ option.label }}</FieldLabel></Field></FieldSet>
 
-                <Field v-else-if="sectionEditable(section) && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><div class="boolean-options flex gap-2" role="radiogroup" :aria-label="field.label.trim() || section.title"><Button type="button" size="sm" :variant="field.value === true ? 'default' : 'outline'" role="radio" :aria-checked="field.value === true" @click="toggleBoolean(field, true)">Sí</Button><Button type="button" size="sm" :variant="field.value === false ? 'default' : 'outline'" role="radio" :aria-checked="field.value === false" @click="toggleBoolean(field, false)">No</Button></div><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
+                <Field v-else-if="sectionEditable(section) && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><BooleanChoice class="boolean-options" :model-value="typeof field.value === 'boolean' ? field.value : null" :label="field.label.trim() || section.title" :aria-invalid="validationFor(field.id).length > 0" @update:model-value="toggleBoolean(field, $event)" /><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
 
                 <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div v-if="field.label.trim() || field.inherited" class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Dato automático</Badge></div><span>{{ masterValue(field.value) }}</span></div>
                 <FieldError :errors="visibleValidationMessages(field.id)" />
@@ -556,7 +561,7 @@ onBeforeUnmount(() => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{{ libraryCorrection ? '¿Reenviar la bibliografía?' : '¿Enviar a Coordinación?' }}</DialogTitle>
-          <DialogDescription v-if="libraryCorrection">La bibliografía corregida no vuelve a revisión de coordinación: el resto del sílabo queda como ya fue aprobado. Se generará un PDF nuevo; el docente y coordinación lo firman de nuevo y después usted lo envía otra vez a biblioteca.</DialogDescription>
+          <DialogDescription v-if="libraryCorrection">La bibliografía corregida vuelve a biblioteca para su verificación, sin pasar por la revisión de coordinación: el resto del sílabo queda como ya fue aprobado.</DialogDescription>
           <DialogDescription v-else>Coordinación revisará el sílabo. Mientras lo revisa, no podrá hacer cambios.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
@@ -566,4 +571,5 @@ onBeforeUnmount(() => {
       </DialogContent>
     </Dialog>
   </PageFrame>
+  <UnsavedChangesDialog :open="discardOpen" title="Hay cambios sin guardar" description="No se pudieron guardar los últimos cambios. Si sale, perderá esos cambios." discard-label="Salir y descartar cambios" @continue="decideDiscard(false)" @discard="decideDiscard(true)" @update:open="(open) => { if (!open) decideDiscard(false); }" />
 </template>

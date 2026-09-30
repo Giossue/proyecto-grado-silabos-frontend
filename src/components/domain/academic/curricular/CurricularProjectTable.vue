@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { Info } from '@lucide/vue';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/domain/EmptyState.vue';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { ConfirmedCurricularValue, CurricularImportIndex } from '@/api/curricular-imports';
 import CurricularValuePreview from './CurricularValuePreview.vue';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
@@ -26,7 +30,7 @@ const source = (item: ConfirmedCurricularValue): string =>
         <EmptyDescription>Cuando Administración los agregue en la plantilla, aparecerán aquí para completarlos.</EmptyDescription>
       </EmptyHeader>
     </Empty>
-    <p v-else-if="!subjects.length" class="text-sm text-muted-foreground">La malla todavía no tiene asignaturas.</p>
+    <EmptyState v-else-if="!subjects.length" title="La malla todavía no tiene asignaturas." />
     <div v-else class="min-w-0 overflow-x-auto rounded-md border">
       <Table>
         <TableHeader>
@@ -45,10 +49,13 @@ const source = (item: ConfirmedCurricularValue): string =>
               v-for="concept in concepts"
               :key="concept.key"
               class="align-top whitespace-normal"
-              :title="valueFor(concept.key, subject.id) ? source(valueFor(concept.key, subject.id)!) : undefined"
             >
               <CurricularValuePreview v-if="valueFor(concept.key, subject.id)" :definition="valueFor(concept.key, subject.id)" :value="valueFor(concept.key, subject.id)!.value" />
               <span v-else class="text-sm text-muted-foreground">Sin dato</span>
+              <Tooltip v-if="valueFor(concept.key, subject.id)?.evidence.length">
+                <TooltipTrigger as-child><Button type="button" variant="ghost" size="icon-sm" :aria-label="`Ver procedencia de ${concept.label} para ${subject.name}`"><Info aria-hidden="true" /></Button></TooltipTrigger>
+                <TooltipContent class="whitespace-pre-line">{{ source(valueFor(concept.key, subject.id)!) }}</TooltipContent>
+              </Tooltip>
             </TableCell>
           </TableRow>
         </TableBody>

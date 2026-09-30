@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { Button } from '@/components/ui/button';
 import { FileText, ImageIcon, Upload, X } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
-import { cn } from '@/lib/utils';
 
 type FileKind = 'pdf' | 'png' | 'curricular';
 
@@ -79,14 +79,6 @@ const copy = computed(() => props.kind === 'curricular' ? {
   dropAnnouncement: 'Suelta el PDF para seleccionarlo.',
 });
 const fileDescription = computed(() => props.modelValue ? `${copy.value.label} · ${formatBytes(props.modelValue.size)}` : '');
-const dropzoneClass = computed(() => cn(
-  'flex min-h-32 w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed p-4 transition-colors',
-  props.disabled && 'cursor-not-allowed opacity-60',
-  props.invalid && 'border-destructive/60 bg-destructive/5',
-  !props.invalid && isDragging.value && 'border-primary bg-primary/5',
-  !props.invalid && !isDragging.value && 'border-border bg-muted/20 hover:border-primary/60 hover:bg-muted/40',
-));
-
 const chooseFile = (): void => {
   if (!props.disabled) input.value?.click();
 };
@@ -162,21 +154,16 @@ watch(() => props.modelValue, (file) => {
 
 <template>
   <div class="flex flex-col gap-2">
-    <div
-      :class="dropzoneClass"
-      role="button"
-      :aria-disabled="props.disabled"
+    <Button type="button" variant="dropzone" size="dropzone"
+      :data-dragging="isDragging" :aria-invalid="props.invalid"
+      :disabled="props.disabled"
       :aria-label="modelValue ? copy.replaceLabel : copy.chooseLabel"
-      tabindex="0"
       @click="chooseFile"
-      @keydown.enter.prevent="chooseFile"
-      @keydown.space.prevent="chooseFile"
       @dragenter.prevent="handleDragEnter"
       @dragover.prevent
       @dragleave.prevent="handleDragLeave"
       @drop="handleDrop"
     >
-      <input ref="input" :id="inputId" class="sr-only" type="file" :multiple="multiple" :accept="copy.accept" :disabled="props.disabled" :required="props.required" :aria-invalid="props.invalid" :aria-required="props.required" tabindex="-1" @click.stop @change="selectFile" />
       <div v-if="!modelValue" class="flex flex-col items-center gap-2 text-center">
         <Upload class="size-8 text-muted-foreground" aria-hidden="true" />
         <div>
@@ -189,7 +176,8 @@ watch(() => props.modelValue, (file) => {
         <p class="font-medium">{{ copy.selectedTitle }}</p>
         <p class="text-sm text-muted-foreground">{{ copy.selectedDescription }}</p>
       </div>
-    </div>
+    </Button>
+    <input ref="input" :id="inputId" class="sr-only" type="file" :multiple="multiple" :accept="copy.accept" :disabled="props.disabled" :required="props.required" :aria-invalid="props.invalid" :aria-required="props.required" tabindex="-1" @click.stop @change="selectFile" />
     <Attachment v-if="modelValue" class="w-full" :state="props.invalid ? 'error' : props.state">
       <AttachmentMedia><ImageIcon v-if="props.kind === 'png'" aria-hidden="true" /><FileText v-else aria-hidden="true" /></AttachmentMedia>
       <AttachmentContent>

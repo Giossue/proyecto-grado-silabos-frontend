@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Progress } from '@/components/ui/progress';
 import { RouterLink } from 'vue-router';
 import { ArrowRight, Check, Circle } from '@lucide/vue';
 import { computed } from 'vue';
@@ -35,11 +36,6 @@ const emit = defineEmits<{ action: [action: string] }>();
 const nextKey = computed(
     () => props.setup.steps.find((step) => !step.done)?.key ?? null,
 );
-const percent = computed(() =>
-    props.setup.total === 0
-        ? 0
-        : Math.round((props.setup.done / props.setup.total) * 100),
-);
 </script>
 
 <template>
@@ -50,19 +46,7 @@ const percent = computed(() =>
                 setup.intro
             }}</CardDescription>
             <div class="flex items-center gap-3 pt-1">
-                <div
-                    class="h-2 flex-1 overflow-hidden rounded-full bg-muted"
-                    role="progressbar"
-                    :aria-valuenow="setup.done"
-                    :aria-valuemin="0"
-                    :aria-valuemax="setup.total"
-                    :aria-label="`${setup.done} de ${setup.total} pasos`"
-                >
-                    <div
-                        class="h-full rounded-full bg-primary transition-[width]"
-                        :style="{ width: `${percent}%` }"
-                    />
-                </div>
+                <Progress :model-value="setup.done" :max="setup.total" class="flex-1" :aria-label="`${setup.done} de ${setup.total} pasos`" />
                 <span class="text-sm text-muted-foreground tabular-nums">
                     {{ setup.done }} de {{ setup.total }}
                 </span>
