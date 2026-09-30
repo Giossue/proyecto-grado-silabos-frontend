@@ -15,7 +15,7 @@ const governance = (lockReason: string | null): AcademicGovernance => ({
     id: 'period-1', code: 'Septiembre-Marzo 2026-2027', starts_on: '2026-09-29', ends_on: '2027-03-01', teaching_weeks: 23,
     status: 'en_curso', status_label: 'En curso', institutional_process: { id: 'process-1', state: 'abierto' }, lock_reason: lockReason,
   }] },
-  options: { faculties: [], careers: [], periods: [], modalityOptions: [{ value: 'presencial', label: 'Presencial' }], shiftOptions: [{ value: 'matutina', label: 'Matutina' }], campusOptions: [], currentCurricula: [], activeSubjects: [], scheduledSubjects: [], parallels: [], coordinatorUsers: [], teacherUsers: [] },
+  options: { faculties: [], careers: [], periods: [], modalityOptions: [{ value: 'Presencial', label: 'Presencial' }], shiftOptions: [{ value: 'matutina', label: 'Matutina' }], campusOptions: [], currentCurricula: [], activeSubjects: [], scheduledSubjects: [], parallels: [], coordinatorUsers: [], teacherUsers: [] },
 } as unknown as AcademicGovernance);
 const mountPage = () => mount(AcademicGovernancePage, { attachTo: document.body, global: { stubs: {
   PageFrame: { props: ['title'], template: '<main><h1>{{ title }}</h1><slot name="actions" /><slot /></main>' },
