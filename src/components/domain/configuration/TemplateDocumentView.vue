@@ -185,7 +185,6 @@ const draw = (
                 'data-variable': String(attrs.id),
                 'data-page-fragment': '',
                 class: 'document-variable',
-                title: props.preview ? props.variables[String(attrs.id)] : undefined,
             },
             props.variables[String(attrs.id)] ||
                 (props.preview ? '' : 'Pendiente de Coordinación'),
@@ -333,13 +332,6 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
     hyphens: auto;
     -webkit-hyphens: auto;
     hyphenate-limit-chars: 8 4 4;
-}
-.template-document-view[data-preview] :is(td, th) .document-variable {
-    display: block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }
 .template-document-view[data-preview] {
     background: transparent;
