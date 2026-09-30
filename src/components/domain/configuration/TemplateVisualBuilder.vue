@@ -593,7 +593,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                     type="button"
                     variant="document"
                     size="inline"
-                    class="mb-8 w-full justify-start rounded-xs text-left leading-tight outline-offset-4 transition-shadow"
+                    class="mb-8 w-full justify-start rounded-xs leading-tight outline-offset-4 transition-shadow"
                     :class="{
                         'cursor-pointer outline-2 outline-primary':
                             selection.kind === 'title',
@@ -606,7 +606,12 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                     @pointerdown.stop="selectTitle"
                     @click.stop="selectTitle"
                 >
-                    <span role="heading" aria-level="1" :style="titleStyle">
+                    <span
+                        role="heading"
+                        aria-level="1"
+                        class="w-full whitespace-normal"
+                        :style="titleStyle"
+                    >
                         {{ template.titleBlock.text }}
                     </span>
                 </Button>
