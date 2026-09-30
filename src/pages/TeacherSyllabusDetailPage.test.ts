@@ -4,7 +4,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import FreeTextEditor from "@/components/domain/syllabus/FreeTextEditor.vue";
-import { getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, startTeacherSyllabus } from "@/api/syllabi";
+import { copyTeacherSyllabus, getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, startTeacherSyllabus } from "@/api/syllabi";
 import { ApiError } from "@/api/client";
 import { handleUnauthorized } from "@/lib/unauthorized";
 
@@ -20,6 +20,7 @@ vi.mock("@/lib/unauthorized", () => ({ handleUnauthorized: vi.fn() }));
 
 vi.mock("@/api/syllabi", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/syllabi")>()),
+  copyTeacherSyllabus: vi.fn(),
   getTeacherSyllabus: vi.fn(),
   saveTeacherField: vi.fn(),
   startTeacherSyllabus: vi.fn(),
@@ -105,6 +106,7 @@ const mountPage = () => mount(PageWithTooltips, {
 describe("TeacherSyllabusDetailPage", () => {
   beforeEach(() => {
     vi.useRealTimers();
+    vi.mocked(copyTeacherSyllabus).mockReset();
     vi.mocked(getTeacherSyllabus).mockReset();
     vi.mocked(startTeacherSyllabus).mockReset();
     vi.mocked(saveTeacherField).mockReset();
@@ -309,6 +311,28 @@ describe("TeacherSyllabusDetailPage", () => {
     await wrapper.get("#input-field-1").setValue("Contenido");
     expect(send!.attributes("disabled")).toBeUndefined();
     expect(wrapper.find(".submit-hint").exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it("copia el contenido desde otro paralelo del docente tras confirmar", async () => {
+    const draft = syllabus("borrador");
+    draft.copy_sources = [{ id: "syllabus-2", parallel: "B", state: "borrador" }];
+    const copied = syllabus("borrador");
+    copied.version_bloqueo = 3;
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+    vi.mocked(copyTeacherSyllabus).mockResolvedValue({ message: "Contenido copiado.", syllabus: copied });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await buttonNamed(wrapper, "Copiar desde paralelo B")!.trigger("click");
+    await flushPromises();
+    expect(document.body.textContent).toContain("¿Copiar desde el paralelo B?");
+    const confirm = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find((button) => button.textContent?.includes("Copiar contenido"));
+    confirm!.click();
+    await flushPromises();
+
+    expect(copyTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", "syllabus-2", 2);
+    expect(buttonNamed(wrapper, "Copiar desde paralelo B")).toBeUndefined();
     wrapper.unmount();
   });
 

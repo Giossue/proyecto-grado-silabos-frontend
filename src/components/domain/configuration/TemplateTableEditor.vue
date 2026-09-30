@@ -30,6 +30,7 @@ import TemplateToolbarButton from '@/components/domain/configuration/TemplateToo
 import TemplateToolbarSelect from '@/components/domain/configuration/TemplateToolbarSelect.vue';
 import { SelectItem } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { DOCUMENT_COLORS } from '@/lib/documentPalette';
 import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import type {
     DocumentField,
@@ -65,6 +66,10 @@ const editorStyle = computed<CSSProperties & Record<string, string>>(() => ({
     color: props.textColor,
     '--table-body-alignment': props.bodyAlignment,
 }));
+const pickColors = (values: string[]) =>
+    props.colors.filter((option) => values.includes(option.value.toUpperCase()));
+const textColors = computed(() => pickColors([DOCUMENT_COLORS.text, DOCUMENT_COLORS.paper]));
+const backgroundColors = computed(() => pickColors([DOCUMENT_COLORS.darkBlue, DOCUMENT_COLORS.tableHeader]));
 const initial = JSON.stringify(props.document);
 const version = ref(0);
 const declared = ref<TemplateVariable[]>([]);
@@ -226,7 +231,7 @@ defineExpose({ getDocument });
                     </template>
                     <SelectItem value="inherit">Sin fondo</SelectItem>
                     <SelectItem
-                        v-for="option in colors"
+                        v-for="option in backgroundColors"
                         :key="`background-${option.value}`"
                         :value="option.value"
                     >
@@ -250,7 +255,7 @@ defineExpose({ getDocument });
                     </template>
                     <SelectItem value="inherit">Predeterminado</SelectItem>
                     <SelectItem
-                        v-for="option in colors"
+                        v-for="option in textColors"
                         :key="`text-${option.value}`"
                         :value="option.value"
                     >

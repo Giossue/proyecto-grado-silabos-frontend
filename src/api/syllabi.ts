@@ -54,6 +54,7 @@ export type SyllabusDetail = {
   approved_revision_id?: string | null;
   iniciado_en: string | null;
   parallels: string[];
+  copy_sources?: Array<{ id: string; parallel: string; state: SyllabusRow["state"] }>;
   teachers: string[];
   template_variables?: Record<string, string>;
   validation?: {
@@ -182,6 +183,15 @@ export const saveTeacherField = (
       method: "PATCH",
       body: JSON.stringify({ version_bloqueo: version, value }),
     },
+  );
+export const copyTeacherSyllabus = (
+  syllabusId: string,
+  sourceId: string,
+  version: number,
+) =>
+  api<{ message: string; syllabus: SyllabusDetail }>(
+    `/teacher/syllabi/${syllabusId}/copy-from/${sourceId}`,
+    { method: "POST", body: JSON.stringify({ version_bloqueo: version }) },
   );
 export const validateTeacherSyllabus = (syllabusId: string) =>
   api<{

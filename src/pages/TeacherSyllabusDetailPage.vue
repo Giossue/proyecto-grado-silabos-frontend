@@ -12,6 +12,7 @@ import {
   getTeacherSyllabus,
   saveTeacherField,
   startTeacherSyllabus,
+  copyTeacherSyllabus,
   submitTeacherSyllabus,
   validateTeacherSyllabus,
   type SyllabusDetail,
@@ -41,7 +42,7 @@ import { freeTextPlain, isFreeTextDocument } from '@/components/domain/syllabus/
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { hiddenKeys } from '@/lib/fieldConditions';
-import { ArrowLeft, Library, Send } from '@lucide/vue';
+import { ArrowLeft, Copy, Library, Send } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
@@ -66,6 +67,7 @@ const conflict = ref(false);
 const processingAction = ref(false);
 const confirmSubmitOpen = ref(false);
 const localBlockReason = ref<string | null>(null);
+const copySource = ref<{ id: string; parallel: string } | null>(null);
 const saveFailed = ref(false);
 const PAUSED_MESSAGE = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude.";
 const LIBRARY_SECTION = "bibliografia";
@@ -163,6 +165,9 @@ const clearFieldValidation = (fieldId: string): void => {
   }
 };
 const hasUnsavedChanges = (): boolean => dirtyFields.size > 0;
+const copySources = computed(() =>
+  canEdit.value && syllabus.value?.state === "borrador" ? syllabus.value.copy_sources ?? [] : [],
+);
 
 const requestedObservations = computed(() =>
   (syllabus.value?.observations ?? []).filter(
@@ -416,6 +421,31 @@ const submit = async (): Promise<void> => {
   }
 };
 
+const copyFromSource = async (): Promise<void> => {
+  const source = copySource.value;
+  copySource.value = null;
+  if (!syllabus.value || !source) return;
+  try {
+    processingAction.value = true;
+    error.value = null;
+    if (!(await flushAutosave())) return;
+    syllabus.value = (
+      await copyTeacherSyllabus(syllabus.value.id, source.id, syllabus.value.version_bloqueo)
+    ).syllabus;
+    invalidateValidation();
+    validationResults.value = [];
+  } catch (reason) {
+    if (reason instanceof ApiError && reason.status === 409) conflict.value = true;
+    if (reason instanceof ApiError && reason.status === 403) {
+      localBlockReason.value = PAUSED_MESSAGE;
+      return;
+    }
+    error.value = reason instanceof ApiError ? reason.message : "No se pudo copiar el sílabo.";
+  } finally {
+    processingAction.value = false;
+  }
+};
+
 const sectionHeading = (title: string, index: number): string =>
   /^\s*\d+[.)]/.test(title) ? title : `${index + 1}. ${title}`;
 
@@ -459,6 +489,7 @@ onBeforeUnmount(() => {
   >
     <template #actions>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
+      <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
       <span v-if="syllabus && canEdit" class="flex items-center gap-2"><span v-if="submitHint" class="submit-hint text-xs text-muted-foreground">{{ submitHint }}</span><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />{{ libraryCorrection ? 'Reenviar bibliografía' : 'Enviar sílabo' }}</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || 'Enviar la revisión del sílabo' }}</TooltipContent></Tooltip></span>
     </template>
 
@@ -567,6 +598,18 @@ onBeforeUnmount(() => {
         <DialogFooter>
           <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>
           <Button type="button" :disabled="processingAction || conflict" @click="confirmSubmit"><Send data-icon="inline-start" aria-hidden="true" />{{ libraryCorrection ? 'Reenviar bibliografía' : 'Enviar a Coordinación' }}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    <Dialog :open="copySource !== null" @update:open="(open) => { if (!open) copySource = null; }">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>¿Copiar desde el paralelo {{ copySource?.parallel }}?</DialogTitle>
+          <DialogDescription>Todo lo que escribió en este sílabo se reemplazará por lo del paralelo {{ copySource?.parallel }}. Cada paralelo se envía y se firma por separado.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button type="button" variant="outline" @click="copySource = null">Cancelar</Button>
+          <Button type="button" :disabled="processingAction || conflict" @click="copyFromSource"><Copy data-icon="inline-start" aria-hidden="true" />Copiar contenido</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
