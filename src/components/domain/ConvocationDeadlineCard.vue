@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { formatDateDisplay } from '@/lib/dateDisplay';
-import { CalendarRange } from '@lucide/vue';
+import { ArrowRight, CalendarRange, Eye } from '@lucide/vue';
 import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import type { DashboardDeadline } from '@/api/dashboard';
@@ -84,9 +84,9 @@ const summary = computed(() => {
     </CardContent>
     <CardFooter v-if="role === 'docente' || deadline.convocation_id">
       <Button v-if="role === 'docente'" as-child class="max-sm:w-full">
-        <RouterLink :to="paths.teacher.syllabi">Continuar mis sílabos</RouterLink>
+        <RouterLink :to="paths.teacher.syllabi"><ArrowRight data-icon="inline-start" aria-hidden="true" />Continuar mis sílabos</RouterLink>
       </Button>
-      <Button v-else type="button" class="max-sm:w-full" @click="emit('tracking')">Ver seguimiento</Button>
+      <Button v-else type="button" class="max-sm:w-full" @click="emit('tracking')"><Eye data-icon="inline-start" aria-hidden="true" />Ver seguimiento</Button>
     </CardFooter>
   </Card>
 </template>

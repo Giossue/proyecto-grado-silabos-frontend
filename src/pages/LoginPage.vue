@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LogIn } from '@lucide/vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -65,7 +66,7 @@ const submit = async (): Promise<void> => {
           <FieldError :errors="errors.password ?? [undefined]" />
         </Field>
         <Field orientation="horizontal"><Checkbox id="remember" v-model="remember" /><FieldLabel for="remember" class="font-normal">Mantener la sesión iniciada</FieldLabel></Field>
-        <Button type="submit" class="mt-4 w-full" :disabled="processing" data-test="login-button"><Spinner v-if="processing" />Ingresar</Button>
+        <Button type="submit" class="mt-4 w-full" :disabled="processing" data-test="login-button"><Spinner v-if="processing" data-icon="inline-start" /><LogIn v-else data-icon="inline-start" aria-hidden="true" />Ingresar</Button>
       </FieldGroup>
     </form>
   </AuthSimpleLayout>

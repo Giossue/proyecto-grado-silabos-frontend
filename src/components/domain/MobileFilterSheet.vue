@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ListFilter, X } from '@lucide/vue';
+import { Check, ListFilter, X } from '@lucide/vue';
 import { onBeforeUnmount, ref, useAttrs, useTemplateRef, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -129,6 +129,7 @@ onBeforeUnmount(() => {
             class="mt-2 w-full shrink-0 sm:hidden"
             @click="close"
         >
+            <Check data-icon="inline-start" aria-hidden="true" />
             Ver resultados
         </Button>
     </div>

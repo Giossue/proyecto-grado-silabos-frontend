@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { ShieldCheck } from '@lucide/vue';
+import { ShieldCheck, ShieldOff } from '@lucide/vue';
 import { onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import {
@@ -119,7 +119,7 @@ onMounted(() => void load());
                 El inicio de sesión solicitará un código temporal generado por la aplicación TOTP de su dispositivo.
             </p>
             <Button variant="destructive" type="button" :disabled="processing" @click="disable">
-                <Spinner v-if="processing" />Desactivar 2FA
+                <Spinner v-if="processing" data-icon="inline-start" /><ShieldOff v-else data-icon="inline-start" aria-hidden="true" />Desactivar 2FA
             </Button>
             <TwoFactorRecoveryCodes :codes="recoveryCodes" :processing="processing" @regenerate="regenerate" />
         </div>

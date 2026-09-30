@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LogIn } from '@lucide/vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -80,7 +81,7 @@ onMounted(() => {
                     <Spinner />
                     Verificando correo…
                 </p>
-                <Button v-if="!sessionState.current.value" as-child><RouterLink :to="paths.login">Iniciar sesión</RouterLink></Button>
+                <Button v-if="!sessionState.current.value" as-child><RouterLink :to="paths.login"><LogIn data-icon="inline-start" aria-hidden="true" />Iniciar sesión</RouterLink></Button>
             </div>
         </template>
 

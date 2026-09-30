@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CalendarClock, Lock, Pause, Play, Square, Trash2 } from '@lucide/vue';
-import { ref } from 'vue';
+import { ref, type Component } from 'vue';
 import { ApiError } from '@/api/client';
 import { deleteProcess, transitionProcess, type SyllabusProcess } from '@/api/processes';
 import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
@@ -34,21 +34,24 @@ const deleteOpen = ref(false);
 const deleting = ref(false);
 const deleteError = ref<string | null>(null);
 
-const dialogs: Record<Transition, { title: string; description: string; label: string; destructive?: boolean }> = {
+const dialogs: Record<Transition, { title: string; description: string; label: string; icon: Component; destructive?: boolean }> = {
   pausar: {
     title: 'Pausar el proceso',
     description: 'Se detienen los envíos y la edición docente en todas las carreras hasta que lo reanude.',
     label: 'Pausar proceso',
+    icon: Pause,
   },
   reanudar: {
     title: 'Reanudar el proceso',
     description: 'Los envíos vuelven a admitirse y la plantilla vuelve a quedar protegida.',
     label: 'Reanudar proceso',
+    icon: Play,
   },
   cerrar: {
     title: 'Cerrar el proceso',
     description: 'Ningún sílabo de este proceso podrá enviarse después. Esta acción no se deshace.',
     label: 'Cerrar proceso',
+    icon: Square,
     destructive: true,
   },
 };
@@ -110,7 +113,7 @@ const remove = async (): Promise<void> => {
       <DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader>
       <form class="flex flex-col gap-4" @submit.prevent="confirm">
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing"><Spinner v-if="processing" />{{ dialogs[pending].label }}</Button></DialogFooter>
+        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[pending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[pending].label }}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>

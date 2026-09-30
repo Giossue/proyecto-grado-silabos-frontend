@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Download, FileUp, RotateCw } from '@lucide/vue';
+import { Check, Download, FileUp, RotateCw, Trash2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { discardCurricularImport, getCurricularImportDocument, type CurricularImportDetail } from '@/api/curricular-imports';
@@ -110,7 +110,7 @@ onMounted(load);
                 <EmptyTitle>Datos guardados</EmptyTitle>
                 <EmptyDescription>La tabla ya muestra los datos nuevos. Los documentos se eliminaron; cada dato conserva su extracto y de dónde salió.</EmptyDescription>
               </EmptyHeader>
-              <Button type="button" @click="updateWizard(false)">Cerrar</Button>
+              <Button type="button" @click="updateWizard(false)"><Check data-icon="inline-start" aria-hidden="true" />Cerrar</Button>
             </Empty>
 
             <div v-if="detail.status === 'lista' || detail.status === 'fallida'" class="flex flex-col gap-3 border-t pt-4">
@@ -120,7 +120,7 @@ onMounted(load);
                   <span>Se eliminarán la propuesta y sus documentos. Los datos de la tabla no cambian.</span>
                   <span class="flex flex-wrap gap-2">
                     <Button type="button" variant="outline" size="sm" :disabled="discarding" @click="confirmingDiscard = false">Cancelar</Button>
-                    <Button type="button" variant="destructive" size="sm" :disabled="discarding" @click="discard"><Spinner v-if="discarding" data-icon="inline-start" />Descartar</Button>
+                    <Button type="button" variant="destructive" size="sm" :disabled="discarding" @click="discard"><Spinner v-if="discarding" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Descartar</Button>
                   </span>
                 </AlertDescription>
               </Alert>

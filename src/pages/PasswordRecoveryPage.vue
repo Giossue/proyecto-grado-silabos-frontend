@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Send } from '@lucide/vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { ref } from 'vue';
 import { ApiError } from '@/api/client';
@@ -47,7 +48,7 @@ const submit = async (): Promise<void> => {
         </div>
         <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />
         <div class="my-6 flex items-center justify-start">
-          <Button class="w-full" :disabled="pending" type="submit" data-test="email-password-reset-link-button"><Spinner v-if="pending" />Enviar enlace de restablecimiento</Button>
+          <Button class="w-full" :disabled="pending" type="submit" data-test="email-password-reset-link-button"><Spinner v-if="pending" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar enlace de restablecimiento</Button>
         </div>
       </form>
       <div class="flex items-center justify-center gap-1 text-center text-sm text-muted-foreground"><span>O vuelva a</span><RouterLink :to="paths.login" class="text-foreground underline decoration-border underline-offset-4 hover:decoration-current">iniciar sesión</RouterLink></div>

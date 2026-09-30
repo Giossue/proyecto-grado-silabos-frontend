@@ -2,7 +2,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { RouterLink } from 'vue-router';
-import { ArrowRight, Check, Circle } from '@lucide/vue';
+import { ArrowRight, Check, Circle, Play, Settings } from '@lucide/vue';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -89,6 +89,8 @@ const nextKey = computed(
                         class="shrink-0"
                         @click="emit('action', step.action)"
                     >
+                        <Play v-if="step.action === 'open_convocation'" data-icon="inline-start" aria-hidden="true" />
+                        <Settings v-else data-icon="inline-start" aria-hidden="true" />
                         {{ step.action === 'open_convocation' ? 'Abrir convocatoria' : 'Configurar' }}
                     </Button>
                     <Button

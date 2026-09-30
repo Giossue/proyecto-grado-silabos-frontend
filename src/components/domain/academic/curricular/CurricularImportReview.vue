@@ -2,7 +2,7 @@
 import EvidenceDisclosure from '@/components/domain/EvidenceDisclosure.vue';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
-import { Check } from '@lucide/vue';
+import { ArrowRight, Check } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { PURGE_CANCELLED_MESSAGE } from '@/api/career-academics';
@@ -130,7 +130,7 @@ const apply = async () => {
       </FieldSet>
       <div class="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-center sm:justify-between">
         <p class="text-sm text-muted-foreground">Las que no elijas quedarán sin guardar.</p>
-        <Button type="button" @click="phase = 'data'">Continuar</Button>
+        <Button type="button" @click="phase = 'data'"><ArrowRight data-icon="inline-start" aria-hidden="true" />Continuar</Button>
       </div>
     </template>
     <template v-else>

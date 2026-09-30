@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { UserCheck } from '@lucide/vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -68,7 +69,8 @@ const submit = async (): Promise<void> => {
             <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />
             <InputError :message="errors.token?.[0]" />
             <Button type="submit" class="w-full" :disabled="pending || !token">
-                <Spinner v-if="pending" />
+                <Spinner v-if="pending" data-icon="inline-start" />
+                <UserCheck v-else data-icon="inline-start" aria-hidden="true" />
                 Activar cuenta
             </Button>
         </form>
