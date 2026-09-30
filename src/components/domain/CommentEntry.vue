@@ -4,10 +4,10 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { formatDateDisplay } from '@/lib/dateDisplay';
 
 defineProps<{
-    revision: number;
+    revision: number | string;
     content: string;
-    author: string;
-    date: string;
+    author?: string;
+    date?: string;
 }>();
 </script>
 
@@ -18,6 +18,6 @@ defineProps<{
             <slot name="badges" />
         </CardHeader>
         <CardContent class="px-4 text-sm whitespace-pre-wrap">{{ content }}</CardContent>
-        <CardFooter class="px-4 text-xs text-muted-foreground">{{ author }} · {{ formatDateDisplay(date) }}</CardFooter>
+        <CardFooter v-if="author || date" class="px-4 text-xs text-muted-foreground">{{ [author, date ? formatDateDisplay(date) : null].filter(Boolean).join(' · ') }}</CardFooter>
     </Card>
 </template>

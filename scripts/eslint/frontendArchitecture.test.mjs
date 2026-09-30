@@ -18,7 +18,7 @@ test('admite composición shadcn, campos ocultos y geometría dinámica', async 
 });
 
 test('rechaza paletas locales, medidas fijas y niveles de diálogo locales', async () => {
-    assert.deepEqual(await lint('<template><div class="bg-red-500 w-[28rem] z-[60]" /></template><style scoped>.local { color: #fff; }</style>'), ['color', 'color', 'dimension', 'stacking']);
+    assert.deepEqual(await lint('<template><div class="bg-red-500 w-[28rem] z-[60]" /></template><style scoped>.local { color: #fff; }</style>'), ['color', 'dimension', 'stacking', 'color']);
     assert.deepEqual(await lint('<script setup>const classes = `text-blue-500 ${state}`;</script><template><div /></template>'), ['color']);
 });
 

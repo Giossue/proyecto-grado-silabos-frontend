@@ -499,7 +499,7 @@ onBeforeUnmount(() => {
           <Card v-if="requestedObservations.length">
             <CardHeader><CardTitle>Observaciones de coordinación</CardTitle><CardDescription>Corrija lo indicado en el sílabo y reenvíelo para una nueva revisión.</CardDescription></CardHeader>
             <CardContent class="flex flex-col gap-4">
-              <article v-for="observation in requestedObservations" :key="observation.id" class="flex flex-col gap-3 rounded-md border p-4"><div class="flex flex-wrap gap-2"><Badge variant="outline">Revisión {{ observation.revision_number ?? 'actual' }}</Badge></div><p class="text-sm whitespace-pre-wrap">{{ observation.content }}</p></article>
+              <CommentEntry v-for="observation in requestedObservations" :key="observation.id" :revision="observation.revision_number ?? 'actual'" :content="observation.content" />
             </CardContent>
           </Card>
 

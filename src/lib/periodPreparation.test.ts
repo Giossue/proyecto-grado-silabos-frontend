@@ -54,9 +54,11 @@ describe('preparationRows', () => {
     expect(result.rows.map((row) => row.id)).toEqual(['subject-b']);
   });
 
-  it('proposes paralelo A in the morning shift when there is no previous schedule', () => {
+  it('proposes paralelo A with the first shift supplied by the server', () => {
     const result = preparationRows('target', options, [], [], []);
     expect(result.rows.every((row) => row.parallels.length === 1 && row.parallels[0].code === 'A' && row.parallels[0].shift === 'matutina')).toBe(true);
+    const alternative = preparationRows('target', { ...options, shiftOptions: [{ value: 'nocturna', label: 'Nocturna' }] }, [], [], []);
+    expect(alternative.rows.every((row) => row.parallels[0]?.shift === 'nocturna')).toBe(true);
   });
 });
 
