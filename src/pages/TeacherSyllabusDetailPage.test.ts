@@ -481,4 +481,67 @@ describe("TeacherSyllabusDetailPage", () => {
     confirm.mockRestore();
     wrapper.unmount();
   });
+
+  it("durante la corrección de biblioteca solo deja editar la bibliografía y reenvía sin pasar por coordinación", async () => {
+    const detail = syllabus("correccion_solicitada");
+    detail.sections[0]!.blocks[0]!.fields[0]!.value = "";
+    detail.sections.push({
+      id: "section-2",
+      key: "bibliografia",
+      title: "Bibliografía",
+      description: null,
+      blocks: [{
+        id: "block-2",
+        title: "Bibliografía",
+        content_type: "text",
+        fields: [{
+          id: "field-2",
+          key: "bibliografia_basica",
+          label: "Bibliografía básica",
+          help: null,
+          type: "texto_largo",
+          options: [],
+          required: true,
+          inherited: false,
+          teacher_editable: true,
+          value: "Sommerville, 10.ª ed.",
+        }],
+      }],
+    });
+    detail.library_correction = true;
+    detail.reopening = { cause: "La 10.ª edición no está disponible.", reopened_at: "2026-09-29T09:00:00-05:00", reopened_by: "Biblioteca Demo", origin: "biblioteca" };
+    detail.library_comments = [
+      { comment: "Comentario anterior.", commented_at: "2026-09-20T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 1 },
+      { comment: "La 10.ª edición no está disponible.", commented_at: "2026-09-29T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 2 },
+    ];
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    vi.mocked(submitTeacherSyllabus).mockResolvedValue({ message: "Bibliografía reenviada.", syllabus: { ...detail, state: "aprobado", library_correction: false } });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find("#input-field-1").exists()).toBe(false);
+    expect(wrapper.get("#field-field-1").classes()).toContain("syllabus-readonly-field");
+    expect(wrapper.find("#input-field-2").exists()).toBe(true);
+    expect(wrapper.get(".library-correction").text()).toContain("Solo puede cambiar la sección Bibliografía");
+    const commentCard = wrapper.get(".library-comment-card");
+    expect(commentCard.text()).toContain("Comentario de biblioteca");
+    expect(commentCard.text().indexOf("La 10.ª edición no está disponible.")).toBeLessThan(commentCard.text().indexOf("Comentario anterior."));
+
+    const resend = buttonNamed(wrapper, "Reenviar bibliografía");
+    expect(resend).toBeDefined();
+    expect(resend!.attributes("disabled")).toBeUndefined();
+    expect(buttonNamed(wrapper, "Enviar sílabo")).toBeUndefined();
+    await resend!.trigger("click");
+    await flushPromises();
+
+    expect(document.body.textContent).toContain("¿Reenviar la bibliografía?");
+    expect(document.body.textContent).toContain("no vuelve a revisión de coordinación");
+    expect(document.body.textContent).toContain("Se generará un PDF nuevo");
+    const confirm = Array.from(document.body.querySelectorAll('[role="dialog"] button')).find((button) => button.textContent?.includes("Reenviar bibliografía"));
+    (confirm as HTMLButtonElement).click();
+    await flushPromises();
+
+    expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2);
+    wrapper.unmount();
+  });
 });

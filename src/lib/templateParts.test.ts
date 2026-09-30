@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { inlineNodeLabel, inlineNodeName } from '@/components/domain/configuration/template-table/inlineNodeLabel';
+import { inlineNodeLabel, inlineNodeName, markClass, sheetMark } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import { isFreeTextPart, partFormLabel, sectionOrientation } from '@/lib/templateParts';
 import type { TemplateFieldContainer } from '@/types/configuration';
 
@@ -36,5 +36,14 @@ describe('templateParts', () => {
         expect(inlineNodeLabel('field', { key: 'discapacidad', label: 'Discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'], choice: 'Sí' })).toBe('X');
         expect(inlineNodeLabel('variable', { id: 'curricular_resultados', label: 'curricular_resultados' }, () => 'Resultados')).toBe('Proyecto de carrera');
         expect(inlineNodeName('variable', { id: 'curricular_resultados', label: 'curricular_resultados' }, () => 'Resultados')).toBe('Resultados');
+    });
+
+    it('distingue las firmas de los datos automáticos en la hoja', () => {
+        const signature = { id: 'firma_bibliotecario', label: 'firma_bibliotecario' };
+        expect(sheetMark('variable', signature)).toBe('signature');
+        expect(markClass[sheetMark('variable', signature)]).toBe('template-table-signature');
+        expect(inlineNodeLabel('variable', signature, () => 'Firma de biblioteca')).toBe('Firma de biblioteca');
+        expect(inlineNodeLabel('variable', signature)).toBe('Firma');
+        expect(sheetMark('variable', { id: 'nombre_carrera' })).toBe('automatic');
     });
 });
