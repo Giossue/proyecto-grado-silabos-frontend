@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyState from '@/components/domain/EmptyState.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { syllabusStateLabel } from '@/lib/syllabusStates';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
@@ -94,7 +95,6 @@ const formatValue = (value: unknown): string => {
   if (typeof value === 'object') return JSON.stringify(value, null, 2);
   return String(value);
 };
-const stateLabel = (value: string): string => ({ en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado' })[value] ?? 'Estado no disponible';
 const observationState = (value: string): string => ({ abierta: 'Abierta', respondida: 'Respondida', verificada: 'Verificada' })[value] ?? 'Estado no disponible';
 const submitCorrection = (): Promise<void> => run(() => requestCorrection(data.value!.revision.id, {
   justification: correctionJustification.value,
@@ -150,7 +150,7 @@ onMounted(load);
               <p class="text-sm whitespace-pre-wrap">{{ observation.content }}</p>
               <p class="text-xs text-muted-foreground">{{ observation.created_by }} · {{ formatDateDisplay(observation.observado_en) }}</p>
             </article>
-            <p v-if="data.observations.length === 0" class="text-sm text-muted-foreground">Aún no hay observaciones.</p>
+            <EmptyState v-if="data.observations.length === 0" title="Aún no hay observaciones." />
           </CardContent>
         </Card>
 

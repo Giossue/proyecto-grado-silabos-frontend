@@ -97,7 +97,7 @@ const onFocusIn = (): void => {
     <EdgeLabelRenderer>
         <div
             v-if="hoverPoint"
-            class="pointer-events-none absolute z-10 rounded-md bg-card px-2 py-1 text-[10px] text-card-foreground shadow-menu ring-1 ring-surface-ring"
+            class="pointer-events-none absolute z-10 rounded-md bg-card px-2 py-1 text-curriculum-edge text-card-foreground shadow-menu ring-1 ring-surface-ring"
             :style="{
                 transform: `translate(-50%, -150%) translate(${hoverPoint.x}px, ${hoverPoint.y}px)`,
             }"

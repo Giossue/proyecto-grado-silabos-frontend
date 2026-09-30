@@ -9,6 +9,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
+    --text-curriculum-edge: 0.625rem;
     --text-curriculum-code: 0.65rem;
     --text-curriculum-metric: 0.6rem;
     --font-sans:
@@ -103,6 +104,20 @@
 }
 
 :root {
+    --notifications-width: min(24rem, calc(100vw - 1rem));
+    --notifications-max-height: min(26rem, 60vh);
+    --curriculum-canvas-height: 76vh;
+    --curriculum-canvas-full-height: calc(100dvh - 5.5rem);
+    --overlay-max-height: calc(100dvh - 2rem);
+    --filter-sheet-max-height: 85vh;
+    --app-header-height: calc(4rem + env(safe-area-inset-top));
+    --app-header-compact-height: calc(3rem + env(safe-area-inset-top));
+    --safe-footer-inset: calc(1rem + env(safe-area-inset-bottom));
+    --safe-header-inset: calc(1rem + env(safe-area-inset-top));
+    --page-mobile-actions-inset: calc(6rem + env(safe-area-inset-bottom));
+    --page-mobile-actions-right: calc(1rem + env(safe-area-inset-right));
+    --safe-footer-inset: calc(1rem + env(safe-area-inset-bottom));
+    --configuration-workspace-columns: minmax(0, 2fr) minmax(18rem, 1fr);
     --layer-modal: 50;
     --layer-confirmation: 60;
     --brand-logo-surface: hsl(0 0% 100%);

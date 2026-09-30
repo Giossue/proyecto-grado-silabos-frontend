@@ -25,7 +25,6 @@ const data = ref<ReviewsPage | null>(null);
 const loading = ref(true);
 const filters = reactive({ search: '', state: 'all' });
 const error = ref<string | null>(null);
-const stateLabel = (value: string): string => ({ en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado' })[value] ?? 'Estado no disponible';
 const load = async (page = 1): Promise<void> => {
   loading.value = true;
   error.value = null;

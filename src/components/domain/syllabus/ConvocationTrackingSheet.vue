@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { formatDateDisplay } from '@/lib/dateDisplay';
-import { syllabusStateLabel } from '@/lib/syllabusStates';
+import { SYLLABUS_STATE_OPTIONS, syllabusStateLabel } from '@/lib/syllabusStates';
 import { ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { getConvocation, type ConvocationDetail } from '@/api/convocations';
@@ -82,10 +82,7 @@ watch(() => props.open, (open) => {
                   <SelectContent>
                     <SelectGroup>
                       <SelectItem value="all">Todos los estados</SelectItem>
-                      <SelectItem value="sin_iniciar">Sin iniciar</SelectItem>
-                      <SelectItem value="borrador">Borrador</SelectItem>
-                      <SelectItem value="en_revision">En revisión</SelectItem>
-                      <SelectItem value="aprobado">Aprobado</SelectItem>
+<SelectItem v-for="option in SYLLABUS_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
                     </SelectGroup>
                   </SelectContent>
                 </Select>

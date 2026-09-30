@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { CalendarPlus, LockKeyhole, Pencil, Trash2, UserRoundCog } from '@lucide/vue';
 import { ref } from 'vue';
 import { deleteAcademicRecord } from '@/api/academic';
@@ -62,7 +63,7 @@ const remove = async (): Promise<void> => {
         <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" @saved="emit('changed', $event)" />
 
         <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar registro institucional</DialogTitle><DialogDescription v-if="entity === 'periodo'">Se eliminará el período «{{ recordName }}». Solo puede eliminarse si no tiene materias programadas ni una convocatoria institucional asociada. Si la convocatoria todavía no tiene actividad docente, elimínela primero desde Convocatorias.</DialogDescription><DialogDescription v-else>Se eliminará «{{ recordName }}». La operación se rechazará si tiene carreras, materias programadas, procesos u otro historial relacionado.</DialogDescription></DialogHeader>
-            <p v-if="error" class="mb-4 text-sm text-destructive">{{ error }}</p>
+            <FeedbackAlert v-if="error" :message="error" />
             <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" variant="destructive" :disabled="deleting" @click="remove"><Spinner v-if="deleting" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Eliminar registro</Button></DialogFooter>
         </DialogContent></Dialog>
     </div>

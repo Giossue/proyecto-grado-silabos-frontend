@@ -83,7 +83,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 'flex min-w-0 flex-col gap-6 overflow-x-clip p-4 sm:p-6',
                 // Sitio para que el botón flotante no tape la última fila de una tabla.
                 actionCount > 0 &&
-                    'max-sm:pb-[calc(6rem+env(safe-area-inset-bottom))]',
+                    'max-sm:pb-(--page-mobile-actions-inset)',
                 widthClass,
             )
         "
@@ -119,7 +119,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                         // esa franja mide cero porque la página no se dibuja debajo de
                         // ella; el día que alguien lo permita, el botón no queda tapado.
                         'max-sm:fixed max-sm:z-40 max-sm:w-auto max-sm:flex-col max-sm:items-end',
-                        'max-sm:right-[calc(1rem+env(safe-area-inset-right))] max-sm:bottom-[calc(1rem+env(safe-area-inset-bottom))]',
+                        'max-sm:right-(--page-mobile-actions-right) max-sm:bottom-(--safe-footer-inset)',
                         'max-sm:transition-all max-sm:duration-200 max-sm:ease-out',
                         floatingHidden &&
                             'max-sm:pointer-events-none max-sm:translate-y-24 max-sm:opacity-0',

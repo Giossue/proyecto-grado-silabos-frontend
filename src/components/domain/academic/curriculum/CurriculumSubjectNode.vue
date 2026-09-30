@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Pencil, Trash2 } from "@lucide/vue";
 import { Handle, Position } from "@vue-flow/core";
 import { computed, ref, watch } from "vue";
@@ -222,9 +223,7 @@ const totalFields = computed(
           </DialogDescription>
         </DialogHeader>
 
-        <p v-if="deleteError" class="mb-4 text-sm text-destructive">
-          {{ deleteError }}
-        </p>
+        <FeedbackAlert v-if="deleteError" :message="deleteError" />
         <DialogFooter>
           <DialogClose as-child>
             <Button type="button" variant="outline" :disabled="deleting">

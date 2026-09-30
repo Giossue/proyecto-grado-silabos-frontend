@@ -108,7 +108,7 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
             <TableCell>{{ item.subject_code }}</TableCell>
             <TableCell>{{ item.subject_cycle === null ? "Sin ciclo" : `${item.subject_cycle}.º` }}</TableCell>
             <TableCell><div class="flex flex-wrap gap-1.5"><Badge v-for="parallel in item.parallels" :key="parallel.id" variant="outline">{{ parallel.code }} · {{ shiftLabel(parallel.shift, props.options.shiftOptions) }}</Badge><span v-if="!item.parallels.length" class="text-muted-foreground">Sin paralelos</span></div></TableCell>
-            <TableCell class="text-right"><CareerAcademicActions entity="programacion_asignatura" :record="item" :record-label="item.label" :editable="item.editable" :delete-supported="!data.career.lock_reason && item.period_planning_enabled" :parallel-creation-supported="!data.career.lock_reason && item.active && item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? 'Período finalizado · solo lectura' : data.career.lock_reason ?? undefined" @changed="emit('changed', $event)" /></TableCell>
+            <TableCell class="text-right"><CareerAcademicActions :shift-options="options.shiftOptions" entity="programacion_asignatura" :record="item" :record-label="item.label" :editable="item.editable" :delete-supported="!data.career.lock_reason && item.period_planning_enabled" :parallel-creation-supported="!data.career.lock_reason && item.active && item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? 'Período finalizado · solo lectura' : data.career.lock_reason ?? undefined" @changed="emit('changed', $event)" /></TableCell>
           </TableRow>
         </TableBody>
       </Table>

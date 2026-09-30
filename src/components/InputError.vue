@@ -1,13 +1,9 @@
 <script setup lang="ts">
-defineProps<{
-  message?: string;
-}>();
+import { FieldError } from '@/components/ui/field';
+
+defineProps<{ message?: string }>();
 </script>
 
 <template>
-  <div v-show="message">
-    <p class="text-sm text-destructive">
-      {{ message }}
-    </p>
-  </div>
+    <FieldError v-if="message" :errors="[message]" />
 </template>

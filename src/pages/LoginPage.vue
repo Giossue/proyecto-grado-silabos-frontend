@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
@@ -47,7 +48,7 @@ const submit = async (): Promise<void> => {
 
 <template>
   <AuthSimpleLayout title="Iniciar sesión" description="Ingrese con la cuenta asignada por la institución.">
-    <p v-if="error && Object.keys(errors).length === 0" class="text-center text-sm text-destructive" role="alert">{{ error }}</p>
+    <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />
     <form class="flex flex-col gap-6" @submit.prevent="submit">
       <FieldGroup>
         <Field :data-invalid="Boolean(errors.email || errors.correo_electronico)">

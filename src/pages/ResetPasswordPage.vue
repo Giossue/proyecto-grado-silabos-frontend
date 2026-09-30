@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -55,7 +56,7 @@ const submit = async (): Promise<void> => {
         <div class="grid gap-2"><Label for="reset-email" required>Correo electrónico</Label><Input id="reset-email" type="email" :model-value="email" autocomplete="email" class="mt-1 block w-full" placeholder="Ej. nombre@ueb.edu.ec" readonly required /><InputError :message="errors.email?.[0]" class="mt-2" /></div>
         <div class="grid gap-2"><Label for="new-password" required>Contraseña nueva</Label><PasswordInput id="new-password" v-model="password" required autocomplete="new-password" class="mt-1 block w-full" placeholder="Contraseña nueva" :aria-invalid="Boolean(errors.password)" /><InputError :message="errors.password?.[0]" /></div>
         <div class="grid gap-2"><Label for="new-password-confirmation" required>Confirmar contraseña</Label><PasswordInput id="new-password-confirmation" v-model="passwordConfirmation" required autocomplete="new-password" class="mt-1 block w-full" placeholder="Confirmar contraseña" :aria-invalid="Boolean(errors.password_confirmation)" /><InputError :message="errors.password_confirmation?.[0]" /></div>
-        <p v-if="error && Object.keys(errors).length === 0" class="text-sm text-destructive" role="alert">{{ error }}</p>
+        <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />
         <Button type="submit" class="mt-4 w-full" :disabled="pending || !email || !token" data-test="reset-password-button"><Spinner v-if="pending" />Restablecer contraseña</Button>
       </div>
     </form>

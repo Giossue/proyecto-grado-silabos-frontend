@@ -2,22 +2,23 @@
 import { ArrowLeft } from '@lucide/vue';
 import type { HTMLAttributes } from 'vue';
 import { useCarousel } from '@/components/ui/carousel';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const props = defineProps<{
     class?: HTMLAttributes['class'];
 }>();
 
-const { scrollPrev } = useCarousel();
+const { scrollPrev, canScrollPrev } = useCarousel();
 </script>
 
 <template>
-    <button
+    <Button variant="ghost" size="icon-sm"
         :class="cn('shrink-0', props.class)"
         type="button"
-        aria-label="Previous"
-        @click="scrollPrev"
+        aria-label="Anterior"
+        :disabled="!canScrollPrev" @click="scrollPrev"
     >
-        <ArrowLeft class="size-4 text-muted-foreground" />
-    </button>
+        <ArrowLeft data-icon="inline-start" aria-hidden="true" />
+    </Button>
 </template>

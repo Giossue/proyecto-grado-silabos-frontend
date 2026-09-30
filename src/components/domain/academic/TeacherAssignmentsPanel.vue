@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { MailCheck } from "@lucide/vue";
 import { computed, ref } from "vue";
 import { resendCareerTeacherInvitation, type TeacherAssignments } from "@/api/career-academics";
@@ -106,7 +107,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
     <ClientFilterBar :filter="filter" input-id="teacher-assignments-search" label="Buscar asignación docente" placeholder="Buscar por docente, correo, materia o paralelo">
       <template #filters><Field><FieldLabel for="teacher-assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="teacher-assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="pending">Pendiente de activación</SelectItem><SelectItem value="inactive">Finalizadas</SelectItem></SelectGroup></SelectContent></Select></Field></template>
     </ClientFilterBar>
-    <p v-if="resendError" class="text-sm text-destructive" role="alert">{{ resendError }}</p>
+    <FeedbackAlert v-if="resendError" :message="resendError" />
     <Table><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Materia</TableHead><TableHead>Periodo</TableHead><TableHead>Paralelo</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
       <TableBody>
         <TableEmpty v-if="!items.length" :colspan="6">{{ filter.active.value ? "Ningún registro coincide con la búsqueda." : "No existen docentes o asignaciones en esta carrera." }}</TableEmpty>

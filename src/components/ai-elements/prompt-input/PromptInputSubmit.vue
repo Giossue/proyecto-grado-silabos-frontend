@@ -49,7 +49,7 @@ const iconClass = computed(() => {
 <template>
     <InputGroupButton
         v-bind="props"
-        aria-label="Submit"
+        aria-label="Enviar"
         :class="cn(props.class)"
         :size="size"
         :variant="variant"

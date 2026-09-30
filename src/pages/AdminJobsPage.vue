@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { RotateCw } from '@lucide/vue';
 import { onMounted, reactive, ref } from 'vue';
@@ -83,7 +84,7 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Trabajos fallidos" description="Correos, documentos y análisis ejecutados en segundo plano.">
-    <p v-if="actionError" class="text-sm text-destructive" role="alert">{{ actionError }}</p>
+    <FeedbackAlert v-if="actionError" :message="actionError" />
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="7" />
     <Card v-else-if="data"><CardContent class="flex flex-col gap-4">

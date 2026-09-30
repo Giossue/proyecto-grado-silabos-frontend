@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Eye, Lock, Pause, Play } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
@@ -72,7 +73,7 @@ const opened = (message: string): void => emit('changed', message);
   />
   <Dialog :open="pending !== null" @update:open="(open) => { if (!open && !processing) pending = null; }"><DialogContent v-if="pending"><DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader><form class="flex flex-col gap-4" @submit.prevent="submit">
     <Field v-if="pending === 'pausar'" :data-invalid="Boolean(fieldErrors.reason)"><FieldLabel :for="`convocation-pause-reason-${convocation.id}`" required>Motivo</FieldLabel><Textarea :id="`convocation-pause-reason-${convocation.id}`" v-model="reason" rows="3" :aria-invalid="Boolean(fieldErrors.reason)" placeholder="Corrección de las horas de dos materias de la malla antes de continuar." required @update:model-value="fieldErrors.reason = []" /><p class="text-sm text-muted-foreground" :class="{ 'text-destructive': reasonCharacters < 10 }">{{ reasonCharacters }}/10 caracteres mínimos</p><FieldError :errors="fieldErrors.reason" /></Field>
-    <p v-if="error && Object.keys(fieldErrors).length === 0" class="text-sm text-destructive" role="alert">{{ error }}</p>
+    <FeedbackAlert v-if="error && Object.keys(fieldErrors).length === 0" :message="error" />
     <DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose><Button type="button" :disabled="processing || (pending === 'pausar' && reasonCharacters < 10)" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><Pause v-else-if="pending === 'pausar'" data-icon="inline-start" aria-hidden="true" /><Play v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[pending].label }}</Button></DialogFooter>
   </form></DialogContent></Dialog>
   <ConvocationTrackingSheet

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyState from '@/components/domain/EmptyState.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import { BookCheck, CircleSlash, MessageSquareText } from '@lucide/vue';
@@ -203,7 +204,7 @@ onMounted(load);
               <p class="text-sm whitespace-pre-wrap">{{ item.comment }}</p>
               <p class="text-xs text-muted-foreground">{{ item.commented_by }} · {{ formatDate(item.commented_at) }}</p>
             </article>
-            <p v-if="comments.length === 0" class="text-sm text-muted-foreground">Aún no hay comentarios.</p>
+            <EmptyState v-if="comments.length === 0" title="Aún no hay comentarios." />
           </CardContent>
         </Card>
       </aside>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { LockKeyhole, Plus, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { deleteCareerRecord, deleteScheduledSubject } from '@/api/career-academics';
@@ -14,6 +15,7 @@ type CareerAcademicEntity = 'programacion_asignatura' | 'asignacion_docente';
 type CareerAcademicRecord = { id: string; parallels?: { id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }[] };
 
 const props = withDefaults(defineProps<{
+    shiftOptions?: Array<{ value: string; label: string }>;
     entity: CareerAcademicEntity; record: CareerAcademicRecord; recordLabel: string; editable: boolean;
     active?: boolean; deleteSupported?: boolean; parallelCreationSupported?: boolean;
     lockedLabel?: string; allowLockedActions?: boolean;
@@ -35,6 +37,6 @@ const remove = async (): Promise<void> => { processing.value = true; error.value
     <DropdownMenuItem v-if="entity === 'programacion_asignatura' && parallelCreationSupported && !actionsDisabled" @select="parallelCreationOpen = true"><Plus aria-hidden="true" />Agregar o editar paralelos</DropdownMenuItem>
     <DropdownMenuItem v-if="deleteSupported && !actionsDisabled" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />{{ deleteLabel }}</DropdownMenuItem>
 </TableActionsMenu>
-<ParallelCreationSheet v-if="entity === 'programacion_asignatura'" :key="`parallel-${record.id}`" v-model:open="parallelCreationOpen" :scheduled-subject-id="record.id" :scheduled-subject-label="recordLabel" :parallels="record.parallels ?? []" :shift-options="options.shiftOptions" @saved="emit('changed', $event)" @changed="emit('changed', $event)" />
-<Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>{{ deletionTitle }}</DialogTitle><DialogDescription>{{ deletionDescription }}</DialogDescription></DialogHeader><p v-if="error" class="mb-4 text-sm text-destructive">{{ error }}</p><DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" variant="destructive" :disabled="processing" @click="remove"><Spinner v-if="processing" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />{{ deletionTitle }}</Button></DialogFooter></DialogContent></Dialog>
+<ParallelCreationSheet v-if="entity === 'programacion_asignatura'" :key="`parallel-${record.id}`" v-model:open="parallelCreationOpen" :scheduled-subject-id="record.id" :scheduled-subject-label="recordLabel" :parallels="record.parallels ?? []" :shift-options="shiftOptions ?? []" @saved="emit('changed', $event)" @changed="emit('changed', $event)" />
+<Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>{{ deletionTitle }}</DialogTitle><DialogDescription>{{ deletionDescription }}</DialogDescription></DialogHeader><FeedbackAlert v-if="error" :message="error" /><DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" variant="destructive" :disabled="processing" @click="remove"><Spinner v-if="processing" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />{{ deletionTitle }}</Button></DialogFooter></DialogContent></Dialog>
 </div></template>

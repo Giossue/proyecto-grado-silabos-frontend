@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { requestPasswordRecovery } from '@/api/session';
@@ -44,7 +45,7 @@ const submit = async (): Promise<void> => {
           <Input id="recovery-email" v-model="email" type="email" autocomplete="off" required placeholder="Ej. nombre@ueb.edu.ec" :aria-invalid="Boolean(errors.email)" />
           <InputError :message="errors.email?.[0]" />
         </div>
-        <p v-if="error && Object.keys(errors).length === 0" class="mt-2 text-sm text-destructive" role="alert">{{ error }}</p>
+        <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />
         <div class="my-6 flex items-center justify-start">
           <Button class="w-full" :disabled="pending" type="submit" data-test="email-password-reset-link-button"><Spinner v-if="pending" />Enviar enlace de restablecimiento</Button>
         </div>

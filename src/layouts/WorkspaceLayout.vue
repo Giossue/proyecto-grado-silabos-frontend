@@ -34,7 +34,7 @@ const user = computed<User>(() => ({
 <template>
     <div class="flex min-h-svh w-full flex-col bg-background">
         <header
-            class="sticky top-0 z-30 flex h-[calc(4rem+env(safe-area-inset-top))] shrink-0 items-center gap-3 border-b border-sidebar-border/70 bg-background px-4 pt-[env(safe-area-inset-top)] md:px-6"
+            class="sticky top-0 z-30 flex h-(--app-header-height) shrink-0 items-center gap-3 border-b border-sidebar-border/70 bg-background px-4 pt-[env(safe-area-inset-top)] md:px-6"
         >
             <div class="flex items-center gap-2">
                 <AppLogo />

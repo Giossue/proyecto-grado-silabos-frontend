@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -80,7 +81,7 @@ const submit = async (): Promise<void> => {
           <Input id="recovery-code" v-model="code" type="text" autocomplete="one-time-code" placeholder="Ej. ABCD-EFGH" required :disabled="pending" />
           <InputError :message="errors.recovery_code?.[0]" />
         </div>
-        <p v-if="error && Object.keys(errors).length === 0" class="text-sm text-destructive" role="alert">{{ error }}</p>
+        <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />
         <Button type="submit" class="w-full" :disabled="pending || !code">Continuar</Button>
         <div class="text-center text-sm text-muted-foreground"><span>También puede </span><Button type="button" variant="link" class="h-auto p-0 text-foreground underline decoration-border underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current" @click="toggleMode">{{ content.buttonText }}</Button></div>
       </form>

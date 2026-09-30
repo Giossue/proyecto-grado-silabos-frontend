@@ -443,8 +443,8 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
 
 <template>
   <div
-    class="curriculum-canvas relative min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
-    :class="cn(fullScreen && 'h-[calc(100dvh-5.5rem)]', !fullScreen && 'h-[76vh]')"
+    class="curriculum-canvas relative min-h-136 overflow-hidden rounded-lg border bg-background shadow-surface"
+    :class="cn(fullScreen && 'h-(--curriculum-canvas-full-height)', !fullScreen && 'h-(--curriculum-canvas-height)')"
     :aria-label="editing ? 'Editor interactivo de la malla' : 'Vista de la malla'"
   >
     <div class="absolute top-3 right-3 z-10 max-sm:hidden">
@@ -526,7 +526,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
       "
     >
       <DialogContent
-        class="max-h-[calc(100dvh-2rem)] overflow-y-auto sm:max-w-2xl"
+        class="max-h-(--overlay-max-height) overflow-y-auto sm:max-w-2xl"
       >
         <DialogHeader>
           <DialogTitle>{{

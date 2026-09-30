@@ -19,6 +19,6 @@ const { openFileDialog } = usePromptInput();
 <template>
     <DropdownMenuItem @select.prevent="openFileDialog">
         <ImageIcon class="mr-2 size-4" />
-        {{ props.label || 'Add photos or files' }}
+        {{ props.label || 'Agregar fotos o archivos' }}
     </DropdownMenuItem>
 </template>

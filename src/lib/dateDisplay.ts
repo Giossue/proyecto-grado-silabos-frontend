@@ -7,12 +7,14 @@ export const formatDateDisplay = (
     value: string,
     options: Intl.DateTimeFormatOptions = { dateStyle: 'medium', timeStyle: 'short' },
 ): string => {
-    const key = JSON.stringify(options);
+    const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
+    const resolved = { timeZone: dateOnly ? 'UTC' : DISPLAY_TIMEZONE, ...options };
+    const key = JSON.stringify(resolved);
     let formatter = formatters.get(key);
     if (!formatter) {
-        formatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, { timeZone: DISPLAY_TIMEZONE, ...options });
+        formatter = new Intl.DateTimeFormat(DISPLAY_LOCALE, resolved);
         formatters.set(key, formatter);
     }
-    const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00Z`) : new Date(value);
+    const date = dateOnly ? new Date(`${value}T00:00:00Z`) : new Date(value);
     return formatter.format(date);
 };

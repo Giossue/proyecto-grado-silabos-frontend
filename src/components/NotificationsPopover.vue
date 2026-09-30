@@ -134,7 +134,7 @@ const ignoreBell = (event: Event): void => {
                 </span>
             </PopoverAnchor>
         </TooltipProvider>
-        <PopoverContent align="end" @interact-outside="ignoreBell" class="flex w-[min(24rem,calc(100vw-1rem))] flex-col gap-3 p-0">
+        <PopoverContent align="end" @interact-outside="ignoreBell" class="flex w-(--notifications-width) flex-col gap-3 p-0">
             <div class="flex items-center justify-between px-4 pt-4">
                 <h2 class="text-lg font-semibold">Notificaciones</h2>
                 <DropdownMenu>
@@ -154,7 +154,7 @@ const ignoreBell = (event: Event): void => {
 
             <ChoiceGroup :model-value="status" :options="statusOptions" label="Filtrar notificaciones" class="px-4" @update:model-value="updateStatus" />
 
-            <div class="max-h-[min(26rem,60vh)] overflow-y-auto px-2" :class="{ 'pb-3': !hasActiveRole }" aria-live="polite">
+            <div class="max-h-(--notifications-max-height) overflow-y-auto px-2" :class="{ 'pb-3': !hasActiveRole }" aria-live="polite">
                 <div v-if="loading && items.length === 0" class="flex justify-center py-10">
                     <Spinner />
                 </div>

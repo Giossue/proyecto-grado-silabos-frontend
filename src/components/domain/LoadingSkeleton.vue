@@ -64,7 +64,7 @@ const gridColumns = (): string =>
                         </div>
                     </div>
                     <div class="overflow-x-auto p-3">
-                        <div class="min-w-[58rem] overflow-hidden rounded-lg border">
+                        <div class="min-w-232 overflow-hidden rounded-lg border">
                             <div
                                 class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
                                 :style="{ gridTemplateColumns: gridColumns() }"
@@ -92,7 +92,7 @@ const gridColumns = (): string =>
 
             <template v-else-if="variant === 'table-body'">
                 <div class="overflow-x-auto">
-                    <div class="min-w-[48rem] overflow-hidden rounded-lg border">
+                    <div class="min-w-192 overflow-hidden rounded-lg border">
                         <div
                             class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
                             :style="{ gridTemplateColumns: gridColumns() }"
@@ -150,7 +150,7 @@ const gridColumns = (): string =>
                             <Skeleton class="h-10 w-full sm:w-44" />
                         </div>
                         <div class="overflow-x-auto">
-                            <div class="min-w-[32rem] overflow-hidden rounded-lg border">
+                            <div class="min-w-128 overflow-hidden rounded-lg border">
                                 <div
                                     class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
                                     :style="{ gridTemplateColumns: gridColumns() }"
@@ -239,7 +239,7 @@ const gridColumns = (): string =>
                             <Skeleton class="h-10 w-full sm:w-44" />
                         </div>
                         <div class="overflow-x-auto">
-                            <div class="min-w-[42rem] overflow-hidden rounded-lg border">
+                            <div class="min-w-168 overflow-hidden rounded-lg border">
                                 <div
                                     class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
                                     :style="{ gridTemplateColumns: gridColumns() }"
@@ -270,7 +270,7 @@ const gridColumns = (): string =>
                 <template v-if="props.mode === 'curriculum'">
                     <div
                         data-skeleton="curriculum-canvas"
-                        class="relative h-[76vh] min-h-[34rem] overflow-hidden rounded-lg border bg-background shadow-surface"
+                        class="relative h-(--curriculum-canvas-height) min-h-136 overflow-hidden rounded-lg border bg-background shadow-surface"
                     >
                         <div class="absolute inset-0 overflow-hidden p-6 sm:p-8">
                             <div class="grid h-full grid-cols-2 gap-5 sm:grid-cols-4 sm:gap-8">
@@ -299,7 +299,7 @@ const gridColumns = (): string =>
                     <div class="flex flex-col gap-4">
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-end"><Skeleton class="h-10 min-w-0 flex-1" /><Skeleton class="h-10 w-full sm:w-52" /></div>
                         <div class="overflow-x-auto">
-                            <div class="min-w-[48rem] overflow-hidden rounded-lg border">
+                            <div class="min-w-192 overflow-hidden rounded-lg border">
                                 <div
                                     class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
                                     :style="{ gridTemplateColumns: gridColumns() }"
@@ -421,7 +421,7 @@ const gridColumns = (): string =>
                 <div class="overflow-hidden rounded-xl border bg-card">
                     <div class="border-b p-4"><Skeleton class="h-10 w-80 max-w-full" /></div>
                     <div class="overflow-x-auto p-3">
-                        <div class="min-w-[42rem] overflow-hidden rounded-lg border">
+                        <div class="min-w-168 overflow-hidden rounded-lg border">
                             <div class="grid grid-cols-4 gap-3 border-b bg-muted/40 px-3 py-3"><Skeleton v-for="column in 4" :key="`documents-header-${column}`" class="h-4 w-3/4" /></div>
                             <div class="flex flex-col gap-px bg-border"><div v-for="row in 4" :key="`documents-row-${row}`" class="grid grid-cols-4 gap-3 bg-background px-3 py-4"><Skeleton v-for="column in 4" :key="`documents-cell-${row}-${column}`" class="h-4 w-full" /></div></div>
                         </div>
@@ -435,7 +435,7 @@ const gridColumns = (): string =>
                         <Skeleton class="h-6 w-56" />
                         <Skeleton class="h-4 w-96 max-w-full" />
                     </div>
-                    <Skeleton class="mt-5 h-[28rem] w-full" />
+                    <Skeleton class="mt-5 h-112 w-full" />
                     <div class="mt-4 flex justify-end"><Skeleton class="h-10 w-40" /></div>
                 </div>
             </template>
@@ -449,7 +449,7 @@ const gridColumns = (): string =>
                     </div>
                 </div>
                 <div class="flex justify-center px-4 py-6 sm:py-8">
-                    <div class="w-full max-w-[56rem] overflow-hidden border bg-card p-6 shadow-sm sm:p-10">
+                    <div class="w-full max-w-224 overflow-hidden border bg-card p-6 shadow-sm sm:p-10">
                         <div class="flex flex-col gap-8">
                             <div class="flex items-center justify-between"><Skeleton class="h-12 w-40" /><Skeleton class="h-12 w-40" /></div>
                             <Skeleton class="mx-auto h-8 w-96 max-w-full" />
@@ -477,7 +477,7 @@ const gridColumns = (): string =>
             </template>
 
             <template v-else-if="variant === 'detail'">
-                <div class="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(18rem,1fr)]">
+                <div class="grid gap-6 lg:grid-cols-(--configuration-workspace-columns)">
                     <div class="rounded-xl border bg-card p-5">
                         <div class="flex flex-col gap-3 border-b pb-5"><Skeleton class="h-6 w-64" /><Skeleton class="h-4 w-96 max-w-full" /></div>
                         <div class="mt-5 flex flex-col gap-4"><Skeleton v-for="row in 5" :key="`detail-row-${row}`" class="h-14 w-full" /></div>

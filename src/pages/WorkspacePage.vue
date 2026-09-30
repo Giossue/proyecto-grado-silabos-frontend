@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { ArrowRight, CheckCircle2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -106,7 +107,7 @@ onMounted(load);
         :description="selectionDescription"
         size="wide"
     >
-        <p v-if="actionError" class="text-sm text-destructive" role="alert">{{ actionError }}</p>
+        <FeedbackAlert v-if="actionError" :message="actionError" />
 
         <Alert v-if="session.available_roles.length === 0">
             <AlertTitle>No tiene asignaciones vigentes</AlertTitle>

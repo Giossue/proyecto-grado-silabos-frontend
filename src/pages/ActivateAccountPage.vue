@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { activateAccount, logout } from '@/api/session';
@@ -64,7 +65,7 @@ const submit = async (): Promise<void> => {
                 <PasswordInput id="activation-password-confirmation" v-model="passwordConfirmation" autocomplete="new-password" required :aria-invalid="Boolean(errors.password_confirmation)" />
                 <InputError :message="errors.password_confirmation?.[0]" />
             </div>
-            <p v-if="error && Object.keys(errors).length === 0" class="text-sm text-destructive" role="alert">{{ error }}</p>
+            <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />
             <InputError :message="errors.token?.[0]" />
             <Button type="submit" class="w-full" :disabled="pending || !token">
                 <Spinner v-if="pending" />

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -74,7 +75,7 @@ onMounted(() => {
     >
         <template v-if="verifiesSignedLink">
             <div class="flex flex-col gap-5 text-center">
-                <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
+                <FeedbackAlert v-if="error" :message="error" />
                 <p v-else class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                     <Spinner />
                     Verificando correo…
@@ -84,9 +85,7 @@ onMounted(() => {
         </template>
 
         <template v-else>
-            <p v-if="error" class="mb-4 text-center text-sm text-destructive" role="alert">
-                {{ error }}
-            </p>
+            <FeedbackAlert v-if="error" :message="error" />
 
             <div class="flex flex-col gap-6 text-center">
                 <Button type="button" :disabled="processing" variant="secondary" @click="resend">

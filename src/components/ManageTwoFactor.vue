@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { ShieldCheck } from '@lucide/vue';
 import { onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
@@ -100,7 +101,7 @@ onMounted(() => void load());
 <template>
     <div class="flex flex-col gap-6">
         <Heading variant="small" title="Autenticación de dos factores" description="Administre la protección adicional de su cuenta" />
-        <p v-if="error" class="text-sm text-destructive" role="alert">{{ error }}</p>
+        <FeedbackAlert v-if="error" :message="error" />
 
         <div v-if="!enabled" class="flex flex-col items-start justify-start gap-4">
             <p class="text-sm text-muted-foreground">

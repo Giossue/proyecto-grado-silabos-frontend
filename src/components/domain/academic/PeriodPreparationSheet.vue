@@ -49,7 +49,7 @@ const reset = () => {
     : planningPeriods.value[0]?.id ?? '';
   updateProposal();
 };
-const addParallel = (row: PreparationRow) => row.parallels.push({ code: nextParallelCode(row.parallels), shift: teacherId: '' });
+const addParallel = (row: PreparationRow) => row.parallels.push({ code: nextParallelCode(row.parallels), shift: props.options.shiftOptions[0]?.value ?? '', teacherId: '' });
 const removeParallel = (row: PreparationRow, index: number) => row.parallels.length > 1 && row.parallels.splice(index, 1);
 const submit = async (close: () => void) => {
   if (props.disabled || !periodId.value || !rows.value.length || invalidRows.value) return;
