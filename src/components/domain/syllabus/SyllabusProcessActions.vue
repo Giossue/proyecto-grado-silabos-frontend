@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { CalendarClock, Lock, Pause, Play, Square, Trash2 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { deleteProcess, transitionProcess, type SyllabusProcess } from '@/api/processes';
 import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
@@ -18,9 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Field, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
-import { Textarea } from '@/components/ui/textarea';
 
 type Transition = 'pausar' | 'reanudar' | 'cerrar';
 
@@ -30,19 +27,17 @@ const emit = defineEmits<{
 }>();
 
 const pending = ref<Transition | null>(null);
-const reason = ref('');
 const processing = ref(false);
 const error = ref<string | null>(null);
 const deadlineOpen = ref(false);
 const deleteOpen = ref(false);
 const deleting = ref(false);
 const deleteError = ref<string | null>(null);
-const reasonCharacters = computed(() => reason.value.trim().length);
 
 const dialogs: Record<Transition, { title: string; description: string; label: string; destructive?: boolean }> = {
   pausar: {
     title: 'Pausar el proceso',
-    description: 'Se detienen los envíos y la edición docente en todas las carreras hasta que lo reanude. El motivo queda en auditoría.',
+    description: 'Se detienen los envíos y la edición docente en todas las carreras hasta que lo reanude.',
     label: 'Pausar proceso',
   },
   reanudar: {
@@ -60,20 +55,11 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
 
 const confirm = async (): Promise<void> => {
   if (!pending.value) return;
-  if (pending.value === 'pausar' && reason.value.trim().length < VALIDATION_LIMITS.reasonMinimum) {
-    error.value = `Escriba al menos ${VALIDATION_LIMITS.reasonMinimum} caracteres para explicar la pausa.`;
-    return;
-  }
   processing.value = true;
   error.value = null;
   try {
-    const response = await transitionProcess(
-      props.process.id,
-      pending.value,
-      pending.value === 'pausar' ? reason.value.trim() : undefined,
-    );
+    const response = await transitionProcess(props.process.id, pending.value);
     pending.value = null;
-    reason.value = '';
     emit('completed', response.message);
   } catch (cause) {
     error.value = cause instanceof ApiError ? cause.message : 'No se pudo cambiar el estado del proceso.';
@@ -123,9 +109,8 @@ const remove = async (): Promise<void> => {
     <DialogContent v-if="pending">
       <DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader>
       <form class="flex flex-col gap-4" @submit.prevent="confirm">
-        <Field v-if="pending === 'pausar'"><FieldLabel for="process-pause-reason" required>Motivo</FieldLabel><Textarea id="process-pause-reason" v-model="reason" rows="3" required :minlength="VALIDATION_LIMITS.reasonMinimum" placeholder="Corrección de la sección de evaluación en la plantilla." /><p class="text-sm text-muted-foreground" :class="{ 'text-destructive': reasonCharacters < VALIDATION_LIMITS.reasonMinimum }">{{ reasonCharacters }}/{{ VALIDATION_LIMITS.reasonMinimum }} caracteres mínimos</p></Field>
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing || (pending === 'pausar' && reasonCharacters < VALIDATION_LIMITS.reasonMinimum)"><Spinner v-if="processing" />{{ dialogs[pending].label }}</Button></DialogFooter>
+        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing"><Spinner v-if="processing" />{{ dialogs[pending].label }}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>

@@ -3,5 +3,4 @@ export const VALIDATION_LIMITS = Object.freeze({
     longText: 4000,
     cycleCount: 30,
     parallelCode: 30,
-    reasonMinimum: 10,
 });

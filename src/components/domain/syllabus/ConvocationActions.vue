@@ -1,16 +1,14 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Eye, Lock, Pause, Play } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { transitionConvocation, type ConvocationItem } from '@/api/convocations';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
-import { Textarea } from '@/components/ui/textarea';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
 import ConvocationTrackingSheet from '@/components/domain/syllabus/ConvocationTrackingSheet.vue';
 
@@ -19,37 +17,28 @@ const props = defineProps<{ convocation: ConvocationItem }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const pending = ref<Transition | null>(null);
 const processing = ref(false);
-const reason = ref('');
 const error = ref<string | null>(null);
-const fieldErrors = ref<Record<string, string[]>>({});
 const trackingOpen = ref(false);
 const openingOpen = ref(false);
-const reasonCharacters = computed(() => reason.value.trim().length);
 const dialogs: Record<Transition, { title: string; description: string; label: string }> = {
-  pausar: { title: 'Pausar la convocatoria', description: 'Los docentes de su carrera no podrán editar ni enviar hasta que la reanude; sus borradores se conservan. Durante la pausa puede corregir la malla y los datos curriculares; la revisión de lo enviado continúa. El motivo queda en auditoría.', label: 'Pausar' },
+  pausar: { title: 'Pausar la convocatoria', description: 'Los docentes de su carrera no podrán editar ni enviar hasta que la reanude; sus borradores se conservan. Durante la pausa puede corregir la malla y los datos curriculares; la revisión de lo enviado continúa.', label: 'Pausar' },
   reanudar: { title: 'Reanudar la convocatoria', description: 'Los docentes vuelven a trabajar, los paralelos creados durante la pausa reciben su sílabo y la malla y los datos curriculares de la carrera quedan protegidos de nuevo.', label: 'Reanudar' },
 };
 const select = (value: Transition): void => {
   pending.value = value;
-  reason.value = '';
   error.value = null;
-  fieldErrors.value = {};
 };
 const submit = async (): Promise<void> => {
   if (!pending.value) return;
   processing.value = true;
   error.value = null;
-  fieldErrors.value = {};
   try {
     if (!props.convocation.id) return;
-    const result = await transitionConvocation(props.convocation.id, pending.value, pending.value === 'pausar' ? reason.value : undefined);
+    const result = await transitionConvocation(props.convocation.id, pending.value);
     pending.value = null;
     emit('changed', result.message);
   } catch (failure) {
-    if (failure instanceof ApiError) {
-      error.value = failure.message;
-      fieldErrors.value = failure.errors;
-    } else error.value = 'No se pudo cambiar la convocatoria.';
+    error.value = failure instanceof ApiError ? failure.message : 'No se pudo cambiar la convocatoria.';
   } finally { processing.value = false; }
 };
 const opened = (message: string): void => emit('changed', message);
@@ -72,9 +61,8 @@ const opened = (message: string): void => emit('changed', message);
     @opened="opened"
   />
   <Dialog :open="pending !== null" @update:open="(open) => { if (!open && !processing) pending = null; }"><DialogContent v-if="pending"><DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader><form class="flex flex-col gap-4" @submit.prevent="submit">
-    <Field v-if="pending === 'pausar'" :data-invalid="Boolean(fieldErrors.reason)"><FieldLabel :for="`convocation-pause-reason-${convocation.id}`" required>Motivo</FieldLabel><Textarea :id="`convocation-pause-reason-${convocation.id}`" v-model="reason" rows="3" :aria-invalid="Boolean(fieldErrors.reason)" placeholder="Corrección de las horas de dos materias de la malla antes de continuar." required @update:model-value="fieldErrors.reason = []" /><p class="text-sm text-muted-foreground" :class="{ 'text-destructive': reasonCharacters < 10 }">{{ reasonCharacters }}/10 caracteres mínimos</p><FieldError :errors="fieldErrors.reason" /></Field>
-    <FeedbackAlert v-if="error && Object.keys(fieldErrors).length === 0" :message="error" />
-    <DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose><Button type="button" :disabled="processing || (pending === 'pausar' && reasonCharacters < 10)" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><Pause v-else-if="pending === 'pausar'" data-icon="inline-start" aria-hidden="true" /><Play v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[pending].label }}</Button></DialogFooter>
+    <FeedbackAlert v-if="error" :message="error" />
+    <DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose><Button type="button" :disabled="processing" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><Pause v-else-if="pending === 'pausar'" data-icon="inline-start" aria-hidden="true" /><Play v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[pending].label }}</Button></DialogFooter>
   </form></DialogContent></Dialog>
   <ConvocationTrackingSheet
     v-if="convocation.id !== null"
