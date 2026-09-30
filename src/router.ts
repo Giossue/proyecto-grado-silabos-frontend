@@ -41,6 +41,7 @@ const DocumentsPage = () => import("@/pages/DocumentsPage.vue");
 const LibraryReviewsPage = () => import("@/pages/LibraryReviewsPage.vue");
 const LibraryReviewDetailPage = () => import("@/pages/LibraryReviewDetailPage.vue");
 const NotFoundPage = () => import("@/pages/NotFoundPage.vue");
+const TablePrototypePage = () => import("@/pages/TablePrototypePage.vue");
 
 const replaceParams = (target: string, route: RouteLocationNormalized): string =>
   target.replace(/:([A-Za-z0-9_]+)/g, (_, key: string) => String(route.params[key] ?? ""));
@@ -139,6 +140,7 @@ export const router = createRouter({
     { path: "/mis-silabos", component: TeacherSyllabiPage, meta: { requiresAuth: true, roles: ["docente"], aliasTarget: "/docente/mis-silabos" } },
     { path: "/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], aliasTarget: "/docente/mis-silabos/:syllabus", layout: "syllabus-editor" } },
 
+    ...(import.meta.env.DEV ? [{ path: "/prueba-tabla", component: TablePrototypePage, meta: { shell: false } }] : []),
     { path: "/:pathMatch(.*)*", component: NotFoundPage, meta: { title: "Página no encontrada" } },
   ],
 });
