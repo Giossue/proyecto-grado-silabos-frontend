@@ -10,7 +10,7 @@ vi.mock('@/components/domain/ai/avatar/useAvatarController', async () => {
   return { useAvatarController: () => ({ state: ref({}), applyAgentHint: vi.fn() }) };
 });
 const empty: AiChat = { conversation: null, available: true, suggested_questions: ['Propón actividades para la unidad 1.'] };
-const assistant: AiChatMessage = { id: 'answer-1', role: 'asistente', status: 'completado', content: 'Unidad: pruebas de integración.', draft_version: 1, error: null, created_at: '2026-09-27T10:00:00Z', citations: [{ id: 'citation-1', type: 'dato_curricular', field_id: null, source_id: null, label: 'Resultados de aprendizaje · Proyecto, p. 22', excerpt: 'Evalúa la calidad del software.' }] };
+const assistant: AiChatMessage = { id: 'answer-1', role: 'asistente', status: 'completado', content: 'Unidad: pruebas de integración.', draft_version: 1, error: null, created_at: '2026-09-27T10:00:00Z', citations: [{ id: 'citation-1', type: 'contexto_academico', field_id: null, source_id: null, label: 'Resultados de aprendizaje · Malla', excerpt: 'Evalúa la calidad del software.' }] };
 const conversation = (message: AiChatMessage): AiChat => ({ ...empty, conversation: { id: 'chat-1', hidden: false, messages: [message] } });
 const wrappers: Array<ReturnType<typeof mount>> = [];
 const render = () => {
@@ -41,7 +41,7 @@ describe('SyllabusUnitAssistant', () => {
     await vi.advanceTimersByTimeAsync(2500);
     await flushPromises();
     expect(wrapper.text()).toContain('Unidad: pruebas de integración.');
-    const evidence = wrapper.findAll('button').find((button) => button.text().includes('Proyecto, p. 22'))!;
+    const evidence = wrapper.findAll('button').find((button) => button.text().includes('Malla'))!;
     expect(evidence.attributes('aria-expanded')).toBe('false');
     await evidence.trigger('click');
     expect(wrapper.get('blockquote').text()).toBe('Evalúa la calidad del software.');

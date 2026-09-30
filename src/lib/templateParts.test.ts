@@ -34,8 +34,7 @@ describe('templateParts', () => {
         expect(inlineNodeLabel('field', { key: 'formacion', label: 'Formación', kind: 'texto_largo' })).toBe('Docente');
         expect(inlineNodeLabel('field', { key: 'discapacidad', label: 'Discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'] })).toBe('Docente: Sí o No');
         expect(inlineNodeLabel('field', { key: 'discapacidad', label: 'Discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'], choice: 'Sí' })).toBe('X');
-        expect(inlineNodeLabel('variable', { id: 'curricular_resultados', label: 'curricular_resultados' }, () => 'Resultados')).toBe('Proyecto de carrera');
-        expect(inlineNodeName('variable', { id: 'curricular_resultados', label: 'curricular_resultados' }, () => 'Resultados')).toBe('Resultados');
+        expect(inlineNodeName('variable', { id: 'carrera', label: 'carrera' }, () => 'Nombre de la carrera')).toBe('Nombre de la carrera');
     });
 
     it('distingue las firmas de los datos automáticos en la hoja', () => {

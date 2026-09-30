@@ -170,7 +170,7 @@ export const createDocumentInput = (options: Options) => {
                         h(FieldLabel, { for: id }, () => option.label),
                     ]);
                 }),
-                !(field.options ?? []).length ? h('p', { class: 'text-sm text-muted-foreground' }, 'No hay opciones curriculares disponibles para esta asignatura.') : null,
+                !(field.options ?? []).length ? h('p', { class: 'text-sm text-muted-foreground' }, 'No hay opciones disponibles.') : null,
             ]);
         }
 

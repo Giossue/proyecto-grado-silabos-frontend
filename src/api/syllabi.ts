@@ -102,8 +102,6 @@ export type SyllabusField = {
   help: string | null;
   type: string;
   options: Array<{ value: string; label: string }>;
-  options_source?: string | null;
-  options_sources?: string[];
   show_when?: { key: string; value: string } | null;
   required: boolean;
   inherited: boolean;
@@ -113,7 +111,7 @@ export type SyllabusField = {
 
 export type AiChatCitation = {
   id: string;
-  type: "seccion_silabo" | "contexto_academico" | "dato_curricular" | "fuente_academica";
+  type: "seccion_silabo" | "contexto_academico" | "fuente_academica";
   field_id: string | null;
   source_id: string | null;
   label: string;

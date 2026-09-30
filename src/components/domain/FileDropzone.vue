@@ -4,7 +4,7 @@ import { FileText, ImageIcon, Upload, X } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
 
-type FileKind = 'pdf' | 'png' | 'curricular';
+type FileKind = 'pdf' | 'png';
 
 const props = withDefaults(defineProps<{
   modelValue: File | null;
@@ -45,15 +45,7 @@ const formatLimit = (bytes: number): string => {
   return Number.isInteger(megabytes) ? `${megabytes} MB` : formatBytes(bytes);
 };
 
-const copy = computed(() => props.kind === 'curricular' ? {
-  accept: 'application/pdf,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx',
-  label: 'Documento', invalid: 'Seleccione documentos PDF o Excel (.xlsx).',
-  maxError: `Cada documento puede tener hasta ${formatLimit(props.maxBytes)}.`,
-  emptyTitle: 'Arrastra archivos PDF o Excel aquí',
-  selectedTitle: 'Documento seleccionado', selectedDescription: 'Arrastra otro documento o haz clic para reemplazarlo',
-  replaceLabel: 'Reemplazar documento', chooseLabel: 'Adjuntar PDF o Excel', removeLabel: 'Quitar documento',
-  dropAnnouncement: 'Suelta los documentos para adjuntarlos.',
-} : props.kind === 'png' ? {
+const copy = computed(() => props.kind === 'png' ? {
   accept: 'image/png,.png',
   label: 'PNG',
   invalid: 'Seleccione un archivo PNG.',
@@ -84,11 +76,9 @@ const chooseFile = (): void => {
 };
 
 const isValidFile = (file: File): boolean => {
-  const isAccepted = props.kind === 'curricular'
-    ? /\.(pdf|xlsx)$/i.test(file.name)
-    : props.kind === 'png'
-      ? file.name.toLowerCase().endsWith('.png') || file.type === 'image/png'
-      : file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+  const isAccepted = props.kind === 'png'
+    ? file.name.toLowerCase().endsWith('.png') || file.type === 'image/png'
+    : file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
   if (!isAccepted || file.size > props.maxBytes) {
     emit('validation-error', !isAccepted ? copy.value.invalid : copy.value.maxError);
     return false;

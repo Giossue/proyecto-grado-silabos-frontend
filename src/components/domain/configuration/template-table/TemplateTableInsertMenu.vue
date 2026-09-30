@@ -3,7 +3,6 @@ import {
     Braces,
     ChevronDown,
     CircleHelp,
-    FileText,
     List,
     Plus,
     Signature,
@@ -11,7 +10,6 @@ import {
     UserPen,
 } from '@lucide/vue';
 import { computed } from 'vue';
-import { PROJECT_PREFIX } from '@/components/domain/configuration/template-table/inlineNodeLabel';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -36,13 +34,12 @@ const emit = defineEmits<{
     insertVariable: [variable: TemplateVariable];
     teacher: [];
     yesNo: [];
-    project: [];
     table: [];
     list: [];
 }>();
 
 const automatic = computed(() => props.variables.filter(
-    (variable) => !variable.key.startsWith(PROJECT_PREFIX) && !isSignatureVariable(variable.key),
+    (variable) => !isSignatureVariable(variable.key),
 ));
 const signatureOrder = (key: string): number => {
     const index = (SIGNATURE_VARIABLES as readonly string[]).indexOf(key);
@@ -105,10 +102,6 @@ const signatures = computed(() => props.variables
                 <DropdownMenuItem @select="emit('yesNo')">
                     <CircleHelp />
                     Docente: Sí o No
-                </DropdownMenuItem>
-                <DropdownMenuItem @select="emit('project')">
-                    <FileText />
-                    Proyecto de carrera
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <template v-if="signatures.length > 0">

@@ -1,8 +1,6 @@
 import { isSignatureVariable } from '@/lib/signatureVariables';
 
-export const PROJECT_PREFIX = 'curricular_';
-
-export type SheetMark = 'automatic' | 'teacher' | 'yesNo' | 'project' | 'signature';
+export type SheetMark = 'automatic' | 'teacher' | 'yesNo' | 'signature';
 
 const isYesNo = (attrs: Record<string, unknown>): boolean =>
     attrs.kind === 'seleccion_unica' &&
@@ -14,17 +12,14 @@ export const sheetMark = (name: string, attrs: Record<string, unknown>): SheetMa
         ? isYesNo(attrs) && !attrs.choice
             ? 'yesNo'
             : 'teacher'
-        : String(attrs.id ?? '').startsWith(PROJECT_PREFIX)
-          ? 'project'
-          : isSignatureVariable(String(attrs.id ?? ''))
-            ? 'signature'
-            : 'automatic';
+        : isSignatureVariable(String(attrs.id ?? ''))
+          ? 'signature'
+          : 'automatic';
 
 export const markClass: Record<SheetMark, string> = {
     automatic: 'template-table-variable',
     teacher: 'template-table-field',
     yesNo: 'template-table-yes-no',
-    project: 'template-table-project',
     signature: 'template-table-signature',
 };
 
@@ -32,7 +27,6 @@ export const SHEET_MARK_HINTS: Record<SheetMark, string> = {
     automatic: 'lo pone el sistema',
     teacher: 'lo escribe el docente',
     yesNo: 'el docente responde Sí o No',
-    project: 'lo llena Coordinación al importar sus documentos',
     signature: 'espacio para la firma electrónica',
 };
 
@@ -65,7 +59,6 @@ export const inlineNodeLabel = (
         automatic: () => inlineNodeName(name, attrs, variableLabel),
         teacher: () => 'Docente',
         yesNo: () => 'Docente: Sí o No',
-        project: () => 'Proyecto de carrera',
         signature: () => inlineNodeName(name, attrs, variableLabel) || 'Firma',
     }[sheetMark(name, attrs)]();
 };

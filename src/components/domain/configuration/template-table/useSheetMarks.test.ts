@@ -1,17 +1,13 @@
 import { Editor } from '@tiptap/core';
-import { flushPromises } from '@vue/test-utils';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { ref, shallowRef } from 'vue';
-import { declareProjectData } from '@/api/template';
 import { templateTableExtensions } from '@/components/domain/configuration/template-table/templateTableExtensions';
 import { useSheetMarks } from '@/components/domain/configuration/template-table/useSheetMarks';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 
-vi.mock('@/api/template', () => ({ declareProjectData: vi.fn() }));
-vi.mock('@/lib/toast', () => ({ toast: { error: vi.fn(), success: vi.fn() } }));
 
 const editors: Editor[] = [];
-afterEach(() => { editors.splice(0).forEach((editor) => editor.destroy()); vi.mocked(declareProjectData).mockReset(); });
+afterEach(() => { editors.splice(0).forEach((editor) => editor.destroy()); });
 
 const setup = (content: DocumentNode) => {
     const editor = new Editor({ extensions: templateTableExtensions(), content });
@@ -42,19 +38,12 @@ describe('useSheetMarks', () => {
         expect(yesNo.inserted[0]).toMatchObject({ type: 'field', attrs: { label: 'Estudiantes con discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'] } });
     });
 
-    it('en una lista, !Docente y @ProyectoCarrera se vuelven elementos de la lista', async () => {
+    it('en una lista, !Docente se vuelve un elemento de la lista', () => {
         const list: DocumentNode = { type: 'doc', content: [{ type: 'bulletList', content: [{ type: 'listItem', content: [{ type: 'paragraph' }] }] }] };
-        const variable = { key: 'curricular_metodologia', label: 'Metodología', sample: 'Metodología', type: 'lista' as const };
-        vi.mocked(declareProjectData).mockResolvedValue({ message: 'ok', variable });
-        const { marks, inserted, declared } = setup(list);
+        const { marks, inserted } = setup(list);
 
         marks.insertTeacher('Metodología');
-        await marks.insertProject('Metodología');
-        await flushPromises();
 
         expect(inserted[0]).toMatchObject({ type: 'field', attrs: { listStyle: 'bullet' } });
-        expect(declareProjectData).toHaveBeenCalledWith('plantilla-1', { label: 'Metodología', type: 'lista' });
-        expect(inserted[1]).toEqual({ type: 'variable', attrs: { id: 'curricular_metodologia', label: 'Metodología', listStyle: 'bullet' } });
-        expect(declared.value).toEqual([variable]);
     });
 });

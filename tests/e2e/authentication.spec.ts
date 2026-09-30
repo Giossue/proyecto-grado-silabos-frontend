@@ -138,9 +138,7 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(mainNavigation(page).getByRole('link', { name: 'Fuentes académicas', exact: true })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Asistente curricular', exact: true })).toHaveCount(0);
 
-    await mainNavigation(page).getByRole('link', { name: 'Proyecto de carrera', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Proyecto de carrera' })).toBeVisible();
-    await expect(page.getByRole('tab', { name: 'Datos confirmados' })).toBeVisible();
+    await expect(mainNavigation(page).getByRole('link', { name: 'Proyecto de carrera', exact: true })).toHaveCount(0);
 
     await mainNavigation(page).getByRole('link', { name: 'Malla', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Malla' })).toBeVisible();

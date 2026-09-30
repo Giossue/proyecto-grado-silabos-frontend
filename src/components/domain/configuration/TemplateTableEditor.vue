@@ -156,11 +156,10 @@ const {
 } = useTemplateTableActions(editor, props, selection);
 const marks = useSheetMarks({ editor, props, insertNode, keyFor, declared });
 
-type NameKind = 'teacher' | 'yesNo' | 'project';
+type NameKind = 'teacher' | 'yesNo';
 const NAME_TITLES: Record<NameKind, string> = {
     teacher: 'Nueva pregunta para el docente',
     yesNo: 'Nueva pregunta de Sí o No',
-    project: 'Nuevo dato del Proyecto de carrera',
 };
 const namePrompt = ref<{ kind: NameKind; position: number | undefined } | null>(null);
 const nameValue = ref('');
@@ -178,7 +177,6 @@ const confirmName = (): void => {
     }
     if (prompt.kind === 'teacher') marks.insertTeacher(label);
     if (prompt.kind === 'yesNo') marks.insertYesNo(label);
-    if (prompt.kind === 'project') void marks.insertProject(label);
 };
 
 const hasTable = computed(() => {
@@ -238,7 +236,6 @@ defineExpose({ getDocument });
                     @insert-variable="insertVariable"
                     @teacher="askName('teacher')"
                     @yes-no="askName('yesNo')"
-                    @project="askName('project')"
                     @table="insertTable"
                     @list="insertList"
                 />
@@ -534,7 +531,6 @@ defineExpose({ getDocument });
 .template-table-editor .template-table-variable,
 .template-table-editor .template-table-field,
 .template-table-editor .template-table-yes-no,
-.template-table-editor .template-table-project,
 .template-table-editor .template-table-signature {
     border-radius: 2px;
     color: var(--document-editor-foreground) !important;
@@ -552,10 +548,6 @@ defineExpose({ getDocument });
     background: var(--document-mark-yes-no-background);
     outline: 1px dashed var(--document-mark-yes-no-border);
 }
-.template-table-editor .template-table-project {
-    background: var(--document-mark-project-background);
-    outline: 1px solid var(--document-mark-project-border);
-}
 .template-table-editor .template-table-signature {
     background: var(--document-mark-signature-background);
     outline: 1px solid var(--document-mark-signature-border);
@@ -566,7 +558,6 @@ defineExpose({ getDocument });
 .template-table-editor .tiptap .template-table-field,
 .template-table-editor .tiptap .template-table-variable,
 .template-table-editor .tiptap .template-table-yes-no,
-.template-table-editor .tiptap .template-table-project,
 .template-table-editor .tiptap .template-table-signature {
     display: inline-block;
     max-width: 100%;

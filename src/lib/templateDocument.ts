@@ -17,8 +17,6 @@ export type DocumentField = {
     type?: string;
     value?: unknown;
     options?: { value: string; label: string }[];
-    options_source?: string | null;
-    options_sources?: string[];
     inherited?: boolean;
     teacher_editable?: boolean;
     required?: boolean;
@@ -36,9 +34,8 @@ export const paragraph = (content: DocumentNode[] = []): DocumentNode => ({
     type: 'paragraph',
     content,
 });
-export const documentOptionsSources = (field: Pick<DocumentField, 'options_source' | 'options_sources'>): string[] => field.options_sources ?? (field.options_source ? [field.options_source] : []);
 export const documentFieldOptions = (field: DocumentField): string[] | null =>
-    !documentOptionsSources(field).length && ['seleccion_unica', 'seleccion_multiple'].includes(field.type ?? '')
+    ['seleccion_unica', 'seleccion_multiple'].includes(field.type ?? '')
         ? (field.options?.map((option) => option.value) ?? [])
         : null;
 export const fieldNode = (field: DocumentField): DocumentNode => ({
@@ -49,8 +46,6 @@ export const fieldNode = (field: DocumentField): DocumentNode => ({
         kind: field.type ?? 'texto_largo',
         choice: null,
         options: documentFieldOptions(field),
-        options_source: documentOptionsSources(field).length === 1 ? documentOptionsSources(field)[0]! : null,
-        options_sources: documentOptionsSources(field),
     },
 });
 export const nodesOfType = (

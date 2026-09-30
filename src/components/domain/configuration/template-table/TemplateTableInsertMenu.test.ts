@@ -26,7 +26,7 @@ const mountMenu = (keys: string[]) => mount(TemplateTableInsertMenu, {
 
 describe('TemplateTableInsertMenu', () => {
   it('separa las firmas de los datos automáticos en su propio grupo y en orden de firma', async () => {
-    const wrapper = mountMenu(['firma_bibliotecario', 'nombre_carrera', 'firma_docente', 'curricular_resultados', 'firma_coordinador']);
+    const wrapper = mountMenu(['firma_bibliotecario', 'nombre_carrera', 'firma_docente', 'firma_coordinador']);
 
     const subs = wrapper.findAll('.sub');
     const automatic = subs.find((sub) => sub.get('.sub-trigger').text() === 'Dato automático')!;

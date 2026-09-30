@@ -23,7 +23,7 @@ test('Sí/No, adjuntos y evidencia conservan su interacción por teclado', async
             return () => h('main', { class: 'flex flex-col gap-6 p-6' }, [
                 h(BooleanChoice, { label: 'Requiere adaptación', modelValue: answer.value, 'onUpdate:modelValue': value => answer.value = value }),
                 h(FileDropzone, { inputId: 'logo', kind: 'png', modelValue: file.value, 'onUpdate:modelValue': value => file.value = value }),
-                h(EvidenceDisclosure, { label: 'Proyecto de carrera · Página 22', excerpt: 'Evidencia sintética de la prueba.' }),
+                h(EvidenceDisclosure, { label: 'Documento de referencia · Página 22', excerpt: 'Evidencia sintética de la prueba.' }),
             ]);
         }}).mount('#mount');
     `);
@@ -45,7 +45,7 @@ test('Sí/No, adjuntos y evidencia conservan su interacción por teclado', async
     await page.keyboard.press('Space');
     await expect(page.getByText('logo-prueba.png')).toBeHidden();
 
-    const evidence = page.getByRole('button', { name: 'Proyecto de carrera · Página 22' });
+    const evidence = page.getByRole('button', { name: 'Documento de referencia · Página 22' });
     await evidence.focus();
     await page.keyboard.press('Enter');
     await expect(evidence).toHaveAttribute('aria-expanded', 'true');
