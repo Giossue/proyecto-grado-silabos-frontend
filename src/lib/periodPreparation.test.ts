@@ -3,6 +3,7 @@ import type { ScheduledSubjects, TeacherAssignments } from '@/api/career-academi
 import { nextParallelCode, preparationProblem, preparationRows } from './periodPreparation';
 
 const options: ScheduledSubjects['options'] = {
+  shiftOptions: [{ value: 'matutina', label: 'Matutina' }, { value: 'vespertina', label: 'Vespertina' }, { value: 'nocturna', label: 'Nocturna' }],
   periods: [
     { id: 'old', code: '2025-A', starts_on: '2025-01-01', ends_on: '2025-06-30', status: 'finalizado', status_label: 'Finalizado', planning_enabled: false },
     { id: 'recent', code: '2025-B', starts_on: '2025-07-01', ends_on: '2025-12-31', status: 'finalizado', status_label: 'Finalizado', planning_enabled: false },

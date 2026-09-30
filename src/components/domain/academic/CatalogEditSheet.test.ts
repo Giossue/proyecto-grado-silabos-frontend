@@ -11,7 +11,7 @@ const mountSheet = () => mount(CatalogEditSheet, {
   attachTo: document.body,
   props: {
     entity: 'facultad', recordId: 'faculty-1', recordName: 'Facultad de Ciencias', campus: 'matriz',
-    faculties: [], campusOptions: [{ value: 'matriz', label: 'Campus Matriz' }],
+    faculties: [], campusOptions: [{ value: 'matriz', label: 'Campus Matriz' }], modalityOptions: [],
     logoUrl: 'https://api.example.test/logos/faculty-1.png', showTrigger: false, open: true,
   },
 });

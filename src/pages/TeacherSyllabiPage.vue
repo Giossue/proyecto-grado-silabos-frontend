@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { SYLLABUS_STATE_OPTIONS, syllabusStateLabel } from '@/lib/syllabusStates';
 import { syllabusStateLabel } from '@/lib/syllabusStates';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { onMounted, ref } from 'vue';
@@ -52,7 +53,7 @@ onMounted(load);
         <form @submit.prevent="load()">
           <FilterToolbar @clear="clearFilters">
             <template #search><Field><FieldLabel for="syllabi-search" class="sr-only">Buscar</FieldLabel><Input id="syllabi-search" v-model="query" type="search" placeholder="Buscar por asignatura, código o convocatoria" /></Field></template>
-            <template #filters><Field><FieldLabel for="syllabi-state" class="sr-only">Estado</FieldLabel><Select v-model="state" name="state"><SelectTrigger id="syllabi-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="(itemLabel, value) in states" :key="value" :value="value">{{ itemLabel }}</SelectItem></SelectContent></Select></Field></template>
+            <template #filters><Field><FieldLabel for="syllabi-state" class="sr-only">Estado</FieldLabel><Select v-model="state" name="state"><SelectTrigger id="syllabi-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="option in SYLLABUS_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select></Field></template>
           </FilterToolbar>
         </form>
         <LoadingSkeleton v-if="!result && !error" variant="table-body" :columns="6" />

@@ -20,14 +20,13 @@ export const sharedComponents = {
                 if (nativeControls.has(node.rawName)) report(node, 'native');
                 if (node.rawName !== 'input') return;
                 const attrs = new Map(node.startTag.attributes.filter((attr) => !attr.directive).map((attr) => [attr.key.name, valueOf(attr)]));
-                const hidden = attrs.get('type') === 'hidden' || attrs.has('hidden') || /(?:^|\s)sr-only(?:\s|$)/.test(attrs.get('class') ?? '');
+                const hidden = attrs.get('type') === 'hidden' || attrs.has('hidden') || /(?:^|\s)(?:sr-only|hidden)(?:\s|$)/.test(attrs.get('class') ?? '');
                 if (!hidden) report(node, 'native');
             },
             VAttribute(node) {
-                if (attributeName(node) !== 'title') return;
                 const tag = node.parent.parent.rawName;
-                if (isNative(tag) || domPrimitives.has(tag)) report(node, 'title');
                 if (attributeName(node) === 'role' && valueOf(node) === 'button' && isNative(tag)) report(node, 'native');
+                if (attributeName(node) === 'title' && (isNative(tag) || domPrimitives.has(tag))) report(node, 'title');
             },
             MemberExpression: member,
         };
@@ -35,6 +34,7 @@ export const sharedComponents = {
             MemberExpression: member,
             CallExpression(node) {
                 if (node.callee.type === 'Identifier' && node.callee.name === 'confirm') report(node, 'confirm');
+                if (node.callee.type === 'Identifier' && node.callee.name === 'h' && nativeControls.has(node.arguments[0]?.value)) report(node, 'native');
             },
         };
         return context.sourceCode.parserServices.defineTemplateBodyVisitor?.(template, script) ?? script;

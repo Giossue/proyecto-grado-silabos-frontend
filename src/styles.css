@@ -116,7 +116,6 @@
     --safe-header-inset: calc(1rem + env(safe-area-inset-top));
     --page-mobile-actions-inset: calc(6rem + env(safe-area-inset-bottom));
     --page-mobile-actions-right: calc(1rem + env(safe-area-inset-right));
-    --safe-footer-inset: calc(1rem + env(safe-area-inset-bottom));
     --configuration-workspace-columns: minmax(0, 2fr) minmax(18rem, 1fr);
     --layer-modal: 50;
     --layer-confirmation: 60;

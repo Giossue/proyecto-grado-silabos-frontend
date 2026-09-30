@@ -102,6 +102,7 @@ export type ScheduledSubjects = {
     editable: boolean;
   }>;
   options: {
+    shiftOptions: Array<{ value: string; label: string }>;
     periods: Array<{
       id: string;
       code: string;

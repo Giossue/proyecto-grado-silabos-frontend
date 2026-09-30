@@ -9,7 +9,7 @@
     "build:deploy": "vite build",
     "audit:reference": "node scripts/analyze-reference-parity.mjs",
     "audit:visual-parity": "node scripts/audit-reference-parity.mjs",
-    "contract:check": "node scripts/check-openapi-contract.mjs",
+    "contract:check": "node --test scripts/check-openapi-contract.test.mjs && node scripts/check-openapi-contract.mjs",
     "lint": "eslint .",
     "test:e2e": "playwright test",
     "test:visual-compare": "node scripts/compare-visual-parity.mjs",
