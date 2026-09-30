@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import EvidenceDisclosure from '@/components/domain/EvidenceDisclosure.vue';
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Send } from '@lucide/vue';
@@ -33,7 +34,7 @@ const waiting = computed(() => sending.value || pending.value);
 const received = computed(() => messages.value.filter((item) => item.role === 'asistente' && item.status === 'completado').length);
 const avatar = useAvatarController({ userEngaged: engaged, awaitingModel: waiting, receivedCount: received });
 watch(() => [...messages.value].reverse().find((item) => item.role === 'asistente' && item.status === 'completado')?.avatar, (hint) => avatar.applyAgentHint(hint));
-const canSend = computed(() => props.enabled && !props.saving && chat.value?.available && !loading.value && !waiting.value && message.value.trim().length > 0 && message.value.trim().length <= 4000);
+const canSend = computed(() => props.enabled && !props.saving && chat.value?.available && !loading.value && !waiting.value && message.value.trim().length > 0 && message.value.trim().length <= VALIDATION_LIMITS.longText);
 const stop = () => { if (timer) clearTimeout(timer); timer = null; };
 const load = async (): Promise<void> => {
     stop();
@@ -80,7 +81,7 @@ onBeforeUnmount(() => { generation += 1; stop(); });
 </script>
 
 <template>
-    <Card class="h-[38rem] min-h-[30rem] gap-0 overflow-hidden py-0 xl:h-full xl:min-h-0">
+    <Card class="assistant-panel gap-0 overflow-hidden py-0">
         <CardHeader class="shrink-0 py-4">
             <CardTitle>Asistente de unidades</CardTitle>
         </CardHeader>
@@ -114,7 +115,7 @@ onBeforeUnmount(() => { generation += 1; stop(); });
                 <Field>
                     <FieldLabel :for="`unit-assistant-${syllabusId}`" class="sr-only">Consulta sobre una unidad</FieldLabel>
                     <InputGroup>
-                        <InputGroupTextarea :id="`unit-assistant-${syllabusId}`" v-model="message" maxlength="4000" rows="3" :disabled="!enabled || !chat?.available || waiting" placeholder="Escribe la unidad o el tema…" @focus="engaged = true" @blur="engaged = false" />
+                        <InputGroupTextarea :id="`unit-assistant-${syllabusId}`" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" :disabled="!enabled || !chat?.available || waiting" placeholder="Escribe la unidad o el tema…" @focus="engaged = true" @blur="engaged = false" />
                         <InputGroupAddon align="block-end" class="justify-end"><Button type="submit" size="sm" :disabled="!canSend"><Spinner v-if="waiting" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar</Button></InputGroupAddon>
                     </InputGroup>
                     <FieldDescription v-if="saving">Espera a que se guarden los cambios del sílabo antes de consultar.</FieldDescription>

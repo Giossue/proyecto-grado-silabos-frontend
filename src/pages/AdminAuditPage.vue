@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { onMounted, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -35,7 +36,7 @@ const load = async (page = 1): Promise<void> => {
   }
 };
 
-const formatDate = (value: string): string => new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'medium' }).format(new Date(value));
+const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'medium' });
 
 onMounted(() => { void load(); });
 </script>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { RotateCw } from '@lucide/vue';
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -75,7 +76,7 @@ const retry = async (): Promise<void> => {
   }
 };
 const statusLabel = (value: string): string => ({ pendiente: 'En cola', en_ejecucion: 'En ejecución', completada: 'Completado', fallida: 'Fallido' })[value] ?? 'Estado no disponible';
-const formatDate = (value: string | null): string => value === null ? '—' : new Intl.DateTimeFormat('es-EC', { dateStyle: 'short', timeStyle: 'medium' }).format(new Date(value));
+const formatDate = (value: string | null): string => value === null ? '—' : formatDateDisplay(value, { dateStyle: 'short', timeStyle: 'medium' });
 
 onMounted(() => { void load(); });
 </script>

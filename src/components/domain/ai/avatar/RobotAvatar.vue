@@ -73,41 +73,41 @@ onBeforeUnmount(() => {
             <g id="robot_root">
                 <g id="ears">
                     <g id="ear_left">
-                        <path id="ear_left_back" d="M18 166C8.06 166 0 174.06 0 184v10c0 9.94 8.06 18 18 18h2v-46h-2Z" fill="#114E7E" />
-                        <rect id="ear_left_main" x="18" y="152" width="30" height="78" rx="12" fill="#1565A4" />
+                        <path id="ear_left_back" d="M18 166C8.06 166 0 174.06 0 184v10c0 9.94 8.06 18 18 18h2v-46h-2Z" fill="var(--avatar-shadow)" />
+                        <rect id="ear_left_main" x="18" y="152" width="30" height="78" rx="12" fill="var(--avatar-body)" />
                     </g>
                     <g id="ear_right">
-                        <path id="ear_right_back" d="M308 166c9.94 0 18 8.06 18 18v10c0 9.94-8.06 18-18 18h-2v-46h2Z" fill="#114E7E" />
-                        <rect id="ear_right_main" x="278" y="152" width="30" height="78" rx="12" fill="#1565A4" />
+                        <path id="ear_right_back" d="M308 166c9.94 0 18 8.06 18 18v10c0 9.94-8.06 18-18 18h-2v-46h2Z" fill="var(--avatar-shadow)" />
+                        <rect id="ear_right_main" x="278" y="152" width="30" height="78" rx="12" fill="var(--avatar-body)" />
                     </g>
                 </g>
 
                 <g id="head">
-                    <rect id="head_shell" x="40" y="88" width="250" height="184" rx="29" fill="#D9D9D9" />
-                    <rect id="face_panel" x="70" y="118" width="188" height="126" rx="49" fill="#000000" />
+                    <rect id="head_shell" x="40" y="88" width="250" height="184" rx="29" fill="var(--avatar-metal)" />
+                    <rect id="face_panel" x="70" y="118" width="188" height="126" rx="49" fill="var(--avatar-outline)" />
                 </g>
 
                 <g id="eyes">
                     <g id="eye_left">
-                        <circle id="eye_left_dot" cx="113" cy="175" r="15" fill="#2F87CC" />
+                        <circle id="eye_left_dot" cx="113" cy="175" r="15" fill="var(--avatar-accent)" />
                     </g>
                     <g id="eye_right">
-                        <circle id="eye_right_dot" cx="217" cy="175" r="15" fill="#2F87CC" />
+                        <circle id="eye_right_dot" cx="217" cy="175" r="15" fill="var(--avatar-accent)" />
                     </g>
                 </g>
 
                 <g id="mouth">
-                    <path id="mouth_smile" d="M136 199h56c0 13.255-12.536 24-28 24s-28-10.745-28-24Z" fill="#2F87CC" />
-                    <rect id="mouth_neutral" x="145" y="207" width="38" height="7" rx="3.5" fill="#2F87CC" />
-                    <ellipse id="mouth_talk_small" cx="164" cy="211" rx="14" ry="9" fill="#2F87CC" />
-                    <ellipse id="mouth_talk_open" cx="164" cy="211" rx="17" ry="20" fill="#2F87CC" />
-                    <circle id="mouth_surprised" cx="164" cy="211" r="12" fill="#2F87CC" />
+                    <path id="mouth_smile" d="M136 199h56c0 13.255-12.536 24-28 24s-28-10.745-28-24Z" fill="var(--avatar-accent)" />
+                    <rect id="mouth_neutral" x="145" y="207" width="38" height="7" rx="3.5" fill="var(--avatar-accent)" />
+                    <ellipse id="mouth_talk_small" cx="164" cy="211" rx="14" ry="9" fill="var(--avatar-accent)" />
+                    <ellipse id="mouth_talk_open" cx="164" cy="211" rx="17" ry="20" fill="var(--avatar-accent)" />
+                    <circle id="mouth_surprised" cx="164" cy="211" r="12" fill="var(--avatar-accent)" />
                 </g>
 
                 <g id="antenna">
-                    <ellipse id="antenna_base" cx="169" cy="100" rx="25" ry="6" fill="#000000" />
-                    <path id="antenna_stem" d="M167 100V78L148 67l19-11V35" stroke="#1565A4" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
-                    <circle id="antenna_light" cx="168" cy="18" r="18" fill="#952222" />
+                    <ellipse id="antenna_base" cx="169" cy="100" rx="25" ry="6" fill="var(--avatar-outline)" />
+                    <path id="antenna_stem" d="M167 100V78L148 67l19-11V35" stroke="var(--avatar-body)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
+                    <circle id="antenna_light" cx="168" cy="18" r="18" fill="var(--avatar-light)" />
                 </g>
             </g>
         </g>

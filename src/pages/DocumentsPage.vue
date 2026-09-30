@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { ArrowLeft, Download, FileArchive, FileText, ShieldCheck } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -41,7 +42,7 @@ const { items: artifactPage, meta: artifactMeta, setPage: setArtifactPage } = us
 const hasPending = computed(() => data.value?.artifacts.some((item) => ['pendiente', 'en_ejecucion', 'procesando'].includes(item.estado)) ?? false);
 const backHref = computed(() => session.value?.active_role?.code === 'coordinador' ? paths.coordination.review(revisionId()) : paths.teacher.syllabus(data.value?.syllabus.id ?? ''));
 const statusLabel = (status: string): string => ({ pendiente: 'En cola', en_ejecucion: 'Generando', procesando: 'Generando', completado: 'Disponible', fallido: 'Fallida' }[status] ?? 'Estado no disponible');
-const formatDate = (value: string | null): string => value === null ? '—' : new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+const formatDate = (value: string | null): string => value === null ? '—' : formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' });
 const formatBytes = (value: number | null): string => value === null ? '—' : value < 1024 ? `${value} B` : value < 1024 * 1024 ? `${(value / 1024).toFixed(1)} KB` : `${(value / (1024 * 1024)).toFixed(1)} MB`;
 const load = async (): Promise<void> => {
   loading.value = true;

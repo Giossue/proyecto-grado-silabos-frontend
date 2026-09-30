@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { Settings2 } from "@lucide/vue";
 import { reactive, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
@@ -32,7 +33,7 @@ const submit = async (close: () => void) => {
   <FormSheet v-model:open="open" trigger-label="Configurar ciclos" title="Configurar ciclos" description="Ajuste la cantidad de ciclos de la carrera." :show-trigger="false">
     <template #default="{ close }"><form class="contents" @submit.prevent="submit(close)"><FieldGroup>
       <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-      <Field><FieldLabel for="curriculum-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="curriculum-cycle-count" v-model.number="form.cycle_count" type="number" min="1" max="30" required /></Field>
+      <Field><FieldLabel for="curriculum-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="curriculum-cycle-count" v-model.number="form.cycle_count" type="number" min="1" :max="VALIDATION_LIMITS.cycleCount" required /></Field>
       <FormSheetActions :close="close" :processing="saving" :icon="Settings2" label="Guardar configuración" />
     </FieldGroup></form></template>
   </FormSheet>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { Input } from '@/components/ui/input';
 import { Download, FileSignature, Library, RefreshCw, Send, ShieldCheck } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
@@ -63,7 +64,7 @@ const description = computed(() => {
 });
 const orderedSignatures = computed(() => [...(status.value?.signatures ?? [])]
   .sort((left, right) => ROLE_ORDER.indexOf(left.role) - ROLE_ORDER.indexOf(right.role)));
-const formatDate = (value: string): string => new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' });
 
 const load = async (): Promise<void> => {
   loading.value = true;

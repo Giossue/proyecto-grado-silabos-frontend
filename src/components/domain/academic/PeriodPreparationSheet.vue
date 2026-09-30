@@ -11,8 +11,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DEFAULT_SHIFT, nextParallelCode, preparationProblem, preparationRows, type PreparationRow } from '@/lib/periodPreparation';
-import { PARALLEL_SHIFTS } from '@/lib/parallelShifts';
+import { nextParallelCode, preparationProblem, preparationRows, type PreparationRow } from '@/lib/periodPreparation';
 
 const props = defineProps<{
   scheduledSubjects: ScheduledSubjects['scheduledSubjects'];
@@ -50,7 +49,7 @@ const reset = () => {
     : planningPeriods.value[0]?.id ?? '';
   updateProposal();
 };
-const addParallel = (row: PreparationRow) => row.parallels.push({ code: nextParallelCode(row.parallels), shift: DEFAULT_SHIFT, teacherId: '' });
+const addParallel = (row: PreparationRow) => row.parallels.push({ code: nextParallelCode(row.parallels), shift: teacherId: '' });
 const removeParallel = (row: PreparationRow, index: number) => row.parallels.length > 1 && row.parallels.splice(index, 1);
 const submit = async (close: () => void) => {
   if (props.disabled || !periodId.value || !rows.value.length || invalidRows.value) return;
@@ -111,7 +110,7 @@ watch(periodId, () => { if (open.value) updateProposal(); });
             <p v-if="rows.length" class="text-sm text-muted-foreground">
               {{ rows.length }} materias pendientes · {{ parallelCount }} paralelos · {{ assignedCount }} docentes propuestos.
               <span v-if="sourcePeriodCode"> Basado en {{ sourcePeriodCode }}; puede cambiar cualquier propuesta.</span>
-              <span v-else> Cada materia viene con el paralelo A en jornada matutina; cambie solo lo que sea distinto.</span>
+              <span v-else> Cada materia viene con un paralelo y la primera jornada disponible; cambie solo lo que sea distinto.</span>
             </p>
             <Table>
               <TableHeader><TableRow><TableHead>Código</TableHead><TableHead>Materia</TableHead><TableHead>Paralelos, jornada y docente</TableHead></TableRow></TableHeader>
@@ -126,7 +125,7 @@ watch(periodId, () => { if (open.value) updateProposal(); });
                       <Select v-model="parallel.shift">
                         <SelectTrigger class="w-40" :aria-label="`Jornada del paralelo ${index + 1} de ${row.name}`" :aria-invalid="!parallel.shift"><SelectValue placeholder="Elija jornada" /></SelectTrigger>
                         <SelectContent><SelectGroup>
-                          <SelectItem v-for="option in PARALLEL_SHIFTS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
+                          <SelectItem v-for="option in options.shiftOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
                         </SelectGroup></SelectContent>
                       </Select>
                       <Select :model-value="parallel.teacherId || 'sin_docente'" @update:model-value="parallel.teacherId = String($event) === 'sin_docente' ? '' : String($event)">

@@ -17,6 +17,22 @@ export const DOCUMENT_COLORS = Object.freeze({
     variableBackground: '#EDF8EE',
 } as const);
 
+export const initializeDocumentPalette = (): void => {
+    const properties = {
+        '--document-paper': DOCUMENT_COLORS.paper,
+        '--document-text': DOCUMENT_COLORS.text,
+        '--document-border': DOCUMENT_COLORS.border,
+        '--document-table-border': DOCUMENT_COLORS.tableBorder,
+        '--document-table-header-background': DOCUMENT_COLORS.lightBlue,
+        '--document-table-header-color': DOCUMENT_COLORS.tableHeaderText,
+        '--document-table-header-strong-background': DOCUMENT_COLORS.tableHeader,
+        '--document-table-total-background': DOCUMENT_COLORS.total,
+        '--document-muted-text': DOCUMENT_COLORS.mutedText,
+        '--document-accent': DOCUMENT_COLORS.institutionalBlue,
+    };
+    Object.entries(properties).forEach(([property, value]) => document.documentElement.style.setProperty(property, value));
+};
+
 export const DOCUMENT_TEXT_COLORS = [
     { label: 'Negro', value: DOCUMENT_COLORS.text },
     { label: 'Azul institucional', value: DOCUMENT_COLORS.institutionalBlue },

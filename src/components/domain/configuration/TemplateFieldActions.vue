@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { MoreHorizontal, Pencil, Save, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { pageOrientationPayload } from '@/api/template';
@@ -174,7 +175,7 @@ defineExpose({
                         <Input
                             id="edit-template-field-label"
                             v-model="form.label"
-                            maxlength="180"
+                            :maxlength="VALIDATION_LIMITS.shortText"
                             placeholder="Ej. Objetivo general"
                             :disabled="form.processing"
                         />

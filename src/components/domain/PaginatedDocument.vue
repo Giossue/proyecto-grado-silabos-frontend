@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DOCUMENT_DEFAULTS } from '@/lib/documentDefaults';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import {
     A4_PAGE,
@@ -20,9 +21,9 @@ const props = withDefaults(
     {
         orientation: 'portrait',
         paperSize: 'letter',
-        marginCm: 2.5,
-        fontFamily: 'Arial',
-        fontSize: 11,
+        marginCm: DOCUMENT_DEFAULTS.marginCm,
+        fontFamily: DOCUMENT_DEFAULTS.fontFamily,
+        fontSize: DOCUMENT_DEFAULTS.fontSize,
         textColor: 'var(--document-text)',
         showPageNumbers: true,
         startPage: 1,
@@ -186,7 +187,7 @@ onBeforeUnmount(() => {
     width: var(--page-width);
     padding: var(--page-margin);
     box-sizing: border-box;
-    line-height: 1.15;
+    line-height: var(--document-line-height);
 }
 
 .paged-document-papers {
@@ -209,9 +210,9 @@ onBeforeUnmount(() => {
 .paged-document-number {
     position: absolute;
     right: var(--page-margin);
-    bottom: 1cm;
+    bottom: var(--document-page-number-inset);
     color: var(--document-muted-text);
-    font-size: 9pt;
+    font-size: var(--document-page-number-size);
 }
 
 .paged-document-content {

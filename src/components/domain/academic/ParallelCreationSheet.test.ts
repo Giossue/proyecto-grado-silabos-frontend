@@ -18,7 +18,7 @@ const mountSheet = () => mount(ParallelCreationSheet, {
   attachTo: document.body,
   props: {
     open: true,
-    scheduledSubjectId: 'scheduled-1',
+    shiftOptions: [{ value: 'matutina', label: 'Matutina' }, { value: 'vespertina', label: 'Vespertina' }, { value: 'nocturna', label: 'Nocturna' }], scheduledSubjectId: 'scheduled-1',
     scheduledSubjectLabel: 'SW-1 · Materia',
     parallels: [
       { id: 'p-a', code: 'A', shift: 'matutina', editable: true, deletable: false },

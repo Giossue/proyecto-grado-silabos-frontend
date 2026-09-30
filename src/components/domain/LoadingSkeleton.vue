@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type LoadingVariant =
@@ -354,7 +355,7 @@ const gridColumns = (): string =>
             </template>
 
             <template v-else-if="variant === 'syllabus'">
-                <div class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+                <WorkspaceLayout variant="syllabus">
                     <main class="flex min-w-0 flex-col gap-8">
                         <div class="flex flex-col gap-2 border-t pt-8 first:border-t-0 first:pt-0">
                             <Skeleton class="h-6 w-64" />
@@ -382,7 +383,7 @@ const gridColumns = (): string =>
                             </div>
                         </div>
                     </aside>
-                </div>
+                </WorkspaceLayout>
             </template>
 
             <template v-else-if="variant === 'review'">
@@ -391,7 +392,7 @@ const gridColumns = (): string =>
                     <Skeleton class="h-8 w-72 max-w-full" />
                     <Skeleton class="h-4 w-96 max-w-full" />
                 </div>
-                <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
+                <WorkspaceLayout variant="review">
                     <main class="flex min-w-0 flex-col gap-6">
                         <div v-for="card in 3" :key="`review-card-${card}`" class="rounded-xl border bg-card p-5">
                             <div class="flex flex-col gap-3 border-b pb-5">
@@ -411,7 +412,7 @@ const gridColumns = (): string =>
                             <Skeleton v-for="item in 3" :key="`review-observation-${item}`" class="h-24 w-full" />
                         </div>
                     </aside>
-                </div>
+                </WorkspaceLayout>
             </template>
 
             <template v-else-if="variant === 'documents'">

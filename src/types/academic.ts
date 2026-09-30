@@ -138,6 +138,8 @@ export type AcademicStructureProps = {
     careers: Option[];
     periods: Option[];
     campusOptions: Array<{ value: string; label: string }>;
+    modalityOptions: Array<{ value: string; label: string }>;
+    shiftOptions: Array<{ value: string; label: string }>;
     currentCurricula: Option[];
     activeSubjects: Option[];
     scheduledSubjects: Option[];

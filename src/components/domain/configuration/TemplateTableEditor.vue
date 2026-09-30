@@ -409,7 +409,7 @@ defineExpose({ getDocument });
     border: 1px solid var(--document-table-border);
     cursor: text;
     min-width: 20px;
-    padding: 2px 4px;
+    padding: var(--document-cell-padding);
     position: relative;
     vertical-align: top;
     overflow-wrap: break-word;

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -38,7 +39,7 @@ const mutate = async (operation: () => Promise<unknown>, page = 1): Promise<void
 };
 const read = (id: string): Promise<void> => mutate(() => markNotificationRead(id), result.value?.notifications.current_page ?? 1);
 const readAll = (): Promise<void> => mutate(() => markAllNotificationsRead());
-const formatDate = (value: string): string => new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' });
 onMounted(load);
 </script>
 

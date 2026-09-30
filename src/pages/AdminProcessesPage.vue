@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { getProcesses, type Processes, type SyllabusProcess } from '@/api/processes';
@@ -25,7 +26,7 @@ const processes = computed(() => data.value?.processes ?? []);
 const filter = useClientFilter(processes, (item) => [item.period_name], { estado: { matches: (item, value) => item.state === value } });
 const { items: processPage, meta: processMeta, setPage: setProcessPage } = useClientPagination(() => filter.items.value);
 const stateLabel = (state: SyllabusProcess['state']): string => ({ abierto: 'Abierto', pausado: 'En pausa', cerrado: 'Cerrado' })[state];
-const formatDate = (value: string): string => new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(new Date(value));
+const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'medium' });
 const load = async (): Promise<void> => { loading.value = true; error.value = null; try { const session = await getSession(); if (session.active_role?.code !== 'administrador') { await router.replace(paths.dashboard); return; } data.value = await getProcesses(); } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los procesos institucionales.'; } finally { loading.value = false; } };
 const changed = async (notice: string): Promise<void> => { toast.success(notice); await load(); };
 onMounted(load);

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
+import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import BooleanChoice from '@/components/domain/BooleanChoice.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
@@ -93,7 +95,7 @@ const libraryComments = computed(() =>
 );
 const latestLibraryComment = computed(() => libraryComments.value[0] ?? null);
 const formatDateTime = (value: string): string =>
-  new Intl.DateTimeFormat("es-EC", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+  formatDateDisplay(value, { dateStyle: "medium", timeStyle: "short" });
 const canStart = computed(() =>
   syllabus.value?.state === "sin_iniciar" && editBlockReason.value === null,
 );
@@ -471,7 +473,7 @@ onBeforeUnmount(() => {
       <Alert v-if="syllabus.state === 'correccion_solicitada' && libraryCorrection" class="library-correction"><Library aria-hidden="true" /><AlertTitle>Biblioteca pidió corregir la bibliografía</AlertTitle><AlertDescription>Solo puede cambiar la sección Bibliografía. Las demás partes quedan como las aprobó coordinación.</AlertDescription></Alert>
       <Alert v-else-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
 
-      <div v-if="syllabus.state !== 'sin_iniciar'" class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)]">
+      <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar'" variant="syllabus">
         <main class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
           <Card v-if="!canEdit" class="syllabus-document-header">
             <CardContent class="flex flex-col items-center gap-5 py-8 text-center">
@@ -547,14 +549,14 @@ onBeforeUnmount(() => {
 
         </main>
 
-        <aside class="min-w-0 self-start xl:fixed xl:right-4 xl:top-32 xl:h-[calc(100dvh-9rem)] xl:w-[28rem] xl:max-w-[calc(100vw-2rem)]" aria-label="Asistente de unidades">
+        <aside class="min-w-0" aria-label="Asistente de unidades">
           <SyllabusUnitAssistant
             :syllabus-id="syllabus.id"
             :enabled="canEdit && !conflict"
             :saving="processingAction || savingFieldId !== null || hasUnsavedChanges()"
           />
         </aside>
-      </div>
+      </WorkspaceLayout>
     </template>
 
     <Dialog v-model:open="confirmSubmitOpen">

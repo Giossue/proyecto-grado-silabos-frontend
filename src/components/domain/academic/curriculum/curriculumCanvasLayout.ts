@@ -41,6 +41,9 @@ export const toRoman = (value: number): string => {
 };
 
 export const laneHeight = 238;
+export const subjectWidth = 274;
+export const subjectGap = 34;
+export const CANVAS_ZOOM = { min: 0.2, max: 1.5 } as const;
 export const laneInset = 16;
 export const subjectHeight = 158;
 export const addSubjectHeight = 36;
@@ -51,7 +54,7 @@ export const addSubjectOffset = Math.round(
     (laneHeight - laneInset - addSubjectHeight) / 2,
 );
 export const laneStart = 109;
-export const subjectStep = 308;
+export const subjectStep = subjectWidth + subjectGap;
 export const navigationPadding = 48;
 
 type CurriculumNodeOptions = Pick<
@@ -125,6 +128,7 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
                 ],
                 connectable: options.editable && !options.hasOpenEditor,
                 selectable: false,
+                style: { width: `${subjectWidth}px` },
                 zIndex: options.draggingSubjectId === subject.id ? 10 : 0,
             });
             x += subjectStep;

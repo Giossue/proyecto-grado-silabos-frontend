@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Eye } from '@lucide/vue';
@@ -23,7 +24,6 @@ const result = ref<SyllabiResponse | null>(null);
 const query = ref('');
 const state = ref('all');
 const error = ref<string | null>(null);
-const states: Record<string, string> = { sin_iniciar: 'Sin iniciar', borrador: 'Borrador', en_revision: 'En revisión', correccion_solicitada: 'Corrección solicitada', aprobado: 'Aprobado' };
 
 const load = async (page = 1): Promise<void> => {
   error.value = null;
@@ -33,8 +33,8 @@ const load = async (page = 1): Promise<void> => {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar sus sílabos.';
   }
 };
-const formatSavedAt = (value: string | null): string => value ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : 'Sin guardados';
-const formatStartedAt = (value: string | null): string => value ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(new Date(value)) : 'Sin iniciar';
+const formatSavedAt = (value: string | null): string => value ? formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin guardados';
+const formatStartedAt = (value: string | null): string => value ? formatDateDisplay(value, { dateStyle: 'medium' }) : 'Sin iniciar';
 const clearFilters = (): void => {
   query.value = '';
   state.value = 'all';

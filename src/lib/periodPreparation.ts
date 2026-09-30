@@ -8,8 +8,6 @@ export type PreparationRow = {
   parallels: ParallelDraft[];
 };
 
-export const DEFAULT_SHIFT = 'matutina';
-
 export function preparationProblem(rows: PreparationRow[]): string | null {
   for (const row of rows) {
     if (row.parallels.length === 0) return `${row.name}: agregue al menos un paralelo.`;
@@ -37,6 +35,7 @@ export function preparationRows(
   assignments: TeacherAssignments['teacherAssignments'],
   teacherUsers: TeacherAssignments['options']['teacherUsers'],
 ): { rows: PreparationRow[]; sourcePeriodCode: string | null } {
+  const defaultShift = options.shiftOptions[0]?.value ?? '';
   const target = options.periods.find((period) => period.id === periodId);
   if (!target) return { rows: [], sourcePeriodCode: null };
 
@@ -64,11 +63,11 @@ export function preparationRows(
             const teacherId = activeAssignments.get(parallel.id) ?? '';
             return {
               code: parallel.code,
-              shift: parallel.shift || DEFAULT_SHIFT,
+              shift: parallel.shift || defaultShift,
               teacherId: availableTeachers.has(teacherId) ? teacherId : '',
             };
           })
-          : [{ code: 'A', shift: DEFAULT_SHIFT, teacherId: '' }],
+          : [{ code: 'A', shift: defaultShift, teacherId: '' }],
       };
     }),
     sourcePeriodCode: previous && previousSchedules.size > 0 ? previous.code : null,

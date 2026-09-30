@@ -163,7 +163,7 @@ const {
                                 :record-name="faculty.nombre"
                                 :active="faculty.activo"
                                 :campus="faculty.campus"
-                                :campus-options="options.campusOptions"
+                                :campus-options="options.campusOptions" :modality-options="options.modalityOptions"
                                 :logo-url="faculty.logo_url"
                                 :faculties="catalogs.faculties"
                                 @changed="emit('changed', $event)"
@@ -267,7 +267,7 @@ const {
                                 :faculty-id="career.faculty_id"
                                 :modality="career.modality"
                                 :faculties="catalogs.faculties"
-                                :campus-options="options.campusOptions"
+                                :campus-options="options.campusOptions" :modality-options="options.modalityOptions"
                                 :coordinator="career.coordinator"
                                 :coordinator-users="options.coordinatorUsers"
                                 @changed="emit('changed', $event)"
@@ -342,7 +342,7 @@ const {
                                 :institutional-process="period.institutional_process"
                                 :lock-reason="period.lock_reason"
                                 :faculties="catalogs.faculties"
-                                :campus-options="options.campusOptions"
+                                :campus-options="options.campusOptions" :modality-options="options.modalityOptions"
                                 @changed="emit('changed', $event)"
                             />
                         </TableCell>

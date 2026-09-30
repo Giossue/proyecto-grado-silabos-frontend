@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { Save } from '@lucide/vue';
 import { ref } from 'vue';
 import TemplateController from '@/api/template-routes';
@@ -76,7 +77,7 @@ defineExpose({ openEdit });
                         <Input
                             id="template-document-title"
                             v-model="form.title"
-                            maxlength="180"
+                            :maxlength="VALIDATION_LIMITS.shortText"
                             placeholder="Ej. Programa de asignatura (sílabo)"
                             :disabled="form.processing"
                             :aria-invalid="Boolean(form.errors.title)"

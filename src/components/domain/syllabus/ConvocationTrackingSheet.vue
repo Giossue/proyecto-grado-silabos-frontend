@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
+import { syllabusStateLabel } from '@/lib/syllabusStates';
 import { ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { getConvocation, type ConvocationDetail } from '@/api/convocations';
@@ -20,18 +22,11 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 
 const formatDate = (value: string | null): string => value
-  ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'long' }).format(new Date(value))
+  ? formatDateDisplay(value, { dateStyle: 'long' })
   : 'Sin fecha';
 const formatStartedAt = (value: string | null): string => value
-  ? new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(new Date(value))
+  ? formatDateDisplay(value, { dateStyle: 'medium' })
   : 'Sin iniciar';
-const stateLabel = (value: string): string => ({
-  sin_iniciar: 'Sin iniciar',
-  borrador: 'Borrador',
-  en_revision: 'En revisión',
-  correccion_solicitada: 'Corrección solicitada',
-  aprobado: 'Aprobado',
-}[value] ?? 'Estado no disponible');
 const syllabusFilter = useClientFilter(
   () => data.value?.convocation.syllabi ?? [],
   (item) => [item.subject, item.code, item.state],
@@ -122,7 +117,7 @@ watch(() => props.open, (open) => {
                     <div>Paralelos {{ syllabus.parallels.join(', ') }}</div>
                     <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
                   </TableCell>
-                  <TableCell>{{ stateLabel(syllabus.state) }}</TableCell>
+                  <TableCell>{{ syllabusStateLabel(syllabus.state) }}</TableCell>
                   <TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell>
                 </TableRow>
               </TableBody>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { ChevronDown, FileSearch, X } from '@lucide/vue';
 import { computed, nextTick, ref, watch } from 'vue';
 import type { CurricularImportIndex } from '@/api/curricular-imports';
@@ -97,7 +98,7 @@ watch(() => props.errors.instruction, (messages) => {
           <CollapsibleContent class="pt-3">
             <Field :data-invalid="Boolean(errors.instruction)" :data-disabled="disabled">
               <FieldLabel for="curricular-import-instruction" class="sr-only">Indicación adicional</FieldLabel>
-              <Textarea id="curricular-import-instruction" v-model="instruction" maxlength="4000" :disabled="disabled" :aria-invalid="Boolean(errors.instruction)" placeholder="Ej. Identifica los resultados de aprendizaje y las habilidades disponibles para cada asignatura." @focus="revealInstruction" />
+              <Textarea id="curricular-import-instruction" v-model="instruction" :maxlength="VALIDATION_LIMITS.longText" :disabled="disabled" :aria-invalid="Boolean(errors.instruction)" placeholder="Ej. Identifica los resultados de aprendizaje y las habilidades disponibles para cada asignatura." @focus="revealInstruction" />
               <FieldError :errors="errors.instruction" />
             </Field>
           </CollapsibleContent>

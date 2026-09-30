@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { Blocks, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
 import TemplateController from '@/api/template-routes';
@@ -152,7 +153,7 @@ const updateOpen = (value: boolean): void => {
                             <Input
                                 id="new-template-block-title"
                                 v-model="form.title"
-                                maxlength="180"
+                                :maxlength="VALIDATION_LIMITS.shortText"
                                 placeholder="Ej. Objetivos de la asignatura"
                                 :disabled="form.processing"
                                 :aria-invalid="Boolean(errorFor('title'))"
@@ -200,7 +201,7 @@ const updateOpen = (value: boolean): void => {
                                 <Input
                                     :id="`new-template-field-${index}`"
                                     v-model="field.label"
-                                    maxlength="180"
+                                    :maxlength="VALIDATION_LIMITS.shortText"
                                     placeholder="Ej. Objetivo general"
                                     :disabled="form.processing"
                                     :aria-invalid="

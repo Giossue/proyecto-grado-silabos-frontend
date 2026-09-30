@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Info } from "@lucide/vue";
-import { Controls } from "@vue-flow/controls";
+import CurriculumNavigationControls from '@/components/domain/academic/curriculum/CurriculumNavigationControls.vue';
 import { ConnectionMode, useVueFlow, VueFlow } from "@vue-flow/core";
 import type {
   Connection,
@@ -17,6 +17,7 @@ import { updateSubjectLayout } from "@/api/career-academics";
 import CurriculumAddSubjectNode from "@/components/domain/academic/curriculum/CurriculumAddSubjectNode.vue";
 import {
   buildCurriculumNodes,
+  CANVAS_ZOOM,
   buildRequirementEdges,
   FALLBACK_UNIT_STYLE,
   laneHeight,
@@ -59,7 +60,6 @@ import type {
 
 import "@vue-flow/core/dist/style.css";
 import "@vue-flow/core/dist/theme-default.css";
-import "@vue-flow/controls/dist/style.css";
 
 const props = defineProps<
   Pick<
@@ -471,8 +471,8 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
       v-model:nodes="nodes"
       v-model:edges="edges"
       fit-view-on-init
-      :min-zoom="0.2"
-      :max-zoom="1.5"
+      :min-zoom="CANVAS_ZOOM.min"
+      :max-zoom="CANVAS_ZOOM.max"
       :translate-extent="navigationExtent"
       :auto-pan-on-node-drag="false"
       :pan-on-scroll="true"
@@ -507,11 +507,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
           @add="beginSubjectCreation"
         />
       </template>
-      <Controls
-        position="bottom-left"
-        :show-fit-view="false"
-        :show-interactive="false"
-      />
+      <CurriculumNavigationControls :flow-id="flowId" :min-zoom="CANVAS_ZOOM.min" :max-zoom="CANVAS_ZOOM.max" />
       <CurriculumRequirementDialogs
         v-model:pending-connection="pendingConnection"
         v-model:selected-requirement="selectedRequirement"
@@ -563,44 +559,3 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     </Dialog>
   </div>
 </template>
-
-<style scoped>
-:deep(.vue-flow) {
-  background-color: var(--curriculum-canvas-background);
-}
-
-:deep(.vue-flow__node-subject:not(.dragging)) {
-  transition: transform 150ms ease-out;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :deep(.vue-flow__node-subject) {
-    transition: none;
-  }
-}
-
-:deep(.vue-flow__controls) {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) - 2px);
-  box-shadow: none;
-}
-
-:deep(.vue-flow__controls-button) {
-  border-bottom: 1px solid var(--border);
-  background-color: var(--card);
-  color: var(--foreground);
-}
-
-:deep(.vue-flow__controls-button:last-child) {
-  border-bottom: none;
-}
-
-:deep(.vue-flow__controls-button:hover) {
-  background-color: var(--accent);
-}
-
-:deep(.vue-flow__controls-button svg) {
-  fill: currentColor;
-}
-</style>

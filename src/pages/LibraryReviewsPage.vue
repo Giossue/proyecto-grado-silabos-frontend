@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { Eye } from '@lucide/vue';
 import { onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -33,7 +34,7 @@ const filters = reactive({
 const initialPage = Number(queryText(route.query.page)) || 1;
 const stateOptions = Object.entries(LIBRARY_STATE_LABELS).map(([value, label]) => ({ value, label }));
 const formatDate = (value: string): string =>
-  new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' });
 
 const syncUrl = (page: number): void => {
   const query: Record<string, string> = {};

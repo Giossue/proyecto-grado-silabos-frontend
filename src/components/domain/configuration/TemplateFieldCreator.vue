@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { ListPlus } from '@lucide/vue';
 import { ref } from 'vue';
 import TemplateController from '@/api/template-routes';
@@ -122,7 +123,7 @@ const updateOpen = (value: boolean): void => {
                         <Input
                             id="new-field-label"
                             v-model="form.label"
-                            maxlength="180"
+                            :maxlength="VALIDATION_LIMITS.shortText"
                             placeholder="Ej. Objetivos específicos"
                             :disabled="form.processing"
                             :aria-invalid="Boolean(errorFor('label'))"

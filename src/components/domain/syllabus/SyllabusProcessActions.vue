@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { CalendarClock, Lock, Pause, Play, Square, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
@@ -59,8 +60,8 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
 
 const confirm = async (): Promise<void> => {
   if (!pending.value) return;
-  if (pending.value === 'pausar' && reason.value.trim().length < 10) {
-    error.value = 'Escriba al menos 10 caracteres para explicar la pausa.';
+  if (pending.value === 'pausar' && reason.value.trim().length < VALIDATION_LIMITS.reasonMinimum) {
+    error.value = `Escriba al menos ${VALIDATION_LIMITS.reasonMinimum} caracteres para explicar la pausa.`;
     return;
   }
   processing.value = true;
@@ -122,9 +123,9 @@ const remove = async (): Promise<void> => {
     <DialogContent v-if="pending">
       <DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader>
       <form class="flex flex-col gap-4" @submit.prevent="confirm">
-        <Field v-if="pending === 'pausar'"><FieldLabel for="process-pause-reason" required>Motivo</FieldLabel><Textarea id="process-pause-reason" v-model="reason" rows="3" required minlength="10" placeholder="Corrección de la sección de evaluación en la plantilla." /><p class="text-sm text-muted-foreground" :class="{ 'text-destructive': reasonCharacters < 10 }">{{ reasonCharacters }}/10 caracteres mínimos</p></Field>
+        <Field v-if="pending === 'pausar'"><FieldLabel for="process-pause-reason" required>Motivo</FieldLabel><Textarea id="process-pause-reason" v-model="reason" rows="3" required :minlength="VALIDATION_LIMITS.reasonMinimum" placeholder="Corrección de la sección de evaluación en la plantilla." /><p class="text-sm text-muted-foreground" :class="{ 'text-destructive': reasonCharacters < VALIDATION_LIMITS.reasonMinimum }">{{ reasonCharacters }}/{{ VALIDATION_LIMITS.reasonMinimum }} caracteres mínimos</p></Field>
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing || (pending === 'pausar' && reasonCharacters < 10)"><Spinner v-if="processing" />{{ dialogs[pending].label }}</Button></DialogFooter>
+        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing || (pending === 'pausar' && reasonCharacters < VALIDATION_LIMITS.reasonMinimum)"><Spinner v-if="processing" />{{ dialogs[pending].label }}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>

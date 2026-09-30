@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { Check, Pencil, Plus, Trash2, X } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
@@ -26,38 +27,39 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PARALLEL_SHIFTS, shiftLabel } from "@/lib/parallelShifts";
-import { DEFAULT_SHIFT } from "@/lib/periodPreparation";
+import { shiftLabel } from "@/lib/parallelShifts";
 
 const props = defineProps<{
+  shiftOptions: Array<{ value: string; label: string }>;
   scheduledSubjectId: string;
   scheduledSubjectLabel: string;
   parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }>;
 }>();
 const emit = defineEmits<{ saved: [message: string]; changed: [message: string] }>();
 const open = defineModel<boolean>("open", { default: false });
+const defaultShift = computed(() => props.shiftOptions[0]?.value ?? '');
 const code = ref("");
-const shift = ref(DEFAULT_SHIFT);
+const shift = ref(defaultShift.value);
 const saving = ref(false);
 const error = ref<string | null>(null);
 const fieldError = computed(() => (error.value && code.value.trim() === "" ? error.value : undefined));
 
 const reset = () => {
   code.value = "";
-  shift.value = DEFAULT_SHIFT;
+  shift.value = defaultShift.value;
   error.value = null;
   editingId.value = null;
   rowError.value = null;
 };
 const editingId = ref<string | null>(null);
 const editCode = ref("");
-const editShift = ref(DEFAULT_SHIFT);
+const editShift = ref(defaultShift.value);
 const rowBusy = ref(false);
 const rowError = ref<string | null>(null);
 const startEdit = (parallel: { id: string; code: string; shift: string | null }) => {
   editingId.value = parallel.id;
   editCode.value = parallel.code;
-  editShift.value = parallel.shift || DEFAULT_SHIFT;
+  editShift.value = parallel.shift || defaultShift.value;
   rowError.value = null;
 };
 const cancelEdit = () => {
@@ -131,7 +133,7 @@ watch(open, (value) => value && reset());
             <Input
               :id="`parallel-code-${scheduledSubjectId}`"
               v-model="code"
-              maxlength="30"
+              :maxlength="VALIDATION_LIMITS.parallelCode"
               placeholder="Ej. B"
               required
               :aria-invalid="Boolean(fieldError)"
@@ -146,7 +148,7 @@ watch(open, (value) => value && reset());
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectItem v-for="option in PARALLEL_SHIFTS" :key="option.value" :value="option.value">
+                  <SelectItem v-for="option in shiftOptions" :key="option.value" :value="option.value">
                     {{ option.label }}
                   </SelectItem>
                 </SelectGroup>
@@ -163,11 +165,11 @@ watch(open, (value) => value && reset());
                   <TableEmpty v-if="parallels.length === 0" :colspan="3">Sin paralelos registrados</TableEmpty>
                   <TableRow v-for="parallel in parallels" v-else :key="parallel.id">
                     <template v-if="editingId === parallel.id">
-                      <TableCell><Input v-model="editCode" maxlength="30" class="w-20" :aria-label="`Código del paralelo ${parallel.code}`" :aria-invalid="!editCode.trim()" /></TableCell>
+                      <TableCell><Input v-model="editCode" :maxlength="VALIDATION_LIMITS.parallelCode" class="w-20" :aria-label="`Código del paralelo ${parallel.code}`" :aria-invalid="!editCode.trim()" /></TableCell>
                       <TableCell>
                         <Select v-model="editShift">
                           <SelectTrigger class="w-36" :aria-label="`Jornada del paralelo ${parallel.code}`"><SelectValue placeholder="Elija la jornada" /></SelectTrigger>
-                          <SelectContent><SelectGroup><SelectItem v-for="option in PARALLEL_SHIFTS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
+                          <SelectContent><SelectGroup><SelectItem v-for="option in shiftOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
                         </Select>
                       </TableCell>
                       <TableCell class="text-right">
@@ -177,7 +179,7 @@ watch(open, (value) => value && reset());
                     </template>
                     <template v-else>
                       <TableCell>{{ parallel.code }}</TableCell>
-                      <TableCell>{{ shiftLabel(parallel.shift) }}</TableCell>
+                      <TableCell>{{ shiftLabel(parallel.shift, shiftOptions) }}</TableCell>
                       <TableCell class="text-right">
                         <Button v-if="parallel.editable !== false" type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Editar paralelo ${parallel.code}`" @click="startEdit(parallel)"><Pencil aria-hidden="true" /></Button>
                         <Button v-if="parallel.deletable !== false && parallels.length > 1" type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Eliminar paralelo ${parallel.code}`" @click="removeParallel(parallel.id)"><Trash2 aria-hidden="true" /></Button>

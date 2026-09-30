@@ -103,7 +103,7 @@ const totalFields = computed(
       aria-label="Recibir relación académica"
     />
     <article
-      class="relative w-[17.125rem] overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-2 data-[dragging=true]:ring-ring"
+      class="relative w-full overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-2 data-[dragging=true]:ring-ring"
       :class="cn(data.editable && 'cursor-grab active:cursor-grabbing')"
       :data-dragging="dragging"
       :aria-label="`${data.subject.code}: ${data.subject.name}`"
@@ -133,7 +133,7 @@ const totalFields = computed(
           class="flex w-9 shrink-0 items-center justify-center border-r bg-muted px-1 py-2"
         >
           <span
-            class="-rotate-90 text-[0.65rem] font-semibold whitespace-nowrap"
+            class="-rotate-90 text-curriculum-code font-semibold whitespace-nowrap"
           >
             {{ data.subject.code }}
           </span>
@@ -156,7 +156,7 @@ const totalFields = computed(
       </div>
 
       <p
-        class="border-t px-2 py-0.5 text-center text-[0.65rem] tracking-wide text-muted-foreground uppercase"
+        class="border-t px-2 py-0.5 text-center text-curriculum-code tracking-wide text-muted-foreground uppercase"
       >
         {{
           data.subject.modality_label ??
@@ -182,7 +182,7 @@ const totalFields = computed(
             class="border-r text-center last:border-r-0"
           >
             <dt
-              class="px-1 py-1 text-[0.6rem] font-semibold"
+              class="px-1 py-1 text-curriculum-metric font-semibold"
               :style="data.unitStyle"
             >
               {{ field.label }}
@@ -199,7 +199,7 @@ const totalFields = computed(
           :class="{ 'border-t': regularFields.length > 0 }"
         >
           <dt
-            class="px-1 py-1 text-[0.6rem] font-semibold"
+            class="px-1 py-1 text-curriculum-metric font-semibold"
             :style="data.unitStyle"
           >
             {{ field.label }}

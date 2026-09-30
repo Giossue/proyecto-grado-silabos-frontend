@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DOCUMENT_DEFAULTS } from '@/lib/documentDefaults';
 import { defineComponent, h, isVNode, useId, useSlots } from 'vue';
 import { computed } from 'vue';
 import type { VNodeChild, CSSProperties } from 'vue';
@@ -33,8 +34,8 @@ const props = withDefaults(
         editable: false,
         preview: false,
         presentation: 'document',
-        fontFamily: 'Arial',
-        fontSize: 11,
+        fontFamily: DOCUMENT_DEFAULTS.fontFamily,
+        fontSize: DOCUMENT_DEFAULTS.fontSize,
         textColor: DOCUMENT_COLORS.text,
         textAlign: 'left',
         tableHeaderBackground: DOCUMENT_COLORS.tableHeader,
@@ -375,7 +376,7 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 .template-document-view :deep(td),
 .template-document-view :deep(th) {
     border: 1px solid var(--document-table-border);
-    padding: 2px 4px;
+    padding: var(--document-cell-padding);
     vertical-align: middle;
     font-weight: normal;
 }
@@ -432,7 +433,7 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
     color: var(--foreground);
     background: transparent;
     font-family: inherit;
-    font-size: 0.875rem;
+    font-size: var(--text-sm);
 }
 .template-document-view[data-presentation='form']
     :deep(.document-table-container) {
@@ -460,7 +461,7 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
     color: var(--foreground) !important;
     background: var(--card) !important;
     font-family: inherit !important;
-    font-size: 0.875rem !important;
+    font-size: var(--text-sm) !important;
 }
 .template-document-view[data-presentation='form'] :deep(tr:last-child > *) {
     border-bottom: 0 !important;
@@ -535,7 +536,7 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 .template-document-view :deep(.free-text-table td),
 .template-document-view :deep(.free-text-table th) {
     border: 1px solid var(--document-table-border);
-    padding: 2px 4px;
+    padding: var(--document-cell-padding);
     vertical-align: top;
 }
 .template-document-view :deep(.free-text-table th) {

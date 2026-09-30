@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { CalendarRange } from '@lucide/vue';
 import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
@@ -15,10 +16,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{ tracking: [] }>();
 
-const formatDate = (value: string): string => new Intl.DateTimeFormat('es-EC', {
+const formatDate = (value: string): string => formatDateDisplay(value, {
   dateStyle: 'long',
   timeZone: 'UTC',
-}).format(new Date(value));
+});
 
 const stateLabel = computed(() => ({
   upcoming: 'Por iniciar',

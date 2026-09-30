@@ -1,10 +1,4 @@
-export const PARALLEL_SHIFTS = [
-    { value: 'matutina', label: 'Matutina' },
-    { value: 'vespertina', label: 'Vespertina' },
-    { value: 'nocturna', label: 'Nocturna' },
-] as const;
-
-export const shiftLabel = (value: string | null | undefined): string =>
-    PARALLEL_SHIFTS.find((shift) => shift.value === value)?.label ??
-    'Sin jornada';
-
+export const shiftLabel = (
+    value: string | null | undefined,
+    options: readonly { value: string; label: string }[],
+): string => options.find((shift) => shift.value === value)?.label ?? value ?? 'Sin jornada';

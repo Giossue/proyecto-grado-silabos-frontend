@@ -9,6 +9,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
+    --text-curriculum-code: 0.65rem;
+    --text-curriculum-metric: 0.6rem;
     --font-sans:
         Instrument Sans, ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
@@ -43,6 +45,7 @@
     --color-destructive-foreground: var(--destructive-foreground);
 
     --color-overlay: var(--overlay);
+    --color-brand-logo-surface: var(--brand-logo-surface);
     --color-brand-surface: var(--brand-surface);
     --color-brand-foreground: var(--brand-foreground);
 
@@ -100,6 +103,27 @@
 }
 
 :root {
+    --layer-modal: 50;
+    --layer-confirmation: 60;
+    --brand-logo-surface: hsl(0 0% 100%);
+    --avatar-shadow: #114e7e;
+    --avatar-body: #1565a4;
+    --avatar-metal: #d9d9d9;
+    --avatar-outline: #000000;
+    --avatar-accent: #2f87cc;
+    --avatar-light: #952222;
+    --layout-syllabus-aside-width: 28rem;
+    --layout-syllabus-aside-top: 8rem;
+    --layout-syllabus-aside-inset: 1rem;
+    --layout-syllabus-aside-height: calc(100dvh - 9rem);
+    --layout-assistant-height: 38rem;
+    --layout-assistant-min-height: 30rem;
+    --layout-review-aside-min-width: 22rem;
+    --document-cell-padding: 2px 4px;
+    --document-line-height: 1.15;
+    --document-page-number-size: 9pt;
+    --document-page-number-inset: 1cm;
+    --duration-layout: 150ms;
     --background: hsl(0 0% 98%);
     --foreground: hsl(0 0% 3.9%);
     --card: hsl(0 0% 100%);
@@ -148,16 +172,6 @@
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 94%);
 
-    --document-paper: hsl(0 0% 100%);
-    --document-text: hsl(0 0% 0%);
-    --document-border: hsl(0 0% 50%);
-    --document-table-border: hsl(0 0% 0%);
-    --document-table-header-background: hsl(211 42% 84%);
-    --document-table-header-color: hsl(214 45% 38%);
-    --document-table-header-strong-background: hsl(214 44% 53%);
-    --document-table-total-background: hsl(211 46% 78%);
-    --document-muted-text: hsl(0 0% 35%);
-    --document-accent: hsl(205 100% 38%);
     --document-editor-foreground: hsl(218 28% 17%);
     --document-mark-automatic-background: hsl(172 55% 93%);
     --document-mark-automatic-border: hsl(174 60% 36%);
@@ -235,38 +249,6 @@
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 9%);
 
-    --document-paper: hsl(0 0% 100%);
-    --document-text: hsl(0 0% 0%);
-    --document-border: hsl(0 0% 50%);
-    --document-table-border: hsl(0 0% 0%);
-    --document-table-header-background: hsl(211 42% 84%);
-    --document-table-header-color: hsl(214 45% 38%);
-    --document-table-header-strong-background: hsl(214 44% 53%);
-    --document-table-total-background: hsl(211 46% 78%);
-    --document-muted-text: hsl(0 0% 35%);
-    --document-accent: hsl(205 100% 38%);
-    --document-editor-foreground: hsl(218 28% 17%);
-    --document-mark-automatic-background: hsl(172 55% 93%);
-    --document-mark-automatic-border: hsl(174 60% 36%);
-    --document-mark-teacher-background: hsl(214 100% 95%);
-    --document-mark-teacher-border: hsl(214 75% 52%);
-    --document-mark-yes-no-background: hsl(340 85% 95%);
-    --document-mark-yes-no-border: hsl(340 65% 50%);
-    --document-mark-project-background: hsl(40 100% 92%);
-    --document-mark-project-border: hsl(32 85% 45%);
-    --document-mark-signature-background: hsl(262 83% 95%);
-    --document-mark-signature-border: hsl(262 52% 50%);
-    --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
-    --curriculum-unit-1-background: hsl(213 55% 47%);
-    --curriculum-unit-1-foreground: hsl(0 0% 100%);
-    --curriculum-unit-2-background: hsl(210 52% 80%);
-    --curriculum-unit-2-foreground: hsl(213 45% 18%);
-    --curriculum-unit-3-background: hsl(0 0% 74%);
-    --curriculum-unit-3-foreground: hsl(0 0% 12%);
-    --curriculum-unit-4-background: hsl(31 62% 62%);
-    --curriculum-unit-4-foreground: hsl(24 45% 16%);
-    --curriculum-unit-5-background: hsl(150 35% 55%);
-    --curriculum-unit-5-foreground: hsl(152 45% 14%);
 }
 
 .dark .curriculum-canvas {
@@ -441,5 +423,55 @@
     .document-table-total {
         background-color: var(--document-table-total-background);
         color: var(--document-table-header-color);
+    }
+}
+
+@layer components {
+    .workspace-layout[data-layout='syllabus'] > aside {
+        min-width: 0;
+        align-self: start;
+    }
+
+    .assistant-panel {
+        height: var(--layout-assistant-height);
+        min-height: var(--layout-assistant-min-height);
+    }
+
+    @media (width >= 80rem) {
+        .workspace-layout[data-layout='syllabus'] {
+            grid-template-columns: minmax(0, 1fr) var(--layout-syllabus-aside-width);
+        }
+
+        .workspace-layout[data-layout='syllabus'] > aside {
+            position: fixed;
+            right: var(--layout-syllabus-aside-inset);
+            top: var(--layout-syllabus-aside-top);
+            height: var(--layout-syllabus-aside-height);
+            width: var(--layout-syllabus-aside-width);
+            max-width: calc(100vw - 2 * var(--layout-syllabus-aside-inset));
+        }
+
+        .assistant-panel {
+            height: 100%;
+            min-height: 0;
+        }
+
+        .workspace-layout[data-layout='review'] {
+            grid-template-columns: minmax(0, 2fr) minmax(var(--layout-review-aside-min-width), 1fr);
+        }
+    }
+
+    .curriculum-canvas .vue-flow {
+        background-color: var(--curriculum-canvas-background);
+    }
+
+    .curriculum-canvas .vue-flow__node-subject:not(.dragging) {
+        transition: transform var(--duration-layout) ease-out;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .curriculum-canvas .vue-flow__node-subject {
+            transition: none;
+        }
     }
 }

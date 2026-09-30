@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { getLocalTimeZone, today } from '@internationalized/date';
 import { Plus } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
@@ -11,7 +12,6 @@ import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { STUDY_MODALITIES } from '@/lib/studyModalities';
 import type { AcademicStructureProps, GovernanceCatalogEntity } from '@/types/academic';
 
 const props = withDefaults(defineProps<Pick<AcademicStructureProps, 'options'> & { entity: GovernanceCatalogEntity; disabled?: boolean }>(), { disabled: false });
@@ -22,7 +22,7 @@ const errors = ref<Record<string, string[]>>({});
 const open = ref(false);
 const form = ref({
     nombre: '', code: '', faculty_id: '', campus: '', modality: '',
-    cycle_count: 8, starts_on: '', ends_on: '',
+    cycle_count: '', starts_on: '', ends_on: '',
 });
 const logo = ref<File | null>(null);
 const minimumPeriodDate = today(getLocalTimeZone()).toString();
@@ -48,7 +48,7 @@ const logoValidationError = (message: string | null): void => {
     errors.value = nextErrors;
 };
 const reset = (): void => {
-    form.value = { nombre: '', code: '', faculty_id: '', campus: '', modality: '', cycle_count: 8, starts_on: '', ends_on: '' };
+    form.value = { nombre: '', code: '', faculty_id: '', campus: '', modality: '', cycle_count: '', starts_on: '', ends_on: '' };
     logo.value = null;
 };
 const submit = async (): Promise<void> => {
@@ -102,13 +102,13 @@ const submit = async (): Promise<void> => {
                     </Field>
                     <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.modality)">
                         <FieldLabel for="catalog-modality" required>Modalidad</FieldLabel>
-                        <Select v-model="form.modality" required><SelectTrigger id="catalog-modality"><SelectValue placeholder="Seleccione la modalidad aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in STUDY_MODALITIES" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select>
+                        <Select v-model="form.modality" required><SelectTrigger id="catalog-modality"><SelectValue placeholder="Seleccione la modalidad aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in options.modalityOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select>
                         <FieldError :errors="errors.modality" />
                     </Field>
                     <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.nombre)"><FieldLabel for="catalog-name" required>Nombre</FieldLabel><Input id="catalog-name" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
                     <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.code)"><FieldLabel for="catalog-code" required>Código de carrera</FieldLabel><Input id="catalog-code" v-model="form.code" required /><FieldError :errors="errors.code" /></Field>
                     <template v-if="entity === 'carrera'">
-                        <Field :data-invalid="Boolean(errors.cycle_count)"><FieldLabel for="catalog-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="catalog-cycle-count" v-model="form.cycle_count" type="number" min="1" max="30" step="1" required /><FieldError :errors="errors.cycle_count" /></Field>
+                        <Field :data-invalid="Boolean(errors.cycle_count)"><FieldLabel for="catalog-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="catalog-cycle-count" v-model="form.cycle_count" type="number" min="1" :max="VALIDATION_LIMITS.cycleCount" step="1" required /><FieldError :errors="errors.cycle_count" /></Field>
                     </template>
                     <template v-if="entity === 'periodo'">
                         <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" :min-value="minimumPeriodDate" :aria-invalid="Boolean(errors.starts_on)" required /><FieldDescription>Debe ser hoy o una fecha posterior.</FieldDescription><FieldError :errors="errors.starts_on" /></Field>

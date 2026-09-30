@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { RouterLink } from 'vue-router';
 import { ArrowRight, Check, Circle } from '@lucide/vue';
@@ -62,23 +63,9 @@ const nextKey = computed(
                         'bg-muted/60 ring-1 ring-border': step.key === nextKey,
                     }"
                 >
-                    <span
-                        class="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-medium"
-                        :class="
-                            step.done
-                                ? 'bg-primary text-primary-foreground'
-                                : step.key === nextKey
-                                  ? 'bg-foreground text-background'
-                                  : 'bg-muted text-muted-foreground'
-                        "
-                    >
-                        <Check
-                            v-if="step.done"
-                            class="size-3.5"
-                            aria-hidden="true"
-                        />
-                        <template v-else>{{ index + 1 }}</template>
-                    </span>
+                    <Badge size="step" :variant="step.done ? 'default' : step.key === nextKey ? 'outline' : 'secondary'" class="mt-0.5">
+                        <Check v-if="step.done" aria-hidden="true" /><template v-else>{{ index + 1 }}</template>
+                    </Badge>
                     <div class="min-w-0 flex-1">
                         <p
                             class="text-sm font-medium"

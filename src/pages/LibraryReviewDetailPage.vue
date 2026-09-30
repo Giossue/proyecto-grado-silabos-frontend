@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
+import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import { BookCheck, CircleSlash, MessageSquareText } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
@@ -39,7 +41,7 @@ const verifying = ref(false);
 const verifyKey = ref('');
 
 const formatDate = (value: string): string =>
-  new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' });
 const documentFields = (fields: SnapshotField[]): DocumentField[] => fields.map((field) => ({ ...field }));
 const formatValue = (value: unknown): string => {
   if (value === null || value === '') return 'Sin contenido';
@@ -148,7 +150,7 @@ onMounted(load);
     <Alert v-else-if="review.state === 'comentado'"><MessageSquareText aria-hidden="true" /><AlertTitle>Comentario enviado al docente</AlertTitle><AlertDescription>El docente corregirá la bibliografía. El sílabo volverá a esta bandeja para una nueva verificación.</AlertDescription></Alert>
     <Alert v-else-if="review.state === 'anulado'"><CircleSlash aria-hidden="true" /><AlertTitle>Envío anulado</AlertTitle><AlertDescription>El sílabo se reabrió después de este envío. Esta revisión queda solo para consulta.</AlertDescription></Alert>
 
-    <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
+    <WorkspaceLayout variant="review">
       <main class="flex min-w-0 flex-col gap-6">
         <Card v-for="section in review.sections" :id="`section-${section.key}`" :key="section.key">
           <CardHeader><CardTitle>{{ section.title }}</CardTitle><CardDescription>Libros que propuso el docente en la revisión {{ review.revision_number }}. Solo lectura.</CardDescription></CardHeader>
@@ -205,7 +207,7 @@ onMounted(load);
           </CardContent>
         </Card>
       </aside>
-    </div>
+    </WorkspaceLayout>
 
     <Dialog v-model:open="confirmOpen">
       <DialogContent>

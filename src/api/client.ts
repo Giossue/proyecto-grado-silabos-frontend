@@ -11,8 +11,10 @@ export class ApiError extends Error {
 const baseUrl = (
   window.__SILABOS_CONFIG__?.apiUrl ||
   import.meta.env.VITE_API_URL ||
-  'http://localhost:8000'
+  (import.meta.env.DEV ? 'http://localhost:8000' : '')
 ).replace(/\/$/, '');
+
+if (!baseUrl) throw new Error('Falta configurar la URL pública de la API.');
 
 const readCookie = (name: string): string | null => {
   const prefix = `${name}=`;

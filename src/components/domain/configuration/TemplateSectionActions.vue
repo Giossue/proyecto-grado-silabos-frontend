@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { MoreHorizontal, Pencil, Save, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
 import TemplateController from '@/api/template-routes';
@@ -161,7 +162,7 @@ defineExpose({
                         <Input
                             id="edit-template-section-title"
                             v-model="form.title"
-                            maxlength="180"
+                            :maxlength="VALIDATION_LIMITS.shortText"
                             placeholder="Ej. Objetivos de la asignatura"
                             :disabled="form.processing"
                             :aria-invalid="Boolean(form.errors.title)"
