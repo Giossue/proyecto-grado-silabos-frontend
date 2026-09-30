@@ -6,7 +6,8 @@ const mountCanvas = async (page: import('@playwright/test').Page): Promise<void>
     await page.addScriptTag({
         type: 'module',
         content: `
-            const { createApp } = await import('/@id/vue');
+            const { createApp, h } = await import('/@id/vue');
+            const { TooltipProvider } = await import('/src/components/ui/tooltip/index.ts');
             const { default: CurriculumCanvas } = await import('/src/components/domain/academic/curriculum/CurriculumCanvas.vue');
             const subject = (id, position) => ({
                 id: String(id), code: 'SW-' + id, name: 'Materia ' + id,
@@ -15,19 +16,36 @@ const mountCanvas = async (page: import('@playwright/test').Page): Promise<void>
                 total_hours: 144, active: true, system_values: {},
                 display_fields: [{ id: 'hours', label: 'ACD', value: 48 }],
             });
-            createApp(CurriculumCanvas, {
+            const props = {
                 career: { id: 'career', name: 'Software', modality: null },
                 curriculum: { id: 'career', cycle_count: 2, editable: true, lock_reason: null },
                 editing: true,
                 fixedFields: [], fixedFieldTotals: [],
                 subjects: [1, 2, 3, 4, 5].map(subject),
                 requirements: [], organizationUnits: [], modalityOptions: [],
-            }).mount('#mount');
+            };
+            createApp({ setup: () => () => h(TooltipProvider, () => h(CurriculumCanvas, props)) }).mount('#mount');
         `,
     });
     await page.locator('.vue-flow__node-subject[data-id="1"]').waitFor();
     await page.waitForTimeout(250);
 };
+
+test('los botones shadcn cambian el zoom por teclado y presentan ayuda accesible', async ({ page }) => {
+    await mountCanvas(page);
+    const pane = page.locator('.vue-flow__transformationpane');
+    const zoom = () => pane.evaluate((element) => new DOMMatrixReadOnly(getComputedStyle(element).transform).a);
+    const initial = await zoom();
+    const increase = page.getByRole('button', { name: 'Acercar la malla' });
+    const decrease = page.getByRole('button', { name: 'Alejar la malla' });
+    await increase.focus();
+    await expect(page.getByRole('tooltip')).toContainText('Acercar la malla');
+    await page.keyboard.press('Enter');
+    await expect.poll(zoom).toBeGreaterThan(initial);
+    await decrease.focus();
+    await page.keyboard.press('Space');
+    await expect.poll(zoom).toBeCloseTo(initial, 2);
+});
 
 test('el desplazamiento de dos dedos mueve la malla sin cambiar el zoom', async ({ page }) => {
     await mountCanvas(page);
@@ -38,7 +56,8 @@ test('el desplazamiento de dos dedos mueve la malla sin cambiar el zoom', async 
     });
 
     for (let index = 0; index < 5; index += 1) {
-        await page.locator('.vue-flow__controls-zoomin').click();
+        const increase = page.getByRole('button', { name: 'Acercar la malla' });
+        if (await increase.isEnabled()) await increase.click();
     }
     const before = await transform();
     expect(before.zoom).toBeGreaterThan(1);
