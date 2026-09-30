@@ -94,7 +94,6 @@ const tableWithAction = (
         'table',
         {
             class: 'document-table',
-            style: typeof table.attrs?.fontSize === 'number' ? { fontSize: `${table.attrs.fontSize}pt` } : undefined,
             'data-wide': columnCount > 3 ? '' : undefined,
             'data-page-repeat-header': repeatsHeader ? '' : undefined,
         },
