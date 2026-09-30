@@ -23,8 +23,6 @@ export type TemplateField = DocumentField & {
     content_type: TemplateContentType;
     page_orientation?: 'portrait' | 'landscape' | null;
     master_source: string | null;
-
-    document_marker: string | null;
 };
 
 export type TemplateFieldContainer = {

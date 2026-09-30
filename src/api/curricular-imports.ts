@@ -36,7 +36,7 @@ export type ConfirmedCurricularValue = CurricularDefinition & {
   value: CurricularProposedValue['value'];
   evidence: Array<{ source_name: string; locator: string; quote: string | null }>;
   confirmed_at: string;
-  origin: 'importacion' | 'anterior';
+  origin: 'importacion';
 };
 export type CurricularImportIndex = {
   imports: CurricularImportSummary[];
