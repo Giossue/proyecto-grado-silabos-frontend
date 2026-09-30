@@ -1,3 +1,5 @@
+import { defineComponent, h } from 'vue';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
@@ -89,7 +91,8 @@ const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", t
   observations: [],
 });
 
-const mountPage = () => mount(TeacherSyllabusDetailPage, {
+const PageWithTooltips = defineComponent({ setup: () => () => h(TooltipProvider, () => h(TeacherSyllabusDetailPage)) });
+const mountPage = () => mount(PageWithTooltips, {
   global: {
     stubs: {
       RouterLink: { template: "<a><slot /></a>" },
@@ -356,7 +359,7 @@ describe("TeacherSyllabusDetailPage", () => {
 
   it("habilita la generación de unidades sin exigir una validación previa", async () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
-    const wrapper = mount(TeacherSyllabusDetailPage, {
+    const wrapper = mount(PageWithTooltips, {
       global: { stubs: { SyllabusUnitAssistant: { props: ["enabled"], template: '<div class="ai" :data-enabled="String(enabled)" />' } } },
     });
     await flushPromises();
@@ -465,20 +468,24 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("pide confirmación al salir si lo pendiente no se pudo guardar", async () => {
+  it.each([
+    { button: "Seguir editando", allowed: false },
+    { button: "Salir y descartar cambios", allowed: true },
+  ])("pide confirmación al fallar el guardado y permite decidir: $button", async ({ button, allowed }) => {
     vi.useFakeTimers();
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
     vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("Error temporal.", 500));
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
     const wrapper = mountPage();
     await flushPromises();
 
     await wrapper.get("textarea").setValue("Antes de salir");
-    const allowed = await routeLeaveGuards[0]!();
-
-    expect(allowed).toBe(false);
-    expect(confirm).toHaveBeenCalled();
-    confirm.mockRestore();
+    const leaving = routeLeaveGuards[0]!();
+    await flushPromises();
+    const choice = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find((item) => item.textContent?.trim() === button);
+    expect(choice).toBeDefined();
+    choice!.click();
+    await flushPromises();
+    expect(await leaving).toBe(allowed);
     wrapper.unmount();
   });
 

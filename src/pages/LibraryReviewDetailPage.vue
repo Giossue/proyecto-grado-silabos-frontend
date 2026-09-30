@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CommentEntry from '@/components/domain/CommentEntry.vue';
 import EmptyState from '@/components/domain/EmptyState.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
@@ -199,11 +200,7 @@ onMounted(load);
         <Card>
           <CardHeader><CardTitle>Comentarios de biblioteca</CardTitle><CardDescription>Historial de comentarios enviados al docente.</CardDescription></CardHeader>
           <CardContent class="flex flex-col gap-3">
-            <article v-for="(item, index) in comments" :key="`${item.commented_at}-${index}`" class="flex flex-col gap-2 rounded-md border p-4">
-              <div class="flex flex-wrap gap-2"><Badge variant="outline">Revisión {{ item.revision_number }}</Badge></div>
-              <p class="text-sm whitespace-pre-wrap">{{ item.comment }}</p>
-              <p class="text-xs text-muted-foreground">{{ item.commented_by }} · {{ formatDate(item.commented_at) }}</p>
-            </article>
+            <CommentEntry v-for="(item, index) in comments" :key="`${item.commented_at}-${index}`" :revision="item.revision_number" :content="item.comment" :author="item.commented_by" :date="item.commented_at" />
             <EmptyState v-if="comments.length === 0" title="Aún no hay comentarios." />
           </CardContent>
         </Card>

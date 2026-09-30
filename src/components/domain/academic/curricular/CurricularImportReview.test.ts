@@ -49,6 +49,7 @@ describe('CurricularImportReview', () => {
     expect(wrapper.text()).toContain('SW-801 · Calidad de Software');
     expect(wrapper.text()).toContain('Resultados de aprendizaje');
     expect(wrapper.text()).toContain('Proyecto de carrera.pdf · Página 22');
+    await button(wrapper, 'Proyecto de carrera.pdf · Página 22').trigger('click');
     expect(wrapper.get('blockquote').text()).toBe('Evalúa la calidad del software.');
     expect(wrapper.get('#proposal-known').attributes('data-state')).toBe('checked');
     expect(wrapper.get('#proposal-unmatched').attributes('disabled')).toBeDefined();

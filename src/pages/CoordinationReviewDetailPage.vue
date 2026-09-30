@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CommentEntry from '@/components/domain/CommentEntry.vue';
 import EmptyState from '@/components/domain/EmptyState.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { syllabusStateLabel } from '@/lib/syllabusStates';
@@ -145,11 +146,9 @@ onMounted(load);
         <Card>
           <CardHeader><CardTitle>Observaciones</CardTitle><CardDescription>{{ unresolvedCount }} pendiente(s) en todo el historial.</CardDescription></CardHeader>
           <CardContent class="flex flex-col gap-4">
-            <article v-for="observation in data.observations" :key="observation.id" class="flex flex-col gap-3 rounded-md border p-4">
-              <div class="flex flex-wrap items-center gap-2"><Badge variant="outline">Rev. {{ observation.revision_number }}</Badge><Badge :variant="observation.state === 'verificada' ? 'secondary' : 'destructive'">{{ observationState(observation.state) }}</Badge><Badge v-if="observation.requested" variant="outline">Solicitada</Badge></div>
-              <p class="text-sm whitespace-pre-wrap">{{ observation.content }}</p>
-              <p class="text-xs text-muted-foreground">{{ observation.created_by }} · {{ formatDateDisplay(observation.observado_en) }}</p>
-            </article>
+            <CommentEntry v-for="observation in data.observations" :key="observation.id" :revision="observation.revision_number" :content="observation.content" :author="observation.created_by" :date="observation.observado_en">
+              <template #badges><Badge :variant="observation.state === 'verificada' ? 'secondary' : 'destructive'">{{ observationState(observation.state) }}</Badge><Badge v-if="observation.requested" variant="outline">Solicitada</Badge></template>
+            </CommentEntry>
             <EmptyState v-if="data.observations.length === 0" title="Aún no hay observaciones." />
           </CardContent>
         </Card>

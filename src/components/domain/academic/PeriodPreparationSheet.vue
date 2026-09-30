@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { CalendarCheck, ListChecks, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
@@ -28,14 +29,14 @@ const rows = ref<PreparationRow[]>([]);
 const sourcePeriodCode = ref<string | null>(null);
 const saving = ref(false);
 const error = ref<string | null>(null);
-const formatter = new Intl.DateTimeFormat('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' });
+
 const planningPeriods = computed(() => props.options.periods.filter((period) => period.planning_enabled));
 const parallelCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.length, 0));
 const assignedCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.filter((parallel) => parallel.teacherId).length, 0));
 const problem = computed(() => preparationProblem(rows.value));
 const invalidRows = computed(() => problem.value !== null);
 const dateRange = (period: ScheduledSubjects['options']['periods'][number]) =>
-  `${period.code} · ${formatter.format(new Date(`${period.starts_on}T00:00:00Z`))} – ${formatter.format(new Date(`${period.ends_on}T00:00:00Z`))}`;
+  `${period.code} · ${formatDateDisplay(period.starts_on, { day: '2-digit', month: '2-digit', year: 'numeric' })} – ${formatDateDisplay(period.ends_on, { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 
 const updateProposal = () => {
   const proposal = preparationRows(periodId.value, props.options, props.scheduledSubjects, props.assignments, props.teacherUsers);

@@ -588,27 +588,28 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                     :template-id="template.id"
                     :title="template.titleBlock.text"
                 />
-                <div
+                <Button
                     v-if="!readonly"
-                    class="mb-8 rounded-xs leading-tight outline-offset-4 transition-shadow"
+                    type="button"
+                    variant="document"
+                    size="inline"
+                    class="mb-8 w-full justify-start rounded-xs text-left leading-tight outline-offset-4 transition-shadow"
                     :class="{
                         'cursor-pointer outline-2 outline-primary':
                             selection.kind === 'title',
                     }"
                     :aria-label="`Título ${template.titleBlock.text}`"
-                    role="button"
                     :aria-pressed="selection.kind === 'title'"
-                    tabindex="0"
                     data-template-selectable="title"
                     data-page-unit
                     data-page-keep-next
                     @pointerdown.stop="selectTitle"
-                    @keydown.enter.self="selectTitle"
+                    @click.stop="selectTitle"
                 >
-                    <h1 :style="titleStyle">
+                    <span role="heading" aria-level="1" :style="titleStyle">
                         {{ template.titleBlock.text }}
-                    </h1>
-                </div>
+                    </span>
+                </Button>
                 <h1
                     v-else
                     class="mb-8 leading-tight"

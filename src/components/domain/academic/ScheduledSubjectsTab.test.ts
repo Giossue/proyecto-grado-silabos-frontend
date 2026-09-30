@@ -28,6 +28,7 @@ const data: ScheduledSubjects = {
         row('3', 'Cálculo', 'MA-101', 1, [{ code: 'A', shift: 'nocturna' }]),
     ],
     options: {
+        shiftOptions: [{ value: 'matutina', label: 'Matutina' }, { value: 'nocturna', label: 'Nocturna' }],
         periods: [{ id: 'p1', code: 'Septiembre-Septiembre 2026', starts_on: '2026-09-23', ends_on: '2026-09-25', status: 'en_curso', status_label: 'En curso', planning_enabled: true }],
         activeSubjects: [],
         scheduledSubjects: [],

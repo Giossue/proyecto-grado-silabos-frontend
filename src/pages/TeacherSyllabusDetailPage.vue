@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatDateDisplay } from '@/lib/dateDisplay';
+import CommentEntry from '@/components/domain/CommentEntry.vue';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import BooleanChoice from '@/components/domain/BooleanChoice.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
@@ -94,8 +94,6 @@ const libraryComments = computed(() =>
   ),
 );
 const latestLibraryComment = computed(() => libraryComments.value[0] ?? null);
-const formatDateTime = (value: string): string =>
-  formatDateDisplay(value, { dateStyle: "medium", timeStyle: "short" });
 const canStart = computed(() =>
   syllabus.value?.state === "sin_iniciar" && editBlockReason.value === null,
 );
@@ -488,11 +486,11 @@ onBeforeUnmount(() => {
           <Card v-if="latestLibraryComment" class="library-comment-card">
             <CardHeader><CardTitle>Comentario de biblioteca</CardTitle><CardDescription>{{ libraryCorrection ? 'Corrija la bibliografía según este comentario y reenvíela.' : 'Último comentario que dejó biblioteca sobre la bibliografía.' }}</CardDescription></CardHeader>
             <CardContent class="flex flex-col gap-4">
-              <article class="flex flex-col gap-2 rounded-md border p-4"><div class="flex flex-wrap gap-2"><Badge variant="outline">Revisión {{ latestLibraryComment.revision_number }}</Badge></div><p class="text-sm whitespace-pre-wrap">{{ latestLibraryComment.comment }}</p><p class="text-xs text-muted-foreground">{{ latestLibraryComment.commented_by }} · {{ formatDateTime(latestLibraryComment.commented_at) }}</p></article>
+              <CommentEntry :revision="latestLibraryComment.revision_number" :content="latestLibraryComment.comment" :author="latestLibraryComment.commented_by" :date="latestLibraryComment.commented_at" />
               <section v-if="libraryComments.length > 1" class="flex flex-col gap-3 text-sm" aria-label="Comentarios anteriores de biblioteca">
                 <h3 class="font-medium">Comentarios anteriores</h3>
                 <ol class="flex flex-col gap-3">
-                  <li v-for="(item, index) in libraryComments.slice(1)" :key="`${item.commented_at}-${index}`" class="flex flex-col gap-1 rounded-md border p-3"><span class="text-xs text-muted-foreground">Revisión {{ item.revision_number }} · {{ item.commented_by }} · {{ formatDateTime(item.commented_at) }}</span><p class="whitespace-pre-wrap">{{ item.comment }}</p></li>
+                  <li v-for="(item, index) in libraryComments.slice(1)" :key="`${item.commented_at}-${index}`"><CommentEntry :revision="item.revision_number" :content="item.comment" :author="item.commented_by" :date="item.commented_at" /></li>
                 </ol>
               </section>
             </CardContent>

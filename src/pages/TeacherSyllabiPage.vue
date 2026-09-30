@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { SYLLABUS_STATE_OPTIONS, syllabusStateLabel } from '@/lib/syllabusStates';
-import { syllabusStateLabel } from '@/lib/syllabusStates';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';

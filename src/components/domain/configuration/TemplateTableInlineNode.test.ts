@@ -93,7 +93,10 @@ describe('preguntas de seguimiento en la hoja (I-159)', () => {
         expect(showWhen(editor, 1)).toEqual({ key: 'discapacidad', value: 'Sí' });
         expect(document.querySelectorAll('[data-condition-group="discapacidad"]')).toHaveLength(3);
         expect(yes!.textContent?.trim()).toBe('X ①');
-        expect(yes!.querySelector('button')!.title).toBe('Se marca con X si el docente responde Sí en «Estudiantes con discapacidad» (pregunta ①)');
+        expect(yes!.querySelector('button')!.hasAttribute('title')).toBe(false);
+        yes!.querySelector('button')!.focus();
+        await flushPromises();
+        expect(document.querySelector('[role=tooltip]')?.textContent).toBe('Se marca con X si el docente responde Sí en «Estudiantes con discapacidad» (pregunta ①)');
 
         await open(no!);
         expect(document.body.textContent).toContain('Si marca «No», pedir también:');

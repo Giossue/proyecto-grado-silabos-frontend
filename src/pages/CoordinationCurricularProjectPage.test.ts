@@ -1,3 +1,5 @@
+import { defineComponent, h } from 'vue';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ref } from 'vue';
@@ -25,8 +27,9 @@ const index: CurricularImportIndex = {
 const detail: CurricularImportDetail = { id: 'import-1', career_id: 'career-1', status: 'en_ejecucion', documents: [{ source_id: 'source-1', name: 'Proyecto.pdf', kind: 'pdf', hash: 'hash', execution_id: 'execution' }], proposal: null, fingerprint: null, error: null, editable: false, lock_reason: null };
 const inProgress = (status: CurricularImportDetail['status']) => ({ ...index, imports: [{ id: 'import-1', status, created_at: '2026-09-27T10:00:00Z', applied_at: null, error: null }] });
 const wrappers: Array<ReturnType<typeof mount>> = [];
+const PageWithTooltips = defineComponent({ setup: () => () => h(TooltipProvider, () => h(CoordinationCurricularProjectPage)) });
 const mountPage = () => {
-  const wrapper = mount(CoordinationCurricularProjectPage, { attachTo: document.body, global: { stubs: {
+  const wrapper = mount(PageWithTooltips, { attachTo: document.body, global: { stubs: {
     PageFrame: { props: ['title', 'description'], template: '<main><h1>{{ title }}</h1><p>{{ description }}</p><div data-actions><slot name="actions" /></div><slot /></main>' },
   } } });
   wrappers.push(wrapper);

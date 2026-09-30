@@ -41,7 +41,9 @@ describe('SyllabusUnitAssistant', () => {
     await vi.advanceTimersByTimeAsync(2500);
     await flushPromises();
     expect(wrapper.text()).toContain('Unidad: pruebas de integración.');
-    expect(wrapper.get('details summary').text()).toContain('Proyecto, p. 22');
+    const evidence = wrapper.findAll('button').find((button) => button.text().includes('Proyecto, p. 22'))!;
+    expect(evidence.attributes('aria-expanded')).toBe('false');
+    await evidence.trigger('click');
     expect(wrapper.get('blockquote').text()).toBe('Evalúa la calidad del software.');
     expect(wrapper.text()).toContain('Copiar respuesta');
     expect(wrapper.text()).not.toContain('Revisar con IA');

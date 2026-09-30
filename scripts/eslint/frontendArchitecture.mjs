@@ -50,7 +50,19 @@ export const semanticStyles = {
             if (fixedDimension.test(value)) context.report({ node, messageId: 'dimension' });
             if (/(?:^|\s|:)z-\[\d+\]/.test(value)) context.report({ node, messageId: 'stacking' });
         };
-        const script = { Literal: (node) => check(node, node.value) };
+        const script = {
+            Literal: (node) => check(node, node.value),
+            TemplateElement: (node) => check(node, node.value.cooked),
+            Program() {
+                const fragment = context.sourceCode.parserServices.getDocumentFragment?.();
+                for (const element of fragment?.children ?? []) {
+                    if (element.type !== 'VElement' || element.rawName !== 'style') continue;
+                    for (const child of element.children) {
+                        if (child.type === 'VText' && rawColor.test(child.value)) context.report({ node: child, messageId: 'color' });
+                    }
+                }
+            },
+        };
         const template = { VLiteral: (node) => check(node, node.value), ...script };
         return context.sourceCode.parserServices.defineTemplateBodyVisitor?.(template, script) ?? script;
     },

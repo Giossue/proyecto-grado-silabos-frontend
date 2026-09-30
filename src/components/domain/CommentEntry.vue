@@ -1,0 +1,23 @@
+<script setup lang="ts">
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { formatDateDisplay } from '@/lib/dateDisplay';
+
+defineProps<{
+    revision: number;
+    content: string;
+    author: string;
+    date: string;
+}>();
+</script>
+
+<template>
+    <Card class="gap-3 rounded-md py-3">
+        <CardHeader class="flex flex-row flex-wrap items-center gap-2 px-4">
+            <Badge variant="outline">Revisión {{ revision }}</Badge>
+            <slot name="badges" />
+        </CardHeader>
+        <CardContent class="px-4 text-sm whitespace-pre-wrap">{{ content }}</CardContent>
+        <CardFooter class="px-4 text-xs text-muted-foreground">{{ author }} · {{ formatDateDisplay(date) }}</CardFooter>
+    </Card>
+</template>

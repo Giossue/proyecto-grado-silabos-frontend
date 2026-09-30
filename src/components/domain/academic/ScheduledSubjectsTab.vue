@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { computed, ref, watch } from "vue";
 import { type ScheduledSubjects } from "@/api/career-academics";
 import CareerAcademicActions from "@/components/domain/academic/CareerAcademicActions.vue";
@@ -32,7 +33,7 @@ import { shiftLabel } from "@/lib/parallelShifts";
 const props = defineProps<{ data: ScheduledSubjects }>();
 const emit = defineEmits<{ period: [id: string]; changed: [message: string]; failed: [message: string] }>();
 const selectedPeriod = ref(props.data.selectedPeriodId ?? "");
-const formatter = new Intl.DateTimeFormat("es-EC", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" });
+
 const periodRows = computed(() => props.data.scheduledSubjects.filter((item) => item.period_id === selectedPeriod.value));
 type ScheduledRow = ScheduledSubjects["scheduledSubjects"][number];
 const cycleKey = (item: ScheduledRow) => item.subject_cycle === null ? "none" : String(item.subject_cycle);
@@ -56,7 +57,7 @@ const { items, meta, setPage } = useClientPagination(() => filter.items.value);
 const selectedPeriodOption = computed(() => props.data.options.periods.find((item) => item.id === selectedPeriod.value));
 const emptyMessage = computed(() => filter.active.value ? "No hay materias que coincidan con los filtros." : "No hay materias programadas para este período.");
 const periodLabel = (period: ScheduledSubjects["options"]["periods"][number]) =>
-  `${period.code} · ${formatter.format(new Date(`${period.starts_on}T00:00:00Z`))} – ${formatter.format(new Date(`${period.ends_on}T00:00:00Z`))}`;
+  `${period.code} · ${formatDateDisplay(period.starts_on, { day: '2-digit', month: '2-digit', year: 'numeric' })} – ${formatDateDisplay(period.ends_on, { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 const changePeriod = (value: unknown) => {
   if (typeof value !== "string" || value === selectedPeriod.value) return;
   selectedPeriod.value = value;

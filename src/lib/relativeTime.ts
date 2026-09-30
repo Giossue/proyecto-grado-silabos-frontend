@@ -1,3 +1,5 @@
+import { formatDateDisplay } from '@/lib/dateDisplay';
+
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
 const DAY = 24 * HOUR;
@@ -16,9 +18,9 @@ export const relativeTime = (value: string, now: Date = new Date()): string => {
   }
   if (elapsed < 5 * WEEK) return `hace ${Math.floor(elapsed / WEEK)} sem`;
 
-  return new Intl.DateTimeFormat('es-EC', {
+  return formatDateDisplay(value, {
     day: 'numeric',
     month: 'short',
     ...(date.getFullYear() === now.getFullYear() ? {} : { year: 'numeric' }),
-  }).format(date);
+  });
 };
