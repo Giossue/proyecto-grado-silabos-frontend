@@ -1,4 +1,5 @@
 import { api } from '@/api/client';
+import type { RoleCode } from '@/api/session';
 
 export type ManagedUser = {
   id: string;
@@ -7,7 +8,7 @@ export type ManagedUser = {
   active: boolean;
   pending_activation: boolean;
   two_factor_enabled: boolean;
-  roles: Array<{ code: 'administrador' | 'coordinador' | 'docente'; name: string; career_name: string | null }>;
+  roles: Array<{ code: RoleCode; name: string; career_name: string | null }>;
   careers: Array<string | null>;
   assignments: Array<{ id: string; role_name: string; career_name: string | null; active: boolean }>;
 };
@@ -15,7 +16,7 @@ export type ManagedUser = {
 export type ManagedUsersResponse = {
   users: { data: ManagedUser[]; current_page: number; last_page: number; per_page: number; from: number | null; to: number | null; total: number };
   filters: { q: string | null; status: string | null; role: string | null; career: string | null };
-  roles: Array<{ codigo: 'administrador' | 'coordinador' | 'docente'; nombre: string }>;
+  roles: Array<{ codigo: RoleCode; nombre: string }>;
   careers: Array<{ id: string; nombre: string }>;
 };
 

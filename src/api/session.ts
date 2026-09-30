@@ -1,8 +1,10 @@
 import { api } from '@/api/client';
 
+export type RoleCode = 'administrador' | 'coordinador' | 'docente' | 'bibliotecario';
+
 export type ActiveRole = {
   id: string;
-  code: 'administrador' | 'coordinador' | 'docente';
+  code: RoleCode;
   career_id: string | null;
   career_name: string | null;
 };

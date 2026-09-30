@@ -12,6 +12,7 @@ import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader,
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import { roleEntry } from '@/lib/routes';
+import { LIBRARY_SCOPE, roleLabel } from '@/lib/roles';
 
 const open = defineModel<boolean>('open', { default: false });
 const router = useRouter();
@@ -21,12 +22,15 @@ const roles = computed(() => sessionState.current.value?.available_roles ?? []);
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
 const coordinatorCareerCount = computed(() => roles.value.filter((role) => role.code === 'coordinador').length);
 const title = computed(() => coordinatorCareerCount.value > 1 ? 'Cambiar carrera' : 'Cambiar ámbito de trabajo');
-const roleLabel = (code: string): string => ({ administrador: 'Administrador', coordinador: 'Coordinador', docente: 'Docente' })[code] ?? code;
-const scopeName = (role: (typeof roles.value)[number]): string => role.career_name ?? roleLabel(role.code);
-const scopeDescription = (role: (typeof roles.value)[number]): string => {
+type Role = (typeof roles.value)[number];
+const scopeName = (role: Role): string => role.code === 'bibliotecario' ? 'Biblioteca' : role.career_name ?? roleLabel(role.code);
+const scopeDescription = (role: Role): string => {
   if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}`;
-  return role.career_name ? `${roleLabel(role.code)} · ${role.career_name}` : 'Administración general del sistema';
+  if (role.code === 'bibliotecario') return LIBRARY_SCOPE;
+  if (role.career_name) return `${roleLabel(role.code)} · ${role.career_name}`;
+  return role.code === 'administrador' ? 'Administración general del sistema' : roleLabel(role.code);
 };
+const scopeArea = (role: Role): string => role.career_name ?? (role.code === 'bibliotecario' ? 'Toda la universidad' : 'Ámbito institucional sin carrera específica');
 
 const select = async (roleAssignmentId: string): Promise<void> => {
   if (roleAssignmentId === activeRole.value?.id || pendingRoleId.value) return;
@@ -60,7 +64,7 @@ const select = async (roleAssignmentId: string): Promise<void> => {
             <CardDescription>{{ scopeDescription(role) }}</CardDescription>
             <CardAction><Badge v-if="activeRole?.id === role.id" variant="secondary"><CheckCircle2 aria-hidden="true" />Actual</Badge><Badge v-else variant="outline">{{ roleLabel(role.code) }}</Badge></CardAction>
           </CardHeader>
-          <CardContent><p class="flex items-center gap-2 text-sm text-muted-foreground"><Building2 aria-hidden="true" />{{ role.career_name ?? 'Ámbito institucional sin carrera específica' }}</p></CardContent>
+          <CardContent><p class="flex items-center gap-2 text-sm text-muted-foreground"><Building2 aria-hidden="true" />{{ scopeArea(role) }}</p></CardContent>
           <CardFooter><Button v-if="activeRole?.id === role.id" type="button" variant="secondary" class="w-full" disabled>Carrera o rol actual</Button><Button v-else type="button" class="w-full" :disabled="pendingRoleId !== null" @click="select(role.id)"><Spinner v-if="pendingRoleId === role.id" data-icon="inline-start" /><ArrowRight v-else data-icon="inline-start" aria-hidden="true" />Cambiar a {{ scopeName(role) }}</Button></CardFooter>
         </Card>
       </div>

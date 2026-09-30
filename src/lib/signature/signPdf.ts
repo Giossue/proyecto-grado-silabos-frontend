@@ -9,12 +9,36 @@ const BYTE_RANGE_PLACEHOLDER = '/ByteRange [0 ********** ********** **********]'
 
 export type StampPosition = { page: number; x: number; y: number; width: number; height: number };
 
+export type SignerRole = 'docente' | 'coordinacion' | 'biblioteca';
+
+const FALLBACK_WIDTH = 150;
+const FALLBACK_HEIGHT = 48;
+const FALLBACK_MARGIN = 60;
+
+const ROLE_REASONS: Record<SignerRole, string> = {
+  docente: 'Elaboración del sílabo',
+  coordinacion: 'Aprobación de coordinación',
+  biblioteca: 'Verificación de bibliografía (biblioteca)',
+};
+
+export const fallbackStamp = (role: SignerRole, page: number, pageWidth: number): StampPosition => ({
+  page,
+  x: role === 'docente'
+    ? FALLBACK_MARGIN
+    : role === 'coordinacion'
+      ? (pageWidth - FALLBACK_WIDTH) / 2
+      : pageWidth - FALLBACK_MARGIN - FALLBACK_WIDTH,
+  y: 40,
+  width: FALLBACK_WIDTH,
+  height: FALLBACK_HEIGHT,
+});
+
 export type SignPdfInput = {
   pdf: Uint8Array;
   p12: Uint8Array;
   password: string;
   stamp: StampPosition | null;
-  role: 'docente' | 'coordinacion';
+  role: SignerRole;
   reason?: string;
   location?: string;
   now?: Date;
@@ -92,10 +116,7 @@ export async function signPdf(input: SignPdfInput): Promise<SignPdfResult> {
   const fallbackPage = pages.length - 1;
   const position: StampPosition = input.stamp && input.stamp.page >= 0 && input.stamp.page < pages.length
     ? input.stamp
-    : (() => {
-        const { width } = pages[fallbackPage]!.getSize();
-        return { page: fallbackPage, x: input.role === 'docente' ? 60 : width / 2 + 10, y: 40, width: 190, height: 48 };
-      })();
+    : fallbackStamp(input.role, fallbackPage, pages[fallbackPage]!.getSize().width);
   const page = pages[position.page]!;
   const box = page.getMediaBox();
 
@@ -110,9 +131,9 @@ export async function signPdf(input: SignPdfInput): Promise<SignPdfResult> {
   const objects: IndirectObject[] = [];
 
   const dates = ecuadorParts(now);
-  const reason = input.reason ?? (input.role === 'docente' ? 'Elaboración del sílabo' : 'Aprobación de coordinación');
+  const reason = input.reason ?? ROLE_REASONS[input.role];
   const location = input.location ?? '';
-  const fieldName = `Firma ${input.role === 'docente' ? 'docente' : 'coordinacion'} ${now.getTime()}`;
+  const fieldName = `Firma ${input.role} ${now.getTime()}`;
 
   objects.push({
     ref: signatureRef,

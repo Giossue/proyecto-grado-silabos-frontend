@@ -482,7 +482,8 @@ defineExpose({ getDocument });
 .template-table-editor .template-table-variable,
 .template-table-editor .template-table-field,
 .template-table-editor .template-table-yes-no,
-.template-table-editor .template-table-project {
+.template-table-editor .template-table-project,
+.template-table-editor .template-table-signature {
     border-radius: 2px;
     color: var(--document-editor-foreground) !important;
     padding: 1px 3px;
@@ -503,13 +504,18 @@ defineExpose({ getDocument });
     background: var(--document-mark-project-background);
     outline: 1px solid var(--document-mark-project-border);
 }
+.template-table-editor .template-table-signature {
+    background: var(--document-mark-signature-background);
+    outline: 1px solid var(--document-mark-signature-border);
+}
 .template-table-editor .is-linked {
     box-shadow: 0 0 0 2px var(--primary);
 }
 .template-table-editor .tiptap .template-table-field,
 .template-table-editor .tiptap .template-table-variable,
 .template-table-editor .tiptap .template-table-yes-no,
-.template-table-editor .tiptap .template-table-project {
+.template-table-editor .tiptap .template-table-project,
+.template-table-editor .tiptap .template-table-signature {
     display: inline-block;
     max-width: 100%;
     overflow: hidden;

@@ -12,7 +12,7 @@ describe.skipIf(!input)('firma de extremo a extremo (script)', () => {
       p12: new Uint8Array(readFileSync(process.env.SIGN_E2E_P12!)),
       password: process.env.SIGN_E2E_PASSWORD ?? '',
       stamp,
-      role: process.env.SIGN_E2E_ROLE === 'coordinacion' ? 'coordinacion' : 'docente',
+      role: process.env.SIGN_E2E_ROLE === 'coordinacion' || process.env.SIGN_E2E_ROLE === 'biblioteca' ? process.env.SIGN_E2E_ROLE : 'docente',
     });
     writeFileSync(process.env.SIGN_E2E_OUTPUT!, result.pdf);
     expect(result.pdf.length).toBeGreaterThan(0);

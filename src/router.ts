@@ -1,7 +1,15 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from "vue-router";
 import { sessionState } from "@/state/session";
 import { rememberIntendedRoute } from "@/lib/intended-route";
-import { paths, roleEntry as resolveRoleEntry, roleHome as resolveRoleHome, roleSetting, type RoleCode } from "@/lib/routes";
+import {
+  paths,
+  roleDocuments,
+  roleEntry as resolveRoleEntry,
+  roleHome as resolveRoleHome,
+  roleNotifications,
+  roleSetting,
+  type RoleCode,
+} from "@/lib/routes";
 
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
@@ -30,6 +38,8 @@ const CoordinationReviewComparisonPage = () => import("@/pages/CoordinationRevie
 const CoordinationAcademicStructurePage = () => import("@/pages/CoordinationAcademicStructurePage.vue");
 const CoordinationCurricularProjectPage = () => import("@/pages/CoordinationCurricularProjectPage.vue");
 const DocumentsPage = () => import("@/pages/DocumentsPage.vue");
+const LibraryReviewsPage = () => import("@/pages/LibraryReviewsPage.vue");
+const LibraryReviewDetailPage = () => import("@/pages/LibraryReviewDetailPage.vue");
 const NotFoundPage = () => import("@/pages/NotFoundPage.vue");
 
 const replaceParams = (target: string, route: RouteLocationNormalized): string =>
@@ -113,6 +123,13 @@ export const router = createRouter({
     { path: "/docente/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", layout: "syllabus-editor" } },
     { path: "/docente/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos" } },
 
+    { path: "/biblioteca/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Panel" } },
+    { path: "/biblioteca/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Notificaciones" } },
+    { path: "/biblioteca/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Perfil" } },
+    { path: "/biblioteca/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Seguridad" } },
+    { path: "/biblioteca/revisiones", component: LibraryReviewsPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Revisiones de biblioteca" } },
+    { path: "/biblioteca/revisiones/:revision", component: LibraryReviewDetailPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Revisión de bibliografía" } },
+
     { path: "/administracion/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/usuarios" } },
     { path: "/administracion/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/estructura-academica" } },
     { path: "/administracion/procesos", component: AdminProcessesPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/convocatorias" } },
@@ -169,13 +186,14 @@ router.beforeEach(async (to) => {
   if (typeof to.meta.aliasTarget === "string") return canonicalFromAlias(to, to.meta.aliasTarget);
 
   if (typeof to.meta.shortcut === "string") {
-    const destination = {
-      panel: resolveRoleHome(code),
-      notifications: code === "administrador" ? paths.admin.notifications : code === "coordinador" ? paths.coordination.notifications : paths.teacher.notifications,
-      profile: roleSetting(code, 'profile'),
-      security: roleSetting(code, 'security'),
-      documents: code === "administrador" ? paths.admin.panel : code === "coordinador" ? paths.coordination.documents(String(to.params.revision)) : paths.teacher.documents(String(to.params.revision)),
-    }[to.meta.shortcut];
+    const shortcuts: Record<string, () => string> = {
+      panel: () => resolveRoleHome(code),
+      notifications: () => roleNotifications(code),
+      profile: () => roleSetting(code, "profile"),
+      security: () => roleSetting(code, "security"),
+      documents: () => roleDocuments(code, String(to.params.revision)),
+    };
+    const destination = shortcuts[to.meta.shortcut]?.();
     if (destination) return { path: destination, query: to.query };
   }
 

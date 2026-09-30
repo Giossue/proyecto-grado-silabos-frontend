@@ -6,6 +6,7 @@ import {
     FileText,
     List,
     Plus,
+    Signature,
     Table2,
     UserPen,
 } from '@lucide/vue';
@@ -23,6 +24,7 @@ import {
     DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { isSignatureVariable, SIGNATURE_VARIABLES } from '@/lib/signatureVariables';
 import type { TemplateVariable } from '@/lib/templateDocument';
 
 const props = defineProps<{
@@ -39,7 +41,16 @@ const emit = defineEmits<{
     list: [];
 }>();
 
-const automatic = computed(() => props.variables.filter((variable) => !variable.key.startsWith(PROJECT_PREFIX)));
+const automatic = computed(() => props.variables.filter(
+    (variable) => !variable.key.startsWith(PROJECT_PREFIX) && !isSignatureVariable(variable.key),
+));
+const signatureOrder = (key: string): number => {
+    const index = (SIGNATURE_VARIABLES as readonly string[]).indexOf(key);
+    return index === -1 ? SIGNATURE_VARIABLES.length : index;
+};
+const signatures = computed(() => props.variables
+    .filter((variable) => isSignatureVariable(variable.key))
+    .sort((left, right) => signatureOrder(left.key) - signatureOrder(right.key)));
 </script>
 
 <template>
@@ -100,6 +111,28 @@ const automatic = computed(() => props.variables.filter((variable) => !variable.
                     Proyecto de carrera
                 </DropdownMenuItem>
             </DropdownMenuGroup>
+            <template v-if="signatures.length > 0">
+                <DropdownMenuSeparator />
+                <DropdownMenuGroup>
+                    <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>
+                            <Signature />
+                            Firma
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent class="w-64">
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem
+                                    v-for="variable in signatures"
+                                    :key="variable.key"
+                                    @select="emit('insertVariable', variable)"
+                                >
+                                    <span class="truncate">{{ variable.label }}</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                </DropdownMenuGroup>
+            </template>
         </DropdownMenuContent>
     </DropdownMenu>
 </template>

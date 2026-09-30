@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import UserInfo from '@/components/UserInfo.vue';
 import UserMenuContent from '@/components/UserMenuContent.vue';
+import { roleLabel } from '@/lib/roles';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
 
@@ -27,14 +28,7 @@ const user = computed<User>(() => ({
 }));
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
 const canSwitchScope = computed(() => (sessionState.current.value?.available_roles.length ?? 0) > 1);
-const roleName = computed(() => {
-    switch (activeRole.value?.code) {
-        case 'administrador': return 'Administrador';
-        case 'coordinador': return 'Coordinador';
-        case 'docente': return 'Docente';
-        default: return 'Sin rol';
-    }
-});
+const roleName = computed(() => activeRole.value ? roleLabel(activeRole.value.code) : 'Sin rol');
 const switcherOpen = ref(false);
 const { isMobile, state } = useSidebar();
 </script>

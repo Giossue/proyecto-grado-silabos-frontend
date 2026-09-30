@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Download, FileSignature, RefreshCw, ShieldCheck } from '@lucide/vue';
+import { Download, FileSignature, Library, RefreshCw, Send, ShieldCheck } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
-import { downloadSignaturePdf, getSignatureStatus, submitSignature, type SignatureRole, type SignatureStatus } from '@/api/signatures';
+import { downloadSignaturePdf, getSignatureStatus, sendToLibrary, submitSignature, type SignatureRole, type SignatureStatus } from '@/api/signatures';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/lib/toast';
 
 const props = withDefaults(defineProps<{ revisionId: string; fileName?: string }>(), { fileName: 'silabo' });
+const emit = defineEmits<{ changed: [] }>();
 
 const status = ref<SignatureStatus | null>(null);
 const loadError = ref<string | null>(null);
@@ -26,12 +27,18 @@ const downloading = ref(false);
 const errors = ref<{ certificate?: string; password?: string; general?: string }>({});
 const stale = ref(false);
 const fileInput = ref<HTMLInputElement | null>(null);
+const sendOpen = ref(false);
+const sending = ref(false);
+const sendError = ref<string | null>(null);
 
-const roleLabel = (role: SignatureRole): string => role === 'docente' ? 'Docente' : 'Coordinación';
+const ROLE_ORDER: SignatureRole[] = ['docente', 'coordinacion', 'biblioteca'];
+const roleLabel = (role: SignatureRole): string => ({ docente: 'Docente', coordinacion: 'Coordinación', biblioteca: 'Biblioteca' })[role] ?? role;
 const stateLabel = computed(() => ({
   sin_documento: 'Sin PDF',
   pendiente_docente: 'Pendiente docente',
   pendiente_coordinacion: 'Pendiente coordinación',
+  pendiente_envio_biblioteca: 'Por enviar a biblioteca',
+  pendiente_biblioteca: 'Pendiente biblioteca',
   firmado: 'Firmado',
   anulado: 'Anulado',
 })[status.value?.state ?? 'sin_documento']);
@@ -40,11 +47,19 @@ const description = computed(() => {
     case 'sin_documento': return 'Genere primero el PDF de la revisión aprobada en «Documentos».';
     case 'pendiente_docente': return status.value.can_sign ? 'Le corresponde firmar el sílabo aprobado.' : 'Primero firma el docente del sílabo.';
     case 'pendiente_coordinacion': return status.value.can_sign ? 'El docente ya firmó. Le corresponde firmar a coordinación.' : 'El docente ya firmó. Falta la firma de coordinación.';
-    case 'firmado': return 'El sílabo tiene la firma del docente y de coordinación.';
+    case 'pendiente_envio_biblioteca': return status.value.can_send_to_library
+      ? 'Docente y coordinación ya firmaron. Envíe el sílabo a biblioteca para que verifique la bibliografía.'
+      : 'Docente y coordinación ya firmaron. Falta que el docente lo envíe a biblioteca.';
+    case 'pendiente_biblioteca': return status.value.can_sign
+      ? 'Docente y coordinación ya firmaron. Si los libros están disponibles, firme; si no, envíe un comentario al docente.'
+      : 'Biblioteca está verificando la bibliografía. Firmará o enviará un comentario al docente.';
+    case 'firmado': return 'El sílabo tiene la firma del docente, de coordinación y de biblioteca.';
     case 'anulado': return 'El sílabo fue reabierto: esta revisión ya no se firma. Se firmará la nueva revisión aprobada.';
     default: return 'Estado de la firma de la revisión aprobada.';
   }
 });
+const orderedSignatures = computed(() => [...(status.value?.signatures ?? [])]
+  .sort((left, right) => ROLE_ORDER.indexOf(left.role) - ROLE_ORDER.indexOf(right.role)));
 const formatDate = (value: string): string => new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 
 const load = async (): Promise<void> => {
@@ -108,6 +123,7 @@ const sign = async (): Promise<void> => {
       open.value = false;
       toast.success(response.message);
       await load();
+      emit('changed');
     } catch (reason) {
       if (reason instanceof SignatureError) {
         if (reason.code === 'wrong_password') errors.value = { password: reason.message };
@@ -125,6 +141,23 @@ const sign = async (): Promise<void> => {
     signing.value = false;
   }
 };
+
+const submitToLibrary = async (): Promise<void> => {
+  sending.value = true;
+  sendError.value = null;
+  try {
+    const response = await sendToLibrary(props.revisionId);
+    sendOpen.value = false;
+    toast.success(response.message);
+    await load();
+    emit('changed');
+  } catch (reason) {
+    sendError.value = reason instanceof ApiError ? reason.message : 'No se pudo enviar el sílabo a biblioteca.';
+  } finally {
+    sending.value = false;
+  }
+};
+watch(sendOpen, (value) => { if (!value) sendError.value = null; });
 
 const retryWithFreshDocument = async (): Promise<void> => {
   await load();
@@ -147,14 +180,19 @@ onMounted(load);
     <CardContent class="flex flex-col gap-4">
       <Alert v-if="loadError" variant="destructive"><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ loadError }}</span><Button size="sm" variant="outline" @click="load">Reintentar</Button></AlertDescription></Alert>
       <template v-if="status">
-        <ol v-if="status.signatures.length" class="flex flex-col gap-2">
-          <li v-for="item in status.signatures" :key="item.role" class="flex items-start gap-2 rounded-md border p-3 text-sm">
+        <ol v-if="orderedSignatures.length" class="flex flex-col gap-2">
+          <li v-for="item in orderedSignatures" :key="item.role" class="flex items-start gap-2 rounded-md border p-3 text-sm">
             <ShieldCheck class="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
             <div class="min-w-0"><p class="font-medium">{{ roleLabel(item.role) }}: {{ item.certificate_holder }}</p><p class="text-muted-foreground">{{ item.signer }} · {{ formatDate(item.signed_at) }}</p></div>
           </li>
         </ol>
+        <p v-if="status.library" class="flex items-start gap-2 rounded-md border p-3 text-sm" data-testid="library-submission">
+          <Library class="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+          <span>Enviado a biblioteca el {{ formatDate(status.library.sent_at) }} por {{ status.library.sent_by }}.</span>
+        </p>
         <div class="flex flex-wrap gap-2">
           <Button v-if="status.can_sign" @click="open = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar electrónicamente</Button>
+          <Button v-if="status.can_send_to_library" @click="sendOpen = true"><Send data-icon="inline-start" aria-hidden="true" />Enviar a biblioteca</Button>
           <Button v-if="status.artifact_id && status.state !== 'sin_documento'" variant="outline" :disabled="downloading" @click="download"><Spinner v-if="downloading" data-icon="inline-start" /><Download v-else data-icon="inline-start" aria-hidden="true" />{{ status.signatures.length ? 'Descargar PDF firmado' : 'Descargar PDF' }}</Button>
         </div>
       </template>
@@ -188,6 +226,20 @@ onMounted(load);
           <Button type="submit" :disabled="signing"><Spinner v-if="signing" data-icon="inline-start" /><FileSignature v-else data-icon="inline-start" aria-hidden="true" />{{ signing ? 'Firmando…' : 'Firmar' }}</Button>
         </DialogFooter>
       </form>
+    </DialogContent>
+  </Dialog>
+
+  <Dialog v-model:open="sendOpen">
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>¿Enviar a biblioteca?</DialogTitle>
+        <DialogDescription>Biblioteca revisará si los libros de la bibliografía están disponibles. Si están, firmará el sílabo; si no, le enviará un comentario para que corrija solo la bibliografía.</DialogDescription>
+      </DialogHeader>
+      <Alert v-if="sendError" variant="destructive"><AlertTitle>No se envió el sílabo</AlertTitle><AlertDescription>{{ sendError }}</AlertDescription></Alert>
+      <DialogFooter>
+        <DialogClose as-child><Button type="button" variant="outline" :disabled="sending">Cancelar</Button></DialogClose>
+        <Button type="button" :disabled="sending" @click="submitToLibrary"><Spinner v-if="sending" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar a biblioteca</Button>
+      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>

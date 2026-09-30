@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bell, BookOpen, CalendarClock, CheckCheck, ClipboardCheck, FileText, MoreHorizontal, Sparkles, UserRound } from '@lucide/vue';
+import { Bell, BookOpen, CalendarClock, CheckCheck, ClipboardCheck, FileText, Library, MoreHorizontal, Sparkles, UserRound } from '@lucide/vue';
 import { computed, onMounted, ref, watch, type Component } from 'vue';
 import { useRoute } from 'vue-router';
 import { getNotifications, markAllNotificationsRead, markNotificationRead, type Notification } from '@/api/notifications';
@@ -30,6 +30,7 @@ const hasActiveRole = computed(() => sessionState.current.value?.active_role != 
 const isNotificationsPage = computed(() => route.path.endsWith('/notificaciones') || route.path === paths.notifications);
 
 const iconFor = (tipo: string): Component => {
+    if (tipo.startsWith('biblioteca')) return Library;
     if (tipo.startsWith('documento')) return FileText;
     if (tipo.startsWith('ia')) return Sparkles;
     if (tipo.startsWith('fuente_academica')) return BookOpen;

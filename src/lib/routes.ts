@@ -1,4 +1,6 @@
-export type RoleCode = 'administrador' | 'coordinador' | 'docente';
+import type { ActiveRole } from '@/api/session';
+
+export type RoleCode = ActiveRole['code'];
 
 const segment = (value: string): string => encodeURIComponent(value);
 
@@ -77,6 +79,15 @@ export const paths = {
     documents: (revision: string): string =>
       `/docente/revisiones/${segment(revision)}/documentos`,
   },
+  library: {
+    root: '/biblioteca',
+    panel: '/biblioteca/panel',
+    notifications: '/biblioteca/notificaciones',
+    profile: '/biblioteca/configuracion/perfil',
+    security: '/biblioteca/configuracion/seguridad',
+    reviews: '/biblioteca/revisiones',
+    review: (revision: string): string => `/biblioteca/revisiones/${segment(revision)}`,
+  },
   legacy: {
     adminUsers: '/administracion/usuarios',
     adminAcademic: '/administracion/estructura-academica',
@@ -89,19 +100,48 @@ export const paths = {
   },
 } as const;
 
-type RoleArea = 'admin' | 'coordination' | 'teacher';
+export type RoleArea = 'admin' | 'coordination' | 'teacher' | 'library';
 
-export const rolePrefix = (role: RoleCode): RoleArea =>
-  role === 'administrador' ? 'admin' : role === 'coordinador' ? 'coordination' : 'teacher';
+type AreaPaths = {
+  root: string;
+  panel: string;
+  notifications: string;
+  profile: string;
+  security: string;
+};
+
+const roleAreas: Record<RoleCode, RoleArea> = {
+  administrador: 'admin',
+  coordinador: 'coordination',
+  docente: 'teacher',
+  bibliotecario: 'library',
+};
+
+const areaPaths: Record<RoleArea, AreaPaths> = {
+  admin: paths.admin,
+  coordination: paths.coordination,
+  teacher: paths.teacher,
+  library: paths.library,
+};
+
+const areaDocuments: Record<RoleArea, (revision: string) => string> = {
+  admin: () => paths.admin.panel,
+  coordination: paths.coordination.documents,
+  teacher: paths.teacher.documents,
+  library: paths.library.review,
+};
+
+export const rolePrefix = (role: RoleCode): RoleArea | null =>
+  Object.hasOwn(roleAreas, role) ? roleAreas[role] : null;
+
+const areaOf = (role: RoleCode): AreaPaths | null => {
+  const area = rolePrefix(role);
+  return area ? areaPaths[area] : null;
+};
 
 export const roleHome = (role: RoleCode | undefined): string => {
   if (!role) return paths.root;
-  const area = rolePrefix(role);
-  return area === 'admin'
-    ? paths.admin.panel
-    : area === 'coordination'
-      ? paths.coordination.panel
-      : paths.teacher.panel;
+  return areaOf(role)?.panel ?? paths.roleSelection;
 };
 
 export const roleEntry = (role: RoleCode | undefined): string => {
@@ -111,18 +151,22 @@ export const roleEntry = (role: RoleCode | undefined): string => {
 
 export type RoleScopedSetting = 'profile' | 'security';
 
-export const roleSetting = (role: RoleCode, setting: RoleScopedSetting): string => {
-  if (role === 'administrador') {
-    return setting === 'profile' ? paths.admin.profile : paths.admin.security;
-  }
+export const areaSetting = (area: RoleArea, setting: RoleScopedSetting): string =>
+  areaPaths[area][setting];
+
+export const roleSetting = (role: RoleCode, setting: RoleScopedSetting): string =>
+  areaOf(role)?.[setting] ?? paths.roleSelection;
+
+export const roleNotifications = (role: RoleCode): string =>
+  areaOf(role)?.notifications ?? paths.roleSelection;
+
+export const roleDocuments = (role: RoleCode, revision: string): string => {
   const area = rolePrefix(role);
-  const prefix = area === 'admin'
-    ? paths.admin.root
-    : area === 'coordination'
-      ? paths.coordination.root
-      : paths.teacher.root;
-  return `${prefix}/configuracion/${setting === 'profile' ? 'perfil' : 'seguridad'}`;
+  return area ? areaDocuments[area](revision) : paths.roleSelection;
 };
+
+export const areaForPath = (path: string): RoleArea | null =>
+  (Object.keys(areaPaths) as RoleArea[]).find((area) => path.startsWith(`${areaPaths[area].root}/`)) ?? null;
 
 export type RouteDefinition = {
   name: string;
@@ -142,6 +186,7 @@ const authenticated = { requiresAuth: true } as const;
 const admin = { ...authenticated, roles: ['administrador'] as const };
 const coordinator = { ...authenticated, roles: ['coordinador'] as const };
 const teacher = { ...authenticated, roles: ['docente'] as const };
+const librarian = { ...authenticated, roles: ['bibliotecario'] as const };
 
 export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'login', path: paths.login, component: 'LoginPage', guest: true },
@@ -195,6 +240,13 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'teacher-syllabi', path: paths.teacher.syllabi, component: 'TeacherSyllabiPage', breadcrumb: 'Mis sílabos', ...teacher },
   { name: 'teacher-syllabus', path: '/docente/mis-silabos/:syllabus', component: 'TeacherSyllabusDetailPage', states: ['resumen', 'edicion', 'ia', 'envio'], breadcrumb: 'Mis sílabos', layout: 'syllabus-editor', ...teacher },
   { name: 'teacher-documents', path: '/docente/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...teacher },
+
+  { name: 'library-panel', path: paths.library.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...librarian },
+  { name: 'library-notifications', path: paths.library.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...librarian },
+  { name: 'library-profile', path: paths.library.profile, component: 'ProfilePage', shortcut: 'profile', ...librarian },
+  { name: 'library-security', path: paths.library.security, component: 'SecurityPage', shortcut: 'security', ...librarian },
+  { name: 'library-reviews', path: paths.library.reviews, component: 'LibraryReviewsPage', breadcrumb: 'Revisiones de biblioteca', ...librarian },
+  { name: 'library-review', path: '/biblioteca/revisiones/:revision', component: 'LibraryReviewDetailPage', breadcrumb: 'Revisión de bibliografía', ...librarian },
 
   { name: 'legacy-login', path: paths.loginLegacy, guest: true, aliasOf: paths.login },
   { name: 'legacy-admin-users', path: paths.legacy.adminUsers, ...admin, aliasOf: paths.admin.users },

@@ -167,6 +167,8 @@
     --document-mark-yes-no-border: hsl(340 65% 50%);
     --document-mark-project-background: hsl(40 100% 92%);
     --document-mark-project-border: hsl(32 85% 45%);
+    --document-mark-signature-background: hsl(262 83% 95%);
+    --document-mark-signature-border: hsl(262 52% 50%);
     --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
     --curriculum-unit-1-background: hsl(213 55% 47%);
     --curriculum-unit-1-foreground: hsl(0 0% 100%);
@@ -252,6 +254,8 @@
     --document-mark-yes-no-border: hsl(340 65% 50%);
     --document-mark-project-background: hsl(40 100% 92%);
     --document-mark-project-border: hsl(32 85% 45%);
+    --document-mark-signature-background: hsl(262 83% 95%);
+    --document-mark-signature-border: hsl(262 52% 50%);
     --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
     --curriculum-unit-1-background: hsl(213 55% 47%);
     --curriculum-unit-1-foreground: hsl(0 0% 100%);

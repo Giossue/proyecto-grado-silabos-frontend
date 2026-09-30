@@ -1,0 +1,193 @@
+<script setup lang="ts">
+import { BookCheck, CircleSlash, MessageSquareText } from '@lucide/vue';
+import { computed, onMounted, ref, watch } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
+import { ApiError } from '@/api/client';
+import { commentLibraryReview, getLibraryReview, type LibraryReviewDetail } from '@/api/library';
+import type { SnapshotField } from '@/api/reviews';
+import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
+import { freeTextLines, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
+import { libraryStateLabel, libraryStateVariant } from '@/lib/libraryStates';
+import { paths } from '@/lib/routes';
+import type { DocumentField } from '@/lib/templateDocument';
+import { toast } from '@/lib/toast';
+
+const route = useRoute();
+const review = ref<LibraryReviewDetail | null>(null);
+const loading = ref(true);
+const loadError = ref('');
+const comment = ref('');
+const commentErrors = ref<string[]>([]);
+const actionError = ref('');
+const confirmOpen = ref(false);
+const sending = ref(false);
+const idempotencyKey = ref('');
+
+const formatDate = (value: string): string =>
+  new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+const documentFields = (fields: SnapshotField[]): DocumentField[] => fields.map((field) => ({ ...field }));
+const formatValue = (value: unknown): string => {
+  if (value === null || value === '') return 'Sin contenido';
+  if (typeof value === 'boolean') return value ? 'Sí' : 'No';
+  if (isFreeTextDocument(value)) return freeTextLines(value);
+  if (Array.isArray(value)) return value.map(String).join(', ');
+  if (typeof value === 'object') return JSON.stringify(value, null, 2);
+  return String(value);
+};
+const comments = computed(() => [...(review.value?.comments ?? [])].sort(
+  (left, right) => new Date(right.commented_at).getTime() - new Date(left.commented_at).getTime(),
+));
+
+const load = async (): Promise<void> => {
+  loading.value = true;
+  loadError.value = '';
+  try {
+    review.value = (await getLibraryReview(String(route.params.revision))).review;
+  } catch (failure) {
+    loadError.value = failure instanceof ApiError ? failure.message : 'No se pudo cargar la revisión de bibliografía.';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const askConfirmation = (): void => {
+  commentErrors.value = [];
+  actionError.value = '';
+  if (comment.value.trim() === '') {
+    commentErrors.value = ['Escriba qué libros no están disponibles o qué debe corregir el docente.'];
+    return;
+  }
+  idempotencyKey.value = crypto.randomUUID();
+  confirmOpen.value = true;
+};
+
+const sendComment = async (): Promise<void> => {
+  if (!review.value) return;
+  sending.value = true;
+  actionError.value = '';
+  try {
+    const result = await commentLibraryReview(review.value.revision_id, {
+      comment: comment.value.trim(),
+      idempotency_key: idempotencyKey.value,
+    });
+    confirmOpen.value = false;
+    comment.value = '';
+    toast.success(result.message);
+    await load();
+  } catch (failure) {
+    if (failure instanceof ApiError) {
+      commentErrors.value = failure.errors.comment ?? [];
+      actionError.value = failure.message;
+    } else {
+      actionError.value = 'No se pudo enviar el comentario.';
+    }
+    confirmOpen.value = false;
+  } finally {
+    sending.value = false;
+  }
+};
+
+watch(() => route.params.revision, (current, previous) => { if (current !== previous) void load(); });
+onMounted(load);
+</script>
+
+<template>
+  <PageFrame
+    v-if="review && !loadError"
+    :title="review.subject"
+    :description="`${review.code} · ${review.career} · ${review.period} · Paralelo(s) ${review.parallels.join(', ')} · ${review.teachers.join(', ')}`"
+  >
+    <template #eyebrow><Button as-child variant="link" class="h-auto px-0"><RouterLink :to="paths.library.reviews">← Volver a revisiones</RouterLink></Button></template>
+    <template #meta>
+      <Badge variant="secondary">Revisión {{ review.revision_number }}</Badge>
+      <Badge :variant="libraryStateVariant(review.state)">{{ libraryStateLabel(review.state) }}</Badge>
+      <span class="text-sm text-muted-foreground">Enviado por {{ review.sent_by }} · {{ formatDate(review.sent_at) }}</span>
+    </template>
+
+    <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo enviar el comentario</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
+    <Alert v-if="review.state === 'firmado'"><BookCheck aria-hidden="true" /><AlertTitle>Bibliografía verificada</AlertTitle><AlertDescription>Biblioteca ya firmó este sílabo.</AlertDescription></Alert>
+    <Alert v-else-if="review.state === 'comentado'"><MessageSquareText aria-hidden="true" /><AlertTitle>Comentario enviado al docente</AlertTitle><AlertDescription>El docente corregirá la bibliografía. El sílabo volverá a esta bandeja con un PDF nuevo, firmado otra vez por docente y coordinación.</AlertDescription></Alert>
+    <Alert v-else-if="review.state === 'anulado'"><CircleSlash aria-hidden="true" /><AlertTitle>Envío anulado</AlertTitle><AlertDescription>El sílabo se reabrió después de este envío. Esta revisión queda solo para consulta.</AlertDescription></Alert>
+
+    <div class="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(22rem,1fr)]">
+      <main class="flex min-w-0 flex-col gap-6">
+        <Card v-for="section in review.sections" :id="`section-${section.key}`" :key="section.key">
+          <CardHeader><CardTitle>{{ section.title }}</CardTitle><CardDescription>Libros que propuso el docente en la revisión {{ review.revision_number }}. Solo lectura.</CardDescription></CardHeader>
+          <CardContent class="flex flex-col gap-6">
+            <section v-for="block in section.blocks" :key="block.key" class="flex flex-col gap-4">
+              <h3 v-if="section.blocks.length > 1" class="font-medium">{{ block.title }}</h3>
+              <TemplateDocumentView v-if="block.document" :document="block.document" :fields="documentFields(block.fields)" :variables="review.template_variables" />
+              <dl v-else class="grid gap-4">
+                <div v-for="field in block.fields" :key="field.key" class="rounded-md border p-4">
+                  <dt class="font-medium">{{ field.label }}</dt>
+                  <dd class="mt-2 text-sm whitespace-pre-wrap">{{ formatValue(field.value) }}</dd>
+                </div>
+              </dl>
+            </section>
+          </CardContent>
+        </Card>
+        <Card v-if="review.sections.length === 0">
+          <CardHeader><CardTitle>Bibliografía</CardTitle><CardDescription>Este sílabo no tiene una sección de Bibliografía en su plantilla.</CardDescription></CardHeader>
+        </Card>
+      </main>
+
+      <aside class="flex min-w-0 flex-col gap-6">
+        <DocumentSignatureCard :key="review.revision_id" :revision-id="review.revision_id" :file-name="`silabo-${review.code}-revision-${review.revision_number}`" @changed="load" />
+
+        <Card v-if="review.can_comment">
+          <CardHeader><CardTitle>Enviar comentario</CardTitle><CardDescription>Si algún libro no está en biblioteca, explíquelo al docente. El sílabo vuelve al docente para que corrija solo la bibliografía.</CardDescription></CardHeader>
+          <CardContent>
+            <form id="library-comment-form" class="flex flex-col gap-4" @submit.prevent="askConfirmation">
+              <Field :data-invalid="commentErrors.length > 0">
+                <FieldLabel for="library-comment" required>Comentario para el docente</FieldLabel>
+                <Textarea id="library-comment" v-model="comment" rows="4" :aria-invalid="commentErrors.length > 0" placeholder="Ej. El libro «Ingeniería de software» de Sommerville no está en biblioteca; proponga otra edición disponible." />
+                <FieldDescription>El docente verá este texto en su sílabo.</FieldDescription>
+                <FieldError :errors="commentErrors" />
+              </Field>
+              <Button type="submit" variant="destructive" :disabled="sending"><MessageSquareText data-icon="inline-start" aria-hidden="true" />Enviar comentario</Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Comentarios de biblioteca</CardTitle><CardDescription>Historial de comentarios enviados al docente.</CardDescription></CardHeader>
+          <CardContent class="flex flex-col gap-3">
+            <article v-for="(item, index) in comments" :key="`${item.commented_at}-${index}`" class="flex flex-col gap-2 rounded-md border p-4">
+              <div class="flex flex-wrap gap-2"><Badge variant="outline">Revisión {{ item.revision_number }}</Badge></div>
+              <p class="text-sm whitespace-pre-wrap">{{ item.comment }}</p>
+              <p class="text-xs text-muted-foreground">{{ item.commented_by }} · {{ formatDate(item.commented_at) }}</p>
+            </article>
+            <p v-if="comments.length === 0" class="text-sm text-muted-foreground">Aún no hay comentarios.</p>
+          </CardContent>
+        </Card>
+      </aside>
+    </div>
+
+    <Dialog v-model:open="confirmOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>¿Enviar comentario al docente?</DialogTitle>
+          <DialogDescription>El sílabo vuelve al docente para que corrija solo la bibliografía. Las firmas de este PDF quedan anuladas: cuando el docente reenvíe, se generará un PDF nuevo que firmarán otra vez docente y coordinación antes de volver a biblioteca.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <DialogClose as-child><Button type="button" variant="outline" :disabled="sending">Cancelar</Button></DialogClose>
+          <Button type="button" variant="destructive" :disabled="sending" @click="sendComment"><Spinner v-if="sending" data-icon="inline-start" /><MessageSquareText v-else data-icon="inline-start" aria-hidden="true" />Enviar comentario</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </PageFrame>
+  <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
+  <LoadingSkeleton v-else-if="loading" variant="review" />
+</template>

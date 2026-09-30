@@ -35,7 +35,7 @@ import { freeTextPlain, isFreeTextDocument } from '@/components/domain/syllabus/
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { hiddenKeys } from '@/lib/fieldConditions';
-import { ArrowLeft, Send } from '@lucide/vue';
+import { ArrowLeft, Library, Send } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const route = useRoute();
@@ -61,6 +61,7 @@ const confirmSubmitOpen = ref(false);
 const localBlockReason = ref<string | null>(null);
 const saveFailed = ref(false);
 const PAUSED_MESSAGE = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude.";
+const LIBRARY_SECTION = "bibliografia";
 
 const editBlockReason = computed<string | null>(() =>
   localBlockReason.value ??
@@ -72,6 +73,22 @@ const canEdit = computed(() =>
   ["borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? "") &&
   editBlockReason.value === null,
 );
+const libraryCorrection = computed(() => syllabus.value?.library_correction === true);
+const sectionEditable = (section: { key: string }): boolean =>
+  canEdit.value && (!libraryCorrection.value || section.key === LIBRARY_SECTION);
+const editableFieldIds = computed(() => new Set(
+  (syllabus.value?.sections ?? [])
+    .filter((section) => !libraryCorrection.value || section.key === LIBRARY_SECTION)
+    .flatMap((section) => section.blocks.flatMap((block) => block.fields.map((field) => field.id))),
+));
+const libraryComments = computed(() =>
+  [...(syllabus.value?.library_comments ?? [])].sort(
+    (left, right) => new Date(right.commented_at).getTime() - new Date(left.commented_at).getTime(),
+  ),
+);
+const latestLibraryComment = computed(() => libraryComments.value[0] ?? null);
+const formatDateTime = (value: string): string =>
+  new Intl.DateTimeFormat("es-EC", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 const canStart = computed(() =>
   syllabus.value?.state === "sin_iniciar" && editBlockReason.value === null,
 );
@@ -120,6 +137,7 @@ const isFieldEmpty = (field: SyllabusField): boolean => {
 const emptyParts = computed(() =>
   (syllabus.value?.sections ?? [])
     .flatMap((section) => section.blocks.flatMap((block) => block.fields))
+    .filter((field) => editableFieldIds.value.has(field.id))
     .filter((field) => field.teacher_editable && !field.inherited && !hiddenParts.value.has(field.key))
     .filter(isFieldEmpty).length,
 );
@@ -259,7 +277,7 @@ const saveField = (field: SyllabusField): void => {
 };
 
 const scheduleSave = (field: SyllabusField): void => {
-  if (!canEdit.value || conflict.value) return;
+  if (!canEdit.value || conflict.value || !editableFieldIds.value.has(field.id)) return;
   const previous = saveTimers.get(field.id);
   if (previous) clearTimeout(previous);
   dirtyFields.set(field.id, field);
@@ -436,7 +454,7 @@ onBeforeUnmount(() => {
   >
     <template #actions>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
-      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><span v-if="submitHint" class="submit-hint text-xs text-muted-foreground">{{ submitHint }}</span><Button :disabled="processingAction || conflict || emptyParts > 0" :title="submitHint || undefined" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />Enviar sílabo</Button></span>
+      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><span v-if="submitHint" class="submit-hint text-xs text-muted-foreground">{{ submitHint }}</span><Button :disabled="processingAction || conflict || emptyParts > 0" :title="submitHint || undefined" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />{{ libraryCorrection ? 'Reenviar bibliografía' : 'Enviar sílabo' }}</Button></span>
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
@@ -445,7 +463,8 @@ onBeforeUnmount(() => {
     <template v-if="syllabus">
       <Alert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked"><AlertTitle>Edición no disponible</AlertTitle><AlertDescription>{{ editBlockReason }}</AlertDescription></Alert>
 
-      <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
+      <Alert v-if="syllabus.state === 'correccion_solicitada' && libraryCorrection" class="library-correction"><Library aria-hidden="true" /><AlertTitle>Biblioteca pidió corregir la bibliografía</AlertTitle><AlertDescription>Solo puede cambiar la sección Bibliografía. Las demás partes quedan como las aprobó coordinación.</AlertDescription></Alert>
+      <Alert v-else-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
 
       <div v-if="syllabus.state !== 'sin_iniciar'" class="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(24rem,28rem)]">
         <main class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
@@ -458,6 +477,19 @@ onBeforeUnmount(() => {
           </Card>
 
           <DocumentSignatureCard v-if="syllabus.state === 'aprobado' && syllabus.approved_revision_id" :revision-id="syllabus.approved_revision_id" :file-name="`silabo-${syllabus.code}`" />
+
+          <Card v-if="latestLibraryComment" class="library-comment-card">
+            <CardHeader><CardTitle>Comentario de biblioteca</CardTitle><CardDescription>{{ libraryCorrection ? 'Corrija la bibliografía según este comentario y reenvíela.' : 'Último comentario que dejó biblioteca sobre la bibliografía.' }}</CardDescription></CardHeader>
+            <CardContent class="flex flex-col gap-4">
+              <article class="flex flex-col gap-2 rounded-md border p-4"><div class="flex flex-wrap gap-2"><Badge variant="outline">Revisión {{ latestLibraryComment.revision_number }}</Badge></div><p class="text-sm whitespace-pre-wrap">{{ latestLibraryComment.comment }}</p><p class="text-xs text-muted-foreground">{{ latestLibraryComment.commented_by }} · {{ formatDateTime(latestLibraryComment.commented_at) }}</p></article>
+              <section v-if="libraryComments.length > 1" class="flex flex-col gap-3 text-sm" aria-label="Comentarios anteriores de biblioteca">
+                <h3 class="font-medium">Comentarios anteriores</h3>
+                <ol class="flex flex-col gap-3">
+                  <li v-for="(item, index) in libraryComments.slice(1)" :key="`${item.commented_at}-${index}`" class="flex flex-col gap-1 rounded-md border p-3"><span class="text-xs text-muted-foreground">Revisión {{ item.revision_number }} · {{ item.commented_by }} · {{ formatDateTime(item.commented_at) }}</span><p class="whitespace-pre-wrap">{{ item.comment }}</p></li>
+                </ol>
+              </section>
+            </CardContent>
+          </Card>
 
           <Card v-if="requestedObservations.length">
             <CardHeader><CardTitle>Observaciones de coordinación</CardTitle><CardDescription>Corrija lo indicado en el sílabo y reenvíelo para una nueva revisión.</CardDescription></CardHeader>
@@ -474,30 +506,30 @@ onBeforeUnmount(() => {
 
             <FieldSet v-for="block in section.blocks" :id="`block-${block.id}`" :key="block.id" class="scroll-mt-6 gap-5">
               <FieldLegend v-if="(block.title ?? '').trim() !== '' && section.blocks.length > 1 && (usesTabularDocument(block) || !(block.fields.length === 1 && block.title === block.fields[0]?.label))" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
-              <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :editable="canEdit && !conflict" presentation="form" @value="(key, value) => updateDesignValue(block.fields, key, value)" />
+              <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :editable="sectionEditable(section) && !conflict" presentation="form" @value="(key, value) => updateDesignValue(block.fields, key, value)" />
               <FieldError v-if="usesTabularDocument(block)" class="block-errors" :errors="blockErrors(block.fields)" />
               <template v-if="!usesTabularDocument(block)">
                 <FieldGroup>
                 <template v-for="field in block.fields.filter((item) => !hiddenParts.has(item.key) && (block.content_type !== 'institutional' || (item.teacher_editable && !item.inherited)))" :key="field.id">
-                <Field v-if="canEdit && field.teacher_editable && !field.inherited && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                <Field v-if="sectionEditable(section) && field.teacher_editable && !field.inherited && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
-                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'texto_libre'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                <Field v-else-if="sectionEditable(section) && field.teacher_editable && !field.inherited && field.type === 'texto_libre'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><FreeTextEditor :id="`input-${field.id}`" :label="field.label.trim() || section.title" :model-value="isFreeTextDocument(field.value) ? field.value : null" @update:model-value="updateDesignValue([field], field.key, $event)" />
                 </Field>
 
-                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'texto_largo'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                <Field v-else-if="sectionEditable(section) && field.teacher_editable && !field.inherited && field.type === 'texto_largo'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Textarea :id="`input-${field.id}`" :model-value="scalarValue(field)" class="min-h-32" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
-                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'seleccion_unica'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                <Field v-else-if="sectionEditable(section) && field.teacher_editable && !field.inherited && field.type === 'seleccion_unica'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><Select :model-value="String(scalarValue(field))" @update:model-value="updateScalar(field, String($event))"><SelectTrigger :id="`input-${field.id}`"><SelectValue placeholder="Seleccione una opción" /></SelectTrigger><SelectContent><SelectItem v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select>
                 </Field>
 
-                <FieldSet v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'seleccion_multiple'" :id="`field-${field.id}`" :aria-required="field.required"><FieldLegend class="text-sm" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLegend><Field v-for="option in field.options" :key="option.value" orientation="horizontal"><Checkbox :id="`field-${field.id}-${option.value}`" :model-value="selectedValues(field).includes(option.value)" @update:model-value="toggleChoice(field, option.value, Boolean($event))" /><FieldLabel :for="`field-${field.id}-${option.value}`">{{ option.label }}</FieldLabel></Field></FieldSet>
+                <FieldSet v-else-if="sectionEditable(section) && field.teacher_editable && !field.inherited && field.type === 'seleccion_multiple'" :id="`field-${field.id}`" :aria-required="field.required"><FieldLegend class="text-sm" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLegend><Field v-for="option in field.options" :key="option.value" orientation="horizontal"><Checkbox :id="`field-${field.id}-${option.value}`" :model-value="selectedValues(field).includes(option.value)" @update:model-value="toggleChoice(field, option.value, Boolean($event))" /><FieldLabel :for="`field-${field.id}-${option.value}`">{{ option.label }}</FieldLabel></Field></FieldSet>
 
-                <Field v-else-if="canEdit && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><div class="boolean-options flex gap-2" role="radiogroup" :aria-label="field.label.trim() || section.title"><Button type="button" size="sm" :variant="field.value === true ? 'default' : 'outline'" role="radio" :aria-checked="field.value === true" @click="toggleBoolean(field, true)">Sí</Button><Button type="button" size="sm" :variant="field.value === false ? 'default' : 'outline'" role="radio" :aria-checked="field.value === false" @click="toggleBoolean(field, false)">No</Button></div><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
+                <Field v-else-if="sectionEditable(section) && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><div class="boolean-options flex gap-2" role="radiogroup" :aria-label="field.label.trim() || section.title"><Button type="button" size="sm" :variant="field.value === true ? 'default' : 'outline'" role="radio" :aria-checked="field.value === true" @click="toggleBoolean(field, true)">Sí</Button><Button type="button" size="sm" :variant="field.value === false ? 'default' : 'outline'" role="radio" :aria-checked="field.value === false" @click="toggleBoolean(field, false)">No</Button></div><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
 
                 <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div v-if="field.label.trim() || field.inherited" class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Dato automático</Badge></div><span>{{ masterValue(field.value) }}</span></div>
                 <FieldError :errors="visibleValidationMessages(field.id)" />
@@ -523,12 +555,13 @@ onBeforeUnmount(() => {
     <Dialog v-model:open="confirmSubmitOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>¿Enviar a Coordinación?</DialogTitle>
-          <DialogDescription>Coordinación revisará el sílabo. Mientras lo revisa, no podrá hacer cambios.</DialogDescription>
+          <DialogTitle>{{ libraryCorrection ? '¿Reenviar la bibliografía?' : '¿Enviar a Coordinación?' }}</DialogTitle>
+          <DialogDescription v-if="libraryCorrection">La bibliografía corregida no vuelve a revisión de coordinación: el resto del sílabo queda como ya fue aprobado. Se generará un PDF nuevo; el docente y coordinación lo firman de nuevo y después usted lo envía otra vez a biblioteca.</DialogDescription>
+          <DialogDescription v-else>Coordinación revisará el sílabo. Mientras lo revisa, no podrá hacer cambios.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>
-          <Button type="button" :disabled="processingAction || conflict" @click="confirmSubmit">Enviar a Coordinación</Button>
+          <Button type="button" :disabled="processingAction || conflict" @click="confirmSubmit"><Send data-icon="inline-start" aria-hidden="true" />{{ libraryCorrection ? 'Reenviar bibliografía' : 'Enviar a Coordinación' }}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

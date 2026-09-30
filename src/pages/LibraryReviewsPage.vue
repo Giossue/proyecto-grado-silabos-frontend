@@ -1,0 +1,134 @@
+<script setup lang="ts">
+import { Eye } from '@lucide/vue';
+import { onMounted, reactive, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ApiError } from '@/api/client';
+import { getLibraryReviews, type LibraryReviewsPage } from '@/api/library';
+import FilterToolbar from '@/components/domain/FilterToolbar.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { LIBRARY_STATE_LABELS, libraryStateLabel, libraryStateVariant } from '@/lib/libraryStates';
+import { paths } from '@/lib/routes';
+
+const route = useRoute();
+const router = useRouter();
+const data = ref<LibraryReviewsPage | null>(null);
+const loading = ref(true);
+const error = ref<string | null>(null);
+const queryText = (value: unknown): string => typeof value === 'string' ? value : '';
+const filters = reactive({
+  q: queryText(route.query.q),
+  state: queryText(route.query.state) || 'all',
+});
+const initialPage = Number(queryText(route.query.page)) || 1;
+const stateOptions = Object.entries(LIBRARY_STATE_LABELS).map(([value, label]) => ({ value, label }));
+const formatDate = (value: string): string =>
+  new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+
+const syncUrl = (page: number): void => {
+  const query: Record<string, string> = {};
+  if (filters.q) query.q = filters.q;
+  if (filters.state !== 'all') query.state = filters.state;
+  if (page > 1) query.page = String(page);
+  void router.replace({ query });
+};
+
+const load = async (page = 1): Promise<void> => {
+  loading.value = true;
+  error.value = null;
+  try {
+    data.value = await getLibraryReviews({ q: filters.q, state: filters.state, page });
+    syncUrl(page);
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las revisiones de biblioteca.';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const clearFilters = (): void => {
+  Object.assign(filters, { q: '', state: 'all' });
+  void load();
+};
+
+onMounted(() => { void load(initialPage); });
+</script>
+
+<template>
+  <PageFrame title="Revisiones de biblioteca" description="Sílabos firmados por docente y coordinación que esperan la verificación de su bibliografía.">
+    <LoadErrorState v-if="error" :message="error" @retry="load" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="7" />
+    <Card v-if="data">
+      <CardContent class="flex flex-col gap-4">
+        <form @submit.prevent="load()">
+          <FilterToolbar @clear="clearFilters">
+            <template #search>
+              <Field>
+                <FieldLabel for="library-search" class="sr-only">Buscar por asignatura, código o docente</FieldLabel>
+                <Input id="library-search" v-model="filters.q" type="search" placeholder="Ej. Arquitectura de Software" />
+              </Field>
+            </template>
+            <template #filters>
+              <Field>
+                <FieldLabel for="library-state" class="sr-only">Estado</FieldLabel>
+                <Select v-model="filters.state" name="state">
+                  <SelectTrigger id="library-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="all">Todos los estados</SelectItem>
+                      <SelectItem v-for="option in stateOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+            </template>
+          </FilterToolbar>
+        </form>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Asignatura</TableHead>
+              <TableHead>Carrera</TableHead>
+              <TableHead>Período</TableHead>
+              <TableHead>Paralelo</TableHead>
+              <TableHead>Docente(s)</TableHead>
+              <TableHead>Revisión</TableHead>
+              <TableHead>Enviado</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead class="text-right">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-for="item in data.reviews.data" :key="item.revision_id">
+              <TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }}</div></TableCell>
+              <TableCell>{{ item.career }}</TableCell>
+              <TableCell>{{ item.period }}</TableCell>
+              <TableCell>{{ item.parallels.join(', ') }}</TableCell>
+              <TableCell>{{ item.teachers.join(', ') }}</TableCell>
+              <TableCell>N.º {{ item.revision_number }}</TableCell>
+              <TableCell><div>{{ formatDate(item.sent_at) }}</div><div class="text-sm text-muted-foreground">{{ item.sent_by }}</div></TableCell>
+              <TableCell><Badge :variant="libraryStateVariant(item.state)">{{ libraryStateLabel(item.state) }}</Badge></TableCell>
+              <TableCell class="text-right">
+                <TableActionsMenu :label="`Acciones para ${item.subject}`">
+                  <DropdownMenuItem @select="router.push(paths.library.review(item.revision_id))"><Eye aria-hidden="true" />Abrir</DropdownMenuItem>
+                </TableActionsMenu>
+              </TableCell>
+            </TableRow>
+            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="9">No hay sílabos para los filtros seleccionados.</TableEmpty>
+          </TableBody>
+        </Table>
+        <TablePagination :meta="data.reviews" label="Paginación de revisiones de biblioteca" @update:page="load" />
+      </CardContent>
+    </Card>
+  </PageFrame>
+</template>

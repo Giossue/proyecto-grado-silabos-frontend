@@ -79,6 +79,19 @@ export type SyllabusDetail = {
     state: string;
     requested: boolean;
   }>;
+  reopening?: {
+    cause: string;
+    reopened_at: string;
+    reopened_by: string;
+    origin?: "coordinacion" | "biblioteca";
+  } | null;
+  library_correction?: boolean;
+  library_comments?: Array<{
+    comment: string;
+    commented_at: string;
+    commented_by: string;
+    revision_number: number;
+  }>;
 };
 
 export type SyllabusField = {

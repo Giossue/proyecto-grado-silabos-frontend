@@ -1,3 +1,5 @@
+import type { RoleCode } from '@/api/session';
+
 export type User = {
     id: string;
     nombre: string;
@@ -15,7 +17,7 @@ export type Auth = {
 
 export type ActiveRole = {
     id: string;
-    role: 'administrador' | 'coordinador' | 'docente';
+    role: RoleCode;
     role_name: string;
     career_id: string | null;
     career_name: string | null;

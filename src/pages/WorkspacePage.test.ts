@@ -98,4 +98,25 @@ describe('WorkspacePage', () => {
     expect(replace).toHaveBeenCalledWith('/docente/mis-silabos');
     wrapper.unmount();
   });
+
+  it('presenta Biblioteca como ámbito de toda la universidad, no como Administración', async () => {
+    const library = { id: 'role-library', code: 'bibliotecario' as const, career_id: null, career_name: null };
+    const teacher = teacherRole('role-1', 'Software');
+    vi.mocked(getSession).mockResolvedValue({ ...sessionFor([teacher], null), available_roles: [teacher, library] });
+    vi.mocked(selectActiveRole).mockResolvedValue({ ...sessionFor([teacher], null), available_roles: [teacher, library], active_role: library });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const card = wrapper.findAll('[data-slot="card"]').find((item) => item.text().includes('Biblioteca'))!;
+    expect(card.text()).toContain('Biblioteca · toda la universidad');
+    expect(card.text()).toContain('Bibliotecario');
+    expect(card.text()).not.toContain('Administración');
+    await card.findAll('button').find((button) => button.text() === 'Entrar a Biblioteca')!.trigger('click');
+    await flushPromises();
+
+    expect(selectActiveRole).toHaveBeenCalledWith('role-library');
+    expect(replace).toHaveBeenCalledWith('/biblioteca/panel');
+    wrapper.unmount();
+  });
 });

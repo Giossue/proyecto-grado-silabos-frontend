@@ -5,18 +5,13 @@ import { useRoute } from 'vue-router';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { paths, roleSetting, type RoleCode } from '@/lib/routes';
+import { areaForPath, areaSetting, paths } from '@/lib/routes';
 
 const route = useRoute();
-const role = computed<RoleCode | null>(() => {
-    if (route.path.startsWith(`${paths.admin.root}/`)) return 'administrador';
-    if (route.path.startsWith(`${paths.coordination.root}/`)) return 'coordinador';
-    if (route.path.startsWith(`${paths.teacher.root}/`)) return 'docente';
-    return null;
-});
+const area = computed(() => areaForPath(route.path));
 const sidebarNavItems = computed(() => [
-    { title: 'Perfil', href: role.value ? roleSetting(role.value, 'profile') : paths.configuration.profile, icon: UserRound },
-    { title: 'Seguridad', href: role.value ? roleSetting(role.value, 'security') : paths.configuration.security, icon: ShieldCheck },
+    { title: 'Perfil', href: area.value ? areaSetting(area.value, 'profile') : paths.configuration.profile, icon: UserRound },
+    { title: 'Seguridad', href: area.value ? areaSetting(area.value, 'security') : paths.configuration.security, icon: ShieldCheck },
 ]);
 </script>
 

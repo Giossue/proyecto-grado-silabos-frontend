@@ -5,15 +5,16 @@ import type { SignatureStatus } from '@/api/signatures';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
 import { SignatureError } from '@/lib/signature/certificate';
 
-const { getSignatureStatus, downloadSignaturePdf, submitSignature, signPdf, sha256Hex, toastSuccess } = vi.hoisted(() => ({
+const { getSignatureStatus, downloadSignaturePdf, submitSignature, sendToLibrary, signPdf, sha256Hex, toastSuccess } = vi.hoisted(() => ({
   getSignatureStatus: vi.fn(),
   downloadSignaturePdf: vi.fn(),
   submitSignature: vi.fn(),
+  sendToLibrary: vi.fn(),
   signPdf: vi.fn(),
   sha256Hex: vi.fn(),
   toastSuccess: vi.fn(),
 }));
-vi.mock('@/api/signatures', () => ({ getSignatureStatus, downloadSignaturePdf, submitSignature }));
+vi.mock('@/api/signatures', () => ({ getSignatureStatus, downloadSignaturePdf, submitSignature, sendToLibrary }));
 vi.mock('@/lib/signature/signPdf', () => ({ signPdf, sha256Hex }));
 vi.mock('@/lib/toast', () => ({ toast: { success: toastSuccess, error: vi.fn(), info: vi.fn() } }));
 
@@ -22,6 +23,8 @@ const status = (overrides: Partial<SignatureStatus> = {}): SignatureStatus => ({
   next_role: 'docente',
   my_role: 'docente',
   can_sign: true,
+  can_send_to_library: false,
+  library: null,
   artifact_id: 'artifact-1',
   document: { sha256: 'a'.repeat(64), size: 10 },
   stamp: { page: 1, x: 60, y: 300, width: 190, height: 48 },
@@ -146,5 +149,57 @@ describe('DocumentSignatureCard', () => {
     expect(wrapper.text()).toContain('Primero firma el docente del sílabo.');
     expect(wrapper.text()).not.toContain('Firmar electrónicamente');
     expect(wrapper.text()).toContain('Descargar PDF');
+  });
+
+  it('el docente envía a biblioteca después de las dos firmas y ve cuándo lo hizo', async () => {
+    const signatures: SignatureStatus['signatures'] = [
+      { role: 'coordinacion', signer: 'Coordinación', certificate_holder: 'COORDINACION DE PRUEBA', certificate_issuer: 'CA', signed_at: '2026-09-24T11:00:00-05:00' },
+      { role: 'docente', signer: 'Docente', certificate_holder: 'DOCENTE DE PRUEBA', certificate_issuer: 'CA', signed_at: '2026-09-24T10:00:00-05:00' },
+    ];
+    getSignatureStatus
+      .mockResolvedValueOnce(status({ state: 'pendiente_envio_biblioteca', next_role: 'biblioteca', can_sign: false, can_send_to_library: true, stamp: null, signatures }))
+      .mockResolvedValueOnce(status({ state: 'pendiente_biblioteca', next_role: 'biblioteca', can_sign: false, stamp: null, signatures, library: { sent_at: '2026-09-25T09:00:00-05:00', sent_by: 'Docente de prueba' } }));
+    sendToLibrary.mockResolvedValue({ message: 'Sílabo enviado a biblioteca.' });
+    const wrapper = await mountCard();
+
+    expect(wrapper.text()).toContain('Por enviar a biblioteca');
+    expect(wrapper.text()).toContain('Envíe el sílabo a biblioteca');
+    const items = wrapper.findAll('li').map((item) => item.text());
+    expect(items[0]).toContain('Docente');
+    expect(items[1]).toContain('Coordinación');
+    expect(wrapper.text()).not.toContain('Firmar electrónicamente');
+
+    button('Enviar a biblioteca').click();
+    await flushPromises();
+    expect(document.body.textContent).toContain('¿Enviar a biblioteca?');
+    const confirm = [...document.body.querySelectorAll('[role="dialog"] button')].find((item) => item.textContent?.includes('Enviar a biblioteca')) as HTMLButtonElement;
+    confirm.click();
+    await flushPromises();
+
+    expect(sendToLibrary).toHaveBeenCalledWith('rev-1');
+    expect(toastSuccess).toHaveBeenCalledWith('Sílabo enviado a biblioteca.');
+    expect(wrapper.emitted('changed')).toHaveLength(1);
+    expect(wrapper.text()).toContain('Pendiente biblioteca');
+    expect(wrapper.get('[data-testid="library-submission"]').text()).toContain('Docente de prueba');
+    expect(wrapper.text()).not.toContain('Enviar a biblioteca');
+  });
+
+  it('biblioteca firma con su propio rol cuando le corresponde', async () => {
+    getSignatureStatus.mockResolvedValue(status({
+      state: 'pendiente_biblioteca', next_role: 'biblioteca', my_role: 'biblioteca', can_sign: true,
+      library: { sent_at: '2026-09-25T09:00:00-05:00', sent_by: 'Docente de prueba' },
+    }));
+    submitSignature.mockResolvedValue({ message: 'Firma registrada.', signature_id: 's-3' });
+    const wrapper = await mountCard();
+
+    expect(wrapper.text()).toContain('Si los libros están disponibles, firme');
+    button('Firmar electrónicamente').click();
+    await flushPromises();
+    await fillDialog();
+    document.body.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await flushPromises();
+
+    expect(signPdf).toHaveBeenCalledWith(expect.objectContaining({ role: 'biblioteca' }));
+    expect(submitSignature).toHaveBeenCalledTimes(1);
   });
 });

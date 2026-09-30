@@ -15,6 +15,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { sessionState } from '@/state/session';
 import { consumeIntendedRoute } from '@/lib/intended-route';
 import { paths, roleEntry } from '@/lib/routes';
+import { roleLabel, scopeTitle } from '@/lib/roles';
 
 const router = useRouter();
 const session = ref<Session | null>(null);
@@ -38,28 +39,21 @@ const selectionDescription = computed(() =>
             : 'Seleccione el ámbito con el que trabajará en esta sesión.',
 );
 
-const roleLabel = (role: ActiveRole): string => ({
-    administrador: 'Administrador',
-    coordinador: 'Coordinador',
-    docente: 'Docente',
-}[role.code]);
-
-const roleTitle = (role: ActiveRole): string =>
-    role.code === 'docente' && role.career_name
-        ? `Docencia · ${role.career_name}`
-        : role.career_name ?? roleLabel(role);
-
 const roleDescription = (role: ActiveRole): string => {
     if (role.code === 'docente') return 'Sílabos asignados en esta carrera.';
     if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}.`;
-    return 'Administración general del sistema.';
+    if (role.code === 'bibliotecario') return 'Verificación de la bibliografía de los sílabos de todas las carreras.';
+    if (role.code === 'administrador') return 'Administración general del sistema.';
+    return role.career_name ? `${roleLabel(role.code)} · ${role.career_name}` : roleLabel(role.code);
 };
 
 const actionLabel = (role: ActiveRole): string => {
     if (session.value?.active_role?.id === role.id) return 'Continuar aquí';
     if (role.code === 'coordinador') return 'Entrar a esta carrera';
     if (role.code === 'docente') return 'Ver mis sílabos';
-    return 'Entrar como Administrador';
+    if (role.code === 'bibliotecario') return 'Entrar a Biblioteca';
+    if (role.code === 'administrador') return 'Entrar como Administrador';
+    return `Entrar como ${roleLabel(role.code)}`;
 };
 
 const load = async (): Promise<void> => {
@@ -124,14 +118,14 @@ onMounted(load);
         <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <Card v-for="role in session.available_roles" :key="role.id" class="h-full">
                 <CardHeader>
-                    <CardTitle>{{ roleTitle(role) }}</CardTitle>
+                    <CardTitle>{{ scopeTitle(role) }}</CardTitle>
                     <CardDescription>{{ roleDescription(role) }}</CardDescription>
                     <CardAction>
                         <Badge v-if="session.active_role?.id === role.id" variant="secondary">
                             <CheckCircle2 aria-hidden="true" />
                             Activo
                         </Badge>
-                        <Badge v-else variant="outline">{{ roleLabel(role) }}</Badge>
+                        <Badge v-else variant="outline">{{ roleLabel(role.code) }}</Badge>
                     </CardAction>
                 </CardHeader>
                 <CardFooter class="mt-auto">

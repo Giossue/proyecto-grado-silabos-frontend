@@ -44,6 +44,17 @@ export type SnapshotField = {
   inherited: boolean;
   value: unknown;
 };
+export type SnapshotSection = {
+  key: string;
+  title: string;
+  blocks: Array<{
+    key: string;
+    title: string;
+    content_type: string;
+    document?: DocumentNode | null;
+    fields: SnapshotField[];
+  }>;
+};
 export type ReviewDetail = {
   syllabus: {
     id: string;
@@ -62,17 +73,7 @@ export type ReviewDetail = {
     snapshot: {
       schema_version?: number;
       template_variables?: Record<string, string>;
-      sections: Array<{
-        key: string;
-        title: string;
-        blocks: Array<{
-          key: string;
-          title: string;
-          content_type: string;
-          document?: DocumentNode | null;
-          fields: SnapshotField[];
-        }>;
-      }>;
+      sections: SnapshotSection[];
     };
     is_current: boolean;
   };

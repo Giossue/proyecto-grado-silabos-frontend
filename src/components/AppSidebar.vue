@@ -7,6 +7,7 @@ import {
     FileStack,
     FileText,
     LayoutGrid,
+    Library,
     ScrollText,
     Settings,
     UsersRound,
@@ -33,6 +34,7 @@ import type { NavItem } from '@/types';
 
 const route = useRoute();
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
+const logoLinksToPanel = computed(() => ['administrador', 'coordinador', 'bibliotecario'].includes(activeRole.value?.code ?? ''));
 const mainNavItems = computed<NavItem[]>(() => [
     ...(activeRole.value?.code === 'administrador'
         ? [{ title: 'Panel', href: paths.admin.panel, icon: LayoutGrid }]
@@ -73,6 +75,12 @@ const mainNavItems = computed<NavItem[]>(() => [
     ...(activeRole.value?.code === 'docente'
         ? [{ title: 'Mis sílabos', href: paths.teacher.syllabi, icon: BookOpenCheck }]
         : []),
+    ...(activeRole.value?.code === 'bibliotecario'
+        ? [
+              { title: 'Panel', href: paths.library.panel, icon: LayoutGrid },
+              { title: 'Revisiones de biblioteca', href: paths.library.reviews, icon: Library },
+          ]
+        : []),
     ...(activeRole.value
         ? [{ title: 'Configuración', href: roleSetting(activeRole.value.code, 'profile'), icon: Settings }]
         : []),
@@ -90,7 +98,7 @@ watch(() => route.fullPath, () => {
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton v-if="activeRole?.code === 'administrador' || activeRole?.code === 'coordinador'" size="lg" as-child>
+                    <SidebarMenuButton v-if="logoLinksToPanel" size="lg" as-child>
                         <RouterLink :to="paths.dashboard"><AppLogo /></RouterLink>
                     </SidebarMenuButton>
                     <SidebarMenuButton v-else size="lg" as="div">

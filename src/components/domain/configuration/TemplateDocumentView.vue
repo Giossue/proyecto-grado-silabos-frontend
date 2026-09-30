@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import type { VNodeChild, CSSProperties } from 'vue';
 import type { DocumentNode, DocumentField } from '@/lib/templateDocument';
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
+import { isSignatureVariable, signatureLabel } from '@/lib/signatureVariables';
 import { createDocumentInput } from '@/components/domain/configuration/templateDocumentInput';
 import {
     cellBorder,
@@ -137,6 +138,30 @@ const draw = (
 
     if (node.type === 'hardBreak') {
         return h('br');
+    }
+
+    if (node.type === 'variable' && isSignatureVariable(String(attrs.id ?? ''))) {
+        const id = String(attrs.id);
+
+        return h(
+            'span',
+            {
+                class: 'document-signature',
+                'data-variable': id,
+                'data-signature': id,
+            },
+            [
+                h('span', { class: 'document-signature-space', 'aria-hidden': 'true' }),
+                h(
+                    'span',
+                    {
+                        class: 'document-signature-label',
+                        style: markStyle(node, context.insideCell === true),
+                    },
+                    signatureLabel(id, props.variables[id]),
+                ),
+            ],
+        );
     }
 
     if (node.type === 'variable' && attrs.listStyle) {
@@ -478,6 +503,25 @@ const Content = defineComponent({ setup: () => () => draw(props.document) });
 .template-document-view[data-presentation='form']
     :deep(.document-table td textarea.document-input) {
     min-width: 12rem;
+}
+.template-document-view :deep(.document-signature) {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: min(100%, 14em);
+    max-width: 100%;
+    vertical-align: bottom;
+    white-space: normal;
+}
+.template-document-view :deep(.document-signature-space) {
+    display: block;
+    height: 4.5em;
+    border-bottom: 1px solid currentColor;
+}
+.template-document-view :deep(.document-signature-label) {
+    display: block;
+    padding-top: 2px;
+    text-align: center;
 }
 .template-document-view :deep(.free-text-view p) {
     margin: 0 0 0.35em;

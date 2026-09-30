@@ -2,18 +2,22 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { router } from '@/router';
 import { sessionState } from '@/state/session';
 import { clearIntendedRoute, consumeIntendedRoute } from '@/lib/intended-route';
+import type { RoleCode } from '@/lib/routes';
 
-const session = (code: 'administrador' | 'coordinador' | 'docente') => ({
-  user: {
-    id: 'user-1',
-    name: 'Persona de prueba',
-    email: 'persona@example.test',
-    email_verified: true,
-    can_edit_identity: code === 'administrador',
-  },
-  active_role: { id: `role-${code}`, code, career_id: code === 'administrador' ? null : 'career-1', career_name: code === 'administrador' ? null : 'Software' },
-  available_roles: [],
-});
+const session = (code: RoleCode) => {
+  const global = code === 'administrador' || code === 'bibliotecario';
+  return {
+    user: {
+      id: 'user-1',
+      name: 'Persona de prueba',
+      email: 'persona@example.test',
+      email_verified: true,
+      can_edit_identity: code === 'administrador',
+    },
+    active_role: { id: `role-${code}`, code, career_id: global ? null : 'career-1', career_name: global ? null : 'Software' },
+    available_roles: [],
+  };
+};
 
 describe('navegación por ámbito activo', () => {
   beforeEach(() => sessionState.replace(session('administrador')));
@@ -116,6 +120,8 @@ describe('navegación por ámbito activo', () => {
     ['coordinador', '/coordinacion/malla', '/coordinacion/malla'],
     ['coordinador', '/coordinacion/proyecto-carrera', '/coordinacion/proyecto-carrera'],
     ['docente', '/docente/mis-silabos', '/docente/mis-silabos'],
+    ['bibliotecario', '/biblioteca/revisiones', '/biblioteca/revisiones'],
+    ['bibliotecario', '/biblioteca/revisiones/revision-1', '/biblioteca/revisiones/revision-1'],
   ] as const)('permite la ruta propia de %s y conserva sus parámetros', async (code, target, expected) => {
     sessionState.replace(session(code));
     await router.push(`${target}?pagina=2&orden=asc`);
@@ -124,17 +130,41 @@ describe('navegación por ámbito activo', () => {
   });
 
   it.each([
-    ['administrador', '/coordinacion/malla'],
-    ['coordinador', '/admin/usuarios'],
-    ['docente', '/admin/plantilla'],
-  ] as const)('redirige una ruta de otro rol al panel de %s', async (code, target) => {
+    ['administrador', '/coordinacion/malla', '/admin/panel'],
+    ['coordinador', '/admin/usuarios', '/coordinacion/panel'],
+    ['docente', '/admin/plantilla', '/docente/panel'],
+    ['docente', '/biblioteca/revisiones', '/docente/panel'],
+    ['bibliotecario', '/coordinacion/revisiones', '/biblioteca/panel'],
+  ] as const)('redirige una ruta de otro rol al panel de %s', async (code, target, expected) => {
     sessionState.replace(session(code));
     await router.push(target);
 
-    expect(router.currentRoute.value.fullPath).toBe(code === 'administrador'
-      ? '/admin/panel'
-      : code === 'coordinador'
-        ? '/coordinacion/panel'
-        : '/docente/panel');
+    expect(router.currentRoute.value.fullPath).toBe(expected);
+  });
+
+  it.each([
+    ['/dashboard', '/biblioteca/panel'],
+    ['/notificaciones', '/biblioteca/notificaciones'],
+    ['/configuracion/seguridad', '/biblioteca/configuracion/seguridad'],
+    ['/revisiones/revision-1/documentos', '/biblioteca/revisiones/revision-1'],
+  ])('resuelve el atajo %s al área de Biblioteca', async (target, expected) => {
+    sessionState.replace(session('bibliotecario'));
+    await router.push(target);
+
+    expect(router.currentRoute.value.fullPath).toBe(expected);
+  });
+
+  it('lleva a Biblioteca directo a su panel al entrar', async () => {
+    sessionState.replace(session('bibliotecario'));
+    await router.push('/ingresar');
+
+    expect(router.currentRoute.value.fullPath).toBe('/biblioteca/panel');
+  });
+
+  it('no entra en bucle con un rol que la SPA aún no conoce', async () => {
+    sessionState.replace(session('rol_futuro' as RoleCode));
+    await router.push('/admin/usuarios');
+
+    expect(router.currentRoute.value.fullPath).toBe('/rol');
   });
 });

@@ -50,7 +50,7 @@ onMounted(load);
 </script>
 
 <template>
-    <PageFrame title="Usuarios y roles" description="Cuentas de coordinación y docencia: crearlas y decir de qué carrera son. Al desactivar una, su sesión se cierra.">
+    <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca. Coordinación y docencia van con su carrera; biblioteca trabaja con toda la universidad. Al desactivar una, su sesión se cierra.">
         <template #actions><ManagedUserSheet v-if="result" :roles="result.roles" :careers="result.careers" @saved="changed" /></template>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="5" />

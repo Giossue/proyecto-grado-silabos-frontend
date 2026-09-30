@@ -2,7 +2,7 @@ import forge from 'node-forge';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { readCertificate, SignatureError } from '@/lib/signature/certificate';
-import { CONTENTS_HEX_LENGTH, signPdf } from '@/lib/signature/signPdf';
+import { CONTENTS_HEX_LENGTH, fallbackStamp, signPdf } from '@/lib/signature/signPdf';
 import { makeTestP12 } from '@/lib/signature/testCertificate';
 
 const text = (bytes: Uint8Array): string => Buffer.from(bytes).toString('latin1');
@@ -44,9 +44,11 @@ const verifies = (signed: Uint8Array): boolean => {
 describe('firma incremental en el navegador', () => {
   let teacher: Uint8Array;
   let coordinator: Uint8Array;
+  let librarian: Uint8Array;
   beforeAll(() => {
     teacher = makeTestP12('DOCENTE DE PRUEBA ÑANDÚ', 'clave-docente');
     coordinator = makeTestP12('COORDINACION DE PRUEBA', 'clave-coordinacion');
+    librarian = makeTestP12('BIBLIOTECA DE PRUEBA', 'clave-biblioteca');
   });
 
   it.each([false, true])('agrega la firma sin tocar los bytes originales (flujos de objetos: %s)', async (useObjectStreams) => {
@@ -70,6 +72,31 @@ describe('firma incremental en el navegador', () => {
 
     const reopened = await PDFDocument.load(second.pdf);
     expect(reopened.getForm().getFields()).toHaveLength(2);
+  });
+
+  it('agrega la tercera firma de biblioteca con su razón y sin tocar las anteriores', async () => {
+    const first = await signPdf({ pdf: await samplePdf(false), p12: teacher, password: 'clave-docente', stamp: null, role: 'docente' });
+    const second = await signPdf({ pdf: first.pdf, p12: coordinator, password: 'clave-coordinacion', stamp: null, role: 'coordinacion' });
+    const third = await signPdf({ pdf: second.pdf, p12: librarian, password: 'clave-biblioteca', stamp: null, role: 'biblioteca' });
+
+    expect(Buffer.from(third.pdf.subarray(0, second.pdf.length)).equals(Buffer.from(second.pdf))).toBe(true);
+    expect(verifies(third.pdf)).toBe(true);
+    expect([...text(third.pdf).matchAll(/\/FT \/Sig/g)]).toHaveLength(3);
+    const reason = 'Verificación de bibliografía (biblioteca)';
+    const hex = [...reason].map((char) => char.charCodeAt(0).toString(16).padStart(4, '0')).join('').toUpperCase();
+    expect(text(third.pdf)).toContain(`/Reason <FEFF${hex}>`);
+    expect((await PDFDocument.load(third.pdf)).getForm().getFields()).toHaveLength(3);
+  });
+
+  it.each([595, 612])('ubica sin superponer los tres sellos de respaldo (ancho %i)', (width) => {
+    const [teacherStamp, coordinationStamp, libraryStamp] = (['docente', 'coordinacion', 'biblioteca'] as const)
+      .map((role) => fallbackStamp(role, 0, width));
+
+    expect(teacherStamp!.x).toBe(60);
+    expect(coordinationStamp!.x + coordinationStamp!.width / 2).toBeCloseTo(width / 2);
+    expect(libraryStamp!.x + libraryStamp!.width).toBe(width - 60);
+    expect(teacherStamp!.x + teacherStamp!.width).toBeLessThan(coordinationStamp!.x);
+    expect(coordinationStamp!.x + coordinationStamp!.width).toBeLessThan(libraryStamp!.x);
   });
 
   it('un byte alterado invalida la firma', async () => {
