@@ -39,7 +39,7 @@ const props = withDefaults(
 
 const columnCount = (): number => Math.max(props.columns, 2);
 const gridColumns = (): string =>
-    `minmax(12rem, 2fr) repeat(${columnCount() - 1}, minmax(7rem, 1fr))`;
+    `minmax(var(--layout-skeleton-leading-column), 2fr) repeat(${columnCount() - 1}, minmax(var(--layout-skeleton-column), 1fr))`;
 </script>
 
 <template>

@@ -133,6 +133,8 @@
     --layout-assistant-height: 38rem;
     --layout-assistant-min-height: 30rem;
     --layout-review-aside-min-width: 22rem;
+    --layout-skeleton-leading-column: 12rem;
+    --layout-skeleton-column: 7rem;
     --document-cell-padding: 2px 4px;
     --document-line-height: 1.15;
     --document-page-number-size: 9pt;

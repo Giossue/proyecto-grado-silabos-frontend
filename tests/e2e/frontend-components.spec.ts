@@ -3,7 +3,11 @@ import { expect, test, type Page } from '@playwright/test';
 const mountFixture = async (page: Page, source: string): Promise<void> => {
     await page.route('**/api/v1/**', (route) => route.fulfill({ status: 401, contentType: 'application/json', body: '{}' }));
     await page.goto('/ingresar', { waitUntil: 'networkidle' });
-    await page.evaluate(() => { document.body.innerHTML = '<div id="mount"></div>'; });
+    await page.evaluate(() => {
+        const root = document.getElementById('app') as (HTMLElement & { __vue_app__?: { unmount: () => void } }) | null;
+        root?.__vue_app__?.unmount();
+        document.body.innerHTML = '<div id="mount"></div>';
+    });
     await page.addScriptTag({ type: 'module', content: source });
 };
 
@@ -27,7 +31,7 @@ test('Sí/No, adjuntos y evidencia conservan su interacción por teclado', async
     const no = page.getByRole('radio', { name: 'No', exact: true });
     await yes.click();
     await expect(yes).toBeChecked();
-    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight', { delay: 50 });
     await expect(no).toBeFocused();
     await expect(no).toBeChecked();
 

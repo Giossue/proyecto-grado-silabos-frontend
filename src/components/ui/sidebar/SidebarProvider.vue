@@ -11,7 +11,7 @@ const props = withDefaults(defineProps<{
   open?: boolean
   class?: HTMLAttributes["class"]
 }>(), {
-  defaultOpen: !defaultDocument?.cookie.includes(`${SIDEBAR_COOKIE_NAME}=false`),
+  defaultOpen: () => !defaultDocument?.cookie.includes(`${SIDEBAR_COOKIE_NAME}=false`),
   open: undefined,
 })
 
@@ -76,4 +76,3 @@ provideSidebarContext({
     </div>
   </TooltipProvider>
 </template>
-

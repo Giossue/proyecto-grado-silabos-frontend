@@ -2,6 +2,7 @@
 import type { Component } from 'vue';
 import { computed } from 'vue';
 import { Card, CardContent } from '@/components/ui/card';
+import { DISPLAY_LOCALE } from '@/lib/dateDisplay';
 
 const props = defineProps<{
     label: string;
@@ -12,7 +13,7 @@ const props = defineProps<{
 }>();
 
 const formatted = computed(() =>
-    new Intl.NumberFormat('es-EC', {
+    new Intl.NumberFormat(DISPLAY_LOCALE, {
         notation: props.value >= 10000 ? 'compact' : 'standard',
         maximumFractionDigits: 1,
     }).format(props.value),
@@ -45,4 +46,3 @@ const formatted = computed(() =>
         </CardContent>
     </Card>
 </template>
-

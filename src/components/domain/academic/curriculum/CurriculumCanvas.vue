@@ -120,7 +120,7 @@ const summaryRows = computed(() => [
 ]);
 
 const flowId = `curriculum-${props.curriculum.id}`;
-const { setEdges, setNodes, updateNode } = useVueFlow({ id: flowId });
+const { setEdges, setNodes, updateNode } = useVueFlow(flowId);
 
 const editingSubjectId = ref<string | null>(null);
 const draftCycle = ref<number | null>(null);

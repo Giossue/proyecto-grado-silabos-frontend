@@ -1,8 +1,13 @@
 import { expect, test } from '@playwright/test';
 
 const mountCanvas = async (page: import('@playwright/test').Page): Promise<void> => {
-    await page.goto('/ingresar', { waitUntil: 'domcontentloaded' });
-    await page.evaluate(() => { document.body.innerHTML = '<div id="mount"></div>'; });
+    await page.route('**/api/v1/session', route => route.fulfill({ status: 401, contentType: 'application/json', body: '{}' }));
+    await page.goto('/ingresar', { waitUntil: 'networkidle' });
+    await page.evaluate(() => {
+        const root = document.getElementById('app') as (HTMLElement & { __vue_app__?: { unmount: () => void } }) | null;
+        root?.__vue_app__?.unmount();
+        document.body.innerHTML = '<div id="mount"></div>';
+    });
     await page.addScriptTag({
         type: 'module',
         content: `
@@ -39,7 +44,8 @@ test('los botones shadcn cambian el zoom por teclado y presentan ayuda accesible
     const increase = page.getByRole('button', { name: 'Acercar la malla' });
     const decrease = page.getByRole('button', { name: 'Alejar la malla' });
     await increase.focus();
-    await expect(page.getByRole('tooltip')).toContainText('Acercar la malla');
+    await expect(increase).toHaveAccessibleDescription('Acercar la malla');
+    await expect(page.locator('[data-slot="tooltip-content"]')).toContainText('Acercar la malla');
     await page.keyboard.press('Enter');
     await expect.poll(zoom).toBeGreaterThan(initial);
     await decrease.focus();

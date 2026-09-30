@@ -65,6 +65,27 @@ afterEach(() => {
 });
 
 describe('DocumentSignatureCard', () => {
+  it('limpia archivo y clave al cancelar y exige seleccionarlos de nuevo', async () => {
+    getSignatureStatus.mockResolvedValue(status());
+    await mountCard();
+    button('Firmar electrónicamente').click();
+    await flushPromises();
+    await fillDialog();
+    const fileInput = document.body.querySelector<HTMLInputElement>('#signature-certificate')!;
+    expect(fileInput.getAttribute('data-slot')).toBe('input');
+    expect(fileInput.accept).toContain('.p12');
+    button('Cancelar').click();
+    await flushPromises();
+    button('Firmar electrónicamente').click();
+    await flushPromises();
+    expect(document.body.querySelector<HTMLInputElement>('#signature-certificate')!.value).toBe('');
+    expect(document.body.querySelector<HTMLInputElement>('#signature-password')!.value).toBe('');
+    document.body.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await flushPromises();
+    expect(document.body.textContent).toContain('Seleccione su archivo');
+    expect(signPdf).not.toHaveBeenCalled();
+  });
+
   it('firma en el navegador y solo sube el PDF firmado con la huella del documento base', async () => {
     getSignatureStatus.mockResolvedValueOnce(status()).mockResolvedValueOnce(status({
       state: 'pendiente_coordinacion', next_role: 'coordinacion', can_sign: false, stamp: null,

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 const props = defineProps<{ flowId: string; minZoom: number; maxZoom: number }>();
-const { viewport, zoomIn, zoomOut } = useVueFlow({ id: props.flowId });
+const { viewport, zoomIn, zoomOut } = useVueFlow(props.flowId);
 </script>
 
 <template>
