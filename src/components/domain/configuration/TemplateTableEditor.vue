@@ -28,6 +28,10 @@ import { useTemplateTableSelection } from '@/components/domain/configuration/tem
 import { useSheetMarks } from '@/components/domain/configuration/template-table/useSheetMarks';
 import TemplateToolbarButton from '@/components/domain/configuration/TemplateToolbarButton.vue';
 import TemplateToolbarSelect from '@/components/domain/configuration/TemplateToolbarSelect.vue';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
 import { SelectItem } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { DOCUMENT_COLORS } from '@/lib/documentPalette';
@@ -152,6 +156,31 @@ const {
 } = useTemplateTableActions(editor, props, selection);
 const marks = useSheetMarks({ editor, props, insertNode, keyFor, declared });
 
+type NameKind = 'teacher' | 'yesNo' | 'project';
+const NAME_TITLES: Record<NameKind, string> = {
+    teacher: 'Nueva pregunta para el docente',
+    yesNo: 'Nueva pregunta de Sí o No',
+    project: 'Nuevo dato del Proyecto de carrera',
+};
+const namePrompt = ref<{ kind: NameKind; position: number | undefined } | null>(null);
+const nameValue = ref('');
+const askName = (kind: NameKind): void => {
+    nameValue.value = '';
+    namePrompt.value = { kind, position: editor.value?.state.selection.to };
+};
+const confirmName = (): void => {
+    const prompt = namePrompt.value;
+    const label = nameValue.value.trim();
+    if (!prompt || label === '') return;
+    namePrompt.value = null;
+    if (prompt.position !== undefined) {
+        editor.value?.commands.setTextSelection(prompt.position);
+    }
+    if (prompt.kind === 'teacher') marks.insertTeacher(label);
+    if (prompt.kind === 'yesNo') marks.insertYesNo(label);
+    if (prompt.kind === 'project') void marks.insertProject(label);
+};
+
 const hasTable = computed(() => {
     void version.value;
     let found = false;
@@ -207,9 +236,9 @@ defineExpose({ getDocument });
                     :disabled="pending"
                     :variables="allVariables"
                     @insert-variable="insertVariable"
-                    @teacher="marks.insertTeacher()"
-                    @yes-no="marks.insertYesNo()"
-                    @project="marks.insertProject()"
+                    @teacher="askName('teacher')"
+                    @yes-no="askName('yesNo')"
+                    @project="askName('project')"
                     @table="insertTable"
                     @list="insertList"
                 />
@@ -389,6 +418,24 @@ defineExpose({ getDocument });
             @mousedown.capture="startCellResize"
         />
     </div>
+    <Dialog :open="namePrompt !== null" @update:open="(open) => { if (!open) namePrompt = null; }">
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle>{{ namePrompt ? NAME_TITLES[namePrompt.kind] : '' }}</DialogTitle>
+                <DialogDescription>Escriba el nombre con el que el docente verá este dato.</DialogDescription>
+            </DialogHeader>
+            <form class="flex flex-col gap-4" @submit.prevent="confirmName">
+                <Field>
+                    <FieldLabel for="template-field-name">Nombre</FieldLabel>
+                    <Input id="template-field-name" v-model="nameValue" maxlength="180" />
+                </Field>
+                <DialogFooter>
+                    <Button type="button" variant="outline" @click="namePrompt = null">Cancelar</Button>
+                    <Button type="submit" :disabled="nameValue.trim() === ''">Insertar</Button>
+                </DialogFooter>
+            </form>
+        </DialogContent>
+    </Dialog>
 </template>
 
 <style>

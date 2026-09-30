@@ -9,6 +9,7 @@ import {
     followUpCandidates,
     isTrigger,
     setShowWhen,
+    triggerQuestions,
     type ShowWhen,
 } from '@/components/domain/configuration/template-table/sheetConditions';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -16,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Tooltip,
     TooltipContent,
@@ -106,6 +108,33 @@ const otherAnswer = (candidate: string): string | null => {
     return fixedAnswer.value && condition?.key === key.value && condition.value !== fixedAnswer.value ? condition.value : null;
 };
 
+const conditionEditable = computed(() => kind.value === 'field' && !props.node.attrs.choice && !trigger.value && props.editor.isEditable);
+const questions = computed(() => {
+    void version.value;
+
+    return triggerQuestions(props.editor.state.doc, key.value);
+});
+const conditionMode = computed(() => (showWhen.value ? 'si' : 'siempre'));
+const conditionAnswers = computed(() => questions.value.find((item) => item.key === showWhen.value?.key)?.answers ?? []);
+const setMode = (value: unknown): void => {
+    if (value === 'siempre') {
+        setShowWhen(props.editor, key.value, null);
+    } else if (value === 'si' && !showWhen.value) {
+        const first = questions.value[0];
+        if (first) setShowWhen(props.editor, key.value, { key: first.key, value: first.answers[0] ?? '' });
+    }
+    bump();
+};
+const setConditionQuestion = (value: unknown): void => {
+    const question = questions.value.find((item) => item.key === value);
+    if (question) setShowWhen(props.editor, key.value, { key: question.key, value: question.answers[0] ?? '' });
+    bump();
+};
+const setConditionAnswer = (value: unknown): void => {
+    if (typeof value === 'string' && showWhen.value) setShowWhen(props.editor, key.value, { key: showWhen.value.key, value });
+    bump();
+};
+
 const highlight = (on: boolean): void => {
     if (!group.value) return;
     props.editor.view.dom
@@ -169,6 +198,52 @@ const dataAttributes = computed(() => ({
                     <FieldDescription>
                         {{ candidates.length ? 'Lo que no marque se pide siempre. Se guarda con la hoja.' : 'Inserte en este campo las preguntas «Docente» que dependen de esta respuesta.' }}
                     </FieldDescription>
+                </FieldSet>
+            </PopoverContent>
+        </Popover>
+        <Popover v-else-if="conditionEditable">
+            <Tooltip>
+                <TooltipTrigger as-child>
+                    <PopoverTrigger as-child>
+                        <Button type="button" variant="document" size="inline" class="truncate" :aria-label="`${label}: cuándo se pide`">{{ label }}</Button>
+                    </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>{{ hint }}</TooltipContent>
+            </Tooltip>
+            <PopoverContent align="start" class="w-80">
+                <FieldSet class="gap-3">
+                    <FieldLegend variant="label">¿Cuándo se le pide al docente?</FieldLegend>
+                    <RadioGroup :model-value="conditionMode" class="flex flex-col gap-2" @update:model-value="setMode">
+                        <Field orientation="horizontal">
+                            <RadioGroupItem :id="`condicion-${key}-siempre`" value="siempre" />
+                            <FieldLabel :for="`condicion-${key}-siempre`" class="font-normal">Siempre</FieldLabel>
+                        </Field>
+                        <Field orientation="horizontal">
+                            <RadioGroupItem :id="`condicion-${key}-si`" value="si" :disabled="questions.length === 0" />
+                            <FieldLabel :for="`condicion-${key}-si`" class="font-normal">Solo si otra pregunta tiene cierta respuesta</FieldLabel>
+                        </Field>
+                    </RadioGroup>
+                    <template v-if="showWhen">
+                        <Field>
+                            <FieldLabel>Pregunta</FieldLabel>
+                            <Select :model-value="showWhen.key" @update:model-value="setConditionQuestion">
+                                <SelectTrigger class="w-full"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem v-for="question in questions" :key="question.key" :value="question.key">{{ question.label }}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                        <Field>
+                            <FieldLabel>Respuesta</FieldLabel>
+                            <Select :model-value="showWhen.value" @update:model-value="setConditionAnswer">
+                                <SelectTrigger class="w-full"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem v-for="answer in conditionAnswers" :key="answer" :value="answer">{{ answer }}</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </Field>
+                    </template>
+                    <FieldDescription v-if="questions.length === 0">Primero inserte en la hoja una pregunta de Sí o No.</FieldDescription>
                 </FieldSet>
             </PopoverContent>
         </Popover>

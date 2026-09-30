@@ -32,24 +32,14 @@ const setup = (content: DocumentNode) => {
 const paragraph = (text: string): DocumentNode => ({ type: 'doc', content: [{ type: 'paragraph', content: text ? [{ type: 'text', text }] : [] }] });
 
 describe('useSheetMarks', () => {
-    it('!Docente toma su nombre del texto previo y, sin texto, de la sección', () => {
+    it('usa el nombre que escribe el administrador, no el texto de la celda', () => {
         const withText = setup(paragraph('Herramientas TIC: '));
-        withText.marks.insertTeacher();
-        expect(withText.inserted[0]).toMatchObject({ type: 'field', attrs: { label: 'Herramientas TIC', kind: 'texto_largo', listStyle: null } });
+        withText.marks.insertTeacher('Herramientas pedagógicas');
+        expect(withText.inserted[0]).toMatchObject({ type: 'field', attrs: { label: 'Herramientas pedagógicas', key: 'campo_Herramientas pedagógicas', kind: 'texto_largo', listStyle: null } });
 
-        const empty = setup(paragraph(''));
-        empty.marks.insertYesNo();
-        expect(empty.inserted[0]).toMatchObject({ type: 'field', attrs: { label: 'Metodología', kind: 'seleccion_unica', options: ['Sí', 'No'] } });
-    });
-
-    it('en una celda, !Docente toma el nombre de lo escrito en las líneas de arriba de esa celda', () => {
-        const cell = (paragraphs: string[]): DocumentNode => ({ type: 'tableCell', content: paragraphs.map((text) => ({ type: 'paragraph', content: text ? [{ type: 'text', text }] : [] })) });
-        const table: DocumentNode = { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [cell(['FORMACIÓN Y EXPERIENCIA ACADÉMICA – INVESTIGATIVA:', ''])] }] }] };
-        const { marks, inserted } = setup(table);
-
-        marks.insertTeacher();
-
-        expect(inserted[0]).toMatchObject({ type: 'field', attrs: { label: 'FORMACIÓN Y EXPERIENCIA ACADÉMICA – INVESTIGATIVA', kind: 'texto_largo' } });
+        const yesNo = setup(paragraph(''));
+        yesNo.marks.insertYesNo('Estudiantes con discapacidad');
+        expect(yesNo.inserted[0]).toMatchObject({ type: 'field', attrs: { label: 'Estudiantes con discapacidad', kind: 'seleccion_unica', options: ['Sí', 'No'] } });
     });
 
     it('en una lista, !Docente y @ProyectoCarrera se vuelven elementos de la lista', async () => {
@@ -58,8 +48,8 @@ describe('useSheetMarks', () => {
         vi.mocked(declareProjectData).mockResolvedValue({ message: 'ok', variable });
         const { marks, inserted, declared } = setup(list);
 
-        marks.insertTeacher();
-        await marks.insertProject();
+        marks.insertTeacher('Metodología');
+        await marks.insertProject('Metodología');
         await flushPromises();
 
         expect(inserted[0]).toMatchObject({ type: 'field', attrs: { listStyle: 'bullet' } });

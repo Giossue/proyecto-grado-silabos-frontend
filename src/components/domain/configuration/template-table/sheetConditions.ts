@@ -105,3 +105,16 @@ export const setShowWhen = (editor: Editor, key: string, showWhen: ShowWhen | nu
     });
     if (tr.docChanged) editor.view.dispatch(tr);
 };
+
+export type TriggerQuestion = { key: string; label: string; answers: string[] };
+
+export const triggerQuestions = (doc: ProseMirrorNode, except: string): TriggerQuestion[] => {
+    const byKey = new Map<string, TriggerQuestion>();
+    for (const attrs of fields(doc)) {
+        const key = String(attrs.key ?? '');
+        if (!key || key === except || byKey.has(key) || !isTrigger(attrs)) continue;
+        byKey.set(key, { key, label: String(attrs.label || key), answers: answersOf(doc, attrs) });
+    }
+
+    return [...byKey.values()];
+};

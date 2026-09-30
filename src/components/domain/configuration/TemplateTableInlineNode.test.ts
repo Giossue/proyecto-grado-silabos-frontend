@@ -37,7 +37,7 @@ describe('preguntas de seguimiento en la hoja (I-159)', () => {
     it('la regla se define en el Sí/No y la hoja numera la pregunta con sus dependientes', async () => {
         const editor = mountSheet();
         await flushPromises();
-        expect(chip('tipo').querySelector('button')).toBeNull();
+        expect(chip('tipo').querySelector('button')?.getAttribute('aria-label')).toContain('cuándo se pide');
         await openTrigger();
         expect(document.body.textContent).toContain('Si responde');
         expect(document.body.textContent).toContain('pedir también:');

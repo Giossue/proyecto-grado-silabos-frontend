@@ -20,37 +20,9 @@ type Options = {
     declared: Ref<TemplateVariable[]>;
 };
 
-const clean = (value: string): string =>
-    value.replace(/\s+/g, ' ').replace(/[\s:;,\-–—]+$/u, '').trim().slice(-120).trim();
-
 export function useSheetMarks(options: Options) {
     const { editor, props } = options;
 
-    const context = (): string => {
-        const current = editor.value;
-        if (!current) {
-            return '';
-        }
-        const { $from } = current.state.selection;
-        const before = clean($from.parent.textBetween(0, $from.parentOffset, ' ', ' '));
-        if (before) {
-            return before;
-        }
-        for (let depth = $from.depth; depth > 0; depth--) {
-            const node = $from.node(depth);
-            if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') {
-                const inCell = clean(node.textBetween(0, $from.pos - $from.start(depth), ' ', ' '));
-                if (inCell) {
-                    return inCell;
-                }
-            }
-            if (node.type.name === 'tableRow') {
-                return $from.index(depth) > 0 ? clean(node.child(0).textContent) : '';
-            }
-        }
-
-        return '';
-    };
     const inList = (): boolean => {
         const { $from } = editor.value?.state.selection ?? {};
         for (let depth = $from?.depth ?? 0; depth > 0; depth--) {
@@ -61,10 +33,7 @@ export function useSheetMarks(options: Options) {
 
         return false;
     };
-    const teacherLabel = (): string => context() || props.partTitle?.trim() || props.sectionTitle;
-
-    const insertTeacher = (): void => {
-        const label = teacherLabel();
+    const insertTeacher = (label: string): void => {
         options.insertNode({
             type: 'field',
             attrs: {
@@ -75,8 +44,7 @@ export function useSheetMarks(options: Options) {
         });
     };
 
-    const insertYesNo = (): void => {
-        const label = teacherLabel();
+    const insertYesNo = (label: string): void => {
         options.insertNode({
             type: 'field',
             attrs: {
@@ -86,11 +54,8 @@ export function useSheetMarks(options: Options) {
         });
     };
 
-    const insertProject = async (): Promise<void> => {
+    const insertProject = async (label: string): Promise<void> => {
         const list = inList();
-        const label = [...new Set([props.sectionTitle.trim(), context() || props.partTitle?.trim() || ''])]
-            .filter(Boolean)
-            .join(': ');
         const position = editor.value?.state.selection.to;
         try {
             const { variable } = await declareProjectData(props.templateId, { label, type: list ? 'lista' : 'texto' });
