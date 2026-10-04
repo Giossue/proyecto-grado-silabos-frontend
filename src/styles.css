@@ -518,10 +518,3 @@
     background-color: rgb(255 255 255 / 0.18);
     color: #ffffff;
 }
-
-/* Contador de notificaciones: siempre rojo institucional, en ambos temas. */
-.notification-counter {
-    background-color: var(--brand-accent) !important;
-    border-color: transparent !important;
-    color: #ffffff !important;
-}

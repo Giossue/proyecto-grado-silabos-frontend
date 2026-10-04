@@ -118,15 +118,19 @@ const ignoreBell = (event: Event): void => {
                                 :variant="open || isNotificationsPage ? 'secondary' : 'ghost'"
                                 size="icon-sm"
                                 class="relative"
-                                aria-label="Notificaciones"
+                                :aria-label="unreadCount > 0 ? 'Notificaciones sin leer' : 'Notificaciones'"
                                 aria-haspopup="dialog"
                                 :aria-expanded="open"
                                 @click="open = !open"
                             >
                                 <Bell data-icon="inline-start" aria-hidden="true" />
-                                <Badge v-if="unreadCount > 0" as="span" class="notification-counter absolute -top-1 -right-1 min-w-5 px-1" aria-hidden="true">
-                                    {{ unreadCount > 99 ? '99+' : unreadCount }}
-                                </Badge>
+                                <Badge
+                                    v-if="unreadCount > 0"
+                                    as="span"
+                                    variant="destructive"
+                                    class="absolute top-1 right-1 size-1.5 border-0 p-0 ring-2 ring-background"
+                                    aria-hidden="true"
+                                />
                             </Button>
                         </TooltipTrigger>
                         <TooltipContent>Notificaciones</TooltipContent>

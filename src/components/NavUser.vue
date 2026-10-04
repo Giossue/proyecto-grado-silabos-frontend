@@ -43,7 +43,7 @@ const switcherOpen = ref(false);
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
-            class="w-(--reka-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            class="w-72 max-w-(--reka-dropdown-menu-content-available-width) rounded-lg"
             side="bottom"
             align="end"
             :side-offset="4"

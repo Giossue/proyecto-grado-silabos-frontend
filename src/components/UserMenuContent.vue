@@ -21,7 +21,6 @@ withDefaults(defineProps<{ user: User; canSwitchScope?: boolean }>(), {
 defineEmits<{ 'switch-scope': [] }>();
 
 const router = useRouter();
-// La configuración vive en el menú del usuario, no en el menú lateral.
 const settingsHref = computed(() => {
     const code = sessionState.current.value?.active_role?.code;
     return code ? roleSetting(code, 'profile') : null;
@@ -36,8 +35,8 @@ const handleLogout = async (): Promise<void> => {
 
 <template>
     <DropdownMenuLabel class="p-0 font-normal">
-        <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <UserInfo :user="user" :show-email="true" />
+        <div class="flex min-w-0 items-start gap-2 px-1 py-1.5 text-left text-sm">
+            <UserInfo :user="user" :show-email="true" :show-full-name="true" />
         </div>
     </DropdownMenuLabel>
     <DropdownMenuSeparator />
@@ -56,6 +55,7 @@ const handleLogout = async (): Promise<void> => {
     </DropdownMenuItem>
     <DropdownMenuSeparator v-if="settingsHref" />
     <DropdownMenuItem
+        variant="destructive"
         class="w-full"
         data-test="logout-button"
         @select="handleLogout"

@@ -66,7 +66,7 @@ describe('AppSidebarLayout', () => {
     localStorage.clear();
   });
 
-  it('muestra la navegación del rol y el contador de notificaciones', async () => {
+  it('muestra la navegación del rol y el indicador de notificaciones sin leer', async () => {
     const wrapper = await mountShell();
     await flushPromises();
 
@@ -80,7 +80,8 @@ describe('AppSidebarLayout', () => {
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).toContain('Ada Admin');
     expect(wrapper.text()).not.toContain('Mis sílabos');
     expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
-    expect(wrapper.get('[aria-label="Notificaciones"]').text()).toContain('3');
+    const notificationsButton = wrapper.get('[aria-label="Notificaciones sin leer"]');
+    expect(notificationsButton.get('[data-slot="badge"]').text()).toBe('');
   });
 
   it('muestra el Panel de Coordinación en el sidebar', async () => {
