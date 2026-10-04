@@ -17,7 +17,7 @@ describe('trazado de relaciones de la malla', () => {
         // A (col 0) → B (col 1 abajo); C (col 1 arriba) → D (col 2 abajo). Columna 1 recibe
         // una línea desde la izquierda y emite otra hacia la derecha: no deben compartir x.
         const edges = edgesFor(
-            [subject('A', 1, 0), subject('C', 1, 1), subject('B', 2, 1), subject('D', 2, 2)],
+            [subject('A', 1, 0), subject('C', 1, 1), subject('X', 2, 0), subject('B', 2, 1), subject('D', 2, 2)],
             [['A', 'B'], ['C', 'D']],
         );
         const [toB, fromC] = edges.map((edge) => edge.data!);
@@ -28,16 +28,22 @@ describe('trazado de relaciones de la malla', () => {
     });
 
     it('elige el orden de carriles que evita cruces cuando existe uno', () => {
-        // A (col 0) → B (col 2): va a la derecha. C (col 1) → D (col 1): baja recto.
-        // Si la horizontal de A→B pasara por debajo de la bajada de C, se cruzarían.
+        // A (col 0) → D (col 2) y B (col 1) → C (col 2). Si A→D fuera por el carril de
+        // arriba, la bajada de B atravesaría su tramo horizontal; al revés no hay cruce.
         const edges = edgesFor(
-            [subject('A', 1, 0), subject('C', 1, 1), subject('D', 2, 1), subject('B', 2, 2)],
-            [['A', 'B'], ['C', 'D']],
+            [subject('A', 1, 0), subject('B', 1, 1), subject('X', 2, 0), subject('Y', 2, 1), subject('C', 2, 2)],
+            [['A', 'C'], ['B', 'C']],
         );
-        const [aToB, cToD] = edges.map((edge) => edge.data!);
+        const [aToC, bToC] = edges.map((edge) => edge.data!);
 
-        expect(cToD.sourceOffset).toBe(cToD.targetOffset);
-        expect(aToB.channelIndex).toBeLessThan(cToD.channelIndex);
+        expect(aToC.targetOffset).toBeLessThan(bToC.targetOffset);
+        expect(bToC.channelIndex).toBeLessThan(aToC.channelIndex);
+    });
+
+    it('baja recta cuando origen y destino están en la misma columna de niveles seguidos', () => {
+        const edges = edgesFor([subject('A', 1, 0), subject('B', 2, 0)], [['A', 'B']]);
+
+        expect(edges[0]!.data!.sourceOffset).toBe(edges[0]!.data!.targetOffset);
         expect(subjectStep).toBeGreaterThan(0);
     });
 });

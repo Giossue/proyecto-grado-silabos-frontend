@@ -6,7 +6,6 @@ import { computed, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
 import { deleteCurriculumSubject } from "@/api/career-academics";
 import TableActionsMenu from "@/components/domain/TableActionsMenu.vue";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -132,7 +131,9 @@ const totalFields = computed(
 
       <div class="flex h-24">
         <div
-          class="flex w-9 shrink-0 items-center justify-center border-r bg-muted px-1 py-2"
+          class="flex w-9 shrink-0 items-center justify-center border-r px-1 py-2"
+          :style="data.unitStyle"
+          :title="data.subject.organization_unit_label ?? undefined"
         >
           <span
             class="-rotate-90 text-curriculum-code font-semibold whitespace-nowrap"
@@ -144,13 +145,6 @@ const totalFields = computed(
           class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 p-2 text-center"
           :class="cn(data.editable && 'pr-9')"
         >
-          <Badge
-            v-if="data.subject.organization_unit_label"
-            variant="secondary"
-            :style="data.unitStyle"
-          >
-            {{ data.subject.organization_unit_label }}
-          </Badge>
           <h3 class="line-clamp-3 text-xs leading-snug font-semibold uppercase">
             {{ data.subject.name }}
           </h3>
