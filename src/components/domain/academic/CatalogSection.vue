@@ -79,16 +79,6 @@ const {
     meta: careerMeta,
     setPage: setCareerPage,
 } = useClientPagination(() => careerFilter.items.value);
-const periodFilter = useClientFilter(
-    () => props.catalogs.periods,
-    (item) => [item.code],
-);
-
-const {
-    items: periodPage,
-    meta: periodMeta,
-    setPage: setPeriodPage,
-} = useClientPagination(() => periodFilter.items.value);
 </script>
 
 <template>
@@ -131,7 +121,6 @@ const {
                     <TableRow>
                         <TableHead>Facultad</TableHead>
                         <TableHead>Campus</TableHead>
-                        <TableHead>Estado</TableHead>
                         <TableHead class="text-right">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -181,7 +170,7 @@ const {
         </CardContent>
     </Card>
 
-    <Card v-else-if="section === 'careers'">
+    <Card v-else>
         <CardContent class="flex flex-col gap-4">
             <ClientFilterBar
                 :filter="careerFilter"
@@ -229,7 +218,7 @@ const {
                 <TableBody>
                     <TableEmpty
                         v-if="careerPage.length === 0"
-                        :colspan="6"
+                        :colspan="5"
                     >
                         {{ careerFilter.active.value ? 'Ninguna carrera coincide con los filtros.' : 'No existen carreras registradas.' }}
                     </TableEmpty>
@@ -249,9 +238,6 @@ const {
                         </TableCell>
                         <TableCell>
                             {{ career.campus_name ?? 'Sin campus' }}
-                        </TableCell>
-                        <TableCell>
-                            {{ career.active ? 'Activa' : 'Inactiva' }}
                         </TableCell>
                         <TableCell class="text-right">
                             <CatalogActions
@@ -281,74 +267,4 @@ const {
         </CardContent>
     </Card>
 
-    <Card v-else>
-        <CardContent class="flex flex-col gap-4">
-            <ClientFilterBar
-                :filter="periodFilter"
-                input-id="periods-search"
-                label="Buscar periodo"
-                placeholder="Buscar por período"
-            />
-            <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Período</TableHead>
-                        <TableHead>Fechas</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead class="text-right">Acciones</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    <TableEmpty
-                        v-if="periodPage.length === 0"
-                        :colspan="4"
-                    >
-                        {{ periodFilter.active.value ? 'Ningún período coincide con los filtros.' : 'No existen periodos académicos registrados.' }}
-                    </TableEmpty>
-                    <TableRow
-                        v-for="period in periodPage"
-                        v-else
-                        :key="period.id"
-                    >
-                        <TableCell>
-                            {{ period.code }}
-                        </TableCell>
-                        <TableCell>
-                            <time :datetime="period.starts_on">
-                                {{ period.starts_on }}
-                            </time>
-                            →
-                            <time :datetime="period.ends_on">
-                                {{ period.ends_on }}
-                            </time>
-                        </TableCell>
-                        <TableCell>
-                            {{ period.status_label }}
-                        </TableCell>
-                        <TableCell class="text-right">
-                            <CatalogActions
-                                entity="periodo"
-                                :record-id="period.id"
-                                :record-name="period.code"
-                                :record-code="period.code"
-                                :starts-on="period.starts_on"
-                                :ends-on="period.ends_on"
-                                :institutional-process="period.institutional_process"
-                                :lock-reason="period.lock_reason"
-                                :faculties="catalogs.faculties"
-                                :campus-options="options.campusOptions" :modality-options="options.modalityOptions"
-                                @changed="emit('changed', $event)"
-                            />
-                        </TableCell>
-                    </TableRow>
-                </TableBody>
-            </Table>
-            <TablePagination
-                :meta="periodMeta"
-                mode="client"
-                label="Paginación de periodos académicos"
-                @update:page="setPeriodPage"
-            />
-        </CardContent>
-    </Card>
 </template>
