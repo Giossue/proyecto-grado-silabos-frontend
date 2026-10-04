@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { formatDateDisplay } from '@/lib/dateDisplay';
 import { computed, ref, watch } from "vue";
 import { type ScheduledSubjects } from "@/api/career-academics";
 import CareerAcademicActions from "@/components/domain/academic/CareerAcademicActions.vue";
@@ -59,15 +58,6 @@ const shiftOptions = computed(() => [...new Map(periodRows.value.flatMap((item) 
 const { items, meta, setPage } = useClientPagination(() => filter.items.value);
 const selectedPeriodOption = computed(() => props.data.options.periods.find((item) => item.id === selectedPeriod.value));
 const emptyMessage = computed(() => filter.active.value ? "No hay materias que coincidan con los filtros." : "No hay materias programadas para este período.");
-const periodLabel = (period: ScheduledSubjects["options"]["periods"][number]) =>
-  `${period.code} · ${formatDateDisplay(period.starts_on, { day: '2-digit', month: '2-digit', year: 'numeric' })} – ${formatDateDisplay(period.ends_on, { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
-const changePeriod = (value: unknown) => {
-  if (typeof value !== "string" || value === selectedPeriod.value) return;
-  selectedPeriod.value = value;
-  filter.clear();
-  setPage(1);
-  emit("period", value);
-};
 watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = value ?? ""; });
 </script>
 
@@ -76,12 +66,6 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
     <CardContent class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="scheduled-subjects-search" label="Buscar materia programada" placeholder="Buscar por materia o código">
         <template #filters>
-          <Field data-wide><FieldLabel for="scheduled-subject-period" class="sr-only">Período académico</FieldLabel>
-            <Select :model-value="selectedPeriod" @update:model-value="changePeriod">
-              <SelectTrigger id="scheduled-subject-period"><SelectValue placeholder="Seleccione un período" /></SelectTrigger>
-              <SelectContent><SelectGroup><SelectItem v-for="period in data.options.periods" :key="period.id" :value="period.id">{{ periodLabel(period) }} · {{ period.status_label }}</SelectItem></SelectGroup></SelectContent>
-            </Select>
-          </Field>
           <Field><FieldLabel for="scheduled-subject-cycle" class="sr-only">Ciclo</FieldLabel>
             <Select v-model="filter.values.ciclo.value" @update:model-value="setPage(1)">
               <SelectTrigger id="scheduled-subject-cycle"><SelectValue placeholder="Todos los ciclos" /></SelectTrigger>

@@ -63,16 +63,16 @@ describe('ScheduledSubjectsTab', () => {
     it('filtra por ciclo, paralelo y jornada por separado', async () => {
         const wrapper = mountTab();
         const selects = wrapper.findAllComponents(SelectStub);
-        await selects[3].vm.$emit('update:modelValue', 'nocturna');
+        await selects[2].vm.$emit('update:modelValue', 'nocturna');
         expect(wrapper.text()).not.toContain('Arquitectura de Software');
         expect(wrapper.text()).toContain('Bases de Datos');
         expect(wrapper.text()).toContain('Cálculo');
 
-        await selects[2].vm.$emit('update:modelValue', 'A');
+        await selects[1].vm.$emit('update:modelValue', 'A');
         expect(wrapper.text()).not.toContain('Bases de Datos');
         expect(wrapper.text()).toContain('Cálculo');
 
-        await selects[1].vm.$emit('update:modelValue', '3');
+        await selects[0].vm.$emit('update:modelValue', '3');
         expect(wrapper.text()).toContain('No hay materias que coincidan con los filtros.');
     });
 });
