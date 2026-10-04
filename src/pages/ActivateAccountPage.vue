@@ -5,7 +5,7 @@ import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { activateAccount, logout } from '@/api/session';
 import { ApiError } from '@/api/client';
-import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
+import AuthSimpleLayout from '@/layouts/auth/AuthSplitLayout.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';

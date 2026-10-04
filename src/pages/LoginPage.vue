@@ -3,7 +3,7 @@ import { LogIn } from '@lucide/vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
+import AuthSimpleLayout from '@/layouts/auth/AuthSplitLayout.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';

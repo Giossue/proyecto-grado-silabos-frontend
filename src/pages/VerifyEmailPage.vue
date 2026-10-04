@@ -8,7 +8,7 @@ import { logout, resendEmailVerification, verifyEmail } from '@/api/session';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
+import AuthSimpleLayout from '@/layouts/auth/AuthSplitLayout.vue';
 import { sessionState } from '@/state/session';
 import { clearIntendedRoute } from '@/lib/intended-route';
 import { paths } from '@/lib/routes';

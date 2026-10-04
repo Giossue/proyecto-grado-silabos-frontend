@@ -8,7 +8,7 @@ import { completeTwoFactorLogin } from '@/api/session';
 import { sessionState } from '@/state/session';
 import { consumeIntendedRoute } from '@/lib/intended-route';
 import { roleEntry } from '@/lib/routes';
-import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
+import AuthSimpleLayout from '@/layouts/auth/AuthSplitLayout.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

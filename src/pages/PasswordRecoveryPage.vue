@@ -4,7 +4,7 @@ import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { requestPasswordRecovery } from '@/api/session';
-import AuthSimpleLayout from '@/layouts/auth/AuthSimpleLayout.vue';
+import AuthSimpleLayout from '@/layouts/auth/AuthSplitLayout.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
