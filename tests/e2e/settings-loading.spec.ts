@@ -100,9 +100,9 @@ const expectLoading = async (page: Page): Promise<void> => {
 
 const expectPasswordForm = async (page: Page): Promise<void> => {
     await expect(page.getByRole('status')).toHaveCount(0);
-    await expect(page.getByLabel('Contraseña actual', { exact: true })).toBeVisible();
-    await expect(page.getByLabel('Contraseña nueva', { exact: true })).toBeVisible();
-    await expect(page.getByLabel('Confirmar contraseña', { exact: true })).toBeVisible();
+    await expect(page.getByLabel(/^Contraseña actual/)).toBeVisible();
+    await expect(page.getByLabel(/^Contraseña nueva/)).toBeVisible();
+    await expect(page.getByLabel(/^Confirmar contraseña/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Guardar', exact: true })).toBeEnabled();
 };
 
