@@ -5,16 +5,15 @@ import type { SignatureStatus } from '@/api/signatures';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
 import { SignatureError } from '@/lib/signature/certificate';
 
-const { getSignatureStatus, downloadSignaturePdf, submitSignature, sendToLibrary, signPdf, sha256Hex, toastSuccess } = vi.hoisted(() => ({
+const { getSignatureStatus, downloadSignaturePdf, submitSignature, signPdf, sha256Hex, toastSuccess } = vi.hoisted(() => ({
   getSignatureStatus: vi.fn(),
   downloadSignaturePdf: vi.fn(),
   submitSignature: vi.fn(),
-  sendToLibrary: vi.fn(),
   signPdf: vi.fn(),
   sha256Hex: vi.fn(),
   toastSuccess: vi.fn(),
 }));
-vi.mock('@/api/signatures', () => ({ getSignatureStatus, downloadSignaturePdf, submitSignature, sendToLibrary }));
+vi.mock('@/api/signatures', () => ({ getSignatureStatus, downloadSignaturePdf, submitSignature }));
 vi.mock('@/lib/signature/signPdf', () => ({ signPdf, sha256Hex }));
 vi.mock('@/lib/toast', () => ({ toast: { success: toastSuccess, error: vi.fn(), info: vi.fn() } }));
 
@@ -23,7 +22,6 @@ const status = (overrides: Partial<SignatureStatus> = {}): SignatureStatus => ({
   next_role: 'docente',
   my_role: 'docente',
   can_sign: true,
-  can_send_to_library: false,
   library: null,
   artifact_id: 'artifact-1',
   document: { sha256: 'a'.repeat(64), size: 10 },
@@ -172,30 +170,21 @@ describe('DocumentSignatureCard', () => {
     expect(wrapper.text()).toContain('Descargar PDF');
   });
 
-  it('el docente envía a biblioteca tras la aprobación, antes del PDF, y espera la verificación', async () => {
-    getSignatureStatus
-      .mockResolvedValueOnce(status({ state: 'pendiente_envio_biblioteca', next_role: null, can_sign: false, can_send_to_library: true, artifact_id: null, document: null, stamp: null, signatures: [] }))
-      .mockResolvedValueOnce(status({ state: 'pendiente_verificacion_biblioteca', next_role: null, can_sign: false, artifact_id: null, document: null, stamp: null, signatures: [], library: { sent_at: '2026-09-25T09:00:00-05:00', sent_by: 'Docente de prueba', verified_at: null, verified_by: null } }));
-    sendToLibrary.mockResolvedValue({ message: 'Sílabo enviado a biblioteca.' });
+  it('el decanato firma al final, después de biblioteca', async () => {
+    getSignatureStatus.mockResolvedValue(status({
+      state: 'pendiente_decanato', next_role: 'decanato', my_role: 'decanato', can_sign: true,
+      signatures: [
+        { role: 'docente', signer: 'Docente de prueba', certificate_holder: 'DOCENTE', certificate_issuer: 'BCE', signed_at: '2026-09-27T09:00:00-05:00' },
+        { role: 'coordinacion', signer: 'Coordinación', certificate_holder: 'COORD', certificate_issuer: 'BCE', signed_at: '2026-09-27T10:00:00-05:00' },
+        { role: 'biblioteca', signer: 'Biblioteca Demo', certificate_holder: 'BIBLIO', certificate_issuer: 'BCE', signed_at: '2026-09-27T11:00:00-05:00' },
+      ],
+    }));
     const wrapper = await mountCard();
 
-    expect(wrapper.text()).toContain('Por enviar a biblioteca');
-    expect(wrapper.text()).toContain('antes de generar y firmar el PDF');
-    expect(wrapper.text()).not.toContain('Descargar PDF');
-    expect(wrapper.text()).not.toContain('Firmar electrónicamente');
-
-    button('Enviar a biblioteca').click();
-    await flushPromises();
-    expect(document.body.textContent).toContain('¿Enviar a biblioteca?');
-    const confirm = [...document.body.querySelectorAll('[role="dialog"] button')].find((item) => item.textContent?.includes('Enviar a biblioteca')) as HTMLButtonElement;
-    confirm.click();
-    await flushPromises();
-
-    expect(sendToLibrary).toHaveBeenCalledWith('rev-1');
-    expect(toastSuccess).toHaveBeenCalledWith('Sílabo enviado a biblioteca.');
-    expect(wrapper.emitted('changed')).toHaveLength(1);
-    expect(wrapper.text()).toContain('Esperando a biblioteca');
-    expect(wrapper.get('[data-testid="library-submission"]').text()).toContain('Docente de prueba');
+    expect(wrapper.text()).toContain('Pendiente decanato');
+    expect(wrapper.text()).toContain('Le corresponde firmar al decanato.');
+    expect(wrapper.text()).toContain('Biblioteca: BIBLIO');
+    expect(wrapper.text()).toContain('Firmar electrónicamente');
     expect(wrapper.text()).not.toContain('Enviar a biblioteca');
   });
 

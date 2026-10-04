@@ -2,7 +2,10 @@
 import type { HTMLAttributes } from "vue"
 import { computed, ref } from "vue"
 import { useVModel } from "@vueuse/core"
+import { Search } from "@lucide/vue"
 import { cn } from "@/lib/utils"
+
+defineOptions({ inheritAttrs: false })
 
 const props = defineProps<{
   defaultValue?: string | number
@@ -25,6 +28,8 @@ const classes = computed(() => cn(
   'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
   'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
   '[&::-webkit-search-cancel-button]:appearance-none',
+  // Los buscadores llevan la lupa al inicio; el texto empieza después de ella.
+  props.type === 'search' && 'pl-9',
   props.class,
 ))
 defineExpose({ clear: () => { if (input.value) input.value.value = '' } })
@@ -37,12 +42,27 @@ defineExpose({ clear: () => { if (input.value) input.value.value = '' } })
     type="file"
     data-slot="input"
     :class="classes"
+    v-bind="$attrs"
   >
+  <div v-else-if="type === 'search'" class="relative w-full min-w-0">
+    <Search
+      class="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+      aria-hidden="true"
+    />
+    <input
+      v-model="modelValue"
+      type="search"
+      data-slot="input"
+      :class="classes"
+      v-bind="$attrs"
+    >
+  </div>
   <input
     v-else
     v-model="modelValue"
     :type="type"
     data-slot="input"
     :class="classes"
+    v-bind="$attrs"
   >
 </template>

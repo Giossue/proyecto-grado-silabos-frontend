@@ -84,9 +84,9 @@ export type SyllabusDetail = {
     cause: string;
     reopened_at: string;
     reopened_by: string;
-    origin?: "coordinacion" | "biblioteca";
+    origin?: "coordinacion" | "biblioteca" | "decanato";
   } | null;
-  library_correction?: boolean;
+  review_stage?: "biblioteca" | "coordinacion" | "decanato" | null;
   library_comments?: Array<{
     comment: string;
     commented_at: string;

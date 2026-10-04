@@ -2,7 +2,7 @@ import { api } from '@/api/client';
 import type { SnapshotSection } from '@/api/reviews';
 import type { PaginationMeta } from '@/types/pagination';
 
-export type LibraryReviewState = 'pendiente' | 'por_firmar' | 'firmado' | 'comentado' | 'anulado';
+export type LibraryReviewState = 'pendiente' | 'aprobado' | 'por_firmar' | 'firmado' | 'comentado' | 'anulado';
 
 export type LibraryReviewItem = {
   revision_id: string;

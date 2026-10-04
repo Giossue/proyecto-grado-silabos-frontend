@@ -1,14 +1,13 @@
 import { api, apiBlob } from '@/api/client';
 import type { StampPosition } from '@/lib/signature/signPdf';
 
-export type SignatureRole = 'docente' | 'coordinacion' | 'biblioteca';
+export type SignatureRole = 'docente' | 'coordinacion' | 'biblioteca' | 'decanato';
 export type SignatureState =
   | 'sin_documento'
   | 'pendiente_docente'
   | 'pendiente_coordinacion'
-  | 'pendiente_envio_biblioteca'
-  | 'pendiente_verificacion_biblioteca'
   | 'pendiente_biblioteca'
+  | 'pendiente_decanato'
   | 'firmado'
   | 'anulado';
 export type SignatureStatus = {
@@ -16,7 +15,6 @@ export type SignatureStatus = {
   next_role: SignatureRole | null;
   my_role: SignatureRole | null;
   can_sign: boolean;
-  can_send_to_library: boolean;
   library: { sent_at: string; sent_by: string; verified_at: string | null; verified_by: string | null } | null;
   artifact_id: string | null;
   document: { sha256: string; size: number } | null;
@@ -32,5 +30,3 @@ export const submitSignature = (revisionId: string, signedPdf: Blob, baseSha256:
   body.append('base_sha256', baseSha256);
   return api<{ message: string; signature_id: string }>(`/revisions/${revisionId}/signature`, { method: 'POST', body });
 };
-export const sendToLibrary = (revisionId: string) =>
-  api<{ message: string }>(`/revisions/${revisionId}/library-submission`, { method: 'POST' });

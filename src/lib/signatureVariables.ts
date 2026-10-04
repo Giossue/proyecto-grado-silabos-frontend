@@ -1,11 +1,12 @@
 export const SIGNATURE_PREFIX = 'firma_';
 
-export const SIGNATURE_VARIABLES = ['firma_docente', 'firma_coordinador', 'firma_bibliotecario'] as const;
+export const SIGNATURE_VARIABLES = ['firma_docente', 'firma_coordinador', 'firma_bibliotecario', 'firma_decano'] as const;
 
 const FALLBACK_LABELS: Record<string, string> = {
   firma_docente: 'Firma del docente',
   firma_coordinador: 'Firma de coordinación',
   firma_bibliotecario: 'Firma de biblioteca',
+  firma_decano: 'Firma de decanato',
 };
 
 export const isSignatureVariable = (id: string): boolean => id.startsWith(SIGNATURE_PREFIX);

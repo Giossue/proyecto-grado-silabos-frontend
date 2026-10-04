@@ -37,8 +37,12 @@ const detail = (withObservation = false, decisionsAllowed = true): ReviewDetail 
     code: "SW-601",
     period: "2026-2027",
     state: "en_revision",
+    stage: "coordinacion",
     teachers: ["Docente Demo"],
   },
+  my_stage: "coordinacion",
+  can_decide: decisionsAllowed,
+  can_reopen: false,
   presentation: {
     appearance: {
       font_family: "Arial",

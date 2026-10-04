@@ -148,9 +148,10 @@ onMounted(load);
 
     <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo completar la acción</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <Alert v-if="review.state === 'firmado'"><BookCheck aria-hidden="true" /><AlertTitle>Bibliografía verificada</AlertTitle><AlertDescription>Biblioteca ya firmó este sílabo.</AlertDescription></Alert>
-    <Alert v-else-if="review.state === 'por_firmar'"><BookCheck aria-hidden="true" /><AlertTitle>Bibliografía aprobada</AlertTitle><AlertDescription>Aprobada<template v-if="review.verified_by"> por {{ review.verified_by }}</template><template v-if="review.verified_at"> el {{ formatDate(review.verified_at) }}</template>. Firme el PDF cuando docente y coordinación hayan firmado.</AlertDescription></Alert>
-    <Alert v-else-if="review.state === 'comentado'"><MessageSquareText aria-hidden="true" /><AlertTitle>Comentario enviado al docente</AlertTitle><AlertDescription>El docente corregirá la bibliografía. El sílabo volverá a esta bandeja para una nueva verificación.</AlertDescription></Alert>
-    <Alert v-else-if="review.state === 'anulado'"><CircleSlash aria-hidden="true" /><AlertTitle>Envío anulado</AlertTitle><AlertDescription>El sílabo se reabrió después de este envío. Esta revisión queda solo para consulta.</AlertDescription></Alert>
+    <Alert v-else-if="review.state === 'por_firmar'"><BookCheck aria-hidden="true" /><AlertTitle>Aprobado por el decanato</AlertTitle><AlertDescription>Bibliografía aprobada<template v-if="review.verified_by"> por {{ review.verified_by }}</template><template v-if="review.verified_at"> el {{ formatDate(review.verified_at) }}</template>. Firme el PDF cuando docente y coordinación hayan firmado; después firma el decanato.</AlertDescription></Alert>
+    <Alert v-else-if="review.state === 'aprobado'"><BookCheck aria-hidden="true" /><AlertTitle>Bibliografía aprobada</AlertTitle><AlertDescription>Aprobada<template v-if="review.verified_by"> por {{ review.verified_by }}</template><template v-if="review.verified_at"> el {{ formatDate(review.verified_at) }}</template>. El sílabo sigue en coordinación y decanato; volverá aquí para su firma.</AlertDescription></Alert>
+    <Alert v-else-if="review.state === 'comentado'"><MessageSquareText aria-hidden="true" /><AlertTitle>Comentario enviado al docente</AlertTitle><AlertDescription>El docente corregirá el sílabo y lo reenviará. Volverá a esta bandeja como una nueva revisión.</AlertDescription></Alert>
+    <Alert v-else-if="review.state === 'anulado'"><CircleSlash aria-hidden="true" /><AlertTitle>Revisión reemplazada</AlertTitle><AlertDescription>Hay una revisión más reciente o el sílabo se reabrió. Esta queda solo para consulta.</AlertDescription></Alert>
 
     <WorkspaceLayout variant="review">
       <main class="flex min-w-0 flex-col gap-6">
@@ -176,14 +177,14 @@ onMounted(load);
 
       <aside class="flex min-w-0 flex-col gap-6">
         <Card v-if="review.can_verify">
-          <CardHeader><CardTitle>Aprobar bibliografía</CardTitle><CardDescription>Si todos los libros están en biblioteca, apruebe la bibliografía. Después el docente genera el PDF y lo firman docente, coordinación y biblioteca.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Aprobar bibliografía</CardTitle><CardDescription>Si todos los libros están en biblioteca, apruebe la bibliografía. El sílabo pasa a coordinación y luego al decanato; al final firman los cuatro.</CardDescription></CardHeader>
           <CardContent><Button type="button" :disabled="verifying" @click="askVerify"><BookCheck data-icon="inline-start" aria-hidden="true" />Aprobar bibliografía</Button></CardContent>
         </Card>
 
         <DocumentSignatureCard v-if="['por_firmar', 'firmado'].includes(review.state)" :key="review.revision_id" :revision-id="review.revision_id" :file-name="`silabo-${review.code}-revision-${review.revision_number}`" @changed="load" />
 
         <Card v-if="review.can_comment">
-          <CardHeader><CardTitle>Enviar comentario</CardTitle><CardDescription>Si algún libro no está en biblioteca, explíquelo al docente. El sílabo vuelve al docente para que corrija solo la bibliografía.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Enviar comentario</CardTitle><CardDescription>Si algún libro no está en biblioteca, explíquelo al docente. El sílabo vuelve al docente para que lo corrija y lo reenvíe.</CardDescription></CardHeader>
           <CardContent>
             <form id="library-comment-form" class="flex flex-col gap-4" @submit.prevent="askConfirmation">
               <Field :data-invalid="commentErrors.length > 0">
@@ -211,7 +212,7 @@ onMounted(load);
       <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Enviar comentario al docente?</DialogTitle>
-          <DialogDescription>El sílabo vuelve al docente para que corrija solo la bibliografía. Cuando el docente la reenvíe, volverá a esta bandeja para una nueva verificación, sin pasar por coordinación.</DialogDescription>
+          <DialogDescription>El sílabo vuelve al docente para que lo corrija. Cuando lo reenvíe, llegará otra vez a esta bandeja y seguirá después a coordinación y decanato.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose as-child><Button type="button" variant="outline" :disabled="sending">Cancelar</Button></DialogClose>
@@ -223,7 +224,7 @@ onMounted(load);
       <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Aprobar la bibliografía?</DialogTitle>
-          <DialogDescription>Confirma que los libros están disponibles en biblioteca. El docente podrá generar el PDF y empezar las firmas; biblioteca firmará al final.</DialogDescription>
+          <DialogDescription>Confirma que los libros están disponibles en biblioteca. El sílabo pasa a coordinación; biblioteca firmará el PDF después de docente y coordinación.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose as-child><Button type="button" variant="outline" :disabled="verifying">Cancelar</Button></DialogClose>
