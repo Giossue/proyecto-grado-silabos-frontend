@@ -13,7 +13,7 @@ import ConvocationDeadlineCard from '@/components/domain/ConvocationDeadlineCard
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
 import StatTile from '@/components/domain/StatTile.vue';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
-import ConvocationTrackingSheet from '@/components/domain/syllabus/ConvocationTrackingSheet.vue';
+import ConvocationTrackingDialog from '@/components/domain/syllabus/ConvocationTrackingDialog.vue';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -98,5 +98,5 @@ onMounted(() => { void load(); });
     :period="dashboard.coordination_convocation.period"
     @opened="handleOpened"
   />
-  <ConvocationTrackingSheet v-if="trackingId" v-model:open="trackingOpen" :convocation-id="trackingId" />
+  <ConvocationTrackingDialog v-if="trackingId" v-model:open="trackingOpen" :convocation-id="trackingId" />
 </template>

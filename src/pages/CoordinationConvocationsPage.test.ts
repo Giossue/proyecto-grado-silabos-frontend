@@ -90,7 +90,7 @@ describe("CoordinationConvocationsPage", () => {
     wrapper.unmount();
   });
 
-  it("abre el seguimiento en un Sheet sin configuración fijada", async () => {
+  it("abre el seguimiento en un modal al hacer clic en la fila", async () => {
     vi.mocked(getConvocations).mockResolvedValue({
       filters: { q: null, state: null },
       convocations: {
@@ -134,9 +134,9 @@ describe("CoordinationConvocationsPage", () => {
     await flushPromises();
 
     await wrapper.get("table tbody button").trigger("click");
-    const trackingItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'))
-      .find((item) => item.textContent?.includes("Ver seguimiento"));
-    trackingItem?.click();
+    const menuItems = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'));
+    expect(menuItems.some((item) => item.textContent?.includes("Ver seguimiento"))).toBe(false);
+    await wrapper.get("table tbody tr").trigger("click");
     await flushPromises();
 
     expect(getConvocation).toHaveBeenCalledWith("convocation-1");

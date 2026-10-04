@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { Eye, Lock, Pause, Play } from '@lucide/vue';
+import { Lock, Pause, Play } from '@lucide/vue';
 import { ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { transitionConvocation, type ConvocationItem } from '@/api/convocations';
@@ -10,7 +10,6 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
-import ConvocationTrackingSheet from '@/components/domain/syllabus/ConvocationTrackingSheet.vue';
 
 type Transition = 'pausar' | 'reanudar';
 const props = defineProps<{ convocation: ConvocationItem }>();
@@ -18,7 +17,6 @@ const emit = defineEmits<{ changed: [message: string] }>();
 const pending = ref<Transition | null>(null);
 const processing = ref(false);
 const error = ref<string | null>(null);
-const trackingOpen = ref(false);
 const openingOpen = ref(false);
 const dialogs: Record<Transition, { title: string; description: string; label: string }> = {
   pausar: { title: 'Pausar la convocatoria', description: 'Los docentes de su carrera no podrán editar ni enviar hasta que la reanude; sus borradores se conservan. Durante la pausa puede corregir la malla y los datos curriculares; la revisión de lo enviado continúa.', label: 'Pausar' },
@@ -47,7 +45,6 @@ const opened = (message: string): void => emit('changed', message);
 <template>
   <TableActionsMenu :label="`Acciones para ${convocation.name}`">
     <DropdownMenuItem v-if="convocation.id === null" :disabled="convocation.process_state !== 'abierto'" @select="openingOpen = true"><Play aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
-    <DropdownMenuItem v-if="convocation.id !== null" @select="trackingOpen = true"><Eye aria-hidden="true" />Ver seguimiento</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'abierta'" @select="select('pausar')"><Pause aria-hidden="true" />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'pausada'" :disabled="convocation.process_state !== 'abierto'" @select="select('reanudar')"><Play aria-hidden="true" />Reanudar</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'cerrada'" disabled><Lock aria-hidden="true" />Convocatoria cerrada</DropdownMenuItem>
@@ -64,9 +61,4 @@ const opened = (message: string): void => emit('changed', message);
     <FeedbackAlert v-if="error" :message="error" />
     <DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose><Button type="button" :disabled="processing" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><Pause v-else-if="pending === 'pausar'" data-icon="inline-start" aria-hidden="true" /><Play v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[pending].label }}</Button></DialogFooter>
   </form></DialogContent></Dialog>
-  <ConvocationTrackingSheet
-    v-if="convocation.id !== null"
-    v-model:open="trackingOpen"
-    :convocation-id="convocation.id"
-  />
 </template>
