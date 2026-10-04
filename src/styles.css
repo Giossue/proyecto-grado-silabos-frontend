@@ -503,3 +503,10 @@
 [data-sidebar='sidebar'] .text-muted-foreground {
     color: rgb(255 255 255 / 0.72);
 }
+
+/* Avatar sin foto dentro del sidebar: tinte claro con iniciales blancas. */
+[data-slot='sidebar'] [data-slot='avatar-fallback'],
+[data-sidebar='sidebar'] [data-slot='avatar-fallback'] {
+    background-color: rgb(255 255 255 / 0.18);
+    color: #ffffff;
+}
