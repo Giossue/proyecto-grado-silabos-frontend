@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
 import ConvocationPeriodSheet from '@/components/domain/syllabus/ConvocationPeriodSheet.vue';
 
@@ -16,27 +17,34 @@ const mountSheet = async () => {
 };
 
 describe('ConvocationPeriodSheet', () => {
-  it('pide las fechas del periodo y deja opcionales las de la convocatoria', async () => {
+  it('exige las cuatro fechas y las deja vacías al abrir', async () => {
     const wrapper = await mountSheet();
     const pickers = wrapper.findAllComponents(DatePicker);
     expect(pickers).toHaveLength(4);
-    expect(pickers.map((picker) => picker.props('required'))).toEqual([true, true, false, false]);
+    expect(pickers.every((picker) => picker.props('required'))).toBe(true);
     expect(pickers.every((picker) => picker.props('modelValue') === '')).toBe(true);
     wrapper.unmount();
   });
 
-  it('solo crea el periodo cuando no se indican fechas de elaboración', async () => {
+  it('si la apertura falla, el reintento no vuelve a crear el periodo', async () => {
     api.createAcademicRecord.mockResolvedValue({ message: 'Registro institucional creado.', id: 'p1' });
+    api.createProcess.mockRejectedValueOnce(new ApiError('Error', 422, { process: ['Ya hay una convocatoria en curso.'] })).mockResolvedValueOnce({ message: 'Convocatoria institucional abierta.' });
     const wrapper = await mountSheet();
-    const [starts, ends] = wrapper.findAllComponents(DatePicker);
+    const [starts, ends, opens, due] = wrapper.findAllComponents(DatePicker);
     starts.vm.$emit('update:modelValue', '2026-10-05');
     ends.vm.$emit('update:modelValue', '2027-02-26');
-    await document.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    opens.vm.$emit('update:modelValue', '2026-10-06');
+    due.vm.$emit('update:modelValue', '2026-10-30');
+    const form = document.querySelector('form')!;
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
+    await flushPromises();
+    expect(wrapper.text()).toContain('El periodo ya quedó creado');
+    form.dispatchEvent(new Event('submit', { cancelable: true }));
     await flushPromises();
 
-    expect(api.createAcademicRecord).toHaveBeenCalledWith('periodo', { starts_on: '2026-10-05', ends_on: '2027-02-26' });
-    expect(api.createProcess).not.toHaveBeenCalled();
-    expect(wrapper.emitted('saved')?.[0]).toEqual(['Registro institucional creado.']);
+    expect(api.createAcademicRecord).toHaveBeenCalledTimes(1);
+    expect(api.createProcess).toHaveBeenCalledTimes(2);
+    expect(wrapper.emitted('saved')?.[0]).toEqual(['Convocatoria institucional abierta.']);
     wrapper.unmount();
   });
 

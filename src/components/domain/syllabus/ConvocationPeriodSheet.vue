@@ -24,7 +24,6 @@ const todayIso = today(getLocalTimeZone()).toString();
 const periodEndMinimum = computed(() => form.value.starts_on || todayIso);
 const dueMinimum = computed(() => (form.value.starts_at > todayIso ? form.value.starts_at : todayIso));
 const periodEnd = computed(() => form.value.ends_on || undefined);
-const opensConvocation = computed(() => Boolean(form.value.starts_at || form.value.due_at));
 const periodCreated = computed(() => createdPeriodId.value !== null);
 
 watch(open, (value) => {
@@ -49,9 +48,9 @@ const submit = async (): Promise<void> => {
             const period = await createAcademicRecord('periodo', { starts_on: form.value.starts_on, ends_on: form.value.ends_on });
             periodId = period.id ?? null;
             message = period.message;
-            if (opensConvocation.value) createdPeriodId.value = periodId;
+            createdPeriodId.value = periodId;
         }
-        if (opensConvocation.value && periodId) {
+        if (periodId) {
             const process = await createProcess({ period_id: periodId, starts_at: form.value.starts_at, due_at: form.value.due_at });
             message = process.message;
         }
@@ -71,7 +70,7 @@ const submit = async (): Promise<void> => {
         :disabled="props.disabled"
         trigger-label="Nueva convocatoria"
         title="Nueva convocatoria"
-        description="Registre las fechas del periodo lectivo y, si ya corresponde, las fechas en que los docentes elaboran sus sílabos. La etiqueta del periodo se genera con el rango de meses y año."
+        description="Registre las fechas del periodo lectivo y las fechas en que los docentes elaboran y entregan sus sílabos. La etiqueta del periodo se genera con el rango de meses y año."
     >
         <template #default="{ close }">
             <form @submit.prevent="submit">
@@ -93,19 +92,19 @@ const submit = async (): Promise<void> => {
                     </FieldSet>
                     <FieldSet>
                         <FieldLegend>Elaboración de sílabos</FieldLegend>
-                        <FieldDescription>Opcional. Si deja estas fechas vacías, solo se crea el periodo y la convocatoria se abre después desde la fila.</FieldDescription>
+                        <FieldDescription>Las fechas no se copian del periodo: elija cuándo empieza la elaboración y hasta cuándo se entrega.</FieldDescription>
                         <Field :data-invalid="Boolean(errors.starts_at)">
-                            <FieldLabel for="convocation-starts" :required="opensConvocation">Inicio de la elaboración</FieldLabel>
-                            <DatePicker id="convocation-starts" v-model="form.starts_at" :min-value="todayIso" :max-value="periodEnd" :required="opensConvocation" :aria-invalid="Boolean(errors.starts_at)" />
+                            <FieldLabel for="convocation-starts" required>Inicio de la elaboración</FieldLabel>
+                            <DatePicker id="convocation-starts" v-model="form.starts_at" :min-value="todayIso" :max-value="periodEnd" required :aria-invalid="Boolean(errors.starts_at)" />
                             <FieldError :errors="errors.starts_at" />
                         </Field>
                         <Field :data-invalid="Boolean(errors.due_at)">
-                            <FieldLabel for="convocation-due" :required="opensConvocation">Fecha límite de entrega</FieldLabel>
-                            <DatePicker id="convocation-due" v-model="form.due_at" :min-value="dueMinimum" :max-value="periodEnd" :required="opensConvocation" :aria-invalid="Boolean(errors.due_at)" />
+                            <FieldLabel for="convocation-due" required>Fecha límite de entrega</FieldLabel>
+                            <DatePicker id="convocation-due" v-model="form.due_at" :min-value="dueMinimum" :max-value="periodEnd" required :aria-invalid="Boolean(errors.due_at)" />
                             <FieldError :errors="errors.due_at" />
                         </Field>
                     </FieldSet>
-                    <FormSheetActions :close="close" :processing="processing" :icon="CalendarPlus" :label="opensConvocation ? 'Crear y abrir convocatoria' : 'Crear periodo'" />
+                    <FormSheetActions :close="close" :processing="processing" :icon="CalendarPlus" label="Abrir convocatoria" />
                 </FieldGroup>
             </form>
         </template>
