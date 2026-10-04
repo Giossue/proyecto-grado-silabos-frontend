@@ -363,8 +363,8 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(submitTeacherSyllabus).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain("¿Enviar a Coordinación?");
-    const confirm = Array.from(document.body.querySelectorAll("button")).find((button) => button.textContent?.includes("Enviar a Coordinación"));
+    expect(document.body.textContent).toContain("¿Enviar a revisión?");
+    const confirm = Array.from(document.body.querySelectorAll("button")).find((button) => button.textContent?.includes("Enviar a revisión"));
     expect(confirm).toBeDefined();
     confirm!.click();
     await flushPromises();
@@ -515,9 +515,8 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("durante la corrección de biblioteca solo deja editar la bibliografía y reenvía sin pasar por coordinación", async () => {
+  it("tras un comentario de biblioteca el docente edita todo el sílabo y lo reenvía a revisión", async () => {
     const detail = syllabus("correccion_solicitada");
-    detail.sections[0]!.blocks[0]!.fields[0]!.value = "";
     detail.sections.push({
       id: "section-2",
       key: "bibliografia",
@@ -541,40 +540,24 @@ describe("TeacherSyllabusDetailPage", () => {
         }],
       }],
     });
-    detail.library_correction = true;
-    detail.reopening = { cause: "La 10.ª edición no está disponible.", reopened_at: "2026-09-29T09:00:00-05:00", reopened_by: "Biblioteca Demo", origin: "biblioteca" };
     detail.library_comments = [
       { comment: "Comentario anterior.", commented_at: "2026-09-20T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 1 },
       { comment: "La 10.ª edición no está disponible.", commented_at: "2026-09-29T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 2 },
     ];
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
-    vi.mocked(submitTeacherSyllabus).mockResolvedValue({ message: "Bibliografía reenviada.", syllabus: { ...detail, state: "aprobado", library_correction: false } });
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.find("#input-field-1").exists()).toBe(false);
-    expect(wrapper.get("#field-field-1").classes()).toContain("syllabus-readonly-field");
+    // I-173: no hay corrección parcial; se edita todo y el reenvío vuelve a empezar por biblioteca.
+    expect(wrapper.find("#input-field-1").exists()).toBe(true);
     expect(wrapper.find("#input-field-2").exists()).toBe(true);
-    expect(wrapper.get(".library-correction").text()).toContain("Solo puede cambiar la sección Bibliografía");
+    expect(wrapper.find(".library-correction").exists()).toBe(false);
     const commentCard = wrapper.get(".library-comment-card");
     expect(commentCard.text()).toContain("Comentario de biblioteca");
+    expect(commentCard.text()).toContain("volverá a biblioteca");
     expect(commentCard.text().indexOf("La 10.ª edición no está disponible.")).toBeLessThan(commentCard.text().indexOf("Comentario anterior."));
-
-    const resend = buttonNamed(wrapper, "Reenviar bibliografía");
-    expect(resend).toBeDefined();
-    expect(resend!.attributes("disabled")).toBeUndefined();
-    expect(buttonNamed(wrapper, "Enviar sílabo")).toBeUndefined();
-    await resend!.trigger("click");
-    await flushPromises();
-
-    expect(document.body.textContent).toContain("¿Reenviar la bibliografía?");
-    expect(document.body.textContent).toContain("sin pasar por la revisión de coordinación");
-    expect(document.body.textContent).toContain("vuelve a biblioteca para su verificación");
-    const confirm = Array.from(document.body.querySelectorAll('[role="dialog"] button')).find((button) => button.textContent?.includes("Reenviar bibliografía"));
-    (confirm as HTMLButtonElement).click();
-    await flushPromises();
-
-    expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2);
+    expect(buttonNamed(wrapper, "Reenviar bibliografía")).toBeUndefined();
+    expect(buttonNamed(wrapper, "Enviar sílabo")).toBeDefined();
     wrapper.unmount();
   });
 });

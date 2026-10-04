@@ -35,7 +35,7 @@ const delegatedProps = reactiveOmit(props, "class")
     >
       <Empty class="gap-3 rounded-none border-0 p-6 md:p-10">
         <EmptyHeader class="gap-3">
-          <EmptyMedia variant="icon" class="text-muted-foreground">
+          <EmptyMedia class="text-muted-foreground [&_svg]:size-6">
             <Inbox aria-hidden="true" />
           </EmptyMedia>
           <EmptyTitle class="text-sm text-muted-foreground">

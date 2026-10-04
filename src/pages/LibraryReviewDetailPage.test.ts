@@ -102,7 +102,7 @@ describe('LibraryReviewDetailPage', () => {
     expect(getLibraryReview).toHaveBeenCalledWith('revision-2');
     expect(wrapper.text()).toContain('Bibliografía básica');
     expect(wrapper.text()).toContain('Sommerville, Ingeniería de software');
-    expect(wrapper.text()).toContain('Por verificar');
+    expect(wrapper.text()).toContain('Por revisar');
     expect(wrapper.find('[data-testid="signature-card"]').exists()).toBe(false);
     expect(wrapper.find('#library-comment').exists()).toBe(true);
     wrapper.unmount();
