@@ -7,13 +7,12 @@ import {
     LayoutGrid,
     Library,
     ScrollText,
-    Settings,
     UsersRound,
 } from '@lucide/vue';
 import { computed } from 'vue';
 import type { ComputedRef } from 'vue';
 import { useCurrentUrl } from '@/composables/useCurrentUrl';
-import { paths, roleSetting } from '@/lib/routes';
+import { paths } from '@/lib/routes';
 import { sessionState } from '@/state/session';
 import type { NavItem } from '@/types';
 
@@ -64,9 +63,6 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                   { title: 'Panel', href: paths.library.panel, icon: LayoutGrid },
                   { title: 'Revisiones de biblioteca', href: paths.library.reviews, icon: Library },
               ]
-            : []),
-        ...(activeRole.value
-            ? [{ title: 'Configuración', href: roleSetting(activeRole.value.code, 'profile'), icon: Settings }]
             : []),
     ]);
     return mainNavItems;

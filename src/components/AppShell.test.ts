@@ -81,7 +81,8 @@ describe('AppSidebarLayout', () => {
     expect(sidebar.text()).toContain('Panel');
     expect(sidebar.get('a[href="/admin/panel"]').attributes('data-active')).toBe('true');
     expect(sidebar.get('a[href="/admin/panel"]').attributes('aria-current')).toBe('page');
-    expect(wrapper.text()).toContain('Configuración');
+    // Configuración vive en el menú del usuario, no en el menú lateral.
+    expect(sidebar.text()).not.toContain('Configuración');
     expect(wrapper.text()).not.toContain('Mis sílabos');
     expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
     expect(wrapper.get('[aria-label="Notificaciones"]').text()).toContain('3');
@@ -115,7 +116,7 @@ describe('AppSidebarLayout', () => {
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
     expect(sidebar.find('a[href="/biblioteca/panel"]').text()).toContain('Panel');
     expect(sidebar.get('a[href="/biblioteca/revisiones"]').text()).toContain('Revisiones de biblioteca');
-    expect(sidebar.find('a[href="/biblioteca/configuracion/perfil"]').exists()).toBe(true);
+    expect(sidebar.find('a[href="/biblioteca/configuracion/perfil"]').exists()).toBe(false);
     expect(sidebar.text()).not.toContain('Mis sílabos');
     expect(sidebar.text()).not.toContain('Usuarios y roles');
     expect(wrapper.get('[data-test="sidebar-menu-button"]').text()).toContain('Bibliotecario');

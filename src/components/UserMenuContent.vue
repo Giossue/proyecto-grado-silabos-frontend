@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Building2, LogOut } from '@lucide/vue';
+import { Building2, LogOut, Settings } from '@lucide/vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import {
     DropdownMenuGroup,
@@ -12,7 +13,7 @@ import { logout } from '@/api/session';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
 import { clearIntendedRoute } from '@/lib/intended-route';
-import { paths } from '@/lib/routes';
+import { paths, roleSetting } from '@/lib/routes';
 
 withDefaults(defineProps<{ user: User; canSwitchScope?: boolean }>(), {
     canSwitchScope: false,
@@ -20,6 +21,11 @@ withDefaults(defineProps<{ user: User; canSwitchScope?: boolean }>(), {
 defineEmits<{ 'switch-scope': [] }>();
 
 const router = useRouter();
+// La configuración vive en el menú del usuario, no en el menú lateral.
+const settingsHref = computed(() => {
+    const code = sessionState.current.value?.active_role?.code;
+    return code ? roleSetting(code, 'profile') : null;
+});
 const handleLogout = async (): Promise<void> => {
     await logout();
     sessionState.clear();
@@ -42,6 +48,13 @@ const handleLogout = async (): Promise<void> => {
         </DropdownMenuItem>
     </DropdownMenuGroup>
     <DropdownMenuSeparator v-if="canSwitchScope" />
+    <DropdownMenuItem v-if="settingsHref" as-child>
+        <RouterLink :to="settingsHref" class="w-full">
+            <Settings data-icon="inline-start" aria-hidden="true" />
+            Configuración
+        </RouterLink>
+    </DropdownMenuItem>
+    <DropdownMenuSeparator v-if="settingsHref" />
     <DropdownMenuItem
         class="w-full"
         data-test="logout-button"
