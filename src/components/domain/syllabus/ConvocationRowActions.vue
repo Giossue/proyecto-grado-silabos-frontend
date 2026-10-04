@@ -43,7 +43,7 @@ const remove = async (): Promise<void> => {
 
         <SyllabusProcessSheet v-if="!row.process" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: row.id, codigo: row.code, starts_on: row.starts_on, ends_on: row.ends_on }" display="menu" trigger-label="Abrir convocatoria" @saved="emit('changed', $event)" />
 
-        <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar periodo</DialogTitle><DialogDescription>Se eliminará el período «{{ row.code }}». Solo puede eliminarse si no tiene materias programadas.</DialogDescription></DialogHeader>
+        <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar periodo</DialogTitle><DialogDescription>Se eliminará el período «{{ row.code }}» junto con las materias, paralelos y docentes que las coordinaciones hayan programado en él. Esta acción no se puede deshacer.</DialogDescription></DialogHeader>
             <FeedbackAlert v-if="error" :message="error" />
             <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" variant="destructive" :disabled="deleting" @click="remove"><Spinner v-if="deleting" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Eliminar periodo</Button></DialogFooter>
         </DialogContent></Dialog>
