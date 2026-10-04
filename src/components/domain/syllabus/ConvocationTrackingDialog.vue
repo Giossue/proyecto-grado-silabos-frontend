@@ -62,7 +62,7 @@ watch(() => props.open, (open) => {
         </DialogDescription>
       </DialogHeader>
 
-      <div class="min-h-0 flex-1 overflow-y-auto px-6 pb-6">
+      <div class="min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6">
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" />
         <div v-else-if="data" class="flex flex-col gap-4">
