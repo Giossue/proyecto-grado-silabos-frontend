@@ -36,7 +36,7 @@ const data: ScheduledSubjects = {
 };
 
 const mountTab = () => mount(ScheduledSubjectsTab, {
-    props: { data },
+    props: { data, assignments: [], teacherUsers: [] },
     global: {
         stubs: {
             Card: passthrough, CardContent: passthrough, CareerAcademicActions: passthrough, ClientFilterBar: passthrough,

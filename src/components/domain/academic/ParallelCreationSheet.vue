@@ -3,7 +3,7 @@ import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { Check, Pencil, Plus, Trash2, X } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
-import { createParallels, deleteParallel, updateParallel } from "@/api/career-academics";
+import { createCareerRecord, createParallels, deleteCareerRecord, deleteParallel, updateParallel } from "@/api/career-academics";
 import FormSheet from "@/components/domain/FormSheet.vue";
 import FormSheetActions from "@/components/domain/FormSheetActions.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -34,6 +34,8 @@ const props = defineProps<{
   scheduledSubjectId: string;
   scheduledSubjectLabel: string;
   parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }>;
+  teacherUsers?: Array<{ id: string; name: string; email: string }>;
+  assignments?: Array<{ id: string; parallel_id: string; user_id: string; user_name: string; active: boolean; editable: boolean }>;
 }>();
 const emit = defineEmits<{ saved: [message: string]; changed: [message: string] }>();
 const open = defineModel<boolean>("open", { default: false });
@@ -89,6 +91,27 @@ const saveEdit = async () => {
   await runRowAction(() => updateParallel(id, { code: editCode.value.trim(), shift: editShift.value }), "No se pudo actualizar el paralelo.");
 };
 const removeParallel = (id: string) => runRowAction(() => deleteParallel(id), "No se pudo eliminar el paralelo.");
+const NO_TEACHER = "none";
+const assignmentOf = (parallelId: string) => (props.assignments ?? []).find((item) => item.parallel_id === parallelId && item.active) ?? null;
+const teacherOf = (parallelId: string) => assignmentOf(parallelId)?.user_id ?? NO_TEACHER;
+const teacherChoices = (parallelId: string) => {
+  const current = assignmentOf(parallelId);
+  const users = props.teacherUsers ?? [];
+  return current && !users.some((user) => user.id === current.user_id)
+    ? [{ id: current.user_id, name: current.user_name, email: "" }, ...users]
+    : users;
+};
+const changeTeacher = (parallelId: string, value: unknown) => {
+  if (typeof value !== "string") return;
+  const current = assignmentOf(parallelId);
+  if ((current?.user_id ?? NO_TEACHER) === value) return;
+  void runRowAction(async () => {
+    let result: { message: string } = { message: "Docente retirado del paralelo." };
+    if (current) result = await deleteCareerRecord("asignacion_docente", current.id);
+    if (value !== NO_TEACHER) result = await createCareerRecord("asignacion_docente", { user_id: value, parallel_id: parallelId });
+    return result;
+  }, "No se pudo cambiar el docente del paralelo.");
+};
 const submit = async (close: () => void) => {
   if (!code.value.trim() || !shift.value) {
     error.value = "Escriba el código y elija la jornada del paralelo.";
@@ -119,8 +142,8 @@ watch(open, (value) => value && reset());
     v-model:open="open"
     :show-trigger="false"
     trigger-label="Agregar paralelo"
-    title="Paralelos de la materia"
-    :description="`Agregue, corrija o elimine los paralelos de ${scheduledSubjectLabel}. Todo paralelo necesita código y jornada.`"
+    title="Paralelos y docentes de la materia"
+    :description="`Agregue, corrija o elimine los paralelos de ${scheduledSubjectLabel} y elija quién dicta cada uno.`"
   >
     <template #default="{ close }">
       <form class="contents" @submit.prevent="submit(close)">
@@ -160,9 +183,9 @@ watch(open, (value) => value && reset());
             <Alert v-if="rowError" variant="destructive"><AlertDescription>{{ rowError }}</AlertDescription></Alert>
             <div class="overflow-hidden rounded-md border">
               <Table>
-                <TableHeader><TableRow><TableHead>Paralelo</TableHead><TableHead>Jornada</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Paralelo</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  <TableEmpty v-if="parallels.length === 0" :colspan="3">Sin paralelos registrados</TableEmpty>
+                  <TableEmpty v-if="parallels.length === 0" :colspan="4">Sin paralelos registrados</TableEmpty>
                   <TableRow v-for="parallel in parallels" v-else :key="parallel.id">
                     <template v-if="editingId === parallel.id">
                       <TableCell><Input v-model="editCode" :maxlength="VALIDATION_LIMITS.parallelCode" class="w-20" :aria-label="`Código del paralelo ${parallel.code}`" :aria-invalid="!editCode.trim()" /></TableCell>
@@ -172,6 +195,7 @@ watch(open, (value) => value && reset());
                           <SelectContent><SelectGroup><SelectItem v-for="option in shiftOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
                         </Select>
                       </TableCell>
+                      <TableCell>{{ assignmentOf(parallel.id)?.user_name ?? "Sin docente" }}</TableCell>
                       <TableCell class="text-right">
                         <Button type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Guardar paralelo ${parallel.code}`" @click="saveEdit"><Check aria-hidden="true" /></Button>
                         <Button type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" aria-label="Cancelar edición" @click="cancelEdit"><X aria-hidden="true" /></Button>
@@ -180,6 +204,16 @@ watch(open, (value) => value && reset());
                     <template v-else>
                       <TableCell>{{ parallel.code }}</TableCell>
                       <TableCell>{{ shiftLabel(parallel.shift, shiftOptions) }}</TableCell>
+                      <TableCell>
+                        <Select v-if="teacherUsers" :model-value="teacherOf(parallel.id)" :disabled="rowBusy || (assignmentOf(parallel.id)?.editable === false)" @update:model-value="changeTeacher(parallel.id, $event)">
+                          <SelectTrigger class="min-w-40 max-w-60" :aria-label="`Docente del paralelo ${parallel.code}`"><SelectValue placeholder="Sin docente" /></SelectTrigger>
+                          <SelectContent><SelectGroup>
+                            <SelectItem :value="NO_TEACHER">Sin docente</SelectItem>
+                            <SelectItem v-for="user in teacherChoices(parallel.id)" :key="user.id" :value="user.id">{{ user.name }}</SelectItem>
+                          </SelectGroup></SelectContent>
+                        </Select>
+                        <span v-else>{{ assignmentOf(parallel.id)?.user_name ?? "Sin docente" }}</span>
+                      </TableCell>
                       <TableCell class="text-right">
                         <Button v-if="parallel.editable !== false" type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Editar paralelo ${parallel.code}`" @click="startEdit(parallel)"><Pencil aria-hidden="true" /></Button>
                         <Button v-if="parallel.deletable !== false && parallels.length > 1" type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Eliminar paralelo ${parallel.code}`" @click="removeParallel(parallel.id)"><Trash2 aria-hidden="true" /></Button>
@@ -189,7 +223,7 @@ watch(open, (value) => value && reset());
                 </TableBody>
               </Table>
             </div>
-            <p class="text-xs text-muted-foreground">Un paralelo con docente asignado o con sílabo no se elimina.</p>
+            <p class="text-xs text-muted-foreground">Cambiar el docente conserva el sílabo del paralelo. Un paralelo con docente asignado o con sílabo no se elimina.</p>
           </section>
           <FormSheetActions :close="close" :processing="saving" :icon="Plus" label="Crear paralelo" />
         </FieldGroup>

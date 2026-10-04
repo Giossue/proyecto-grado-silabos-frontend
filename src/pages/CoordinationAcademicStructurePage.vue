@@ -28,6 +28,8 @@ import ProcessLockAlert from "@/components/domain/ProcessLockAlert.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { preparationRows } from "@/lib/periodPreparation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -40,19 +42,29 @@ import { toast } from "@/lib/toast";
 import { curriculumEditorState } from "@/state/curriculumEditor";
 
 const router = useRouter();
-const props = defineProps<{ mode: 'curriculum' | 'schedule' | 'teachers' }>();
+const props = defineProps<{ mode: 'curriculum' | 'schedule' }>();
 const pageTitle = computed(() => ({
   curriculum: 'Malla',
   schedule: 'Materias y paralelos',
-  teachers: 'Asignación docente',
 })[props.mode]);
 const pageDescription = computed(() => {
   const career = curriculum.value?.career.name ?? 'la carrera activa';
   return {
     curriculum: `Malla curricular de ${career}. Consulte las materias y sus relaciones; pulse Editar malla para modificarlas.`,
-    schedule: `Prepare cada período con la malla completa de ${career}, sus paralelos y docentes.`,
-    teachers: `Quién dicta cada paralelo en ${career}.`,
+    schedule: `Materias, paralelos y docentes de ${career} en el período en curso.`,
   }[props.mode];
+});
+const scheduleTab = ref<'materias' | 'docentes'>('materias');
+// Paralelos del período mostrado, con etiqueta «Materia · A», para la pestaña Docentes.
+const periodParallels = computed(() => (schedule.value?.scheduledSubjects ?? [])
+  .filter((item) => item.period_id === schedule.value?.selectedPeriodId)
+  .flatMap((item) => item.parallels.map((parallel) => ({ id: parallel.id, label: `${item.subject_name} · ${parallel.code}` }))));
+// Mientras falte programar materias de la malla, el botón principal es Preparar período.
+const pendingPreparation = computed(() => {
+  if (!schedule.value || !assignments.value || !schedule.value.selectedPeriodId) return false;
+  const period = schedule.value.options.periods.find((item) => item.id === schedule.value?.selectedPeriodId);
+  if (!period?.planning_enabled) return false;
+  return preparationRows(period.id, schedule.value.options, schedule.value.scheduledSubjects, assignments.value.teacherAssignments, assignments.value.options.teacherUsers).rows.length > 0;
 });
 const curriculum = ref<Curriculum | null>(null);
 const schedule = ref<ScheduledSubjects | null>(null);
@@ -123,7 +135,7 @@ const reloadSchedule = async (periodId?: string) => {
 };
 const handleScheduleChanged = async (notice: string) => {
   toast.success(notice);
-  await reloadSchedule(schedule.value?.selectedPeriodId ?? undefined);
+  await Promise.all([reloadSchedule(schedule.value?.selectedPeriodId ?? undefined), reloadAssignments()]);
 };
 const handlePeriodPrepared = async (notice: string, periodId: string) => {
   toast.success(notice);
@@ -139,7 +151,7 @@ const reloadAssignments = async () => {
 };
 const handleAssignmentChanged = async (notice: string) => {
   toast.success(notice);
-  await reloadAssignments();
+  await Promise.all([reloadAssignments(), reloadSchedule(schedule.value?.selectedPeriodId ?? undefined)]);
 };
 const reloadCurriculum = async () => {
   try {
@@ -201,7 +213,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
   >
     <template #actions>
       <PeriodPreparationSheet
-        v-if="mode === 'schedule' && schedule && assignments && schedule.options.periods.some((item) => item.planning_enabled)"
+        v-if="mode === 'schedule' && schedule && assignments && pendingPreparation"
         :scheduled-subjects="schedule.scheduledSubjects"
         :options="schedule.options"
         :assignments="assignments.teacherAssignments"
@@ -210,15 +222,15 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         :disabled="Boolean(schedule.career.lock_reason)"
         @saved="handlePeriodPrepared"
       />
-      <DropdownMenu v-if="mode === 'teachers' && assignments">
+      <DropdownMenu v-if="mode === 'schedule' && schedule && assignments && !pendingPreparation">
         <DropdownMenuTrigger as-child><Button><UserPlus data-icon="inline-start" aria-hidden="true" />Gestionar docente<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end"><DropdownMenuGroup>
           <DropdownMenuItem v-if="assignments.canCreateTeacher" @select="teacherOpen = true">Crear docente</DropdownMenuItem>
-          <DropdownMenuItem @select="assignmentOpen = true">Asignar docente</DropdownMenuItem>
+          <DropdownMenuItem :disabled="Boolean(schedule.career.lock_reason)" @select="assignmentOpen = true">Asignar docente</DropdownMenuItem>
         </DropdownMenuGroup></DropdownMenuContent>
       </DropdownMenu>
       <TeacherAssignmentSheet
-        v-if="mode === 'teachers' && assignments"
+        v-if="mode === 'schedule' && assignments"
         v-model:open="assignmentOpen"
         :options="assignments.options"
         :show-trigger="false"
@@ -238,20 +250,28 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" :editing="false" @changed="handleCurriculumChanged" />
       </template>
       <ProcessLockAlert v-if="mode === 'schedule' && schedule.career.lock_reason" />
-      <ScheduledSubjectsTab
-        v-if="mode === 'schedule'"
-        :data="schedule"
-        @period="reloadSchedule"
-        @changed="handleScheduleChanged"
-        @failed="actionError = $event"
-      />
-      <TeacherAssignmentsPanel v-if="mode === 'teachers'" :data="assignments" @changed="handleAssignmentChanged" />
+      <Tabs v-if="mode === 'schedule'" v-model="scheduleTab" class="gap-4">
+        <TabsList><TabsTrigger value="materias">Materias</TabsTrigger><TabsTrigger value="docentes">Docentes</TabsTrigger></TabsList>
+        <TabsContent value="materias">
+          <ScheduledSubjectsTab
+            :data="schedule"
+            :assignments="assignments.teacherAssignments"
+            :teacher-users="assignments.options.teacherUsers"
+            @period="reloadSchedule"
+            @changed="handleScheduleChanged"
+            @failed="actionError = $event"
+          />
+        </TabsContent>
+        <TabsContent value="docentes">
+          <TeacherAssignmentsPanel :data="assignments" :period-parallels="periodParallels" @changed="handleAssignmentChanged" />
+        </TabsContent>
+      </Tabs>
       </template
     >
     <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading" variant="academic-structure" :mode="mode" :columns="mode === 'teachers' ? 6 : 5" />
+    <LoadingSkeleton v-else-if="loading" variant="academic-structure" :mode="mode" :columns="5" />
     <ManagedUserSheet
-      v-if="mode === 'teachers'"
+      v-if="mode === 'schedule'"
       v-model:open="teacherOpen"
       :teacher-career="assignments?.career ?? null"
       :show-trigger="false"

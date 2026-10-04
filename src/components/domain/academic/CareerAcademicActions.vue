@@ -16,6 +16,8 @@ type CareerAcademicRecord = { id: string; parallels?: { id: string; code: string
 
 const props = withDefaults(defineProps<{
     shiftOptions?: Array<{ value: string; label: string }>;
+    teacherUsers?: Array<{ id: string; name: string; email: string }>;
+    assignments?: Array<{ id: string; parallel_id: string; user_id: string; user_name: string; active: boolean; editable: boolean }>;
     entity: CareerAcademicEntity; record: CareerAcademicRecord; recordLabel: string; editable: boolean;
     active?: boolean; deleteSupported?: boolean; parallelCreationSupported?: boolean;
     lockedLabel?: string; allowLockedActions?: boolean;
@@ -34,9 +36,9 @@ const remove = async (): Promise<void> => { processing.value = true; error.value
 <template><div class="flex justify-end"><TableActionsMenu :label="`Acciones para ${recordLabel}`" :disabled="menuDisabled">
     <DropdownMenuItem v-if="actionsDisabled" disabled><LockKeyhole aria-hidden="true" />{{ disabledLabel }}</DropdownMenuItem>
     <slot />
-    <DropdownMenuItem v-if="entity === 'programacion_asignatura' && parallelCreationSupported && !actionsDisabled" @select="parallelCreationOpen = true"><Plus aria-hidden="true" />Agregar o editar paralelos</DropdownMenuItem>
+    <DropdownMenuItem v-if="entity === 'programacion_asignatura' && parallelCreationSupported && !actionsDisabled" @select="parallelCreationOpen = true"><Plus aria-hidden="true" />Paralelos y docentes</DropdownMenuItem>
     <DropdownMenuItem v-if="deleteSupported && !actionsDisabled" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />{{ deleteLabel }}</DropdownMenuItem>
 </TableActionsMenu>
-<ParallelCreationSheet v-if="entity === 'programacion_asignatura'" :key="`parallel-${record.id}`" v-model:open="parallelCreationOpen" :scheduled-subject-id="record.id" :scheduled-subject-label="recordLabel" :parallels="record.parallels ?? []" :shift-options="shiftOptions ?? []" @saved="emit('changed', $event)" @changed="emit('changed', $event)" />
+<ParallelCreationSheet v-if="entity === 'programacion_asignatura'" :key="`parallel-${record.id}`" v-model:open="parallelCreationOpen" :scheduled-subject-id="record.id" :scheduled-subject-label="recordLabel" :parallels="record.parallels ?? []" :shift-options="shiftOptions ?? []" :teacher-users="teacherUsers" :assignments="assignments" @saved="emit('changed', $event)" @changed="emit('changed', $event)" />
 <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>{{ deletionTitle }}</DialogTitle><DialogDescription>{{ deletionDescription }}</DialogDescription></DialogHeader><FeedbackAlert v-if="error" :message="error" /><DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" variant="destructive" :disabled="processing" @click="remove"><Spinner v-if="processing" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />{{ deletionTitle }}</Button></DialogFooter></DialogContent></Dialog>
 </div></template>

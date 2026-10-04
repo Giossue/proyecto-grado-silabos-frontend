@@ -229,7 +229,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-comparison', path: '/coordinacion/revisiones/:before/comparar/:after', component: 'CoordinationReviewComparisonPage', breadcrumb: 'Comparar revisiones', ...coordinator },
   { name: 'coordination-curriculum', path: paths.coordination.curriculum, component: 'CoordinationAcademicStructurePage', states: ['curriculum'], breadcrumb: 'Malla', ...coordinator },
   { name: 'coordination-scheduled-subjects', path: paths.coordination.scheduledSubjects, component: 'CoordinationAcademicStructurePage', states: ['schedule'], breadcrumb: 'Materias y paralelos', ...coordinator },
-  { name: 'coordination-teacher-assignments', path: paths.coordination.teacherAssignments, component: 'CoordinationAcademicStructurePage', states: ['teachers'], breadcrumb: 'Asignación docente', ...coordinator },
   { name: 'coordination-documents', path: '/coordinacion/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...coordinator },
 
   { name: 'teacher-panel', path: paths.teacher.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...teacher },

@@ -110,7 +110,7 @@ export const router = createRouter({
     { path: "/coordinacion/estructura-academica", redirect: "/coordinacion/malla", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },
     { path: "/coordinacion/materias-paralelos", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y paralelos" } },
-    { path: "/coordinacion/asignaciones-docentes", component: CoordinationAcademicStructurePage, props: { mode: "teachers" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Asignación docente" } },
+    { path: "/coordinacion/asignaciones-docentes", redirect: "/coordinacion/materias-paralelos", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Documentos" } },
 
     { path: "/docente/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["docente"], title: "Panel" } },
