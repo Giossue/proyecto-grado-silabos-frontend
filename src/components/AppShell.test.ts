@@ -11,12 +11,7 @@ const { getNotifications, logout, selectActiveRole } = vi.hoisted(() => ({
   selectActiveRole: vi.fn(),
 }));
 
-const { getDashboard } = vi.hoisted(() => ({
-  getDashboard: vi.fn(),
-}));
-
 vi.mock('@/api/notifications', () => ({ getNotifications }));
-vi.mock('@/api/dashboard', () => ({ getDashboard }));
 vi.mock('@/api/session', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/api/session')>(),
   logout,
@@ -67,7 +62,6 @@ describe('AppSidebarLayout', () => {
   beforeEach(() => {
     sessionState.replace(administratorSession);
     getNotifications.mockResolvedValue({ unread_count: 3, filters: { status: 'unread' }, notifications: { data: [], current_page: 1, last_page: 1, total: 0 } });
-    getDashboard.mockResolvedValue({ setup: { title: 'Puesta en marcha', intro: '', done: 1, total: 3, steps: [] } });
     logout.mockResolvedValue(undefined);
     localStorage.clear();
   });
@@ -81,8 +75,9 @@ describe('AppSidebarLayout', () => {
     expect(sidebar.text()).toContain('Panel');
     expect(sidebar.get('a[href="/admin/panel"]').attributes('data-active')).toBe('true');
     expect(sidebar.get('a[href="/admin/panel"]').attributes('aria-current')).toBe('page');
-    // Configuración vive en el menú del usuario, no en el menú lateral.
     expect(sidebar.text()).not.toContain('Configuración');
+    expect(sidebar.find('[aria-label="Menú de usuario"]').exists()).toBe(false);
+    expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).toContain('Ada Admin');
     expect(wrapper.text()).not.toContain('Mis sílabos');
     expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
     expect(wrapper.get('[aria-label="Notificaciones"]').text()).toContain('3');
@@ -119,10 +114,10 @@ describe('AppSidebarLayout', () => {
     expect(sidebar.find('a[href="/biblioteca/configuracion/perfil"]').exists()).toBe(false);
     expect(sidebar.text()).not.toContain('Mis sílabos');
     expect(sidebar.text()).not.toContain('Usuarios y roles');
-    expect(wrapper.get('[data-test="sidebar-menu-button"]').text()).toContain('Bibliotecario');
+    expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).toContain('Bibliotecario');
   });
 
-  it('deja el checklist en el encabezado y retira el Panel del sidebar para docente', async () => {
+  it('muestra la cuenta en el encabezado y retira el acceso al Panel para docente', async () => {
     sessionState.replace({
       ...administratorSession,
       active_role: { id: 'role-docente', code: 'docente', career_id: 'career-1', career_name: 'Software' },
@@ -133,7 +128,9 @@ describe('AppSidebarLayout', () => {
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
     expect(sidebar.text()).not.toContain('Panel');
     expect(sidebar.find('a[href="/dashboard"]').exists()).toBe(false);
-    expect(wrapper.find('a[href="/dashboard"]').exists()).toBe(true);
+    expect(wrapper.find('a[href="/dashboard"]').exists()).toBe(false);
+    expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).toContain('Software');
+    expect(wrapper.find('header [role="progressbar"]').exists()).toBe(false);
     expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
   });
 
@@ -164,9 +161,8 @@ describe('AppSidebarLayout', () => {
 
   it('expone el cambio de ámbito desde el menú de la cuenta', async () => {
     const wrapper = await mountShell();
-    const accountButton = wrapper.findAll('button').find((button) => button.text().includes('Ada Admin'));
-    expect(accountButton).toBeDefined();
-    await accountButton!.trigger('click');
+    const accountButton = wrapper.get('header [aria-label="Menú de usuario"]');
+    await accountButton.trigger('click');
     await flushPromises();
     expect(document.body.textContent).toContain('Cerrar sesión');
 
@@ -189,7 +185,7 @@ describe('AppSidebarLayout', () => {
     const wrapper = await mountShell();
     await flushPromises();
 
-    const accountButton = wrapper.find('[data-test="sidebar-menu-button"]');
+    const accountButton = wrapper.get('header [aria-label="Menú de usuario"]');
     expect(accountButton.text()).toContain('Sin rol');
     expect(accountButton.text()).not.toContain('Administrador');
   });

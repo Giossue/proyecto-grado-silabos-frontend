@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { ChevronsUpDown } from '@lucide/vue';
+import { ChevronDown } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import WorkScopeSwitcherSheet from '@/components/domain/identity/WorkScopeSwitcherSheet.vue';
+import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-    SidebarMenu,
-    SidebarMenuButton,
-    SidebarMenuItem,
-    useSidebar,
-} from '@/components/ui/sidebar';
 import UserInfo from '@/components/UserInfo.vue';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { roleLabel } from '@/lib/roles';
@@ -30,37 +25,35 @@ const activeRole = computed(() => sessionState.current.value?.active_role ?? nul
 const canSwitchScope = computed(() => (sessionState.current.value?.available_roles.length ?? 0) > 1);
 const roleName = computed(() => activeRole.value ? roleLabel(activeRole.value.code) : 'Sin rol');
 const switcherOpen = ref(false);
-const { isMobile, state } = useSidebar();
 </script>
 
 <template>
-    <SidebarMenu>
-        <SidebarMenuItem>
-            <DropdownMenu>
-                <DropdownMenuTrigger as-child>
-                    <SidebarMenuButton
-                        size="lg"
-                        class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                        data-test="sidebar-menu-button"
-                    >
-                        <UserInfo :user="user" :subtitle="activeRole?.career_name ?? roleName" />
-                        <ChevronsUpDown class="ml-auto" />
-                    </SidebarMenuButton>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                    class="w-(--reka-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                    :side="isMobile ? 'bottom' : state === 'collapsed' ? 'left' : 'bottom'"
-                    align="end"
-                    :side-offset="4"
-                >
-                    <UserMenuContent
-                        :user="user"
-                        :can-switch-scope="canSwitchScope"
-                        @switch-scope="switcherOpen = true"
-                    />
-                </DropdownMenuContent>
-            </DropdownMenu>
-            <WorkScopeSwitcherSheet v-model:open="switcherOpen" />
-        </SidebarMenuItem>
-    </SidebarMenu>
+    <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+            <Button
+                type="button"
+                variant="ghost"
+                class="h-11 rounded-lg px-2 sm:w-48 lg:w-56"
+                aria-label="Menú de usuario"
+            >
+                <div class="flex min-w-0 flex-1 items-center gap-2 [&>.grid]:hidden [&>.grid]:min-w-0 sm:[&>.grid]:grid">
+                    <UserInfo :user="user" :subtitle="activeRole?.career_name ?? roleName" />
+                    <ChevronDown class="hidden sm:block" data-icon="inline-end" aria-hidden="true" />
+                </div>
+            </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+            class="w-(--reka-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            side="bottom"
+            align="end"
+            :side-offset="4"
+        >
+            <UserMenuContent
+                :user="user"
+                :can-switch-scope="canSwitchScope"
+                @switch-scope="switcherOpen = true"
+            />
+        </DropdownMenuContent>
+    </DropdownMenu>
+    <WorkScopeSwitcherSheet v-model:open="switcherOpen" />
 </template>
