@@ -55,10 +55,6 @@ const pageDescription = computed(() => {
   }[props.mode];
 });
 const scheduleTab = ref<'materias' | 'docentes'>('materias');
-// Paralelos del período mostrado, con etiqueta «Materia · A», para la pestaña Docentes.
-const periodParallels = computed(() => (schedule.value?.scheduledSubjects ?? [])
-  .filter((item) => item.period_id === schedule.value?.selectedPeriodId)
-  .flatMap((item) => item.parallels.map((parallel) => ({ id: parallel.id, label: `${item.subject_name} · ${parallel.code}` }))));
 // Mientras falte programar materias de la malla, el botón principal es Preparar período.
 const pendingPreparation = computed(() => {
   if (!schedule.value || !assignments.value || !schedule.value.selectedPeriodId) return false;
@@ -263,7 +259,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
           />
         </TabsContent>
         <TabsContent value="docentes">
-          <TeacherAssignmentsPanel :data="assignments" :period-parallels="periodParallels" @changed="handleAssignmentChanged" />
+          <TeacherAssignmentsPanel :data="assignments" @changed="handleAssignmentChanged" />
         </TabsContent>
       </Tabs>
       </template

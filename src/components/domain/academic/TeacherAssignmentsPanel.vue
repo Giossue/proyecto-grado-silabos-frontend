@@ -18,33 +18,28 @@ import { useClientFilter } from "@/composables/useClientFilter";
 import { useClientPagination } from "@/composables/useClientPagination";
 import { Spinner } from "@/components/ui/spinner";
 
-/** Una fila por docente de la carrera; los paralelos listados son solo los del período en curso. */
-const props = defineProps<{ data: TeacherAssignments; periodParallels: Array<{ id: string; label: string }> }>();
+/** Una fila por docente de la carrera. */
+const props = defineProps<{ data: TeacherAssignments }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 type TeacherRow = {
   id: string;
   name: string;
   email: string;
   pending_activation: boolean;
-  parallels: string[];
 };
 
 const resendingId = ref<string | null>(null);
 const resendError = ref<string | null>(null);
-const parallelLabel = computed(() => new Map(props.periodParallels.map((item) => [item.id, item.label])));
 const rows = computed<TeacherRow[]>(() => props.data.careerTeachers.map((teacher) => ({
   id: teacher.id,
   name: teacher.name,
   email: teacher.email,
   pending_activation: teacher.pending_activation,
-  parallels: props.data.teacherAssignments
-    .filter((item) => item.active && item.user_id === teacher.id && parallelLabel.value.has(item.parallel_id))
-    .map((item) => parallelLabel.value.get(item.parallel_id) as string),
 })));
 const statusOf = (item: TeacherRow): { label: string; hint: string } => item.pending_activation
   ? { label: "Pendiente de activación", hint: "La cuenta espera que su titular abra la invitación y defina su contraseña." }
-  : { label: "Activa", hint: item.parallels.length ? "La cuenta está activa y dicta paralelos este período." : "La cuenta está activa; aún no tiene paralelo este período." };
-const filter = useClientFilter(() => rows.value, (item) => [item.name, item.email, ...item.parallels, statusOf(item).label], {
+  : { label: "Activa", hint: "La cuenta está activa; su titular ya definió su contraseña." };
+const filter = useClientFilter(() => rows.value, (item) => [item.name, item.email, statusOf(item).label], {
   estado: { matches: (item, value) => value === "pending" ? item.pending_activation : !item.pending_activation },
 });
 const { items, meta, setPage } = useClientPagination(() => filter.items.value);
@@ -64,19 +59,16 @@ const resendInvitation = async (userId: string): Promise<void> => {
 
 <template>
   <Card><CardContent class="flex flex-col gap-4">
-    <ClientFilterBar :filter="filter" input-id="teacher-assignments-search" label="Buscar docente" placeholder="Buscar por docente, correo o materia">
+    <ClientFilterBar :filter="filter" input-id="teacher-assignments-search" label="Buscar docente" placeholder="Buscar por docente o correo">
       <template #filters><Field><FieldLabel for="teacher-assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="teacher-assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="pending">Pendiente de activación</SelectItem></SelectGroup></SelectContent></Select></Field></template>
     </ClientFilterBar>
     <FeedbackAlert v-if="resendError" :message="resendError" />
-    <Table><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Paralelos del período</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+    <Table><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
       <TableBody>
         <TableEmpty v-if="!items.length" :colspan="4">{{ filter.active.value ? "Ningún docente coincide con la búsqueda." : "No existen docentes en esta carrera." }}</TableEmpty>
         <TableRow v-for="item in items" v-else :key="item.id">
-          <TableCell><div class="flex flex-col"><span>{{ item.name }}</span><span class="text-sm text-muted-foreground">{{ item.email }}</span></div></TableCell>
-          <TableCell>
-            <ul v-if="item.parallels.length" class="flex flex-col gap-0.5"><li v-for="label in item.parallels" :key="label">{{ label }}</li></ul>
-            <span v-else class="text-muted-foreground">Sin paralelo este período</span>
-          </TableCell>
+          <TableCell>{{ item.name }}</TableCell>
+          <TableCell>{{ item.email }}</TableCell>
           <TableCell><Tooltip><TooltipTrigger as-child><span>{{ statusOf(item).label }}</span></TooltipTrigger><TooltipContent class="max-w-xs">{{ statusOf(item).hint }}</TooltipContent></Tooltip></TableCell>
           <TableCell class="text-right">
             <TableActionsMenu :label="`Acciones para ${item.name}`">

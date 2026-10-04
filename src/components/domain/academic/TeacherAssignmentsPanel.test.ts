@@ -55,7 +55,7 @@ const inactivePendingData: TeacherAssignments = {
 describe('TeacherAssignmentsPanel', () => {
     it('muestra la invitación pendiente dentro de la tabla', () => {
         const wrapper = mount(TeacherAssignmentsPanel, {
-            props: { data, periodParallels: [{ id: 'parallel-1', label: 'Inteligencia Artificial · A' }] },
+            props: { data },
             global: {
                 stubs: {
                     Card: passthrough,
@@ -92,13 +92,13 @@ describe('TeacherAssignmentsPanel', () => {
         expect(wrapper.text()).toContain('Docente pendiente');
         expect(wrapper.text()).toContain('Pendiente de activación');
         expect(wrapper.text()).toContain('Reenviar invitación');
-        expect(wrapper.text()).toContain('Inteligencia Artificial · A');
+        expect(wrapper.text()).toContain('activo@example.test');
         expect(wrapper.text().match(/Editar docente/g)).toHaveLength(3);
     });
 
-    it('no lista un paralelo cuya asignación fue retirada', () => {
+    it('muestra al docente pendiente sin datos de paralelos', () => {
         const wrapper = mount(TeacherAssignmentsPanel, {
-            props: { data: inactivePendingData, periodParallels: [{ id: 'parallel-1', label: 'Inteligencia Artificial · A' }] },
+            props: { data: inactivePendingData },
             global: {
                 stubs: {
                     Card: passthrough,
@@ -133,13 +133,13 @@ describe('TeacherAssignmentsPanel', () => {
         });
 
         expect(wrapper.text()).toContain('Docente retirado');
-        expect(wrapper.text()).toContain('Sin paralelo este período');
-        expect(wrapper.text()).not.toContain('Inteligencia Artificial · A');
+        expect(wrapper.text()).toContain('Pendiente de activación');
+        expect(wrapper.text()).not.toContain('Inteligencia Artificial');
     });
 
     it('muestra al docente activo sin paralelo con estado Activa', () => {
         const wrapper = mount(TeacherAssignmentsPanel, {
-            props: { data: { ...data, pendingTeachers: [], careerTeachers: [data.careerTeachers[2]], teacherAssignments: [] }, periodParallels: [] },
+            props: { data: { ...data, pendingTeachers: [], careerTeachers: [data.careerTeachers[2]], teacherAssignments: [] } },
             global: {
                 stubs: {
                     Card: passthrough,
@@ -177,7 +177,6 @@ describe('TeacherAssignmentsPanel', () => {
         expect(text).toContain('Docente sin paralelo');
         expect(text).toContain('docente2.pruebas@example.test');
         expect(text).toContain('Activa');
-        expect(text).toContain('Sin paralelo este período');
         expect(text).not.toContain('Pendiente de activación');
         expect(text).not.toContain('Reenviar invitación');
     });
