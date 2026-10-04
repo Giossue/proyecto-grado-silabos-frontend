@@ -12,11 +12,7 @@ defineProps<{
     <Toaster />
     <div class="grid min-h-svh bg-background lg:grid-cols-2">
         <div class="relative flex flex-col gap-4 p-6 md:p-10">
-            <div class="flex items-center justify-between">
-                <RouterLink to="/" class="flex items-center gap-2 font-medium">
-                    <img src="/logo-ueb.png" alt="Universidad Estatal de Bolívar" class="size-10 object-contain" />
-                    Sílabos UEB
-                </RouterLink>
+            <div class="flex items-center justify-end">
                 <AppearanceToggle />
             </div>
             <div class="flex flex-1 items-center justify-center">

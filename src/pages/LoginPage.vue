@@ -48,7 +48,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-  <AuthSimpleLayout title="Iniciar sesión" description="Ingrese con la cuenta asignada por la institución.">
+  <AuthSimpleLayout title="Iniciar sesión">
     <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />
     <form class="flex flex-col gap-6" @submit.prevent="submit">
       <FieldGroup>
