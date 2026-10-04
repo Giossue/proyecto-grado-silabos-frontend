@@ -213,7 +213,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
   >
     <template #actions>
       <PeriodPreparationSheet
-        v-if="mode === 'schedule' && schedule && assignments && pendingPreparation"
+        v-if="mode === 'schedule' && schedule && assignments && scheduleTab === 'materias' && pendingPreparation"
         :scheduled-subjects="schedule.scheduledSubjects"
         :options="schedule.options"
         :assignments="assignments.teacherAssignments"
@@ -222,7 +222,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         :disabled="Boolean(schedule.career.lock_reason)"
         @saved="handlePeriodPrepared"
       />
-      <DropdownMenu v-if="mode === 'schedule' && schedule && assignments && !pendingPreparation">
+      <DropdownMenu v-if="mode === 'schedule' && schedule && assignments && (scheduleTab === 'docentes' || !pendingPreparation)">
         <DropdownMenuTrigger as-child><Button><UserPlus data-icon="inline-start" aria-hidden="true" />Gestionar docente<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end"><DropdownMenuGroup>
           <DropdownMenuItem v-if="assignments.canCreateTeacher" @select="teacherOpen = true">Crear docente</DropdownMenuItem>
