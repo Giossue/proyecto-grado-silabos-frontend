@@ -133,5 +133,5 @@ onMounted(load);
         </div>
     </PageFrame>
     <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading" variant="workspace" />
+    <LoadingSkeleton v-else-if="loading" variant="workspace" :workspace-count="sessionState.current.value?.available_roles.length ?? 3" />
 </template>

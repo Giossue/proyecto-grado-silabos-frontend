@@ -53,7 +53,7 @@ onMounted(load);
     <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca. Coordinación y docencia van con su carrera; biblioteca trabaja con toda la universidad. Al desactivar una, su sesión se cierra.">
         <template #actions><ManagedUserSheet v-if="result" :roles="result.roles" :careers="result.careers" :faculties="result.faculties ?? []" @saved="changed" /></template>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-if="loading && !result" variant="table" :columns="5" />
+        <LoadingSkeleton v-if="loading && !result" variant="table" :columns="5" :filters="3" :cell-lines="2" />
 
         <Card v-if="result"><CardContent class="flex flex-col gap-4">
             <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters">

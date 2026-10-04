@@ -25,6 +25,23 @@ beforeEach(() => { vi.resetAllMocks(); vi.mocked(getAiChat).mockResolvedValue(em
 afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); vi.useRealTimers(); });
 
 describe('SyllabusUnitAssistant', () => {
+  it('anuncia la carga de la conversación y conserva el formulario hasta recibir el contexto', async () => {
+    let finish!: (value: AiChat) => void;
+    vi.mocked(getAiChat).mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+    const wrapper = render();
+
+    expect(wrapper.get('[aria-label="Cargando conversación"]').attributes('aria-busy')).toBe('true');
+    expect(wrapper.get('textarea').attributes('disabled')).toBeDefined();
+    expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeDefined();
+
+    finish(empty);
+    await flushPromises();
+
+    expect(wrapper.find('[aria-label="Cargando conversación"]').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Comienza una conversación');
+    expect(wrapper.get('textarea').attributes('disabled')).toBeUndefined();
+  });
+
   it('consulta sobre unidades sin lanzar revisión ni modificar el sílabo, y presenta la evidencia de la respuesta', async () => {
     vi.useFakeTimers();
     vi.mocked(getAiChat).mockResolvedValueOnce(empty).mockResolvedValueOnce(conversation({ ...assistant, status: 'pendiente', content: '', citations: [] })).mockResolvedValueOnce(conversation(assistant));

@@ -14,9 +14,11 @@ import Heading from '@/components/Heading.vue';
 import TwoFactorRecoveryCodes from '@/components/TwoFactorRecoveryCodes.vue';
 import TwoFactorSetupModal from '@/components/TwoFactorSetupModal.vue';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 
-const enabled = ref(false);
+const enabled = ref<boolean | null>(null);
+const loading = ref(true);
 const confirmationRequired = ref(false);
 const qrCodeSvg = ref<string | null>(null);
 const recoveryCodes = ref<string[]>([]);
@@ -28,12 +30,15 @@ const messageOf = (reason: unknown, fallback: string): string =>
     reason instanceof ApiError ? reason.message : fallback;
 
 const load = async (): Promise<void> => {
+    loading.value = true;
     try {
         const status = await getTwoFactorStatus();
         enabled.value = status.enabled;
         confirmationRequired.value = status.confirmation_required;
     } catch (reason) {
         error.value = messageOf(reason, 'No se pudo consultar el segundo factor.');
+    } finally {
+        loading.value = false;
     }
 };
 
@@ -103,7 +108,12 @@ onMounted(() => void load());
         <Heading variant="small" title="Autenticación de dos factores" description="Administre la protección adicional de su cuenta" />
         <FeedbackAlert v-if="error" :message="error" />
 
-        <div v-if="!enabled" class="flex flex-col items-start justify-start gap-4">
+        <div v-if="loading" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando autenticación de dos factores">
+            <span class="sr-only">Cargando autenticación de dos factores…</span>
+            <div aria-hidden="true" class="flex flex-col gap-4"><div class="flex flex-col gap-2"><Skeleton class="h-4 w-full" /><Skeleton class="h-4 w-5/6" /></div><Skeleton class="h-9 w-32" /></div>
+        </div>
+
+        <div v-else-if="enabled === false" class="flex flex-col items-start justify-start gap-4">
             <p class="text-sm text-muted-foreground">
                 Al activarla, el inicio de sesión solicitará un código seguro generado por una aplicación TOTP en su dispositivo.
             </p>
@@ -114,7 +124,7 @@ onMounted(() => void load());
             </Button>
         </div>
 
-        <div v-else class="flex flex-col items-start justify-start gap-4">
+        <div v-else-if="enabled" class="flex flex-col items-start justify-start gap-4">
             <p class="text-sm text-muted-foreground">
                 El inicio de sesión solicitará un código temporal generado por la aplicación TOTP de su dispositivo.
             </p>

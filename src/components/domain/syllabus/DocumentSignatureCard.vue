@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/lib/toast';
 
@@ -157,11 +158,23 @@ onMounted(load);
       <div class="flex items-start justify-between gap-3">
         <CardTitle>Firma electrónica</CardTitle>
         <Badge v-if="status" :variant="status.state === 'firmado' ? 'default' : status.state === 'anulado' ? 'destructive' : 'secondary'">{{ stateLabel }}</Badge>
+        <Skeleton v-else-if="loading" aria-hidden="true" class="h-5 w-32 shrink-0 rounded-full" />
       </div>
-      <CardDescription>{{ loading && !status ? 'Consultando el estado de la firma…' : description }}</CardDescription>
+      <CardDescription v-if="loading && !status" aria-hidden="true"><Skeleton class="h-4 w-full" /></CardDescription>
+      <CardDescription v-else>{{ description }}</CardDescription>
     </CardHeader>
     <CardContent class="flex flex-col gap-4">
       <Alert v-if="loadError" variant="destructive"><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ loadError }}</span><Button size="sm" variant="outline" @click="load">Reintentar</Button></AlertDescription></Alert>
+      <div v-else-if="loading && !status" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando firma electrónica">
+        <span class="sr-only">Consultando el estado de la firma…</span>
+        <div aria-hidden="true" class="flex flex-col gap-4">
+          <div class="flex items-start gap-2 rounded-md border p-3">
+            <Skeleton class="size-4 shrink-0" />
+            <div class="flex min-w-0 flex-1 flex-col gap-2"><Skeleton class="h-4 w-full" /><Skeleton class="h-4 w-3/4" /></div>
+          </div>
+          <div class="flex flex-wrap gap-2"><Skeleton class="h-9 w-44" /><Skeleton class="h-9 w-32" /></div>
+        </div>
+      </div>
       <template v-if="status">
         <ol v-if="orderedSignatures.length" class="flex flex-col gap-2">
           <li v-for="item in orderedSignatures" :key="item.role" class="flex items-start gap-2 rounded-md border p-3 text-sm">

@@ -89,7 +89,7 @@ onMounted(() => { void load(); });
       <ConvocationDeadlineCard v-if="dashboard.deadline && deadlineRole" :deadline="dashboard.deadline" :role="deadlineRole" @tracking="trackingOpen = true" />
       <SetupChecklist v-if="setup" :setup="setup" @action="handleSetupAction" />
     </template>
-    <LoadingSkeleton v-else variant="dashboard" />
+    <LoadingSkeleton v-else variant="dashboard" :dashboard-role="roleCode ?? undefined" />
   </PageFrame>
   <ConvocationOpeningDialog
     v-if="dashboard?.coordination_convocation"

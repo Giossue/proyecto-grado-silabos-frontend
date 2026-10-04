@@ -51,7 +51,7 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Cola de revisión" description="Sílabos que los docentes ya enviaron y esperan revisión.">
-        <LoadErrorState v-if="error" :message="error" @retry="load" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="6" />
+        <LoadErrorState v-if="error" :message="error" @retry="load" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="6" :filters="1" :cell-lines="2" />
     <Card v-if="data"><CardContent class="flex flex-col gap-4">
       <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters"><template #search><Field><FieldLabel for="review-search" class="sr-only">Buscar por asignatura o código</FieldLabel><Input id="review-search" v-model="filters.search" type="search" placeholder="Buscar asignatura o código" /></Field></template><template #filters><Field><FieldLabel for="review-state" class="sr-only">Estado</FieldLabel><Select v-model="filters.state" name="state"><SelectTrigger id="review-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="option in REVIEW_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent></Select></Field></template></FilterToolbar></form>
       <Table><TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Docente(s)</TableHead><TableHead>Revisión</TableHead><TableHead>Estado</TableHead><TableHead>Pendientes</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>

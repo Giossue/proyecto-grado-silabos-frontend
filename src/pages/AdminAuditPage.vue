@@ -46,7 +46,7 @@ onMounted(() => { void load(); });
     <template #actions><Button as-child variant="outline"><RouterLink :to="paths.admin.processes">Trabajos fallidos</RouterLink></Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <Card v-else-if="loading && !data">
-      <CardContent><LoadingSkeleton variant="table-body" :columns="4" /></CardContent>
+      <CardContent><LoadingSkeleton variant="table-body" :columns="4" :search="false" :filters="0" :actions="false" :cell-lines="2" /></CardContent>
     </Card>
     <Card v-else-if="data">
       <CardContent class="flex flex-col gap-4">

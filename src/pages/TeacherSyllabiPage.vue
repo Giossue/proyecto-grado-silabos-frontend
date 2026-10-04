@@ -59,7 +59,7 @@ onMounted(load);
             <template #filters><Field><FieldLabel for="syllabi-state" class="sr-only">Estado</FieldLabel><Select v-model="state" name="state"><SelectTrigger id="syllabi-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="option in SYLLABUS_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select></Field></template>
           </FilterToolbar>
         </form>
-        <LoadingSkeleton v-if="!result && !error" variant="table-body" :columns="5" />
+        <LoadingSkeleton v-if="!result && !error" variant="table-body" :columns="5" :search="false" :filters="0" :actions="false" />
         <Table v-if="result">
           <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos</TableHead><TableHead>Estado</TableHead><TableHead>Iniciado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
           <TableBody>

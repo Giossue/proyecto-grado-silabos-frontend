@@ -63,6 +63,22 @@ afterEach(() => {
 });
 
 describe('DocumentSignatureCard', () => {
+  it('anuncia la consulta y ofrece firmar solo después de recibir el estado', async () => {
+    let finish!: (value: SignatureStatus) => void;
+    getSignatureStatus.mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+    const wrapper = await mountCard();
+
+    expect(wrapper.get('[aria-label="Cargando firma electrónica"]').attributes('aria-busy')).toBe('true');
+    expect(wrapper.text()).not.toContain('Le corresponde firmar');
+    expect(wrapper.text()).not.toContain('Firmar electrónicamente');
+
+    finish(status());
+    await flushPromises();
+
+    expect(wrapper.find('[aria-label="Cargando firma electrónica"]').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Firmar electrónicamente');
+  });
+
   it('limpia archivo y clave al cancelar y exige seleccionarlos de nuevo', async () => {
     getSignatureStatus.mockResolvedValue(status());
     await mountCard();

@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
-import { Spinner } from '@/components/ui/spinner';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths } from '@/lib/routes';
 import { relativeTime } from '@/lib/relativeTime';
@@ -159,8 +159,19 @@ const ignoreBell = (event: Event): void => {
             <ChoiceGroup :model-value="status" :options="statusOptions" label="Filtrar notificaciones" class="px-4" @update:model-value="updateStatus" />
 
             <div class="max-h-(--notifications-max-height) overflow-y-auto px-2" :class="{ 'pb-3': !hasActiveRole }" aria-live="polite">
-                <div v-if="loading && items.length === 0" class="flex justify-center py-10">
-                    <Spinner />
+                <div v-if="loading && items.length === 0" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando notificaciones">
+                    <span class="sr-only">Cargando notificaciones…</span>
+                    <div aria-hidden="true" class="flex flex-col">
+                        <div v-for="item in 3" :key="item" class="flex items-start gap-3 px-3 py-4">
+                            <Skeleton class="size-10 shrink-0 rounded-full" />
+                            <div class="flex min-w-0 flex-1 flex-col gap-2">
+                                <Skeleton class="h-4 w-3/4" />
+                                <Skeleton class="h-4 w-full" />
+                                <Skeleton class="h-4 w-5/6" />
+                                <Skeleton class="h-3 w-24" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <FeedbackAlert v-else-if="error" :message="error" />
                 <EmptyState v-else-if="items.length === 0" :title="status === 'unread' ? 'No tiene notificaciones sin leer.' : 'No tiene notificaciones.'" />

@@ -60,7 +60,7 @@ onMounted(load);
         </template>
 
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 7 : 5" />
+        <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 5 : 3" :filters="1" />
 
         <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" @changed="changed" />
     </PageFrame>

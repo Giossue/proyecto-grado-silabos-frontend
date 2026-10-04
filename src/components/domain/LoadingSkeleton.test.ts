@@ -12,6 +12,7 @@ const variants = [
   'dashboard',
   'academic',
   'catalog',
+  'cards',
   'academic-structure',
   'notifications',
   'workspace',
@@ -53,5 +54,38 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.find('.bg-muted.inline-flex').exists()).toBe(false);
     expect(wrapper.findAll('[data-slot="skeleton"]').length).toBeGreaterThan(0);
     expect(wrapper.findAll('button')).toHaveLength(0);
+  });
+
+  it('no duplica la búsqueda ni los filtros que ya están visibles fuera de la tabla', async () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'table-body' } });
+
+    expect(wrapper.find('[data-skeleton="table-toolbar"]').exists()).toBe(false);
+    expect(wrapper.find('[data-skeleton="table-pagination"]').exists()).toBe(true);
+
+    await wrapper.setProps({ search: true, filters: 1 });
+
+    expect(wrapper.find('[data-skeleton="table-toolbar"]').exists()).toBe(true);
+    expect(wrapper.findAll('[role="status"]')).toHaveLength(1);
+    expect(wrapper.find('button, input, select, [tabindex]').exists()).toBe(false);
+  });
+
+  it.each(['bibliotecario', 'decano'] as const)('no inventa plazo ni puesta en marcha para %s', (dashboardRole) => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole } });
+
+    expect(wrapper.find('[data-skeleton="dashboard-metrics"]').exists()).toBe(true);
+    expect(wrapper.find('[data-skeleton="dashboard-deadline"]').exists()).toBe(false);
+    expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(false);
+  });
+
+  it('actualiza la superficie al cambiar el rol activo durante la carga', async () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole: 'coordinador' } });
+
+    expect(wrapper.find('[data-skeleton="dashboard-deadline"]').exists()).toBe(true);
+
+    await wrapper.setProps({ dashboardRole: 'bibliotecario' });
+
+    expect(wrapper.find('[data-skeleton="dashboard-deadline"]').exists()).toBe(false);
+    expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(false);
+    expect(wrapper.findAll('[role="status"]')).toHaveLength(1);
   });
 });

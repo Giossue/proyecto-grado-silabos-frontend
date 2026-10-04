@@ -1,5 +1,11 @@
 <script setup lang="ts">
-import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
+import { computed } from 'vue';
+import type { RoleCode } from '@/api/session';
+import AcademicLoadingSkeleton from '@/components/domain/loading/AcademicLoadingSkeleton.vue';
+import DashboardLoadingSkeleton from '@/components/domain/loading/DashboardLoadingSkeleton.vue';
+import DocumentLoadingSkeleton from '@/components/domain/loading/DocumentLoadingSkeleton.vue';
+import TableLoadingSkeleton from '@/components/domain/loading/TableLoadingSkeleton.vue';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 type LoadingVariant =
@@ -23,475 +29,137 @@ type LoadingVariant =
     | 'template'
     | 'comparison';
 
-const props = withDefaults(
-    defineProps<{
-        variant?: LoadingVariant;
-        rows?: number;
-        columns?: number;
-        mode?: 'curriculum' | 'schedule' | 'teachers';
-    }>(),
-    {
-        variant: 'table',
-        rows: 5,
-        columns: 6,
-    },
-);
+const props = withDefaults(defineProps<{
+    variant?: LoadingVariant;
+    rows?: number;
+    columns?: number;
+    mode?: 'curriculum' | 'schedule' | 'teachers';
+    filters?: number;
+    search?: boolean;
+    pagination?: boolean;
+    actions?: boolean;
+    cellLines?: number;
+    dashboardRole?: RoleCode;
+    workspaceCount?: number;
+    reviewStage?: 'coordination' | 'library' | 'dean';
+    readonly?: boolean;
+}>(), {
+    variant: 'table',
+    rows: 5,
+    columns: 6,
+    filters: 0,
+    search: undefined,
+    pagination: true,
+    actions: true,
+    cellLines: 1,
+    workspaceCount: 3,
+    readonly: false,
+});
 
-const columnCount = (): number => Math.max(props.columns, 2);
-const gridColumns = (): string =>
-    `minmax(var(--layout-skeleton-leading-column), 2fr) repeat(${columnCount() - 1}, minmax(var(--layout-skeleton-column), 1fr))`;
+const tableProps = computed(() => ({
+    rows: props.rows,
+    columns: props.columns,
+    search: props.search ?? props.variant !== 'table-body',
+    filters: props.filters,
+    pagination: props.pagination,
+    actions: props.actions,
+    cellLines: props.cellLines,
+}));
 </script>
 
 <template>
-    <div
-        class="flex w-full min-w-0 flex-col gap-6"
-        role="status"
-        aria-live="polite"
-        aria-busy="true"
-        aria-label="Cargando contenido"
-    >
+    <div class="flex w-full min-w-0 flex-col gap-6" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando contenido">
         <span class="sr-only">Cargando contenido…</span>
         <div aria-hidden="true" class="contents">
-            <template v-if="variant === 'table'">
-                <div class="overflow-hidden rounded-xl border bg-card">
-                    <div class="border-b p-4">
-                        <div class="flex flex-col gap-3 lg:flex-row lg:items-end">
-                            <Skeleton class="h-10 min-w-0 flex-1" />
-                            <div class="grid gap-3 sm:grid-cols-2 lg:flex">
-                                <Skeleton class="h-10 w-full sm:w-44" />
-                                <Skeleton class="h-10 w-full sm:w-44" />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto p-3">
-                        <div class="min-w-232 overflow-hidden rounded-lg border">
-                            <div
-                                class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
-                                :style="{ gridTemplateColumns: gridColumns() }"
-                            >
-                                <Skeleton v-for="column in columnCount()" :key="`header-${column}`" class="h-4 w-3/4" />
-                            </div>
-                            <div class="flex flex-col gap-px bg-border">
-                                <div
-                                    v-for="row in props.rows"
-                                    :key="`row-${row}`"
-                                    class="grid gap-3 bg-background px-3 py-4"
-                                    :style="{ gridTemplateColumns: gridColumns() }"
-                                >
-                                    <Skeleton v-for="column in columnCount()" :key="`cell-${row}-${column}`" class="h-4 w-full" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between border-t px-4 py-3">
-                        <Skeleton class="h-4 w-40" />
-                        <Skeleton class="h-9 w-32" />
-                    </div>
-                </div>
-            </template>
+            <TableLoadingSkeleton v-if="variant === 'table-body'" v-bind="tableProps" />
 
-            <template v-else-if="variant === 'table-body'">
-                <div class="overflow-x-auto">
-                    <div class="min-w-192 overflow-hidden rounded-lg border">
-                        <div
-                            class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
-                            :style="{ gridTemplateColumns: gridColumns() }"
-                        >
-                            <Skeleton v-for="column in columnCount()" :key="`header-${column}`" class="h-4 w-3/4" />
-                        </div>
-                        <div class="flex flex-col gap-px bg-border">
-                            <div
-                                v-for="row in props.rows"
-                                :key="`row-${row}`"
-                                class="grid gap-3 bg-background px-3 py-4"
-                                :style="{ gridTemplateColumns: gridColumns() }"
-                            >
-                                <Skeleton v-for="column in columnCount()" :key="`cell-${row}-${column}`" class="h-4 w-full" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex items-center justify-between">
-                    <Skeleton class="h-4 w-40" />
-                    <Skeleton class="h-9 w-32" />
-                </div>
-            </template>
+            <Card v-else-if="variant === 'table' || variant === 'catalog' || variant === 'academic' || variant === 'table-detail'" class="min-w-0">
+                <CardHeader v-if="variant === 'table-detail'">
+                    <Skeleton class="h-5 w-52 max-w-full" />
+                    <Skeleton class="h-4 w-80 max-w-full" />
+                </CardHeader>
+                <CardContent><TableLoadingSkeleton v-bind="tableProps" /></CardContent>
+            </Card>
 
-            <template v-else-if="variant === 'cards'">
-                <Skeleton class="h-10 w-full" />
-                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                    <div v-for="card in 6" :key="`card-${card}`" class="flex min-h-44 flex-col rounded-xl border bg-card p-6">
-                        <div class="flex items-start justify-between gap-3">
-                            <Skeleton class="h-5 w-2/3" />
-                            <Skeleton class="size-8" />
-                        </div>
-                        <div class="mt-5 flex flex-col gap-2">
+            <DashboardLoadingSkeleton v-else-if="variant === 'dashboard'" :role="dashboardRole" />
+
+            <AcademicLoadingSkeleton v-else-if="variant === 'academic-structure'" :mode="mode" :rows="rows" />
+
+            <DocumentLoadingSkeleton
+                v-else-if="variant === 'syllabus' || variant === 'review' || variant === 'template' || variant === 'comparison' || variant === 'documents'"
+                :variant="variant"
+                :rows="rows"
+                :review-stage="reviewStage"
+                :readonly="readonly"
+            />
+
+            <Card v-else-if="variant === 'notifications'">
+                <CardContent class="flex flex-col gap-3">
+                    <div v-for="notification in rows" :key="notification" class="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="flex min-w-0 flex-1 flex-col gap-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <Skeleton class="h-5 w-56 max-w-full" />
+                                <Skeleton v-if="notification === 1" class="h-5 w-12 rounded-full" />
+                            </div>
                             <Skeleton class="h-4 w-full" />
                             <Skeleton class="h-4 w-4/5" />
+                            <Skeleton class="mt-1 h-3 w-48 max-w-full" />
                         </div>
-                        <Skeleton class="mt-auto h-5 w-32" />
+                        <div v-if="notification % 2 === 1" class="flex shrink-0 flex-wrap gap-2">
+                            <Skeleton class="h-8 w-24" />
+                            <Skeleton class="h-8 w-16" />
+                        </div>
                     </div>
-                </div>
-                <div class="flex items-center justify-between gap-4">
-                    <Skeleton class="h-4 w-36" />
-                    <Skeleton class="h-9 w-32" />
-                </div>
-            </template>
+                </CardContent>
+            </Card>
 
-            <template v-else-if="variant === 'table-detail'">
-                <div class="overflow-hidden rounded-xl border bg-card">
-                    <div class="grid gap-1.5 px-6 py-6">
-                        <Skeleton class="h-6 w-52" />
-                        <Skeleton class="h-4 w-80 max-w-full" />
-                    </div>
-                    <div class="flex flex-col gap-4 px-6 pb-6">
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-                            <Skeleton class="h-10 min-w-0 flex-1" />
-                            <Skeleton class="h-10 w-full sm:w-44" />
-                        </div>
-                        <div class="overflow-x-auto">
-                            <div class="min-w-128 overflow-hidden rounded-lg border">
-                                <div
-                                    class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
-                                    :style="{ gridTemplateColumns: gridColumns() }"
-                                >
-                                    <Skeleton v-for="column in columnCount()" :key="`detail-header-${column}`" class="h-4 w-3/4" />
-                                </div>
-                                <div class="flex flex-col gap-px bg-border">
-                                    <div
-                                        v-for="row in props.rows"
-                                        :key="`detail-row-${row}`"
-                                        class="grid gap-3 bg-background px-3 py-4"
-                                        :style="{ gridTemplateColumns: gridColumns() }"
-                                    >
-                                        <Skeleton v-for="column in columnCount()" :key="`detail-cell-${row}-${column}`" class="h-4 w-full" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <Skeleton class="h-4 w-40" />
-                            <Skeleton class="h-9 w-32" />
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'dashboard'">
-                <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
-                    <div v-for="tile in 4" :key="`tile-${tile}`" class="rounded-xl border bg-card p-4">
-                        <div class="flex items-start justify-between gap-3">
-                            <Skeleton class="h-4 w-24" />
-                            <Skeleton class="size-9 rounded-lg" />
-                        </div>
-                        <Skeleton class="mt-4 h-8 w-20" />
-                        <Skeleton class="mt-2 h-3 w-32" />
-                    </div>
-                </div>
-                <div class="rounded-xl border bg-card p-5">
-                    <div class="flex flex-col gap-4">
-                        <div class="flex items-center justify-between gap-4">
-                            <div class="flex min-w-0 flex-col gap-2">
-                                <Skeleton class="h-5 w-48" />
-                                <Skeleton class="h-4 w-72 max-w-full" />
-                            </div>
-                            <Skeleton class="h-9 w-24" />
-                        </div>
-                        <Skeleton class="h-3 w-full" />
-                        <div class="grid gap-3 sm:grid-cols-3">
-                            <Skeleton v-for="step in 3" :key="`setup-${step}`" class="h-16 w-full" />
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'academic'">
-                <div class="flex flex-wrap items-center justify-between gap-3">
-                    <Skeleton class="h-10 w-64" />
-                    <div class="flex gap-2">
-                        <Skeleton class="h-10 w-32" />
-                        <Skeleton class="h-10 w-36" />
-                    </div>
-                </div>
-                <div class="rounded-xl border bg-card p-5">
-                    <div class="flex flex-col gap-3 border-b pb-5">
-                        <Skeleton class="h-6 w-56" />
-                        <Skeleton class="h-4 w-96 max-w-full" />
-                    </div>
-                    <div class="mt-5 overflow-hidden rounded-lg border">
-                        <div class="grid grid-cols-4 gap-3 border-b bg-muted/40 px-3 py-3">
-                            <Skeleton v-for="column in 4" :key="`academic-header-${column}`" class="h-4 w-3/4" />
-                        </div>
-                        <div class="flex flex-col gap-px bg-border">
-                            <div v-for="row in 5" :key="`academic-row-${row}`" class="grid grid-cols-4 gap-3 bg-background px-3 py-4">
-                                <Skeleton v-for="column in 4" :key="`academic-cell-${row}-${column}`" class="h-4 w-full" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'catalog'">
-                <div class="overflow-hidden rounded-xl border bg-card p-6">
-                    <div class="flex flex-col gap-4">
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
-                            <Skeleton class="h-10 min-w-0 flex-1" />
-                            <Skeleton class="h-10 w-full sm:w-44" />
-                        </div>
-                        <div class="overflow-x-auto">
-                            <div class="min-w-168 overflow-hidden rounded-lg border">
-                                <div
-                                    class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
-                                    :style="{ gridTemplateColumns: gridColumns() }"
-                                >
-                                    <Skeleton v-for="column in columnCount()" :key="`catalog-header-${column}`" class="h-4 w-3/4" />
-                                </div>
-                                <div class="flex flex-col gap-px bg-border">
-                                    <div
-                                        v-for="row in props.rows"
-                                        :key="`catalog-row-${row}`"
-                                        class="grid gap-3 bg-background px-3 py-4"
-                                        :style="{ gridTemplateColumns: gridColumns() }"
-                                    >
-                                        <Skeleton v-for="column in columnCount()" :key="`catalog-cell-${row}-${column}`" class="h-4 w-full" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between">
-                            <Skeleton class="h-4 w-40" />
-                            <Skeleton class="h-9 w-32" />
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'academic-structure'">
-                <template v-if="props.mode === 'curriculum'">
-                    <div
-                        data-skeleton="curriculum-canvas"
-                        class="relative h-(--curriculum-canvas-height) min-h-136 overflow-hidden rounded-lg border bg-background shadow-surface"
-                    >
-                        <div class="absolute inset-0 overflow-hidden p-6 sm:p-8">
-                            <div class="grid h-full grid-cols-2 gap-5 sm:grid-cols-4 sm:gap-8">
-                                <div v-for="cycle in 4" :key="`curriculum-cycle-${cycle}`" class="flex min-w-0 flex-col gap-4">
-                                    <Skeleton class="h-7 w-24 max-w-full rounded-md" />
-                                    <div class="flex min-w-0 flex-col gap-3">
-                                        <Skeleton v-for="subject in 3" :key="`curriculum-subject-${cycle}-${subject}`" class="h-20 w-full rounded-lg" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="absolute right-3 top-3 flex w-36 flex-col gap-3 rounded-lg border bg-card p-3">
-                            <Skeleton class="h-4 w-24" />
-                            <Skeleton class="h-3 w-full" />
-                            <Skeleton class="h-3 w-28" />
-                        </div>
-                        <div class="absolute bottom-3 left-3 flex flex-col overflow-hidden rounded-md border bg-card">
-                            <Skeleton class="h-8 w-8 rounded-none" />
-                            <Skeleton class="h-8 w-8 rounded-none" />
-                            <Skeleton class="h-8 w-8 rounded-none" />
-                        </div>
-                        <Skeleton class="absolute bottom-3 right-3 h-24 w-32 rounded-md border" />
-                    </div>
-                </template>
-                <div v-else class="overflow-hidden rounded-xl border bg-card p-6">
-                    <div class="flex flex-col gap-4">
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end"><Skeleton class="h-10 min-w-0 flex-1" /><Skeleton class="h-10 w-full sm:w-52" /></div>
-                        <div class="overflow-x-auto">
-                            <div class="min-w-192 overflow-hidden rounded-lg border">
-                                <div
-                                    class="grid items-center gap-3 border-b bg-muted/40 px-3 py-3"
-                                    :style="{ gridTemplateColumns: gridColumns() }"
-                                >
-                                    <Skeleton v-for="column in columnCount()" :key="`structure-header-${column}`" class="h-4 w-3/4" />
-                                </div>
-                                <div class="flex flex-col gap-px bg-border">
-                                    <div v-for="row in props.rows" :key="`structure-row-${row}`" class="grid gap-3 bg-background px-3 py-4" :style="{ gridTemplateColumns: gridColumns() }"><Skeleton v-for="column in columnCount()" :key="`structure-cell-${row}-${column}`" class="h-4 w-full" /></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex items-center justify-between"><Skeleton class="h-4 w-40" /><Skeleton class="h-9 w-32" /></div>
-                    </div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'notifications'">
-                <div class="rounded-xl border bg-card p-4">
-                    <div class="flex flex-col gap-4">
-                        <div v-for="notification in props.rows" :key="`notification-${notification}`" class="rounded-lg border p-4">
-                            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                                <div class="flex min-w-0 flex-1 flex-col gap-2">
-                                    <Skeleton class="h-5 w-56 max-w-full" />
-                                    <Skeleton class="h-4 w-full" />
-                                    <Skeleton class="h-3 w-32" />
-                                </div>
-                                <div class="flex gap-2">
-                                    <Skeleton class="h-9 w-28" />
-                                    <Skeleton class="h-9 w-32" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'workspace'">
-                <div class="mx-auto w-full max-w-6xl">
-                    <div class="flex flex-col gap-3">
-                        <Skeleton class="h-4 w-72" />
-                        <Skeleton class="h-5 w-96 max-w-full" />
-                    </div>
-                    <div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                        <div v-for="card in 3" :key="`workspace-${card}`" class="flex min-h-36 flex-col justify-between rounded-xl border bg-card p-5">
-                            <div class="flex items-start justify-between gap-3">
-                                <Skeleton class="h-6 w-40" />
-                                <Skeleton class="h-6 w-20" />
-                            </div>
-                            <Skeleton class="h-10 w-full" />
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'syllabus'">
-                <WorkspaceLayout variant="syllabus">
-                    <main class="flex min-w-0 flex-col gap-8">
-                        <div class="flex flex-col gap-2 border-t pt-8 first:border-t-0 first:pt-0">
-                            <Skeleton class="h-6 w-64" />
-                            <Skeleton class="h-4 w-96 max-w-full" />
-                        </div>
-                        <div v-for="section in 4" :key="`syllabus-section-${section}`" class="flex flex-col gap-5 border-t pt-8">
-                            <div class="flex flex-col gap-2">
-                                <Skeleton class="h-6 w-56" />
-                                <Skeleton class="h-4 w-80 max-w-full" />
-                            </div>
-                            <div class="flex flex-col gap-4">
-                                <Skeleton class="h-4 w-48" />
-                                <Skeleton class="h-10 w-full" />
-                                <Skeleton class="h-32 w-full" />
-                            </div>
-                        </div>
-                    </main>
-                    <aside class="flex min-w-0 flex-col gap-6 self-start">
-                        <div class="rounded-xl border bg-card p-5">
-                            <div class="flex flex-col gap-3">
-                                <Skeleton class="h-6 w-40" />
-                                <Skeleton class="h-4 w-full" />
-                                <Skeleton class="h-24 w-full" />
-                                <Skeleton class="h-10 w-full" />
-                            </div>
-                        </div>
-                    </aside>
-                </WorkspaceLayout>
-            </template>
-
-            <template v-else-if="variant === 'review'">
-                <div class="flex flex-col gap-3">
-                    <Skeleton class="h-4 w-32" />
+            <div v-else-if="variant === 'workspace'" class="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-6 p-4 sm:p-6">
+                <div class="flex min-w-0 flex-col gap-2">
                     <Skeleton class="h-8 w-72 max-w-full" />
-                    <Skeleton class="h-4 w-96 max-w-full" />
+                    <Skeleton class="h-5 w-112 max-w-full" />
                 </div>
-                <WorkspaceLayout variant="review">
-                    <main class="flex min-w-0 flex-col gap-6">
-                        <div v-for="card in 3" :key="`review-card-${card}`" class="rounded-xl border bg-card p-5">
-                            <div class="flex flex-col gap-3 border-b pb-5">
-                                <Skeleton class="h-6 w-56" />
-                                <Skeleton class="h-4 w-80 max-w-full" />
-                            </div>
-                            <div class="mt-5 flex flex-col gap-3">
-                                <Skeleton class="h-4 w-44" />
-                                <Skeleton class="h-24 w-full" />
-                                <Skeleton class="h-20 w-full" />
-                            </div>
-                        </div>
-                    </main>
-                    <aside class="rounded-xl border bg-card p-5">
-                        <div class="flex flex-col gap-4">
-                            <Skeleton class="h-6 w-44" />
-                            <Skeleton v-for="item in 3" :key="`review-observation-${item}`" class="h-24 w-full" />
-                        </div>
-                    </aside>
-                </WorkspaceLayout>
-            </template>
+                <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <Card v-for="card in Math.max(1, workspaceCount)" :key="card" class="h-full min-w-0">
+                        <CardHeader class="gap-3">
+                            <Skeleton class="h-5 w-3/4" />
+                            <Skeleton class="h-4 w-full" />
+                            <Skeleton class="h-4 w-2/3" />
+                        </CardHeader>
+                        <CardFooter class="mt-auto"><Skeleton class="h-9 w-full" /></CardFooter>
+                    </Card>
+                </div>
+            </div>
 
-            <template v-else-if="variant === 'documents'">
-                <Skeleton class="h-20 w-full rounded-xl" />
-                <Skeleton class="h-16 w-full rounded-xl" />
-                <div class="overflow-hidden rounded-xl border bg-card">
-                    <div class="border-b p-4"><Skeleton class="h-10 w-80 max-w-full" /></div>
-                    <div class="overflow-x-auto p-3">
-                        <div class="min-w-168 overflow-hidden rounded-lg border">
-                            <div class="grid grid-cols-4 gap-3 border-b bg-muted/40 px-3 py-3"><Skeleton v-for="column in 4" :key="`documents-header-${column}`" class="h-4 w-3/4" /></div>
-                            <div class="flex flex-col gap-px bg-border"><div v-for="row in 4" :key="`documents-row-${row}`" class="grid grid-cols-4 gap-3 bg-background px-3 py-4"><Skeleton v-for="column in 4" :key="`documents-cell-${row}-${column}`" class="h-4 w-full" /></div></div>
-                        </div>
+            <div v-else-if="variant === 'form'" class="flex flex-col gap-6">
+                <div v-for="row in rows" :key="row" class="flex flex-col gap-2">
+                    <Skeleton class="h-3.5 w-32" />
+                    <Skeleton class="h-9 w-full" />
+                </div>
+            </div>
+
+            <div v-else-if="variant === 'cards'" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <Card v-for="card in rows" :key="card" class="min-w-0">
+                    <CardHeader class="gap-3">
+                        <Skeleton class="h-5 w-3/4" />
+                        <Skeleton class="h-4 w-full" />
+                    </CardHeader>
+                    <CardContent><Skeleton class="h-4 w-2/3" /></CardContent>
+                </Card>
+            </div>
+
+            <Card v-else>
+                <CardHeader class="gap-3">
+                    <Skeleton class="h-5 w-56 max-w-full" />
+                    <Skeleton class="h-4 w-80 max-w-full" />
+                </CardHeader>
+                <CardContent class="flex flex-col gap-6">
+                    <div v-for="row in rows" :key="row" class="flex flex-col gap-3">
+                        <Skeleton class="h-4 w-40 max-w-full" />
+                        <Skeleton class="h-4 w-full" />
+                        <Skeleton class="h-4 w-5/6" />
                     </div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'source'">
-                <div class="rounded-xl border bg-card p-5">
-                    <div class="flex flex-col gap-3 border-b pb-5">
-                        <Skeleton class="h-6 w-56" />
-                        <Skeleton class="h-4 w-96 max-w-full" />
-                    </div>
-                    <Skeleton class="mt-5 h-112 w-full" />
-                    <div class="mt-4 flex justify-end"><Skeleton class="h-10 w-40" /></div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'template'">
-                <div class="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
-                    <div class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
-                        <Skeleton class="h-9 w-32" />
-                        <Skeleton class="h-5 w-48 justify-self-center" />
-                        <Skeleton class="h-9 w-20" />
-                    </div>
-                </div>
-                <div class="flex justify-center px-4 py-6 sm:py-8">
-                    <div class="w-full max-w-224 overflow-hidden border bg-card p-6 shadow-sm sm:p-10">
-                        <div class="flex flex-col gap-8">
-                            <div class="flex items-center justify-between"><Skeleton class="h-12 w-40" /><Skeleton class="h-12 w-40" /></div>
-                            <Skeleton class="mx-auto h-8 w-96 max-w-full" />
-                            <Skeleton v-for="block in 6" :key="`template-block-${block}`" class="h-24 w-full" />
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'comparison'">
-                <div class="rounded-xl border bg-card p-6">
-                    <div class="flex flex-col gap-2"><Skeleton class="h-6 w-72 max-w-full" /><Skeleton class="h-4 w-96 max-w-full" /></div>
-                </div>
-                <div v-for="change in 3" :key="`comparison-${change}`" class="rounded-xl border bg-card p-6">
-                    <div class="flex items-start justify-between gap-4 border-b pb-5"><div class="flex min-w-0 flex-col gap-2"><Skeleton class="h-4 w-40" /><Skeleton class="h-6 w-64 max-w-full" /></div><Skeleton class="h-6 w-28" /></div>
-                    <div class="mt-5 grid gap-4 lg:grid-cols-2"><div class="rounded-md border p-4"><Skeleton class="h-5 w-40" /><Skeleton class="mt-3 h-24 w-full" /></div><div class="rounded-md border p-4"><Skeleton class="h-5 w-40" /><Skeleton class="mt-3 h-24 w-full" /></div></div>
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'form'">
-                <div v-for="row in props.rows" :key="`form-${row}`" class="flex flex-col gap-2">
-                    <Skeleton class="h-4 w-32" />
-                    <Skeleton class="h-10 w-full" />
-                </div>
-            </template>
-
-            <template v-else-if="variant === 'detail'">
-                <div class="grid gap-6 lg:grid-cols-(--configuration-workspace-columns)">
-                    <div class="rounded-xl border bg-card p-5">
-                        <div class="flex flex-col gap-3 border-b pb-5"><Skeleton class="h-6 w-64" /><Skeleton class="h-4 w-96 max-w-full" /></div>
-                        <div class="mt-5 flex flex-col gap-4"><Skeleton v-for="row in 5" :key="`detail-row-${row}`" class="h-14 w-full" /></div>
-                    </div>
-                    <div class="rounded-xl border bg-card p-5"><div class="flex flex-col gap-4"><Skeleton class="h-6 w-44" /><Skeleton v-for="row in 4" :key="`detail-side-${row}`" class="h-16 w-full" /></div></div>
-                </div>
-            </template>
-
-            <template v-else>
-                <Skeleton class="h-8 w-1/2" />
-                <Skeleton class="h-5 w-3/4" />
-                <Skeleton class="h-72 w-full" />
-                <Skeleton class="h-40 w-full" />
-            </template>
+                </CardContent>
+            </Card>
         </div>
     </div>
 </template>

@@ -69,7 +69,7 @@ watch(() => props.open, (open) => {
 
       <div class="min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6">
         <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" />
+        <LoadingSkeleton v-else-if="loading && !data" variant="table-body" :columns="4" :search="true" :filters="1" :actions="false" :cell-lines="2" />
         <div v-else-if="data" class="flex flex-col gap-4">
           <ClientFilterBar
             :filter="syllabusFilter"

@@ -234,5 +234,5 @@ onMounted(load);
     </Dialog>
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-  <LoadingSkeleton v-else-if="loading" variant="review" />
+  <LoadingSkeleton v-else-if="loading" variant="review" review-stage="library" />
 </template>

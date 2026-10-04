@@ -1,7 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import NotificationsPopover from '@/components/NotificationsPopover.vue';
-import { getNotifications, openNotification, type Notification } from '@/api/notifications';
+import { getNotifications, openNotification, type Notification, type NotificationsResponse } from '@/api/notifications';
 import { sessionState } from '@/state/session';
 
 const { push, load } = vi.hoisted(() => ({ push: vi.fn(), load: vi.fn() }));
@@ -61,6 +61,23 @@ describe('NotificationsPopover', () => {
         });
         sessionState.replace(null);
         vi.spyOn(sessionState, 'load').mockImplementation(load);
+    });
+
+    it('mantiene el filtro visible mientras carga los avisos y reemplaza la carga al recibirlos', async () => {
+        const payload: NotificationsResponse = { filters: { status: 'all' }, unread_count: 1, notifications: { data: [notification()], current_page: 1, last_page: 1, per_page: 20, from: 1, to: 1, total: 1 } };
+        let finish!: (value: typeof payload) => void;
+        vi.mocked(getNotifications).mockResolvedValueOnce(payload).mockReturnValueOnce(new Promise((resolve) => { finish = resolve; }));
+        const wrapper = await mountOpen();
+
+        expect(wrapper.get('[aria-label="Cargando notificaciones"]').attributes('aria-busy')).toBe('true');
+        expect(wrapper.get('[role="radiogroup"]').attributes('aria-label')).toBe('Filtrar notificaciones');
+
+        finish(payload);
+        await flushPromises();
+
+        expect(wrapper.find('[aria-label="Cargando notificaciones"]').exists()).toBe(false);
+        expect(wrapper.text()).toContain('Sílabo aprobado');
+        wrapper.unmount();
     });
 
     it('sin ámbito elegido muestra el contexto y no ofrece la página completa', async () => {

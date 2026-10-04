@@ -16,6 +16,7 @@ import {
     InputOTPSlot,
 } from '@/components/ui/input-otp';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 
 const props = defineProps<{
@@ -59,7 +60,7 @@ const submit = (): void => {
                 <InputError v-if="error" :message="error" />
                 <template v-if="!verification">
                     <div class="relative mx-auto aspect-square w-64 overflow-hidden rounded-lg border border-border bg-background p-5">
-                        <Spinner v-if="!qrCodeSvg" class="absolute inset-1/2 size-6 -translate-1/2" />
+                        <div v-if="!qrCodeSvg" class="size-full" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando código QR"><span class="sr-only">Cargando código QR…</span><Skeleton aria-hidden="true" class="size-full" /></div>
                         <div v-else class="flex size-full items-center justify-center" v-html="qrCodeSvg" />
                     </div>
                     <div class="flex w-full items-center gap-2">

@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { InputGroup, InputGroupAddon, InputGroupTextarea } from '@/components/ui/input-group';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import RobotAvatar from '@/components/domain/ai/avatar/RobotAvatar.vue';
 import { useAvatarController } from '@/components/domain/ai/avatar/useAvatarController';
@@ -89,7 +90,18 @@ onBeforeUnmount(() => { generation += 1; stop(); });
         <Conversation aria-label="Conversación para generar contenido de las unidades" class="min-h-0 flex-1">
             <ConversationContent class="gap-5 px-4 py-4">
                 <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}<Button type="button" variant="outline" size="sm" :disabled="loading || sending" @click="load">Consultar de nuevo</Button></AlertDescription></Alert>
-                <p v-if="loading && !chat" role="status" class="text-sm text-muted-foreground">Cargando conversación…</p>
+                <div v-if="loading && !chat" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando conversación">
+                    <span class="sr-only">Cargando conversación…</span>
+                    <Empty aria-hidden="true">
+                        <EmptyHeader>
+                            <Skeleton class="h-28 w-36 rounded-full" />
+                            <Skeleton class="h-6 w-56 max-w-full" />
+                        </EmptyHeader>
+                        <EmptyContent>
+                            <Skeleton v-for="question in 3" :key="question" class="h-10 w-full" />
+                        </EmptyContent>
+                    </Empty>
+                </div>
                 <Alert v-else-if="chat && !chat.available"><AlertDescription>El asistente no está disponible en este momento. Puedes continuar elaborando tu sílabo.</AlertDescription></Alert>
                 <Empty v-if="chat && !messages.length"><EmptyHeader><EmptyMedia><RobotAvatar v-bind="avatar.state.value" class="h-28 w-36" /></EmptyMedia><EmptyTitle>Comienza una conversación</EmptyTitle></EmptyHeader>
                     <EmptyContent v-if="chat.available && chat.suggested_questions.length">

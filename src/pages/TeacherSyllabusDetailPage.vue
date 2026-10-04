@@ -488,7 +488,7 @@ onBeforeUnmount(() => {
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
-    <LoadingSkeleton v-if="(!syllabus || canStart) && !error" variant="syllabus" />
+    <LoadingSkeleton v-if="(!syllabus || canStart) && !error" variant="syllabus" :readonly="Boolean(syllabus && !canEdit)" />
 
     <template v-if="syllabus">
       <Alert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked"><AlertTitle>Edición no disponible</AlertTitle><AlertDescription>{{ editBlockReason }}</AlertDescription></Alert>
