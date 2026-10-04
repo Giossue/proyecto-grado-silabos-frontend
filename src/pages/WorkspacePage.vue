@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { ArrowRight, CheckCircle2 } from '@lucide/vue';
-import { computed, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getSession, selectActiveRole, type ActiveRole, type Session } from '@/api/session';
@@ -25,20 +25,7 @@ const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
 const selectingRoleId = ref<string | null>(null);
 
-const hasCoordinatorScope = computed(() =>
-    session.value?.available_roles.some((role) => role.code === 'coordinador') === true,
-);
-const teacherOnly = computed(() => {
-    const roles = session.value?.available_roles ?? [];
-    return roles.length > 0 && roles.every((role) => role.code === 'docente');
-});
-const selectionDescription = computed(() =>
-    hasCoordinatorScope.value
-        ? 'Seleccione la carrera y el ámbito con el que trabajará en esta sesión.'
-        : teacherOnly.value
-            ? 'Seleccione la carrera para ver sus sílabos asignados.'
-            : 'Seleccione el ámbito con el que trabajará en esta sesión.',
-);
+const selectionDescription = 'Seleccione la carrera con la que trabajará en esta sesión.';
 
 const roleDescription = (role: ActiveRole): string => {
     if (role.code === 'docente') return '';
@@ -103,7 +90,7 @@ onMounted(load);
 <template>
     <PageFrame
         v-if="session"
-        :title="`Bienvenida, ${session.user.name}`"
+        :title="`Hola, ${session.user.name}`"
         :description="selectionDescription"
         size="wide"
     >
