@@ -511,9 +511,14 @@
         border-radius: 9999px;
     }
 
-    .curriculum-canvas .vue-flow__handle.curriculum-handle:hover,
-    .curriculum-canvas .vue-flow__handle.curriculum-handle.connecting {
-        transform: translate(-50%, 0) scale(1.4);
+    .curriculum-canvas .vue-flow__handle-top.curriculum-handle:hover,
+    .curriculum-canvas .vue-flow__handle-top.curriculum-handle.connecting {
+        transform: translate(-50%, -50%) scale(1.4);
+    }
+
+    .curriculum-canvas .vue-flow__handle-bottom.curriculum-handle:hover,
+    .curriculum-canvas .vue-flow__handle-bottom.curriculum-handle.connecting {
+        transform: translate(-50%, 50%) scale(1.4);
     }
 
     .curriculum-canvas .vue-flow__node-subject:not(.dragging) {
