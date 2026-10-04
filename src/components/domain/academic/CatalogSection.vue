@@ -298,7 +298,6 @@ const {
                     <TableRow>
                         <TableHead>Período</TableHead>
                         <TableHead>Fechas</TableHead>
-                        <TableHead>Semanas lectivas</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead class="text-right">Acciones</TableHead>
                     </TableRow>
@@ -306,7 +305,7 @@ const {
                 <TableBody>
                     <TableEmpty
                         v-if="periodPage.length === 0"
-                        :colspan="5"
+                        :colspan="4"
                     >
                         {{ periodFilter.active.value ? 'Ningún período coincide con los filtros.' : 'No existen periodos académicos registrados.' }}
                     </TableEmpty>
@@ -327,7 +326,6 @@ const {
                                 {{ period.ends_on }}
                             </time>
                         </TableCell>
-                        <TableCell>{{ period.teaching_weeks }}</TableCell>
                         <TableCell>
                             {{ period.status_label }}
                         </TableCell>
