@@ -49,6 +49,9 @@ const cycleOptions = computed(() => [...new Map(periodRows.value.map((item) => [
 ])).values()].sort((a, b) => a.order - b.order));
 const parallelOptions = computed(() => [...new Set(periodRows.value.flatMap((item) => item.parallels.map((parallel) => parallel.code)))]
   .sort((a, b) => a.localeCompare(b, "es", { numeric: true })));
+// Jornadas distintas de una materia, en el orden de sus paralelos.
+const rowShifts = (item: { parallels: { shift: string | null }[] }) =>
+  [...new Set(item.parallels.map((parallel) => shiftLabel(parallel.shift, props.data.options.shiftOptions)))];
 const shiftOptions = computed(() => [...new Map(periodRows.value.flatMap((item) => item.parallels).map((parallel) => [
   shiftKey(parallel.shift),
   { value: shiftKey(parallel.shift), label: shiftLabel(parallel.shift, props.data.options.shiftOptions) },
@@ -101,14 +104,15 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
       </ClientFilterBar>
       <Alert v-if="selectedPeriodOption?.planning_enabled === false"><AlertDescription>Período finalizado · solo lectura</AlertDescription></Alert>
       <Table>
-        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Código</TableHead><TableHead>Ciclo</TableHead><TableHead>Paralelos y jornadas</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Código</TableHead><TableHead>Ciclo</TableHead><TableHead>Paralelos</TableHead><TableHead>Jornadas</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="!items.length" :colspan="5">{{ emptyMessage }}</TableEmpty>
           <TableRow v-for="item in items" v-else :key="item.id">
             <TableCell>{{ item.subject_name }}</TableCell>
             <TableCell>{{ item.subject_code }}</TableCell>
             <TableCell>{{ item.subject_cycle === null ? "Sin ciclo" : `${item.subject_cycle}.º` }}</TableCell>
-            <TableCell><div class="flex flex-wrap gap-1.5"><Badge v-for="parallel in item.parallels" :key="parallel.id" variant="outline">{{ parallel.code }} · {{ shiftLabel(parallel.shift, props.data.options.shiftOptions) }}</Badge><span v-if="!item.parallels.length" class="text-muted-foreground">Sin paralelos</span></div></TableCell>
+            <TableCell><div class="flex flex-wrap gap-1.5"><Badge v-for="parallel in item.parallels" :key="parallel.id" variant="outline">{{ parallel.code }}</Badge><span v-if="!item.parallels.length" class="text-muted-foreground">Sin paralelos</span></div></TableCell>
+            <TableCell><div class="flex flex-wrap gap-1.5"><Badge v-for="shift in rowShifts(item)" :key="shift" variant="outline">{{ shift }}</Badge><span v-if="!item.parallels.length" class="text-muted-foreground">—</span></div></TableCell>
             <TableCell class="text-right"><CareerAcademicActions :shift-options="data.options.shiftOptions" entity="programacion_asignatura" :record="item" :record-label="item.label" :editable="item.editable" :delete-supported="!data.career.lock_reason && item.period_planning_enabled" :parallel-creation-supported="!data.career.lock_reason && item.active && item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? 'Período finalizado · solo lectura' : data.career.lock_reason ?? undefined" @changed="emit('changed', $event)" /></TableCell>
           </TableRow>
         </TableBody>
