@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import CommentEntry from '@/components/domain/CommentEntry.vue';
-import EmptyState from '@/components/domain/EmptyState.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { syllabusStateLabel } from '@/lib/syllabusStates';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
@@ -23,7 +21,6 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
-import ReviewObservationSheet from '@/components/domain/syllabus/ReviewObservationSheet.vue';
 import SyllabusResetDialog from '@/components/domain/syllabus/SyllabusResetDialog.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -85,13 +82,8 @@ const run = async (action: () => Promise<{ message: string }>): Promise<void> =>
   }
 };
 
-const openCurrentObservations = computed(() => data.value?.observations.filter(
-  (observation) => observation.revision_number === data.value?.revision.number && observation.state === 'abierta',
-) ?? []);
-const unresolvedCount = computed(() => data.value?.observations.filter((observation) => observation.state !== 'verificada').length ?? 0);
 // I-173: solo decide quien tiene la etapa vigente; los demás consultan.
 const canReviewCurrent = computed(() => Boolean(data.value?.can_decide && data.value?.revision.is_current && data.value?.syllabus.state === 'en_revision'));
-const isCoordination = computed(() => data.value?.my_stage === 'coordinacion');
 const isDeanery = computed(() => data.value?.my_stage === 'decanato');
 const stageLabel = computed(() => reviewStageLabel(data.value?.syllabus.stage));
 const canReopen = computed(() => Boolean(data.value?.can_reopen && data.value?.revision.is_current));
@@ -104,7 +96,6 @@ const formatValue = (value: unknown): string => {
   if (typeof value === 'object') return JSON.stringify(value, null, 2);
   return String(value);
 };
-const observationState = (value: string): string => ({ abierta: 'Abierta', respondida: 'Respondida', verificada: 'Verificada' })[value] ?? 'Estado no disponible';
 const submitCorrection = (): Promise<void> => run(() => requestCorrection(data.value!.revision.id, {
   justification: correctionJustification.value,
 }));
@@ -126,7 +117,7 @@ onMounted(load);
     </template>
 
     <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo completar la operación</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
-    <Alert v-if="!data.decisions_allowed"><LockKeyhole aria-hidden="true" /><AlertTitle>Convocatoria cerrada</AlertTitle><AlertDescription>La revisión queda solo para consulta: ya no se pueden registrar observaciones, solicitar correcciones, aprobar, reabrir ni reiniciar.</AlertDescription></Alert>
+    <Alert v-if="!data.decisions_allowed"><LockKeyhole aria-hidden="true" /><AlertTitle>Convocatoria cerrada</AlertTitle><AlertDescription>La revisión queda solo para consulta: ya no se pueden solicitar correcciones, aprobar, reabrir ni reiniciar.</AlertDescription></Alert>
     <Alert v-if="!data.revision.is_current"><LockKeyhole aria-hidden="true" /><AlertTitle>Está consultando una revisión histórica</AlertTitle><AlertDescription>Esta revisión se conserva tal como fue enviada. Las acciones del flujo solo están disponibles en la revisión vigente.</AlertDescription></Alert>
     <Alert v-if="data.revision.is_current && data.syllabus.state === 'en_revision' && !canReviewCurrent && data.decisions_allowed"><LockKeyhole aria-hidden="true" /><AlertTitle>{{ stageLabel || 'En revisión' }}</AlertTitle><AlertDescription>Esta revisión la tiene ahora otro revisor. Podrá decidir cuando llegue a su etapa.</AlertDescription></Alert>
     <Alert v-if="data.correction_request"><Undo2 aria-hidden="true" /><AlertTitle>Corrección solicitada en esta revisión<template v-if="data.correction_request.stage"> ({{ reviewStageLabel(data.correction_request.stage).replace('En ', '') }})</template></AlertTitle><AlertDescription>{{ data.correction_request.justification }}<template v-if="data.correction_request.requested_by"> · {{ data.correction_request.requested_by }}</template></AlertDescription></Alert>
@@ -152,29 +143,15 @@ onMounted(load);
       </main>
 
       <aside class="flex min-w-0 flex-col gap-6">
-        <ReviewObservationSheet v-if="canReviewCurrent && isCoordination" :revision-id="data.revision.id" :sections="data.revision.snapshot.sections" @saved="changed" />
-        <Card>
-          <CardHeader><CardTitle>Observaciones</CardTitle><CardDescription>{{ unresolvedCount }} pendiente(s) en todo el historial.</CardDescription></CardHeader>
-          <CardContent class="flex flex-col gap-4">
-            <CommentEntry v-for="observation in data.observations" :key="observation.id" :revision="observation.revision_number" :content="observation.content" :author="observation.created_by" :date="observation.observado_en">
-              <template #badges><Badge :variant="observation.state === 'verificada' ? 'secondary' : 'destructive'">{{ observationState(observation.state) }}</Badge><Badge v-if="observation.requested" variant="outline">Solicitada</Badge></template>
-            </CommentEntry>
-            <EmptyState v-if="data.observations.length === 0" title="Aún no hay observaciones." />
-          </CardContent>
-        </Card>
-
-        <Card v-if="canReviewCurrent && (isDeanery || openCurrentObservations.length > 0)">
-          <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>{{ isDeanery ? 'El sílabo vuelve al docente; al reenviarlo pasa otra vez por biblioteca y coordinación.' : openCurrentObservations.length === 1 ? 'Se enviará al docente la observación pendiente de esta revisión.' : `Se enviarán al docente las ${openCurrentObservations.length} observaciones pendientes de esta revisión.` }}</CardDescription></CardHeader>
+        <Card v-if="canReviewCurrent">
+          <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>{{ isDeanery ? 'El sílabo vuelve al docente con su comentario; al reenviarlo pasa otra vez por biblioteca y coordinación.' : 'El sílabo vuelve al docente con su comentario; al reenviarlo pasa otra vez por biblioteca.' }}</CardDescription></CardHeader>
           <CardContent><form id="correction-form" class="flex flex-col gap-4" @submit.prevent="submitCorrection">
-            <ul v-if="openCurrentObservations.length > 0" class="flex flex-col gap-2" aria-label="Observaciones que se enviarán">
-              <li v-for="observation in openCurrentObservations" :key="observation.id" class="rounded-md border p-3 text-sm whitespace-pre-wrap">{{ observation.content }}</li>
-            </ul>
-            <Field><FieldLabel for="correction-justification" required>Justificación para el docente</FieldLabel><Textarea id="correction-justification" v-model="correctionJustification" rows="4" required /><FieldError :errors="[...(errors.revision ?? []), ...(errors.justification ?? [])]" /></Field>
+            <Field><FieldLabel for="correction-justification" required>Comentario para el docente</FieldLabel><Textarea id="correction-justification" v-model="correctionJustification" rows="4" required /><FieldError :errors="[...(errors.revision ?? []), ...(errors.justification ?? [])]" /></Field>
             <Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><Undo2 v-else aria-hidden="true" />Solicitar corrección</Button>
           </form></CardContent>
         </Card>
 
-        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>{{ isDeanery ? `La aprobación del decanato fija la revisión ${data.revision.number} y genera el PDF para las firmas.` : `Al aprobar, la revisión ${data.revision.number} pasa al decanato.` }}</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button><p v-if="isCoordination && unresolvedCount > 0" class="text-sm text-muted-foreground">Al aprobar, las {{ unresolvedCount }} observación(es) pendiente(s) se darán por resueltas.</p></CardContent></Card>
+        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>{{ isDeanery ? `La aprobación del decanato fija la revisión ${data.revision.number} y genera el PDF para las firmas.` : `Al aprobar, la revisión ${data.revision.number} pasa al decanato.` }}</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button></CardContent></Card>
 
         <DocumentSignatureCard v-if="data.history.some((item) => item.id === data!.revision.id && item.approved_at)" :key="data.revision.id" :revision-id="data.revision.id" :file-name="`silabo-${data.syllabus.code}-revision-${data.revision.number}`" />
 

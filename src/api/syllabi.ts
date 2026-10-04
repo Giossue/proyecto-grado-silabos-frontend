@@ -71,15 +71,6 @@ export type SyllabusDetail = {
     description: string | null;
     blocks: SyllabusBlock[];
   }>;
-  observations: Array<{
-    id: string;
-    revision_number?: number;
-    section_key?: string | null;
-    field_key?: string | null;
-    content: string;
-    state: string;
-    requested: boolean;
-  }>;
   reopening?: {
     cause: string;
     reopened_at: string;
@@ -87,7 +78,8 @@ export type SyllabusDetail = {
     origin?: "coordinacion" | "biblioteca" | "decanato";
   } | null;
   review_stage?: "biblioteca" | "coordinacion" | "decanato" | null;
-  library_comments?: Array<{
+  review_comments?: Array<{
+    stage: "biblioteca" | "coordinacion" | "decanato";
     comment: string;
     commented_at: string;
     commented_by: string;

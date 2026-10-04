@@ -15,7 +15,6 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useClientFilter } from "@/composables/useClientFilter";
 import { useClientPagination } from "@/composables/useClientPagination";
 import { Spinner } from "@/components/ui/spinner";
@@ -38,10 +37,10 @@ const rows = computed<TeacherRow[]>(() => props.data.careerTeachers.map((teacher
   email: teacher.email,
   pending_activation: teacher.pending_activation,
 })));
-const statusOf = (item: TeacherRow): { label: string; hint: string } => item.pending_activation
-  ? { label: "Pendiente de activación", hint: "La cuenta espera que su titular abra la invitación y defina su contraseña." }
-  : { label: "Activa", hint: "La cuenta está activa; su titular ya definió su contraseña." };
-const filter = useClientFilter(() => rows.value, (item) => [item.name, item.email, statusOf(item).label], {
+const statusOf = (item: TeacherRow): string => item.pending_activation
+  ? "Pendiente de activación"
+  : "Activa";
+const filter = useClientFilter(() => rows.value, (item) => [item.name, item.email, statusOf(item)], {
   estado: { matches: (item, value) => value === "pending" ? item.pending_activation : !item.pending_activation },
 });
 const { items, meta, setPage } = useClientPagination(() => filter.items.value);
@@ -88,7 +87,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
         <TableRow v-for="item in items" v-else :key="item.id">
           <TableCell>{{ item.name }}</TableCell>
           <TableCell>{{ item.email }}</TableCell>
-          <TableCell><Tooltip><TooltipTrigger as-child><span>{{ statusOf(item).label }}</span></TooltipTrigger><TooltipContent class="max-w-xs">{{ statusOf(item).hint }}</TooltipContent></Tooltip></TableCell>
+          <TableCell>{{ statusOf(item) }}</TableCell>
           <TableCell class="text-right">
             <TableActionsMenu :label="`Acciones para ${item.name}`">
               <CareerTeacherEditSheet :teacher="item" @saved="emit('changed', $event)" />

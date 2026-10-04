@@ -19,7 +19,6 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -29,10 +28,10 @@ const currentUserId = ref<string | null>(null);
 const result = ref<ManagedUsersResponse | null>(null);
 const error = ref<string | null>(null); const loading = ref(true);
 const q = ref(typeof route.query.q === 'string' ? route.query.q : ''); const status = ref('all'); const role = ref('all'); const career = ref('all');
-const statusOf = (user: ManagedUser): { label: string; hint: string } => {
-    if (!user.active) return { label: 'Inactivo', hint: 'La cuenta está desactivada y no puede iniciar sesión.' };
-    if (user.pending_activation) return { label: 'Pendiente de activación', hint: 'La cuenta espera que su titular abra la invitación y defina su contraseña.' };
-    return { label: 'Activo', hint: 'La cuenta está verificada y su titular definió su contraseña.' };
+const statusOf = (user: ManagedUser): string => {
+    if (!user.active) return 'Inactivo';
+    if (user.pending_activation) return 'Pendiente de activación';
+    return 'Activo';
 };
 const load = async (page = 1): Promise<void> => {
     loading.value = true; error.value = null;
@@ -71,7 +70,7 @@ onMounted(load);
                     <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span></div></TableCell>
                     <TableCell><div class="flex flex-col items-start gap-1"><span v-for="(item, index) in user.roles" :key="`rol-${index}`">{{ item.name }}</span><span v-if="user.roles.length === 0" class="text-sm text-muted-foreground">Sin rol vigente</span></div></TableCell>
                     <TableCell><div class="flex flex-col items-start gap-1 text-sm"><span v-for="(item, index) in user.roles" :key="`ambito-${index}`" :class="item.career_name || item.faculty_name ? '' : 'text-muted-foreground'">{{ item.career_name ?? item.faculty_name ?? 'Todas las carreras' }}</span><span v-if="user.roles.length === 0" class="text-muted-foreground">—</span></div></TableCell>
-                    <TableCell><Tooltip><TooltipTrigger as-child><span>{{ statusOf(user).label }}</span></TooltipTrigger><TooltipContent class="max-w-xs">{{ statusOf(user).hint }}</TooltipContent></Tooltip></TableCell>
+                    <TableCell>{{ statusOf(user) }}</TableCell>
                     <TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${user.nombre}`"><ManagedUserDetailSheet :user="user" /><ManagedUserEditSheet v-if="user.id !== currentUserId" display="menu" :user="user" :roles="result.roles" :careers="result.careers" :faculties="result.faculties ?? []" @saved="changed" /><ManagedUserPendingActions v-if="user.pending_activation && user.active" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
                 </TableRow>
             </TableBody></Table>

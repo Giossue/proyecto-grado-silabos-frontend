@@ -89,7 +89,6 @@ const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", t
       }],
     }],
   }],
-  observations: [],
 });
 
 const PageWithTooltips = defineComponent({ setup: () => () => h(TooltipProvider, () => h(TeacherSyllabusDetailPage)) });
@@ -221,19 +220,20 @@ describe("TeacherSyllabusDetailPage", () => {
     );
   });
 
-  it("muestra las observaciones de coordinación sin pedir respuesta al docente", async () => {
+  it("muestra el comentario general de coordinación, sin observaciones por campo", async () => {
     const draft = syllabus("correccion_solicitada");
-    draft.observations = [{
-      id: "observation-1",
-      content: "Aclare el resultado.",
-      state: "pendiente",
-      requested: true,
+    draft.review_comments = [{
+      stage: "coordinacion",
+      comment: "Aclare el resultado.",
+      commented_at: "2026-09-29T09:00:00-05:00",
+      commented_by: "Coordinación Demo",
+      revision_number: 1,
     }];
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Observaciones de coordinación");
+    expect(wrapper.text()).toContain("Comentario de Coordinación");
     expect(wrapper.text()).toContain("Aclare el resultado.");
     expect(wrapper.text()).not.toContain("Guardar respuesta");
   });
@@ -540,9 +540,9 @@ describe("TeacherSyllabusDetailPage", () => {
         }],
       }],
     });
-    detail.library_comments = [
-      { comment: "Comentario anterior.", commented_at: "2026-09-20T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 1 },
-      { comment: "La 10.ª edición no está disponible.", commented_at: "2026-09-29T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 2 },
+    detail.review_comments = [
+      { stage: "biblioteca", comment: "Comentario anterior.", commented_at: "2026-09-20T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 1 },
+      { stage: "biblioteca", comment: "La 10.ª edición no está disponible.", commented_at: "2026-09-29T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 2 },
     ];
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     const wrapper = mountPage();
@@ -553,7 +553,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.find("#input-field-2").exists()).toBe(true);
     expect(wrapper.find(".library-correction").exists()).toBe(false);
     const commentCard = wrapper.get(".library-comment-card");
-    expect(commentCard.text()).toContain("Comentario de biblioteca");
+    expect(commentCard.text()).toContain("Comentario de Biblioteca");
     expect(commentCard.text()).toContain("volverá a biblioteca");
     expect(commentCard.text().indexOf("La 10.ª edición no está disponible.")).toBeLessThan(commentCard.text().indexOf("Comentario anterior."));
     expect(buttonNamed(wrapper, "Reenviar bibliografía")).toBeUndefined();

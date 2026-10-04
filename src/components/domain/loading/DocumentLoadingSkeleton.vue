@@ -29,9 +29,7 @@ const reviewSections = computed(() => props.reviewStage === 'library' ? 1 : sect
 const reviewPanels = computed(() =>
     props.reviewStage === 'library'
         ? ['approval', 'correction', 'history']
-        : props.reviewStage === 'dean'
-            ? ['observations', 'correction', 'approval', 'history']
-            : ['observations', 'approval', 'history'],
+        : ['correction', 'approval', 'history'],
 );
 
 const pageStyle = {
@@ -159,7 +157,6 @@ const pageStyle = {
             </main>
 
             <aside class="flex min-w-0 flex-col gap-6" :data-review-stage="reviewStage">
-                <Skeleton v-if="reviewStage === 'coordination'" class="h-9 w-full" data-skeleton="new-observation" />
                 <Card v-for="panel in reviewPanels" :key="panel" :data-skeleton="`review-${panel}`">
                     <CardHeader class="min-w-0 grid-cols-1">
                         <Skeleton class="h-5 w-48 max-w-full" />

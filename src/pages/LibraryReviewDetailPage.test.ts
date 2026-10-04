@@ -48,6 +48,10 @@ const detail = (overrides: Partial<LibraryReviewDetail> = {}): LibraryReviewDeta
     }],
   }],
   comments: [],
+  comment_reasons: [
+    { code: 'libro_no_disponible', label: 'El libro no está disponible en biblioteca' },
+    { code: 'codigo_incorrecto', label: 'El código del libro es incorrecto' },
+  ],
   ...overrides,
 });
 
@@ -104,11 +108,13 @@ describe('LibraryReviewDetailPage', () => {
     expect(wrapper.text()).toContain('Sommerville, Ingeniería de software');
     expect(wrapper.text()).toContain('Por revisar');
     expect(wrapper.find('[data-testid="signature-card"]').exists()).toBe(false);
-    expect(wrapper.find('#library-comment').exists()).toBe(true);
+    expect(wrapper.find('#library-comment-form').exists()).toBe(true);
+    expect(wrapper.find('#library-comment-form textarea').exists()).toBe(false);
+    expect(wrapper.find('#library-comment-form').text()).toContain('El libro no está disponible en biblioteca');
     wrapper.unmount();
   });
 
-  it('pide confirmación antes de enviar el comentario al docente', async () => {
+  it('pide confirmación antes de devolver el sílabo con los motivos marcados', async () => {
     vi.mocked(getLibraryReview)
       .mockResolvedValueOnce({ review: detail() })
       .mockResolvedValueOnce({ review: detail({
@@ -121,29 +127,31 @@ describe('LibraryReviewDetailPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get('#library-comment').setValue('No está disponible la 10.ª edición.');
+    const boxes = wrapper.findAll('#library-comment-form [role="checkbox"]');
+    await boxes[0]!.trigger('click');
+    await boxes[1]!.trigger('click');
     await wrapper.get('#library-comment-form').trigger('submit');
     await flushPromises();
 
     expect(commentLibraryReview).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain('¿Enviar comentario al docente?');
+    expect(document.body.textContent).toContain('¿Devolver el sílabo al docente?');
     const confirm = [...document.body.querySelectorAll('[role="dialog"] button')]
-      .find((item) => item.textContent?.includes('Enviar comentario')) as HTMLButtonElement;
+      .find((item) => item.textContent?.includes('Devolver al docente')) as HTMLButtonElement;
     confirm.click();
     await flushPromises();
 
     expect(commentLibraryReview).toHaveBeenCalledWith('revision-2', {
-      comment: 'No está disponible la 10.ª edición.',
+      reasons: ['libro_no_disponible', 'codigo_incorrecto'],
       idempotency_key: expect.any(String),
     });
     expect(toastSuccess).toHaveBeenCalledWith('Comentario enviado al docente.');
     expect(wrapper.text()).toContain('Con comentario');
     expect(wrapper.text()).toContain('Biblioteca Demo');
-    expect(wrapper.find('#library-comment').exists()).toBe(false);
+    expect(wrapper.find('#library-comment-form').exists()).toBe(false);
     wrapper.unmount();
   });
 
-  it('no abre la confirmación con un comentario vacío', async () => {
+  it('no abre la confirmación sin motivos', async () => {
     vi.mocked(getLibraryReview).mockResolvedValue({ review: detail() });
     const wrapper = mountPage();
     await flushPromises();
@@ -151,8 +159,8 @@ describe('LibraryReviewDetailPage', () => {
     await wrapper.get('#library-comment-form').trigger('submit');
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Escriba qué libros no están disponibles');
-    expect(document.body.textContent).not.toContain('¿Enviar comentario al docente?');
+    expect(wrapper.text()).toContain('Elija al menos un motivo.');
+    expect(document.body.textContent).not.toContain('¿Devolver el sílabo al docente?');
     wrapper.unmount();
   });
 

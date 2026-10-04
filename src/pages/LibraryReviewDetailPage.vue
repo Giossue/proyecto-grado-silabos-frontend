@@ -22,7 +22,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
-import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { libraryStateLabel, libraryStateVariant } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
 import type { DocumentField } from '@/lib/templateDocument';
@@ -32,7 +32,7 @@ const route = useRoute();
 const review = ref<LibraryReviewDetail | null>(null);
 const loading = ref(true);
 const loadError = ref('');
-const comment = ref('');
+const selectedReasons = ref<string[]>([]);
 const commentErrors = ref<string[]>([]);
 const actionError = ref('');
 const confirmOpen = ref(false);
@@ -53,6 +53,11 @@ const formatValue = (value: unknown): string => {
   if (typeof value === 'object') return JSON.stringify(value, null, 2);
   return String(value);
 };
+const toggleReason = (code: string, checked: boolean | 'indeterminate'): void => {
+  selectedReasons.value = checked === true
+    ? [...selectedReasons.value, code]
+    : selectedReasons.value.filter((item) => item !== code);
+};
 const comments = computed(() => [...(review.value?.comments ?? [])].sort(
   (left, right) => new Date(right.commented_at).getTime() - new Date(left.commented_at).getTime(),
 ));
@@ -72,8 +77,8 @@ const load = async (): Promise<void> => {
 const askConfirmation = (): void => {
   commentErrors.value = [];
   actionError.value = '';
-  if (comment.value.trim() === '') {
-    commentErrors.value = ['Escriba qué libros no están disponibles o qué debe corregir el docente.'];
+  if (selectedReasons.value.length === 0) {
+    commentErrors.value = ['Elija al menos un motivo.'];
     return;
   }
   idempotencyKey.value = crypto.randomUUID();
@@ -86,16 +91,16 @@ const sendComment = async (): Promise<void> => {
   actionError.value = '';
   try {
     const result = await commentLibraryReview(review.value.revision_id, {
-      comment: comment.value.trim(),
+      reasons: selectedReasons.value,
       idempotency_key: idempotencyKey.value,
     });
     confirmOpen.value = false;
-    comment.value = '';
+    selectedReasons.value = [];
     toast.success(result.message);
     await load();
   } catch (failure) {
     if (failure instanceof ApiError) {
-      commentErrors.value = failure.errors.comment ?? [];
+      commentErrors.value = failure.errors.reasons ?? failure.errors['reasons.0'] ?? [];
       actionError.value = failure.message;
     } else {
       actionError.value = 'No se pudo enviar el comentario.';
@@ -184,25 +189,30 @@ onMounted(load);
         <DocumentSignatureCard v-if="['por_firmar', 'firmado'].includes(review.state)" :key="review.revision_id" :revision-id="review.revision_id" :file-name="`silabo-${review.code}-revision-${review.revision_number}`" @changed="load" />
 
         <Card v-if="review.can_comment">
-          <CardHeader><CardTitle>Enviar comentario</CardTitle><CardDescription>Si algún libro no está en biblioteca, explíquelo al docente. El sílabo vuelve al docente para que lo corrija y lo reenvíe.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Devolver al docente</CardTitle><CardDescription>Si hay algún problema con la bibliografía, marque los motivos. El sílabo vuelve al docente para que lo corrija y lo reenvíe.</CardDescription></CardHeader>
           <CardContent>
             <form id="library-comment-form" class="flex flex-col gap-4" @submit.prevent="askConfirmation">
               <Field :data-invalid="commentErrors.length > 0">
-                <FieldLabel for="library-comment" required>Comentario para el docente</FieldLabel>
-                <Textarea id="library-comment" v-model="comment" rows="4" :aria-invalid="commentErrors.length > 0" placeholder="Ej. El libro «Ingeniería de software» de Sommerville no está en biblioteca; proponga otra edición disponible." />
-                <FieldDescription>El docente verá este texto en su sílabo.</FieldDescription>
+                <FieldLabel required>Motivos</FieldLabel>
+                <div class="flex flex-col gap-3" role="group" aria-label="Motivos de la devolución">
+                  <div v-for="reason in review.comment_reasons" :key="reason.code" class="flex items-center gap-2 text-sm">
+                    <Checkbox :id="`library-reason-${reason.code}`" :model-value="selectedReasons.includes(reason.code)" @update:model-value="toggleReason(reason.code, $event)" />
+                    <label :for="`library-reason-${reason.code}`">{{ reason.label }}</label>
+                  </div>
+                </div>
+                <FieldDescription>El docente verá los motivos marcados en su sílabo.</FieldDescription>
                 <FieldError :errors="commentErrors" />
               </Field>
-              <Button type="submit" variant="destructive" :disabled="sending"><MessageSquareText data-icon="inline-start" aria-hidden="true" />Enviar comentario</Button>
+              <Button type="submit" variant="destructive" :disabled="sending"><MessageSquareText data-icon="inline-start" aria-hidden="true" />Devolver al docente</Button>
             </form>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Comentarios de biblioteca</CardTitle><CardDescription>Historial de comentarios enviados al docente.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Motivos enviados</CardTitle><CardDescription>Historial de devoluciones de biblioteca al docente.</CardDescription></CardHeader>
           <CardContent class="flex flex-col gap-3">
             <CommentEntry v-for="(item, index) in comments" :key="`${item.commented_at}-${index}`" :revision="item.revision_number" :content="item.comment" :author="item.commented_by" :date="item.commented_at" />
-            <EmptyState v-if="comments.length === 0" title="Aún no hay comentarios." />
+            <EmptyState v-if="comments.length === 0" title="Aún no hay devoluciones." />
           </CardContent>
         </Card>
       </aside>
@@ -211,12 +221,12 @@ onMounted(load);
     <Dialog v-model:open="confirmOpen">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>¿Enviar comentario al docente?</DialogTitle>
+          <DialogTitle>¿Devolver el sílabo al docente?</DialogTitle>
           <DialogDescription>El sílabo vuelve al docente para que lo corrija. Cuando lo reenvíe, llegará otra vez a esta bandeja y seguirá después a coordinación y decanato.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose as-child><Button type="button" variant="outline" :disabled="sending">Cancelar</Button></DialogClose>
-          <Button type="button" variant="destructive" :disabled="sending" @click="sendComment"><Spinner v-if="sending" data-icon="inline-start" /><MessageSquareText v-else data-icon="inline-start" aria-hidden="true" />Enviar comentario</Button>
+          <Button type="button" variant="destructive" :disabled="sending" @click="sendComment"><Spinner v-if="sending" data-icon="inline-start" /><MessageSquareText v-else data-icon="inline-start" aria-hidden="true" />Devolver al docente</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

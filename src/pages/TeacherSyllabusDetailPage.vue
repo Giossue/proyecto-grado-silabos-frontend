@@ -88,12 +88,14 @@ const editableFieldIds = computed(() => new Set(
 // I-173: mientras está en revisión, el docente ve en qué etapa va (biblioteca → coordinación → decanato).
 const REVIEW_STAGE_TEXT: Record<string, string> = { biblioteca: 'Biblioteca revisa la bibliografía.', coordinacion: 'Biblioteca aprobó; coordinación revisa.', decanato: 'Coordinación aprobó; espera la aprobación del decanato.' };
 const reviewStageLabel = computed(() => REVIEW_STAGE_TEXT[syllabus.value?.review_stage ?? ''] ?? '');
-const libraryComments = computed(() =>
-  [...(syllabus.value?.library_comments ?? [])].sort(
+const STAGE_NAME: Record<string, string> = { biblioteca: 'Biblioteca', coordinacion: 'Coordinación', decanato: 'Decanato' };
+const stageName = (stage: string): string => STAGE_NAME[stage] ?? stage;
+const reviewComments = computed(() =>
+  [...(syllabus.value?.review_comments ?? [])].sort(
     (left, right) => new Date(right.commented_at).getTime() - new Date(left.commented_at).getTime(),
   ),
 );
-const latestLibraryComment = computed(() => libraryComments.value[0] ?? null);
+const latestReviewComment = computed(() => reviewComments.value[0] ?? null);
 const canStart = computed(() =>
   syllabus.value?.state === "sin_iniciar" && editBlockReason.value === null,
 );
@@ -165,12 +167,6 @@ const clearFieldValidation = (fieldId: string): void => {
 const hasUnsavedChanges = (): boolean => dirtyFields.size > 0;
 const copySources = computed(() =>
   canEdit.value && syllabus.value?.state === "borrador" ? syllabus.value.copy_sources ?? [] : [],
-);
-
-const requestedObservations = computed(() =>
-  (syllabus.value?.observations ?? []).filter(
-    (observation) => observation.requested && observation.state !== 'verificada',
-  ),
 );
 
 const syllabusId = (): string => String(route.params.syllabus);
@@ -494,7 +490,7 @@ onBeforeUnmount(() => {
       <Alert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked"><AlertTitle>Edición no disponible</AlertTitle><AlertDescription>{{ editBlockReason }}</AlertDescription></Alert>
 
       <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
-      <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo y responda las observaciones seleccionadas antes de reenviar.</AlertDescription></Alert>
+      <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
 
       <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar'" variant="syllabus">
         <main class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
@@ -508,23 +504,16 @@ onBeforeUnmount(() => {
 
           <DocumentSignatureCard v-if="syllabus.state === 'aprobado' && syllabus.approved_revision_id" :revision-id="syllabus.approved_revision_id" :file-name="`silabo-${syllabus.code}`" />
 
-          <Card v-if="latestLibraryComment" class="library-comment-card">
-            <CardHeader><CardTitle>Comentario de biblioteca</CardTitle><CardDescription>{{ syllabus.state === 'correccion_solicitada' ? 'Corrija lo indicado y reenvíe el sílabo; volverá a biblioteca.' : 'Último comentario que dejó biblioteca sobre la bibliografía.' }}</CardDescription></CardHeader>
+          <Card v-if="latestReviewComment" class="library-comment-card">
+            <CardHeader><CardTitle>Comentario de {{ stageName(latestReviewComment.stage) }}</CardTitle><CardDescription>{{ syllabus.state === 'correccion_solicitada' ? 'Corrija lo indicado y reenvíe el sílabo; volverá a biblioteca.' : 'Último comentario que recibió este sílabo en la revisión.' }}</CardDescription></CardHeader>
             <CardContent class="flex flex-col gap-4">
-              <CommentEntry :revision="latestLibraryComment.revision_number" :content="latestLibraryComment.comment" :author="latestLibraryComment.commented_by" :date="latestLibraryComment.commented_at" />
-              <section v-if="libraryComments.length > 1" class="flex flex-col gap-3 text-sm" aria-label="Comentarios anteriores de biblioteca">
+              <CommentEntry :revision="latestReviewComment.revision_number" :content="latestReviewComment.comment" :author="`${latestReviewComment.commented_by} · ${stageName(latestReviewComment.stage)}`" :date="latestReviewComment.commented_at" />
+              <section v-if="reviewComments.length > 1" class="flex flex-col gap-3 text-sm" aria-label="Comentarios anteriores de la revisión">
                 <h3 class="font-medium">Comentarios anteriores</h3>
                 <ol class="flex flex-col gap-3">
-                  <li v-for="(item, index) in libraryComments.slice(1)" :key="`${item.commented_at}-${index}`"><CommentEntry :revision="item.revision_number" :content="item.comment" :author="item.commented_by" :date="item.commented_at" /></li>
+                  <li v-for="(item, index) in reviewComments.slice(1)" :key="`${item.commented_at}-${index}`"><CommentEntry :revision="item.revision_number" :content="item.comment" :author="`${item.commented_by} · ${stageName(item.stage)}`" :date="item.commented_at" /></li>
                 </ol>
               </section>
-            </CardContent>
-          </Card>
-
-          <Card v-if="requestedObservations.length">
-            <CardHeader><CardTitle>Observaciones de coordinación</CardTitle><CardDescription>Corrija lo indicado en el sílabo y reenvíelo para una nueva revisión.</CardDescription></CardHeader>
-            <CardContent class="flex flex-col gap-4">
-              <CommentEntry v-for="observation in requestedObservations" :key="observation.id" :revision="observation.revision_number ?? 'actual'" :content="observation.content" />
             </CardContent>
           </Card>
 

@@ -156,6 +156,8 @@
     --popover-foreground: #121c28;
     --primary: var(--brand-blue);
     --primary-foreground: hsl(0 0% 98%);
+    --selection-background: var(--brand-blue);
+    --selection-foreground: hsl(0 0% 98%);
     --secondary: #e6edf5;
     --secondary-foreground: var(--brand-blue);
     --muted: #edf2f8;
@@ -232,6 +234,8 @@
     --popover-foreground: #eef0f3;
     --primary: #215587;
     --primary-foreground: hsl(0 0% 98%);
+    --selection-background: #b9d6f2;
+    --selection-foreground: #122c41;
     --secondary: #2c3138;
     --secondary-foreground: #eef0f3;
     --muted: #2c3138;
@@ -284,6 +288,12 @@
     }
     body {
         @apply bg-background text-foreground;
+    }
+
+    ::selection {
+        background-color: var(--selection-background);
+        color: var(--selection-foreground);
+        text-shadow: none;
     }
 
     button,

@@ -38,8 +38,6 @@ describe('DocumentLoadingSkeleton', () => {
         });
 
         expect(wrapper.findAll('[data-skeleton="review-section"]')).toHaveLength(1);
-        expect(wrapper.find('[data-skeleton="new-observation"]').exists()).toBe(false);
-        expect(wrapper.find('[data-skeleton="review-observations"]').exists()).toBe(false);
         expect(wrapper.find('[data-skeleton="review-correction"]').exists()).toBe(true);
         expect(wrapper.find('[data-skeleton="review-approval"]').exists()).toBe(true);
         expect(wrapper.find('[data-skeleton="review-history"]').exists()).toBe(true);
@@ -49,9 +47,9 @@ describe('DocumentLoadingSkeleton', () => {
         const coordination = mount(DocumentLoadingSkeleton, { props: { variant: 'review' } });
         const dean = mount(DocumentLoadingSkeleton, { props: { variant: 'review', reviewStage: 'dean' } });
 
-        expect(coordination.find('[data-skeleton="new-observation"]').exists()).toBe(true);
-        expect(dean.find('[data-skeleton="new-observation"]').exists()).toBe(false);
+        expect(coordination.find('[data-skeleton="review-correction"]').exists()).toBe(true);
         expect(dean.find('[data-skeleton="review-correction"]').exists()).toBe(true);
+        expect(dean.find('[data-skeleton="review-observations"]').exists()).toBe(false);
     });
 
     it('conserva las dimensiones y márgenes compartidos de la hoja carta dentro de su scroll', () => {

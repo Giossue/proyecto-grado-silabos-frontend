@@ -17,7 +17,6 @@ export type ReviewQueueItem = {
   state: string;
   stage?: ReviewStage | null;
   teachers: string[];
-  unresolved_observations: number;
   submitted_at: string;
 };
 export type ReviewsPage = {
@@ -31,17 +30,6 @@ export type ReviewsPage = {
     to: number | null;
     total: number;
   };
-};
-export type ReviewObservation = {
-  id: string;
-  revision_number: number;
-  section_key: string | null;
-  field_key: string | null;
-  content: string;
-  state: string;
-  requested: boolean;
-  created_by: string;
-  observado_en: string;
 };
 export type SnapshotField = {
   key: string;
@@ -99,7 +87,6 @@ export type ReviewDetail = {
     approved_at: string | null;
     approved_by?: string | null;
   }>;
-  observations: ReviewObservation[];
   correction_request: { justification: string; requested_at: string; stage?: ReviewStage; requested_by?: string } | null;
   decisions_allowed: boolean;
   reset: { allowed: boolean };
@@ -139,14 +126,6 @@ export const getReview = (revisionId: string) =>
   api<ReviewDetail>(`/coordination/reviews/${revisionId}`);
 export const compareReviews = (beforeId: string, afterId: string) =>
   api<ReviewComparison>(`/coordination/reviews/${beforeId}/compare/${afterId}`);
-export const addObservation = (
-  revisionId: string,
-  payload: { content: string; section_key?: string; field_key?: string },
-) =>
-  api<{ message: string }>(`/coordination/reviews/${revisionId}/observations`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
 export const requestCorrection = (
   revisionId: string,
   payload: { justification: string },

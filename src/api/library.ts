@@ -34,6 +34,7 @@ export type LibraryReviewDetail = LibraryReviewItem & {
   template_variables: Record<string, string>;
   sections: SnapshotSection[];
   comments: LibraryComment[];
+  comment_reasons: Array<{ code: string; label: string }>;
 };
 
 export type LibraryReviewsPage = {
@@ -52,7 +53,7 @@ export const getLibraryReviews = (filters: { state?: string; q?: string; page?: 
 export const getLibraryReview = (revisionId: string) =>
   api<{ review: LibraryReviewDetail }>(`/library/reviews/${revisionId}`);
 
-export const commentLibraryReview = (revisionId: string, payload: { comment: string; idempotency_key: string }) =>
+export const commentLibraryReview = (revisionId: string, payload: { reasons: string[]; idempotency_key: string }) =>
   api<{ message: string }>(`/library/reviews/${revisionId}/comments`, {
     method: 'POST',
     body: JSON.stringify(payload),
