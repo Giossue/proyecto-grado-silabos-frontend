@@ -124,7 +124,7 @@ const ignoreBell = (event: Event): void => {
                                 @click="open = !open"
                             >
                                 <Bell data-icon="inline-start" aria-hidden="true" />
-                                <Badge v-if="unreadCount > 0" as="span" class="absolute -top-1 -right-1 min-w-5 bg-brand-accent px-1 text-white" aria-hidden="true">
+                                <Badge v-if="unreadCount > 0" as="span" class="notification-counter absolute -top-1 -right-1 min-w-5 px-1" aria-hidden="true">
                                     {{ unreadCount > 99 ? '99+' : unreadCount }}
                                 </Badge>
                             </Button>
@@ -184,7 +184,7 @@ const ignoreBell = (event: Event): void => {
                             </span>
                             <span
                                 v-if="notification.leido_en === null"
-                                class="mt-4 size-2.5 shrink-0 rounded-full bg-primary"
+                                class="mt-4 size-2.5 shrink-0 rounded-full bg-brand-accent"
                                 aria-label="Sin leer"
                             />
                         </Button>
