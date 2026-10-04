@@ -402,7 +402,8 @@ describe("TeacherSyllabusDetailPage", () => {
 
     expect(startTeacherSyllabus).toHaveBeenCalledWith(pending.id);
     expect(wrapper.get("header").text()).toContain("Volver a mis sílabos");
-    expect(wrapper.get("header").text()).toContain("Inteligencia Artificial");
+    // La cabecera ya no repite el nombre de la asignatura.
+    expect(wrapper.get("header").text()).not.toContain("Inteligencia Artificial");
     expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();
     expect(wrapper.text()).not.toContain("Listo para iniciar");
     expect(wrapper.find("textarea, [contenteditable='true'], input").exists()).toBe(true);

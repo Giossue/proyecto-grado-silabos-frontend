@@ -482,9 +482,7 @@ onBeforeUnmount(() => {
     <span class="flex-1" />
     <AppearanceToggle />
   </header>
-  <PageFrame
-    title=""
-  >
+  <PageFrame title="" description="">
     <template #actions>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
