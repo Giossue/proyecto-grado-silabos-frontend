@@ -45,7 +45,7 @@ const router = useRouter();
 const props = defineProps<{ mode: 'curriculum' | 'schedule' }>();
 const pageTitle = computed(() => ({
   curriculum: 'Malla',
-  schedule: 'Materias y paralelos',
+  schedule: 'Materias y asignaciones',
 })[props.mode]);
 const pageDescription = computed(() => {
   const career = curriculum.value?.career.name ?? 'la carrera activa';

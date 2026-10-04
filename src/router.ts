@@ -109,8 +109,9 @@ export const router = createRouter({
     { path: "/coordinacion/fuentes/:source", redirect: "/dashboard" },
     { path: "/coordinacion/estructura-academica", redirect: "/coordinacion/malla", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },
-    { path: "/coordinacion/materias-paralelos", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y paralelos" } },
-    { path: "/coordinacion/asignaciones-docentes", redirect: "/coordinacion/materias-paralelos", meta: { requiresAuth: true, roles: ["coordinador"] } },
+    { path: "/coordinacion/materias-asignaciones", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y asignaciones" } },
+    { path: "/coordinacion/asignaciones-docentes", redirect: "/coordinacion/materias-asignaciones", meta: { requiresAuth: true, roles: ["coordinador"] } },
+    { path: "/coordinacion/materias-paralelos", redirect: "/coordinacion/materias-asignaciones", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Documentos" } },
 
     { path: "/docente/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["docente"], title: "Panel" } },

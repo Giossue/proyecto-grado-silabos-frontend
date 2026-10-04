@@ -49,7 +49,7 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                   { title: 'Panel', href: paths.coordination.panel, icon: LayoutGrid },
                   { title: 'Convocatorias', href: paths.coordination.convocations, icon: CalendarRange },
                   { title: 'Revisión', href: paths.coordination.reviews, icon: ClipboardCheck },
-                  { title: 'Materias y paralelos', href: paths.coordination.scheduledSubjects, icon: Building2 },
+                  { title: 'Materias y asignaciones', href: paths.coordination.scheduledSubjects, icon: Building2 },
                   { title: 'Malla', href: paths.coordination.curriculum, icon: BookOpenCheck },
               ]
             : []),
