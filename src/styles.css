@@ -49,7 +49,6 @@
     --color-brand-logo-surface: var(--brand-logo-surface);
     --color-brand-surface: var(--brand-surface);
     --color-brand-foreground: var(--brand-foreground);
-    --color-brand-accent: var(--brand-accent);
 
     --color-success: var(--success);
     --color-success-foreground: var(--success-foreground);
@@ -82,7 +81,6 @@
     --shadow-surface: var(--shadow-surface-value);
     --shadow-menu: var(--shadow-menu-value);
     --shadow-modal: var(--shadow-modal-value);
-    --shadow-navigation-active: var(--shadow-navigation-active-value);
 }
 
 @layer base {
@@ -122,8 +120,6 @@
     --layer-modal: 50;
     --layer-confirmation: 60;
     --brand-logo-surface: hsl(0 0% 100%);
-    --brand-blue: #2d4b6f;
-    --brand-accent: #ac231e;
     --avatar-shadow: #114e7e;
     --avatar-body: #1565a4;
     --avatar-metal: #d9d9d9;
@@ -144,32 +140,32 @@
     --document-page-number-size: 9pt;
     --document-page-number-inset: 1cm;
     --duration-layout: 150ms;
-    --background: #f3f6fa;
-    --foreground: #17283e;
+    --background: hsl(0 0% 98%);
+    --foreground: hsl(0 0% 3.9%);
     --card: hsl(0 0% 100%);
-    --card-foreground: var(--foreground);
+    --card-foreground: hsl(0 0% 3.9%);
     --popover: hsl(0 0% 100%);
-    --popover-foreground: var(--foreground);
-    --primary: var(--brand-blue);
+    --popover-foreground: hsl(0 0% 3.9%);
+    --primary: hsl(207.7 100% 30%);
     --primary-foreground: hsl(0 0% 98%);
-    --secondary: #e4ecf5;
-    --secondary-foreground: var(--brand-blue);
-    --muted: #edf2f7;
-    --muted-foreground: #53657b;
-    --accent: #e8eff7;
-    --accent-foreground: var(--brand-blue);
+    --secondary: hsl(0 0% 92.1%);
+    --secondary-foreground: hsl(0 0% 9%);
+    --muted: hsl(0 0% 96.1%);
+    --muted-foreground: hsl(0 0% 44%);
+    --accent: hsl(0 0% 96.1%);
+    --accent-foreground: hsl(0 0% 9%);
     --destructive: hsl(0 84.2% 48%);
     --destructive-foreground: hsl(0 0% 98%);
     --overlay: hsl(0 0% 0%);
-    --brand-surface: var(--brand-blue);
+    --brand-surface: hsl(0 0% 10%);
     --brand-foreground: hsl(0 0% 98%);
     --success: hsl(142 72% 29%);
     --success-foreground: hsl(0 0% 98%);
     --warning: hsl(38 92% 35%);
     --warning-foreground: hsl(0 0% 98%);
-    --border: #dce5ef;
-    --input: #bac9da;
-    --ring: var(--brand-blue);
+    --border: hsl(0 0% 92%);
+    --input: hsl(0 0% 84%);
+    --ring: hsl(0 0% 3.9%);
     --chart-1: hsl(12 76% 61%);
     --chart-2: hsl(173 58% 39%);
     --chart-3: hsl(197 37% 24%);
@@ -182,22 +178,15 @@
         0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     --shadow-menu-value: 0px 4px 10px rgb(0 0 0 / 0.18);
     --shadow-modal-value: 0px 10px 28px rgb(0 0 0 / 0.22);
-    --sidebar-background: var(--brand-blue);
-    --sidebar-foreground: #ffffff;
-    --sidebar-muted-foreground: #d4e1ef;
-    --sidebar-primary: #eef3f9;
-    --sidebar-primary-foreground: var(--brand-blue);
-    --sidebar-accent: #3c5e84;
-    --sidebar-accent-foreground: #ffffff;
-    --sidebar-border: rgb(255 255 255 / 0.18);
-    --sidebar-ring: #b6cee8;
-    --sidebar: var(--sidebar-background);
-    --shadow-navigation-active-value: inset 3px 0 0 var(--brand-accent);
-    --auth-background: radial-gradient(
-        ellipse at top left,
-        color-mix(in srgb, var(--brand-blue) 16%, transparent),
-        transparent 65%
-    );
+    --sidebar-background: hsl(0 0% 94%);
+    --sidebar-foreground: hsl(240 5.3% 26.1%);
+    --sidebar-primary: hsl(0 0% 10%);
+    --sidebar-primary-foreground: hsl(0 0% 98%);
+    --sidebar-accent: hsl(0 0% 90%);
+    --sidebar-accent-foreground: hsl(0 0% 30%);
+    --sidebar-border: hsl(0 0% 91%);
+    --sidebar-ring: hsl(217.2 91.2% 59.8%);
+    --sidebar: hsl(0 0% 94%);
 
     --document-editor-foreground: hsl(218 28% 17%);
     --document-mark-automatic-background: hsl(172 55% 93%);
@@ -227,32 +216,32 @@
 }
 
 .dark {
-    --background: #101923;
-    --foreground: #edf3fa;
-    --card: #172331;
-    --card-foreground: var(--foreground);
-    --popover: #1b293a;
-    --popover-foreground: var(--foreground);
-    --primary: #94b4d7;
-    --primary-foreground: #122235;
-    --secondary: #24364b;
-    --secondary-foreground: #d6e5f5;
-    --muted: #202f41;
-    --muted-foreground: #a5b7cc;
-    --accent: #293e56;
-    --accent-foreground: #e3edf9;
+    --background: hsl(0 0% 3.9%);
+    --foreground: hsl(0 0% 98%);
+    --card: hsl(0 0% 9%);
+    --card-foreground: hsl(0 0% 98%);
+    --popover: hsl(0 0% 11%);
+    --popover-foreground: hsl(0 0% 98%);
+    --primary: hsl(207.7 100% 35%);
+    --primary-foreground: hsl(0 0% 98%);
+    --secondary: hsl(0 0% 14.9%);
+    --secondary-foreground: hsl(0 0% 98%);
+    --muted: hsl(0 0% 16.08%);
+    --muted-foreground: hsl(0 0% 63.9%);
+    --accent: hsl(0 0% 14.9%);
+    --accent-foreground: hsl(0 0% 98%);
     --destructive: hsl(0 84% 48%);
     --destructive-foreground: hsl(0 0% 98%);
     --overlay: hsl(0 0% 0%);
-    --brand-surface: var(--brand-blue);
+    --brand-surface: hsl(0 0% 10%);
     --brand-foreground: hsl(0 0% 98%);
     --success: hsl(142 64% 39%);
     --success-foreground: hsl(0 0% 98%);
     --warning: hsl(38 92% 50%);
     --warning-foreground: hsl(0 0% 9%);
-    --border: #2c3e53;
-    --input: #455c78;
-    --ring: var(--primary);
+    --border: hsl(0 0% 16%);
+    --input: hsl(0 0% 24%);
+    --ring: hsl(0 0% 83.1%);
     --surface-ring: rgb(255 255 255 / 0.1);
     --shadow-control-value: 0 0 #0000;
     --shadow-surface-value:
@@ -264,11 +253,16 @@
     --chart-3: hsl(30 80% 55%);
     --chart-4: hsl(280 65% 60%);
     --chart-5: hsl(340 75% 55%);
-    --sidebar-background: #1e344e;
-    --sidebar-primary: var(--primary);
-    --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: #304e70;
-    --sidebar-ring: var(--primary);
+    --sidebar-background: hsl(0 0% 9%);
+    --sidebar-foreground: hsl(0 0% 95.9%);
+    --sidebar-primary: hsl(0 0% 98%);
+    --sidebar-primary-foreground: hsl(0 0% 9%);
+    --sidebar-accent: hsl(0 0% 15.9%);
+    --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
+    --sidebar-border: hsl(0 0% 15.9%);
+    --sidebar-ring: hsl(217.2 91.2% 59.8%);
+    --sidebar: hsl(0 0% 9%);
+
 }
 
 .dark .curriculum-canvas {
@@ -305,23 +299,6 @@
 }
 
 @layer components {
-    [data-sidebar='sidebar'] {
-        --muted: var(--sidebar-accent);
-        --muted-foreground: var(--sidebar-muted-foreground);
-    }
-
-    .app-header {
-        border-top: 2px solid var(--brand-accent);
-    }
-
-    .auth-shell {
-        background-image: var(--auth-background);
-    }
-
-    .auth-panel {
-        border-top: 4px solid var(--brand-accent);
-    }
-
     @media (width < 40rem) {
         table[data-cards='true'] :is(th, td)[data-card-hidden='true'] {
             display: none;
