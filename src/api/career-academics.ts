@@ -290,6 +290,10 @@ export const updateCareerTeacher = (userId: string, payload: {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
+export const removeCareerTeacher = (userId: string) =>
+  api<{ message: string }>(`/coordination/academic/teachers/${userId}`, {
+    method: "DELETE",
+  });
 export const resendCareerTeacherInvitation = (userId: string) =>
   api<{ message: string }>(`/coordination/academic/teachers/${userId}/resend-activation`, {
     method: "POST",

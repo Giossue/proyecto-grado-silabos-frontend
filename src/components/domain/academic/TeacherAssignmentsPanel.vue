@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { MailCheck } from "@lucide/vue";
+import { MailCheck, Trash2, UserMinus } from "@lucide/vue";
 import { computed, ref } from "vue";
-import { resendCareerTeacherInvitation, type TeacherAssignments } from "@/api/career-academics";
+import { removeCareerTeacher, resendCareerTeacherInvitation, type TeacherAssignments } from "@/api/career-academics";
 import { ApiError } from "@/api/client";
 import CareerTeacherEditSheet from "@/components/domain/academic/CareerTeacherEditSheet.vue";
 import ClientFilterBar from "@/components/domain/ClientFilterBar.vue";
 import TableActionsMenu from "@/components/domain/TableActionsMenu.vue";
 import TablePagination from "@/components/domain/TablePagination.vue";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -43,6 +45,23 @@ const filter = useClientFilter(() => rows.value, (item) => [item.name, item.emai
   estado: { matches: (item, value) => value === "pending" ? item.pending_activation : !item.pending_activation },
 });
 const { items, meta, setPage } = useClientPagination(() => filter.items.value);
+const removing = ref<TeacherRow | null>(null);
+const removeProcessing = ref(false);
+const removeError = ref<string | null>(null);
+const removeFromCareer = async (): Promise<void> => {
+  if (!removing.value) return;
+  removeProcessing.value = true;
+  removeError.value = null;
+  try {
+    const result = await removeCareerTeacher(removing.value.id);
+    removing.value = null;
+    emit("changed", result.message);
+  } catch (reason) {
+    removeError.value = reason instanceof ApiError ? reason.message : "No se pudo quitar al docente de la carrera.";
+  } finally {
+    removeProcessing.value = false;
+  }
+};
 const resendInvitation = async (userId: string): Promise<void> => {
   resendingId.value = userId;
   resendError.value = null;
@@ -74,11 +93,25 @@ const resendInvitation = async (userId: string): Promise<void> => {
             <TableActionsMenu :label="`Acciones para ${item.name}`">
               <CareerTeacherEditSheet :teacher="item" @saved="emit('changed', $event)" />
               <DropdownMenuItem v-if="item.pending_activation" :disabled="resendingId !== null" @select="resendInvitation(item.id)"><Spinner v-if="resendingId === item.id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" :disabled="Boolean(data.career.lock_reason)" @select="removing = item; removeError = null"><UserMinus aria-hidden="true" />Quitar de la carrera</DropdownMenuItem>
             </TableActionsMenu>
           </TableCell>
         </TableRow>
       </TableBody>
     </Table>
     <TablePagination :meta="meta" mode="client" label="Paginación de docentes" @update:page="setPage" />
+    <Dialog :open="removing !== null" @update:open="(value) => { if (!value) removing = null; }">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Quitar a {{ removing?.name }} de la carrera</DialogTitle>
+          <DialogDescription>Deja de ser docente de esta carrera y sus paralelos quedan sin docente. Los sílabos se conservan; quien se asigne después empieza desde cero. Su cuenta y sus otros roles no cambian.</DialogDescription>
+        </DialogHeader>
+        <FeedbackAlert v-if="removeError" :message="removeError" />
+        <DialogFooter>
+          <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
+          <Button type="button" variant="destructive" :disabled="removeProcessing" @click="removeFromCareer"><Spinner v-if="removeProcessing" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Quitar de la carrera</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </CardContent></Card>
 </template>

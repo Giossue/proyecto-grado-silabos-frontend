@@ -5,6 +5,7 @@ import TeacherAssignmentsPanel from '@/components/domain/academic/TeacherAssignm
 import type { TeacherAssignments } from '@/api/career-academics';
 
 vi.mock('@/api/career-academics', () => ({
+    removeCareerTeacher: vi.fn(),
     resendCareerTeacherInvitation: vi.fn(),
     updateCareerTeacher: vi.fn(),
 }));
@@ -94,6 +95,7 @@ describe('TeacherAssignmentsPanel', () => {
         expect(wrapper.text()).toContain('Reenviar invitación');
         expect(wrapper.text()).toContain('activo@example.test');
         expect(wrapper.text().match(/Editar docente/g)).toHaveLength(3);
+        expect(wrapper.text().match(/Quitar de la carrera/g)).toHaveLength(3);
     });
 
     it('muestra al docente pendiente sin datos de paralelos', () => {
