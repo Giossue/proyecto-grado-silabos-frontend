@@ -311,7 +311,7 @@
     }
 
     .app-header {
-        box-shadow: inset 0 2px 0 var(--brand-accent);
+        border-top: 2px solid var(--brand-accent);
     }
 
     .auth-shell {
