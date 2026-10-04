@@ -21,7 +21,6 @@ import type { NavItem } from '@/types';
 
 const route = useRoute();
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
-const logoLinksToPanel = computed(() => ['administrador', 'coordinador', 'bibliotecario', 'decano'].includes(activeRole.value?.code ?? ''));
 const mainNavItems = useMainNavItems();
 const footerNavItems: NavItem[] = [];
 const { isMobile, setOpenMobile } = useSidebar();
@@ -36,11 +35,8 @@ watch(() => route.fullPath, () => {
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton v-if="logoLinksToPanel" size="lg" as-child>
-                        <RouterLink :to="paths.dashboard"><AppLogo /></RouterLink>
-                    </SidebarMenuButton>
-                    <SidebarMenuButton v-else size="lg" as="div">
-                        <AppLogo />
+                    <SidebarMenuButton size="lg" as-child>
+                        <RouterLink :to="paths.dashboard" aria-label="Ir al inicio"><AppLogo /></RouterLink>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
             </SidebarMenu>
