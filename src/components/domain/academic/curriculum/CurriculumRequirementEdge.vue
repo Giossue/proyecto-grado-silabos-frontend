@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import {
-    BaseEdge,
-    EdgeLabelRenderer,
-    getSmoothStepPath,
-    useVueFlow,
-} from '@vue-flow/core';
+import { BaseEdge, EdgeLabelRenderer, useVueFlow } from '@vue-flow/core';
 import type { EdgeProps } from '@vue-flow/core';
 import { computed, ref } from 'vue';
+import {
+    laneHeight,
+    subjectHeight,
+} from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
 
 const props = defineProps<
     EdgeProps<{
@@ -15,10 +14,15 @@ const props = defineProps<
         targetOffset: number;
         sameLevel: boolean;
         targetShared: boolean;
+        channelIndex: number;
+        channelCount: number;
     }>
 >();
 
 const OVERPASS_RISE = 18;
+// Hueco vertical entre la base de una tarjeta y la cima de la del nivel siguiente.
+const LEVEL_GAP = laneHeight - subjectHeight;
+const CHANNEL_MARGIN = 12;
 
 const { screenToFlowCoordinate } = useVueFlow();
 
@@ -49,16 +53,26 @@ const pathData = computed((): [string, number, number] => {
         ];
     }
 
-    const [path, labelX, labelY] = getSmoothStepPath({
-        sourceX: endpoints.value.sourceX,
-        sourceY: props.sourceY,
-        sourcePosition: props.sourcePosition,
-        targetX: endpoints.value.targetX,
-        targetY: props.targetY,
-        targetPosition: props.targetPosition,
-    });
+    const { sourceX, targetX } = endpoints.value;
+    if (sourceX === targetX) {
+        return [
+            `M ${sourceX} ${props.sourceY} V ${props.targetY}`,
+            sourceX,
+            (props.sourceY + props.targetY) / 2,
+        ];
+    }
 
-    return [path, labelX, labelY];
+    // Tramo horizontal en su propio carril del hueco que precede a la materia destino.
+    const usable = LEVEL_GAP - CHANNEL_MARGIN * 2;
+    const step = usable / (props.data.channelCount + 1);
+    const channelY =
+        props.targetY - LEVEL_GAP + CHANNEL_MARGIN + step * (props.data.channelIndex + 1);
+
+    return [
+        `M ${sourceX} ${props.sourceY} V ${channelY} H ${targetX} V ${props.targetY}`,
+        (sourceX + targetX) / 2,
+        channelY,
+    ];
 });
 const path = computed(() => pathData.value[0]);
 

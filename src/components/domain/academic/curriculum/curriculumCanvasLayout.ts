@@ -248,6 +248,7 @@ export const buildRequirementEdges = (
             .map((requirement) => requirement.id),
     );
     const offsets = edgeOffsets(requirements, subjectById, sameLevelIds);
+    const channels = edgeChannels(requirements, subjectById, sameLevelIds);
 
     return requirements.map((requirement) => {
         const color =
@@ -288,7 +289,42 @@ export const buildRequirementEdges = (
                 targetOffset: offset?.target ?? 0,
                 sameLevel,
                 targetShared: offset?.topShared ?? false,
+                channelIndex: channels.get(requirement.id)?.index ?? 0,
+                channelCount: channels.get(requirement.id)?.count ?? 1,
             },
         };
     });
+};
+
+/**
+ * Cada relación que baja entre niveles lleva su tramo horizontal a una altura distinta
+ * dentro del hueco que hay sobre la materia destino. Así dos líneas nunca se superponen;
+ * si deben cruzarse, se cruzan en un punto claro.
+ */
+const edgeChannels = (
+    requirements: CurriculumRequirement[],
+    subjectById: Map<string, CurriculumBuilderSubject>,
+    sameLevelIds: Set<string>,
+): Map<string, { index: number; count: number }> => {
+    const columnOf = (subjectId: string): number =>
+        subjectById.get(subjectId)?.position ?? 0;
+    const groups = new Map<number, CurriculumRequirement[]>();
+    requirements.forEach((requirement) => {
+        if (sameLevelIds.has(requirement.id)) return;
+        const cycle = subjectById.get(requirement.subject_id)?.cycle ?? 0;
+        groups.set(cycle, [...(groups.get(cycle) ?? []), requirement]);
+    });
+    const result = new Map<string, { index: number; count: number }>();
+    groups.forEach((group) => {
+        const sorted = [...group].sort(
+            (left, right) =>
+                columnOf(left.subject_id) - columnOf(right.subject_id) ||
+                columnOf(left.requirement_id) - columnOf(right.requirement_id),
+        );
+        sorted.forEach((requirement, index) => {
+            result.set(requirement.id, { index, count: sorted.length });
+        });
+    });
+
+    return result;
 };
