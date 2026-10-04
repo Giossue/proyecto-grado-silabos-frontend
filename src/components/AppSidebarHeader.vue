@@ -3,13 +3,16 @@ import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import NotificationsPopover from '@/components/NotificationsPopover.vue';
 import SetupProgress from '@/components/SetupProgress.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { useActiveNavTitle } from '@/composables/useMainNavItems';
 import type { BreadcrumbItem } from '@/types';
 
-// La cabecera ya no muestra el título de la página: solo el botón del menú y los accesos.
+// La cabecera muestra el título del ítem activo del menú lateral.
 withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTitle?: string }>(), {
     breadcrumbs: () => [],
     pageTitle: '',
 });
+
+const navTitle = useActiveNavTitle();
 </script>
 
 <template>
@@ -18,6 +21,7 @@ withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTitle?: string }>
     >
         <div class="flex items-center gap-2">
             <SidebarTrigger class="-ml-1" />
+            <h1 v-if="navTitle" class="truncate text-base font-semibold">{{ navTitle }}</h1>
         </div>
         <div class="ml-auto flex items-center gap-2">
             <SetupProgress />
