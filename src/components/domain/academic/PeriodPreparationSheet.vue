@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { formatDateDisplay } from '@/lib/dateDisplay';
 import { CalendarCheck, ListChecks, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
@@ -8,7 +7,7 @@ import FormDialog from '@/components/domain/FormDialog.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -35,8 +34,6 @@ const parallelCount = computed(() => rows.value.reduce((total, row) => total + r
 const assignedCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.filter((parallel) => parallel.teacherId).length, 0));
 const problem = computed(() => preparationProblem(rows.value));
 const invalidRows = computed(() => problem.value !== null);
-const dateRange = (period: ScheduledSubjects['options']['periods'][number]) =>
-  `${period.code} · ${formatDateDisplay(period.starts_on, { day: '2-digit', month: '2-digit', year: 'numeric' })} – ${formatDateDisplay(period.ends_on, { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
 
 const updateProposal = () => {
   const proposal = preparationRows(periodId.value, props.options, props.scheduledSubjects, props.assignments, props.teacherUsers);
@@ -95,17 +92,8 @@ watch(periodId, () => { if (open.value) updateProposal(); });
     <template #default="{ close }">
       <form class="contents" @submit.prevent="submit(close)">
         <FieldGroup>
-          <Field>
-            <FieldLabel for="period-preparation-period" required>Período académico</FieldLabel>
-            <Select v-model="periodId" required>
-              <SelectTrigger id="period-preparation-period"><SelectValue placeholder="Seleccione un período" /></SelectTrigger>
-              <SelectContent><SelectGroup>
-                <SelectItem v-for="item in planningPeriods" :key="item.id" :value="item.id">{{ dateRange(item) }}</SelectItem>
-              </SelectGroup></SelectContent>
-            </Select>
-          </Field>
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-          <Alert v-if="!periodId"><AlertDescription>Seleccione un período para ver las materias pendientes.</AlertDescription></Alert>
+          <Alert v-if="!periodId"><AlertDescription>No hay un período disponible para preparar.</AlertDescription></Alert>
           <template v-else>
             <p v-if="rows.length" class="text-sm text-muted-foreground">
               {{ rows.length }} materias pendientes · {{ parallelCount }} paralelos · {{ assignedCount }} docentes propuestos.
