@@ -18,7 +18,7 @@ describe('roles', () => {
   it('describe el ámbito sin suponer que sin carrera es Administración', () => {
     expect(scopeTitle({ code: 'bibliotecario', career_name: null })).toBe('Biblioteca · toda la universidad');
     expect(scopeTitle({ code: 'administrador', career_name: null })).toBe('Administrador');
-    expect(scopeTitle({ code: 'docente', career_name: 'Software' })).toBe('Docencia · Software');
+    expect(scopeTitle({ code: 'docente', career_name: 'Software' })).toBe('Docente · Software');
     expect(scopeTitle({ code: 'coordinador', career_name: 'Software' })).toBe('Software');
   });
 });

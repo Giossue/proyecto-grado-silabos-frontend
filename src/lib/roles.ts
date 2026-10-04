@@ -17,6 +17,6 @@ export const roleNeedsCareer = (code: string): boolean =>
 
 export const scopeTitle = (role: Pick<ActiveRole, 'code' | 'career_name'>): string => {
   if (role.code === 'bibliotecario') return LIBRARY_SCOPE;
-  if (role.code === 'docente' && role.career_name) return `Docencia · ${role.career_name}`;
+  if (role.code === 'docente' && role.career_name) return `Docente · ${role.career_name}`;
   return role.career_name ?? roleLabel(role.code);
 };

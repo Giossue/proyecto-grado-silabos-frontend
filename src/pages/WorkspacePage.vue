@@ -41,7 +41,7 @@ const selectionDescription = computed(() =>
 );
 
 const roleDescription = (role: ActiveRole): string => {
-    if (role.code === 'docente') return 'Sílabos asignados en esta carrera.';
+    if (role.code === 'docente') return '';
     if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}.`;
     if (role.code === 'bibliotecario') return 'Verificación de la bibliografía de los sílabos de todas las carreras.';
     if (role.code === 'administrador') return 'Administración general del sistema.';
@@ -51,7 +51,7 @@ const roleDescription = (role: ActiveRole): string => {
 const actionLabel = (role: ActiveRole): string => {
     if (session.value?.active_role?.id === role.id) return 'Continuar aquí';
     if (role.code === 'coordinador') return 'Entrar a esta carrera';
-    if (role.code === 'docente') return 'Ver mis sílabos';
+    if (role.code === 'docente') return 'Entrar';
     if (role.code === 'bibliotecario') return 'Entrar a Biblioteca';
     if (role.code === 'administrador') return 'Entrar como Administrador';
     return `Entrar como ${roleLabel(role.code)}`;
@@ -120,13 +120,12 @@ onMounted(load);
             <Card v-for="role in session.available_roles" :key="role.id" class="h-full">
                 <CardHeader>
                     <CardTitle>{{ scopeTitle(role) }}</CardTitle>
-                    <CardDescription>{{ roleDescription(role) }}</CardDescription>
-                    <CardAction>
-                        <Badge v-if="session.active_role?.id === role.id" variant="secondary">
+                    <CardDescription v-if="roleDescription(role)">{{ roleDescription(role) }}</CardDescription>
+                    <CardAction v-if="session.active_role?.id === role.id">
+                        <Badge variant="secondary">
                             <CheckCircle2 aria-hidden="true" />
                             Activo
                         </Badge>
-                        <Badge v-else variant="outline">{{ roleLabel(role.code) }}</Badge>
                     </CardAction>
                 </CardHeader>
                 <CardFooter class="mt-auto">

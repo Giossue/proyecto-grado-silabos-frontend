@@ -26,7 +26,7 @@ const notification = (overrides: Partial<Notification> = {}): Notification => ({
     leido_en: null,
     notificado_en: new Date().toISOString(),
     has_destination: true,
-    context: 'Docencia · Software',
+    context: 'Docente · Software',
     ...overrides,
 });
 
@@ -66,7 +66,7 @@ describe('NotificationsPopover', () => {
     it('sin ámbito elegido muestra el contexto y no ofrece la página completa', async () => {
         const wrapper = await mountOpen();
 
-        expect(wrapper.text()).toContain('Docencia · Software');
+        expect(wrapper.text()).toContain('Docente · Software');
         expect(wrapper.text()).not.toContain('Ver todas las notificaciones');
         wrapper.unmount();
     });

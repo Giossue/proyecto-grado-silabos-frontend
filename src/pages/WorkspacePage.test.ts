@@ -72,7 +72,7 @@ describe('WorkspacePage', () => {
     await flushPromises();
 
     expect(wrapper.findAll('[data-slot="card"]')).toHaveLength(1);
-    expect(wrapper.text()).toContain('Docencia · Software');
+    expect(wrapper.text()).toContain('Docente · Software');
     expect(selectActiveRole).not.toHaveBeenCalled();
     expect(replace).not.toHaveBeenCalled();
     wrapper.unmount();
@@ -87,11 +87,11 @@ describe('WorkspacePage', () => {
     await flushPromises();
 
     expect(wrapper.findAll('[data-slot="card"]')).toHaveLength(2);
-    expect(wrapper.text()).toContain('Docencia · Software');
-    expect(wrapper.text()).toContain('Docencia · Turismo');
-    expect(wrapper.findAll('button').filter((button) => button.text() === 'Ver mis sílabos')).toHaveLength(2);
+    expect(wrapper.text()).toContain('Docente · Software');
+    expect(wrapper.text()).toContain('Docente · Turismo');
+    expect(wrapper.findAll('button').filter((button) => button.text() === 'Entrar')).toHaveLength(2);
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Ver mis sílabos')?.trigger('click');
+    await wrapper.findAll('button').find((button) => button.text() === 'Entrar')?.trigger('click');
     await flushPromises();
 
     expect(selectActiveRole).toHaveBeenCalledWith('role-1');
@@ -110,7 +110,6 @@ describe('WorkspacePage', () => {
 
     const card = wrapper.findAll('[data-slot="card"]').find((item) => item.text().includes('Biblioteca'))!;
     expect(card.text()).toContain('Biblioteca · toda la universidad');
-    expect(card.text()).toContain('Bibliotecario');
     expect(card.text()).not.toContain('Administración');
     await card.findAll('button').find((button) => button.text() === 'Entrar a Biblioteca')!.trigger('click');
     await flushPromises();

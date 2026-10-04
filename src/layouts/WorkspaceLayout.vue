@@ -39,12 +39,6 @@ const user = computed<User>(() => ({
             <div class="flex items-center gap-2">
                 <AppLogo />
             </div>
-            <p
-                v-if="pageTitle"
-                class="hidden min-w-0 truncate text-sm text-muted-foreground sm:block"
-            >
-                {{ pageTitle }}
-            </p>
             <div class="ml-auto flex items-center gap-2">
                 <NotificationsPopover />
                 <AppearanceToggle />
