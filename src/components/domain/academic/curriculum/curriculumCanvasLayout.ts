@@ -226,6 +226,7 @@ const edgeGeometry = (
             towards: centerX(targetId),
         });
     });
+    (globalThis as any).__dbgGroups = [...groups.entries()].map(([k, v]) => [k, v.map((e) => e.requirement.id + ':' + e.end)]);
     groups.forEach((ends) => {
         // Una relación recta (misma columna, niveles seguidos) ocupa un solo hueco con
         // sus dos extremos; comparten abscisa para que baje sin codos.
