@@ -306,7 +306,8 @@ describe("TeacherSyllabusDetailPage", () => {
     const send = buttonNamed(wrapper, "Enviar sílabo");
     expect(send).toBeDefined();
     expect(send!.attributes("disabled")).toBeDefined();
-    expect(wrapper.get(".submit-hint").text()).toBe("Falta 1 campo por completar");
+    // El aviso de campos faltantes ya no se muestra como texto; solo en el tooltip de Enviar.
+    expect(wrapper.find(".submit-hint").exists()).toBe(false);
 
     await wrapper.get("#input-field-1").setValue("Contenido");
     expect(send!.attributes("disabled")).toBeUndefined();
