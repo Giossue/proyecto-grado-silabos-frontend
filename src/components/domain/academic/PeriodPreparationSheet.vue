@@ -4,7 +4,7 @@ import { CalendarCheck, ListChecks, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { preparePeriod, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
-import FormSheet from '@/components/domain/FormSheet.vue';
+import FormDialog from '@/components/domain/FormDialog.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -82,10 +82,9 @@ watch(periodId, () => { if (open.value) updateProposal(); });
 </script>
 
 <template>
-  <FormSheet
+  <FormDialog
     v-model:open="open"
     :disabled="props.disabled"
-    wide
     trigger-label="Preparar período"
     title="Preparar período académico"
     description="La malla activa se incluirá completa. Revise los paralelos y docentes propuestos antes de guardar."
@@ -150,5 +149,5 @@ watch(periodId, () => { if (open.value) updateProposal(); });
         </FieldGroup>
       </form>
     </template>
-  </FormSheet>
+  </FormDialog>
 </template>
