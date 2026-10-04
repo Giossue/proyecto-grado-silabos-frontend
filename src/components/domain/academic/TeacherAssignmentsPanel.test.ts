@@ -6,6 +6,7 @@ import type { TeacherAssignments } from '@/api/career-academics';
 
 vi.mock('@/api/career-academics', () => ({
     resendCareerTeacherInvitation: vi.fn(),
+    updateCareerTeacher: vi.fn(),
 }));
 
 const passthrough = defineComponent({ template: '<div><slot /></div>' });
@@ -92,6 +93,7 @@ describe('TeacherAssignmentsPanel', () => {
         expect(wrapper.text()).toContain('Pendiente de activación');
         expect(wrapper.text()).toContain('Reenviar invitación');
         expect(wrapper.text()).not.toContain('Invitaciones pendientes');
+        expect(wrapper.text().match(/Editar docente/g)).toHaveLength(3);
     });
 
     it('muestra como finalizada una asignación retirada aunque la cuenta siga pendiente', () => {

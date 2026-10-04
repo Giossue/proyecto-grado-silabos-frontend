@@ -282,6 +282,14 @@ export const createCareerTeacher = (payload: {
     method: "POST",
     body: JSON.stringify(payload),
   });
+export const updateCareerTeacher = (userId: string, payload: {
+  nombre: string;
+  correo_electronico: string;
+}) =>
+  api<{ message: string }>(`/coordination/academic/teachers/${userId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
 export const resendCareerTeacherInvitation = (userId: string) =>
   api<{ message: string }>(`/coordination/academic/teachers/${userId}/resend-activation`, {
     method: "POST",

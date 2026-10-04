@@ -5,6 +5,7 @@ import { computed, ref } from "vue";
 import { resendCareerTeacherInvitation, type TeacherAssignments } from "@/api/career-academics";
 import { ApiError } from "@/api/client";
 import CareerAcademicActions from "@/components/domain/academic/CareerAcademicActions.vue";
+import CareerTeacherEditSheet from "@/components/domain/academic/CareerTeacherEditSheet.vue";
 import ClientFilterBar from "@/components/domain/ClientFilterBar.vue";
 import TableActionsMenu from "@/components/domain/TableActionsMenu.vue";
 import TablePagination from "@/components/domain/TablePagination.vue";
@@ -37,6 +38,7 @@ type TeacherRow = {
   pending_activation: boolean;
 };
 
+const teacherOf = (item: TeacherRow) => ({ id: item.user_id, name: item.user_name, email: item.user_email, pending_activation: item.pending_activation });
 const resendingId = ref<string | null>(null);
 const resendError = ref<string | null>(null);
 const rows = computed<TeacherRow[]>(() => {
@@ -116,10 +118,14 @@ const resendInvitation = async (userId: string): Promise<void> => {
           <TableCell>{{ item.subject_name ?? "—" }}</TableCell><TableCell>{{ item.period_name ?? "—" }}</TableCell><TableCell>{{ item.parallel_code ?? "—" }}</TableCell>
           <TableCell><Tooltip><TooltipTrigger as-child><span>{{ statusOf(item).label }}</span></TooltipTrigger><TooltipContent class="max-w-xs">{{ statusOf(item).hint }}</TooltipContent></Tooltip></TableCell>
           <TableCell class="text-right">
-            <CareerAcademicActions v-if="item.parallel_id" entity="asignacion_docente" :record="item" :record-label="`la asignación de ${item.user_name}`" :editable="item.editable" :active="item.active" :allow-locked-actions="item.pending_activation" :delete-supported="item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? (item.period_status === 'finalizado' ? 'Período finalizado · solo lectura' : 'Período inactivo · solo lectura') : undefined" @changed="emit('changed', $event)">
+            <CareerAcademicActions v-if="item.parallel_id" entity="asignacion_docente" :record="item" :record-label="`la asignación de ${item.user_name}`" :editable="item.editable" :active="item.active" allow-locked-actions :delete-supported="item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? (item.period_status === 'finalizado' ? 'Período finalizado · solo lectura' : 'Período inactivo · solo lectura') : undefined" @changed="emit('changed', $event)">
+              <CareerTeacherEditSheet :teacher="teacherOf(item)" @saved="emit('changed', $event)" />
               <DropdownMenuItem v-if="item.pending_activation" :disabled="resendingId !== null" @select="resendInvitation(item.user_id)"><Spinner v-if="resendingId === item.user_id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
             </CareerAcademicActions>
-            <TableActionsMenu v-else-if="item.pending_activation" :label="`Acciones para ${item.user_name}`"><DropdownMenuItem :disabled="resendingId !== null" @select="resendInvitation(item.user_id)"><Spinner v-if="resendingId === item.user_id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem></TableActionsMenu>
+            <TableActionsMenu v-else :label="`Acciones para ${item.user_name}`">
+              <CareerTeacherEditSheet :teacher="teacherOf(item)" @saved="emit('changed', $event)" />
+              <DropdownMenuItem v-if="item.pending_activation" :disabled="resendingId !== null" @select="resendInvitation(item.user_id)"><Spinner v-if="resendingId === item.user_id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
+            </TableActionsMenu>
           </TableCell>
         </TableRow>
       </TableBody>
