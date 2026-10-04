@@ -127,7 +127,7 @@ const {
                 <TableBody>
                     <TableEmpty
                         v-if="facultyPage.length === 0"
-                        :colspan="4"
+                        :colspan="3"
                     >
                         {{ facultyFilter.active.value ? 'Ninguna facultad coincide con los filtros.' : 'No existen facultades registradas.' }}
                     </TableEmpty>
@@ -141,9 +141,6 @@ const {
                         </TableCell>
                         <TableCell>
                             {{ faculty.campus ?? 'Sin campus' }}
-                        </TableCell>
-                        <TableCell>
-                            {{ faculty.activo ? 'Activa' : 'Inactiva' }}
                         </TableCell>
                         <TableCell class="text-right">
                             <CatalogActions
@@ -211,7 +208,6 @@ const {
                         <TableHead>Facultad</TableHead>
                         <TableHead>Modalidad</TableHead>
                         <TableHead>Campus</TableHead>
-                        <TableHead>Estado</TableHead>
                         <TableHead class="text-right">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
