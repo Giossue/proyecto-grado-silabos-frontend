@@ -43,7 +43,7 @@ const description = computed(() => {
   const periods = [...new Set((result.value?.syllabi.data ?? []).map((syllabus) => syllabus.period))];
   return periods.length === 1 ? `Sílabos del período ${periods[0]}.` : 'Los sílabos de las materias que usted dicta.';
 });
-const openSyllabus = (id: number | string): void => { void router.push(paths.teacher.syllabus(id)); };
+const openSyllabus = (id: string): void => { void router.push(paths.teacher.syllabus(id)); };
 onMounted(load);
 </script>
 
