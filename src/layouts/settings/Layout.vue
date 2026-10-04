@@ -43,8 +43,8 @@ const sidebarNavItems = computed(() => [
 
             <Separator class="my-6 lg:hidden" />
 
-            <div class="flex-1 md:max-w-2xl">
-                <section class="flex max-w-xl flex-col gap-12">
+            <div class="min-w-0 flex-1 md:max-w-2xl">
+                <section class="flex min-w-0 max-w-xl flex-col gap-12">
                     <slot />
                 </section>
             </div>

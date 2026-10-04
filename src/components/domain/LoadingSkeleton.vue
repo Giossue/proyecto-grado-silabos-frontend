@@ -4,6 +4,7 @@ import type { RoleCode } from '@/api/session';
 import AcademicLoadingSkeleton from '@/components/domain/loading/AcademicLoadingSkeleton.vue';
 import DashboardLoadingSkeleton from '@/components/domain/loading/DashboardLoadingSkeleton.vue';
 import DocumentLoadingSkeleton from '@/components/domain/loading/DocumentLoadingSkeleton.vue';
+import SettingsLoadingSkeleton from '@/components/domain/loading/SettingsLoadingSkeleton.vue';
 import TableLoadingSkeleton from '@/components/domain/loading/TableLoadingSkeleton.vue';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';

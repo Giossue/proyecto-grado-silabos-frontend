@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client';
 import { resendEmailVerification, updateProfile } from '@/api/session';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,7 +64,8 @@ const resendVerification = async (): Promise<void> => {
 
 <template>
     <SettingsLayout>
-        <div class="flex flex-col gap-6">
+        <LoadingSkeleton v-if="!user" variant="settings" settings-section="profile" :readonly="sessionState.current.value?.active_role?.code !== 'administrador'" />
+        <div v-else class="flex flex-col gap-6">
             <Heading
                 variant="small"
                 title="Perfil"

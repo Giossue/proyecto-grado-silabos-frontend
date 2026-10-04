@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 
+const emit = defineEmits<{ loading: [loading: boolean] }>();
+
 const enabled = ref<boolean | null>(null);
 const loading = ref(true);
 const confirmationRequired = ref(false);
@@ -31,6 +33,7 @@ const messageOf = (reason: unknown, fallback: string): string =>
 
 const load = async (): Promise<void> => {
     loading.value = true;
+    emit('loading', true);
     try {
         const status = await getTwoFactorStatus();
         enabled.value = status.enabled;
@@ -39,6 +42,7 @@ const load = async (): Promise<void> => {
         error.value = messageOf(reason, 'No se pudo consultar el segundo factor.');
     } finally {
         loading.value = false;
+        emit('loading', false);
     }
 };
 

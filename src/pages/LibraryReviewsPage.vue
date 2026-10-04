@@ -66,7 +66,7 @@ onMounted(() => { void load(initialPage); });
 </script>
 
 <template>
-  <PageFrame title="Revisiones de biblioteca" description="Biblioteca revisa primero la bibliografía de cada sílabo enviado; después siguen coordinación y decanato, y al final biblioteca firma el PDF.">
+  <PageFrame title="Revisiones de biblioteca" description="Biblioteca revisa primero la bibliografía de cada sílabo enviado; después siguen coordinación y decanato.">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="9" :filters="1" :cell-lines="2" />
     <Card v-if="data">

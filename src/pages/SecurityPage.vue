@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client';
 import { updatePassword } from '@/api/session';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import { toast } from '@/lib/toast';
 import { sessionState } from '@/state/session';
 
 const currentPassword = ref('');
+const loading = ref(true);
 const password = ref('');
 const passwordConfirmation = ref('');
 const processing = ref(false);
@@ -51,6 +53,8 @@ const submit = async (): Promise<void> => {
 
 <template>
     <SettingsLayout>
+        <LoadingSkeleton v-if="loading" variant="settings" settings-section="security" />
+        <div v-show="!loading" class="contents">
         <div class="flex flex-col gap-6">
             <Heading variant="small" title="Actualizar contraseña" description="Use una contraseña larga y única para proteger su cuenta" />
             <InputError :message="errors.request" />
@@ -81,6 +85,7 @@ const submit = async (): Promise<void> => {
             </form>
         </div>
 
-        <ManageTwoFactor />
+        <ManageTwoFactor @loading="loading = $event" />
+        </div>
     </SettingsLayout>
 </template>
