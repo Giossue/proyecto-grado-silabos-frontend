@@ -1,11 +1,9 @@
-<script setup lang="ts">
-import AppLogoIcon from '@/components/AppLogoIcon.vue';
-</script>
 <template>
-  <div class="flex h-10 w-full items-center justify-center px-1 group-data-[collapsible=icon]:hidden">
-    <img src="/logo-ueb.png" alt="Universidad Estatal de Bolívar" class="h-9 w-auto object-contain" />
+  <div class="flex aspect-square size-9 shrink-0 items-center justify-center">
+    <img src="/logo-ueb.png" alt="Universidad Estatal de Bolívar" class="size-9 object-contain" />
   </div>
-  <div class="hidden aspect-square size-8 items-center justify-center rounded-md bg-brand-logo-surface group-data-[collapsible=icon]:flex">
-    <AppLogoIcon class="size-7 object-contain" />
+  <div class="ml-1 grid flex-1 text-left text-sm group-data-[collapsible=icon]:hidden">
+    <span class="truncate leading-tight font-semibold">Sílabos UEB</span>
+    <span class="truncate text-xs text-muted-foreground">Universidad Estatal de Bolívar</span>
   </div>
 </template>

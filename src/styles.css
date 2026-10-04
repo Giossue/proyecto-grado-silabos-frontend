@@ -224,7 +224,7 @@
     --card-foreground: #e8ecf0;
     --popover: #1b232c;
     --popover-foreground: #e8ecf0;
-    --primary: #4a74a4;
+    --primary: #215587;
     --primary-foreground: hsl(0 0% 98%);
     --secondary: #242e39;
     --secondary-foreground: #e8ecf0;
@@ -243,7 +243,7 @@
     --warning-foreground: hsl(0 0% 9%);
     --border: #303b48;
     --input: #3c4958;
-    --ring: #7fa3cc;
+    --ring: #5d8cc0;
     --surface-ring: rgb(255 255 255 / 0.1);
     --shadow-control-value: 0 0 #0000;
     --shadow-surface-value:

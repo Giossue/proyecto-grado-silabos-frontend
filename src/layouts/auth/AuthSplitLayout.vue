@@ -14,7 +14,8 @@ defineProps<{
         <div class="relative flex flex-col gap-4 p-6 md:p-10">
             <div class="flex items-center justify-between">
                 <RouterLink to="/" class="flex items-center gap-2 font-medium">
-                    <img src="/logo-ueb.png" alt="Universidad Estatal de Bolívar" class="h-10 w-auto object-contain" />
+                    <img src="/logo-ueb.png" alt="Universidad Estatal de Bolívar" class="size-10 object-contain" />
+                    Sílabos UEB
                 </RouterLink>
                 <AppearanceToggle />
             </div>
@@ -35,8 +36,8 @@ defineProps<{
         <div
             class="relative hidden flex-col items-center justify-center gap-6 bg-brand-surface p-10 text-brand-foreground lg:flex"
         >
-            <div class="flex w-full max-w-md items-center justify-center">
-                <img src="/logo-ueb.png" alt="Universidad Estatal de Bolívar" class="w-full object-contain" />
+            <div class="flex items-center justify-center">
+                <img src="/logo-ueb.png" alt="Universidad Estatal de Bolívar" class="size-56 object-contain" />
             </div>
             <div class="flex max-w-md flex-col gap-2 text-center">
                 <p class="text-2xl font-semibold">Sílabos UEB</p>
