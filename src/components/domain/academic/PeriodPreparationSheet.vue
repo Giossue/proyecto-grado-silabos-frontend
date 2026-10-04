@@ -95,11 +95,6 @@ watch(periodId, () => { if (open.value) updateProposal(); });
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
           <Alert v-if="!periodId"><AlertDescription>No hay un período disponible para preparar.</AlertDescription></Alert>
           <template v-else>
-            <p v-if="rows.length" class="text-sm text-muted-foreground">
-              {{ rows.length }} materias pendientes · {{ parallelCount }} paralelos · {{ assignedCount }} docentes propuestos.
-              <span v-if="sourcePeriodCode"> Basado en {{ sourcePeriodCode }}; puede cambiar cualquier propuesta.</span>
-              <span v-else> Cada materia viene con un paralelo y la primera jornada disponible; cambie solo lo que sea distinto.</span>
-            </p>
             <Table>
               <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Paralelos, jornada y docente</TableHead></TableRow></TableHeader>
               <TableBody>
