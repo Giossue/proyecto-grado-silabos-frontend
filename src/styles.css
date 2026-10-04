@@ -91,6 +91,12 @@
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
     }
+
+    /* Los fieldset no se encogen por debajo de su contenido: sin esto, las tablas
+       anchas del sílabo desbordan la tarjeta en lugar de desplazarse. */
+    fieldset {
+        min-inline-size: 0;
+    }
 }
 
 @layer utilities {
@@ -451,6 +457,8 @@
     .assistant-panel {
         height: var(--layout-assistant-height);
         min-height: var(--layout-assistant-min-height);
+        min-width: 0;
+        max-width: 100%;
     }
 
     @media (width >= 80rem) {

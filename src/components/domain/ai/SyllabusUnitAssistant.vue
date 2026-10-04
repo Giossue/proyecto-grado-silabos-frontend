@@ -110,12 +110,12 @@ onBeforeUnmount(() => { generation += 1; stop(); });
             <ConversationScrollButton />
         </Conversation>
         <Separator />
-        <CardContent class="shrink-0 px-4 pt-4">
+        <CardContent class="min-w-0 shrink-0 px-4 py-4">
             <form @submit.prevent="send">
                 <Field>
                     <FieldLabel :for="`unit-assistant-${syllabusId}`" class="sr-only">Consulta sobre una unidad</FieldLabel>
                     <InputGroup>
-                        <InputGroupTextarea :id="`unit-assistant-${syllabusId}`" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" :disabled="!enabled || !chat?.available || waiting" placeholder="Escribe la unidad o el tema…" @focus="engaged = true" @blur="engaged = false" />
+                        <InputGroupTextarea :id="`unit-assistant-${syllabusId}`" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" class="w-full min-w-0" :disabled="!enabled || !chat?.available || waiting" placeholder="Escribe la unidad o el tema…" @focus="engaged = true" @blur="engaged = false" />
                         <InputGroupAddon align="block-end" class="justify-end"><Button type="submit" size="sm" :disabled="!canSend"><Spinner v-if="waiting" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar</Button></InputGroupAddon>
                     </InputGroup>
                     <FieldDescription v-if="saving">Espera a que se guarden los cambios del sílabo antes de consultar.</FieldDescription>
