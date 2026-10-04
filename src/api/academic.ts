@@ -11,7 +11,7 @@ export type AcademicEntity = 'facultad' | 'carrera' | 'periodo';
 export const getAcademicGovernance = () =>
   api<AcademicGovernance>('/admin/academic');
 export const createAcademicRecord = (entity: AcademicEntity, payload: Record<string, unknown> | FormData) =>
-  api<{ message: string }>(`/admin/academic/${entity}`, {
+  api<{ message: string; id?: string }>(`/admin/academic/${entity}`, {
     method: 'POST',
     body: payload instanceof FormData ? payload : JSON.stringify(payload),
   });
