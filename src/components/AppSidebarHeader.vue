@@ -5,7 +5,6 @@ import SetupProgress from '@/components/SetupProgress.vue';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import type { BreadcrumbItem } from '@/types';
 
-// La cabecera ya no muestra el título de la página: solo el botón del menú y los accesos.
 withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTitle?: string }>(), {
     breadcrumbs: () => [],
     pageTitle: '',
@@ -14,7 +13,7 @@ withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTitle?: string }>
 
 <template>
     <header
-        class="sticky top-0 z-30 flex h-(--app-header-height) shrink-0 items-center gap-2 border-b border-sidebar-border/70 bg-background px-6 pt-[env(safe-area-inset-top)] transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--app-header-compact-height) md:px-4"
+        class="app-header sticky top-0 z-30 flex h-(--app-header-height) shrink-0 items-center gap-2 border-b border-border bg-background px-6 pt-[env(safe-area-inset-top)] transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--app-header-compact-height) md:px-4"
     >
         <div class="flex items-center gap-2">
             <SidebarTrigger class="-ml-1" />

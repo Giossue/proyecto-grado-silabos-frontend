@@ -23,16 +23,13 @@ const formatted = computed(() =>
 <template>
     <Card>
         <CardContent class="flex flex-col gap-1 py-5">
-            <div class="flex items-center gap-2 text-muted-foreground">
-                <component
-                    :is="icon"
-                    v-if="icon"
-                    class="size-4"
-                    aria-hidden="true"
-                />
+            <div class="flex items-center gap-3 text-muted-foreground">
+                <span v-if="icon" class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                    <component :is="icon" class="size-4" aria-hidden="true" />
+                </span>
                 <span class="text-sm">{{ label }}</span>
             </div>
-            <span class="text-3xl leading-none font-semibold text-foreground">
+            <span class="text-3xl leading-none font-semibold text-primary">
                 {{ formatted
                 }}<span
                     v-if="suffix"
