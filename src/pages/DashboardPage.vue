@@ -27,11 +27,11 @@ const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: C
 const setupRoutes: Record<string, string> = {
   faculties: paths.admin.academicSection('facultades'),
   careers: paths.admin.academicSection('carreras'),
-  periods: paths.admin.academicSection('periodos-academicos'),
+  periods: paths.admin.convocations,
   accounts: paths.admin.users,
   coordinators: paths.admin.academicSection('carreras'),
   template: paths.admin.template,
-  process: paths.admin.academicSection('periodos-academicos'),
+  process: paths.admin.convocations,
   curriculum: paths.coordination.curriculum,
   scheduled_subjects: paths.coordination.scheduledSubjects,
   parallels: paths.coordination.scheduledSubjects,

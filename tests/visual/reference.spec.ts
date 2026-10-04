@@ -12,7 +12,6 @@ const routes = {
     '/admin/estructura-academica/facultades',
     '/admin/estructura-academica/campus',
     '/admin/estructura-academica/carreras',
-    '/admin/estructura-academica/periodos-academicos',
     '/admin/plantilla',
     '/admin/auditoria',
     '/admin/procesos',
