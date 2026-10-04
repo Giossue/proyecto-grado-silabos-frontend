@@ -128,12 +128,8 @@
     --brand-logo-surface: hsl(0 0% 100%);
     --brand-blue: #122c41;
     --brand-accent: #ac231e;
-    --avatar-shadow: #114e7e;
-    --avatar-body: #1565a4;
-    --avatar-metal: #d9d9d9;
-    --avatar-outline: #000000;
-    --avatar-accent: #2f87cc;
-    --avatar-light: #952222;
+    --avatar-body: #5b7be8;
+    --avatar-outline: #1c1c1e;
     --layout-syllabus-aside-width: 28rem;
     --layout-syllabus-aside-top: 8rem;
     --layout-syllabus-aside-inset: 1rem;

@@ -3,6 +3,8 @@ import { useMediaQuery } from '@vueuse/core';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { clampIntensity, type AvatarEmotion, type AvatarMode } from './types';
 
+// Blob azul con dos ojos, al estilo «Strobi»: casi todo se expresa con los ojos y el cuerpo;
+// la boca solo aparece al hablar, sonreír o sorprenderse.
 const props = withDefaults(defineProps<{
     mode?: AvatarMode;
     emotion?: AvatarEmotion;
@@ -23,8 +25,7 @@ const mouth = computed<Mouth>(() => {
     if (props.mode === 'speaking') return 'talk';
     if (props.emotion === 'surprised') return 'surprised';
     if (props.emotion === 'happy') return 'smile';
-    if (props.emotion === 'confused' || props.mode === 'thinking') return 'neutral';
-    return 'smile';
+    return 'neutral';
 });
 
 const style = computed(() => ({
@@ -43,8 +44,8 @@ const scheduleBlink = (): void => {
         blinkTimer = setTimeout(() => {
             blinking.value = false;
             scheduleBlink();
-        }, 190);
-    }, 1600 + Math.random() * 2200);
+        }, 170);
+    }, 1800 + Math.random() * 2600);
 };
 
 watch(blinks, scheduleBlink);
@@ -71,43 +72,29 @@ onBeforeUnmount(() => {
     >
         <g id="robot_motion">
             <g id="robot_root">
-                <g id="ears">
-                    <g id="ear_left">
-                        <path id="ear_left_back" d="M18 166C8.06 166 0 174.06 0 184v10c0 9.94 8.06 18 18 18h2v-46h-2Z" fill="var(--avatar-shadow)" />
-                        <rect id="ear_left_main" x="18" y="152" width="30" height="78" rx="12" fill="var(--avatar-body)" />
-                    </g>
-                    <g id="ear_right">
-                        <path id="ear_right_back" d="M308 166c9.94 0 18 8.06 18 18v10c0 9.94-8.06 18-18 18h-2v-46h2Z" fill="var(--avatar-shadow)" />
-                        <rect id="ear_right_main" x="278" y="152" width="30" height="78" rx="12" fill="var(--avatar-body)" />
-                    </g>
-                </g>
-
-                <g id="head">
-                    <rect id="head_shell" x="40" y="88" width="250" height="184" rx="29" fill="var(--avatar-metal)" />
-                    <rect id="face_panel" x="70" y="118" width="188" height="126" rx="49" fill="var(--avatar-outline)" />
+                <g id="body">
+                    <!-- Círculo con un leve aplastamiento lateral para que no parezca geométrico. -->
+                    <path
+                        id="body_shell"
+                        d="M163 18c66 0 119 51 119 118 0 69-50 118-119 118S44 205 44 136C44 69 97 18 163 18Z"
+                        fill="var(--avatar-body)"
+                    />
                 </g>
 
                 <g id="eyes">
                     <g id="eye_left">
-                        <circle id="eye_left_dot" cx="113" cy="175" r="15" fill="var(--avatar-accent)" />
+                        <rect id="eye_left_dot" x="107" y="104" width="30" height="62" rx="15" fill="var(--avatar-outline)" />
                     </g>
                     <g id="eye_right">
-                        <circle id="eye_right_dot" cx="217" cy="175" r="15" fill="var(--avatar-accent)" />
+                        <rect id="eye_right_dot" x="189" y="104" width="30" height="62" rx="15" fill="var(--avatar-outline)" />
                     </g>
                 </g>
 
                 <g id="mouth">
-                    <path id="mouth_smile" d="M136 199h56c0 13.255-12.536 24-28 24s-28-10.745-28-24Z" fill="var(--avatar-accent)" />
-                    <rect id="mouth_neutral" x="145" y="207" width="38" height="7" rx="3.5" fill="var(--avatar-accent)" />
-                    <ellipse id="mouth_talk_small" cx="164" cy="211" rx="14" ry="9" fill="var(--avatar-accent)" />
-                    <ellipse id="mouth_talk_open" cx="164" cy="211" rx="17" ry="20" fill="var(--avatar-accent)" />
-                    <circle id="mouth_surprised" cx="164" cy="211" r="12" fill="var(--avatar-accent)" />
-                </g>
-
-                <g id="antenna">
-                    <ellipse id="antenna_base" cx="169" cy="100" rx="25" ry="6" fill="var(--avatar-outline)" />
-                    <path id="antenna_stem" d="M167 100V78L148 67l19-11V35" stroke="var(--avatar-body)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" />
-                    <circle id="antenna_light" cx="168" cy="18" r="18" fill="var(--avatar-light)" />
+                    <path id="mouth_smile" d="M139 190c8 11 40 11 48 0" stroke="var(--avatar-outline)" stroke-width="7" stroke-linecap="round" />
+                    <ellipse id="mouth_talk_small" cx="163" cy="196" rx="9" ry="6" fill="var(--avatar-outline)" />
+                    <ellipse id="mouth_talk_open" cx="163" cy="198" rx="12" ry="14" fill="var(--avatar-outline)" />
+                    <circle id="mouth_surprised" cx="163" cy="198" r="10" fill="var(--avatar-outline)" />
                 </g>
             </g>
         </g>
@@ -120,33 +107,33 @@ onBeforeUnmount(() => {
     overflow: visible;
 }
 
-.robot-avatar g {
+.robot-avatar g,
+.robot-avatar path,
+.robot-avatar rect {
     transform-box: view-box;
 }
 
 #robot_motion,
-#robot_root {
-    transform-origin: 165px 272px;
+#robot_root,
+#body_shell {
+    transform-origin: 163px 254px;
 }
 
 #eyes {
-    transform-origin: 165px 175px;
+    transform-origin: 163px 135px;
     transition: transform 320ms ease-out;
 }
 
-#eye_left {
-    transform-origin: 113px 175px;
+#eye_left,
+#eye_left_dot {
+    transform-origin: 122px 135px;
+    transition: transform 240ms ease-out;
 }
 
-#eye_right {
-    transform-origin: 217px 175px;
-}
-
-#antenna,
-#antenna_stem,
-#antenna_light {
-    transform-origin: 168px 100px;
-    transform-box: view-box;
+#eye_right,
+#eye_right_dot {
+    transform-origin: 204px 135px;
+    transition: transform 240ms ease-out;
 }
 
 #mouth > * {
@@ -155,7 +142,6 @@ onBeforeUnmount(() => {
 }
 
 [data-mouth='smile'] #mouth_smile,
-[data-mouth='neutral'] #mouth_neutral,
 [data-mouth='surprised'] #mouth_surprised {
     opacity: 1;
 }
@@ -170,60 +156,66 @@ onBeforeUnmount(() => {
 
 [data-blinking] #eye_left,
 [data-blinking] #eye_right {
-    animation: blink 190ms ease-in-out;
+    animation: blink 170ms ease-in-out;
 }
 
-[data-mode='idle'] #robot_root {
-    animation: idle-float 4s ease-in-out infinite;
+/* En reposo respira: se aplasta y estira apenas, como gelatina. */
+[data-mode='idle'] #body_shell {
+    animation: breathe 4.2s ease-in-out infinite;
 }
 
 [data-mode='listening'] #robot_root {
-    transform: rotate(calc(1.5deg * var(--i) + 0.5deg));
+    transform: rotate(calc(3deg * var(--i) + 1deg));
     transition: transform 400ms ease-out;
 }
 
-[data-mode='listening'] #antenna {
-    animation: antenna-sway 2.6s ease-in-out infinite;
-    --sway: 1.5deg;
+[data-mode='listening'] #eyes {
+    transform: translateY(calc(-2px - 2px * var(--i))) scaleY(1.06);
 }
 
 [data-mode='thinking'] #robot_root {
-    transform: rotate(-2.5deg);
+    transform: rotate(-3deg);
     transition: transform 450ms ease-out;
 }
 
 [data-mode='thinking'] #eyes {
-    transform: translate(calc(5px + 3px * var(--i)), calc(-4px - 2px * var(--i)));
+    transform: translate(calc(8px + 4px * var(--i)), calc(-10px - 4px * var(--i)));
 }
 
-[data-mode='thinking'] #antenna {
-    animation: antenna-sway 2.4s ease-in-out infinite;
-    --sway: 5deg;
+[data-mode='thinking'] #eye_left_dot,
+[data-mode='thinking'] #eye_right_dot {
+    transform: scaleY(0.8);
 }
 
 [data-mode='speaking'] #robot_root {
-    animation: speak-nod 720ms ease-in-out infinite;
+    animation: speak-bob 720ms ease-in-out infinite;
 }
 
 [data-emotion='happy'] #robot_motion {
     animation: bounce 520ms cubic-bezier(0.3, 0.7, 0.4, 1);
 }
 
-[data-emotion='happy'] #eyes {
-    transform: scaleY(calc(1 - 0.2 * var(--i)));
+/* Ojos felices: se cierran en arco subiendo. */
+[data-emotion='happy'] #eye_left_dot,
+[data-emotion='happy'] #eye_right_dot {
+    transform: translateY(-6px) scaleY(calc(0.45 - 0.1 * var(--i)));
 }
 
 [data-emotion='surprised'] #eyes {
-    transform: scale(calc(1 + 0.15 * var(--i)));
+    transform: translateY(-4px) scale(calc(1.12 + 0.12 * var(--i)));
 }
 
-[data-emotion='surprised'] #antenna_stem,
-[data-emotion='surprised'] #antenna_light {
-    animation: antenna-rebound 560ms ease-out;
+[data-emotion='surprised'] #body_shell {
+    animation: startle 420ms ease-out;
 }
 
+/* Confundido: un ojo entrecerrado y la mirada ladeada. */
 [data-emotion='confused'] #eyes {
-    transform: translateX(-4px);
+    transform: translateX(-6px);
+}
+
+[data-emotion='confused'] #eye_right_dot {
+    transform: scaleY(0.6) translateY(8px);
 }
 
 @keyframes blink {
@@ -236,51 +228,35 @@ onBeforeUnmount(() => {
     }
 }
 
-@keyframes idle-float {
+@keyframes breathe {
     0%,
     100% {
-        transform: translateY(0) rotate(0deg);
-    }
-    30% {
-        transform: translateY(calc(-1px - 1px * var(--i))) rotate(calc(-1deg * var(--i)));
-    }
-    70% {
-        transform: translateY(calc(-0.5px - 0.5px * var(--i))) rotate(calc(1deg * var(--i)));
-    }
-}
-
-@keyframes speak-nod {
-    0%,
-    100% {
-        transform: translateY(0);
+        transform: scale(1, 1);
     }
     50% {
-        transform: translateY(calc(-0.6px - 0.6px * var(--i)));
+        transform: scale(calc(1 + 0.012 * var(--i)), calc(1 - 0.018 * var(--i)));
     }
 }
 
-@keyframes antenna-sway {
+@keyframes speak-bob {
     0%,
     100% {
-        transform: rotate(calc(var(--sway) * -1 * var(--i)));
+        transform: translateY(0) scale(1, 1);
     }
     50% {
-        transform: rotate(calc(var(--sway) * var(--i)));
+        transform: translateY(calc(-1px - 1px * var(--i))) scale(1.01, 0.99);
     }
 }
 
-@keyframes antenna-rebound {
+@keyframes startle {
     0% {
-        transform: scaleY(1);
+        transform: scale(1, 1);
     }
-    35% {
-        transform: scaleY(calc(1 + 0.1 * var(--i)));
-    }
-    65% {
-        transform: scaleY(0.96);
+    40% {
+        transform: scale(calc(1.04 + 0.04 * var(--i)), calc(1.06 + 0.04 * var(--i)));
     }
     100% {
-        transform: scaleY(1);
+        transform: scale(1, 1);
     }
 }
 
@@ -290,10 +266,10 @@ onBeforeUnmount(() => {
         transform: translateY(0);
     }
     40% {
-        transform: translateY(calc(-3px - 4px * var(--i)));
+        transform: translateY(calc(-5px - 6px * var(--i)));
     }
     70% {
-        transform: translateY(1px);
+        transform: translateY(2px);
     }
 }
 
