@@ -66,16 +66,17 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
     return mainNavItems;
 }
 
-// Título del ítem del menú que corresponde a la ruta actual (hijo antes que padre).
-export function useActiveNavTitle(): ComputedRef<string> {
+// Ítem del menú que corresponde a la ruta actual (hijo antes que padre). El hijo
+// hereda el icono del padre porque los subítems no tienen uno propio.
+export function useActiveNavItem(): ComputedRef<NavItem | null> {
     const items = useMainNavItems();
     const { isCurrentOrParentUrl } = useCurrentUrl();
     return computed(() => {
         for (const item of items.value) {
             const child = item.items?.find((c) => isCurrentOrParentUrl(c.href));
-            if (child) return child.title;
-            if (isCurrentOrParentUrl(item.href)) return item.title;
+            if (child) return { ...child, icon: child.icon ?? item.icon };
+            if (isCurrentOrParentUrl(item.href)) return item;
         }
-        return '';
+        return null;
     });
 }
