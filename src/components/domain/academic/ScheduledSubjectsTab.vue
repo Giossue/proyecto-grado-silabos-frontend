@@ -86,19 +86,15 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
       </ClientFilterBar>
       <Alert v-if="selectedPeriodOption?.planning_enabled === false"><AlertDescription>Período finalizado · solo lectura</AlertDescription></Alert>
       <Table>
-        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Código</TableHead><TableHead>Ciclo</TableHead><TableHead>Paralelos y docentes</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Ciclo</TableHead><TableHead>Paralelos</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
         <TableBody>
-          <TableEmpty v-if="!items.length" :colspan="5">{{ emptyMessage }}</TableEmpty>
+          <TableEmpty v-if="!items.length" :colspan="6">{{ emptyMessage }}</TableEmpty>
           <TableRow v-for="item in items" v-else :key="item.id">
             <TableCell>{{ item.subject_name }}</TableCell>
-            <TableCell>{{ item.subject_code }}</TableCell>
             <TableCell>{{ item.subject_cycle === null ? "Sin ciclo" : `${item.subject_cycle}.º` }}</TableCell>
-            <TableCell>
-              <ul v-if="item.parallels.length" class="flex flex-col gap-1">
-                <li v-for="parallel in item.parallels" :key="parallel.id" class="flex flex-wrap items-center gap-1.5"><Badge variant="outline">{{ parallel.code }}</Badge><span class="text-sm">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</span><span class="text-sm" :class="teacherByParallel.get(parallel.id) ? '' : 'text-muted-foreground'">· {{ teacherByParallel.get(parallel.id) ?? 'Sin docente' }}</span></li>
-              </ul>
-              <span v-else class="text-muted-foreground">Sin paralelos</span>
-            </TableCell>
+            <TableCell><ul v-if="item.parallels.length" class="flex flex-col gap-1"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-6 items-center"><Badge variant="outline">{{ parallel.code }}</Badge></li></ul><span v-else class="text-muted-foreground">Sin paralelos</span></TableCell>
+            <TableCell><ul v-if="item.parallels.length" class="flex flex-col gap-1"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-6 items-center">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
+            <TableCell><ul v-if="item.parallels.length" class="flex flex-col gap-1"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-6 items-center" :class="teacherByParallel.get(parallel.id) ? '' : 'text-muted-foreground'">{{ teacherByParallel.get(parallel.id) ?? 'Sin docente' }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
             <TableCell class="text-right"><CareerAcademicActions :shift-options="data.options.shiftOptions" :teacher-users="teacherUsers" :assignments="assignments" entity="programacion_asignatura" :record="item" :record-label="item.label" :editable="item.editable" allow-locked-actions :delete-supported="!data.career.lock_reason && item.period_planning_enabled" :parallel-creation-supported="!data.career.lock_reason && item.active && item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? 'Período finalizado · solo lectura' : data.career.lock_reason ?? undefined" @changed="emit('changed', $event)" /></TableCell>
           </TableRow>
         </TableBody>
