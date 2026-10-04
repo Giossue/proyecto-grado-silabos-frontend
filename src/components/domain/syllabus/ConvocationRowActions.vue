@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { CalendarPlus, LockKeyhole, Pencil, Trash2 } from '@lucide/vue';
+import { CalendarPlus, LockKeyhole, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
 import { deleteAcademicRecord } from '@/api/academic';
 import { ApiError } from '@/api/client';
-import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import SyllabusProcessActions from '@/components/domain/syllabus/SyllabusProcessActions.vue';
@@ -16,7 +15,6 @@ import type { ConvocationRow } from '@/pages/AdminProcessesPage.vue';
 
 const props = defineProps<{ row: ConvocationRow }>();
 const emit = defineEmits<{ changed: [message: string] }>();
-const editOpen = ref(false);
 const processOpen = ref(false);
 const deleteOpen = ref(false);
 const deleting = ref(false);
@@ -35,20 +33,15 @@ const remove = async (): Promise<void> => {
 
 <template>
     <div class="flex justify-end">
-        <!-- Con convocatoria abierta mandan las acciones del proceso; el periodo solo se edita si no está bloqueado. -->
-        <SyllabusProcessActions v-if="row.process" :process="row.process" @completed="emit('changed', $event)">
-            <DropdownMenuItem v-if="!row.lock_reason" @select="editOpen = true"><Pencil aria-hidden="true" />Editar fechas del periodo</DropdownMenuItem>
-            <DropdownMenuItem v-else disabled><LockKeyhole aria-hidden="true" />{{ row.lock_reason }}</DropdownMenuItem>
-        </SyllabusProcessActions>
+        <!-- El periodo no se edita nunca: con convocatoria mandan las acciones del proceso; sin ella, abrir o eliminar. -->
+        <SyllabusProcessActions v-if="row.process" :process="row.process" @completed="emit('changed', $event)" />
         <TableActionsMenu v-else :label="`Acciones para ${row.code}`" :disabled="Boolean(row.lock_reason)">
             <DropdownMenuItem v-if="!row.lock_reason" @select="processOpen = true"><CalendarPlus aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
-            <DropdownMenuItem v-if="!row.lock_reason" @select="editOpen = true"><Pencil aria-hidden="true" />Editar fechas del periodo</DropdownMenuItem>
-            <DropdownMenuItem v-else disabled><LockKeyhole aria-hidden="true" />{{ row.lock_reason }}</DropdownMenuItem>
+            <DropdownMenuItem v-if="row.lock_reason" disabled><LockKeyhole aria-hidden="true" />{{ row.lock_reason }}</DropdownMenuItem>
             <DropdownMenuItem v-if="!row.lock_reason" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />Eliminar periodo</DropdownMenuItem>
         </TableActionsMenu>
 
         <SyllabusProcessSheet v-if="!row.process" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: row.id, codigo: row.code, starts_on: row.starts_on, ends_on: row.ends_on }" display="menu" trigger-label="Abrir convocatoria" @saved="emit('changed', $event)" />
-        <CatalogEditSheet :key="row.id" v-model:open="editOpen" entity="periodo" :record-id="row.id" :record-name="row.code" :record-code="row.code" :starts-on="row.starts_on" :ends-on="row.ends_on" :faculties="[]" :campus-options="[]" :modality-options="[]" :show-trigger="false" @saved="emit('changed', $event)" />
 
         <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar periodo</DialogTitle><DialogDescription>Se eliminará el período «{{ row.code }}». Solo puede eliminarse si no tiene materias programadas.</DialogDescription></DialogHeader>
             <FeedbackAlert v-if="error" :message="error" />

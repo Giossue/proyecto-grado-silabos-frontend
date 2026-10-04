@@ -16,13 +16,14 @@ withDefaults(
     defineProps<{
         triggerLabel: string;
         title: string;
-        description: string;
+        description?: string;
         showTrigger?: boolean;
         disabled?: boolean;
         fullScreen?: boolean;
         wide?: boolean;
     }>(),
     {
+        description: '',
         showTrigger: true,
         disabled: false,
         fullScreen: false,
@@ -68,7 +69,7 @@ const close = (): void => {
         >
             <SheetHeader>
                 <SheetTitle>{{ title }}</SheetTitle>
-                <SheetDescription>{{ description }}</SheetDescription>
+                <SheetDescription v-if="description">{{ description }}</SheetDescription>
             </SheetHeader>
             <div class="flex-1 overflow-y-auto px-4 pt-1 pb-28">
                 <slot :close="close" />

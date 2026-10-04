@@ -8,13 +8,17 @@ import { createProcess } from '@/api/processes';
 import DatePicker from '@/components/DatePicker.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
+import { Spinner } from '@/components/ui/spinner';
 
 const props = withDefaults(defineProps<{ disabled?: boolean }>(), { disabled: false });
 const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 
 const processing = ref(false);
+const confirmOpen = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const form = ref({ starts_on: '', ends_on: '', starts_at: '', due_at: '' });
 // Si el periodo ya se creó pero la convocatoria falló, el reintento solo abre la convocatoria.
@@ -31,14 +35,20 @@ watch(open, (value) => {
         form.value = { starts_on: '', ends_on: '', starts_at: '', due_at: '' };
         errors.value = {};
         createdPeriodId.value = null;
+        confirmOpen.value = false;
     }
 });
 watch(() => form.value.starts_on, (startsOn) => {
     if (startsOn && form.value.ends_on && form.value.ends_on < startsOn) form.value.ends_on = '';
 });
 
+// El formulario solo pide confirmación; el envío real ocurre al aceptar el diálogo.
+const askConfirmation = (): void => {
+    if (!props.disabled) confirmOpen.value = true;
+};
 const submit = async (): Promise<void> => {
     if (props.disabled) return;
+    confirmOpen.value = false;
     processing.value = true;
     errors.value = {};
     try {
@@ -70,15 +80,14 @@ const submit = async (): Promise<void> => {
         :disabled="props.disabled"
         trigger-label="Nueva convocatoria"
         title="Nueva convocatoria"
-        description="Registre las fechas del periodo lectivo y las fechas en que los docentes elaboran y entregan sus sílabos. La etiqueta del periodo se genera con el rango de meses y año."
     >
         <template #default="{ close }">
-            <form @submit.prevent="submit">
+            <form @submit.prevent="askConfirmation">
                 <FieldGroup>
                     <Field v-if="errors.process" data-invalid><FieldError :errors="errors.process" /></Field>
                     <FieldSet>
                         <FieldLegend>Periodo lectivo</FieldLegend>
-                        <FieldDescription v-if="periodCreated">El periodo ya quedó creado; solo falta abrir la convocatoria.</FieldDescription>
+                        <FieldDescription>{{ periodCreated ? 'El periodo ya quedó creado; solo falta abrir la convocatoria.' : 'Fechas de inicio y fin de clases; la etiqueta se genera con el rango de meses y año.' }}</FieldDescription>
                         <Field :data-invalid="Boolean(errors.starts_on)">
                             <FieldLabel for="convocation-period-starts" required>Inicio de clases</FieldLabel>
                             <DatePicker id="convocation-period-starts" v-model="form.starts_on" :min-value="todayIso" :disabled="periodCreated" required :aria-invalid="Boolean(errors.starts_on)" />
@@ -92,7 +101,7 @@ const submit = async (): Promise<void> => {
                     </FieldSet>
                     <FieldSet>
                         <FieldLegend>Elaboración de sílabos</FieldLegend>
-                        <FieldDescription>Las fechas no se copian del periodo: elija cuándo empieza la elaboración y hasta cuándo se entrega.</FieldDescription>
+                        <FieldDescription>Elija cuándo empieza la elaboración y hasta cuándo se entrega.</FieldDescription>
                         <Field :data-invalid="Boolean(errors.starts_at)">
                             <FieldLabel for="convocation-starts" required>Inicio de la elaboración</FieldLabel>
                             <DatePicker id="convocation-starts" v-model="form.starts_at" :min-value="todayIso" :max-value="periodEnd" required :aria-invalid="Boolean(errors.starts_at)" />
@@ -107,6 +116,18 @@ const submit = async (): Promise<void> => {
                     <FormSheetActions :close="close" :processing="processing" :icon="CalendarPlus" label="Abrir convocatoria" />
                 </FieldGroup>
             </form>
+            <Dialog v-model:open="confirmOpen">
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Abrir convocatoria</DialogTitle>
+                        <DialogDescription>Una vez abierta, el periodo y sus fechas no se pueden editar. Si necesita cambiar algo, deberá eliminar la convocatoria y abrir otra.</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
+                        <Button type="button" :disabled="processing" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><CalendarPlus v-else data-icon="inline-start" aria-hidden="true" />Abrir convocatoria</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </template>
     </FormSheet>
 </template>

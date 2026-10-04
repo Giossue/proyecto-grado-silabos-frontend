@@ -18,7 +18,8 @@ import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
-import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
+import { Lock } from '@lucide/vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import ConvocationPeriodSheet from '@/components/domain/syllabus/ConvocationPeriodSheet.vue';
 import ConvocationRowActions from '@/components/domain/syllabus/ConvocationRowActions.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
@@ -46,11 +47,13 @@ const rows = computed<ConvocationRow[]>(() => {
     .map((period) => ({ ...period, process: byPeriod.get(period.id) ?? null }));
 });
 const stateLabel = (row: ConvocationRow): string => row.process
-  ? ({ abierto: 'Abierta', pausado: 'En pausa', cerrado: 'Cerrada' })[row.process.state]
-  : 'Sin abrir';
+  ? ({ abierto: 'Abierto', pausado: 'Pausado', cerrado: 'Finalizado' })[row.process.state]
+  : 'Sin iniciar';
 const filter = useClientFilter(rows, (row) => [row.code], {
-  estado: { matches: (row, value) => (value === 'sin_abrir' ? row.process === null : row.process?.state === value) },
+  estado: { matches: (row, value) => (value === 'sin_iniciar' ? row.process === null : row.process?.state === value) },
 });
+// Mientras haya una convocatoria abierta o pausada no se abre otra ni se crean periodos.
+const inProgress = computed(() => Boolean(governance.value?.lock_reason) || rows.value.some((row) => row.process?.state === 'abierto' || row.process?.state === 'pausado'));
 const { items: page, meta, setPage } = useClientPagination(() => filter.items.value);
 const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'medium' });
 
@@ -71,17 +74,17 @@ onMounted(load);
 <template>
   <PageFrame title="Convocatorias" description="Cada fila es un periodo lectivo y su convocatoria institucional: las fechas de clases y las fechas en que los docentes elaboran y entregan sus sílabos. Cada coordinación inicia después su convocatoria heredada.">
     <template #actions>
-      <ConvocationPeriodSheet v-if="loaded" :disabled="Boolean(governance?.lock_reason)" @saved="changed" />
+      <ConvocationPeriodSheet v-if="loaded" :disabled="inProgress" @saved="changed" />
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :columns="5" />
-    <ProcessLockAlert v-if="loaded && governance?.lock_reason" />
+    <Alert v-if="loaded && inProgress"><Lock aria-hidden="true" /><AlertTitle>Convocatoria en curso</AlertTitle><AlertDescription>Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra.</AlertDescription></Alert>
     <Card v-if="loaded"><CardContent class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar período" placeholder="Buscar por período">
         <template #filters>
           <Field><FieldLabel for="processes-search-state" class="sr-only">Estado</FieldLabel>
             <Select v-model="filter.values.estado.value"><SelectTrigger id="processes-search-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger>
-              <SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="sin_abrir">Sin abrir</SelectItem><SelectItem value="abierto">Abiertas</SelectItem><SelectItem value="pausado">En pausa</SelectItem><SelectItem value="cerrado">Cerradas</SelectItem></SelectGroup></SelectContent>
+              <SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="sin_iniciar">Sin iniciar</SelectItem><SelectItem value="abierto">Abiertos</SelectItem><SelectItem value="pausado">Pausados</SelectItem><SelectItem value="cerrado">Finalizados</SelectItem></SelectGroup></SelectContent>
             </Select>
           </Field>
         </template>

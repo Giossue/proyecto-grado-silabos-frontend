@@ -36,21 +36,21 @@ const deleteError = ref<string | null>(null);
 
 const dialogs: Record<Transition, { title: string; description: string; label: string; icon: Component; destructive?: boolean }> = {
   pausar: {
-    title: 'Pausar el proceso',
-    description: 'Se detienen los envíos y la edición docente en todas las carreras hasta que lo reanude.',
-    label: 'Pausar proceso',
+    title: 'Pausar la convocatoria',
+    description: 'Se detienen los envíos y la edición docente en todas las carreras hasta que la reanude.',
+    label: 'Pausar',
     icon: Pause,
   },
   reanudar: {
-    title: 'Reanudar el proceso',
+    title: 'Reanudar la convocatoria',
     description: 'Los envíos vuelven a admitirse y la plantilla vuelve a quedar protegida.',
-    label: 'Reanudar proceso',
+    label: 'Reanudar',
     icon: Play,
   },
   cerrar: {
-    title: 'Cerrar el proceso',
-    description: 'Ningún sílabo de este proceso podrá enviarse después. Esta acción no se deshace.',
-    label: 'Cerrar proceso',
+    title: 'Finalizar la convocatoria',
+    description: 'Ningún sílabo de esta convocatoria podrá enviarse después. Esta acción no se deshace.',
+    label: 'Finalizar',
     icon: Square,
     destructive: true,
   },
@@ -102,7 +102,7 @@ const remove = async (): Promise<void> => {
     <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" @select="deadlineOpen = true"><CalendarClock />Prorrogar plazo</DropdownMenuItem>
     <template v-if="process.state === 'abierto' || process.state === 'pausado'">
       <DropdownMenuSeparator />
-      <DropdownMenuItem variant="destructive" @select="pending = 'cerrar'"><Square />Cerrar</DropdownMenuItem>
+      <DropdownMenuItem variant="destructive" @select="pending = 'cerrar'"><Square />Finalizar</DropdownMenuItem>
     </template>
     <DropdownMenuSeparator v-if="process.state !== 'cerrado'" />
     <DropdownMenuItem v-if="process.deletable" variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>

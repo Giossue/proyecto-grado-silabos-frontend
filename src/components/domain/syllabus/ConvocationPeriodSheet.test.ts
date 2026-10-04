@@ -10,6 +10,14 @@ vi.mock('@/api/processes', async (importOriginal) => ({ ...(await importOriginal
 
 afterEach(() => { document.body.innerHTML = ''; vi.clearAllMocks(); });
 
+// El envío pasa por un diálogo de confirmación: enviar el formulario y aceptar.
+const confirmSubmit = async (): Promise<void> => {
+  document.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+  await flushPromises();
+  const confirm = [...document.querySelectorAll('[role="dialog"] button')].reverse().find((button) => button.textContent?.includes('Abrir convocatoria'));
+  (confirm as HTMLButtonElement).click();
+  await flushPromises();
+};
 const mountSheet = async () => {
   const wrapper = mount(ConvocationPeriodSheet, { attachTo: document.body, props: { open: true } });
   await flushPromises();
@@ -35,12 +43,9 @@ describe('ConvocationPeriodSheet', () => {
     ends.vm.$emit('update:modelValue', '2027-02-26');
     opens.vm.$emit('update:modelValue', '2026-10-06');
     due.vm.$emit('update:modelValue', '2026-10-30');
-    const form = document.querySelector('form')!;
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
-    await flushPromises();
+    await confirmSubmit();
     expect(document.body.textContent).toContain('El periodo ya quedó creado');
-    form.dispatchEvent(new Event('submit', { cancelable: true }));
-    await flushPromises();
+    await confirmSubmit();
 
     expect(api.createAcademicRecord).toHaveBeenCalledTimes(1);
     expect(api.createProcess).toHaveBeenCalledTimes(2);
@@ -57,8 +62,7 @@ describe('ConvocationPeriodSheet', () => {
     ends.vm.$emit('update:modelValue', '2027-02-26');
     opens.vm.$emit('update:modelValue', '2026-10-06');
     due.vm.$emit('update:modelValue', '2026-10-30');
-    await document.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
-    await flushPromises();
+    await confirmSubmit();
 
     expect(api.createProcess).toHaveBeenCalledWith({ period_id: 'p1', starts_at: '2026-10-06', due_at: '2026-10-30' });
     expect(wrapper.emitted('saved')?.[0]).toEqual(['Convocatoria institucional abierta.']);
