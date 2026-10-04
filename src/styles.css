@@ -218,20 +218,20 @@
 }
 
 .dark {
-    --background: hsl(0 0% 3.9%);
-    --foreground: hsl(0 0% 98%);
-    --card: hsl(0 0% 9%);
-    --card-foreground: hsl(0 0% 98%);
-    --popover: hsl(0 0% 11%);
-    --popover-foreground: hsl(0 0% 98%);
-    --primary: #4a6f99;
+    --background: #0f1a26;
+    --foreground: #e6edf3;
+    --card: #172636;
+    --card-foreground: #e6edf3;
+    --popover: #172636;
+    --popover-foreground: #e6edf3;
+    --primary: #4a74a4;
     --primary-foreground: hsl(0 0% 98%);
-    --secondary: hsl(0 0% 14.9%);
-    --secondary-foreground: hsl(0 0% 98%);
-    --muted: hsl(0 0% 16.08%);
-    --muted-foreground: hsl(0 0% 63.9%);
-    --accent: hsl(0 0% 14.9%);
-    --accent-foreground: hsl(0 0% 98%);
+    --secondary: #1e3042;
+    --secondary-foreground: #e6edf3;
+    --muted: #1e3042;
+    --muted-foreground: #9fb0c3;
+    --accent: #1e3042;
+    --accent-foreground: #e6edf3;
     --destructive: hsl(0 84% 48%);
     --destructive-foreground: hsl(0 0% 98%);
     --overlay: hsl(0 0% 0%);
@@ -241,8 +241,8 @@
     --success-foreground: hsl(0 0% 98%);
     --warning: hsl(38 92% 50%);
     --warning-foreground: hsl(0 0% 9%);
-    --border: hsl(0 0% 16%);
-    --input: hsl(0 0% 24%);
+    --border: #2a3d52;
+    --input: #35495f;
     --ring: #7fa3cc;
     --surface-ring: rgb(255 255 255 / 0.1);
     --shadow-control-value: 0 0 #0000;
@@ -255,10 +255,10 @@
     --chart-3: hsl(30 80% 55%);
     --chart-4: hsl(280 65% 60%);
     --chart-5: hsl(340 75% 55%);
-    --sidebar-background: #122c41;
+    --sidebar-background: #0c1e2f;
     --sidebar-foreground: #ffffff;
     --sidebar-primary: #ffffff;
-    --sidebar-primary-foreground: #122c41;
+    --sidebar-primary-foreground: #0c1e2f;
     --sidebar-accent: rgb(255 255 255 / 0.09);
     --sidebar-accent-foreground: #ffffff;
     --sidebar-border: rgb(255 255 255 / 0.14);
