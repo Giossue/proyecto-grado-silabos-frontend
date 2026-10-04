@@ -34,7 +34,6 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                       items: [
                           { title: 'Facultades', href: paths.admin.academicWithSection('facultad') },
                           { title: 'Carreras', href: paths.admin.academicWithSection('carrera') },
-                          { title: 'Periodos académicos', href: paths.admin.academicWithSection('periodo') },
                       ],
                   },
                   { title: 'Plantilla', href: paths.admin.template, icon: FileStack },

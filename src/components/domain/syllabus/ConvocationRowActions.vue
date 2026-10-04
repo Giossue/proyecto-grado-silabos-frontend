@@ -3,7 +3,6 @@ import { CalendarPlus, LockKeyhole, Pencil, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
 import { deleteAcademicRecord } from '@/api/academic';
 import { ApiError } from '@/api/client';
-import type { SyllabusProcess } from '@/api/processes';
 import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
@@ -32,7 +31,6 @@ const remove = async (): Promise<void> => {
     } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo eliminar el periodo.'; }
     finally { deleting.value = false; }
 };
-const periodFor = (process: SyllabusProcess) => ({ id: process.period_id, codigo: process.period_name });
 </script>
 
 <template>
