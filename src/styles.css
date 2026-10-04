@@ -493,13 +493,27 @@
         background-color: var(--curriculum-canvas-background);
     }
 
-    /* Puntos de conexión más grandes en edición: se ven y se agarran mejor. */
+    /* Puntos de conexión en edición: se ven de 16px pero se agarran en un área de 40px;
+       crecen al pasar el cursor para confirmar que son el sitio donde arrastrar. */
     .curriculum-canvas .vue-flow__handle.curriculum-handle {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
         border: 2px solid var(--card);
         background-color: var(--primary);
         cursor: crosshair;
+        transition: transform var(--duration-layout) ease-out;
+    }
+
+    .curriculum-canvas .vue-flow__handle.curriculum-handle::before {
+        content: '';
+        position: absolute;
+        inset: -12px;
+        border-radius: 9999px;
+    }
+
+    .curriculum-canvas .vue-flow__handle.curriculum-handle:hover,
+    .curriculum-canvas .vue-flow__handle.curriculum-handle.connecting {
+        transform: translate(-50%, 0) scale(1.4);
     }
 
     .curriculum-canvas .vue-flow__node-subject:not(.dragging) {
