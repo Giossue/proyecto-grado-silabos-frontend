@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import AppLogoIcon from '@/components/AppLogoIcon.vue';
+import { Toaster } from '@/components/ui/sonner';
 
 defineProps<{
     title?: string;
@@ -8,33 +10,41 @@ defineProps<{
 </script>
 
 <template>
-    <div
-        class="relative grid h-dvh flex-col items-center justify-center px-8 sm:px-0 lg:max-w-none lg:grid-cols-2 lg:px-0"
-    >
-        <div
-            class="relative hidden h-full flex-col border-r border-border bg-brand-surface p-10 text-brand-foreground lg:flex"
-        >
-            <RouterLink
-                to="/"
-                class="relative z-20 flex items-center text-lg font-medium"
-            >
-                <AppLogoIcon class="mr-2 size-8 object-contain" />
-                Sílabos UEB
-            </RouterLink>
-        </div>
-        <div class="lg:p-8">
-            <div
-                class="mx-auto flex w-full flex-col justify-center gap-6 sm:w-87.5"
-            >
-                <div class="flex flex-col gap-2 text-center">
-                    <h1 v-if="title" class="text-xl font-medium tracking-tight">
-                        {{ title }}
-                    </h1>
-                    <p v-if="description" class="text-sm text-muted-foreground">
-                        {{ description }}
-                    </p>
+    <Toaster />
+    <div class="grid min-h-svh bg-background lg:grid-cols-2">
+        <div class="relative flex flex-col gap-4 p-6 md:p-10">
+            <div class="flex items-center justify-between">
+                <RouterLink to="/" class="flex items-center gap-2 font-medium">
+                    <AppLogoIcon class="size-8 object-contain" />
+                    Sílabos UEB
+                </RouterLink>
+                <AppearanceToggle />
+            </div>
+            <div class="flex flex-1 items-center justify-center">
+                <div class="flex w-full max-w-sm flex-col gap-6">
+                    <div class="flex flex-col gap-2 text-center">
+                        <h1 v-if="title" class="text-2xl font-semibold tracking-tight">
+                            {{ title }}
+                        </h1>
+                        <p v-if="description" class="text-sm text-muted-foreground">
+                            {{ description }}
+                        </p>
+                    </div>
+                    <slot />
                 </div>
-                <slot />
+            </div>
+        </div>
+        <div
+            class="relative hidden flex-col items-center justify-center gap-6 bg-brand-surface p-10 text-brand-foreground lg:flex"
+        >
+            <div class="flex size-32 items-center justify-center rounded-2xl bg-brand-logo-surface p-4">
+                <AppLogoIcon class="size-full object-contain" />
+            </div>
+            <div class="flex max-w-md flex-col gap-2 text-center">
+                <p class="text-2xl font-semibold">Universidad Estatal de Bolívar</p>
+                <p class="text-sm text-brand-foreground/80">
+                    Gestión de sílabos de la Carrera de Software
+                </p>
             </div>
         </div>
     </div>
