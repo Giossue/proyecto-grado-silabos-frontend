@@ -425,9 +425,13 @@
     }
 }
 
-.vue-flow .vue-flow__pane.draggable,
+/* La manito indica que el lienzo se arrastra; las flechas quedan para mover tarjetas. */
+.vue-flow .vue-flow__pane.draggable {
+    cursor: grab;
+}
+
 .vue-flow .vue-flow__pane.dragging {
-    cursor: move;
+    cursor: grabbing;
 }
 
 @media (prefers-reduced-motion: reduce) {

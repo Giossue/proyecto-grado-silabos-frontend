@@ -11,7 +11,8 @@ import type {
   NodeDragEvent,
   NodeMouseEvent,
 } from "@vue-flow/core";
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
+import { useResizeObserver } from "@vueuse/core";
 import { ApiError } from "@/api/client";
 import { updateSubjectLayout } from "@/api/career-academics";
 import CurriculumAddSubjectNode from "@/components/domain/academic/curriculum/CurriculumAddSubjectNode.vue";
@@ -120,7 +121,22 @@ const summaryRows = computed(() => [
 ]);
 
 const flowId = `curriculum-${props.curriculum.id}`;
-const { setEdges, setNodes, updateNode } = useVueFlow(flowId);
+const { setEdges, setNodes, updateNode, fitView, viewport } = useVueFlow(flowId);
+// Tamaño real del lienzo: sirve para centrar la malla cuando sobra espacio y para
+// volver a encuadrarla la primera vez que el contenedor tiene medidas.
+const canvasElement = useTemplateRef<HTMLElement>("canvasElement");
+const canvasSize = ref({ width: 0, height: 0 });
+useResizeObserver(canvasElement, (entries) => {
+  const rect = entries[0]?.contentRect;
+  if (rect) canvasSize.value = { width: rect.width, height: rect.height };
+});
+const fitted = ref(false);
+watch(canvasSize, async ({ width, height }) => {
+  if (fitted.value || width === 0 || height === 0) return;
+  fitted.value = true;
+  await nextTick();
+  await fitView({ padding: 0.08 });
+});
 
 const editingSubjectId = ref<string | null>(null);
 const draftCycle = ref<number | null>(null);
@@ -181,9 +197,15 @@ const navigationExtent = computed<CoordinateExtent>(() => {
     props.curriculum.cycle_count * laneHeight - laneInset,
   );
 
+  // Cuando el lienzo es más ancho o alto que la malla, el límite de desplazamiento se
+  // ensancha para que la malla pueda quedar centrada y no pegada a la esquina.
+  const zoom = Math.max(viewport.value?.zoom ?? 1, CANVAS_ZOOM.min);
+  const slackX = Math.max(0, (canvasSize.value.width / zoom - laneWidth.value - navigationPadding * 2) / 2);
+  const slackY = Math.max(0, (canvasSize.value.height / zoom - contentHeight - navigationPadding * 2) / 2);
+
   return [
-    [-navigationPadding, -navigationPadding],
-    [laneWidth.value + navigationPadding, contentHeight + navigationPadding],
+    [-navigationPadding - slackX, -navigationPadding - slackY],
+    [laneWidth.value + navigationPadding + slackX, contentHeight + navigationPadding + slackY],
   ];
 });
 
@@ -443,6 +465,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
 
 <template>
   <div
+    ref="canvasElement"
     class="curriculum-canvas relative min-h-136 overflow-hidden rounded-lg border bg-background shadow-surface"
     :class="cn(fullScreen && 'h-(--curriculum-canvas-full-height)', !fullScreen && 'h-(--curriculum-canvas-height)')"
     :aria-label="editing ? 'Editor interactivo de la malla' : 'Vista de la malla'"

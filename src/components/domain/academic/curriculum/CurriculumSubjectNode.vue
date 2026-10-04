@@ -105,7 +105,7 @@ const totalFields = computed(
     />
     <article
       class="relative w-full overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-2 data-[dragging=true]:ring-ring"
-      :class="cn(data.editable && 'cursor-grab active:cursor-grabbing')"
+      :class="cn(data.editable && 'cursor-move')"
       :data-dragging="dragging"
       :aria-label="`${data.subject.code}: ${data.subject.name}`"
     >
