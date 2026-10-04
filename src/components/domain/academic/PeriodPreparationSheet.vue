@@ -108,9 +108,9 @@ watch(periodId, () => { if (open.value) updateProposal(); });
                   <TableCell class="align-top">{{ row.name }}</TableCell>
                   <TableCell><div class="flex flex-col gap-2">
                     <div v-for="(parallel, index) in row.parallels" :key="index" class="flex flex-wrap items-center gap-2">
-                      <Input v-model="parallel.code" class="w-20" :aria-label="`Código del paralelo ${index + 1} de ${row.name}`" :aria-invalid="!parallel.code.trim()" :placeholder="index ? 'Ej. B' : 'Ej. A'" />
+                      <Input v-model="parallel.code" class="w-14" :aria-label="`Código del paralelo ${index + 1} de ${row.name}`" :aria-invalid="!parallel.code.trim()" :placeholder="index ? 'Ej. B' : 'Ej. A'" />
                       <Select v-model="parallel.shift">
-                        <SelectTrigger class="w-40" :aria-label="`Jornada del paralelo ${index + 1} de ${row.name}`" :aria-invalid="!parallel.shift"><SelectValue placeholder="Elija jornada" /></SelectTrigger>
+                        <SelectTrigger class="w-32" :aria-label="`Jornada del paralelo ${index + 1} de ${row.name}`" :aria-invalid="!parallel.shift"><SelectValue placeholder="Elija jornada" /></SelectTrigger>
                         <SelectContent><SelectGroup>
                           <SelectItem v-for="option in options.shiftOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
                         </SelectGroup></SelectContent>
