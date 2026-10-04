@@ -21,7 +21,7 @@ import type { NavItem } from '@/types';
 
 const route = useRoute();
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
-const logoLinksToPanel = computed(() => ['administrador', 'coordinador', 'bibliotecario'].includes(activeRole.value?.code ?? ''));
+const logoLinksToPanel = computed(() => ['administrador', 'coordinador', 'bibliotecario', 'decano'].includes(activeRole.value?.code ?? ''));
 const mainNavItems = useMainNavItems();
 const footerNavItems: NavItem[] = [];
 const { isMobile, setOpenMobile } = useSidebar();

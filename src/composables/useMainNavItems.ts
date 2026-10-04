@@ -50,6 +50,7 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                   { title: 'Convocatorias', href: paths.coordination.convocations, icon: CalendarRange },
                   { title: 'Revisión', href: paths.coordination.reviews, icon: ClipboardCheck },
                   { title: 'Materias y asignaciones', href: paths.coordination.scheduledSubjects, icon: Building2 },
+                  { title: 'Docentes', href: paths.coordination.teachers, icon: UsersRound },
                   { title: 'Malla', href: paths.coordination.curriculum, icon: BookOpenCheck },
               ]
             : []),
@@ -60,6 +61,12 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
             ? [
                   { title: 'Panel', href: paths.library.panel, icon: LayoutGrid },
                   { title: 'Revisiones de biblioteca', href: paths.library.reviews, icon: Library },
+              ]
+            : []),
+        ...(activeRole.value?.code === 'decano'
+            ? [
+                  { title: 'Panel', href: paths.deanery.panel, icon: LayoutGrid },
+                  { title: 'Revisión', href: paths.deanery.reviews, icon: ClipboardCheck },
               ]
             : []),
     ]);

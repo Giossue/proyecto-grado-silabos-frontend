@@ -152,6 +152,9 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByRole('button', { name: 'Asistente curricular', exact: true })).toHaveCount(0);
     await expect(page.getByLabel('Buscar materia programada')).toBeVisible();
 
+    await mainNavigation(page).getByRole('link', { name: 'Docentes', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Docentes' })).toBeVisible();
+
     await mainNavigation(page).getByRole('link', { name: 'Convocatorias', exact: true }).click();
     const convocationActions = page.getByRole('button', { name: /Acciones para/ }).first();
     await convocationActions.click();

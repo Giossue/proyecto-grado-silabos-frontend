@@ -110,7 +110,8 @@ export const router = createRouter({
     { path: "/coordinacion/estructura-academica", redirect: "/coordinacion/malla", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },
     { path: "/coordinacion/materias-asignaciones", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y asignaciones" } },
-    { path: "/coordinacion/asignaciones-docentes", redirect: "/coordinacion/materias-asignaciones", meta: { requiresAuth: true, roles: ["coordinador"] } },
+    { path: "/coordinacion/docentes", component: CoordinationAcademicStructurePage, props: { mode: "teachers" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Docentes" } },
+    { path: "/coordinacion/asignaciones-docentes", redirect: "/coordinacion/docentes", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/materias-paralelos", redirect: "/coordinacion/materias-asignaciones", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Documentos" } },
 
@@ -128,6 +129,15 @@ export const router = createRouter({
     { path: "/biblioteca/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Seguridad" } },
     { path: "/biblioteca/revisiones", component: LibraryReviewsPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Revisiones de biblioteca" } },
     { path: "/biblioteca/revisiones/:revision", component: LibraryReviewDetailPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Revisión de bibliografía" } },
+
+    { path: "/decanato/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["decano"], title: "Panel" } },
+    { path: "/decanato/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["decano"], title: "Notificaciones" } },
+    { path: "/decanato/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["decano"], title: "Perfil" } },
+    { path: "/decanato/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["decano"], title: "Seguridad" } },
+    { path: "/decanato/revisiones", component: CoordinationReviewsPage, meta: { requiresAuth: true, roles: ["decano"], title: "Revisión" } },
+    { path: "/decanato/revisiones/:revision", component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ["decano"], title: "Detalle de revisión" } },
+    { path: "/decanato/revisiones/:before/comparar/:after", component: CoordinationReviewComparisonPage, meta: { requiresAuth: true, roles: ["decano"], title: "Comparar revisiones" } },
+    { path: "/decanato/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["decano"], title: "Documentos" } },
 
     { path: "/administracion/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/usuarios" } },
     { path: "/administracion/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/estructura-academica" } },

@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { freeTextLines, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
-import { paths } from '@/lib/routes';
+import { reviewAreaPaths } from '@/lib/routes';
+import { sessionState } from '@/state/session';
 
 const route = useRoute();
 const data = ref<ReviewComparison | null>(null);
@@ -44,7 +45,7 @@ onMounted(() => { void load(); });
     title="Comparar revisiones"
     :description="data ? `${data.syllabus.subject} · ${data.syllabus.code} · ${data.syllabus.period}` : 'Contenido enviado en dos revisiones del expediente.'"
   >
-    <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="paths.coordination.review(String(route.params.after))"><ArrowLeft aria-hidden="true" />Volver al expediente</RouterLink></Button></template>
+    <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="reviewAreaPaths(sessionState.current.value?.active_role?.code).review(String(route.params.after))"><ArrowLeft aria-hidden="true" />Volver al expediente</RouterLink></Button></template>
     <template v-if="data" #meta><Badge variant="secondary">{{ data.comparison.changed_fields }} campo(s) con cambios</Badge></template>
 
     <LoadErrorState v-if="error" :message="error" @retry="load" />

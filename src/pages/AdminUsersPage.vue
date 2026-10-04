@@ -51,7 +51,7 @@ onMounted(load);
 
 <template>
     <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca. Coordinación y docencia van con su carrera; biblioteca trabaja con toda la universidad. Al desactivar una, su sesión se cierra.">
-        <template #actions><ManagedUserSheet v-if="result" :roles="result.roles" :careers="result.careers" @saved="changed" /></template>
+        <template #actions><ManagedUserSheet v-if="result" :roles="result.roles" :careers="result.careers" :faculties="result.faculties ?? []" @saved="changed" /></template>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="5" />
 
@@ -70,9 +70,9 @@ onMounted(load);
                 <TableRow v-for="user in result.users.data" v-else :key="user.id">
                     <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span></div></TableCell>
                     <TableCell><div class="flex flex-col items-start gap-1"><span v-for="(item, index) in user.roles" :key="`rol-${index}`">{{ item.name }}</span><span v-if="user.roles.length === 0" class="text-sm text-muted-foreground">Sin rol vigente</span></div></TableCell>
-                    <TableCell><div class="flex flex-col items-start gap-1 text-sm"><span v-for="(scope, index) in user.careers" :key="`carrera-${index}`" :class="scope ? '' : 'text-muted-foreground'">{{ scope ?? 'Todas las carreras' }}</span><span v-if="user.careers.length === 0" class="text-muted-foreground">—</span></div></TableCell>
+                    <TableCell><div class="flex flex-col items-start gap-1 text-sm"><span v-for="(item, index) in user.roles" :key="`ambito-${index}`" :class="item.career_name || item.faculty_name ? '' : 'text-muted-foreground'">{{ item.career_name ?? item.faculty_name ?? 'Todas las carreras' }}</span><span v-if="user.roles.length === 0" class="text-muted-foreground">—</span></div></TableCell>
                     <TableCell><Tooltip><TooltipTrigger as-child><span>{{ statusOf(user).label }}</span></TooltipTrigger><TooltipContent class="max-w-xs">{{ statusOf(user).hint }}</TooltipContent></Tooltip></TableCell>
-                    <TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${user.nombre}`"><ManagedUserDetailSheet :user="user" /><ManagedUserEditSheet v-if="user.id !== currentUserId" display="menu" :user="user" :roles="result.roles" :careers="result.careers" @saved="changed" /><ManagedUserPendingActions v-if="user.pending_activation && user.active" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
+                    <TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${user.nombre}`"><ManagedUserDetailSheet :user="user" /><ManagedUserEditSheet v-if="user.id !== currentUserId" display="menu" :user="user" :roles="result.roles" :careers="result.careers" :faculties="result.faculties ?? []" @saved="changed" /><ManagedUserPendingActions v-if="user.pending_activation && user.active" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
                 </TableRow>
             </TableBody></Table>
             <TablePagination :meta="result.users" label="Paginación de usuarios" @update:page="load" />

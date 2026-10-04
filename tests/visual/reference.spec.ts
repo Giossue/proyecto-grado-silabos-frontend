@@ -26,6 +26,7 @@ const routes = {
     '/coordinacion/revisiones',
     '/coordinacion/asignaciones-docentes',
     '/coordinacion/materias-asignaciones',
+    '/coordinacion/docentes',
     '/coordinacion/malla',
     '/coordinacion/fuentes',
     '/coordinacion/configuracion/perfil',

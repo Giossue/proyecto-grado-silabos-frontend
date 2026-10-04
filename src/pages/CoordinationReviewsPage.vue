@@ -4,7 +4,7 @@ import { Eye } from '@lucide/vue';
 import { onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { getReviews, type ReviewsPage } from '@/api/reviews';
+import { getReviews, reviewStageLabel, type ReviewsPage } from '@/api/reviews';
 import { getSession } from '@/api/session';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -18,10 +18,11 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { paths } from '@/lib/routes';
+import { paths, reviewAreaPaths } from '@/lib/routes';
 
 const router = useRouter();
 const data = ref<ReviewsPage | null>(null);
+const area = ref(reviewAreaPaths(undefined));
 const loading = ref(true);
 const filters = reactive({ search: '', state: 'all' });
 const error = ref<string | null>(null);
@@ -30,10 +31,11 @@ const load = async (page = 1): Promise<void> => {
   error.value = null;
   try {
     const session = await getSession();
-    if (session.active_role?.code !== 'coordinador') {
+    if (session.active_role?.code !== 'coordinador' && session.active_role?.code !== 'decano') {
       await router.replace(paths.dashboard);
       return;
     }
+    area.value = reviewAreaPaths(session.active_role.code);
     data.value = await getReviews({ search: filters.search, state: filters.state === 'all' ? '' : filters.state, page });
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la cola de revisión.';
@@ -53,7 +55,7 @@ onMounted(() => { void load(); });
     <Card v-if="data"><CardContent class="flex flex-col gap-4">
       <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters"><template #search><Field><FieldLabel for="review-search" class="sr-only">Buscar por asignatura o código</FieldLabel><Input id="review-search" v-model="filters.search" type="search" placeholder="Buscar asignatura o código" /></Field></template><template #filters><Field><FieldLabel for="review-state" class="sr-only">Estado</FieldLabel><Select v-model="filters.state" name="state"><SelectTrigger id="review-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="option in REVIEW_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent></Select></Field></template></FilterToolbar></form>
       <Table><TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Docente(s)</TableHead><TableHead>Revisión</TableHead><TableHead>Estado</TableHead><TableHead>Pendientes</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
-        <TableRow v-for="item in data.syllabi.data" :key="item.id"><TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }} · {{ item.period }}</div></TableCell><TableCell>{{ item.teachers.join(', ') }}</TableCell><TableCell>N.º {{ item.revision_number }}</TableCell><TableCell>{{ syllabusStateLabel(item.state) }}</TableCell><TableCell><span :class="item.unresolved_observations > 0 ? 'text-destructive' : ''">{{ item.unresolved_observations }}</span></TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${item.subject}`"><DropdownMenuItem @select="router.push(paths.coordination.review(item.revision_id))"><Eye aria-hidden="true" />Abrir revisión</DropdownMenuItem></TableActionsMenu></TableCell></TableRow>
+        <TableRow v-for="item in data.syllabi.data" :key="item.id"><TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }} · {{ item.period }}</div></TableCell><TableCell>{{ item.teachers.join(', ') }}</TableCell><TableCell>N.º {{ item.revision_number }}</TableCell><TableCell><div>{{ syllabusStateLabel(item.state) }}</div><div v-if="item.stage" class="text-sm text-muted-foreground">{{ reviewStageLabel(item.stage) }}</div></TableCell><TableCell><span :class="item.unresolved_observations > 0 ? 'text-destructive' : ''">{{ item.unresolved_observations }}</span></TableCell><TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${item.subject}`"><DropdownMenuItem @select="router.push(area.review(item.revision_id))"><Eye aria-hidden="true" />Abrir revisión</DropdownMenuItem></TableActionsMenu></TableCell></TableRow>
         <TableEmpty v-if="data.syllabi.data.length === 0" :colspan="6">No hay expedientes para los filtros seleccionados.</TableEmpty>
       </TableBody></Table>
       <TablePagination :meta="data.syllabi" label="Paginación de expedientes en revisión" @update:page="load" />

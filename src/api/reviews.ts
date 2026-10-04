@@ -2,6 +2,11 @@ import { api } from "@/api/client";
 import type { DocumentPresentation } from "@/api/syllabi";
 import type { DocumentNode } from "@/lib/templateDocument";
 
+// Etapa de la revisión vigente (I-173): biblioteca → coordinación → decanato.
+export type ReviewStage = "biblioteca" | "coordinacion" | "decanato";
+export const REVIEW_STAGE_LABELS: Record<ReviewStage, string> = { biblioteca: "En biblioteca", coordinacion: "En coordinación", decanato: "En decanato" };
+export const reviewStageLabel = (stage: string | null | undefined): string => (stage && Object.hasOwn(REVIEW_STAGE_LABELS, stage) ? REVIEW_STAGE_LABELS[stage as ReviewStage] : "");
+
 export type ReviewQueueItem = {
   id: string;
   revision_id: string;
@@ -10,6 +15,7 @@ export type ReviewQueueItem = {
   code: string;
   period: string;
   state: string;
+  stage?: ReviewStage | null;
   teachers: string[];
   unresolved_observations: number;
   submitted_at: string;
@@ -62,8 +68,12 @@ export type ReviewDetail = {
     code: string;
     period: string;
     state: string;
+    stage?: ReviewStage | null;
     teachers: string[];
   };
+  my_stage?: ReviewStage | null;
+  can_decide?: boolean;
+  can_reopen?: boolean;
   presentation: DocumentPresentation;
   revision: {
     id: string;
@@ -82,10 +92,15 @@ export type ReviewDetail = {
     number: number;
     submitted_at: string;
     submitted_by: string;
+    library_verified_at?: string | null;
+    library_verified_by?: string | null;
+    coordination_reviewed_at?: string | null;
+    coordination_reviewed_by?: string | null;
     approved_at: string | null;
+    approved_by?: string | null;
   }>;
   observations: ReviewObservation[];
-  correction_request: { justification: string; requested_at: string } | null;
+  correction_request: { justification: string; requested_at: string; stage?: ReviewStage; requested_by?: string } | null;
   decisions_allowed: boolean;
   reset: { allowed: boolean };
   reopening: { cause: string; reopened_at: string; reopened_by: string } | null;

@@ -31,6 +31,7 @@ const roleDescription = (role: ActiveRole): string => {
     if (role.code === 'docente') return '';
     if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}.`;
     if (role.code === 'bibliotecario') return 'Verificación de la bibliografía de los sílabos de todas las carreras.';
+    if (role.code === 'decano') return `Aprobación y firma de los sílabos de ${role.faculty_name ?? 'su facultad'}.`;
     if (role.code === 'administrador') return 'Administración general del sistema.';
     return role.career_name ? `${roleLabel(role.code)} · ${role.career_name}` : roleLabel(role.code);
 };
@@ -40,6 +41,7 @@ const actionLabel = (role: ActiveRole): string => {
     if (role.code === 'coordinador') return 'Entrar a esta carrera';
     if (role.code === 'docente') return 'Entrar';
     if (role.code === 'bibliotecario') return 'Entrar a Biblioteca';
+    if (role.code === 'decano') return 'Entrar a Decanato';
     if (role.code === 'administrador') return 'Entrar como Administrador';
     return `Entrar como ${roleLabel(role.code)}`;
 };

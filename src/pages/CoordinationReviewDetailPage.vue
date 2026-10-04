@@ -13,9 +13,11 @@ import {
   getReview,
   reopenSyllabus,
   requestCorrection,
+  reviewStageLabel,
   type ReviewDetail,
   type SnapshotField,
 } from '@/api/reviews';
+import { sessionState } from '@/state/session';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -32,11 +34,12 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import type { DocumentField } from '@/lib/templateDocument';
 import { freeTextLines, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
-import { paths } from '@/lib/routes';
+import { paths, reviewAreaPaths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
 const route = useRoute();
 const data = ref<ReviewDetail | null>(null);
+const area = computed(() => reviewAreaPaths(sessionState.current.value?.active_role?.code));
 const loading = ref(true);
 const processing = ref(false);
 const loadError = ref('');
@@ -86,7 +89,12 @@ const openCurrentObservations = computed(() => data.value?.observations.filter(
   (observation) => observation.revision_number === data.value?.revision.number && observation.state === 'abierta',
 ) ?? []);
 const unresolvedCount = computed(() => data.value?.observations.filter((observation) => observation.state !== 'verificada').length ?? 0);
-const canReviewCurrent = computed(() => Boolean(data.value?.decisions_allowed && data.value?.revision.is_current && data.value?.syllabus.state === 'en_revision'));
+// I-173: solo decide quien tiene la etapa vigente; los demás consultan.
+const canReviewCurrent = computed(() => Boolean(data.value?.can_decide && data.value?.revision.is_current && data.value?.syllabus.state === 'en_revision'));
+const isCoordination = computed(() => data.value?.my_stage === 'coordinacion');
+const isDeanery = computed(() => data.value?.my_stage === 'decanato');
+const stageLabel = computed(() => reviewStageLabel(data.value?.syllabus.stage));
+const canReopen = computed(() => Boolean(data.value?.can_reopen && data.value?.revision.is_current));
 
 const documentFields = (fields: SnapshotField[]): DocumentField[] => fields.map((field) => ({ ...field }));
 const formatValue = (value: unknown): string => {
@@ -106,10 +114,11 @@ onMounted(load);
 
 <template>
   <PageFrame v-if="data && !loadError" :title="data.syllabus.subject" :description="`${data.syllabus.code} · ${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
-    <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="paths.coordination.reviews"><ArrowLeft aria-hidden="true" />Volver a la cola</RouterLink></Button></template>
+    <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="area.reviews"><ArrowLeft aria-hidden="true" />Volver a la cola</RouterLink></Button></template>
     <template #meta>
       <Badge variant="secondary">Revisión {{ data.revision.number }}</Badge>
       <Badge variant="outline">{{ syllabusStateLabel(data.syllabus.state) }}</Badge>
+      <Badge v-if="stageLabel" variant="outline">{{ stageLabel }}</Badge>
       <span class="text-sm text-muted-foreground">Enviada por {{ data.revision.submitted_by }} · {{ formatDateDisplay(data.revision.submitted_at) }}</span>
     </template>
     <template #actions>
@@ -119,7 +128,8 @@ onMounted(load);
     <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo completar la operación</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <Alert v-if="!data.decisions_allowed"><LockKeyhole aria-hidden="true" /><AlertTitle>Convocatoria cerrada</AlertTitle><AlertDescription>La revisión queda solo para consulta: ya no se pueden registrar observaciones, solicitar correcciones, aprobar, reabrir ni reiniciar.</AlertDescription></Alert>
     <Alert v-if="!data.revision.is_current"><LockKeyhole aria-hidden="true" /><AlertTitle>Está consultando una revisión histórica</AlertTitle><AlertDescription>Esta revisión se conserva tal como fue enviada. Las acciones del flujo solo están disponibles en la revisión vigente.</AlertDescription></Alert>
-    <Alert v-if="data.correction_request"><Undo2 aria-hidden="true" /><AlertTitle>Corrección solicitada en esta revisión</AlertTitle><AlertDescription>{{ data.correction_request.justification }}</AlertDescription></Alert>
+    <Alert v-if="data.revision.is_current && data.syllabus.state === 'en_revision' && !canReviewCurrent && data.decisions_allowed"><LockKeyhole aria-hidden="true" /><AlertTitle>{{ stageLabel || 'En revisión' }}</AlertTitle><AlertDescription>Esta revisión la tiene ahora otro revisor. Podrá decidir cuando llegue a su etapa.</AlertDescription></Alert>
+    <Alert v-if="data.correction_request"><Undo2 aria-hidden="true" /><AlertTitle>Corrección solicitada en esta revisión<template v-if="data.correction_request.stage"> ({{ reviewStageLabel(data.correction_request.stage).replace('En ', '') }})</template></AlertTitle><AlertDescription>{{ data.correction_request.justification }}<template v-if="data.correction_request.requested_by"> · {{ data.correction_request.requested_by }}</template></AlertDescription></Alert>
     <Alert v-if="data.reopening"><RotateCcw aria-hidden="true" /><AlertTitle>El expediente tuvo una reapertura</AlertTitle><AlertDescription>{{ data.reopening.cause }} · {{ data.reopening.reopened_by }} · {{ formatDateDisplay(data.reopening.reopened_at) }}. La aprobación anterior se conserva.</AlertDescription></Alert>
 
     <WorkspaceLayout variant="review">
@@ -142,7 +152,7 @@ onMounted(load);
       </main>
 
       <aside class="flex min-w-0 flex-col gap-6">
-        <ReviewObservationSheet v-if="canReviewCurrent" :revision-id="data.revision.id" :sections="data.revision.snapshot.sections" @saved="changed" />
+        <ReviewObservationSheet v-if="canReviewCurrent && isCoordination" :revision-id="data.revision.id" :sections="data.revision.snapshot.sections" @saved="changed" />
         <Card>
           <CardHeader><CardTitle>Observaciones</CardTitle><CardDescription>{{ unresolvedCount }} pendiente(s) en todo el historial.</CardDescription></CardHeader>
           <CardContent class="flex flex-col gap-4">
@@ -153,10 +163,10 @@ onMounted(load);
           </CardContent>
         </Card>
 
-        <Card v-if="canReviewCurrent && openCurrentObservations.length > 0">
-          <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>{{ openCurrentObservations.length === 1 ? 'Se enviará al docente la observación pendiente de esta revisión.' : `Se enviarán al docente las ${openCurrentObservations.length} observaciones pendientes de esta revisión.` }}</CardDescription></CardHeader>
+        <Card v-if="canReviewCurrent && (isDeanery || openCurrentObservations.length > 0)">
+          <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>{{ isDeanery ? 'El sílabo vuelve al docente; al reenviarlo pasa otra vez por biblioteca y coordinación.' : openCurrentObservations.length === 1 ? 'Se enviará al docente la observación pendiente de esta revisión.' : `Se enviarán al docente las ${openCurrentObservations.length} observaciones pendientes de esta revisión.` }}</CardDescription></CardHeader>
           <CardContent><form id="correction-form" class="flex flex-col gap-4" @submit.prevent="submitCorrection">
-            <ul class="flex flex-col gap-2" aria-label="Observaciones que se enviarán">
+            <ul v-if="openCurrentObservations.length > 0" class="flex flex-col gap-2" aria-label="Observaciones que se enviarán">
               <li v-for="observation in openCurrentObservations" :key="observation.id" class="rounded-md border p-3 text-sm whitespace-pre-wrap">{{ observation.content }}</li>
             </ul>
             <Field><FieldLabel for="correction-justification" required>Justificación para el docente</FieldLabel><Textarea id="correction-justification" v-model="correctionJustification" rows="4" required /><FieldError :errors="[...(errors.revision ?? []), ...(errors.justification ?? [])]" /></Field>
@@ -164,13 +174,13 @@ onMounted(load);
           </form></CardContent>
         </Card>
 
-        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>La aprobación quedará vinculada exclusivamente a la revisión {{ data.revision.number }}.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button><p v-if="unresolvedCount > 0" class="text-sm text-muted-foreground">Al aprobar, las {{ unresolvedCount }} observación(es) pendiente(s) se darán por resueltas.</p></CardContent></Card>
+        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>{{ isDeanery ? `La aprobación del decanato fija la revisión ${data.revision.number} y genera el PDF para las firmas.` : `Al aprobar, la revisión ${data.revision.number} pasa al decanato.` }}</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button><p v-if="isCoordination && unresolvedCount > 0" class="text-sm text-muted-foreground">Al aprobar, las {{ unresolvedCount }} observación(es) pendiente(s) se darán por resueltas.</p></CardContent></Card>
 
         <DocumentSignatureCard v-if="data.history.some((item) => item.id === data!.revision.id && item.approved_at)" :key="data.revision.id" :revision-id="data.revision.id" :file-name="`silabo-${data.syllabus.code}-revision-${data.revision.number}`" />
 
-        <Card v-if="data.decisions_allowed && data.revision.is_current && data.syllabus.state === 'aprobado'"><CardHeader><CardTitle>Reabrir aprobado</CardTitle><CardDescription>Conserva esta aprobación y crea una nueva línea de corrección para el docente.</CardDescription></CardHeader><CardContent><form class="flex flex-col gap-4" @submit.prevent="run(() => reopenSyllabus(data!.syllabus.id, reopeningCause))"><Field><FieldLabel for="reopening-cause" required>Causa de reapertura</FieldLabel><Textarea id="reopening-cause" v-model="reopeningCause" rows="4" required /><FieldError :errors="errors.cause" /></Field><Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><RotateCcw v-else aria-hidden="true" />Reabrir conservando la aprobación</Button></form></CardContent></Card>
+        <Card v-if="canReopen"><CardHeader><CardTitle>Reabrir aprobado</CardTitle><CardDescription>Conserva esta aprobación y crea una nueva línea de corrección para el docente.</CardDescription></CardHeader><CardContent><form class="flex flex-col gap-4" @submit.prevent="run(() => reopenSyllabus(data!.syllabus.id, reopeningCause))"><Field><FieldLabel for="reopening-cause" required>Causa de reapertura</FieldLabel><Textarea id="reopening-cause" v-model="reopeningCause" rows="4" required /><FieldError :errors="errors.cause" /></Field><Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><RotateCcw v-else aria-hidden="true" />Reabrir conservando la aprobación</Button></form></CardContent></Card>
 
-        <Card><CardHeader><CardTitle>Historial de revisiones</CardTitle><CardDescription>Consulte o compare revisiones enviadas.</CardDescription></CardHeader><CardContent><ol class="flex flex-col gap-3"><li v-for="(item, index) in data.history" :key="item.id" class="rounded-md border p-3 text-sm"><div class="flex items-center justify-between gap-3"><Button as-child variant="link" class="h-auto p-0"><RouterLink :to="paths.coordination.review(item.id)">Revisión {{ item.number }}</RouterLink></Button><Badge v-if="item.approved_at" variant="secondary">Aprobada</Badge></div><div class="text-muted-foreground">{{ item.submitted_by }} · {{ formatDateDisplay(item.submitted_at, { dateStyle: 'medium' }) }}</div><div class="mt-2 flex flex-wrap gap-2"><Button v-if="item.approved_at" as-child size="sm" variant="outline"><RouterLink :to="paths.documents(item.id)">Documentos</RouterLink></Button><Button v-if="index > 0" as-child size="sm" variant="outline"><RouterLink :to="paths.coordination.comparison(data.history[index - 1]!.id, item.id)">Comparar con la anterior</RouterLink></Button></div></li></ol></CardContent></Card>
+        <Card><CardHeader><CardTitle>Historial de revisiones</CardTitle><CardDescription>Consulte o compare revisiones enviadas.</CardDescription></CardHeader><CardContent><ol class="flex flex-col gap-3"><li v-for="(item, index) in data.history" :key="item.id" class="rounded-md border p-3 text-sm"><div class="flex items-center justify-between gap-3"><Button as-child variant="link" class="h-auto p-0"><RouterLink :to="area.review(item.id)">Revisión {{ item.number }}</RouterLink></Button><Badge v-if="item.approved_at" variant="secondary">Aprobada</Badge></div><div v-if="item.library_verified_at || item.coordination_reviewed_at" class="mt-1 text-muted-foreground"><template v-if="item.library_verified_at">Biblioteca: {{ item.library_verified_by }}. </template><template v-if="item.coordination_reviewed_at">Coordinación: {{ item.coordination_reviewed_by }}. </template><template v-if="item.approved_at">Decanato: {{ item.approved_by }}.</template></div><div class="text-muted-foreground">{{ item.submitted_by }} · {{ formatDateDisplay(item.submitted_at, { dateStyle: 'medium' }) }}</div><div class="mt-2 flex flex-wrap gap-2"><Button v-if="item.approved_at" as-child size="sm" variant="outline"><RouterLink :to="paths.documents(item.id)">Documentos</RouterLink></Button><Button v-if="index > 0" as-child size="sm" variant="outline"><RouterLink :to="area.comparison(data.history[index - 1]!.id, item.id)">Comparar con la anterior</RouterLink></Button></div></li></ol></CardContent></Card>
       </aside>
     </WorkspaceLayout>
   </PageFrame>
