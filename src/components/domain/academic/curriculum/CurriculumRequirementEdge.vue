@@ -13,7 +13,6 @@ const props = defineProps<
         sourceOffset: number;
         targetOffset: number;
         sameLevel: boolean;
-        targetShared: boolean;
         channelIndex: number;
         channelCount: number;
     }>
@@ -26,18 +25,10 @@ const CHANNEL_MARGIN = 12;
 
 const { screenToFlowCoordinate } = useVueFlow();
 
-const ALIGNMENT_TOLERANCE = 24;
-
-const endpoints = computed(() => {
-    const sourceX = props.sourceX + props.data.sourceOffset;
-    const targetX = props.targetX + props.data.targetOffset;
-
-    const alignable =
-        !props.data.targetShared &&
-        Math.abs(sourceX - targetX) <= ALIGNMENT_TOLERANCE;
-
-    return alignable ? { sourceX, targetX: sourceX } : { sourceX, targetX };
-});
+const endpoints = computed(() => ({
+    sourceX: props.sourceX + props.data.sourceOffset,
+    targetX: props.targetX + props.data.targetOffset,
+}));
 
 const pathData = computed((): [string, number, number] => {
     if (props.data.sameLevel) {
@@ -54,7 +45,7 @@ const pathData = computed((): [string, number, number] => {
     }
 
     const { sourceX, targetX } = endpoints.value;
-    if (sourceX === targetX) {
+    if (Math.abs(sourceX - targetX) < 0.5) {
         return [
             `M ${sourceX} ${props.sourceY} V ${props.targetY}`,
             sourceX,

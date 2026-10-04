@@ -160,69 +160,163 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
 
 const EDGE_SPACING = 18;
 
-const edgeOffsets = (
+type EdgeGeometry = {
+    source: number;
+    target: number;
+    channelIndex: number;
+    channelCount: number;
+};
+
+/**
+ * Traza las relaciones sin que dos líneas compartan un tramo.
+ *
+ * Cada relación baja desde la base de la materia origen, recorre un tramo horizontal
+ * por el hueco que precede a la materia destino y sube hasta su cima. Para que no se
+ * monten:
+ * - en cada hueco, todos los extremos que caen en la misma columna (bases de arriba y
+ *   cimas de abajo) reciben una abscisa distinta, ordenada según hacia dónde va la
+ *   línea, de modo que la que viene de la izquierda queda a la izquierda;
+ * - cada relación del hueco recibe su propio carril horizontal, y el orden de los
+ *   carriles se elige probando permutaciones para cruzar lo menos posible.
+ * Los cruces que quedan son los inevitables con las materias fijas en su sitio.
+ */
+const edgeGeometry = (
     requirements: CurriculumRequirement[],
     subjectById: Map<string, CurriculumBuilderSubject>,
     sameLevelIds: Set<string>,
-): Map<string, { source: number; target: number; topShared: boolean }> => {
-    const orderKey = (subjectId: string): number => {
-        const subject = subjectById.get(subjectId);
-
-        return subject ? (subject.cycle ?? 0) * 1000 + subject.position : 0;
-    };
-    type End = { requirement: CurriculumRequirement; end: 'source' | 'target' };
-    const bottom = new Map<string, End[]>();
-    const top = new Map<string, End[]>();
-    const push = (map: Map<string, End[]>, key: string, end: End): void => {
-        map.set(key, [...(map.get(key) ?? []), end]);
-    };
-    requirements.forEach((requirement) => {
-        push(top, requirement.subject_id, { requirement, end: 'target' });
-
-        if (sameLevelIds.has(requirement.id)) {
-            push(top, requirement.requirement_id, {
-                requirement,
-                end: 'source',
-            });
-        } else {
-            push(bottom, requirement.requirement_id, {
-                requirement,
-                end: 'source',
-            });
-        }
+): Map<string, EdgeGeometry> => {
+    const columnIndex = new Map<string, number>();
+    const byCycle = new Map<number, CurriculumBuilderSubject[]>();
+    subjectById.forEach((subject) => {
+        const cycle = subject.cycle ?? 0;
+        byCycle.set(cycle, [...(byCycle.get(cycle) ?? []), subject]);
     });
-    const counterpart = (end: End): string =>
-        end.end === 'target'
-            ? end.requirement.requirement_id
-            : end.requirement.subject_id;
-    const result = new Map<
-        string,
-        { source: number; target: number; topShared: boolean }
-    >();
-    const entry = (id: string) => {
-        const current = result.get(id) ?? {
-            source: 0,
-            target: 0,
-            topShared: false,
-        };
+    byCycle.forEach((list) => {
+        [...list]
+            .sort((left, right) => left.position - right.position)
+            .forEach((subject, index) => columnIndex.set(subject.id, index));
+    });
+    const columnOf = (subjectId: string): number => columnIndex.get(subjectId) ?? 0;
+    const cycleOf = (subjectId: string): number => subjectById.get(subjectId)?.cycle ?? 0;
+    const centerX = (subjectId: string): number =>
+        laneStart + columnOf(subjectId) * subjectStep + subjectWidth / 2;
+
+    const result = new Map<string, EdgeGeometry>();
+    const entry = (id: string): EdgeGeometry => {
+        const current = result.get(id) ?? { source: 0, target: 0, channelIndex: 0, channelCount: 1 };
         result.set(id, current);
 
         return current;
     };
-    [bottom, top].forEach((map, index) => {
-        map.forEach((ends) => {
-            const sorted = [...ends].sort(
-                (left, right) =>
-                    orderKey(counterpart(left)) - orderKey(counterpart(right)),
-            );
-            sorted.forEach((end, slot) => {
-                const current = entry(end.requirement.id);
-                current[end.end] = slot * EDGE_SPACING;
 
-                if (index === 1 && sorted.length > 1) {
-                    current.topShared = true;
-                }
+    // 1. Abscisas: extremos agrupados por hueco y columna.
+    type End = { requirement: CurriculumRequirement; end: 'source' | 'target'; towards: number };
+    const groups = new Map<string, End[]>();
+    const push = (key: string, end: End): void => {
+        groups.set(key, [...(groups.get(key) ?? []), end]);
+    };
+    requirements.forEach((requirement) => {
+        const sourceId = requirement.requirement_id;
+        const targetId = requirement.subject_id;
+        const gap = cycleOf(targetId) - 1;
+        push(`${gap}:${columnOf(targetId)}`, { requirement, end: 'target', towards: centerX(sourceId) });
+        push(`${sameLevelIds.has(requirement.id) ? gap : cycleOf(sourceId)}:${columnOf(sourceId)}`, {
+            requirement,
+            end: 'source',
+            towards: centerX(targetId),
+        });
+    });
+    groups.forEach((ends) => {
+        // Una relación recta (misma columna, niveles seguidos) ocupa un solo hueco con
+        // sus dos extremos; comparten abscisa para que baje sin codos.
+        const slots: End[][] = [];
+        const seen = new Map<string, End[]>();
+        ends.forEach((end) => {
+            const straight = !sameLevelIds.has(end.requirement.id)
+                && columnOf(end.requirement.requirement_id) === columnOf(end.requirement.subject_id)
+                && cycleOf(end.requirement.subject_id) - cycleOf(end.requirement.requirement_id) === 1;
+            const shared = straight ? seen.get(end.requirement.id) : undefined;
+            if (shared) {
+                shared.push(end);
+                return;
+            }
+            const slot = [end];
+            slots.push(slot);
+            if (straight) seen.set(end.requirement.id, slot);
+        });
+        const own = (slot: End[]): number => centerX(slot[0]!.end === 'source' ? slot[0]!.requirement.requirement_id : slot[0]!.requirement.subject_id);
+        const sorted = slots.sort((left, right) => {
+            const l = left.length > 1 ? 0 : left[0]!.towards - own(left);
+            const r = right.length > 1 ? 0 : right[0]!.towards - own(right);
+
+            return l - r;
+        });
+        sorted.forEach((slot, index) => {
+            const offset = (index - (sorted.length - 1) / 2) * EDGE_SPACING;
+            slot.forEach((end) => {
+                entry(end.requirement.id)[end.end] = offset;
             });
+        });
+    });
+
+    // 2. Carriles: por hueco, con el orden que menos cruces produce.
+    const byGap = new Map<number, CurriculumRequirement[]>();
+    requirements.forEach((requirement) => {
+        if (sameLevelIds.has(requirement.id)) return;
+        const gap = cycleOf(requirement.subject_id) - 1;
+        byGap.set(gap, [...(byGap.get(gap) ?? []), requirement]);
+    });
+    byGap.forEach((group) => {
+        const xs = group.map((requirement) => {
+            const geometry = entry(requirement.id);
+
+            return {
+                id: requirement.id,
+                sx: centerX(requirement.requirement_id) + geometry.source,
+                tx: centerX(requirement.subject_id) + geometry.target,
+            };
+        });
+        const between = (x: number, a: number, b: number): boolean => x > Math.min(a, b) && x < Math.max(a, b);
+        // Cruces entre carriles: la bajada de uno atraviesa el tramo horizontal del que
+        // está más arriba; la subida de uno atraviesa el del que está más abajo.
+        const crossings = (order: number[]): number => {
+            let total = 0;
+            for (let upper = 0; upper < order.length; upper++) {
+                for (let lower = upper + 1; lower < order.length; lower++) {
+                    const e = xs[order[upper]!]!;
+                    const f = xs[order[lower]!]!;
+                    if (between(f.sx, e.sx, e.tx)) total++;
+                    if (between(e.tx, f.sx, f.tx)) total++;
+                }
+            }
+
+            return total;
+        };
+        const indexes = xs.map((_, index) => index);
+        let best = [...indexes].sort((left, right) => xs[left]!.tx - xs[right]!.tx || xs[left]!.sx - xs[right]!.sx);
+        if (indexes.length <= 8) {
+            let bestScore = crossings(best);
+            const permute = (prefix: number[], rest: number[]): void => {
+                if (bestScore === 0) return;
+                if (rest.length === 0) {
+                    const score = crossings(prefix);
+                    if (score < bestScore) {
+                        bestScore = score;
+                        best = prefix;
+                    }
+
+                    return;
+                }
+                rest.forEach((item, index) => {
+                    permute([...prefix, item], [...rest.slice(0, index), ...rest.slice(index + 1)]);
+                });
+            };
+            permute([], indexes);
+        }
+        best.forEach((edgeIndex, channel) => {
+            const geometry = entry(xs[edgeIndex]!.id);
+            geometry.channelIndex = channel;
+            geometry.channelCount = best.length;
         });
     });
 
@@ -247,8 +341,7 @@ export const buildRequirementEdges = (
             )
             .map((requirement) => requirement.id),
     );
-    const offsets = edgeOffsets(requirements, subjectById, sameLevelIds);
-    const channels = edgeChannels(requirements, subjectById, sameLevelIds);
+    const geometry = edgeGeometry(requirements, subjectById, sameLevelIds);
 
     return requirements.map((requirement) => {
         const color =
@@ -256,7 +349,7 @@ export const buildRequirementEdges = (
                 ? 'var(--curriculum-corequisite)'
                 : 'var(--curriculum-prerequisite)';
         const sameLevel = sameLevelIds.has(requirement.id);
-        const offset = offsets.get(requirement.id);
+        const offset = geometry.get(requirement.id);
 
         return {
             id: requirement.id,
@@ -288,43 +381,9 @@ export const buildRequirementEdges = (
                 sourceOffset: offset?.source ?? 0,
                 targetOffset: offset?.target ?? 0,
                 sameLevel,
-                targetShared: offset?.topShared ?? false,
-                channelIndex: channels.get(requirement.id)?.index ?? 0,
-                channelCount: channels.get(requirement.id)?.count ?? 1,
+                channelIndex: offset?.channelIndex ?? 0,
+                channelCount: offset?.channelCount ?? 1,
             },
         };
     });
-};
-
-/**
- * Cada relación que baja entre niveles lleva su tramo horizontal a una altura distinta
- * dentro del hueco que hay sobre la materia destino. Así dos líneas nunca se superponen;
- * si deben cruzarse, se cruzan en un punto claro.
- */
-const edgeChannels = (
-    requirements: CurriculumRequirement[],
-    subjectById: Map<string, CurriculumBuilderSubject>,
-    sameLevelIds: Set<string>,
-): Map<string, { index: number; count: number }> => {
-    const columnOf = (subjectId: string): number =>
-        subjectById.get(subjectId)?.position ?? 0;
-    const groups = new Map<number, CurriculumRequirement[]>();
-    requirements.forEach((requirement) => {
-        if (sameLevelIds.has(requirement.id)) return;
-        const cycle = subjectById.get(requirement.subject_id)?.cycle ?? 0;
-        groups.set(cycle, [...(groups.get(cycle) ?? []), requirement]);
-    });
-    const result = new Map<string, { index: number; count: number }>();
-    groups.forEach((group) => {
-        const sorted = [...group].sort(
-            (left, right) =>
-                columnOf(left.subject_id) - columnOf(right.subject_id) ||
-                columnOf(left.requirement_id) - columnOf(right.requirement_id),
-        );
-        sorted.forEach((requirement, index) => {
-            result.set(requirement.id, { index, count: sorted.length });
-        });
-    });
-
-    return result;
 };
