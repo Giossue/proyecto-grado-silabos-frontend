@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumericDisplay } from "@/lib/numberDisplay";
 import { cn } from "@/lib/utils";
 import type {
@@ -130,17 +131,21 @@ const totalFields = computed(
       </div>
 
       <div class="flex h-24">
-        <div
-          class="flex w-9 shrink-0 items-center justify-center border-r px-1 py-2"
-          :style="data.unitStyle"
-          :title="data.subject.organization_unit_label ?? undefined"
-        >
-          <span
-            class="-rotate-90 text-curriculum-code font-semibold whitespace-nowrap"
-          >
-            {{ data.subject.code }}
-          </span>
-        </div>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div
+              class="flex w-9 shrink-0 items-center justify-center border-r px-1 py-2"
+              :style="data.unitStyle"
+            >
+              <span
+                class="-rotate-90 text-curriculum-code font-semibold whitespace-nowrap"
+              >
+                {{ data.subject.code }}
+              </span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent v-if="data.subject.organization_unit_label">{{ data.subject.organization_unit_label }}</TooltipContent>
+        </Tooltip>
         <div
           class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 p-2 text-center"
           :class="cn(data.editable && 'pr-9')"
