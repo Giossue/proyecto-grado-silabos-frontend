@@ -113,11 +113,10 @@ watch(periodId, () => { if (open.value) updateProposal(); });
               <span v-else> Cada materia viene con un paralelo y la primera jornada disponible; cambie solo lo que sea distinto.</span>
             </p>
             <Table>
-              <TableHeader><TableRow><TableHead>Código</TableHead><TableHead>Materia</TableHead><TableHead>Paralelos, jornada y docente</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Paralelos, jornada y docente</TableHead></TableRow></TableHeader>
               <TableBody>
-                <TableEmpty v-if="!rows.length" :colspan="3">Todas las materias activas ya están programadas en este período. Agregue paralelos desde las acciones de cada materia.</TableEmpty>
+                <TableEmpty v-if="!rows.length" :colspan="2">Todas las materias activas ya están programadas en este período. Agregue paralelos desde las acciones de cada materia.</TableEmpty>
                 <TableRow v-for="row in rows" v-else :key="row.id">
-                  <TableCell class="align-top">{{ row.code }}</TableCell>
                   <TableCell class="align-top">{{ row.name }}</TableCell>
                   <TableCell><div class="flex flex-col gap-2">
                     <div v-for="(parallel, index) in row.parallels" :key="index" class="flex flex-wrap items-center gap-2">
