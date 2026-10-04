@@ -120,7 +120,7 @@
     --layer-modal: 50;
     --layer-confirmation: 60;
     --brand-logo-surface: hsl(0 0% 100%);
-    --brand-blue: #2d4b6f;
+    --brand-blue: #122c41;
     --brand-accent: #ac231e;
     --avatar-shadow: #114e7e;
     --avatar-body: #1565a4;
@@ -255,10 +255,10 @@
     --chart-3: hsl(30 80% 55%);
     --chart-4: hsl(280 65% 60%);
     --chart-5: hsl(340 75% 55%);
-    --sidebar-background: #1f3650;
+    --sidebar-background: #122c41;
     --sidebar-foreground: #ffffff;
     --sidebar-primary: #ffffff;
-    --sidebar-primary-foreground: #1f3650;
+    --sidebar-primary-foreground: #122c41;
     --sidebar-accent: rgb(255 255 255 / 0.09);
     --sidebar-accent-foreground: #ffffff;
     --sidebar-border: rgb(255 255 255 / 0.14);
