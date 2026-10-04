@@ -189,7 +189,7 @@ const eyes = (width: number, height: number, spacing: number, angle = 0, positio
 
 // Catálogo de expresiones (valores propios, redondeados).
 export const EXPRESSIONS = {
-    neutral: { headX: 0, headY: 0, headZ: 0, ...eyes(20, 50, 35, 0, -7) },
+    neutral: { headX: 0, headY: 0, headZ: 0, ...eyes(26, 48, 64, 0, -24) },
     glanceUp: { headX: 7, headY: 28, headZ: -16, ...eyes(22, 42, 54, 0, -20) },
     curious: { headX: -12, headY: -18, headZ: 6, ...eyes(21, 48, 55, 24) },
     attentive: { headX: 1, headY: 6, headZ: 11, ...eyes(24, 58, 57) },
