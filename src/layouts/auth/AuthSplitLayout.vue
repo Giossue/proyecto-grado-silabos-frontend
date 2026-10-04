@@ -35,7 +35,7 @@ defineProps<{
         <div
             class="relative hidden flex-col items-center justify-center gap-6 bg-brand-surface p-10 text-brand-foreground lg:flex"
         >
-            <div class="flex w-full max-w-md items-center justify-center rounded-2xl bg-brand-logo-surface p-6">
+            <div class="flex w-full max-w-md items-center justify-center">
                 <img src="/logo-ueb.png" alt="Universidad Estatal de Bolívar" class="w-full object-contain" />
             </div>
             <div class="flex max-w-md flex-col gap-2 text-center">
