@@ -22,6 +22,7 @@ const variants = [
   'source',
   'template',
   'comparison',
+  'settings',
 ] as const;
 
 describe('LoadingSkeleton', () => {

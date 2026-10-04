@@ -28,7 +28,8 @@ type LoadingVariant =
     | 'documents'
     | 'source'
     | 'template'
-    | 'comparison';
+    | 'comparison'
+    | 'settings';
 
 const props = withDefaults(defineProps<{
     variant?: LoadingVariant;
@@ -44,6 +45,7 @@ const props = withDefaults(defineProps<{
     workspaceCount?: number;
     reviewStage?: 'coordination' | 'library' | 'dean';
     readonly?: boolean;
+    settingsSection?: 'profile' | 'security';
 }>(), {
     variant: 'table',
     rows: 5,
@@ -83,6 +85,8 @@ const tableProps = computed(() => ({
             </Card>
 
             <DashboardLoadingSkeleton v-else-if="variant === 'dashboard'" :role="dashboardRole" />
+
+            <SettingsLoadingSkeleton v-else-if="variant === 'settings'" :section="settingsSection" :readonly="readonly" />
 
             <AcademicLoadingSkeleton v-else-if="variant === 'academic-structure'" :mode="mode" :rows="rows" />
 

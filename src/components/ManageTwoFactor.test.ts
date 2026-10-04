@@ -22,12 +22,14 @@ describe('ManageTwoFactor', () => {
     const wrapper = mount(ManageTwoFactor);
 
     expect(wrapper.get('[role="status"]').attributes('aria-busy')).toBe('true');
+    expect(wrapper.emitted('loading')).toEqual([[true]]);
     expect(wrapper.findAll('button').some((button) => /Activar 2FA|Desactivar 2FA/.test(button.text()))).toBe(false);
 
     finish({ enabled: true, confirmation_required: false });
     await flushPromises();
 
     expect(wrapper.find('[aria-busy="true"]').exists()).toBe(false);
+    expect(wrapper.emitted('loading')).toEqual([[true], [false]]);
     expect(wrapper.text()).toContain('Desactivar 2FA');
     expect(wrapper.text()).not.toContain('Activar 2FA');
   });
@@ -38,6 +40,7 @@ describe('ManageTwoFactor', () => {
     await flushPromises();
 
     expect(wrapper.find('[aria-busy="true"]').exists()).toBe(false);
+    expect(wrapper.emitted('loading')).toEqual([[true], [false]]);
     expect(wrapper.text()).toContain('No se pudo consultar la protección.');
     expect(wrapper.findAll('button').some((button) => /Activar 2FA|Desactivar 2FA/.test(button.text()))).toBe(false);
   });
