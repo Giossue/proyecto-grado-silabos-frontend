@@ -184,7 +184,7 @@
     --sidebar-foreground: #ffffff;
     --sidebar-primary: #ffffff;
     --sidebar-primary-foreground: var(--brand-blue);
-    --sidebar-accent: rgb(255 255 255 / 0.14);
+    --sidebar-accent: rgb(255 255 255 / 0.09);
     --sidebar-accent-foreground: #ffffff;
     --sidebar-border: rgb(255 255 255 / 0.16);
     --sidebar-ring: #cfe0f3;
@@ -259,7 +259,7 @@
     --sidebar-foreground: #ffffff;
     --sidebar-primary: #ffffff;
     --sidebar-primary-foreground: #1f3650;
-    --sidebar-accent: rgb(255 255 255 / 0.14);
+    --sidebar-accent: rgb(255 255 255 / 0.09);
     --sidebar-accent-foreground: #ffffff;
     --sidebar-border: rgb(255 255 255 / 0.14);
     --sidebar-ring: #cfe0f3;
@@ -492,11 +492,10 @@
     }
 }
 
-/* Identidad UEB: el ítem activo del menú lleva una barra roja a la izquierda. */
+/* Sidebar azul: hover suave y activo más marcado, ambos con tinte blanco. */
 [data-sidebar='menu-button'][data-active='true'] {
-    background-color: var(--sidebar-primary);
-    color: var(--sidebar-primary-foreground);
-    box-shadow: inset 3px 0 0 var(--brand-accent);
+    background-color: rgb(255 255 255 / 0.18);
+    color: #ffffff;
 }
 
 /* Textos secundarios dentro del sidebar azul: tono claro legible. */
