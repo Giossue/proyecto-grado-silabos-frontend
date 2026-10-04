@@ -38,7 +38,7 @@ describe('ConvocationPeriodSheet', () => {
     const form = document.querySelector('form')!;
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     await flushPromises();
-    expect(wrapper.text()).toContain('El periodo ya quedó creado');
+    expect(document.body.textContent).toContain('El periodo ya quedó creado');
     form.dispatchEvent(new Event('submit', { cancelable: true }));
     await flushPromises();
 
