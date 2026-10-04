@@ -48,7 +48,7 @@ const opened = (message: string): void => emit('changed', message);
     <DropdownMenuItem v-if="convocation.state === 'abierta'" @select="select('pausar')"><Pause aria-hidden="true" />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'pausada'" :disabled="convocation.process_state !== 'abierto'" @select="select('reanudar')"><Play aria-hidden="true" />Reanudar</DropdownMenuItem>
     <DropdownMenuItem v-if="convocation.state === 'cerrada'" disabled><Lock aria-hidden="true" />Convocatoria cerrada</DropdownMenuItem>
-    <DropdownMenuItem v-if="convocation.process_state !== 'abierto'" disabled><Lock aria-hidden="true" />{{ convocation.process_state === 'pausado' ? 'Proceso institucional en pausa' : convocation.process_state === 'cerrado' ? 'Proceso institucional cerrado' : 'Pendiente de apertura institucional' }}</DropdownMenuItem>
+    <DropdownMenuItem v-if="convocation.process_state !== 'abierto'" disabled><Lock aria-hidden="true" />{{ convocation.process_state === 'pausado' ? 'Convocatoria institucional pausada' : convocation.process_state === 'cerrado' ? 'Convocatoria institucional finalizada' : 'Pendiente de apertura institucional' }}</DropdownMenuItem>
   </TableActionsMenu>
   <ConvocationOpeningDialog
     v-if="convocation.id === null"

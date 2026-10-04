@@ -37,7 +37,7 @@ describe('ConvocationDeadlineCard', () => {
       global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
     });
 
-    expect(wrapper.text()).toContain('En pausa');
+    expect(wrapper.text()).toContain('Pausada');
     expect(wrapper.text()).not.toContain('No se admiten envíos');
     expect(wrapper.text()).not.toContain('Quedan 0 días');
   });

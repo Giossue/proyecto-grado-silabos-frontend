@@ -24,9 +24,9 @@ const formatDate = (value: string): string => formatDateDisplay(value, {
 const stateLabel = computed(() => ({
   upcoming: 'Por iniciar',
   active: 'En curso',
-  paused: 'En pausa',
+  paused: 'Pausada',
   overdue: 'Plazo vencido',
-  closed: 'Cerrada',
+  closed: 'Finalizada',
 })[props.deadline.state]);
 
 const elapsed = computed(() => {

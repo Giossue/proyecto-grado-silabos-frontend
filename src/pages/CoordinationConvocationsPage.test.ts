@@ -171,7 +171,7 @@ describe("CoordinationConvocationsPage", () => {
     await flushPromises();
 
     expect(wrapper.text()).not.toContain("Expedientes");
-    expect(wrapper.findAll("th")).toHaveLength(5);
+    expect(wrapper.findAll("th")).toHaveLength(4);
 
     wrapper.unmount();
   });
