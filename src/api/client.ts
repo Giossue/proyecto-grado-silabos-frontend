@@ -40,6 +40,14 @@ const notifyUnauthorized = (): void => {
   window.dispatchEvent(new CustomEvent('silabos:unauthorized'));
 };
 
+// El backend responde 409 con este texto cuando la sesión sigue viva (p. ej. por
+// "recordarme") pero ya perdió el rol elegido.
+const ROLE_REQUIRED_MESSAGE = 'Seleccione un rol vigente.';
+
+const notifyRoleRequired = (): void => {
+  window.dispatchEvent(new CustomEvent('silabos:role-required'));
+};
+
 const sendApiRequest = (path: string, init: RequestInit, method: string): Promise<Response> => {
   const csrfToken = isReadOnlyRequest(method) ? null : readCookie('XSRF-TOKEN');
   const isFormData = init.body instanceof FormData;
@@ -80,6 +88,8 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     message?: string;
     errors?: Record<string, string[]>;
   };
+
+  if (response.status === 409 && payload.message === ROLE_REQUIRED_MESSAGE) notifyRoleRequired();
 
   if (!response.ok) {
     throw new ApiError(payload.message ?? 'No se pudo completar la solicitud.', response.status, payload.errors);

@@ -1,6 +1,7 @@
 import type { Router } from 'vue-router';
 import { paths } from '@/lib/routes';
 import { sessionState } from '@/state/session';
+import type { Session } from '@/api/session';
 import { rememberIntendedRoute } from '@/lib/intended-route';
 
 export const handleUnauthorized = (router: Router): void => {
@@ -15,5 +16,18 @@ export const handleUnauthorized = (router: Router): void => {
 
   if (router.currentRoute.value.path !== paths.login) {
     void router.replace(paths.login);
+  }
+};
+
+// La sesión sigue viva pero sin rol (caducó la sesión y "recordarme" la renovó):
+// se pide elegir rol de nuevo en vez de dejar la pantalla con un error.
+export const handleRoleRequired = (router: Router): void => {
+  const session = sessionState.current.value;
+  if (!session) return;
+
+  sessionState.replace({ ...(session as Session), active_role: null });
+
+  if (router.currentRoute.value.path !== paths.roleSelection) {
+    void router.replace(paths.roleSelection);
   }
 };

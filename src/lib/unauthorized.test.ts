@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import { handleUnauthorized } from '@/lib/unauthorized';
+import { handleRoleRequired, handleUnauthorized } from '@/lib/unauthorized';
 import { sessionState } from '@/state/session';
 import type { Session } from '@/api/session';
 
@@ -13,6 +13,7 @@ const makeRouter = async (start: string) => {
       { path: '/login', component: Empty, meta: { guest: true } },
       { path: '/activar-cuenta', component: Empty, meta: { guest: true } },
       { path: '/docente/panel', component: Empty, meta: { requiresAuth: true } },
+      { path: '/rol', component: Empty, meta: { requiresAuth: true } },
     ],
   });
   await router.push(start);
@@ -40,5 +41,29 @@ describe('manejo de 401', () => {
 
     expect(router.currentRoute.value.path).toBe('/login');
     expect(sessionState.current.value).toBeNull();
+  });
+});
+
+describe('manejo de sesión sin rol', () => {
+  beforeEach(() => sessionState.clear());
+
+  it('no hace nada cuando no hay sesión cargada', async () => {
+    const router = await makeRouter('/docente/panel');
+
+    handleRoleRequired(router);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(router.currentRoute.value.path).toBe('/docente/panel');
+  });
+
+  it('envía a elegir rol y olvida el rol en memoria', async () => {
+    const router = await makeRouter('/docente/panel');
+    sessionState.replace({ user: {}, active_role: { id: 1 } } as unknown as Session);
+
+    handleRoleRequired(router);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(router.currentRoute.value.path).toBe('/rol');
+    expect(sessionState.current.value?.active_role).toBeNull();
   });
 });

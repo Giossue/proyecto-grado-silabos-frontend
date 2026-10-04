@@ -60,6 +60,15 @@ describe('cliente API', () => {
     expect(listener).toHaveBeenCalledOnce();
   });
 
+  it('notifica globalmente cuando la sesión perdió el rol elegido', async () => {
+    const listener = vi.fn();
+    window.addEventListener('silabos:role-required', listener, { once: true });
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(jsonResponse(409, { message: 'Seleccione un rol vigente.' })));
+
+    await expect(api('/coordination/reviews')).rejects.toMatchObject({ status: 409 });
+    expect(listener).toHaveBeenCalledOnce();
+  });
+
   it('conserva el 403 como denegación y no como pérdida de sesión', async () => {
     const listener = vi.fn();
     window.addEventListener('silabos:unauthorized', listener);
