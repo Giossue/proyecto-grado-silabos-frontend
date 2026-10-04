@@ -11,6 +11,7 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { paths } from '@/lib/routes';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -58,12 +59,12 @@ onMounted(load);
             <template #filters><Field><FieldLabel for="syllabi-state" class="sr-only">Estado</FieldLabel><Select v-model="state" name="state"><SelectTrigger id="syllabi-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="option in SYLLABUS_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select></Field></template>
           </FilterToolbar>
         </form>
-        <LoadingSkeleton v-if="!result && !error" variant="table-body" :columns="4" />
+        <LoadingSkeleton v-if="!result && !error" variant="table-body" :columns="5" />
         <Table v-if="result">
-          <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Estado</TableHead><TableHead>Iniciado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos</TableHead><TableHead>Estado</TableHead><TableHead>Iniciado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
           <TableBody>
-            <TableEmpty v-if="result.syllabi.data.length === 0" :colspan="4">No tiene sílabos asignados con este rol.</TableEmpty>
-            <TableRow v-for="syllabus in result.syllabi.data" v-else :key="syllabus.id" class="cursor-pointer" role="link" tabindex="0" :aria-label="`Abrir sílabo de ${syllabus.subject}`" @click="openSyllabus(syllabus.id)" @keydown.enter.prevent="openSyllabus(syllabus.id)"><TableCell><span>{{ syllabus.subject }}</span><div class="text-sm text-muted-foreground">{{ syllabus.code }} · Paralelo(s) {{ syllabus.parallels.join(', ') }}</div></TableCell><TableCell>{{ syllabusStateLabel(syllabus.state) ?? 'Estado no disponible' }}</TableCell><TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell><TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell></TableRow>
+            <TableEmpty v-if="result.syllabi.data.length === 0" :colspan="5">No tiene sílabos asignados con este rol.</TableEmpty>
+            <TableRow v-for="syllabus in result.syllabi.data" v-else :key="syllabus.id" class="cursor-pointer" role="link" tabindex="0" :aria-label="`Abrir sílabo de ${syllabus.subject}`" @click="openSyllabus(syllabus.id)" @keydown.enter.prevent="openSyllabus(syllabus.id)"><TableCell>{{ syllabus.subject }}</TableCell><TableCell><div class="flex flex-wrap gap-1.5"><Badge v-for="parallel in syllabus.parallels" :key="parallel" variant="outline">{{ parallel }}</Badge></div></TableCell><TableCell>{{ syllabusStateLabel(syllabus.state) ?? 'Estado no disponible' }}</TableCell><TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell><TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell></TableRow>
           </TableBody>
         </Table>
         <TablePagination v-if="result" :meta="result.syllabi" label="Paginación de sílabos asignados" @update:page="load" />
