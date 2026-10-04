@@ -61,7 +61,7 @@ export type ReviewDetail = {
   };
   my_stage?: ReviewStage | null;
   can_decide?: boolean;
-  can_reopen?: boolean;
+  can_delete?: boolean;
   presentation: DocumentPresentation;
   revision: {
     id: string;
@@ -90,7 +90,6 @@ export type ReviewDetail = {
   correction_request: { justification: string; requested_at: string; stage?: ReviewStage; requested_by?: string } | null;
   decisions_allowed: boolean;
   reset: { allowed: boolean };
-  reopening: { cause: string; reopened_at: string; reopened_by: string } | null;
 };
 export type ReviewComparison = {
   syllabus: { id: string; subject: string; code: string; period: string };
@@ -139,10 +138,7 @@ export const approveReview = (revisionId: string) =>
     method: "POST",
     body: JSON.stringify({ idempotency_key: crypto.randomUUID() }),
   });
-export const reopenSyllabus = (syllabusId: string, cause: string) =>
-  api<{ message: string }>(`/coordination/syllabi/${syllabusId}/reopen`, {
-    method: "POST",
-    body: JSON.stringify({ cause, idempotency_key: crypto.randomUUID() }),
-  });
+export const deleteSyllabus = (syllabusId: string) =>
+  api<{ message: string }>(`/coordination/syllabi/${syllabusId}`, { method: "DELETE" });
 export const resetSyllabus = (syllabusId: string) =>
   api<{ message: string }>(`/coordination/syllabi/${syllabusId}/reset`, { method: "POST" });

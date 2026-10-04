@@ -1,10 +1,12 @@
 import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 import { ApiError } from "@/api/client";
 import {
   approveReview,
+  deleteSyllabus,
   getReview,
-  reopenSyllabus,
   requestCorrection,
   resetSyllabus,
   type ReviewDetail,
@@ -15,15 +17,15 @@ import CoordinationReviewDetailPage from "@/pages/CoordinationReviewDetailPage.v
 vi.mock("vue-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("vue-router")>()),
   useRoute: () => ({ params: { revision: "revision-1" }, fullPath: "/coordinacion/revisiones/revision-1" }),
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ replace }),
 }));
 
 vi.mock("@/api/session", () => ({ getSession: vi.fn() }));
 vi.mock("@/api/reviews", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/reviews")>()),
   approveReview: vi.fn(),
+  deleteSyllabus: vi.fn(),
   getReview: vi.fn(),
-  reopenSyllabus: vi.fn(),
   requestCorrection: vi.fn(),
   resetSyllabus: vi.fn(),
 }));
@@ -40,7 +42,7 @@ const detail = (decisionsAllowed = true): ReviewDetail => ({
   },
   my_stage: "coordinacion",
   can_decide: decisionsAllowed,
-  can_reopen: false,
+  can_delete: false,
   presentation: {
     appearance: {
       font_family: "Arial",
@@ -100,7 +102,6 @@ const detail = (decisionsAllowed = true): ReviewDetail => ({
   correction_request: null,
   decisions_allowed: decisionsAllowed,
   reset: { allowed: false },
-  reopening: null,
 });
 
 const mountPage = () => mount(CoordinationReviewDetailPage, {
@@ -120,11 +121,12 @@ describe("CoordinationReviewDetailPage", () => {
   beforeEach(() => {
     for (const mock of [
       approveReview,
+      deleteSyllabus,
       getReview,
-      reopenSyllabus,
       requestCorrection,
       resetSyllabus,
     ]) vi.mocked(mock).mockReset();
+    replace.mockReset();
     vi.mocked(getSession).mockResolvedValue({
       user: {
         id: "coordinator-1",
@@ -186,6 +188,27 @@ describe("CoordinationReviewDetailPage", () => {
     expect(requestCorrection).toHaveBeenCalledWith("revision-1", {
       justification: "Debe precisar el resultado observado.",
     });
+    wrapper.unmount();
+  });
+
+  it("elimina un sílabo aprobado con confirmación y vuelve a la cola", async () => {
+    vi.mocked(getReview).mockResolvedValue({ ...detail(), can_delete: true });
+    vi.mocked(deleteSyllabus).mockResolvedValue({ message: "Sílabo eliminado." });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Eliminar sílabo aprobado");
+    expect(wrapper.text()).not.toContain("Reabrir");
+    await wrapper.findAll("button").find((button) => button.text() === "Eliminar sílabo")!.trigger("click");
+    await flushPromises();
+    expect(deleteSyllabus).not.toHaveBeenCalled();
+    const confirm = [...document.body.querySelectorAll('[role="dialog"] button')]
+      .find((item) => item.textContent?.includes("Eliminar definitivamente")) as HTMLButtonElement;
+    confirm.click();
+    await flushPromises();
+
+    expect(deleteSyllabus).toHaveBeenCalledWith("syllabus-1");
+    expect(replace).toHaveBeenCalled();
     wrapper.unmount();
   });
 

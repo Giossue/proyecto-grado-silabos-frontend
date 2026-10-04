@@ -2,14 +2,13 @@
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { syllabusStateLabel } from '@/lib/syllabusStates';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
-import { ArrowLeft, LockKeyhole, RotateCcw, ShieldCheck, Undo2 } from '@lucide/vue';
+import { ArrowLeft, LockKeyhole, ShieldCheck, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import {
   approveReview,
   getReview,
-  reopenSyllabus,
   requestCorrection,
   reviewStageLabel,
   type ReviewDetail,
@@ -21,6 +20,7 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
+import SyllabusDeleteDialog from '@/components/domain/syllabus/SyllabusDeleteDialog.vue';
 import SyllabusResetDialog from '@/components/domain/syllabus/SyllabusResetDialog.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +35,7 @@ import { paths, reviewAreaPaths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
 const route = useRoute();
+const router = useRouter();
 const data = ref<ReviewDetail | null>(null);
 const area = computed(() => reviewAreaPaths(sessionState.current.value?.active_role?.code));
 const loading = ref(true);
@@ -43,7 +44,6 @@ const loadError = ref('');
 const actionError = ref('');
 const errors = ref<Record<string, string[]>>({});
 const correctionJustification = ref('');
-const reopeningCause = ref('');
 
 const load = async (): Promise<void> => {
   loading.value = true;
@@ -86,7 +86,11 @@ const run = async (action: () => Promise<{ message: string }>): Promise<void> =>
 const canReviewCurrent = computed(() => Boolean(data.value?.can_decide && data.value?.revision.is_current && data.value?.syllabus.state === 'en_revision'));
 const isDeanery = computed(() => data.value?.my_stage === 'decanato');
 const stageLabel = computed(() => reviewStageLabel(data.value?.syllabus.stage));
-const canReopen = computed(() => Boolean(data.value?.can_reopen && data.value?.revision.is_current));
+const canDelete = computed(() => Boolean(data.value?.can_delete && data.value?.revision.is_current));
+const deleted = async (message: string): Promise<void> => {
+  toast.success(message);
+  await router.replace(area.value.reviews);
+};
 
 const documentFields = (fields: SnapshotField[]): DocumentField[] => fields.map((field) => ({ ...field }));
 const formatValue = (value: unknown): string => {
@@ -117,11 +121,10 @@ onMounted(load);
     </template>
 
     <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo completar la operación</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
-    <Alert v-if="!data.decisions_allowed"><LockKeyhole aria-hidden="true" /><AlertTitle>Convocatoria cerrada</AlertTitle><AlertDescription>La revisión queda solo para consulta: ya no se pueden solicitar correcciones, aprobar, reabrir ni reiniciar.</AlertDescription></Alert>
+    <Alert v-if="!data.decisions_allowed"><LockKeyhole aria-hidden="true" /><AlertTitle>Convocatoria cerrada</AlertTitle><AlertDescription>La revisión queda solo para consulta: ya no se pueden solicitar correcciones, aprobar, eliminar ni reiniciar.</AlertDescription></Alert>
     <Alert v-if="!data.revision.is_current"><LockKeyhole aria-hidden="true" /><AlertTitle>Está consultando una revisión histórica</AlertTitle><AlertDescription>Esta revisión se conserva tal como fue enviada. Las acciones del flujo solo están disponibles en la revisión vigente.</AlertDescription></Alert>
     <Alert v-if="data.revision.is_current && data.syllabus.state === 'en_revision' && !canReviewCurrent && data.decisions_allowed"><LockKeyhole aria-hidden="true" /><AlertTitle>{{ stageLabel || 'En revisión' }}</AlertTitle><AlertDescription>Esta revisión la tiene ahora otro revisor. Podrá decidir cuando llegue a su etapa.</AlertDescription></Alert>
     <Alert v-if="data.correction_request"><Undo2 aria-hidden="true" /><AlertTitle>Corrección solicitada en esta revisión<template v-if="data.correction_request.stage"> ({{ reviewStageLabel(data.correction_request.stage).replace('En ', '') }})</template></AlertTitle><AlertDescription>{{ data.correction_request.justification }}<template v-if="data.correction_request.requested_by"> · {{ data.correction_request.requested_by }}</template></AlertDescription></Alert>
-    <Alert v-if="data.reopening"><RotateCcw aria-hidden="true" /><AlertTitle>El expediente tuvo una reapertura</AlertTitle><AlertDescription>{{ data.reopening.cause }} · {{ data.reopening.reopened_by }} · {{ formatDateDisplay(data.reopening.reopened_at) }}. La aprobación anterior se conserva.</AlertDescription></Alert>
 
     <WorkspaceLayout variant="review">
       <main class="flex min-w-0 flex-col gap-6">
@@ -155,7 +158,7 @@ onMounted(load);
 
         <DocumentSignatureCard v-if="data.history.some((item) => item.id === data!.revision.id && item.approved_at)" :key="data.revision.id" :revision-id="data.revision.id" :file-name="`silabo-${data.syllabus.code}-revision-${data.revision.number}`" />
 
-        <Card v-if="canReopen"><CardHeader><CardTitle>Reabrir aprobado</CardTitle><CardDescription>Conserva esta aprobación y crea una nueva línea de corrección para el docente.</CardDescription></CardHeader><CardContent><form class="flex flex-col gap-4" @submit.prevent="run(() => reopenSyllabus(data!.syllabus.id, reopeningCause))"><Field><FieldLabel for="reopening-cause" required>Causa de reapertura</FieldLabel><Textarea id="reopening-cause" v-model="reopeningCause" rows="4" required /><FieldError :errors="errors.cause" /></Field><Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><RotateCcw v-else aria-hidden="true" />Reabrir conservando la aprobación</Button></form></CardContent></Card>
+        <Card v-if="canDelete"><CardHeader><CardTitle>Eliminar sílabo aprobado</CardTitle><CardDescription>Un sílabo aprobado no se modifica. Si hay un error, elimínelo con todo su historial: el docente empieza de cero.</CardDescription></CardHeader><CardContent><SyllabusDeleteDialog :syllabus-id="data.syllabus.id" :subject="data.syllabus.subject" @deleted="deleted" /></CardContent></Card>
 
         <Card><CardHeader><CardTitle>Historial de revisiones</CardTitle><CardDescription>Consulte o compare revisiones enviadas.</CardDescription></CardHeader><CardContent><ol class="flex flex-col gap-3"><li v-for="(item, index) in data.history" :key="item.id" class="rounded-md border p-3 text-sm"><div class="flex items-center justify-between gap-3"><Button as-child variant="link" class="h-auto p-0"><RouterLink :to="area.review(item.id)">Revisión {{ item.number }}</RouterLink></Button><Badge v-if="item.approved_at" variant="secondary">Aprobada</Badge></div><div v-if="item.library_verified_at || item.coordination_reviewed_at" class="mt-1 text-muted-foreground"><template v-if="item.library_verified_at">Biblioteca: {{ item.library_verified_by }}. </template><template v-if="item.coordination_reviewed_at">Coordinación: {{ item.coordination_reviewed_by }}. </template><template v-if="item.approved_at">Decanato: {{ item.approved_by }}.</template></div><div class="text-muted-foreground">{{ item.submitted_by }} · {{ formatDateDisplay(item.submitted_at, { dateStyle: 'medium' }) }}</div><div class="mt-2 flex flex-wrap gap-2"><Button v-if="item.approved_at" as-child size="sm" variant="outline"><RouterLink :to="paths.documents(item.id)">Documentos</RouterLink></Button><Button v-if="index > 0" as-child size="sm" variant="outline"><RouterLink :to="area.comparison(data.history[index - 1]!.id, item.id)">Comparar con la anterior</RouterLink></Button></div></li></ol></CardContent></Card>
       </aside>

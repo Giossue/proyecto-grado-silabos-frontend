@@ -71,12 +71,6 @@ export type SyllabusDetail = {
     description: string | null;
     blocks: SyllabusBlock[];
   }>;
-  reopening?: {
-    cause: string;
-    reopened_at: string;
-    reopened_by: string;
-    origin?: "coordinacion" | "biblioteca" | "decanato";
-  } | null;
   review_stage?: "biblioteca" | "coordinacion" | "decanato" | null;
   review_comments?: Array<{
     stage: "biblioteca" | "coordinacion" | "decanato";

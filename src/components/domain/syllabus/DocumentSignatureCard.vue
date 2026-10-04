@@ -55,7 +55,7 @@ const description = computed(() => {
       ? 'Docente, coordinación y biblioteca ya firmaron. Le corresponde firmar al decanato.'
       : 'Docente, coordinación y biblioteca ya firmaron. Falta la firma del decanato.';
     case 'firmado': return 'El sílabo tiene las firmas del docente, de coordinación, de biblioteca y del decanato.';
-    case 'anulado': return 'El sílabo fue reabierto: esta revisión ya no se firma. Se firmará la nueva revisión aprobada.';
+    case 'anulado': return 'Esta revisión no tiene una aprobación vigente, por eso no se firma.';
     default: return 'Estado de la firma de la revisión aprobada.';
   }
 });
