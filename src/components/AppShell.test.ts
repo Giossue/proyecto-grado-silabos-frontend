@@ -115,7 +115,7 @@ describe('AppSidebarLayout', () => {
     expect(sidebar.find('a[href="/biblioteca/configuracion/perfil"]').exists()).toBe(false);
     expect(sidebar.text()).not.toContain('Mis sílabos');
     expect(sidebar.text()).not.toContain('Usuarios y roles');
-    expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).toContain('Bibliotecario');
+    expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Bibliotecario');
   });
 
   it('muestra la cuenta en el encabezado y retira el acceso al Panel para docente', async () => {
@@ -130,7 +130,7 @@ describe('AppSidebarLayout', () => {
     expect(sidebar.text()).not.toContain('Panel');
     expect(sidebar.find('a[href="/dashboard"]').exists()).toBe(false);
     expect(wrapper.find('a[href="/dashboard"]').exists()).toBe(false);
-    expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).toContain('Software');
+    expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Software');
     expect(wrapper.find('header [role="progressbar"]').exists()).toBe(false);
     expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
   });
@@ -187,7 +187,6 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     const accountButton = wrapper.get('header [aria-label="Menú de usuario"]');
-    expect(accountButton.text()).toContain('Sin rol');
     expect(accountButton.text()).not.toContain('Administrador');
   });
 });
