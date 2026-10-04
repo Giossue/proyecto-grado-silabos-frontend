@@ -493,6 +493,15 @@
         background-color: var(--curriculum-canvas-background);
     }
 
+    /* Puntos de conexión más grandes en edición: se ven y se agarran mejor. */
+    .curriculum-canvas .vue-flow__handle.curriculum-handle {
+        width: 14px;
+        height: 14px;
+        border: 2px solid var(--card);
+        background-color: var(--primary);
+        cursor: crosshair;
+    }
+
     .curriculum-canvas .vue-flow__node-subject:not(.dragging) {
         transition: transform var(--duration-layout) ease-out;
     }

@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
 import { formatNumericDisplay } from "@/lib/numberDisplay";
 import { cn } from "@/lib/utils";
@@ -97,12 +98,19 @@ const totalFields = computed(
 
 <template>
   <template v-if="data.subject">
-    <Handle
-      type="target"
-      :position="Position.Top"
-      :connectable="data.editable"
-      aria-label="Recibir relación académica"
-    />
+    <Tooltip v-if="data.editable">
+      <TooltipTrigger as-child>
+        <Handle
+          type="target"
+          :position="Position.Top"
+          :connectable="true"
+          class="curriculum-handle"
+          aria-label="Recibir relación académica"
+        />
+      </TooltipTrigger>
+      <TooltipContent side="top">Suelte aquí la línea que arrastre desde otra materia para marcarla como prerrequisito o correquisito de esta.</TooltipContent>
+    </Tooltip>
+    <Handle v-else type="target" :position="Position.Top" :connectable="false" aria-label="Recibir relación académica" />
     <article
       class="relative w-full overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-2 data-[dragging=true]:ring-ring"
       :class="cn(data.editable && 'cursor-move')"
@@ -243,11 +251,18 @@ const totalFields = computed(
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    <Handle
-      type="source"
-      :position="Position.Bottom"
-      :connectable="data.editable"
-      aria-label="Crear relación académica"
-    />
+    <Tooltip v-if="data.editable">
+      <TooltipTrigger as-child>
+        <Handle
+          type="source"
+          :position="Position.Bottom"
+          :connectable="true"
+          class="curriculum-handle"
+          aria-label="Crear relación académica"
+        />
+      </TooltipTrigger>
+      <TooltipContent side="bottom">Arrastre desde aquí hasta otra materia para crear un prerrequisito o correquisito.</TooltipContent>
+    </Tooltip>
+    <Handle v-else type="source" :position="Position.Bottom" :connectable="false" aria-label="Crear relación académica" />
   </template>
 </template>
