@@ -190,6 +190,11 @@ const eyes = (width: number, height: number, spacing: number, angle = 0, positio
 // Catálogo de expresiones (valores propios, redondeados).
 export const EXPRESSIONS = {
     neutral: { headX: 0, headY: 0, headZ: 0, ...eyes(26, 48, 64, 0, -24) },
+    // Reposo, escucha y habla: casi de frente, con giros mínimos.
+    restA: { headX: 2, headY: 5, headZ: -3, ...eyes(26, 48, 64, 0, -24) },
+    restB: { headX: -2, headY: -5, headZ: 3, ...eyes(25, 50, 63, 0, -23) },
+    listenA: { headX: 0, headY: 4, headZ: 6, ...eyes(27, 54, 64, 0, -22) },
+    listenB: { headX: 2, headY: -4, headZ: 4, ...eyes(26, 52, 64, 0, -23) },
     glanceUp: { headX: 7, headY: 28, headZ: -16, ...eyes(22, 42, 54, 0, -20) },
     curious: { headX: -12, headY: -18, headZ: 6, ...eyes(21, 48, 55, 24) },
     attentive: { headX: 1, headY: 6, headZ: 11, ...eyes(24, 58, 57) },
@@ -223,10 +228,10 @@ const steps = (keys: ExpressionKey[], holdMs: number, transitionMs = 500): Anima
     keys.map((expression) => ({ expression, holdMs, transitionMs }));
 
 export const ANIMATIONS = {
-    idle: { steps: steps(['glanceUp', 'curious'], 5200), blink: { initialDelayMs: 2600, minIntervalMs: 3400, maxIntervalMs: 6200, durationMs: 280 } },
-    listening: { steps: steps(['attentive', 'gazeDown', 'gentleDown'], 2300), blink: { initialDelayMs: 3200, minIntervalMs: 4800, maxIntervalMs: 7200, durationMs: 240 } },
+    idle: { steps: steps(['restA', 'restB'], 4200, 900), blink: { initialDelayMs: 2600, minIntervalMs: 3400, maxIntervalMs: 6200, durationMs: 280 } },
+    listening: { steps: steps(['listenA', 'listenB'], 2600, 700), blink: { initialDelayMs: 3200, minIntervalMs: 4800, maxIntervalMs: 7200, durationMs: 240 } },
     thinking: { steps: steps(['curious', 'frown', 'skepticalLeft', 'playful', 'skepticalRight'], 2300), blink: { initialDelayMs: 2100, minIntervalMs: 2800, maxIntervalMs: 5000, durationMs: 260 } },
-    speaking: { steps: steps(['attentive', 'small', 'neutral'], 900, 350), blink: { initialDelayMs: 1500, minIntervalMs: 2400, maxIntervalMs: 4200, durationMs: 220 } },
+    speaking: { steps: steps(['listenA', 'restA', 'listenB'], 900, 350), blink: { initialDelayMs: 1500, minIntervalMs: 2400, maxIntervalMs: 4200, durationMs: 220 } },
     happy: { steps: steps(['joyfulDown', 'joyfulWide', 'playful', 'gentleDown'], 2300), blink: { initialDelayMs: 2100, minIntervalMs: 2800, maxIntervalMs: 5000, durationMs: 260 } },
     surprised: { steps: steps(['surprised', 'surprisedWide'], 2300), blink: { initialDelayMs: 1200, minIntervalMs: 1800, maxIntervalMs: 3600, durationMs: 220 } },
     confused: { steps: steps(['skepticalLeft', 'skepticalRight', 'curious'], 2300), blink: { initialDelayMs: 2100, minIntervalMs: 2800, maxIntervalMs: 5000, durationMs: 260 } },
