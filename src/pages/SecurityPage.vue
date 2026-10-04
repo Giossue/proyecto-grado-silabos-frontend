@@ -55,37 +55,37 @@ const submit = async (): Promise<void> => {
     <SettingsLayout>
         <LoadingSkeleton v-if="loading" variant="settings" settings-section="security" />
         <div v-show="!loading" class="contents">
-        <div class="flex flex-col gap-6">
-            <Heading variant="small" title="Actualizar contraseña" description="Use una contraseña larga y única para proteger su cuenta" />
-            <InputError :message="errors.request" />
+            <div class="flex flex-col gap-6">
+                <Heading variant="small" title="Actualizar contraseña" description="Use una contraseña larga y única para proteger su cuenta" />
+                <InputError :message="errors.request" />
 
-            <form class="flex flex-col gap-6" @submit.prevent="submit">
-                <div class="grid gap-2">
-                    <Label for="current_password" required>Contraseña actual</Label>
-                    <PasswordInput id="current_password" v-model="currentPassword" required class="mt-1 block w-full" autocomplete="current-password" placeholder="Contraseña actual" />
-                    <InputError :message="errors.current_password" />
-                </div>
-                <div class="grid gap-2">
-                    <Label for="password" required>Contraseña nueva</Label>
-                    <PasswordInput id="password" v-model="password" required class="mt-1 block w-full" autocomplete="new-password" placeholder="Contraseña nueva" />
-                    <InputError :message="errors.password" />
-                </div>
-                <div class="grid gap-2">
-                    <Label for="password_confirmation" required>Confirmar contraseña</Label>
-                    <PasswordInput id="password_confirmation" v-model="passwordConfirmation" required class="mt-1 block w-full" autocomplete="new-password" placeholder="Confirmar contraseña" />
-                    <InputError :message="errors.password_confirmation" />
-                </div>
-                <div class="flex items-center gap-4">
-                    <Button :disabled="processing" data-test="update-password-button">
-                        <Spinner v-if="processing" data-icon="inline-start" />
-                        <Save v-else data-icon="inline-start" aria-hidden="true" />
-                        Guardar
-                    </Button>
-                </div>
-            </form>
-        </div>
+                <form class="flex flex-col gap-6" @submit.prevent="submit">
+                    <div class="grid gap-2">
+                        <Label for="current_password" required>Contraseña actual</Label>
+                        <PasswordInput id="current_password" v-model="currentPassword" required class="mt-1 block w-full" autocomplete="current-password" placeholder="Contraseña actual" />
+                        <InputError :message="errors.current_password" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="password" required>Contraseña nueva</Label>
+                        <PasswordInput id="password" v-model="password" required class="mt-1 block w-full" autocomplete="new-password" placeholder="Contraseña nueva" />
+                        <InputError :message="errors.password" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="password_confirmation" required>Confirmar contraseña</Label>
+                        <PasswordInput id="password_confirmation" v-model="passwordConfirmation" required class="mt-1 block w-full" autocomplete="new-password" placeholder="Confirmar contraseña" />
+                        <InputError :message="errors.password_confirmation" />
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <Button :disabled="processing" data-test="update-password-button">
+                            <Spinner v-if="processing" data-icon="inline-start" />
+                            <Save v-else data-icon="inline-start" aria-hidden="true" />
+                            Guardar
+                        </Button>
+                    </div>
+                </form>
+            </div>
 
-        <ManageTwoFactor @loading="loading = $event" />
+            <ManageTwoFactor @loading="loading = $event" />
         </div>
     </SettingsLayout>
 </template>

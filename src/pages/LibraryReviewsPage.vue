@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { formatDateDisplay } from '@/lib/dateDisplay';
 import { Eye } from '@lucide/vue';
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getLibraryReviews, type LibraryReviewsPage } from '@/api/library';
@@ -33,8 +32,10 @@ const filters = reactive({
 });
 const initialPage = Number(queryText(route.query.page)) || 1;
 const stateOptions = Object.entries(LIBRARY_STATE_LABELS).map(([value, label]) => ({ value, label }));
-const formatDate = (value: string): string =>
-  formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' });
+const pageTitle = computed(() => {
+  const periods = [...new Set((data.value?.reviews.data ?? []).map((item) => item.period))];
+  return periods.length > 0 ? `Revisiones de biblioteca - ${periods.join(', ')}` : 'Revisiones de biblioteca';
+});
 
 const syncUrl = (page: number): void => {
   const query: Record<string, string> = {};
@@ -66,9 +67,9 @@ onMounted(() => { void load(initialPage); });
 </script>
 
 <template>
-  <PageFrame title="Revisiones de biblioteca" description="Biblioteca revisa primero la bibliografía de cada sílabo enviado; después siguen coordinación y decanato.">
+  <PageFrame :title="pageTitle" description="Biblioteca revisa primero la bibliografía de cada sílabo enviado; después siguen coordinación y decanato.">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="9" :filters="1" :cell-lines="2" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="6" :filters="1" :cell-lines="2" />
     <Card v-if="data">
       <CardContent class="flex flex-col gap-4">
         <form @submit.prevent="load()">
@@ -100,11 +101,8 @@ onMounted(() => { void load(initialPage); });
             <TableRow>
               <TableHead>Asignatura</TableHead>
               <TableHead>Carrera</TableHead>
-              <TableHead>Período</TableHead>
               <TableHead>Paralelo</TableHead>
               <TableHead>Docente(s)</TableHead>
-              <TableHead>Revisión</TableHead>
-              <TableHead>Enviado</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead class="text-right">Acciones</TableHead>
             </TableRow>
@@ -113,11 +111,8 @@ onMounted(() => { void load(initialPage); });
             <TableRow v-for="item in data.reviews.data" :key="item.revision_id">
               <TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }}</div></TableCell>
               <TableCell>{{ item.career }}</TableCell>
-              <TableCell>{{ item.period }}</TableCell>
               <TableCell>{{ item.parallels.join(', ') }}</TableCell>
               <TableCell>{{ item.teachers.join(', ') }}</TableCell>
-              <TableCell>N.º {{ item.revision_number }}</TableCell>
-              <TableCell><div>{{ formatDate(item.sent_at) }}</div><div class="text-sm text-muted-foreground">{{ item.sent_by }}</div></TableCell>
               <TableCell><Badge :variant="libraryStateVariant(item.state)">{{ libraryStateLabel(item.state) }}</Badge></TableCell>
               <TableCell class="text-right">
                 <TableActionsMenu :label="`Acciones para ${item.subject}`">
@@ -125,7 +120,7 @@ onMounted(() => { void load(initialPage); });
                 </TableActionsMenu>
               </TableCell>
             </TableRow>
-            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="9">No hay sílabos para los filtros seleccionados.</TableEmpty>
+            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="6">No hay sílabos para los filtros seleccionados.</TableEmpty>
           </TableBody>
         </Table>
         <TablePagination :meta="data.reviews" label="Paginación de revisiones de biblioteca" @update:page="load" />
