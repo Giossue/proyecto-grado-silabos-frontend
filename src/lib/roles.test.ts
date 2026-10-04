@@ -4,6 +4,7 @@ import { roleLabel, roleNeedsCareer, scopeTitle } from '@/lib/roles';
 describe('roles', () => {
   it('nombra los cuatro roles y conserva un código desconocido', () => {
     expect(roleLabel('bibliotecario')).toBe('Bibliotecario');
+    expect(roleLabel('decano')).toBe('Decano');
     expect(roleLabel('administrador')).toBe('Administrador');
     expect(roleLabel('rol_futuro')).toBe('rol_futuro');
   });
@@ -17,6 +18,7 @@ describe('roles', () => {
 
   it('describe el ámbito sin suponer que sin carrera es Administración', () => {
     expect(scopeTitle({ code: 'bibliotecario', career_name: null })).toBe('Biblioteca · toda la universidad');
+    expect(scopeTitle({ code: 'decano', career_name: null, faculty_name: 'Ingeniería' })).toBe('Decanato · Ingeniería');
     expect(scopeTitle({ code: 'administrador', career_name: null })).toBe('Administrador');
     expect(scopeTitle({ code: 'docente', career_name: 'Software' })).toBe('Docente · Software');
     expect(scopeTitle({ code: 'coordinador', career_name: 'Software' })).toBe('Software');
