@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import TableLoadingSkeleton from '@/components/domain/loading/TableLoadingSkeleton.vue';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -58,7 +59,7 @@ const pageStyle = {
                 <template v-for="section in sectionCount" :key="`syllabus-section-${section}`">
                     <Separator v-if="section > 1" />
                     <Card data-skeleton="syllabus-section">
-                        <CardHeader>
+                        <CardHeader class="min-w-0 grid-cols-1">
                             <Skeleton class="h-6 w-56 max-w-full" />
                             <Skeleton class="h-4 w-80 max-w-full" />
                         </CardHeader>
@@ -98,7 +99,7 @@ const pageStyle = {
 
             <aside class="min-w-0" data-skeleton="unit-assistant">
                 <Card class="assistant-panel gap-0 overflow-hidden py-0">
-                    <CardHeader class="shrink-0 py-4">
+                    <CardHeader class="min-w-0 shrink-0 grid-cols-1 py-4">
                         <Skeleton class="h-5 w-48 max-w-full" />
                     </CardHeader>
                     <Separator />
@@ -142,7 +143,7 @@ const pageStyle = {
         <WorkspaceLayout variant="review">
             <main class="flex min-w-0 flex-col gap-6">
                 <Card v-for="section in reviewSections" :key="section" data-skeleton="review-section">
-                    <CardHeader>
+                    <CardHeader class="min-w-0 grid-cols-1">
                         <Skeleton class="h-5 w-52 max-w-full" />
                         <Skeleton class="h-4 w-80 max-w-full" />
                     </CardHeader>
@@ -160,7 +161,7 @@ const pageStyle = {
             <aside class="flex min-w-0 flex-col gap-6" :data-review-stage="reviewStage">
                 <Skeleton v-if="reviewStage === 'coordination'" class="h-9 w-full" data-skeleton="new-observation" />
                 <Card v-for="panel in reviewPanels" :key="panel" :data-skeleton="`review-${panel}`">
-                    <CardHeader>
+                    <CardHeader class="min-w-0 grid-cols-1">
                         <Skeleton class="h-5 w-48 max-w-full" />
                         <Skeleton class="h-4 w-full" />
                         <Skeleton class="h-4 w-3/4" />
@@ -231,13 +232,13 @@ const pageStyle = {
 
     <template v-else-if="variant === 'comparison'">
         <Card data-skeleton="comparison-summary">
-            <CardHeader>
+            <CardHeader class="min-w-0 grid-cols-1">
                 <Skeleton class="h-5 w-64 max-w-full" />
                 <Skeleton class="h-4 w-112 max-w-full" />
             </CardHeader>
         </Card>
         <Card v-for="change in sectionCount" :key="change" data-skeleton="comparison-change">
-            <CardHeader>
+            <CardHeader class="min-w-0 grid-cols-1">
                 <div class="flex flex-wrap items-center justify-between gap-3">
                     <div class="flex min-w-0 flex-col gap-2">
                         <Skeleton class="h-4 w-40 max-w-full" />
@@ -260,14 +261,16 @@ const pageStyle = {
     </template>
 
     <template v-else>
-        <div v-for="notice in 2" :key="notice" class="flex min-w-0 items-start gap-3 rounded-lg border bg-card p-4" data-skeleton="document-notice">
-            <Skeleton class="size-4 shrink-0" />
-            <div class="flex min-w-0 flex-1 flex-col gap-2">
+        <Alert v-for="notice in 2" :key="notice" class="min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-3" data-skeleton="document-notice">
+            <Skeleton class="row-span-2 size-4 shrink-0" />
+            <AlertTitle class="min-w-0">
                 <Skeleton class="h-4 w-40 max-w-full" />
+            </AlertTitle>
+            <AlertDescription class="flex min-w-0 flex-col gap-2">
                 <Skeleton class="h-4 w-full" />
                 <Skeleton v-if="notice === 1" class="h-4 w-5/6" />
-            </div>
-        </div>
+            </AlertDescription>
+        </Alert>
         <Card>
             <CardContent class="flex min-w-0 flex-col gap-4">
                 <TableLoadingSkeleton :rows="rows" :columns="4" :cell-lines="2" search :filters="1" />

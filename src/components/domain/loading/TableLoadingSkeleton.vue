@@ -34,14 +34,12 @@ const minimumWidth = computed(() =>
 <template>
     <div class="flex min-w-0 flex-col gap-4">
         <div v-if="search || filters > 0" data-skeleton="table-toolbar" class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
-            <div v-if="search" class="flex min-w-0 flex-col gap-2 lg:min-w-64 lg:flex-1">
-                <Skeleton class="h-3.5 w-16" />
+            <div v-if="search" class="min-w-0 lg:min-w-64 lg:flex-1">
                 <Skeleton class="h-9 w-full" />
             </div>
             <Skeleton v-if="filters > 0" class="h-9 w-full sm:hidden" />
             <div v-if="filters > 0" data-skeleton="table-filters" class="hidden gap-3 sm:grid sm:grid-cols-2 lg:flex lg:items-end">
-                <div v-for="filter in filters" :key="filter" class="flex min-w-0 flex-col gap-2 lg:w-48 lg:shrink-0">
-                    <Skeleton class="h-3.5 w-20" />
+                <div v-for="filter in filters" :key="filter" class="min-w-0 lg:w-48 lg:shrink-0">
                     <Skeleton class="h-9 w-full" />
                 </div>
             </div>

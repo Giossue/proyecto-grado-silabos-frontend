@@ -33,6 +33,10 @@ const scenarios: { name: string; props: FixtureProps }[] = [
 ];
 
 const screenshotScenarios = new Set([
+    'table',
+    'catalog',
+    'notifications',
+    'workspace',
     'dashboard-coordinador',
     'academic-curriculum',
     'academic-schedule',

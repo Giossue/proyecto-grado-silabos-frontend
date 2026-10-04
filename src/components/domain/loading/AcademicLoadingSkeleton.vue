@@ -88,7 +88,7 @@ const props = withDefaults(
                     <Skeleton v-for="filter in mode === 'schedule' ? 3 : 1" :key="filter" class="h-9 w-full lg:w-44" />
                 </div>
             </div>
-            <div class="min-w-0 overflow-hidden" :data-skeleton="mode === 'schedule' ? 'scheduled-subjects' : 'teachers'">
+            <div class="min-w-0 overflow-x-auto" :data-skeleton="mode === 'schedule' ? 'scheduled-subjects' : 'teachers'">
                 <div
                     :class="cn(
                         'grid grid-cols-(--layout-table-skeleton-mobile-columns) items-center gap-4 border-b bg-muted px-2 py-3',
