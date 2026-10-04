@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarClock, Lock, Pause, Play, Square, Trash2 } from '@lucide/vue';
+import { CalendarClock, Pause, Play, Square, Trash2 } from '@lucide/vue';
 import { ref, type Component } from 'vue';
 import { ApiError } from '@/api/client';
 import { deleteProcess, transitionProcess, type SyllabusProcess } from '@/api/processes';
@@ -105,8 +105,7 @@ const remove = async (): Promise<void> => {
       <DropdownMenuItem variant="destructive" @select="pending = 'cerrar'"><Square />Finalizar</DropdownMenuItem>
     </template>
     <DropdownMenuSeparator v-if="process.state !== 'cerrado'" />
-    <DropdownMenuItem v-if="process.deletable" variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
-    <DropdownMenuItem v-else disabled><Lock aria-hidden="true" />No se puede eliminar: ya hay sílabos iniciados</DropdownMenuItem>
+    <DropdownMenuItem variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
   </TableActionsMenu>
 
   <Dialog :open="pending !== null" @update:open="(value) => { if (!value) pending = null; }">
@@ -122,7 +121,7 @@ const remove = async (): Promise<void> => {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Eliminar convocatoria institucional</DialogTitle>
-        <DialogDescription>Se eliminarán esta convocatoria, sus alcances de carrera y todos los sílabos que nunca fueron iniciados. Esta acción no se puede deshacer.</DialogDescription>
+        <DialogDescription>Se eliminarán esta convocatoria, sus alcances de carrera y todos sus sílabos, incluidos los iniciados, aprobados y firmados. Esta acción no se puede deshacer.</DialogDescription>
       </DialogHeader>
       <Alert v-if="deleteError" variant="destructive"><AlertDescription>{{ deleteError }}</AlertDescription></Alert>
       <DialogFooter>

@@ -25,7 +25,7 @@ const button = defineComponent({
   template: '<button :type="type ?? \'button\'" :disabled="disabled"><slot /></button>',
 });
 
-const process = (deletable: boolean) => ({
+const process = () => ({
   id: 'process-1',
   name: 'Septiembre-Enero 2026-2027',
   state: 'cerrado' as const,
@@ -36,11 +36,10 @@ const process = (deletable: boolean) => ({
   due_at: '2027-01-03T04:59:59Z',
   convocations_count: 1,
   configurable: false,
-  deletable,
 });
 
-const mountActions = (deletable: boolean) => mount(SyllabusProcessActions, {
-  props: { process: process(deletable) },
+const mountActions = () => mount(SyllabusProcessActions, {
+  props: { process: process() },
   global: {
     stubs: {
       TableActionsMenu: passthrough,
@@ -70,11 +69,11 @@ describe('SyllabusProcessActions', () => {
     vi.mocked(deleteProcess).mockReset().mockResolvedValue({ message: 'Convocatoria institucional eliminada.' });
   });
 
-  it('confirms and deletes a process without teacher activity', async () => {
-    const wrapper = mountActions(true);
+  it('confirms and deletes a process with all of its syllabi', async () => {
+    const wrapper = mountActions();
 
     await wrapper.find('.menu-item').trigger('click');
-    expect(wrapper.find('[data-dialog]').text()).toContain('todos los sílabos que nunca fueron iniciados');
+    expect(wrapper.find('[data-dialog]').text()).toContain('incluidos los iniciados, aprobados y firmados');
 
     const confirm = wrapper.findAll('button').find((item) => item.text().includes('Eliminar convocatoria'));
     expect(confirm).toBeDefined();
@@ -83,12 +82,5 @@ describe('SyllabusProcessActions', () => {
 
     expect(deleteProcess).toHaveBeenCalledWith('process-1');
     expect(wrapper.emitted('completed')).toEqual([['Convocatoria institucional eliminada.']]);
-  });
-
-  it('explains that a process with teacher activity is preserved', () => {
-    const wrapper = mountActions(false);
-
-    expect(wrapper.text()).toContain('No se puede eliminar: ya hay sílabos iniciados');
-    expect(wrapper.find('.menu-item').attributes('disabled')).toBeDefined();
   });
 });
