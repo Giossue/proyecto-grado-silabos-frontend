@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { ListPlus } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
@@ -17,7 +17,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
-import type { PartForm } from '@/types/configuration';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import type { PartForm, TemplatePreset } from '@/types/configuration';
 
 const props = withDefaults(
     defineProps<{
@@ -25,9 +26,10 @@ const props = withDefaults(
         sectionId: string;
         position: number;
         blockTypes: { value: PartForm; label: string }[];
+        presets?: TemplatePreset[];
         choice?: boolean;
     }>(),
-    { choice: false },
+    { choice: false, presets: () => [] },
 );
 
 const texts = {
@@ -45,6 +47,7 @@ const form = useForm({
     key: '',
     label: '',
     content_type: 'free_text',
+    preset: '',
 });
 
 const keyFor = (): string =>
@@ -57,6 +60,7 @@ const reset = (): void => {
     form.key = keyFor();
     form.label = '';
     form.content_type = 'free_text';
+    form.preset = '';
 };
 
 reset();
@@ -64,8 +68,18 @@ reset();
 const errorFor = (path: string): string | undefined =>
     (form.errors as Record<string, string>)[path];
 
+const BLANK = 'en_blanco';
+const chosen = computed(() => props.presets.find((preset) => preset.key === form.preset) ?? null);
+const presetModel = computed({
+    get: () => (form.preset === '' ? BLANK : form.preset),
+    set: (value: string) => {
+        form.preset = value === BLANK ? '' : value;
+    },
+});
+
 const submit = (): void => {
     form.position = props.position + 1;
+    form.transform((data) => (data.preset === '' ? { ...data, preset: undefined } : data));
     form.post(TemplateController.storeField.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {
@@ -116,6 +130,23 @@ const updateOpen = (value: boolean): void => {
         <template #default="{ close }">
             <form class="flex flex-col gap-4" @submit.prevent="submit">
                 <FieldGroup>
+                    <Field v-if="presets.length > 0">
+                        <FieldLabel for="new-field-preset">Plantilla</FieldLabel>
+                        <Select v-model="presetModel" :disabled="form.processing">
+                            <SelectTrigger id="new-field-preset" class="w-full">
+                                <SelectValue placeholder="Elija una plantilla" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectItem :value="BLANK">En blanco</SelectItem>
+                                    <SelectItem v-for="preset in presets" :key="preset.key" :value="preset.key">{{ preset.title }}</SelectItem>
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                        <FieldDescription>
+                            {{ chosen ? chosen.summary : 'Elija un diseño oficial ya armado; después puede modificarlo.' }}
+                        </FieldDescription>
+                    </Field>
                     <Field :data-invalid="Boolean(errorFor('label'))">
                         <FieldLabel for="new-field-label">
                             Nombre (opcional)
@@ -129,7 +160,7 @@ const updateOpen = (value: boolean): void => {
                             :aria-invalid="Boolean(errorFor('label'))"
                         />
                         <FieldDescription>
-                            Si lo deja vacío, el campo no lleva subtítulo.
+                            {{ chosen ? 'Si lo deja vacío, usa el nombre de la plantilla.' : 'Si lo deja vacío, el campo no lleva subtítulo.' }}
                         </FieldDescription>
                         <FieldError
                             v-if="errorFor('label')"
@@ -138,6 +169,7 @@ const updateOpen = (value: boolean): void => {
                     </Field>
                 </FieldGroup>
                 <TemplatePartFormSelect
+                    v-if="!chosen"
                     id="new-field-form"
                     v-model="form.content_type"
                     :forms="blockTypes"

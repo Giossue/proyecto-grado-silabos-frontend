@@ -5,15 +5,16 @@ import TemplateBlockCreator from '@/components/domain/configuration/TemplateBloc
 import TemplateFieldCreator from '@/components/domain/configuration/TemplateFieldCreator.vue';
 import TemplateIconPopover from '@/components/domain/configuration/TemplateIconPopover.vue';
 import { PopoverContent } from '@/components/ui/popover';
-import type { PartForm } from '@/types/configuration';
+import type { PartForm, TemplatePreset } from '@/types/configuration';
 
-defineProps<{
+withDefaults(defineProps<{
     templateId: string;
     sectionId: string;
     fieldPosition: number;
     blockPosition: number;
     blockTypes: { value: PartForm; label: string }[];
-}>();
+    presets?: TemplatePreset[];
+}>(), { presets: () => [] });
 
 const open = ref(false);
 </script>
@@ -39,6 +40,7 @@ const open = ref(false);
                     :section-id="sectionId"
                     :position="fieldPosition"
                     :block-types="blockTypes"
+                    :presets="presets"
                     choice
                     @closed="open = false"
                 />

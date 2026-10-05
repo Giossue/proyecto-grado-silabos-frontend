@@ -47,6 +47,7 @@ const builder = computed<TemplateBuilderProps | null>(() => {
         logos: value.logos,
         template: value.template as TemplateBuilderProps['template'],
         blockTypes: value.blockTypes,
+        presets: value.presets ?? [],
         appearanceOptions: value.appearanceOptions as TemplateBuilderProps['appearanceOptions'],
     };
 });
@@ -189,6 +190,7 @@ onBeforeUnmount(() => {
                 :template="builder.template"
                 :appearance="previewAppearance"
                 :block-types="builder.blockTypes"
+                :presets="builder.presets"
                 :variables="builder.variables"
                 :logos="builder.logos"
                 :identification-design="builder.identificationDesign"
@@ -244,6 +246,7 @@ onBeforeUnmount(() => {
             :template="builder.template"
             :appearance="builder.template.appearance"
             :block-types="builder.blockTypes"
+            :presets="builder.presets"
             :variables="builder.variables"
             :logos="builder.logos"
             :identification-design="builder.identificationDesign"

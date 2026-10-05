@@ -12,7 +12,7 @@ export type ActiveRole = {
 };
 
 export type Session = {
-  user: { id: string; name: string; email: string; email_verified: boolean; can_edit_identity: boolean };
+  user: { id: string; name: string; email: string; email_verified: boolean; can_edit_identity: boolean; formation?: string | null };
   active_role: ActiveRole | null;
   available_roles: ActiveRole[];
 };
@@ -72,6 +72,11 @@ export const updatePassword = (password: string, passwordConfirmation: string, c
   api<Session>('/authentication/password', {
     method: 'PUT',
     body: JSON.stringify({ password, password_confirmation: passwordConfirmation, current_password: currentPassword }),
+  });
+export const updateFormation = (formation: string) =>
+  api<Session>('/authentication/formation', {
+    method: 'PUT',
+    body: JSON.stringify({ formacion_experiencia: formation }),
   });
 export const updateProfile = (name: string, email: string) =>
   api<Session>('/authentication/profile', {

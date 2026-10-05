@@ -73,6 +73,17 @@ describe('TemplateFieldActions', () => {
         });
     });
 
+    it('un campo de texto libre propio ofrece su contenido inicial; uno de la ficha, no', async () => {
+        const wrapper = mountActions(block());
+        await open(wrapper);
+        expect(window.document.body.textContent).toContain('Contenido inicial (opcional)');
+        expect(window.document.getElementById('edit-template-field-initial')).not.toBeNull();
+
+        (window.document.getElementById('edit-template-field-profile') as HTMLButtonElement).click();
+        await flushPromises();
+        expect(window.document.body.textContent).not.toContain('Contenido inicial (opcional)');
+    });
+
     it('un dato automático de la malla no ofrece la ficha', async () => {
         const wrapper = mountActions(block({ fields: [part('asignatura', 'Asignatura', { master_source: 'asignaturas', inherited: true, teacher_editable: false })] }));
         await open(wrapper);

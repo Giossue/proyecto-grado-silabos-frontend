@@ -23,7 +23,10 @@ export type TemplateField = DocumentField & {
     content_type: TemplateContentType;
     page_orientation?: 'portrait' | 'landscape' | null;
     master_source: string | null;
+    initial_content?: DocumentNode | null;
 };
+
+export type TemplatePreset = { key: string; title: string; summary: string };
 
 export type TemplateFieldContainer = {
     id: string;
@@ -105,5 +108,6 @@ export type TemplateBuilderProps = {
         value: PartForm;
         label: string;
     }[];
+    presets?: TemplatePreset[];
     appearanceOptions: TemplateAppearanceOptions;
 };

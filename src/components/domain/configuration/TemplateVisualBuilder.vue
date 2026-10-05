@@ -38,6 +38,7 @@ const props = withDefaults(
         template: TemplateBuilderProps['template'];
         appearance: TemplateAppearance;
         blockTypes: TemplateBuilderProps['blockTypes'];
+        presets?: TemplateBuilderProps['presets'];
         variables: TemplateBuilderProps['variables'];
         logos: TemplateBuilderProps['logos'];
         identificationDesign: TemplateBuilderProps['identificationDesign'];
@@ -46,7 +47,7 @@ const props = withDefaults(
         ribbon?: boolean;
         fixedRibbon?: boolean;
     }>(),
-    { ribbon: false },
+    { ribbon: false, presets: () => [] },
 );
 
 const emit = defineEmits<{ personalize: [] }>();
@@ -806,6 +807,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                                 :field-position="fieldIndex + 1"
                                 :block-position="sectionIndex + 1"
                                 :block-types="blockTypes"
+                                :presets="presets"
                             />
                             <div
                                 class="absolute top-1/2 left-full ms-1 flex -translate-y-1/2 items-center gap-1"
@@ -853,6 +855,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             :field-position="section.blocks.length"
                             :block-position="sectionIndex + 1"
                             :block-types="blockTypes"
+                                :presets="presets"
                         />
                         <div
                             class="absolute top-1/2 left-full ms-1 flex -translate-y-1/2 items-center gap-1"

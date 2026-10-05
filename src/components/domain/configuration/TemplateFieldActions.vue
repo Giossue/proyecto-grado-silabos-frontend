@@ -36,6 +36,9 @@ import {
     TooltipContent,
     TooltipTrigger,
 } from '@/components/ui/tooltip';
+import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
+import { isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
+import type { DocumentNode } from '@/lib/templateDocument';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type { TemplateFieldContainer } from '@/types/configuration';
@@ -49,8 +52,12 @@ const props = defineProps<{
 const editOpen = ref(false);
 const deleteOpen = ref(false);
 const form = useForm({ label: '', landscape: false });
-const profileForm = useForm({ block_id: '', key: '', label: '', content_type: 'text', from_profile: false, teacher_editable: false });
+const profileForm = useForm<{ block_id: string; key: string; label: string; content_type: string; from_profile: boolean; teacher_editable: boolean; initial_content?: DocumentNode | null }>({ block_id: '', key: '', label: '', content_type: 'text', from_profile: false, teacher_editable: false });
 const fromProfile = ref(false);
+const initialContent = ref<DocumentNode | null>(null);
+const initialChanged = ref(false);
+/** El contenido inicial (por ejemplo una tabla de planificación) solo aplica a un campo de texto libre que escribe el docente. */
+const initialCapable = computed(() => profileCapable.value && !fromProfile.value);
 const teacherEditable = ref(false);
 /** Solo un campo de texto libre propio puede llenarse desde la ficha de la asignatura. */
 const profileCapable = computed(() => {
@@ -65,6 +72,8 @@ const openEdit = (): void => {
     form.label = props.field.title;
     form.landscape = props.field.page_orientation === 'landscape';
     fromProfile.value = props.field.fields[0]?.master_source === 'ficha';
+    initialContent.value = isFreeTextDocument(props.field.fields[0]?.initial_content) ? props.field.fields[0]!.initial_content! : null;
+    initialChanged.value = false;
     teacherEditable.value = fromProfile.value && props.field.fields[0]?.teacher_editable === true;
     editOpen.value = true;
 };
@@ -88,7 +97,7 @@ const save = (): void => {
     form.patch(url, {
         preserveScroll: true,
         onSuccess: () => {
-            if (profileCapable.value && profileChanged()) {
+            if (profileCapable.value && (profileChanged() || (initialCapable.value && initialChanged.value))) {
                 saveProfileOrigin(primary!.id, data_label(primary!.label));
 
                 return;
@@ -121,6 +130,11 @@ const saveProfileOrigin = (fieldId: string, label: string): void => {
     profileForm.content_type = props.field.content_type;
     profileForm.from_profile = fromProfile.value;
     profileForm.teacher_editable = fromProfile.value && teacherEditable.value;
+    if (initialCapable.value && initialChanged.value) {
+        profileForm.initial_content = initialContent.value;
+    } else {
+        delete profileForm.initial_content;
+    }
     profileForm.patch(TemplateController.updateField.url({ template: props.templateId, field: fieldId }), {
         preserveScroll: true,
         onSuccess: () => {
@@ -278,6 +292,21 @@ defineExpose({
                                 agregar o quitar texto en su sílabo.
                             </FieldDescription>
                         </FieldContent>
+                    </Field>
+                    <Field v-if="initialCapable">
+                        <FieldLabel for="edit-template-field-initial">
+                            Contenido inicial (opcional)
+                        </FieldLabel>
+                        <FreeTextEditor
+                            id="edit-template-field-initial"
+                            label="Contenido inicial"
+                            :model-value="initialContent"
+                            :disabled="form.processing || profileForm.processing"
+                            @update:model-value="initialContent = $event; initialChanged = true"
+                        />
+                        <FieldDescription>
+                            Lo que cada sílabo nuevo trae escrito en este campo, por ejemplo una tabla para que el docente la llene.
+                        </FieldDescription>
                     </Field>
                 </FieldGroup>
                 <DialogFooter>
