@@ -1,3 +1,4 @@
+import type { DocumentNode } from '@/lib/templateDocument';
 import { api, ApiError } from "@/api/client";
 import { requestPurgeConfirmation } from "@/composables/usePurgeConfirmation";
 
@@ -126,28 +127,22 @@ export type ScheduledSubjects = {
   };
 };
 
-export type SubjectProfileData = {
-  descripcion: string | null;
-  objetivo_general: string | null;
-  objetivos_especificos: string[] | null;
-  resultados_aprendizaje: string[] | null;
-  habilidades_blandas: Array<{ nombre: string; definicion: string }> | null;
-  bibliografia_basica: string[] | null;
-  bibliografia_complementaria: string[] | null;
-  herramientas_tic: string[] | null;
-  herramientas_ia: Array<{ herramienta: string; caracteristica: string }> | null;
-  relacion_perfil_egreso: string | null;
+export type SubjectProfileField = { id: string; key: string; label: string; help: string | null; section: string | null };
+
+/** Ficha de una asignatura: un valor de texto libre por cada campo de la plantilla marcado «desde la ficha». */
+export type SubjectProfile = {
+  fields: SubjectProfileField[];
+  values: Record<string, DocumentNode | null>;
+  complete: boolean;
 };
 
-export type SubjectProfile = SubjectProfileData & { ficha_asignatura_id: string; asignatura_id: string };
-
 export const getSubjectProfile = (subjectId: string) =>
-  api<{ profile: SubjectProfile | null }>(`/academic/asignaturas/${subjectId}/ficha`);
+  api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`);
 
-export const saveSubjectProfile = (subjectId: string, payload: SubjectProfileData) =>
-  api<{ profile: SubjectProfile }>(`/academic/asignaturas/${subjectId}/ficha`, {
+export const saveSubjectProfile = (subjectId: string, values: Record<string, DocumentNode | null>) =>
+  api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`, {
     method: "PUT",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ values }),
   });
 
 export type TeacherAssignments = {

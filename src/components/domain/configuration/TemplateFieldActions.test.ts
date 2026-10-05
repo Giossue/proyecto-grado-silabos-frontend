@@ -51,7 +51,33 @@ describe('TemplateFieldActions', () => {
         expect(text).not.toContain('Preguntas que llena el docente');
         expect(text).not.toContain('dependen de una respuesta');
         expect(text).not.toContain('Forma:');
-        expect(window.document.querySelectorAll('input:not([type="hidden"]), button[role="checkbox"]')).toHaveLength(2);
+        expect(text).toContain('Se llena desde la ficha de la asignatura');
+        expect(text).not.toContain('El docente puede ajustarlo');
+        expect(window.document.querySelectorAll('input:not([type="hidden"]), button[role="checkbox"]')).toHaveLength(3);
+    });
+
+    it('marcar «desde la ficha» guarda el origen del campo después de la hoja', async () => {
+        const wrapper = mountActions(block());
+        await open(wrapper);
+        (window.document.getElementById('edit-template-field-profile') as HTMLButtonElement).click();
+        await flushPromises();
+        expect(window.document.body.textContent).toContain('El docente puede ajustarlo');
+        (window.document.getElementById('edit-template-field-adjust') as HTMLButtonElement).click();
+        await flushPromises();
+        await submit();
+
+        const [url, init] = vi.mocked(api).mock.calls[1]!;
+        expect(url).toBe('/admin/template/template-1/fields/field-metodologia');
+        expect(JSON.parse(String(init!.body))).toMatchObject({
+            block_id: 'block-1', key: 'metodologia', content_type: 'text', from_profile: true, teacher_editable: true,
+        });
+    });
+
+    it('un dato automático de la malla no ofrece la ficha', async () => {
+        const wrapper = mountActions(block({ fields: [part('asignatura', 'Asignatura', { master_source: 'asignaturas', inherited: true, teacher_editable: false })] }));
+        await open(wrapper);
+
+        expect(window.document.body.textContent).not.toContain('Se llena desde la ficha');
     });
 
     it('guarda nombre y orientación junto con la hoja del campo', async () => {

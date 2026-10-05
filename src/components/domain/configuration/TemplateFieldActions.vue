@@ -49,12 +49,23 @@ const props = defineProps<{
 const editOpen = ref(false);
 const deleteOpen = ref(false);
 const form = useForm({ label: '', landscape: false });
+const profileForm = useForm({ block_id: '', key: '', label: '', content_type: 'text', from_profile: false, teacher_editable: false });
+const fromProfile = ref(false);
+const teacherEditable = ref(false);
+/** Solo un campo de texto libre propio puede llenarse desde la ficha de la asignatura. */
+const profileCapable = computed(() => {
+    const primary = props.field.fields[0];
+
+    return primary !== undefined && primary.type === 'texto_libre' && primary.master_source !== 'asignaturas';
+});
 const title = computed(() => props.field.title.trim() || 'sin nombre');
 
 const openEdit = (): void => {
     form.clearErrors();
     form.label = props.field.title;
     form.landscape = props.field.page_orientation === 'landscape';
+    fromProfile.value = props.field.fields[0]?.master_source === 'ficha';
+    teacherEditable.value = fromProfile.value && props.field.fields[0]?.teacher_editable === true;
     editOpen.value = true;
 };
 
@@ -77,12 +88,48 @@ const save = (): void => {
     form.patch(url, {
         preserveScroll: true,
         onSuccess: () => {
+            if (profileCapable.value && profileChanged()) {
+                saveProfileOrigin(primary!.id, data_label(primary!.label));
+
+                return;
+            }
             toast.success('Campo guardado.');
             editOpen.value = false;
         },
         onError: (errors) => {
             if (!('purge_required' in errors)) {
                 toast.error(Object.values(errors)[0] ?? 'No se pudo guardar el campo.');
+            }
+        },
+    });
+};
+
+const data_label = (current: string): string => form.label.trim() || current;
+
+const profileChanged = (): boolean => {
+    const primary = props.field.fields[0];
+
+    return fromProfile.value !== (primary?.master_source === 'ficha')
+        || (fromProfile.value && teacherEditable.value !== (primary?.teacher_editable === true));
+};
+
+const saveProfileOrigin = (fieldId: string, label: string): void => {
+    const primary = props.field.fields[0]!;
+    profileForm.block_id = props.field.id;
+    profileForm.key = primary.key;
+    profileForm.label = label;
+    profileForm.content_type = props.field.content_type;
+    profileForm.from_profile = fromProfile.value;
+    profileForm.teacher_editable = fromProfile.value && teacherEditable.value;
+    profileForm.patch(TemplateController.updateField.url({ template: props.templateId, field: fieldId }), {
+        preserveScroll: true,
+        onSuccess: () => {
+            toast.success('Campo guardado.');
+            editOpen.value = false;
+        },
+        onError: (errors) => {
+            if (!('purge_required' in errors)) {
+                toast.error(Object.values(errors)[0] ?? 'No se pudo guardar el origen del campo.');
             }
         },
     });
@@ -197,6 +244,38 @@ defineExpose({
                             <FieldDescription>
                                 Para tablas anchas. La sección de este campo se
                                 imprime en una hoja horizontal.
+                            </FieldDescription>
+                        </FieldContent>
+                    </Field>
+                    <Field v-if="profileCapable" orientation="horizontal">
+                        <Checkbox
+                            id="edit-template-field-profile"
+                            v-model="fromProfile"
+                            :disabled="form.processing || profileForm.processing"
+                        />
+                        <FieldContent>
+                            <FieldLabel for="edit-template-field-profile">
+                                Se llena desde la ficha de la asignatura
+                            </FieldLabel>
+                            <FieldDescription>
+                                Coordinación lo escribe una vez por materia y
+                                cada sílabo nuevo lo hereda.
+                            </FieldDescription>
+                        </FieldContent>
+                    </Field>
+                    <Field v-if="profileCapable && fromProfile" orientation="horizontal">
+                        <Checkbox
+                            id="edit-template-field-adjust"
+                            v-model="teacherEditable"
+                            :disabled="form.processing || profileForm.processing"
+                        />
+                        <FieldContent>
+                            <FieldLabel for="edit-template-field-adjust">
+                                El docente puede ajustarlo
+                            </FieldLabel>
+                            <FieldDescription>
+                                Llega como sugerencia: el docente puede
+                                agregar o quitar texto en su sílabo.
                             </FieldDescription>
                         </FieldContent>
                     </Field>

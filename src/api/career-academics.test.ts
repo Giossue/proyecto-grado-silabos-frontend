@@ -8,7 +8,7 @@ vi.mock('@/api/client', async (importOriginal) => ({
 }));
 
 import { ApiError } from '@/api/client';
-import { PURGE_CANCELLED_MESSAGE, getSubjectProfile, saveSubjectProfile, updateCurriculumConfiguration, type SubjectProfileData } from '@/api/career-academics';
+import { PURGE_CANCELLED_MESSAGE, getSubjectProfile, saveSubjectProfile, updateCurriculumConfiguration } from '@/api/career-academics';
 import { usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
 
 const purgeError = () => new ApiError('purga', 422, {
@@ -52,21 +52,14 @@ describe('career academics API purge confirmation', () => {
 describe('subject profile API', () => {
   beforeEach(() => api.mockReset());
 
-  it('reads and saves the same subject profile through the versioned API', async () => {
-    const profile: SubjectProfileData = {
-      descripcion: 'Arquitectura de software', objetivo_general: 'Diseñar soluciones',
-      objetivos_especificos: ['Comparar estilos'], resultados_aprendizaje: ['Diseña sistemas'],
-      habilidades_blandas: [{ nombre: 'Comunicación', definicion: 'Expresa decisiones' }],
-      bibliografia_basica: [], bibliografia_complementaria: [], herramientas_tic: ['Diagramas'],
-      herramientas_ia: [{ herramienta: 'Asistente', caracteristica: 'Sugiere alternativas' }],
-      relacion_perfil_egreso: 'Diseño de software',
-    };
-    api.mockResolvedValue({ profile });
+  it('reads and saves the profile values through the versioned API', async () => {
+    const values = { 'field-1': { type: 'doc', content: [{ type: 'paragraph' }] } };
+    api.mockResolvedValue({ fields: [], values, complete: false });
     await getSubjectProfile('subject-1');
-    await saveSubjectProfile('subject-1', profile);
+    await saveSubjectProfile('subject-1', values);
     expect(api).toHaveBeenNthCalledWith(1, '/academic/asignaturas/subject-1/ficha');
     expect(api).toHaveBeenNthCalledWith(2, '/academic/asignaturas/subject-1/ficha', {
-      method: 'PUT', body: JSON.stringify(profile),
+      method: 'PUT', body: JSON.stringify({ values }),
     });
   });
 });
