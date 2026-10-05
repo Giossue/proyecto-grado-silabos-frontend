@@ -22,6 +22,10 @@ const processing = ref(false);
 const resending = ref(false);
 const errors = ref<Record<string, string>>({});
 
+const unchanged = computed(
+    () => name.value.trim() === (user.value?.name ?? '') && email.value.trim() === (user.value?.email ?? ''),
+);
+
 watch(user, (value) => {
     name.value = value?.name ?? '';
     email.value = value?.email ?? '';
@@ -121,7 +125,7 @@ const resendVerification = async (): Promise<void> => {
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <Button :disabled="processing" data-test="update-profile-button">
+                    <Button :disabled="processing || unchanged" data-test="update-profile-button">
                         <Spinner v-if="processing" data-icon="inline-start" />
                         <Save v-else data-icon="inline-start" aria-hidden="true" />
                         Guardar
