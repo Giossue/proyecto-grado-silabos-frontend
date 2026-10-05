@@ -13,10 +13,10 @@ const SelectStub = defineComponent({
 });
 
 const row = (id: string, name: string, code: string, cycle: number | null, parallels: Array<{ code: string; shift: string | null }>): ScheduledSubjects['scheduledSubjects'][number] => ({
-    id, subject_id: `s-${id}`, period_id: 'p1', label: name, subject_code: code, subject_name: name, subject_cycle: cycle,
+    subject_id: `s-${id}`, period_id: 'p1', label: name, subject_code: code, subject_name: name, subject_cycle: cycle,
     period_starts_on: '2026-09-23', period_ends_on: '2026-09-25', period_status: 'en_curso', period_status_label: 'En curso',
     period_planning_enabled: true, campus_name: 'Matriz', modality_name: 'Presencial',
-    parallels: parallels.map((parallel, index) => ({ id: `${id}-${index}`, ...parallel })), active: true, editable: true,
+    parallels: parallels.map((parallel, index) => ({ id: `${id}-${index}`, ...parallel })), editable: true,
 });
 
 const data: ScheduledSubjects = {

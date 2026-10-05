@@ -2,7 +2,7 @@
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { LockKeyhole, Plus, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
-import { deleteCareerRecord, deleteScheduledSubject } from '@/api/career-academics';
+import { deleteCareerRecord } from '@/api/career-academics';
 import { ApiError } from '@/api/client';
 import ParallelCreationSheet from '@/components/domain/academic/ParallelCreationSheet.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
@@ -11,8 +11,8 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 
-type CareerAcademicEntity = 'programacion_asignatura' | 'asignacion_docente';
-type CareerAcademicRecord = { id: string; parallels?: { id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }[] };
+type CareerAcademicEntity = 'materia' | 'asignacion_docente';
+type CareerAcademicRecord = { id?: string; subject_id?: string; period_id?: string; parallels?: { id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }[] };
 
 const props = withDefaults(defineProps<{
     shiftOptions?: Array<{ value: string; label: string }>;
@@ -24,21 +24,21 @@ const props = withDefaults(defineProps<{
 }>(), { active: true, deleteSupported: false, parallelCreationSupported: false, allowLockedActions: false });
 const emit = defineEmits<{ changed: [message: string] }>();
 const deleteOpen = ref(false); const parallelCreationOpen = ref(false); const processing = ref(false); const error = ref<string | null>(null);
-const deletionTitle = computed(() => props.entity === 'programacion_asignatura' ? 'Eliminar materia programada' : 'Quitar docente del paralelo');
-const deletionDescription = computed(() => props.entity === 'programacion_asignatura' ? 'Se eliminarán también sus paralelos y asignaciones docentes. La operación se rechazará si existe algún sílabo relacionado, para conservar su historial.' : 'El sílabo del paralelo se conserva tal como está. Quien se asigne después al paralelo continúa con él; mientras tanto nadie lo edita.');
-const deleteLabel = computed(() => props.entity === 'asignacion_docente' ? 'Quitar' : 'Eliminar');
+const deletionTitle = 'Quitar docente del paralelo';
+const deletionDescription = computed(() => 'El sílabo del paralelo se conserva tal como está. Quien se asigne después al paralelo continúa con él; mientras tanto nadie lo edita.');
+const deleteLabel = 'Quitar';
 const actionsDisabled = computed(() => !props.editable || Boolean(props.lockedLabel));
 const menuDisabled = computed(() => actionsDisabled.value && !props.allowLockedActions);
 const disabledLabel = computed(() => props.lockedLabel ?? 'Con historial: este registro queda protegido');
-const remove = async (): Promise<void> => { processing.value = true; error.value = null; try { const result = props.entity === 'programacion_asignatura' ? await deleteScheduledSubject(props.record.id) : await deleteCareerRecord(props.entity, props.record.id); deleteOpen.value = false; emit('changed', result.message); } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo eliminar el registro.'; } finally { processing.value = false; } };
+const remove = async (): Promise<void> => { processing.value = true; error.value = null; try { const result = await deleteCareerRecord(props.entity, props.record.id ?? ''); deleteOpen.value = false; emit('changed', result.message); } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo eliminar el registro.'; } finally { processing.value = false; } };
 </script>
 
 <template><div class="flex justify-end"><TableActionsMenu :label="`Acciones para ${recordLabel}`" :disabled="menuDisabled">
     <DropdownMenuItem v-if="actionsDisabled" disabled><LockKeyhole aria-hidden="true" />{{ disabledLabel }}</DropdownMenuItem>
     <slot />
-    <DropdownMenuItem v-if="entity === 'programacion_asignatura' && parallelCreationSupported && !actionsDisabled" @select="parallelCreationOpen = true"><Plus aria-hidden="true" />Paralelos y docentes</DropdownMenuItem>
+    <DropdownMenuItem v-if="entity === 'materia' && parallelCreationSupported && !actionsDisabled" @select="parallelCreationOpen = true"><Plus aria-hidden="true" />Paralelos y docentes</DropdownMenuItem>
     <DropdownMenuItem v-if="deleteSupported && !actionsDisabled" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />{{ deleteLabel }}</DropdownMenuItem>
 </TableActionsMenu>
-<ParallelCreationSheet v-if="entity === 'programacion_asignatura'" :key="`parallel-${record.id}`" v-model:open="parallelCreationOpen" :scheduled-subject-id="record.id" :scheduled-subject-label="recordLabel" :parallels="record.parallels ?? []" :shift-options="shiftOptions ?? []" :teacher-users="teacherUsers" :assignments="assignments" @saved="emit('changed', $event)" @changed="emit('changed', $event)" />
+<ParallelCreationSheet v-if="entity === 'materia'" :key="`parallel-${record.subject_id}-${record.period_id}`" v-model:open="parallelCreationOpen" :subject-id="record.subject_id ?? ''" :period-id="record.period_id ?? ''" :subject-label="recordLabel" :parallels="record.parallels ?? []" :shift-options="shiftOptions ?? []" :teacher-users="teacherUsers" :assignments="assignments" @saved="emit('changed', $event)" @changed="emit('changed', $event)" />
 <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>{{ deletionTitle }}</DialogTitle><DialogDescription>{{ deletionDescription }}</DialogDescription></DialogHeader><FeedbackAlert v-if="error" :message="error" /><DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" variant="destructive" :disabled="processing" @click="remove"><Spinner v-if="processing" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />{{ deletionTitle }}</Button></DialogFooter></DialogContent></Dialog>
 </div></template>

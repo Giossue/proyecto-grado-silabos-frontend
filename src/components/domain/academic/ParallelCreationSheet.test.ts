@@ -18,8 +18,9 @@ const mountSheet = () => mount(ParallelCreationSheet, {
   attachTo: document.body,
   props: {
     open: true,
-    shiftOptions: [{ value: 'matutina', label: 'Matutina' }, { value: 'vespertina', label: 'Vespertina' }, { value: 'nocturna', label: 'Nocturna' }], scheduledSubjectId: 'scheduled-1',
-    scheduledSubjectLabel: 'SW-1 · Materia',
+    shiftOptions: [{ value: 'matutina', label: 'Matutina' }, { value: 'vespertina', label: 'Vespertina' }, { value: 'nocturna', label: 'Nocturna' }], subjectId: 'subject-1',
+    periodId: 'period-1',
+    subjectLabel: 'SW-1 · Materia',
     parallels: [
       { id: 'p-a', code: 'A', shift: 'matutina', editable: true, deletable: false },
       { id: 'p-b', code: 'B', shift: 'vespertina', editable: true, deletable: true },
@@ -35,14 +36,14 @@ describe('ParallelCreationSheet', () => {
     await flushPromises();
 
     expect(document.body.textContent).not.toContain('Sin jornada');
-    const input = document.body.querySelector<HTMLInputElement>('#parallel-code-scheduled-1')!;
+    const input = document.body.querySelector<HTMLInputElement>('#parallel-code-subject-1')!;
     input.value = 'C';
     input.dispatchEvent(new Event('input'));
     await flushPromises();
     document.body.querySelector('form')!.dispatchEvent(new Event('submit'));
     await flushPromises();
 
-    expect(api.createParallels).toHaveBeenCalledWith({ scheduled_subject_id: 'scheduled-1', codes: ['C'], shift: 'matutina' });
+    expect(api.createParallels).toHaveBeenCalledWith({ subject_id: 'subject-1', period_id: 'period-1', codes: ['C'], shift: 'matutina' });
     wrapper.unmount();
   });
 

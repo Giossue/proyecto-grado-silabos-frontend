@@ -16,9 +16,9 @@ const options: ScheduledSubjects['options'] = {
   scheduledSubjects: [],
 };
 const schedule = (id: string, subjectId: string, periodId: string, parallels: Array<{ id: string; code: string; shift: string | null }>): ScheduledSubjects['scheduledSubjects'][number] => ({
-  id, subject_id: subjectId, period_id: periodId, label: 'Materia', subject_code: 'SW-1', subject_name: 'Materia', subject_cycle: 1,
+  subject_id: subjectId, period_id: periodId, label: 'Materia', subject_code: 'SW-1', subject_name: 'Materia', subject_cycle: 1,
   period_starts_on: '2025-07-01', period_ends_on: '2025-12-31', period_status: 'finalizado', period_status_label: 'Finalizado', period_planning_enabled: false,
-  campus_name: 'Matriz', modality_name: 'Presencial', parallels, active: true, editable: false,
+  campus_name: 'Matriz', modality_name: 'Presencial', parallels, editable: false,
 });
 const assignment = (parallelId: string, userId: string): TeacherAssignments['teacherAssignments'][number] => ({
   id: `assignment-${parallelId}`, user_id: userId, parallel_id: parallelId, user_name: 'Docente', user_email: 'docente@example.test',

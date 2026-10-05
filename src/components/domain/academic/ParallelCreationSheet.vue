@@ -31,8 +31,9 @@ import { shiftLabel } from "@/lib/parallelShifts";
 
 const props = defineProps<{
   shiftOptions: Array<{ value: string; label: string }>;
-  scheduledSubjectId: string;
-  scheduledSubjectLabel: string;
+  subjectId: string;
+  periodId: string;
+  subjectLabel: string;
   parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }>;
   teacherUsers?: Array<{ id: string; name: string; email: string }>;
   assignments?: Array<{ id: string; parallel_id: string; user_id: string; user_name: string; active: boolean; editable: boolean }>;
@@ -121,7 +122,8 @@ const submit = async (close: () => void) => {
   error.value = null;
   try {
     const result = await createParallels({
-      scheduled_subject_id: props.scheduledSubjectId,
+      subject_id: props.subjectId,
+      period_id: props.periodId,
       codes: [code.value.trim()],
       shift: shift.value,
     });
@@ -143,7 +145,7 @@ watch(open, (value) => value && reset());
     :show-trigger="false"
     trigger-label="Agregar paralelo"
     title="Paralelos y docentes de la materia"
-    :description="`Agregue, corrija o elimine los paralelos de ${scheduledSubjectLabel} y elija quién dicta cada uno.`"
+    :description="`Agregue, corrija o elimine los paralelos de ${subjectLabel} y elija quién dicta cada uno.`"
   >
     <template #default="{ close }">
       <form class="contents" @submit.prevent="submit(close)">
@@ -152,9 +154,9 @@ watch(open, (value) => value && reset());
             <AlertDescription>{{ error }}</AlertDescription>
           </Alert>
           <Field :data-invalid="Boolean(fieldError)">
-            <FieldLabel :for="`parallel-code-${scheduledSubjectId}`" required>Código de paralelo</FieldLabel>
+            <FieldLabel :for="`parallel-code-${subjectId}`" required>Código de paralelo</FieldLabel>
             <Input
-              :id="`parallel-code-${scheduledSubjectId}`"
+              :id="`parallel-code-${subjectId}`"
               v-model="code"
               :maxlength="VALIDATION_LIMITS.parallelCode"
               placeholder="Ej. B"
@@ -164,9 +166,9 @@ watch(open, (value) => value && reset());
             <FieldError :errors="[fieldError]" />
           </Field>
           <Field>
-            <FieldLabel :for="`parallel-shift-${scheduledSubjectId}`" required>Jornada</FieldLabel>
+            <FieldLabel :for="`parallel-shift-${subjectId}`" required>Jornada</FieldLabel>
             <Select v-model="shift" required>
-              <SelectTrigger :id="`parallel-shift-${scheduledSubjectId}`">
+              <SelectTrigger :id="`parallel-shift-${subjectId}`">
                 <SelectValue placeholder="Elija la jornada" />
               </SelectTrigger>
               <SelectContent>

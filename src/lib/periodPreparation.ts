@@ -44,10 +44,10 @@ export function preparationRows(
     .sort((left, right) => right.starts_on.localeCompare(left.starts_on))[0];
   const previousSchedules = new Map(
     scheduledSubjects
-      .filter((item) => item.period_id === previous?.id && item.active)
+      .filter((item) => item.period_id === previous?.id && item.parallels.length > 0)
       .map((item) => [item.subject_id, item]),
   );
-  const preparedIds = new Set(scheduledSubjects.filter((item) => item.period_id === periodId && item.active).map((item) => item.subject_id));
+  const preparedIds = new Set(scheduledSubjects.filter((item) => item.period_id === periodId && item.parallels.length > 0).map((item) => item.subject_id));
   const availableTeachers = new Set(teacherUsers.map((teacher) => teacher.id));
   const activeAssignments = new Map(assignments.filter((item) => item.active).map((item) => [item.parallel_id, item.user_id]));
 
