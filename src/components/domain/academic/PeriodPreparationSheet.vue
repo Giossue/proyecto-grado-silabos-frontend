@@ -11,7 +11,7 @@ import { FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { nextParallelCode, preparationProblem, preparationRows, type PreparationRow } from '@/lib/periodPreparation';
+import { incompleteProfileNames, nextParallelCode, preparationProblem, preparationRows, type PreparationRow } from '@/lib/periodPreparation';
 
 const props = defineProps<{
   scheduledSubjects: ScheduledSubjects['scheduledSubjects'];
@@ -33,6 +33,7 @@ const planningPeriods = computed(() => props.options.periods.filter((period) => 
 const parallelCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.length, 0));
 const assignedCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.filter((parallel) => parallel.teacherId).length, 0));
 const problem = computed(() => preparationProblem(rows.value));
+const incompleteProfiles = computed(() => incompleteProfileNames(rows.value));
 const invalidRows = computed(() => problem.value !== null);
 
 const updateProposal = () => {
@@ -125,6 +126,7 @@ watch(periodId, () => { if (open.value) updateProposal(); });
               </TableBody>
             </Table>
             <Alert v-if="problem" variant="destructive"><AlertDescription>{{ problem }}</AlertDescription></Alert>
+            <Alert v-if="incompleteProfiles.length"><AlertDescription>Hay materias sin ficha completa: {{ incompleteProfiles.join(', ') }}. Complete sus fichas antes de generar sílabos para que hereden los datos académicos.</AlertDescription></Alert>
             <p v-if="rows.length && assignedCount < parallelCount" class="text-sm text-muted-foreground">Los paralelos sin docente se guardarán pendientes de asignación.</p>
           </template>
           <FormSheetActions :close="close" :processing="saving" :disabled="!periodId || !rows.length || invalidRows" :icon="ListChecks" label="Confirmar preparación" />

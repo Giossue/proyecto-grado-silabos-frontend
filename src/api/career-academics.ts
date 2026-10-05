@@ -89,6 +89,7 @@ export type ScheduledSubjects = {
     subject_code: string;
     subject_name: string;
     subject_cycle: number | null;
+    profile_complete?: boolean;
     period_starts_on: string;
     period_ends_on: string;
     period_status: "proximo" | "en_curso" | "finalizado";
@@ -115,6 +116,7 @@ export type ScheduledSubjects = {
       codigo_asignatura: string;
       nombre: string;
       ciclo: number;
+      profile_complete?: boolean;
     }>;
     scheduledSubjects: Array<{
       label: string;
@@ -123,6 +125,30 @@ export type ScheduledSubjects = {
     }>;
   };
 };
+
+export type SubjectProfileData = {
+  descripcion: string | null;
+  objetivo_general: string | null;
+  objetivos_especificos: string[] | null;
+  resultados_aprendizaje: string[] | null;
+  habilidades_blandas: Array<{ nombre: string; definicion: string }> | null;
+  bibliografia_basica: string[] | null;
+  bibliografia_complementaria: string[] | null;
+  herramientas_tic: string[] | null;
+  herramientas_ia: Array<{ herramienta: string; caracteristica: string }> | null;
+  relacion_perfil_egreso: string | null;
+};
+
+export type SubjectProfile = SubjectProfileData & { ficha_asignatura_id: string; asignatura_id: string };
+
+export const getSubjectProfile = (subjectId: string) =>
+  api<{ profile: SubjectProfile | null }>(`/academic/asignaturas/${subjectId}/ficha`);
+
+export const saveSubjectProfile = (subjectId: string, payload: SubjectProfileData) =>
+  api<{ profile: SubjectProfile }>(`/academic/asignaturas/${subjectId}/ficha`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 
 export type TeacherAssignments = {
   canCreateTeacher: boolean;

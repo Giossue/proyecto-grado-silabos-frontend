@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ScheduledSubjects, TeacherAssignments } from '@/api/career-academics';
-import { nextParallelCode, preparationProblem, preparationRows } from './periodPreparation';
+import { incompleteProfileNames, nextParallelCode, preparationProblem, preparationRows } from './periodPreparation';
 
 const options: ScheduledSubjects['options'] = {
   shiftOptions: [{ value: 'matutina', label: 'Matutina' }, { value: 'vespertina', label: 'Vespertina' }, { value: 'nocturna', label: 'Nocturna' }],
@@ -26,6 +26,17 @@ const assignment = (parallelId: string, userId: string): TeacherAssignments['tea
 });
 
 describe('preparationRows', () => {
+  it('identifies subjects whose missing profile needs a preparation warning', () => {
+    const configured = {
+      ...options,
+      activeSubjects: [
+        { ...options.activeSubjects[0], profile_complete: false },
+        { ...options.activeSubjects[1], profile_complete: true },
+      ],
+    };
+    const rows = preparationRows('target', configured, [], [], []).rows;
+    expect(incompleteProfileNames(rows)).toEqual(['Materia A']);
+  });
   it('includes every pending subject and copies the latest prior parallels and eligible teachers', () => {
     const result = preparationRows('target', options, [
       schedule('old-a', 'subject-a', 'old', [{ id: 'old-parallel', code: 'C', shift: 'nocturna' }]),

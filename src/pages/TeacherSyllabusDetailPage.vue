@@ -38,7 +38,7 @@ import { Spinner } from '@/components/ui/spinner';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
-import { freeTextPlain, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
+import { freeTextLines, freeTextPlain, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { hiddenKeys } from '@/lib/fieldConditions';
@@ -145,7 +145,7 @@ const emptyParts = computed(() =>
   (syllabus.value?.sections ?? [])
     .flatMap((section) => section.blocks.flatMap((block) => block.fields))
     .filter((field) => editableFieldIds.value.has(field.id))
-    .filter((field) => field.teacher_editable && !field.inherited && !hiddenParts.value.has(field.key))
+    .filter((field) => field.teacher_editable && !hiddenParts.value.has(field.key))
     .filter(isFieldEmpty).length,
 );
 const submitHint = computed(() => {
@@ -326,7 +326,7 @@ const masterValue = (value: unknown): string => {
   if (value === null || value === undefined || value === '') return 'Pendiente de Coordinación';
   if (typeof value !== 'object') return typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value);
   if (Array.isArray(value)) return value.map(String).join(', ');
-  if (isFreeTextDocument(value)) return freeTextPlain(value);
+  if (isFreeTextDocument(value)) return freeTextLines(value);
   return Object.values(value)
     .map((item) => String(item ?? '—'))
     .join(' · ');
@@ -530,27 +530,27 @@ onBeforeUnmount(() => {
               <template v-if="!usesTabularDocument(block)">
                 <FieldGroup>
                 <template v-for="field in block.fields.filter((item) => !hiddenParts.has(item.key) && (block.content_type !== 'institutional' || (item.teacher_editable && !item.inherited)))" :key="field.id">
-                <Field v-if="sectionEditable() && field.teacher_editable && !field.inherited && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                <Field v-if="sectionEditable() && field.teacher_editable && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
-                <Field v-else-if="sectionEditable() && field.teacher_editable && !field.inherited && field.type === 'texto_libre'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                <Field v-else-if="sectionEditable() && field.teacher_editable && field.type === 'texto_libre'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><FreeTextEditor :id="`input-${field.id}`" :label="field.label.trim() || section.title" :model-value="isFreeTextDocument(field.value) ? field.value : null" @update:model-value="updateDesignValue([field], field.key, $event)" />
                 </Field>
 
-                <Field v-else-if="sectionEditable() && field.teacher_editable && !field.inherited && field.type === 'texto_largo'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                <Field v-else-if="sectionEditable() && field.teacher_editable && field.type === 'texto_largo'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Textarea :id="`input-${field.id}`" :model-value="scalarValue(field)" class="min-h-32" @update:model-value="updateScalar(field, String($event))" />
                 </Field>
 
-                <Field v-else-if="sectionEditable() && field.teacher_editable && !field.inherited && field.type === 'seleccion_unica'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                <Field v-else-if="sectionEditable() && field.teacher_editable && field.type === 'seleccion_unica'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><Select :model-value="String(scalarValue(field))" @update:model-value="updateScalar(field, String($event))"><SelectTrigger :id="`input-${field.id}`"><SelectValue placeholder="Seleccione una opción" /></SelectTrigger><SelectContent><SelectItem v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select>
                 </Field>
 
-                <FieldSet v-else-if="sectionEditable() && field.teacher_editable && !field.inherited && field.type === 'seleccion_multiple'" :id="`field-${field.id}`" :aria-required="field.required"><FieldLegend class="text-sm" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLegend><Field v-for="option in field.options" :key="option.value" orientation="horizontal"><Checkbox :id="`field-${field.id}-${option.value}`" :model-value="selectedValues(field).includes(option.value)" @update:model-value="toggleChoice(field, option.value, Boolean($event))" /><FieldLabel :for="`field-${field.id}-${option.value}`">{{ option.label }}</FieldLabel></Field></FieldSet>
+                <FieldSet v-else-if="sectionEditable() && field.teacher_editable && field.type === 'seleccion_multiple'" :id="`field-${field.id}`" :aria-required="field.required"><FieldLegend class="text-sm" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLegend><Field v-for="option in field.options" :key="option.value" orientation="horizontal"><Checkbox :id="`field-${field.id}-${option.value}`" :model-value="selectedValues(field).includes(option.value)" @update:model-value="toggleChoice(field, option.value, Boolean($event))" /><FieldLabel :for="`field-${field.id}-${option.value}`">{{ option.label }}</FieldLabel></Field></FieldSet>
 
-                <Field v-else-if="sectionEditable() && field.teacher_editable && !field.inherited && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><BooleanChoice class="boolean-options" :model-value="typeof field.value === 'boolean' ? field.value : null" :label="field.label.trim() || section.title" :aria-invalid="validationFor(field.id).length > 0" @update:model-value="toggleBoolean(field, $event)" /><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
+                <Field v-else-if="sectionEditable() && field.teacher_editable && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><BooleanChoice class="boolean-options" :model-value="typeof field.value === 'boolean' ? field.value : null" :label="field.label.trim() || section.title" :aria-invalid="validationFor(field.id).length > 0" @update:model-value="toggleBoolean(field, $event)" /><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
 
-                <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div v-if="field.label.trim() || field.inherited" class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Dato automático</Badge></div><span>{{ masterValue(field.value) }}</span></div>
+                <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div v-if="field.label.trim() || field.inherited" class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Dato automático</Badge></div><span class="whitespace-pre-line">{{ masterValue(field.value) }}</span></div>
                 <FieldError :errors="visibleValidationMessages(field.id)" />
                 </template>
                 </FieldGroup>

@@ -5,8 +5,13 @@ export type PreparationRow = {
   id: string;
   code: string;
   name: string;
+  profileComplete?: boolean;
   parallels: ParallelDraft[];
 };
+
+export function incompleteProfileNames(rows: PreparationRow[]): string[] {
+  return rows.filter((row) => row.profileComplete === false).map((row) => row.name);
+}
 
 export function preparationProblem(rows: PreparationRow[]): string | null {
   for (const row of rows) {
@@ -58,6 +63,7 @@ export function preparationRows(
         id: item.id,
         code: item.codigo_asignatura,
         name: item.nombre,
+        ...(typeof item.profile_complete === 'boolean' ? { profileComplete: item.profile_complete } : {}),
         parallels: previousParallels.length
           ? previousParallels.map((parallel) => {
             const teacherId = activeAssignments.get(parallel.id) ?? '';
