@@ -34,8 +34,20 @@ export const createProcess = (payload: ProcessPayload) =>
 export const deleteProcess = (processId: string) =>
   api<{ message: string }>(`/admin/processes/${processId}`, { method: 'DELETE' });
 
-export const transitionProcess = (processId: string, transition: 'pausar' | 'reanudar' | 'cerrar') =>
-  api<{ message: string }>(`/admin/processes/${processId}/${transition}`, { method: 'POST' });
+export type SyllabusStateCounts = Record<string, number>;
+
+export type ProcessTransitionPayload = {
+  confirmar_rehacer?: boolean;
+};
+
+export const transitionProcess = (
+  processId: string,
+  transition: 'pausar' | 'reanudar' | 'cerrar',
+  payload?: ProcessTransitionPayload,
+) => api<{ message: string }>(`/admin/processes/${processId}/${transition}`, {
+  method: 'POST',
+  ...(payload ? { body: JSON.stringify(payload) } : {}),
+});
 
 export const extendProcessDeadline = (processId: string, payload: { due_at: string }) =>
   api<{ message: string }>(`/admin/processes/${processId}/deadline`, { method: 'POST', body: JSON.stringify(payload) });

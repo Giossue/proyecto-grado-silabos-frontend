@@ -3,6 +3,7 @@ export class ApiError extends Error {
     message: string,
     readonly status: number,
     readonly errors: Record<string, string[]> = {},
+    readonly payload: Record<string, unknown> = {},
   ) {
     super(message);
   }
@@ -92,7 +93,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (response.status === 409 && payload.message === ROLE_REQUIRED_MESSAGE) notifyRoleRequired();
 
   if (!response.ok) {
-    throw new ApiError(payload.message ?? 'No se pudo completar la solicitud.', response.status, payload.errors);
+    throw new ApiError(payload.message ?? 'No se pudo completar la solicitud.', response.status, payload.errors, payload);
   }
 
   return payload as T;

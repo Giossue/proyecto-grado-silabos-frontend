@@ -179,6 +179,21 @@ describe("AdminTemplatePage", () => {
     wrapper.unmount();
   });
 
+  it('advierte que reanudar rehace los sílabos si la plantilla cambió durante la pausa', async () => {
+    vi.mocked(getTemplate).mockResolvedValue({ ...payload, templateChangedDuringPause: true });
+    const wrapper = mount({
+      components: { AdminTemplatePage, TooltipProvider },
+      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
+    }, { attachTo: document.body });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.');
+    const edit = wrapper.findAll('button').find((button) => button.text().trim() === 'Editar');
+    await edit!.trigger('click');
+    await flushPromises();
+    expect(wrapper.text()).toContain('Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.');
+  });
+
   it("sincroniza una mutación sin desmontar el constructor visual", async () => {
     const refreshedPayload: TemplatePayload = {
       ...payload,

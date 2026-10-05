@@ -182,6 +182,9 @@ onBeforeUnmount(() => {
 
     <div v-else-if="editing && builder && previewAppearance" class="min-h-dvh min-w-0">
         <main class="min-w-0 pb-5 pt-19 sm:pb-6 sm:pt-20">
+            <Alert v-if="payload?.templateChangedDuringPause" class="mx-auto mb-4 max-w-7xl">
+                <AlertDescription>Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.</AlertDescription>
+            </Alert>
             <TemplateVisualBuilder
                 :template="builder.template"
                 :appearance="previewAppearance"
@@ -233,6 +236,9 @@ onBeforeUnmount(() => {
         </template>
 
         <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
+        <Alert v-if="payload?.templateChangedDuringPause" class="mb-4">
+            <AlertDescription>Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.</AlertDescription>
+        </Alert>
         <ProcessLockAlert v-if="builder.processLock" />
         <TemplateVisualBuilder
             :template="builder.template"

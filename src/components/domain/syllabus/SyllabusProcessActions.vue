@@ -2,7 +2,7 @@
 import { CalendarClock, Pause, Play, Square, Trash2 } from '@lucide/vue';
 import { ref, type Component } from 'vue';
 import { ApiError } from '@/api/client';
-import { deleteProcess, transitionProcess, type SyllabusProcess } from '@/api/processes';
+import { deleteProcess, transitionProcess, type SyllabusProcess, type SyllabusStateCounts } from '@/api/processes';
 import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -29,6 +29,7 @@ const emit = defineEmits<{
 const pending = ref<Transition | null>(null);
 const processing = ref(false);
 const error = ref<string | null>(null);
+const templateImpact = ref<SyllabusStateCounts | null>(null);
 const deadlineOpen = ref(false);
 const deleteOpen = ref(false);
 const deleting = ref(false);
@@ -61,15 +62,35 @@ const confirm = async (): Promise<void> => {
   processing.value = true;
   error.value = null;
   try {
-    const response = await transitionProcess(props.process.id, pending.value);
+    const response = await transitionProcess(
+      props.process.id,
+      pending.value,
+      templateImpact.value ? { confirmar_rehacer: true } : undefined,
+    );
     pending.value = null;
+    templateImpact.value = null;
     emit('completed', response.message);
   } catch (cause) {
+    if (cause instanceof ApiError && cause.payload.code === 'plantilla_cambiada' && pending.value === 'reanudar') {
+      const counts = cause.payload.counts;
+      if (counts && typeof counts === 'object') {
+        templateImpact.value = counts as SyllabusStateCounts;
+      }
+      return;
+    }
     error.value = cause instanceof ApiError ? cause.message : 'No se pudo cambiar el estado del proceso.';
   } finally {
     processing.value = false;
   }
 };
+
+const stateLabel = (state: string): string => ({
+  sin_iniciar: 'Sin iniciar',
+  borrador: 'Borrador',
+  en_revision: 'En revisión',
+  correccion_solicitada: 'Corrección solicitada',
+  aprobado: 'Aprobado',
+}[state] ?? state);
 
 const openDelete = (event: Event): void => {
   event.preventDefault();
@@ -108,12 +129,24 @@ const remove = async (): Promise<void> => {
     <DropdownMenuItem variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
   </TableActionsMenu>
 
-  <Dialog :open="pending !== null" @update:open="(value) => { if (!value) pending = null; }">
+  <Dialog :open="pending !== null" @update:open="(value) => { if (!value) { pending = null; templateImpact = null; error = null; } }">
     <DialogContent v-if="pending">
       <DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader>
       <form class="flex flex-col gap-4" @submit.prevent="confirm">
+        <template v-if="templateImpact">
+          <p>El administrador cambió la plantilla durante la pausa. Al reanudar se rehacen desde cero todos los sílabos de este período y se elimina su historial.</p>
+          <table class="w-full text-sm">
+            <caption class="sr-only">Cantidad de sílabos que se rehacen, por estado</caption>
+            <tbody>
+              <tr v-for="(count, state) in templateImpact" :key="state">
+                <th scope="row" class="py-1 text-left font-medium">{{ stateLabel(state) }}</th>
+                <td class="py-1 text-right tabular-nums">{{ count }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </template>
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[pending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[pending].label }}</Button></DialogFooter>
+        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="templateImpact || dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[pending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ templateImpact ? 'Reanudar y rehacer sílabos' : dialogs[pending].label }}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>
