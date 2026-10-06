@@ -69,7 +69,9 @@ const errorFor = (path: string): string | undefined =>
     (form.errors as Record<string, string>)[path];
 
 const BLANK = 'en_blanco';
-const chosen = computed(() => props.presets.find((preset) => preset.key === form.preset) ?? null);
+// La identificación institucional es una sección completa: solo se ofrece al crear una sección.
+const fieldPresets = computed(() => props.presets.filter((preset) => preset.key !== 'identificacion'));
+const chosen = computed(() => fieldPresets.value.find((preset) => preset.key === form.preset) ?? null);
 const presetModel = computed({
     get: () => (form.preset === '' ? BLANK : form.preset),
     set: (value: string) => {
@@ -130,7 +132,7 @@ const updateOpen = (value: boolean): void => {
         <template #default="{ close }">
             <form class="flex flex-col gap-4" @submit.prevent="submit">
                 <FieldGroup>
-                    <Field v-if="presets.length > 0">
+                    <Field v-if="fieldPresets.length > 0">
                         <FieldLabel for="new-field-preset">Plantilla</FieldLabel>
                         <Select v-model="presetModel" :disabled="form.processing">
                             <SelectTrigger id="new-field-preset" class="w-full">
@@ -139,7 +141,7 @@ const updateOpen = (value: boolean): void => {
                             <SelectContent>
                                 <SelectGroup>
                                     <SelectItem :value="BLANK">En blanco</SelectItem>
-                                    <SelectItem v-for="preset in presets" :key="preset.key" :value="preset.key">{{ preset.title }}</SelectItem>
+                                    <SelectItem v-for="preset in fieldPresets" :key="preset.key" :value="preset.key">{{ preset.title }}</SelectItem>
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
