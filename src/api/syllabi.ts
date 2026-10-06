@@ -71,9 +71,9 @@ export type SyllabusDetail = {
     description: string | null;
     blocks: SyllabusBlock[];
   }>;
-  review_stage?: "biblioteca" | "coordinacion" | "decanato" | null;
+  review_stage?: "biblioteca" | "coordinacion" | null;
   review_comments?: Array<{
-    stage: "biblioteca" | "coordinacion" | "decanato";
+    stage: "biblioteca" | "coordinacion";
     comment: string;
     commented_at: string;
     commented_by: string;

@@ -15,8 +15,6 @@ describe('contrato de rutas', () => {
     expect(roleHome('docente')).toBe(paths.teacher.panel);
     expect(roleSetting('docente', 'security')).toBe(paths.teacher.security);
     expect(roleHome('bibliotecario')).toBe('/biblioteca/panel');
-    expect(roleHome('decano')).toBe('/decanato/panel');
-    expect(roleDocuments('decano', 'revision-1')).toBe('/decanato/revisiones/revision-1/documentos');
     expect(roleSetting('bibliotecario', 'profile')).toBe('/biblioteca/configuracion/perfil');
     expect(roleNotifications('bibliotecario')).toBe('/biblioteca/notificaciones');
     expect(roleDocuments('bibliotecario', 'revision-1')).toBe('/biblioteca/revisiones/revision-1');

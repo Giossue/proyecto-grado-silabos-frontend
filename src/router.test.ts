@@ -5,7 +5,7 @@ import { clearIntendedRoute, consumeIntendedRoute } from '@/lib/intended-route';
 import type { RoleCode } from '@/lib/routes';
 
 const session = (code: RoleCode) => {
-  const global = code === 'administrador' || code === 'bibliotecario' || code === 'decano';
+  const global = code === 'administrador' || code === 'bibliotecario';
   return {
     user: {
       id: 'user-1',
@@ -122,8 +122,6 @@ describe('navegación por ámbito activo', () => {
     ['docente', '/docente/mis-silabos', '/docente/mis-silabos'],
     ['bibliotecario', '/biblioteca/revisiones', '/biblioteca/revisiones'],
     ['bibliotecario', '/biblioteca/revisiones/revision-1', '/biblioteca/revisiones/revision-1'],
-    ['decano', '/decanato/revisiones', '/decanato/revisiones'],
-    ['decano', '/decanato/revisiones/revision-1', '/decanato/revisiones/revision-1'],
   ] as const)('permite la ruta propia de %s y conserva sus parámetros', async (code, target, expected) => {
     sessionState.replace(session(code));
     await router.push(`${target}?pagina=2&orden=asc`);
@@ -137,7 +135,6 @@ describe('navegación por ámbito activo', () => {
     ['docente', '/admin/plantilla', '/docente/panel'],
     ['docente', '/biblioteca/revisiones', '/docente/panel'],
     ['bibliotecario', '/coordinacion/revisiones', '/biblioteca/panel'],
-    ['decano', '/coordinacion/revisiones', '/decanato/panel'],
     ['coordinador', '/decanato/revisiones', '/coordinacion/panel'],
   ] as const)('redirige una ruta de otro rol al panel de %s', async (code, target, expected) => {
     sessionState.replace(session(code));

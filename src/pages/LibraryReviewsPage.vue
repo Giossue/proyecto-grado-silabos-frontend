@@ -67,7 +67,7 @@ onMounted(() => { void load(initialPage); });
 </script>
 
 <template>
-  <PageFrame :title="pageTitle" description="Biblioteca revisa primero la bibliografía de cada sílabo enviado; después siguen coordinación y decanato.">
+  <PageFrame :title="pageTitle" description="Biblioteca revisa primero la bibliografía de cada sílabo enviado; después sigue coordinación.">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="6" :filters="1" :cell-lines="2" />
     <Card v-if="data">

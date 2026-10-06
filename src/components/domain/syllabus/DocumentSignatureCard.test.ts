@@ -186,9 +186,9 @@ describe('DocumentSignatureCard', () => {
     expect(wrapper.text()).toContain('Descargar PDF');
   });
 
-  it('el decanato firma al final, después de biblioteca', async () => {
+  it('biblioteca completa el documento después de coordinación', async () => {
     getSignatureStatus.mockResolvedValue(status({
-      state: 'pendiente_decanato', next_role: 'decanato', my_role: 'decanato', can_sign: true,
+      state: 'firmado', next_role: null, my_role: 'biblioteca', can_sign: false,
       signatures: [
         { role: 'docente', signer: 'Docente de prueba', certificate_holder: 'DOCENTE', certificate_issuer: 'BCE', signed_at: '2026-09-27T09:00:00-05:00' },
         { role: 'coordinacion', signer: 'Coordinación', certificate_holder: 'COORD', certificate_issuer: 'BCE', signed_at: '2026-09-27T10:00:00-05:00' },
@@ -197,10 +197,10 @@ describe('DocumentSignatureCard', () => {
     }));
     const wrapper = await mountCard();
 
-    expect(wrapper.text()).toContain('Pendiente decanato');
-    expect(wrapper.text()).toContain('Le corresponde firmar al decanato.');
+    expect(wrapper.text()).toContain('Firmado');
+    expect(wrapper.text()).toContain('firmas del docente, de coordinación y de biblioteca');
     expect(wrapper.text()).toContain('Biblioteca: BIBLIO');
-    expect(wrapper.text()).toContain('Firmar electrónicamente');
+    expect(wrapper.text()).not.toContain('Firmar electrónicamente');
     expect(wrapper.text()).not.toContain('Enviar a biblioteca');
   });
 

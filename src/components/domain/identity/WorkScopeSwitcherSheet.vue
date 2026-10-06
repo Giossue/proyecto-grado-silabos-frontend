@@ -23,15 +23,14 @@ const activeRole = computed(() => sessionState.current.value?.active_role ?? nul
 const coordinatorCareerCount = computed(() => roles.value.filter((role) => role.code === 'coordinador').length);
 const title = computed(() => coordinatorCareerCount.value > 1 ? 'Cambiar carrera' : 'Cambiar ámbito de trabajo');
 type Role = (typeof roles.value)[number];
-const scopeName = (role: Role): string => role.code === 'bibliotecario' ? 'Biblioteca' : role.code === 'decano' ? 'Decanato' : role.career_name ?? roleLabel(role.code);
+const scopeName = (role: Role): string => role.code === 'bibliotecario' ? 'Biblioteca' : role.career_name ?? roleLabel(role.code);
 const scopeDescription = (role: Role): string => {
   if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}`;
   if (role.code === 'bibliotecario') return LIBRARY_SCOPE;
-  if (role.code === 'decano') return `Decanato · ${role.faculty_name ?? 'facultad asignada'}`;
   if (role.career_name) return `${roleLabel(role.code)} · ${role.career_name}`;
   return role.code === 'administrador' ? 'Administración general del sistema' : roleLabel(role.code);
 };
-const scopeArea = (role: Role): string => role.career_name ?? role.faculty_name ?? (role.code === 'bibliotecario' ? 'Toda la universidad' : 'Ámbito institucional sin carrera específica');
+const scopeArea = (role: Role): string => role.career_name ?? (role.code === 'bibliotecario' ? 'Toda la universidad' : 'Ámbito institucional sin carrera específica');
 
 const select = async (roleAssignmentId: string): Promise<void> => {
   if (roleAssignmentId === activeRole.value?.id || pendingRoleId.value) return;

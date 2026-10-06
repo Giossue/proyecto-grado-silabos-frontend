@@ -1,13 +1,12 @@
 import { api, apiBlob } from '@/api/client';
 import type { StampPosition } from '@/lib/signature/signPdf';
 
-export type SignatureRole = 'docente' | 'coordinacion' | 'biblioteca' | 'decanato';
+export type SignatureRole = 'docente' | 'coordinacion' | 'biblioteca';
 export type SignatureState =
   | 'sin_documento'
   | 'pendiente_docente'
   | 'pendiente_coordinacion'
   | 'pendiente_biblioteca'
-  | 'pendiente_decanato'
   | 'firmado'
   | 'anulado';
 export type SignatureStatus = {

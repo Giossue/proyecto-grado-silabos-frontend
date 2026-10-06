@@ -63,12 +63,6 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                   { title: 'Revisiones de biblioteca', href: paths.library.reviews, icon: Library },
               ]
             : []),
-        ...(activeRole.value?.code === 'decano'
-            ? [
-                  { title: 'Panel', href: paths.deanery.panel, icon: LayoutGrid },
-                  { title: 'Revisión', href: paths.deanery.reviews, icon: ClipboardCheck },
-              ]
-            : []),
     ]);
     return mainNavItems;
 }

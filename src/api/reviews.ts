@@ -2,9 +2,8 @@ import { api } from "@/api/client";
 import type { DocumentPresentation } from "@/api/syllabi";
 import type { DocumentNode } from "@/lib/templateDocument";
 
-// Etapa de la revisión vigente (I-173): biblioteca → coordinación → decanato.
-export type ReviewStage = "biblioteca" | "coordinacion" | "decanato";
-export const REVIEW_STAGE_LABELS: Record<ReviewStage, string> = { biblioteca: "En biblioteca", coordinacion: "En coordinación", decanato: "En decanato" };
+export type ReviewStage = "biblioteca" | "coordinacion";
+export const REVIEW_STAGE_LABELS: Record<ReviewStage, string> = { biblioteca: "En biblioteca", coordinacion: "En coordinación" };
 export const reviewStageLabel = (stage: string | null | undefined): string => (stage && Object.hasOwn(REVIEW_STAGE_LABELS, stage) ? REVIEW_STAGE_LABELS[stage as ReviewStage] : "");
 
 export type ReviewQueueItem = {

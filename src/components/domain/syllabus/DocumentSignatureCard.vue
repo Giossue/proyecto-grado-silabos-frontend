@@ -31,15 +31,13 @@ const errors = ref<{ certificate?: string; password?: string; general?: string }
 const stale = ref(false);
 const fileInput = ref<InstanceType<typeof Input> | null>(null);
 
-// I-173: firman los cuatro, en este orden, sobre el PDF generado al aprobar el decanato.
-const ROLE_ORDER: SignatureRole[] = ['docente', 'coordinacion', 'biblioteca', 'decanato'];
-const roleLabel = (role: SignatureRole): string => ({ docente: 'Docente', coordinacion: 'Coordinación', biblioteca: 'Biblioteca', decanato: 'Decanato' })[role] ?? role;
+const ROLE_ORDER: SignatureRole[] = ['docente', 'coordinacion', 'biblioteca'];
+const roleLabel = (role: SignatureRole): string => ({ docente: 'Docente', coordinacion: 'Coordinación', biblioteca: 'Biblioteca' })[role] ?? role;
 const stateLabel = computed(() => ({
   sin_documento: 'Generando PDF',
   pendiente_docente: 'Pendiente docente',
   pendiente_coordinacion: 'Pendiente coordinación',
   pendiente_biblioteca: 'Pendiente biblioteca',
-  pendiente_decanato: 'Pendiente decanato',
   firmado: 'Firmado',
   anulado: 'Anulado',
 })[status.value?.state ?? 'sin_documento']);
@@ -51,10 +49,7 @@ const description = computed(() => {
     case 'pendiente_biblioteca': return status.value.can_sign
       ? 'Docente y coordinación ya firmaron. Le corresponde firmar a biblioteca.'
       : 'Docente y coordinación ya firmaron. Falta la firma de biblioteca.';
-    case 'pendiente_decanato': return status.value.can_sign
-      ? 'Docente, coordinación y biblioteca ya firmaron. Le corresponde firmar al decanato.'
-      : 'Docente, coordinación y biblioteca ya firmaron. Falta la firma del decanato.';
-    case 'firmado': return 'El sílabo tiene las firmas del docente, de coordinación, de biblioteca y del decanato.';
+    case 'firmado': return 'El sílabo tiene las firmas del docente, de coordinación y de biblioteca.';
     case 'anulado': return 'Esta revisión no tiene una aprobación vigente, por eso no se firma.';
     default: return 'Estado de la firma de la revisión aprobada.';
   }

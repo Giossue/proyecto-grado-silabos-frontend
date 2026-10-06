@@ -14,7 +14,6 @@ import {
   type ReviewDetail,
   type SnapshotField,
 } from '@/api/reviews';
-import { sessionState } from '@/state/session';
 import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -37,7 +36,7 @@ import { toast } from '@/lib/toast';
 const route = useRoute();
 const router = useRouter();
 const data = ref<ReviewDetail | null>(null);
-const area = computed(() => reviewAreaPaths(sessionState.current.value?.active_role?.code));
+const area = computed(() => reviewAreaPaths());
 const loading = ref(true);
 const processing = ref(false);
 const loadError = ref('');
@@ -82,9 +81,7 @@ const run = async (action: () => Promise<{ message: string }>): Promise<void> =>
   }
 };
 
-// I-173: solo decide quien tiene la etapa vigente; los demás consultan.
 const canReviewCurrent = computed(() => Boolean(data.value?.can_decide && data.value?.revision.is_current && data.value?.syllabus.state === 'en_revision'));
-const isDeanery = computed(() => data.value?.my_stage === 'decanato');
 const stageLabel = computed(() => reviewStageLabel(data.value?.syllabus.stage));
 const canDelete = computed(() => Boolean(data.value?.can_delete && data.value?.revision.is_current));
 const deleted = async (message: string): Promise<void> => {
@@ -147,23 +144,23 @@ onMounted(load);
 
       <aside class="flex min-w-0 flex-col gap-6">
         <Card v-if="canReviewCurrent">
-          <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>{{ isDeanery ? 'El sílabo vuelve al docente con su comentario; al reenviarlo pasa otra vez por biblioteca y coordinación.' : 'El sílabo vuelve al docente con su comentario; al reenviarlo pasa otra vez por biblioteca.' }}</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>El sílabo vuelve al docente con su comentario; al reenviarlo pasa otra vez por biblioteca.</CardDescription></CardHeader>
           <CardContent><form id="correction-form" class="flex flex-col gap-4" @submit.prevent="submitCorrection">
             <Field><FieldLabel for="correction-justification" required>Comentario para el docente</FieldLabel><Textarea id="correction-justification" v-model="correctionJustification" rows="4" required /><FieldError :errors="[...(errors.revision ?? []), ...(errors.justification ?? [])]" /></Field>
             <Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><Undo2 v-else aria-hidden="true" />Solicitar corrección</Button>
           </form></CardContent>
         </Card>
 
-        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>{{ isDeanery ? `La aprobación del decanato fija la revisión ${data.revision.number} y genera el PDF para las firmas.` : `Al aprobar, la revisión ${data.revision.number} pasa al decanato.` }}</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button></CardContent></Card>
+        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>La aprobación fija la revisión {{ data.revision.number }} y genera el PDF para las firmas.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button></CardContent></Card>
 
         <DocumentSignatureCard v-if="data.history.some((item) => item.id === data!.revision.id && item.approved_at)" :key="data.revision.id" :revision-id="data.revision.id" :file-name="`silabo-${data.syllabus.code}-revision-${data.revision.number}`" />
 
         <Card v-if="canDelete"><CardHeader><CardTitle>Eliminar sílabo aprobado</CardTitle><CardDescription>Un sílabo aprobado no se modifica. Si hay un error, elimínelo con todo su historial: el docente empieza de cero.</CardDescription></CardHeader><CardContent><SyllabusDeleteDialog :syllabus-id="data.syllabus.id" :subject="data.syllabus.subject" @deleted="deleted" /></CardContent></Card>
 
-        <Card><CardHeader><CardTitle>Historial de revisiones</CardTitle><CardDescription>Consulte o compare revisiones enviadas.</CardDescription></CardHeader><CardContent><ol class="flex flex-col gap-3"><li v-for="(item, index) in data.history" :key="item.id" class="rounded-md border p-3 text-sm"><div class="flex items-center justify-between gap-3"><Button as-child variant="link" class="h-auto p-0"><RouterLink :to="area.review(item.id)">Revisión {{ item.number }}</RouterLink></Button><Badge v-if="item.approved_at" variant="secondary">Aprobada</Badge></div><div v-if="item.library_verified_at || item.coordination_reviewed_at" class="mt-1 text-muted-foreground"><template v-if="item.library_verified_at">Biblioteca: {{ item.library_verified_by }}. </template><template v-if="item.coordination_reviewed_at">Coordinación: {{ item.coordination_reviewed_by }}. </template><template v-if="item.approved_at">Decanato: {{ item.approved_by }}.</template></div><div class="text-muted-foreground">{{ item.submitted_by }} · {{ formatDateDisplay(item.submitted_at, { dateStyle: 'medium' }) }}</div><div class="mt-2 flex flex-wrap gap-2"><Button v-if="item.approved_at" as-child size="sm" variant="outline"><RouterLink :to="paths.documents(item.id)">Documentos</RouterLink></Button><Button v-if="index > 0" as-child size="sm" variant="outline"><RouterLink :to="area.comparison(data.history[index - 1]!.id, item.id)">Comparar con la anterior</RouterLink></Button></div></li></ol></CardContent></Card>
+        <Card><CardHeader><CardTitle>Historial de revisiones</CardTitle><CardDescription>Consulte o compare revisiones enviadas.</CardDescription></CardHeader><CardContent><ol class="flex flex-col gap-3"><li v-for="(item, index) in data.history" :key="item.id" class="rounded-md border p-3 text-sm"><div class="flex items-center justify-between gap-3"><Button as-child variant="link" class="h-auto p-0"><RouterLink :to="area.review(item.id)">Revisión {{ item.number }}</RouterLink></Button><Badge v-if="item.approved_at" variant="secondary">Aprobada</Badge></div><div v-if="item.library_verified_at || item.approved_at" class="mt-1 text-muted-foreground"><template v-if="item.library_verified_at">Biblioteca: {{ item.library_verified_by }}. </template><template v-if="item.approved_at">Coordinación: {{ item.approved_by }}.</template></div><div class="text-muted-foreground">{{ item.submitted_by }} · {{ formatDateDisplay(item.submitted_at, { dateStyle: 'medium' }) }}</div><div class="mt-2 flex flex-wrap gap-2"><Button v-if="item.approved_at" as-child size="sm" variant="outline"><RouterLink :to="paths.documents(item.id)">Documentos</RouterLink></Button><Button v-if="index > 0" as-child size="sm" variant="outline"><RouterLink :to="area.comparison(data.history[index - 1]!.id, item.id)">Comparar con la anterior</RouterLink></Button></div></li></ol></CardContent></Card>
       </aside>
     </WorkspaceLayout>
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-  <LoadingSkeleton v-else-if="loading" variant="review" :review-stage="sessionState.current.value?.active_role?.code === 'decano' ? 'dean' : 'coordination'" />
+  <LoadingSkeleton v-else-if="loading" variant="review" review-stage="coordination" />
 </template>

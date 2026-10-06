@@ -70,7 +70,7 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.find('button, input, select, [tabindex]').exists()).toBe(false);
   });
 
-  it.each(['bibliotecario', 'decano'] as const)('no inventa plazo ni puesta en marcha para %s', (dashboardRole) => {
+  it.each(['bibliotecario'] as const)('no inventa plazo ni puesta en marcha para %s', (dashboardRole) => {
     const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole } });
 
     expect(wrapper.find('[data-skeleton="dashboard-metrics"]').exists()).toBe(true);

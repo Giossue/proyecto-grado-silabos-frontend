@@ -88,19 +88,6 @@ export const paths = {
     reviews: '/biblioteca/revisiones',
     review: (revision: string): string => `/biblioteca/revisiones/${segment(revision)}`,
   },
-  deanery: {
-    root: '/decanato',
-    panel: '/decanato/panel',
-    notifications: '/decanato/notificaciones',
-    profile: '/decanato/configuracion/perfil',
-    security: '/decanato/configuracion/seguridad',
-    reviews: '/decanato/revisiones',
-    review: (revision: string): string => `/decanato/revisiones/${segment(revision)}`,
-    comparison: (before: string, after: string): string =>
-      `/decanato/revisiones/${segment(before)}/comparar/${segment(after)}`,
-    documents: (revision: string): string =>
-      `/decanato/revisiones/${segment(revision)}/documentos`,
-  },
   legacy: {
     adminUsers: '/administracion/usuarios',
     adminAcademic: '/administracion/estructura-academica',
@@ -113,7 +100,7 @@ export const paths = {
   },
 } as const;
 
-export type RoleArea = 'admin' | 'coordination' | 'teacher' | 'library' | 'deanery';
+export type RoleArea = 'admin' | 'coordination' | 'teacher' | 'library';
 
 type AreaPaths = {
   root: string;
@@ -128,7 +115,6 @@ const roleAreas: Record<RoleCode, RoleArea> = {
   coordinador: 'coordination',
   docente: 'teacher',
   bibliotecario: 'library',
-  decano: 'deanery',
 };
 
 const areaPaths: Record<RoleArea, AreaPaths> = {
@@ -136,7 +122,6 @@ const areaPaths: Record<RoleArea, AreaPaths> = {
   coordination: paths.coordination,
   teacher: paths.teacher,
   library: paths.library,
-  deanery: paths.deanery,
 };
 
 const areaDocuments: Record<RoleArea, (revision: string) => string> = {
@@ -144,11 +129,9 @@ const areaDocuments: Record<RoleArea, (revision: string) => string> = {
   coordination: paths.coordination.documents,
   teacher: paths.teacher.documents,
   library: paths.library.review,
-  deanery: paths.deanery.documents,
 };
 
-/** Rutas de la bandeja de revisión según el rol: coordinación por carrera o decanato por facultad (I-173). */
-export const reviewAreaPaths = (role: RoleCode | undefined) => (role === 'decano' ? paths.deanery : paths.coordination);
+export const reviewAreaPaths = () => paths.coordination;
 
 export const rolePrefix = (role: RoleCode): RoleArea | null =>
   Object.hasOwn(roleAreas, role) ? roleAreas[role] : null;
@@ -206,7 +189,6 @@ const admin = { ...authenticated, roles: ['administrador'] as const };
 const coordinator = { ...authenticated, roles: ['coordinador'] as const };
 const teacher = { ...authenticated, roles: ['docente'] as const };
 const librarian = { ...authenticated, roles: ['bibliotecario'] as const };
-const dean = { ...authenticated, roles: ['decano'] as const };
 
 export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'login', path: paths.login, component: 'LoginPage', guest: true },
@@ -268,14 +250,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'library-reviews', path: paths.library.reviews, component: 'LibraryReviewsPage', breadcrumb: 'Revisiones de biblioteca', ...librarian },
   { name: 'library-review', path: '/biblioteca/revisiones/:revision', component: 'LibraryReviewDetailPage', breadcrumb: 'Revisión de bibliografía', ...librarian },
 
-  { name: 'deanery-panel', path: paths.deanery.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...dean },
-  { name: 'deanery-notifications', path: paths.deanery.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...dean },
-  { name: 'deanery-profile', path: paths.deanery.profile, component: 'ProfilePage', shortcut: 'profile', ...dean },
-  { name: 'deanery-security', path: paths.deanery.security, component: 'SecurityPage', shortcut: 'security', ...dean },
-  { name: 'deanery-reviews', path: paths.deanery.reviews, component: 'CoordinationReviewsPage', breadcrumb: 'Revisión', ...dean },
-  { name: 'deanery-review', path: '/decanato/revisiones/:revision', component: 'CoordinationReviewDetailPage', breadcrumb: 'Detalle de revisión', ...dean },
-  { name: 'deanery-comparison', path: '/decanato/revisiones/:before/comparar/:after', component: 'CoordinationReviewComparisonPage', breadcrumb: 'Comparar revisiones', ...dean },
-  { name: 'deanery-documents', path: '/decanato/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...dean },
 
   { name: 'legacy-login', path: paths.loginLegacy, guest: true, aliasOf: paths.login },
   { name: 'legacy-admin-users', path: paths.legacy.adminUsers, ...admin, aliasOf: paths.admin.users },

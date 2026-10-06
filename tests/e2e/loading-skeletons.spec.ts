@@ -13,7 +13,7 @@ const scenarios: { name: string; props: FixtureProps }[] = [
     { name: 'catalog', props: { variant: 'catalog' } },
     { name: 'notifications', props: { variant: 'notifications' } },
     { name: 'workspace', props: { variant: 'workspace' } },
-    ...['administrador', 'coordinador', 'docente', 'bibliotecario', 'decano'].map((dashboardRole) => ({
+    ...['administrador', 'coordinador', 'docente', 'bibliotecario'].map((dashboardRole) => ({
         name: `dashboard-${dashboardRole}`,
         props: { variant: 'dashboard', dashboardRole },
     })),
@@ -23,7 +23,7 @@ const scenarios: { name: string; props: FixtureProps }[] = [
     })),
     { name: 'syllabus-editable', props: { variant: 'syllabus', readonly: false } },
     { name: 'syllabus-readonly', props: { variant: 'syllabus', readonly: true } },
-    ...['coordination', 'library', 'dean'].map((reviewStage) => ({
+    ...['coordination', 'library'].map((reviewStage) => ({
         name: `review-${reviewStage}`,
         props: { variant: 'review', reviewStage },
     })),

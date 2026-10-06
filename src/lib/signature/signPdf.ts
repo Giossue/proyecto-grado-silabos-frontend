@@ -9,7 +9,7 @@ const BYTE_RANGE_PLACEHOLDER = '/ByteRange [0 ********** ********** **********]'
 
 export type StampPosition = { page: number; x: number; y: number; width: number; height: number };
 
-export type SignerRole = 'docente' | 'coordinacion' | 'biblioteca' | 'decanato';
+export type SignerRole = 'docente' | 'coordinacion' | 'biblioteca';
 
 const FALLBACK_WIDTH = 170;
 const FALLBACK_HEIGHT = 48;
@@ -19,7 +19,6 @@ const ROLE_REASONS: Record<SignerRole, string> = {
   docente: 'Elaboración del sílabo',
   coordinacion: 'Aprobación de coordinación',
   biblioteca: 'Verificación de bibliografía (biblioteca)',
-  decanato: 'Aprobación del decanato',
 };
 
 export const fallbackStamp = (role: SignerRole, page: number, pageWidth: number): StampPosition => ({

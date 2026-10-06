@@ -43,7 +43,7 @@ const props = withDefaults(defineProps<{
     cellLines?: number;
     dashboardRole?: RoleCode;
     workspaceCount?: number;
-    reviewStage?: 'coordination' | 'library' | 'dean';
+    reviewStage?: 'coordination' | 'library';
     readonly?: boolean;
     settingsSection?: 'profile' | 'security';
 }>(), {

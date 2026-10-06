@@ -43,13 +43,11 @@ describe('DocumentLoadingSkeleton', () => {
         expect(wrapper.find('[data-skeleton="review-history"]').exists()).toBe(true);
     });
 
-    it('ajusta las acciones del expediente a coordinación y decanato', () => {
+    it('muestra las acciones de coordinación en su expediente', () => {
         const coordination = mount(DocumentLoadingSkeleton, { props: { variant: 'review' } });
-        const dean = mount(DocumentLoadingSkeleton, { props: { variant: 'review', reviewStage: 'dean' } });
 
         expect(coordination.find('[data-skeleton="review-correction"]').exists()).toBe(true);
-        expect(dean.find('[data-skeleton="review-correction"]').exists()).toBe(true);
-        expect(dean.find('[data-skeleton="review-observations"]').exists()).toBe(false);
+        expect(coordination.find('[data-skeleton="review-observations"]').exists()).toBe(false);
     });
 
     it('conserva las dimensiones y márgenes compartidos de la hoja carta dentro de su scroll', () => {

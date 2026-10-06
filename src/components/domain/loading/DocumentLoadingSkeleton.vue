@@ -14,7 +14,7 @@ const props = withDefaults(
     defineProps<{
         variant: 'syllabus' | 'review' | 'template' | 'comparison' | 'documents';
         rows?: number;
-        reviewStage?: 'coordination' | 'library' | 'dean';
+        reviewStage?: 'coordination' | 'library';
         readonly?: boolean;
     }>(),
     {

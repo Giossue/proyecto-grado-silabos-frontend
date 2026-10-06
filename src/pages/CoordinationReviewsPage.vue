@@ -22,7 +22,7 @@ import { paths, reviewAreaPaths } from '@/lib/routes';
 
 const router = useRouter();
 const data = ref<ReviewsPage | null>(null);
-const area = ref(reviewAreaPaths(undefined));
+const area = ref(reviewAreaPaths());
 const loading = ref(true);
 const filters = reactive({ search: '', state: 'all' });
 const error = ref<string | null>(null);
@@ -31,11 +31,11 @@ const load = async (page = 1): Promise<void> => {
   error.value = null;
   try {
     const session = await getSession();
-    if (session.active_role?.code !== 'coordinador' && session.active_role?.code !== 'decano') {
+    if (session.active_role?.code !== 'coordinador') {
       await router.replace(paths.dashboard);
       return;
     }
-    area.value = reviewAreaPaths(session.active_role.code);
+    area.value = reviewAreaPaths();
     data.value = await getReviews({ search: filters.search, state: filters.state === 'all' ? '' : filters.state, page });
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la cola de revisión.';

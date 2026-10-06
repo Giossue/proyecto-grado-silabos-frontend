@@ -85,10 +85,9 @@ const sectionEditable = (): boolean => canEdit.value;
 const editableFieldIds = computed(() => new Set(
   (syllabus.value?.sections ?? []).flatMap((section) => section.blocks.flatMap((block) => block.fields.map((field) => field.id))),
 ));
-// I-173: mientras está en revisión, el docente ve en qué etapa va (biblioteca → coordinación → decanato).
-const REVIEW_STAGE_TEXT: Record<string, string> = { biblioteca: 'Biblioteca revisa la bibliografía.', coordinacion: 'Biblioteca aprobó; coordinación revisa.', decanato: 'Coordinación aprobó; espera la aprobación del decanato.' };
+const REVIEW_STAGE_TEXT: Record<string, string> = { biblioteca: 'Biblioteca revisa la bibliografía.', coordinacion: 'Biblioteca aprobó; coordinación revisa y decide.' };
 const reviewStageLabel = computed(() => REVIEW_STAGE_TEXT[syllabus.value?.review_stage ?? ''] ?? '');
-const STAGE_NAME: Record<string, string> = { biblioteca: 'Biblioteca', coordinacion: 'Coordinación', decanato: 'Decanato' };
+const STAGE_NAME: Record<string, string> = { biblioteca: 'Biblioteca', coordinacion: 'Coordinación' };
 const stageName = (stage: string): string => STAGE_NAME[stage] ?? stage;
 const reviewComments = computed(() =>
   [...(syllabus.value?.review_comments ?? [])].sort(
@@ -575,7 +574,7 @@ onBeforeUnmount(() => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Enviar a revisión?</DialogTitle>
-          <DialogDescription>Biblioteca revisa primero la bibliografía; después coordinación y, al final, el decanato aprueba. Mientras lo revisan, no podrá hacer cambios.</DialogDescription>
+          <DialogDescription>Biblioteca revisa primero la bibliografía; después coordinación decide la aprobación final. Mientras lo revisan, no podrá hacer cambios.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>
