@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { Blocks, Trash2 } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
@@ -9,26 +9,30 @@ import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
 import {
     Field,
+    FieldDescription,
     FieldError,
     FieldGroup,
     FieldLabel,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
-import type { PartForm } from '@/types/configuration';
+import type { PartForm, TemplatePreset } from '@/types/configuration';
 
 const props = withDefaults(
     defineProps<{
         templateId: string;
         position: number;
         blockTypes: { value: PartForm; label: string }[];
+        presets?: TemplatePreset[];
         empty?: boolean;
         choice?: boolean;
     }>(),
     {
         empty: false,
         choice: false,
+        presets: () => [],
     },
 );
 
@@ -53,6 +57,19 @@ const form = useForm({
     key: technicalKey('bloque'),
     position: props.position + 1,
     fields: [newField()],
+    preset: '',
+});
+
+const BLANK = 'en_blanco';
+const chosen = computed(() => props.presets.find((preset) => preset.key === form.preset) ?? null);
+const presetModel = computed({
+    get: () => (form.preset === '' ? BLANK : form.preset),
+    set: (value: string) => {
+        form.preset = value === BLANK ? '' : value;
+        if (chosen.value !== null && form.title.trim() === '') {
+            form.title = chosen.value.title;
+        }
+    },
 });
 
 const reset = (): void => {
@@ -61,6 +78,7 @@ const reset = (): void => {
     form.key = technicalKey('bloque');
     form.position = props.position + 1;
     form.fields = [newField()];
+    form.preset = '';
 };
 
 const addField = (): void => {
@@ -95,6 +113,9 @@ const submit = (): void => {
     }
 
     form.position = props.position + 1;
+    form.transform((data) => (data.preset === ''
+        ? { ...data, preset: undefined }
+        : { ...data, preset: data.preset, fields: undefined }));
     form.post(TemplateController.storeSection.url(props.templateId), {
         preserveScroll: true,
         onSuccess: () => {
@@ -146,6 +167,23 @@ const updateOpen = (value: boolean): void => {
             <form class="flex flex-col gap-4" @submit.prevent="submit">
                 <div>
                     <FieldGroup>
+                        <Field v-if="presets.length > 0">
+                            <FieldLabel for="new-section-preset">Plantilla</FieldLabel>
+                            <Select v-model="presetModel" :disabled="form.processing">
+                                <SelectTrigger id="new-section-preset" class="w-full">
+                                    <SelectValue placeholder="Elija una plantilla" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectGroup>
+                                        <SelectItem :value="BLANK">En blanco</SelectItem>
+                                        <SelectItem v-for="preset in presets" :key="preset.key" :value="preset.key">{{ preset.title }}</SelectItem>
+                                    </SelectGroup>
+                                </SelectContent>
+                            </Select>
+                            <FieldDescription>
+                                {{ chosen ? chosen.summary : 'Elija un diseño oficial ya armado; después puede modificarlo.' }}
+                            </FieldDescription>
+                        </Field>
                         <Field :data-invalid="Boolean(errorFor('title'))">
                             <FieldLabel for="new-template-block-title" required>
                                 Nombre de la sección
@@ -165,7 +203,7 @@ const updateOpen = (value: boolean): void => {
                         </Field>
 
                         <FieldGroup
-                            v-for="(field, index) in form.fields"
+                            v-for="(field, index) in chosen ? [] : form.fields"
                             :key="field.key"
                             class="gap-3 rounded-lg border p-3"
                         >
@@ -233,6 +271,7 @@ const updateOpen = (value: boolean): void => {
                         variant="outline"
                         class="mt-4 w-full"
                         :disabled="form.processing || form.fields.length >= 20"
+                        v-if="!chosen"
                         @click="addField"
                     >
                         Agregar otro campo

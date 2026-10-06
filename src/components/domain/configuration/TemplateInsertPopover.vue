@@ -48,6 +48,7 @@ const open = ref(false);
                     :template-id="templateId"
                     :position="blockPosition"
                     :block-types="blockTypes"
+                    :presets="presets"
                     choice
                     @closed="open = false"
                 />

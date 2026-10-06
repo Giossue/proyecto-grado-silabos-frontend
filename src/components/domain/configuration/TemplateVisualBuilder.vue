@@ -636,6 +636,7 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         :template-id="template.id"
                         :position="0"
                         :block-types="blockTypes"
+                        :presets="presets"
                         empty
                     />
                     <p v-else class="text-center text-muted-foreground">
