@@ -62,7 +62,7 @@ export const renderFreeText = (node: DocumentNode, action?: FreeTextAction): VNo
             type: 'button',
             variant: 'link',
             size: 'inline',
-            class: 'text-left font-semibold whitespace-normal underline',
+            class: 'h-auto p-0 text-left text-[length:inherit] leading-[inherit] font-semibold whitespace-normal underline',
             'aria-label': action.label,
             onClick: action.run,
         }, () => children)]);
