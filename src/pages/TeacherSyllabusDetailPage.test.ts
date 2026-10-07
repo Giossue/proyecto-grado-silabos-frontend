@@ -224,7 +224,7 @@ describe("TeacherSyllabusDetailPage", () => {
 
     const ids = wrapper.findAll("[id^='field-field-']").map((node) => node.attributes("id"));
     expect(ids).toEqual(["field-field-1", "field-field-2", "field-field-3"]);
-    expect(wrapper.text()).toContain("Complete estos datos: se imprimen dentro de la tabla de identificación");
+    expect(wrapper.text()).not.toContain("Complete estos datos");
     expect(wrapper.get("#field-field-2").classes()).toContain("border-l-2");
     expect(wrapper.get("#field-field-3").classes()).not.toContain("border-l-2");
     expect(wrapper.findAllComponents(FreeTextEditor)).toHaveLength(2);
