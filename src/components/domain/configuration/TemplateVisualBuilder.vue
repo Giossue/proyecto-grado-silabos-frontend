@@ -89,7 +89,7 @@ const confirmRemoval = (): Promise<void> => {
 };
 
 const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo sin nombre';
-const boxed = (field: TemplateField): boolean => ['texto', 'ficha', 'fijo'].includes(field.type);
+const boxed = (field: TemplateField): boolean => ['texto', 'fijo'].includes(field.type);
 const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.adminLabel ?? field.type;
 </script>
 
@@ -132,7 +132,7 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
         </div>
 
         <ol class="flex flex-col gap-3">
-          <li v-for="(field, fieldIndex) in fields" :key="field.id" :data-field="field.id" :class="cn('group relative min-w-0 rounded-sm px-2 py-1 outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : field.label.trim() ? 'hover:outline hover:outline-1 hover:outline-primary/40' : 'outline outline-1 outline-dashed outline-muted-foreground')">
+          <li v-for="(field, fieldIndex) in fields" :key="field.id" :data-field="field.id" :class="cn('group relative min-w-0 rounded-sm px-2 py-1 outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60')">
             <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -->
             <Button as="div" variant="ghost" role="button" tabindex="0" class="h-auto w-full min-w-0 cursor-pointer flex-col items-stretch gap-1 whitespace-normal rounded-sm p-0 text-left font-normal hover:bg-transparent" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
               <div class="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
@@ -141,8 +141,8 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
                 <span class="ml-auto max-w-full shrink-0 rounded bg-muted px-1.5 py-0.5 text-left text-xs font-normal text-muted-foreground [overflow-wrap:anywhere]" data-field-type>{{ typeLabel(field) }}</span>
               </div>
               <div :class="cn('pointer-events-none min-w-0 max-w-full', boxed(field) && 'template-sheet-box')">
-                <component :is="fieldTypeEntry(field.type)!.ViewComponent" v-if="fieldTypeEntry(field.type)" :field="typed(field)" />
-                <FreeTextContent v-else :value="null" />
+                <component :is="fieldTypeEntry(field.type)!.ViewComponent" v-if="fieldTypeEntry(field.type) && field.type !== 'ficha'" :field="typed(field)" />
+                <FreeTextContent v-else-if="field.type !== 'ficha'" :value="null" />
               </div>
             </Button>
             <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">
