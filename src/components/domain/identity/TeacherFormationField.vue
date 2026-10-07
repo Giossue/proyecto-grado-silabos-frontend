@@ -3,7 +3,7 @@ import InputError from '@/components/InputError.vue';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-withDefaults(defineProps<{ id?: string; error?: string }>(), { id: 'formation' });
+withDefaults(defineProps<{ id?: string; error?: string; hideHint?: boolean }>(), { id: 'formation', hideHint: false });
 const model = defineModel<string>({ required: true });
 </script>
 
@@ -17,7 +17,7 @@ const model = defineModel<string>({ required: true });
             name="formacion_experiencia"
             placeholder="Ej. Ingeniero en Sistemas, Magíster en…; cátedras impartidas…; proyectos de investigación…"
         />
-        <p class="text-sm text-muted-foreground">
+        <p v-if="!hideHint" class="text-sm text-muted-foreground">
             La escribe una sola vez: todos sus sílabos la copian. Si la cambia, se actualizan los sílabos que aún no ha enviado.
         </p>
         <InputError :message="error" />

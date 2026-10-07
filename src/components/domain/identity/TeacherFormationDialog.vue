@@ -27,10 +27,10 @@ const submit = async (): Promise<void> => {
         <DialogContent class="sm:max-w-2xl">
             <DialogHeader>
                 <DialogTitle>Formación y experiencia</DialogTitle>
-                <DialogDescription>Es la misma que escribe en su perfil. Se imprime en la última fila de la tabla de identificación.</DialogDescription>
+                <DialogDescription>La escribe una sola vez: todos sus sílabos la copian. Si la cambia, se actualizan los sílabos que aún no ha enviado.</DialogDescription>
             </DialogHeader>
             <form class="flex flex-col gap-4" @submit.prevent="submit">
-                <TeacherFormationField id="dialog-formation" v-model="formation" :error="error" />
+                <TeacherFormationField id="dialog-formation" v-model="formation" :error="error" hide-hint />
                 <DialogFooter>
                     <Button type="button" variant="outline" :disabled="saving" data-test="cancel-formation-button" @click="open = false">Cancelar</Button>
                     <Button type="submit" :disabled="saving || !changed" data-test="save-formation-button">
