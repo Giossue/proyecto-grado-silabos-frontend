@@ -9,7 +9,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-    --text-header-user: 0.625rem;
+    --text-header-user: 0.6875rem;
     --text-curriculum-edge: 0.625rem;
     --text-curriculum-code: 0.65rem;
     --text-curriculum-metric: 0.6rem;
