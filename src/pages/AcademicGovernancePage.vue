@@ -68,9 +68,19 @@ onMounted(load);
     <PageFrame :title="sectionContent.title" :description="sectionContent.description" :icon="tabIcons[entity]">
         <template #actions>
             <ImportSpreadsheetDialog
+                v-if="data && entity === 'facultad'"
+                title="Importar facultades"
+                description="Cree varias facultades a la vez. Pegue cada logo sobre la fila de su facultad; se asigna a la fila donde queda su centro."
+                endpoint="/admin/academic/faculties/import"
+                template-endpoint="/admin/academic/faculties/import-template"
+                template-name="plantilla-facultades.xlsx"
+                :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'campus', label: 'Campus' }]"
+                @imported="changed"
+            />
+            <ImportSpreadsheetDialog
                 v-if="data && entity === 'carrera'"
                 title="Importar carreras"
-                description="Cree varias carreras a la vez. Las facultades se crean una por una porque requieren su logo."
+                description="Cree varias carreras a la vez."
                 endpoint="/admin/academic/careers/import"
                 template-endpoint="/admin/academic/careers/import-template"
                 template-name="plantilla-carreras.xlsx"

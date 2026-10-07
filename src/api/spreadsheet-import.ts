@@ -1,6 +1,6 @@
 import { api, apiBlob } from '@/api/client';
 
-export type ImportRow = { line: number; values: Record<string, string>; errors: string[] };
+export type ImportRow = { line: number; values: Record<string, string>; errors: string[]; preview?: string | null };
 export type ImportResult = { rows: ImportRow[]; valid: boolean; created: number };
 
 export const sendImport = (path: string, file: File, confirm: boolean, extra: Record<string, string> = {}) => {
