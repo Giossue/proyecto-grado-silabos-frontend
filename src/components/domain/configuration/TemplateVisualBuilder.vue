@@ -120,7 +120,8 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
 
         <ol class="flex flex-col gap-3">
           <li v-for="(field, fieldIndex) in fields" :key="field.id" :data-field="field.id" :class="cn('group relative rounded-sm px-2 py-1 outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : field.label.trim() ? 'hover:outline hover:outline-1 hover:outline-primary/40' : 'outline outline-1 outline-dashed outline-muted-foreground')">
-            <div role="button" tabindex="0" class="flex cursor-pointer flex-col gap-1" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
+            <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -->
+            <Button as="div" variant="ghost" role="button" tabindex="0" class="h-auto w-full cursor-pointer flex-col items-stretch gap-1 whitespace-normal rounded-sm p-0 text-left font-normal hover:bg-transparent" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
               <div class="flex items-baseline justify-between gap-2">
                 <h4 v-if="field.label.trim()" class="text-sm font-semibold">{{ sectionIndex + 1 }}.{{ fieldIndex + 1 }} {{ field.label }}</h4>
                 <span v-else class="text-xs italic text-muted-foreground">Campo sin nombre</span>
@@ -130,7 +131,7 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
                 <component :is="fieldTypeEntry(field.type)!.ViewComponent" v-if="fieldTypeEntry(field.type)" :field="typed(field)" />
                 <FreeTextContent v-else :value="null" />
               </div>
-            </div>
+            </Button>
             <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">
               <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === 0" :aria-label="`Subir el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
               <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === fields.length - 1" :aria-label="`Bajar el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
