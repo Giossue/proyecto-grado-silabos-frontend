@@ -8,7 +8,7 @@ export type ManagedUser = {
   active: boolean;
   pending_activation: boolean;
   two_factor_enabled: boolean;
-  roles: Array<{ code: RoleCode; name: string; career_name: string | null }>;
+  roles: Array<{ id: string; code: RoleCode; name: string; career_name: string | null }>;
   careers: Array<string | null>;
   assignments: Array<{ id: string; role_name: string; career_name: string | null; active: boolean }>;
 };
@@ -30,6 +30,7 @@ export const createManagedUser = (payload: { nombre: string; correo_electronico:
   api<{ message: string }>('/admin/users', { method: 'POST', body: JSON.stringify(payload) });
 export const resendManagedUserInvitation = (userId: string) =>
   api<{ message: string }>(`/admin/users/${userId}/resend-activation`, { method: 'POST' });
+export const removeManagedUserRole = (userId: string, assignmentId: string) => api<{ message: string }>(`/admin/users/${userId}/roles/${assignmentId}`, { method: 'DELETE' });
 export const deleteManagedUser = (userId: string) => api<{ message: string }>(`/admin/users/${userId}`, { method: 'DELETE' });
 export const updateManagedUser = (userId: string, payload: { nombre: string; correo_electronico: string; active?: boolean; role_code?: string; career_id?: string | null }) =>
   api<{ message: string }>(`/admin/users/${userId}`, { method: 'PATCH', body: JSON.stringify(payload) });
