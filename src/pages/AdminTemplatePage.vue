@@ -15,7 +15,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import type { TemplateAppearance, TemplateBuilderProps } from '@/types/configuration';
+import { LETTER_PAGE } from '@/lib/documentPagination';
 import { paths } from '@/lib/routes';
+import { sectionOrientation } from '@/lib/templateParts';
 import { templateEditorState } from '@/state/templateEditor';
 
 const router = useRouter();
@@ -50,6 +52,18 @@ const builder = computed<TemplateBuilderProps | null>(() => {
         presets: value.presets ?? [],
         appearanceOptions: value.appearanceOptions as TemplateBuilderProps['appearanceOptions'],
     };
+});
+const templateHeaderWidth = computed<number | undefined>(() => {
+    const template = builder.value?.template;
+
+    if (!template) return undefined;
+
+    const firstSection = template.sections[0];
+    const orientation = firstSection
+        ? sectionOrientation(firstSection.blocks, template.appearance.orientation)
+        : template.appearance.orientation;
+
+    return orientation === 'landscape' ? LETTER_PAGE.height : LETTER_PAGE.width;
 });
 
 watch(
@@ -221,6 +235,7 @@ onBeforeUnmount(() => {
         title="Plantilla de sílabo"
         description="Hoja base de la plantilla institucional."
         size="wide"
+        :header-width="templateHeaderWidth"
     >
         <template #actions>
             <Button

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Plus, X } from '@lucide/vue';
-import type { VNode } from 'vue';
+import type { CSSProperties, VNode } from 'vue';
 import {
     computed,
     Fragment,
@@ -22,6 +22,7 @@ const props = withDefaults(
         title: string;
         description: string;
         size?: 'full' | 'wide' | 'narrow';
+        headerWidth?: number;
     }>(),
     {
         size: 'full',
@@ -35,6 +36,11 @@ const widthClass = computed(
             wide: 'mx-auto w-full max-w-6xl',
             narrow: 'mx-auto w-full max-w-4xl',
         })[props.size],
+);
+const headerStyle = computed<CSSProperties | undefined>(() =>
+    props.headerWidth
+        ? { width: `${props.headerWidth}px`, maxWidth: '100%' }
+        : undefined,
 );
 
 const pageTitle = usePageTitle();
@@ -91,7 +97,8 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
         "
     >
         <header
-            class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+            :class="cn('flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between', headerWidth && 'mx-auto')"
+            :style="headerStyle"
         >
             <div class="flex min-w-0 flex-1 flex-col gap-2">
                 <div v-if="$slots.eyebrow" class="-mt-1">
