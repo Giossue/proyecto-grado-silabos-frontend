@@ -482,7 +482,6 @@ onBeforeUnmount(() => {
             <FieldGroup>
               <template v-for="{ field, nested, hint } in sectionEntries(section.fields)" :key="field.id">
                 <template v-if="hint && canEdit">
-                  <p class="text-sm text-muted-foreground">Complete estos datos: se imprimen dentro de la tabla de identificación al enviar el sílabo.</p>
                   <Field v-if="section.fields.some(isDisabilityField)">
                     <FieldLabel for="disability-choice">¿Tiene estudiantes con discapacidad?</FieldLabel>
                     <Select :model-value="hasDisability(section.fields) ? 'si' : 'no'" :disabled="conflict" @update:model-value="chooseDisability(section.fields, String($event))">
