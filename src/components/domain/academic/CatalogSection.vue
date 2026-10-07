@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { X } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import CatalogActions from '@/components/domain/academic/CatalogActions.vue';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
     Select,
@@ -289,7 +290,12 @@ const {
     </Card>
 
     <Dialog :open="Boolean(logoPreview)" @update:open="updateLogoPreviewOpen">
-        <DialogContent class="sm:max-w-3xl">
+        <DialogContent class="pr-14 sm:max-w-3xl">
+            <DialogClose as-child>
+                <Button type="button" variant="ghost" size="icon-sm" class="absolute top-4 right-4" aria-label="Cerrar vista del logo">
+                    <X aria-hidden="true" />
+                </Button>
+            </DialogClose>
             <DialogHeader>
                 <DialogTitle>Logo de {{ logoPreview?.name }}</DialogTitle>
             </DialogHeader>
