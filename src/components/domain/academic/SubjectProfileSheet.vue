@@ -4,8 +4,7 @@ import { ApiError } from '@/api/client';
 import { getSubjectProfile, saveSubjectProfile, type SubjectProfileField } from '@/api/career-academics';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
-import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
-import { isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
+import { fieldTypeRegistry } from '@/components/domain/fieldTypes/registry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import type { DocumentNode } from '@/lib/templateDocument';
@@ -65,11 +64,12 @@ const save = async (close: () => void) => {
               <Field v-for="field in fields" :key="field.id">
                 <FieldLabel :for="`ficha-${field.id}`">{{ field.label }}</FieldLabel>
                 <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
-                <FreeTextEditor
+                <component
+                  :is="fieldTypeRegistry.texto.EditorComponent"
                   :id="`ficha-${field.id}`"
-                  :label="field.label"
+                  :field="{ id: field.id, key: field.key, label: field.label, type: 'texto', value: values[field.id] }"
                   :disabled="disabled"
-                  :model-value="isFreeTextDocument(values[field.id]) ? values[field.id] : null"
+                  :model-value="values[field.id]"
                   @update:model-value="values[field.id] = $event"
                 />
               </Field>

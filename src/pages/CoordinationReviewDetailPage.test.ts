@@ -30,6 +30,8 @@ vi.mock("@/api/reviews", async (importOriginal) => ({
   resetSyllabus: vi.fn(),
 }));
 
+const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
+
 const detail = (decisionsAllowed = true): ReviewDetail => ({
   syllabus: {
     id: "syllabus-1",
@@ -77,18 +79,20 @@ const detail = (decisionsAllowed = true): ReviewDetail => ({
       sections: [{
         key: "descripcion",
         title: "Descripción",
-        blocks: [{
-          key: "descripcion",
-          title: "Descripción",
-          content_type: "text",
-          fields: [{
-            key: "objetivo",
-            label: "Objetivo general",
-            type: "texto_largo",
-            inherited: false,
-            value: "Contenido enviado",
-          }],
-        }],
+        fields: [
+          { key: "objetivo", label: "Objetivo general", type: "texto", inherited: false, config: [], value: doc("Contenido enviado") },
+          { key: "perfil", label: "Descripción", type: "ficha", inherited: true, config: { adjustable: false }, value: doc("Contenido heredado") },
+          {
+            key: "unidades", label: "Planificación", type: "tabla", inherited: false,
+            config: { columns: [{ key: "tema", label: "Tema" }], rows: [{ key: "semana_1", label: "Semana 1" }] },
+            value: { semana_1: { tema: "Fundamentos" } },
+          },
+          {
+            key: "identificacion", label: "", type: "automatico", inherited: false, config: { source: "identification_card" },
+            value: { career: "Software" }, document: { type: "doc", content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph", content: [{ type: "text", text: "FACULTAD: Ciencias" }] }] }] }] }] },
+          },
+          { key: "conducta", label: "Conducta ética", type: "fijo", inherited: false, config: {}, value: doc("Texto institucional") },
+        ],
       }],
     },
   },
@@ -226,6 +230,21 @@ describe("CoordinationReviewDetailPage", () => {
 
     expect(getReview).toHaveBeenCalledTimes(2);
     expect(wrapper.text()).toContain("Contenido enviado");
+    wrapper.unmount();
+  });
+
+  it("pinta cada campo de la fotografía con la vista de su tipo", async () => {
+    vi.mocked(getReview).mockResolvedValue(detail());
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const text = wrapper.text();
+    expect(text).toContain("Contenido enviado");
+    expect(text).toContain("Contenido heredado");
+    expect(wrapper.get(".table-field-view").text()).toContain("Fundamentos");
+    expect(wrapper.get(".table-field-view").text()).toContain("Semana 1");
+    expect(text).toContain("FACULTAD: Ciencias");
+    expect(text).toContain("Texto institucional");
     wrapper.unmount();
   });
 });

@@ -40,12 +40,7 @@ const detail = (overrides: Partial<LibraryReviewDetail> = {}): LibraryReviewDeta
   sections: [{
     key: 'bibliografia',
     title: 'Bibliografía',
-    blocks: [{
-      key: 'bibliografia',
-      title: 'Bibliografía',
-      content_type: 'text',
-      fields: [{ key: 'basica', label: 'Bibliografía básica', type: 'texto_largo', inherited: false, value: 'Sommerville, Ingeniería de software, 10.ª ed.' }],
-    }],
+    fields: [{ key: 'basica', label: 'Bibliografía básica', type: 'texto', inherited: false, value: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Sommerville, Ingeniería de software, 10.ª ed.' }] }] } }],
   }],
   comments: [],
   comment_reasons: [
