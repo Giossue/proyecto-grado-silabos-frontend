@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import logo from '@/assets/logo-ueb.png';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -33,7 +34,7 @@ defineProps<{
             class="relative hidden flex-col items-center justify-center gap-6 bg-brand-surface p-10 text-brand-foreground lg:flex"
         >
             <div class="flex items-center justify-center">
-                <img src="/logo-ueb.png" alt="Universidad Estatal de Bolívar" class="size-56 object-contain" />
+                <img :src="logo" alt="Universidad Estatal de Bolívar" class="size-56 object-contain" />
             </div>
             <div class="flex max-w-md flex-col gap-2 text-center">
                 <p class="text-2xl font-semibold">Sílabos UEB</p>
