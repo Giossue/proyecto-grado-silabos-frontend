@@ -28,7 +28,10 @@ import {
     FieldError,
     FieldGroup,
     FieldLabel,
+    FieldLegend,
+    FieldSet,
 } from '@/components/ui/field';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -57,6 +60,7 @@ const fromProfile = ref(false);
 const initialContent = ref<DocumentNode | null>(null);
 const initialChanged = ref(false);
 /** El contenido inicial (por ejemplo una tabla de planificación) solo aplica a un campo de texto libre que escribe el docente. */
+const origin = computed(() => (fromProfile.value ? 'ficha' : 'docente'));
 const initialCapable = computed(() => profileCapable.value && !fromProfile.value);
 const teacherEditable = ref(false);
 /** Solo un campo de texto libre propio puede llenarse desde la ficha de la asignatura. */
@@ -261,53 +265,63 @@ defineExpose({
                             </FieldDescription>
                         </FieldContent>
                     </Field>
-                    <Field v-if="profileCapable" orientation="horizontal">
-                        <Checkbox
-                            id="edit-template-field-profile"
-                            v-model="fromProfile"
+                    <FieldSet v-if="profileCapable">
+                        <FieldLegend variant="label">¿Quién llena este campo?</FieldLegend>
+                        <RadioGroup
+                            :model-value="origin"
                             :disabled="form.processing || profileForm.processing"
-                        />
-                        <FieldContent>
-                            <FieldLabel for="edit-template-field-profile">
-                                Se llena desde la ficha de la asignatura
-                            </FieldLabel>
-                            <FieldDescription>
-                                Coordinación lo escribe una vez por materia y
-                                cada sílabo nuevo lo hereda.
-                            </FieldDescription>
-                        </FieldContent>
-                    </Field>
-                    <Field v-if="profileCapable && fromProfile" orientation="horizontal">
-                        <Checkbox
-                            id="edit-template-field-adjust"
-                            v-model="teacherEditable"
-                            :disabled="form.processing || profileForm.processing"
-                        />
-                        <FieldContent>
-                            <FieldLabel for="edit-template-field-adjust">
-                                El docente puede ajustarlo
-                            </FieldLabel>
-                            <FieldDescription>
-                                Llega como sugerencia: el docente puede
-                                agregar o quitar texto en su sílabo.
-                            </FieldDescription>
-                        </FieldContent>
-                    </Field>
-                    <Field v-if="initialCapable">
-                        <FieldLabel for="edit-template-field-initial">
-                            Contenido inicial (opcional)
-                        </FieldLabel>
-                        <FreeTextEditor
-                            id="edit-template-field-initial"
-                            label="Contenido inicial"
-                            :model-value="initialContent"
-                            :disabled="form.processing || profileForm.processing"
-                            @update:model-value="initialContent = $event; initialChanged = true"
-                        />
-                        <FieldDescription>
-                            Lo que cada sílabo nuevo trae escrito en este campo, por ejemplo una tabla para que el docente la llene.
-                        </FieldDescription>
-                    </Field>
+                            @update:model-value="fromProfile = $event === 'ficha'"
+                        >
+                            <Field orientation="horizontal">
+                                <RadioGroupItem id="edit-template-field-teacher" value="docente" />
+                                <FieldContent>
+                                    <FieldLabel for="edit-template-field-teacher">
+                                        Lo escribe el docente en su sílabo
+                                    </FieldLabel>
+                                    <FieldDescription>
+                                        Puede traer un contenido inicial, por ejemplo una tabla para que la llene.
+                                    </FieldDescription>
+                                </FieldContent>
+                            </Field>
+                            <Field v-if="initialCapable">
+                                <FreeTextEditor
+                                    id="edit-template-field-initial"
+                                    label="Contenido inicial"
+                                    :model-value="initialContent"
+                                    :disabled="form.processing || profileForm.processing"
+                                    @update:model-value="initialContent = $event; initialChanged = true"
+                                />
+                            </Field>
+                            <Field orientation="horizontal">
+                                <RadioGroupItem id="edit-template-field-profile" value="ficha" />
+                                <FieldContent>
+                                    <FieldLabel for="edit-template-field-profile">
+                                        Se llena desde la ficha de la asignatura
+                                    </FieldLabel>
+                                    <FieldDescription>
+                                        Coordinación lo escribe una vez por materia y
+                                        cada sílabo nuevo lo hereda.
+                                    </FieldDescription>
+                                </FieldContent>
+                            </Field>
+                            <Field v-if="fromProfile" orientation="horizontal">
+                                <Checkbox
+                                    id="edit-template-field-adjust"
+                                    v-model="teacherEditable"
+                                    :disabled="form.processing || profileForm.processing"
+                                />
+                                <FieldContent>
+                                    <FieldLabel for="edit-template-field-adjust">
+                                        El docente puede ajustarlo
+                                    </FieldLabel>
+                                    <FieldDescription>
+                                        Llega como sugerencia: el docente puede
+                                        agregar o quitar texto en su sílabo.
+                                    </FieldDescription>
+                                </FieldContent>
+                            </Field>
+                        </RadioGroup>
+                    </FieldSet>
                 </FieldGroup>
                 <DialogFooter>
                     <Button

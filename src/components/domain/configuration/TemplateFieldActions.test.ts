@@ -53,7 +53,7 @@ describe('TemplateFieldActions', () => {
         expect(text).not.toContain('Forma:');
         expect(text).toContain('Se llena desde la ficha de la asignatura');
         expect(text).not.toContain('El docente puede ajustarlo');
-        expect(window.document.querySelectorAll('input:not([type="hidden"]), button[role="checkbox"]')).toHaveLength(3);
+        expect(window.document.querySelectorAll('input:not([type="hidden"]), button[role="checkbox"], button[role="radio"]')).toHaveLength(4);
     });
 
     it('marcar «desde la ficha» guarda el origen del campo después de la hoja', async () => {
@@ -76,12 +76,11 @@ describe('TemplateFieldActions', () => {
     it('un campo de texto libre propio ofrece su contenido inicial; uno de la ficha, no', async () => {
         const wrapper = mountActions(block());
         await open(wrapper);
-        expect(window.document.body.textContent).toContain('Contenido inicial (opcional)');
-        expect(window.document.getElementById('edit-template-field-initial')).not.toBeNull();
+                expect(window.document.getElementById('edit-template-field-initial')).not.toBeNull();
 
         (window.document.getElementById('edit-template-field-profile') as HTMLButtonElement).click();
         await flushPromises();
-        expect(window.document.body.textContent).not.toContain('Contenido inicial (opcional)');
+        expect(window.document.getElementById('edit-template-field-initial')).toBeNull();
     });
 
     it('un dato automático de la malla no ofrece la ficha', async () => {
