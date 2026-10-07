@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { UserPlus } from '@lucide/vue';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { createManagedUser } from '@/api/admin-users';
 import { createCareerTeacher } from '@/api/career-academics';
 import { ApiError } from '@/api/client';
@@ -22,6 +22,10 @@ const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const form = ref({ nombre: '', correo_electronico: '', role_code: 'docente', career_id: '' });
+const visibleName = computed({
+    get: () => form.value.nombre,
+    set: (value: string) => { form.value.nombre = value.normalize('NFC').toLocaleUpperCase('es-EC'); },
+});
 const reset = (): void => { form.value = { nombre: '', correo_electronico: '', role_code: 'docente', career_id: '' }; errors.value = {}; };
 watch(open, (value) => { if (value) reset(); });
 const submit = async (): Promise<void> => {
@@ -39,7 +43,7 @@ const submit = async (): Promise<void> => {
 <template>
     <FormSheet v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? 'Crear docente para su carrera' : 'Crear cuenta institucional'" :description="teacherCareer ? `Registre un docente para ${teacherCareer.name}. Si el correo ya tiene una cuenta, se incorporará conservando su nombre y acceso actuales.` : 'Registre una cuenta con su rol inicial y, si el rol la pide, su carrera. La persona recibirá un enlace para verificar su correo y definir su contraseña.'" :show-trigger="showTrigger">
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
-            <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel for="managed-user-name" required>Nombre completo</FieldLabel><Input id="managed-user-name" v-model="form.nombre" placeholder="Ej. ANA PÉREZ" required /><FieldError :errors="errors.nombre" /></Field>
+            <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel for="managed-user-name" required>Nombre completo</FieldLabel><Input id="managed-user-name" v-model="visibleName" lang="es" autocomplete="name" autocapitalize="characters" placeholder="Ej. ANA PÉREZ" required /><FieldError :errors="errors.nombre" /></Field>
             <Field :data-invalid="Boolean(errors.correo_electronico)"><FieldLabel for="managed-user-email" required>Correo institucional</FieldLabel><Input id="managed-user-email" v-model="form.correo_electronico" type="email" placeholder="Ej. ana.perez@ueb.edu.ec" required /><FieldError :errors="errors.correo_electronico" /></Field>
             <Field v-if="!teacherCareer" :data-invalid="Boolean(errors.role_code)"><FieldLabel for="managed-user-role" required>Rol inicial</FieldLabel><Select v-model="form.role_code" required><SelectTrigger id="managed-user-role"><SelectValue placeholder="Seleccione" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="role in roles" :key="role.codigo" :value="role.codigo">{{ role.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.role_code" /></Field>
             <Field v-if="!teacherCareer && roleNeedsCareer(form.role_code)" :data-invalid="Boolean(errors.career_id)"><FieldLabel for="managed-user-career" required>Carrera</FieldLabel><Select v-model="form.career_id" required><SelectTrigger id="managed-user-career"><SelectValue placeholder="Seleccione" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="career in careers" :key="career.id" :value="career.id">{{ career.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.career_id" /></Field>
