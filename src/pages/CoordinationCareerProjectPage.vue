@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getScheduledSubjects, type ScheduledSubjects } from '@/api/career-academics';
 import { getSession } from '@/api/session';
+import FichaImportDialog from '@/components/domain/academic/FichaImportDialog.vue';
 import SubjectProfileSheet from '@/components/domain/academic/SubjectProfileSheet.vue';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -57,8 +58,8 @@ const open = (subject: Subject): void => {
     selected.value = subject;
     profileOpen.value = true;
 };
-const saved = async (): Promise<void> => {
-    toast.success('Ficha de asignatura guardada.');
+const saved = async (message = 'Ficha de asignatura guardada.'): Promise<void> => {
+    toast.success(message);
     await load();
 };
 
@@ -67,6 +68,7 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Proyecto de carrera" description="Datos de cada materia de la malla que heredan los sílabos: descripción, objetivos, resultados, habilidades blandas, perfil de egreso y bibliografía.">
+    <template #actions><FichaImportDialog :disabled="Boolean(data?.career.lock_reason)" @applied="saved" /></template>
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" />
     <Card v-else-if="data"><CardContent class="flex flex-col gap-4">

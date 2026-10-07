@@ -1,0 +1,38 @@
+import { api } from '@/api/client';
+
+export type FichaImportSubject = {
+  subject_id: string;
+  code: string;
+  name: string;
+  cycle: number | null;
+  state: 'pendiente' | 'lista' | 'sin_evidencia' | 'fallida';
+  values: Record<string, string | string[]>;
+  replaces: boolean;
+};
+
+export type FichaImport = {
+  id: string;
+  state: 'pendiente' | 'en_ejecucion' | 'lista' | 'fallida' | 'aplicada' | 'descartada';
+  error: string | null;
+  documents: Array<{ name: string; size: number }>;
+  progress: { done: number; total: number };
+  fields: Array<{ key: string; label: string }>;
+  subjects: FichaImportSubject[];
+};
+
+export type FichaImportState = { available: boolean; import: FichaImport | null };
+
+export const getFichaImport = () => api<FichaImportState>('/coordination/ficha-imports');
+
+export const startFichaImport = (files: File[]) => {
+  const body = new FormData();
+  files.forEach((file) => body.append('files[]', file));
+
+  return api<{ import: FichaImport }>('/coordination/ficha-imports', { method: 'POST', body });
+};
+
+export const applyFichaImport = (id: string, subjects: string[]) =>
+  api<{ message: string }>(`/coordination/ficha-imports/${id}/apply`, { method: 'POST', body: JSON.stringify({ subjects }) });
+
+export const discardFichaImport = (id: string) =>
+  api<{ message: string }>(`/coordination/ficha-imports/${id}`, { method: 'DELETE' });

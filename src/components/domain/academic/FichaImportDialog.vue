@@ -1,0 +1,130 @@
+<script setup lang="ts">
+import { FileUp, Sparkles, Trash2 } from '@lucide/vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { ApiError } from '@/api/client';
+import { applyFichaImport, discardFichaImport, getFichaImport, startFichaImport, type FichaImport, type FichaImportSubject } from '@/api/ficha-imports';
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+
+const props = defineProps<{ disabled?: boolean }>();
+const emit = defineEmits<{ applied: [message: string] }>();
+const open = ref(false);
+const available = ref(true);
+const current = ref<FichaImport | null>(null);
+const files = ref<File[]>([]);
+const chosen = ref<Set<string>>(new Set());
+const busy = ref(false);
+const error = ref<string | null>(null);
+let timer: number | undefined;
+
+const working = computed(() => current.value?.state === 'pendiente' || current.value?.state === 'en_ejecucion');
+const ready = computed(() => current.value?.state === 'lista');
+const proposed = computed(() => (current.value?.subjects ?? []).filter((subject) => subject.state === 'lista'));
+const fieldLabel = (key: string): string => current.value?.fields.find((field) => field.key === key)?.label ?? key;
+const stateText = (subject: FichaImportSubject): string => ({ lista: 'Ficha propuesta', sin_evidencia: 'Sin información en los documentos', fallida: 'No se pudo proponer', pendiente: 'Analizando…' })[subject.state];
+const asLines = (value: string | string[]): string[] => (Array.isArray(value) ? value : [value]);
+
+const stop = (): void => { if (timer !== undefined) { window.clearTimeout(timer); timer = undefined; } };
+const load = async (): Promise<void> => {
+  stop();
+  try {
+    const state = await getFichaImport();
+    available.value = state.available;
+    current.value = state.import;
+    if (state.import?.state === 'lista' && chosen.value.size === 0) {
+      chosen.value = new Set(state.import.subjects.filter((subject) => subject.state === 'lista').map((subject) => subject.subject_id));
+    }
+    if (open.value && (state.import?.state === 'pendiente' || state.import?.state === 'en_ejecucion')) timer = window.setTimeout(() => void load(), 3000);
+  } catch (reason) {
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo consultar el asistente.';
+  }
+};
+watch(open, (value) => { if (value) { error.value = null; files.value = []; chosen.value = new Set(); void load(); } else stop(); });
+onBeforeUnmount(stop);
+
+const pick = (event: Event): void => { files.value = Array.from((event.target as HTMLInputElement).files ?? []); };
+const run = async (action: () => Promise<unknown>, fallback: string): Promise<boolean> => {
+  busy.value = true; error.value = null;
+  try { await action(); return true; }
+  catch (reason) { error.value = reason instanceof ApiError ? (Object.values(reason.errors).flat()[0] ?? reason.message) : fallback; return false; }
+  finally { busy.value = false; }
+};
+const analyze = async (): Promise<void> => { if (await run(async () => { current.value = (await startFichaImport(files.value)).import; }, 'No se pudieron enviar los documentos.')) void load(); };
+const discard = async (): Promise<void> => { if (current.value && await run(() => discardFichaImport(current.value!.id), 'No se pudo descartar.')) { current.value = null; chosen.value = new Set(); files.value = []; } };
+const apply = async (): Promise<void> => {
+  if (!current.value) return;
+  const id = current.value.id;
+  if (await run(() => applyFichaImport(id, [...chosen.value]), 'No se pudieron aplicar las fichas.')) { open.value = false; emit('applied', `Fichas aplicadas a ${chosen.value.size} materias.`); }
+};
+const expanded = ref<Set<string>>(new Set());
+const toggleExpanded = (id: string): void => { const next = new Set(expanded.value); if (!next.delete(id)) next.add(id); expanded.value = next; };
+const toggle = (id: string, value: boolean): void => { const next = new Set(chosen.value); if (value) next.add(id); else next.delete(id); chosen.value = next; };
+</script>
+
+<template>
+  <Dialog v-model:open="open">
+    <DialogTrigger as-child><Button type="button" :disabled="props.disabled"><Sparkles data-icon="inline-start" aria-hidden="true" />Importar documentos</Button></DialogTrigger>
+    <DialogContent class="max-h-screen overflow-y-auto sm:max-w-3xl">
+      <DialogHeader>
+        <DialogTitle>Importar el proyecto de carrera</DialogTitle>
+        <DialogDescription>Suba los documentos de la carrera (PDF o Excel). El asistente propone la ficha de cada materia y usted decide cuáles aplicar.</DialogDescription>
+      </DialogHeader>
+      <div class="flex flex-col gap-4">
+        <FeedbackAlert v-if="error" :message="error" />
+        <Alert v-if="!available"><AlertDescription>El asistente de IA no está configurado en este entorno. Pídale a Administración que lo active.</AlertDescription></Alert>
+
+        <template v-else-if="working">
+          <p class="flex items-center gap-2 text-sm" role="status"><Spinner /> Analizando los documentos… {{ current?.progress.done ?? 0 }} de {{ current?.progress.total ?? 0 }} materias.</p>
+        </template>
+
+        <template v-else-if="current?.state === 'fallida'">
+          <Alert variant="destructive"><AlertDescription>{{ current.error ?? 'El análisis falló.' }}</AlertDescription></Alert>
+          <div><Button type="button" variant="outline" :disabled="busy" @click="discard"><Trash2 data-icon="inline-start" aria-hidden="true" />Descartar y empezar de nuevo</Button></div>
+        </template>
+
+        <template v-else-if="ready">
+          <p class="text-sm">Propuesta para {{ proposed.length }} de {{ current?.subjects.length }} materias. Marque las que desea aplicar; lo que no marque no se toca.</p>
+          <ul class="flex max-h-96 flex-col gap-2 overflow-y-auto">
+            <li v-for="subject in current?.subjects" :key="subject.subject_id" class="rounded-md border p-3">
+              <div class="flex items-start gap-3">
+                <Checkbox :id="`ficha-${subject.subject_id}`" :model-value="chosen.has(subject.subject_id)" :disabled="subject.state !== 'lista' || busy" :aria-label="`Aplicar la ficha de ${subject.name}`" @update:model-value="toggle(subject.subject_id, $event === true)" />
+                <div class="flex min-w-0 flex-1 flex-col gap-1">
+                  <FieldLabel :for="`ficha-${subject.subject_id}`" class="font-medium">{{ subject.name }}<span class="font-normal text-muted-foreground"> · {{ subject.code }}</span></FieldLabel>
+                  <p class="text-sm text-muted-foreground">{{ stateText(subject) }}<template v-if="subject.state === 'lista' && subject.replaces"> · reemplaza la ficha actual</template></p>
+                  <div v-if="subject.state === 'lista'" class="text-sm">
+                    <Button type="button" variant="link" size="sm" class="h-auto px-0" :aria-expanded="expanded.has(subject.subject_id)" @click="toggleExpanded(subject.subject_id)">{{ expanded.has(subject.subject_id) ? 'Ocultar lo que propone' : 'Ver lo que propone' }}</Button>
+                    <div v-for="(value, key) in expanded.has(subject.subject_id) ? subject.values : {}" :key="key" class="mt-2">
+                      <p class="font-medium">{{ fieldLabel(String(key)) }}</p>
+                      <p v-for="(line, index) in asLines(value)" :key="index" class="whitespace-pre-wrap">{{ Array.isArray(value) ? '• ' : '' }}{{ line }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </template>
+
+        <template v-else>
+          <div class="flex flex-col gap-2">
+            <FieldLabel for="ficha-import-files">Documentos (PDF o Excel, hasta 6)</FieldLabel>
+            <Input id="ficha-import-files" type="file" multiple accept=".pdf,.xlsx,.xls,application/pdf" :disabled="busy" @change="pick" />
+            <p v-if="files.length" class="text-sm text-muted-foreground">{{ files.map((file) => file.name).join(', ') }}</p>
+          </div>
+        </template>
+      </div>
+      <DialogFooter>
+        <template v-if="ready">
+          <Button type="button" variant="outline" :disabled="busy" @click="discard"><Trash2 data-icon="inline-start" aria-hidden="true" />Descartar</Button>
+          <Button type="button" :disabled="busy || chosen.size === 0" @click="apply"><Spinner v-if="busy" data-icon="inline-start" />Aplicar a {{ chosen.size }} materias</Button>
+        </template>
+        <Button v-else-if="available && !working && current?.state !== 'fallida'" type="button" :disabled="busy || files.length === 0" @click="analyze"><Spinner v-if="busy" data-icon="inline-start" /><FileUp v-else data-icon="inline-start" aria-hidden="true" />Analizar documentos</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+</template>
