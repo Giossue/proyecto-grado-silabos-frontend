@@ -34,7 +34,17 @@ const busy = ref(false);
 const error = ref<string | null>(null);
 
 const isLandscape = (section: TemplateSectionPayload): boolean => section.blocks.some((block) => block.page_orientation === 'landscape');
-const sections = computed(() => props.template.sections.map((section) => ({ section, fields: sectionFields(section), landscape: isLandscape(section) })));
+const sections = computed(() => props.template.sections.map((section, index) => ({ section, fields: sectionFields(section), landscape: isLandscape(section), index })));
+/** Hojas consecutivas con la misma orientación: una sección horizontal va en su propia hoja, aparte de las verticales. */
+const sheets = computed(() => {
+    const groups: Array<{ landscape: boolean; items: typeof sections.value }> = [];
+    for (const item of sections.value) {
+        const last = groups[groups.length - 1];
+        if (last && last.landscape === item.landscape) last.items.push(item);
+        else groups.push({ landscape: item.landscape, items: [item] });
+    }
+    return groups.length > 0 ? groups : [{ landscape: false, items: [] as typeof sections.value }];
+});
 const usedSectionKeys = computed(() => props.template.sections.map((section) => section.key));
 const usedFieldKeys = computed(() => sections.value.flatMap((entry) => entry.fields.map((field) => field.key)));
 
@@ -87,8 +97,8 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
   <div class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
-    <article data-sheet class="template-sheet">
-      <header class="flex flex-col gap-3">
+    <article v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" data-sheet :class="cn('template-sheet', sheet.landscape && 'template-sheet--landscape')">
+      <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
           <TemplateLogoControl :logo-url="logos.institution" :disabled="locked" />
           <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain">
@@ -98,9 +108,9 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
           <Button type="button" variant="outline" size="sm" class="absolute -top-3 right-0 bg-background opacity-0 group-hover:opacity-100 focus-visible:opacity-100" :disabled="locked" @click="titleActions?.openEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar título</Button>
         </div>
       </header>
-      <TemplateTitleActions ref="titleActions" :template-id="template.id" :title="template.titleBlock.text" />
+      <TemplateTitleActions v-if="sheetIndex === 0" ref="titleActions" :template-id="template.id" :title="template.titleBlock.text" />
 
-      <div v-if="sections.length === 0" class="flex flex-1 flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border p-8 text-center">
+      <div v-if="sections.length === 0 && sheetIndex === 0" class="flex flex-1 flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border p-8 text-center">
         <p class="text-base font-medium">Esta hoja está en blanco</p>
         <p class="max-w-sm text-sm text-muted-foreground">La plantilla no tiene secciones. Cargue el formato oficial o agregue la primera sección.</p>
         <div class="flex flex-wrap justify-center gap-2">
@@ -109,8 +119,8 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
         </div>
       </div>
 
-      <section v-for="({ section, fields, landscape }, sectionIndex) in sections" :key="section.id" :data-section="section.id" :data-orientation="landscape ? 'landscape' : 'portrait'" :class="cn('flex min-w-0 flex-col gap-3', landscape && 'template-sheet-landscape')">
-        <p v-if="landscape" class="-mb-1 text-xs italic text-muted-foreground">Hoja horizontal</p>
+      <section v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id" :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="flex min-w-0 flex-col gap-3">
+        <p v-if="sheet.landscape" class="-mb-1 text-xs italic text-muted-foreground">Hoja horizontal</p>
         <div :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
           <Button type="button" variant="ghost" class="h-auto w-full min-w-0 justify-start whitespace-normal px-0 py-0 text-left font-bold [overflow-wrap:anywhere] hover:bg-transparent" :aria-pressed="selectedSection === section.id" :aria-label="`Sección ${section.title}`" @click="selectSection(section.id)">{{ sectionIndex + 1 }}. {{ section.title }}</Button>
           <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
@@ -147,7 +157,7 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
         <Button type="button" variant="outline" size="sm" class="self-start border-dashed" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
       </section>
 
-      <Button v-if="sections.length > 0" type="button" variant="outline" class="self-start border-dashed" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
+      <Button v-if="sections.length > 0 && sheetIndex === sheets.length - 1" type="button" variant="outline" class="self-start border-dashed" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
     </article>
 
     <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" :designs="designs" @saved="emit('changed')" />

@@ -477,17 +477,11 @@
         box-shadow: var(--document-paper-shadow);
     }
 
-    /* Sección en hoja horizontal (carta apaisada): se ensancha sobre la hoja vertical, como en el Word. */
-    .template-sheet-landscape {
-        position: relative;
-        left: 50%;
-        width: min(279mm, calc(100vw - 3rem));
-        max-width: none;
-        transform: translateX(-50%);
-        padding: 1cm;
-        background-color: var(--document-paper);
-        box-shadow: var(--document-paper-shadow);
-        outline: 1px dashed var(--border);
+    /* Hoja horizontal (carta apaisada): una hoja aparte, más ancha, entre las verticales. */
+    .template-sheet--landscape {
+        max-width: 279mm;
+        min-height: 216mm;
+        padding: 1.5cm;
     }
 
     .template-sheet-title {

@@ -7,7 +7,7 @@ const props = defineProps<{ field: TypedField }>();
 // Sin unidades se dibuja una de ejemplo en blanco: así la plantilla muestra el formato oficial.
 const units = (): ReturnType<typeof unitsOf> => {
   const value = unitsOf(props.field.value);
-  return value.length > 0 ? value : [{ nombre: '', resultado: '', semanas: Array.from({ length: 4 }, emptyWeek) }];
+  return value.length > 0 ? value : [{ nombre: '', resultado: '', semanas: Array.from({ length: 16 }, emptyWeek) }];
 };
 </script>
 
