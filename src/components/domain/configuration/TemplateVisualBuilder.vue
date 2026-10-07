@@ -29,7 +29,7 @@ const selectedField = ref<string | null>(null);
 const selectedSection = ref<string | null>(null);
 const selectField = (id: string): void => { selectedField.value = id; selectedSection.value = null; };
 const selectSection = (id: string): void => { selectedSection.value = id; selectedField.value = null; };
-const typed = (field: TemplateField): TypedField => ({ id: field.id, key: field.key, label: field.label, help: field.help, type: field.type, config: field.config, value: null });
+const typed = (field: TemplateField): TypedField => ({ id: field.id, key: field.key, label: field.label, help: field.help, type: field.type, config: field.config, value: null, document: field.document ?? null });
 const busy = ref(false);
 const error = ref<string | null>(null);
 
@@ -109,9 +109,9 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
         </div>
       </div>
 
-      <section v-for="({ section, fields }, sectionIndex) in sections" :key="section.id" :data-section="section.id" class="flex flex-col gap-3">
+      <section v-for="({ section, fields }, sectionIndex) in sections" :key="section.id" :data-section="section.id" class="flex min-w-0 flex-col gap-3">
         <div :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
-          <Button type="button" variant="ghost" class="h-auto w-full min-w-0 justify-start px-0 py-0 text-left font-bold hover:bg-transparent" :aria-pressed="selectedSection === section.id" :aria-label="`Sección ${section.title}`" @click="selectSection(section.id)">{{ sectionIndex + 1 }}. {{ section.title }}</Button>
+          <Button type="button" variant="ghost" class="h-auto w-full min-w-0 justify-start whitespace-normal px-0 py-0 text-left font-bold [overflow-wrap:anywhere] hover:bg-transparent" :aria-pressed="selectedSection === section.id" :aria-label="`Sección ${section.title}`" @click="selectSection(section.id)">{{ sectionIndex + 1 }}. {{ section.title }}</Button>
           <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
             <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === 0" :aria-label="`Subir la sección ${section.title}`" @click="moveSection(sectionIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
             <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === sections.length - 1" :aria-label="`Bajar la sección ${section.title}`" @click="moveSection(sectionIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
@@ -121,15 +121,15 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
         </div>
 
         <ol class="flex flex-col gap-3">
-          <li v-for="(field, fieldIndex) in fields" :key="field.id" :data-field="field.id" :class="cn('group relative rounded-sm px-2 py-1 outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : field.label.trim() ? 'hover:outline hover:outline-1 hover:outline-primary/40' : 'outline outline-1 outline-dashed outline-muted-foreground')">
+          <li v-for="(field, fieldIndex) in fields" :key="field.id" :data-field="field.id" :class="cn('group relative min-w-0 rounded-sm px-2 py-1 outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : field.label.trim() ? 'hover:outline hover:outline-1 hover:outline-primary/40' : 'outline outline-1 outline-dashed outline-muted-foreground')">
             <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -->
-            <Button as="div" variant="ghost" role="button" tabindex="0" class="h-auto w-full cursor-pointer flex-col items-stretch gap-1 whitespace-normal rounded-sm p-0 text-left font-normal hover:bg-transparent" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
-              <div class="flex items-baseline justify-between gap-2">
-                <h4 v-if="field.label.trim()" class="font-bold">{{ sectionIndex + 1 }}.{{ fieldIndex + 1 }} {{ field.label }}</h4>
+            <Button as="div" variant="ghost" role="button" tabindex="0" class="h-auto w-full min-w-0 cursor-pointer flex-col items-stretch gap-1 whitespace-normal rounded-sm p-0 text-left font-normal hover:bg-transparent" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
+              <div class="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+                <h4 v-if="field.label.trim()" class="min-w-0 break-words font-bold [overflow-wrap:anywhere]">{{ field.label }}</h4>
                 <span v-else class="text-xs italic text-muted-foreground">Campo sin nombre</span>
-                <span class="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{{ typeLabel(field) }}</span>
+                <span class="ml-auto max-w-full shrink-0 rounded bg-muted px-1.5 py-0.5 text-left text-xs font-normal text-muted-foreground [overflow-wrap:anywhere]" data-field-type>{{ typeLabel(field) }}</span>
               </div>
-              <div :class="cn('pointer-events-none', boxed(field) && 'template-sheet-box')">
+              <div :class="cn('pointer-events-none min-w-0 max-w-full', boxed(field) && 'template-sheet-box')">
                 <component :is="fieldTypeEntry(field.type)!.ViewComponent" v-if="fieldTypeEntry(field.type)" :field="typed(field)" />
                 <FreeTextContent v-else :value="null" />
               </div>

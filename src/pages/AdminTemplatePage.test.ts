@@ -146,8 +146,11 @@ describe("AdminTemplatePage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const formatButton = wrapper.findAll('button').find((button) => button.text().trim() === 'Cargar formato oficial UEB');
-    expect(formatButton).toBeDefined();
+    const formatButtons = wrapper.findAll('button').filter((button) => button.text().trim() === 'Cargar formato oficial UEB');
+    // Solo queda el de la hoja vacía; la cabecera de la página ya no lo repite.
+    expect(formatButtons).toHaveLength(1);
+    expect(wrapper.get('header').text()).not.toContain('Cargar formato oficial UEB');
+    const formatButton = formatButtons[0];
     await formatButton!.trigger('click');
     await flushPromises();
 

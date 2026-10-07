@@ -463,10 +463,11 @@
         width: 100%;
         max-width: 210mm;
         min-height: 297mm;
-        aspect-ratio: 210 / 297;
+        min-width: 0;
         margin-inline: auto;
         padding: 1.8cm 2cm;
-        font-family: 'Times New Roman', Times, serif;
+        overflow-wrap: anywhere;
+        font-family: Arial, Helvetica, sans-serif;
         font-size: 10pt;
         text-align: justify;
         display: flex;
@@ -481,10 +482,13 @@
         color: var(--document-official-blue);
         text-align: center;
         font-weight: 700;
-        font-size: 10pt;
+        font-size: 14pt;
     }
 
     .template-sheet-box {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: auto;
         border: 1px solid var(--document-official-blue);
         padding: 0.3cm 0.4cm;
     }
@@ -596,4 +600,10 @@
 [data-sidebar='sidebar'] [data-slot='avatar-fallback'] {
     background-color: color-mix(in srgb, var(--sidebar-foreground) 18%, transparent);
     color: var(--sidebar-foreground);
+}
+
+/* La hoja del constructor imita el Word: el texto de los campos va a 10 pt, no al tamaño de la interfaz. */
+.template-sheet .text-sm {
+    font-size: 10pt;
+    line-height: 1.3;
 }

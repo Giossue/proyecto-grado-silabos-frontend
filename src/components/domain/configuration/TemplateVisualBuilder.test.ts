@@ -50,6 +50,35 @@ describe('TemplateVisualBuilder', () => {
     expect(body().textContent).toContain('Texto fijo igual para todos');
   });
 
+  it('dibuja la tabla oficial de identificación y no subtitula los campos sin nombre', () => {
+    const table = { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'FACULTAD: CIENCIAS ADMINISTRATIVAS' }] }] }] }] }] };
+    const official: Template = {
+      ...template,
+      sections: [{ id: 's1', key: 'identificacion', title: 'Identificación Institucional', description: null, blocks: [
+        { id: 'b-a', key: 'a', title: '', fields: [{ ...field('a', '', 'automatico'), config: { source: 'identification_card' }, document: table }] },
+        { id: 'b-d', key: 'd', title: '', fields: [field('d', 'Estudiantes con discapacidad: Tipo de discapacidad')] },
+      ] }],
+    };
+    mount(TemplateVisualBuilder, { props: { template: official }, attachTo: document.body });
+    expect(body().querySelector('[data-field="a"] table')?.textContent).toContain('FACULTAD: CIENCIAS ADMINISTRATIVAS');
+    expect(body().textContent).not.toContain('Se completa con los datos del sílabo');
+    expect(body().textContent).toContain('1. Identificación Institucional');
+    expect(body().querySelector('[data-field="a"] h4')).toBeNull();
+    expect(body().querySelector('[data-field="d"] h4')?.textContent?.trim()).toBe('Estudiantes con discapacidad: Tipo de discapacidad');
+    expect(body().textContent).not.toMatch(/\b1\.[1-9]\b/);
+  });
+
+  it('deja que la etiqueta del tipo y el nombre largo bajen de línea sin desbordar', () => {
+    const long = 'Lo escribe Coordinación en la ficha de la asignatura';
+    mountBuilder();
+    const row = body().querySelector('[data-field="f2"] [data-field-type]')!;
+    expect(row.parentElement?.className).toContain('flex-wrap');
+    expect(row.className).toContain('max-w-full');
+    expect(row.textContent!.length).toBeGreaterThan(0);
+    expect(long.length).toBeGreaterThan(40);
+    expect(body().querySelector('[data-field="f2"] h4')?.className).toContain('min-w-0');
+  });
+
   it('agrega un campo de texto sin nombre', async () => {
     const wrapper = mountBuilder();
     await click(byText('button', 'Agregar campo'));

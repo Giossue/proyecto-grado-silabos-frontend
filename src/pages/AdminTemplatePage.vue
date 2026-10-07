@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Inbox, LoaderCircle, Plus, Sparkles } from '@lucide/vue';
+import { Inbox, LoaderCircle, Plus } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { createTemplate, formatTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
@@ -144,19 +144,8 @@ onBeforeUnmount(() => {
         title="Plantilla de sílabo"
         description="El formato del sílabo: qué secciones y campos tiene, quién escribe cada uno y en qué orden. Cada sílabo entregado conserva su propia copia."
         size="wide"
+        :header-width="794"
     >
-        <template #actions>
-            <Button
-                v-if="template.sections.length === 0"
-                :disabled="formatting || Boolean(payload?.processLock)"
-                @click="format"
-            >
-                <LoaderCircle v-if="formatting" class="animate-spin" data-icon="inline-start" aria-hidden="true" />
-                <Sparkles v-else data-icon="inline-start" aria-hidden="true" />
-                {{ formatting ? 'Cargando formato…' : 'Cargar formato oficial UEB' }}
-            </Button>
-        </template>
-
         <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
         <Alert v-if="payload?.templateChangedDuringPause" class="mb-4">
             <AlertDescription>Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.</AlertDescription>
