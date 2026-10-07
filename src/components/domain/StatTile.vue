@@ -22,7 +22,7 @@ const formatted = computed(() =>
 
 <template>
     <Card>
-        <CardContent class="flex flex-col gap-1 py-5">
+        <CardContent class="flex flex-col gap-0.5 py-3">
             <div class="flex items-center gap-2 text-muted-foreground">
                 <component
                     :is="icon"
@@ -32,7 +32,7 @@ const formatted = computed(() =>
                 />
                 <span class="text-sm">{{ label }}</span>
             </div>
-            <span class="text-3xl leading-none font-semibold text-foreground">
+            <span class="text-2xl leading-none font-semibold text-foreground">
                 {{ formatted
                 }}<span
                     v-if="suffix"

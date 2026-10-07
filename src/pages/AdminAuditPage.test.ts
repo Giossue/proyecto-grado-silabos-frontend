@@ -66,7 +66,6 @@ describe('AdminAuditPage', () => {
     expect(wrapper.text()).toContain('Cuenta desactivada');
     expect(wrapper.text()).toContain('Ada Administradora');
     expect(wrapper.text()).not.toContain('Procesos');
-    expect(wrapper.find('a[href="/admin/procesos"]').text()).toBe('Trabajos fallidos');
     expect(wrapper.text()).not.toContain('Activo');
     expect(wrapper.find('form').exists()).toBe(false);
     expect(wrapper.find('[role="tablist"]').exists()).toBe(false);

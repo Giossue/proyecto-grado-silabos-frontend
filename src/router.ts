@@ -29,7 +29,6 @@ const AcademicGovernancePage = () => import("@/pages/AcademicGovernancePage.vue"
 const AdminProcessesPage = () => import("@/pages/AdminProcessesPage.vue");
 const AdminTemplatePage = () => import("@/pages/AdminTemplatePage.vue");
 const AdminAuditPage = () => import("@/pages/AdminAuditPage.vue");
-const AdminJobsPage = () => import("@/pages/AdminJobsPage.vue");
 const CoordinationConvocationsPage = () => import("@/pages/CoordinationConvocationsPage.vue");
 
 const CoordinationReviewsPage = () => import("@/pages/CoordinationReviewsPage.vue");
@@ -91,7 +90,6 @@ export const router = createRouter({
     { path: "/admin/convocatorias", component: AdminProcessesPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Convocatorias" } },
     { path: "/admin/plantilla", component: AdminTemplatePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Plantilla" } },
     { path: "/admin/auditoria", component: AdminAuditPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Auditoría" } },
-    { path: "/admin/procesos", component: AdminJobsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Trabajos fallidos" } },
     { path: "/admin/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Perfil" } },
     { path: "/admin/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Seguridad" } },
     { path: "/admin/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Notificaciones" } },
@@ -133,7 +131,6 @@ export const router = createRouter({
     { path: "/administracion/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/usuarios" } },
     { path: "/administracion/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/estructura-academica" } },
     { path: "/administracion/procesos", component: AdminProcessesPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/convocatorias" } },
-    { path: "/administracion/trabajos", component: AdminJobsPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/procesos" } },
     { path: "/administracion/plantilla", component: AdminTemplatePage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/plantilla" } },
     { path: "/administracion/auditoria", component: AdminAuditPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/auditoria" } },
     { path: "/mis-silabos", component: TeacherSyllabiPage, meta: { requiresAuth: true, roles: ["docente"], aliasTarget: "/docente/mis-silabos" } },
