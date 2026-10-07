@@ -300,7 +300,7 @@ const updateOpen = (value: boolean): void => {
                                 </Button>
                             </div>
 
-                            <div class="grid gap-3 sm:grid-cols-2">
+                            <div class="flex flex-col gap-3">
                             <Field
                                 :data-invalid="
                                     Boolean(errorFor(`fields.${index}.label`))
