@@ -10,7 +10,7 @@ const emit = defineEmits<{ 'update:modelValue': [value: Record<string, unknown>]
 <template>
   <Field>
     <FieldLabel for="field-config-content">Texto que verán todos los sílabos</FieldLabel>
-    <FreeTextEditor id="field-config-content" label="Texto fijo" :model-value="(props.modelValue.content as DocumentNode | undefined) ?? null" @update:model-value="emit('update:modelValue', { ...props.modelValue, content: $event })" />
+    <FreeTextEditor id="field-config-content" label="Texto fijo" :bullets-only="false" :model-value="(props.modelValue.content as DocumentNode | undefined) ?? null" @update:model-value="emit('update:modelValue', { ...props.modelValue, content: $event })" />
     <FieldDescription>Es igual para todos y el docente no lo puede cambiar. No puede quedar vacío.</FieldDescription>
   </Field>
 </template>

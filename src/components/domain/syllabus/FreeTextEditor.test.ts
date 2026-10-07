@@ -20,18 +20,13 @@ const mountEditor = (modelValue: DocumentNode | null = null) => {
 const button = (label: string) => document.querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!;
 
 describe('Texto libre del docente', () => {
-    it('ofrece negrita, cursiva, listas y tabla, y al insertar la tabla muestra sus acciones', async () => {
-        const wrapper = mountEditor();
-        await flushPromises();
-        expect(['Negrita', 'Cursiva', 'Lista con viñetas', 'Lista numerada', 'Insertar tabla'].every((label) => button(label))).toBe(true);
-
-        button('Insertar tabla').click();
+    it('no muestra barra de herramientas: la lista con viñetas sale al escribir «- » o «* »', async () => {
+        mountEditor();
         await flushPromises();
 
-        const last = (wrapper.vm as unknown as { emitted: DocumentNode[] }).emitted.at(-1)!;
-        expect(last.content?.some((node) => node.type === 'table')).toBe(true);
-        expect(button('Agregar fila')).not.toBeNull();
-        expect(button('Quitar tabla')).not.toBeNull();
+        expect(document.querySelector('[role="toolbar"]')).toBeNull();
+        expect(['Negrita', 'Cursiva', 'Lista con viñetas', 'Lista numerada', 'Insertar tabla'].some((label) => button(label))).toBe(false);
+        expect(document.querySelector('[role="textbox"]')).not.toBeNull();
     });
 
     it('en lectura dibuja párrafos, listas y tablas sin estilos extra', () => {

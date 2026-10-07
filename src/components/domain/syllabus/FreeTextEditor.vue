@@ -1,12 +1,8 @@
 <script setup lang="ts">
-import { Bold, Columns3, Italic, List, ListOrdered, Rows3, Table2, Trash2 } from '@lucide/vue';
 import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
-import { onBeforeUnmount, ref, watch } from 'vue';
-import TemplateToolbarButton from '@/components/domain/configuration/TemplateToolbarButton.vue';
-import { Separator } from '@/components/ui/separator';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { onBeforeUnmount, watch } from 'vue';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const props = withDefaults(defineProps<{
@@ -14,13 +10,12 @@ const props = withDefaults(defineProps<{
     label: string;
     modelValue?: DocumentNode | null;
     disabled?: boolean;
-    /** Solo lista con viñetas: sin negrita, cursiva, lista numerada ni tablas. */
+    /** Solo lista con viñetas (se escribe «- » o «* »): sin negrita, cursiva, lista numerada ni tablas. Sin barra de herramientas. */
     bulletsOnly?: boolean;
-}>(), { modelValue: null, disabled: false, bulletsOnly: false });
+}>(), { modelValue: null, disabled: false, bulletsOnly: true });
 
 const emit = defineEmits<{ 'update:modelValue': [value: DocumentNode] }>();
 
-const version = ref(0);
 const editor = useEditor({
     content: props.modelValue ?? { type: 'doc', content: [{ type: 'paragraph' }] },
     editable: !props.disabled,
@@ -48,66 +43,14 @@ const editor = useEditor({
         ...(props.bulletsOnly ? [] : [Table.configure({ resizable: false }), TableRow, TableHeader, TableCell]),
     ],
     onUpdate: ({ editor: current }) => emit('update:modelValue', current.getJSON() as DocumentNode),
-    onTransaction: () => {
-        version.value++;
-    },
 });
 
 watch(() => props.disabled, (disabled) => editor.value?.setEditable(!disabled));
 onBeforeUnmount(() => editor.value?.destroy());
-
-const active = (name: string): boolean => {
-    void version.value;
-
-    return editor.value?.isActive(name) ?? false;
-};
-const chain = () => editor.value?.chain().focus();
 </script>
 
 <template>
     <div class="free-text-editor flex min-w-0 flex-col rounded-md border bg-background" :data-disabled="disabled || undefined">
-        <TooltipProvider v-if="!disabled" :delay-duration="150">
-        <div class="flex flex-wrap items-center gap-1 border-b p-1" role="toolbar" :aria-label="`Formato de ${label}`">
-            <template v-if="!bulletsOnly">
-                <TemplateToolbarButton label="Negrita" :pressed="active('bold')" :variant="active('bold') ? 'secondary' : 'ghost'" @click="chain()?.toggleBold().run()">
-                    <Bold aria-hidden="true" />
-                </TemplateToolbarButton>
-                <TemplateToolbarButton label="Cursiva" :pressed="active('italic')" :variant="active('italic') ? 'secondary' : 'ghost'" @click="chain()?.toggleItalic().run()">
-                    <Italic aria-hidden="true" />
-                </TemplateToolbarButton>
-                <Separator orientation="vertical" class="h-6" />
-            </template>
-            <TemplateToolbarButton label="Lista con viñetas" :pressed="active('bulletList')" :variant="active('bulletList') ? 'secondary' : 'ghost'" @click="chain()?.toggleBulletList().run()">
-                <List aria-hidden="true" />
-            </TemplateToolbarButton>
-            <template v-if="!bulletsOnly">
-                <TemplateToolbarButton label="Lista numerada" :pressed="active('orderedList')" :variant="active('orderedList') ? 'secondary' : 'ghost'" @click="chain()?.toggleOrderedList().run()">
-                    <ListOrdered aria-hidden="true" />
-                </TemplateToolbarButton>
-                <Separator orientation="vertical" class="h-6" />
-                <TemplateToolbarButton v-if="!active('table')" label="Insertar tabla" text="Tabla" @click="chain()?.insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run()">
-                    <Table2 aria-hidden="true" />
-                </TemplateToolbarButton>
-                <template v-else>
-                    <TemplateToolbarButton label="Agregar fila" text="Fila" @click="chain()?.addRowAfter().run()">
-                        <Rows3 aria-hidden="true" />
-                    </TemplateToolbarButton>
-                    <TemplateToolbarButton label="Agregar columna" text="Columna" @click="chain()?.addColumnAfter().run()">
-                        <Columns3 aria-hidden="true" />
-                    </TemplateToolbarButton>
-                    <TemplateToolbarButton label="Quitar fila" @click="chain()?.deleteRow().run()">
-                        <Rows3 class="text-destructive" aria-hidden="true" />
-                    </TemplateToolbarButton>
-                    <TemplateToolbarButton label="Quitar columna" @click="chain()?.deleteColumn().run()">
-                        <Columns3 class="text-destructive" aria-hidden="true" />
-                    </TemplateToolbarButton>
-                    <TemplateToolbarButton label="Quitar tabla" @click="chain()?.deleteTable().run()">
-                        <Trash2 class="text-destructive" aria-hidden="true" />
-                    </TemplateToolbarButton>
-                </template>
-            </template>
-        </div>
-        </TooltipProvider>
         <EditorContent :editor="editor" class="min-h-32 px-3 py-2 text-sm" />
     </div>
 </template>
