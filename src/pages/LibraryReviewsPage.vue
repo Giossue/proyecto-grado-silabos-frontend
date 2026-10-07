@@ -100,7 +100,7 @@ onMounted(() => { void load(initialPage); });
               <TableHead>Asignatura</TableHead>
               <TableHead>Carrera</TableHead>
               <TableHead>Paralelo</TableHead>
-              <TableHead>Docente(s)</TableHead>
+              <TableHead>Docente</TableHead>
               <TableHead>Estado</TableHead>
             </TableRow>
           </TableHeader>
