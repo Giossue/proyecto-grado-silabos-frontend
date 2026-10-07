@@ -4,10 +4,8 @@ import { Lock, Pause, Play } from '@lucide/vue';
 import { ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { transitionConvocation, type ConvocationItem } from '@/api/convocations';
-import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
 
@@ -43,13 +41,11 @@ const opened = (message: string): void => emit('changed', message);
 </script>
 
 <template>
-  <TableActionsMenu :label="`Acciones para ${convocation.name}`">
-    <DropdownMenuItem v-if="convocation.id === null" :disabled="convocation.process_state !== 'abierto'" @select="openingOpen = true"><Play aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
-    <DropdownMenuItem v-if="convocation.state === 'abierta'" @select="select('pausar')"><Pause aria-hidden="true" />Pausar</DropdownMenuItem>
-    <DropdownMenuItem v-if="convocation.state === 'pausada'" :disabled="convocation.process_state !== 'abierto'" @select="select('reanudar')"><Play aria-hidden="true" />Reanudar</DropdownMenuItem>
-    <DropdownMenuItem v-if="convocation.state === 'cerrada'" disabled><Lock aria-hidden="true" />Convocatoria cerrada</DropdownMenuItem>
-    <DropdownMenuItem v-if="convocation.process_state !== 'abierto'" disabled><Lock aria-hidden="true" />{{ convocation.process_state === 'pausado' ? 'Convocatoria institucional pausada' : convocation.process_state === 'cerrado' ? 'Convocatoria institucional finalizada' : 'Pendiente de apertura institucional' }}</DropdownMenuItem>
-  </TableActionsMenu>
+  <Button v-if="convocation.id === null" type="button" size="lg" :disabled="convocation.process_state !== 'abierto'" @click="openingOpen = true"><Play data-icon="inline-start" aria-hidden="true" />Abrir convocatoria</Button>
+  <Button v-else-if="convocation.state === 'abierta'" type="button" size="lg" variant="outline" @click="select('pausar')"><Pause data-icon="inline-start" aria-hidden="true" />Pausar convocatoria</Button>
+  <Button v-else-if="convocation.state === 'pausada'" type="button" size="lg" :disabled="convocation.process_state !== 'abierto'" @click="select('reanudar')"><Play data-icon="inline-start" aria-hidden="true" />Reanudar convocatoria</Button>
+  <p v-else class="flex items-center gap-2 text-sm text-muted-foreground"><Lock class="size-4" aria-hidden="true" />Convocatoria finalizada</p>
+  <p v-if="convocation.process_state !== 'abierto' && convocation.state !== 'cerrada'" class="text-sm text-muted-foreground">{{ convocation.process_state === 'pausado' ? 'La convocatoria institucional está pausada.' : convocation.process_state === 'cerrado' ? 'La convocatoria institucional finalizó.' : 'Pendiente de apertura institucional.' }}</p>
   <ConvocationOpeningDialog
     v-if="convocation.id === null"
     v-model:open="openingOpen"
