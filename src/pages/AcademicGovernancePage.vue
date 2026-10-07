@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
 import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
 import CatalogSection from '@/components/domain/academic/CatalogSection.vue';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -33,6 +34,9 @@ const entity = computed<CatalogEntity>(() =>
         : routeParamSections[String(route.params.section)] ?? 'facultad',
 );
 const section = computed(() => sectionMap[entity.value]);
+const selectTab = (value: string | number): void => {
+    void router.replace({ path: paths.admin.academic, query: { seccion: String(value) } });
+};
 const sectionContent = computed(() => ({
     facultad: { title: 'Facultades', description: 'Las facultades de la universidad y cuántas carreras tiene cada una.' },
     carrera: { title: 'Carreras', description: 'Las carreras y a qué facultad pertenece cada una.' },
@@ -58,6 +62,12 @@ onMounted(load);
         <template #actions>
         <CatalogRecordSheet v-if="data" :entity="entity" :options="data.options" @saved="changed" />
         </template>
+
+        <Tabs :model-value="entity" class="mb-4" @update:model-value="selectTab">
+            <TabsList>
+                <TabsTrigger v-for="item in routeSections" :key="item.value" :value="item.value">{{ item.label }}</TabsTrigger>
+            </TabsList>
+        </Tabs>
 
     <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 5 : 3" :filters="1" />
