@@ -2,22 +2,6 @@ import { api } from '@/api/client';
 
 export type ConvocationState = 'sin_iniciar' | 'preparacion' | 'abierta' | 'pausada' | 'cerrada';
 
-export type ConvocationItem = {
-  id: string | null;
-  process_id: string;
-  name: string;
-  state: ConvocationState;
-  process_state: string;
-  period: string;
-  template: string;
-  syllabi_count: number;
-};
-
-export type ConvocationsPage = {
-  filters: { q: string | null; state: ConvocationState | null };
-  convocations: { data: ConvocationItem[]; current_page: number; last_page: number; per_page: number; from: number | null; to: number | null; total: number };
-};
-
 export type ConvocationDetail = {
   convocation: {
     id: string;
@@ -31,15 +15,6 @@ export type ConvocationDetail = {
     counts: { total: number; not_started: number; draft: number; in_review: number; approved: number };
     syllabi: Array<{ id: string; subject: string; code: string; state: string; iniciado_en: string | null; parallels: string[]; teachers: string[] }>;
   };
-};
-
-export const getConvocations = (filters: { q?: string; state?: string; page?: number } = {}) => {
-  const query = new URLSearchParams();
-  if (filters.q) query.set('q', filters.q);
-  if (filters.state) query.set('state', filters.state);
-  if (filters.page && filters.page > 1) query.set('page', String(filters.page));
-  const suffix = query.size ? `?${query.toString()}` : '';
-  return api<ConvocationsPage>(`/coordination/convocations${suffix}`);
 };
 
 export const createConvocation = (processId: string) =>

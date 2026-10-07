@@ -51,7 +51,6 @@ export const paths = {
     notifications: '/coordinacion/notificaciones',
     profile: '/coordinacion/configuracion/perfil',
     security: '/coordinacion/configuracion/seguridad',
-    convocations: '/coordinacion/convocatorias',
 
     reviews: '/coordinacion/revisiones',
     review: (revision: string): string => `/coordinacion/revisiones/${segment(revision)}`,
