@@ -1,5 +1,5 @@
 import type { Component } from 'vue';
-import { ClipboardList, Lock, Table2, Type, Zap } from '@lucide/vue';
+import { ClipboardList, ListOrdered, Lock, Table2, Type, Zap } from '@lucide/vue';
 import AutomaticFieldBuilder from '@/components/domain/fieldTypes/AutomaticFieldBuilder.vue';
 import AutomaticFieldEditor from '@/components/domain/fieldTypes/AutomaticFieldEditor.vue';
 import AutomaticFieldView from '@/components/domain/fieldTypes/AutomaticFieldView.vue';
@@ -15,9 +15,13 @@ import TableFieldView from '@/components/domain/fieldTypes/TableFieldView.vue';
 import TextFieldBuilder from '@/components/domain/fieldTypes/TextFieldBuilder.vue';
 import TextFieldEditor from '@/components/domain/fieldTypes/TextFieldEditor.vue';
 import TextFieldView from '@/components/domain/fieldTypes/TextFieldView.vue';
+import UnitsFieldBuilder from '@/components/domain/fieldTypes/UnitsFieldBuilder.vue';
+import UnitsFieldEditor from '@/components/domain/fieldTypes/UnitsFieldEditor.vue';
+import UnitsFieldView from '@/components/domain/fieldTypes/UnitsFieldView.vue';
 import { validateAutomaticConfig, validateFixedConfig, validateTableConfig } from '@/components/domain/fieldTypes/builderConfig';
 import { fieldConfig } from '@/components/domain/fieldTypes/fieldConfig';
 import { isTableEmpty } from '@/components/domain/fieldTypes/tableField';
+import { isUnitsEmpty } from '@/components/domain/fieldTypes/unitsField';
 import { freeTextPlain, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
 import type { FieldTypeConfigs, FieldTypeKey, TypedField } from '@/types/configuration';
 
@@ -114,6 +118,20 @@ export const fieldTypeRegistry: { [K in FieldTypeKey]: FieldTypeEntry<K> } = {
         defaultConfig: { content: { type: 'doc', content: [{ type: 'paragraph' }] } },
         teacherEditable: () => false,
         isEmpty: () => false,
+    },
+    unidades: {
+        label: 'Unidades de planificación',
+        icon: ListOrdered,
+        adminLabel: 'Una tabla por unidad (planificación)',
+        adminHint: 'El docente agrega las unidades y las semanas de su asignatura. Solo viene en el diseño oficial de planificación.',
+        manual: false,
+        BuilderComponent: UnitsFieldBuilder,
+        validateConfig: () => null,
+        EditorComponent: UnitsFieldEditor,
+        ViewComponent: UnitsFieldView,
+        defaultConfig: {},
+        teacherEditable: () => true,
+        isEmpty: (value) => isUnitsEmpty(value),
     },
 };
 

@@ -6,7 +6,7 @@ import { fieldTypeEntry, fieldTypeKeys, fieldTypeRegistry, isEmbeddedField, manu
  * esta lista y el registro del frontend deben actualizarse juntos; la prueba de paridad del backend
  * (tests/Unit/Configuration/FieldTypesTest.php) falla primero y avisa.
  */
-const BACKEND_FIELD_TYPES = ['texto', 'ficha', 'tabla', 'automatico', 'fijo'];
+const BACKEND_FIELD_TYPES = ['texto', 'ficha', 'tabla', 'automatico', 'fijo', 'unidades'];
 
 describe('Registro de tipos de campo', () => {
     it('tiene una entrada completa por cada tipo registrado en el backend', () => {

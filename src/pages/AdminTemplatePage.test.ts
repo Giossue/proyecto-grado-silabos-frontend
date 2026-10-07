@@ -127,7 +127,7 @@ describe("AdminTemplatePage", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Edición bloqueada');
-    expect(wrapper.text()).toContain('la plantilla no se puede cambiar');
+    expect(wrapper.text()).not.toContain('la plantilla no se puede cambiar');
     const nueva = wrapper.findAll('button').find((button) => button.text() === 'Nueva sección');
     expect(nueva!.attributes('disabled')).toBeDefined();
     expect(wrapper.get('[aria-label="Eliminar el campo Descripción"]').attributes('disabled')).toBeDefined();

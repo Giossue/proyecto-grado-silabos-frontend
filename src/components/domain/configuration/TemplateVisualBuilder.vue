@@ -84,7 +84,6 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
 
 <template>
   <div class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
-    <Alert v-if="locked" role="status" class="mx-auto max-w-3xl"><AlertDescription>Hay un proceso abierto: la plantilla no se puede cambiar hasta pausarlo o cerrarlo. Puede revisar la estructura.</AlertDescription></Alert>
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
     <article data-sheet class="template-sheet">
