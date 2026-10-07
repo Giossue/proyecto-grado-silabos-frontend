@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { getAcademicGovernance, type AcademicGovernance, type AcademicEntity } from '@/api/academic';
 import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
+import ImportSpreadsheetDialog from '@/components/domain/ImportSpreadsheetDialog.vue';
 import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
 import CatalogSection from '@/components/domain/academic/CatalogSection.vue';
 import { Building2, ChevronDown, GraduationCap, Plus } from '@lucide/vue';
@@ -66,6 +67,16 @@ onMounted(load);
 <template>
     <PageFrame :title="sectionContent.title" :description="sectionContent.description">
         <template #actions>
+            <ImportSpreadsheetDialog
+                v-if="data && entity === 'carrera'"
+                title="Importar carreras"
+                description="Cree varias carreras a la vez. Las facultades se crean una por una porque requieren su logo."
+                endpoint="/admin/academic/careers/import"
+                template-endpoint="/admin/academic/careers/import-template"
+                template-name="plantilla-carreras.xlsx"
+                :columns="[{ key: 'facultad', label: 'Facultad' }, { key: 'modalidad', label: 'Modalidad' }, { key: 'codigo', label: 'Código' }, { key: 'nombre', label: 'Nombre' }, { key: 'ciclos', label: 'Ciclos' }]"
+                @imported="changed"
+            />
             <DropdownMenu v-if="data">
                 <DropdownMenuTrigger as-child>
                     <Button type="button" class="w-full max-sm:size-14 max-sm:rounded-full max-sm:p-0 sm:w-auto" aria-label="Crear">
