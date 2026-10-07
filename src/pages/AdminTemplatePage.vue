@@ -222,11 +222,7 @@ onBeforeUnmount(() => {
 
         <TemplateAppearanceSheet
             v-model:open="appearanceOpen"
-            :template-id="builder.template.id"
-            :appearance="builder.template.appearance"
-            :options="builder.appearanceOptions"
             :institution-logo-url="builder.logos.institution"
-            @preview="previewAppearance = $event"
         />
     </div>
 
