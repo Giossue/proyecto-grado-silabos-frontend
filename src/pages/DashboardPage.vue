@@ -51,7 +51,7 @@ const setup = computed(() => dashboard.value?.setup ? {
   })),
 } : null);
 const roleCode = computed(() => sessionState.current.value?.active_role?.code ?? null);
-const deadlineRole = computed(() => roleCode.value === 'coordinador' || roleCode.value === 'docente' ? roleCode.value : null);
+const deadlineRole = computed(() => roleCode.value === 'coordinador' ? roleCode.value : null);
 const trackingId = computed(() => dashboard.value?.coordination_convocation?.convocation_id ?? dashboard.value?.deadline?.convocation_id ?? null);
 
 const handleSetupAction = (action: string): void => {

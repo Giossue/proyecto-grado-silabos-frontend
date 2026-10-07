@@ -111,7 +111,7 @@ export const router = createRouter({
     { path: "/coordinacion/materias-paralelos", redirect: "/coordinacion/materias-asignaciones", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Documentos" } },
 
-    { path: "/docente/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["docente"], title: "Panel" } },
+    { path: "/docente/panel", redirect: "/docente/mis-silabos", meta: { requiresAuth: true, roles: ["docente"] } },
     { path: "/docente/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Notificaciones" } },
     { path: "/docente/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["docente"], title: "Perfil" } },
     { path: "/docente/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["docente"], title: "Seguridad" } },
