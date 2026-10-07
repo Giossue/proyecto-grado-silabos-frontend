@@ -181,7 +181,7 @@ describe('DocumentSignatureCard', () => {
     getSignatureStatus.mockResolvedValue(status({ my_role: 'coordinacion', can_sign: false, stamp: null }));
     const wrapper = await mountCard();
 
-    expect(wrapper.text()).toContain('Primero firma el docente del sílabo.');
+    expect(wrapper.text()).toContain('Primero firma el docente del sílabo');
     expect(wrapper.text()).not.toContain('Firmar electrónicamente');
     expect(wrapper.text()).toContain('Descargar PDF');
   });
@@ -212,7 +212,7 @@ describe('DocumentSignatureCard', () => {
     submitSignature.mockResolvedValue({ message: 'Firma registrada.', signature_id: 's-3' });
     const wrapper = await mountCard();
 
-    expect(wrapper.text()).toContain('Le corresponde firmar a biblioteca.');
+    expect(wrapper.text()).toContain('Le corresponde firmar a biblioteca');
     expect(wrapper.get('[data-testid="library-submission"]').text()).toContain('Bibliografía aprobada');
     button('Firmar electrónicamente').click();
     await flushPromises();
