@@ -43,7 +43,6 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
         ...(activeRole.value?.code === 'coordinador'
             ? [
                   { title: 'Panel', href: paths.coordination.panel, icon: LayoutGrid },
-                  { title: 'Convocatorias', href: paths.coordination.convocations, icon: CalendarRange },
                   { title: 'Revisión', href: paths.coordination.reviews, icon: ClipboardCheck },
                   { title: 'Materias y asignaciones', href: paths.coordination.scheduledSubjects, icon: Building2 },
                   { title: 'Docentes', href: paths.coordination.teachers, icon: UsersRound },

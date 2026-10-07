@@ -29,7 +29,6 @@ const AcademicGovernancePage = () => import("@/pages/AcademicGovernancePage.vue"
 const AdminProcessesPage = () => import("@/pages/AdminProcessesPage.vue");
 const AdminTemplatePage = () => import("@/pages/AdminTemplatePage.vue");
 const AdminAuditPage = () => import("@/pages/AdminAuditPage.vue");
-const CoordinationConvocationsPage = () => import("@/pages/CoordinationConvocationsPage.vue");
 
 const CoordinationReviewsPage = () => import("@/pages/CoordinationReviewsPage.vue");
 const CoordinationReviewDetailPage = () => import("@/pages/CoordinationReviewDetailPage.vue");
@@ -98,7 +97,6 @@ export const router = createRouter({
     { path: "/coordinacion/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Notificaciones" } },
     { path: "/coordinacion/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Perfil" } },
     { path: "/coordinacion/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Seguridad" } },
-    { path: "/coordinacion/convocatorias", component: CoordinationConvocationsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Convocatorias" } },
 
     { path: "/coordinacion/revisiones", component: CoordinationReviewsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Revisión" } },
     { path: "/coordinacion/revisiones/:revision", component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión" } },
