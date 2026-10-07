@@ -467,7 +467,7 @@ onBeforeUnmount(() => {
             <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionHeading(section.title, visibleSections.indexOf(section)) }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
             <FieldGroup>
               <template v-for="{ field, nested, hint } in sectionEntries(section.fields)" :key="field.id">
-                <p v-if="hint && canEdit" class="text-sm text-muted-foreground">Complete estos datos: se imprimen dentro de la tabla de identificación al enviar el sílabo.</p>
+                <p v-if="hint && canEdit" class="text-sm text-muted-foreground">Complete estos datos: se imprimen dentro de la tabla de identificación al enviar el sílabo. Los de discapacidad déjelos en blanco si no tiene estudiantes con discapacidad.</p>
                 <Field v-if="canEdit && isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0" :class="nested && 'border-l-2 border-border pl-4'">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel>
                   <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
