@@ -32,7 +32,7 @@ watch(open, async (value) => {
   } finally {
     loading.value = false;
   }
-});
+}, { immediate: true });
 
 const save = async (close: () => void) => {
   if (!canSave.value) return;
