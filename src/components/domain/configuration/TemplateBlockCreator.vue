@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { VALIDATION_LIMITS } from '@/lib/validationLimits';
-import { Blocks, Trash2 } from '@lucide/vue';
+import { Blocks, Check, FilePlus2, FileText, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
@@ -16,13 +16,13 @@ import {
 } from '@/components/ui/dialog';
 import {
     Field,
-    FieldDescription,
     FieldError,
     FieldGroup,
     FieldLabel,
+    FieldLegend,
+    FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
@@ -79,6 +79,11 @@ const presetModel = computed({
         }
     },
 });
+
+const options = computed(() => [
+    { key: BLANK, title: 'En blanco', summary: 'Empiece desde cero y arme los campos usted.' },
+    ...props.presets.map((preset) => ({ key: preset.key, title: preset.title, summary: preset.summary })),
+]);
 
 const reset = (): void => {
     form.clearErrors();
@@ -165,7 +170,7 @@ const updateOpen = (value: boolean): void => {
                 {{ empty ? 'Agregar primera sección' : 'Agregar sección' }}
             </Button>
         </DialogTrigger>
-        <DialogContent class="sm:max-w-2xl">
+        <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Nueva sección</DialogTitle>
                 <DialogDescription>
@@ -175,24 +180,31 @@ const updateOpen = (value: boolean): void => {
             <form class="flex flex-col gap-6" @submit.prevent="submit">
                 <div>
                     <FieldGroup>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                        <Field v-if="presets.length > 0">
-                            <FieldLabel for="new-section-preset">Plantilla</FieldLabel>
-                            <Select v-model="presetModel" :disabled="form.processing">
-                                <SelectTrigger id="new-section-preset" class="w-full">
-                                    <SelectValue placeholder="Elija una plantilla" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectGroup>
-                                        <SelectItem :value="BLANK">En blanco</SelectItem>
-                                        <SelectItem v-for="preset in presets" :key="preset.key" :value="preset.key">{{ preset.title }}</SelectItem>
-                                    </SelectGroup>
-                                </SelectContent>
-                            </Select>
-                            <FieldDescription>
-                                {{ chosen ? chosen.summary : 'Elija un diseño oficial ya armado; después puede modificarlo.' }}
-                            </FieldDescription>
-                        </Field>
+                        <FieldSet v-if="presets.length > 0">
+                            <FieldLegend variant="label">Plantilla</FieldLegend>
+                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup" aria-label="Plantilla">
+                                <Button
+                                    v-for="option in options"
+                                    :key="option.key"
+                                    type="button"
+                                    variant="outline"
+                                    role="radio"
+                                    :aria-checked="presetModel === option.key"
+                                    :disabled="form.processing"
+                                    class="h-auto flex-col items-start gap-2 whitespace-normal p-3 text-left aria-checked:border-primary aria-checked:bg-accent aria-checked:ring-1 aria-checked:ring-primary"
+                                    @click="presetModel = option.key"
+                                >
+                                    <span class="flex w-full items-center gap-2">
+                                        <span class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                                            <component :is="option.key === BLANK ? FilePlus2 : FileText" class="size-4" aria-hidden="true" />
+                                        </span>
+                                        <span class="text-sm font-medium">{{ option.title }}</span>
+                                        <Check v-if="presetModel === option.key" class="ml-auto size-4 text-primary" aria-hidden="true" />
+                                    </span>
+                                    <span class="text-xs text-muted-foreground">{{ option.summary }}</span>
+                                </Button>
+                            </div>
+                        </FieldSet>
                         <Field :data-invalid="Boolean(errorFor('title'))">
                             <FieldLabel for="new-template-block-title" required>
                                 Nombre de la sección
@@ -210,7 +222,6 @@ const updateOpen = (value: boolean): void => {
                                 :errors="[errorFor('title')]"
                             />
                         </Field>
-                        </div>
 
                         <FieldGroup
                             v-for="(field, index) in chosen ? [] : form.fields"
