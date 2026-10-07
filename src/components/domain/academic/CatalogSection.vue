@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import CatalogActions from '@/components/domain/academic/CatalogActions.vue';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
     Select,
@@ -35,6 +37,15 @@ const props = defineProps<
     }
 >();
 const emit = defineEmits<{ changed: [message: string] }>();
+const logoPreview = ref<{ name: string; url: string } | null>(null);
+
+const openLogoPreview = (name: string, url: string): void => {
+    logoPreview.value = { name, url };
+};
+
+const updateLogoPreviewOpen = (open: boolean): void => {
+    if (!open) logoPreview.value = null;
+};
 
 const facultyNames = computed(
     () =>
@@ -121,13 +132,14 @@ const {
                     <TableRow>
                         <TableHead>Facultad</TableHead>
                         <TableHead>Campus</TableHead>
+                        <TableHead class="w-36">Logo</TableHead>
                         <TableHead class="text-right">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableEmpty
                         v-if="facultyPage.length === 0"
-                        :colspan="3"
+                        :colspan="4"
                     >
                         {{ facultyFilter.active.value ? 'Ninguna facultad coincide con los filtros.' : 'No existen facultades registradas.' }}
                     </TableEmpty>
@@ -141,6 +153,19 @@ const {
                         </TableCell>
                         <TableCell>
                             {{ faculty.campus ?? 'Sin campus' }}
+                        </TableCell>
+                        <TableCell>
+                            <Button
+                                v-if="faculty.logo_url"
+                                type="button"
+                                variant="outline"
+                                class="h-12 w-28 p-1"
+                                :aria-label="`Ver logo de ${faculty.nombre}`"
+                                @click="openLogoPreview(faculty.nombre, faculty.logo_url)"
+                            >
+                                <img :src="faculty.logo_url" alt="" class="size-full object-contain" />
+                            </Button>
+                            <span v-else class="text-sm text-muted-foreground">Sin logo</span>
                         </TableCell>
                         <TableCell class="text-right">
                             <CatalogActions
@@ -262,5 +287,19 @@ const {
             />
         </CardContent>
     </Card>
+
+    <Dialog :open="Boolean(logoPreview)" @update:open="updateLogoPreviewOpen">
+        <DialogContent class="sm:max-w-3xl">
+            <DialogHeader>
+                <DialogTitle>Logo de {{ logoPreview?.name }}</DialogTitle>
+            </DialogHeader>
+            <img
+                v-if="logoPreview"
+                :src="logoPreview.url"
+                :alt="`Logo de ${logoPreview.name}`"
+                class="max-h-160 w-full object-contain"
+            />
+        </DialogContent>
+    </Dialog>
 
 </template>
