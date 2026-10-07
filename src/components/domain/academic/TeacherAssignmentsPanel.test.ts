@@ -94,8 +94,8 @@ describe('TeacherAssignmentsPanel', () => {
         expect(wrapper.text()).toContain('Pendiente de activación');
         expect(wrapper.text()).toContain('Reenviar invitación');
         expect(wrapper.text()).toContain('activo@example.test');
-        expect(wrapper.text().match(/Editar docente/g)).toHaveLength(3);
         expect(wrapper.text().match(/Quitar de la carrera/g)).toHaveLength(3);
+        expect(wrapper.text()).not.toContain('Editar docente');
     });
 
     it('muestra al docente pendiente sin datos de paralelos', () => {

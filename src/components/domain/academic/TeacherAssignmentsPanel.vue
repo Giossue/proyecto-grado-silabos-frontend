@@ -44,6 +44,7 @@ const filter = useClientFilter(() => rows.value, (item) => [item.name, item.emai
   estado: { matches: (item, value) => value === "pending" ? item.pending_activation : !item.pending_activation },
 });
 const { items, meta, setPage } = useClientPagination(() => filter.items.value);
+const editing = ref<TeacherRow | null>(null);
 const removing = ref<TeacherRow | null>(null);
 const removeProcessing = ref(false);
 const removeError = ref<string | null>(null);
@@ -84,13 +85,12 @@ const resendInvitation = async (userId: string): Promise<void> => {
     <Table><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
       <TableBody>
         <TableEmpty v-if="!items.length" :colspan="4">{{ filter.active.value ? "Ningún docente coincide con la búsqueda." : "No existen docentes en esta carrera." }}</TableEmpty>
-        <TableRow v-for="item in items" v-else :key="item.id">
+        <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="editing = item" @keydown.enter.self="editing = item">
           <TableCell>{{ item.name }}</TableCell>
           <TableCell>{{ item.email }}</TableCell>
           <TableCell>{{ statusOf(item) }}</TableCell>
-          <TableCell class="text-right">
+          <TableCell class="text-right" @click.stop>
             <TableActionsMenu :label="`Acciones para ${item.name}`">
-              <CareerTeacherEditSheet :teacher="item" @saved="emit('changed', $event)" />
               <DropdownMenuItem v-if="item.pending_activation" :disabled="resendingId !== null" @select="resendInvitation(item.id)"><Spinner v-if="resendingId === item.id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
               <DropdownMenuItem variant="destructive" :disabled="Boolean(data.career.lock_reason)" @select="removing = item; removeError = null"><UserMinus aria-hidden="true" />Quitar de la carrera</DropdownMenuItem>
             </TableActionsMenu>
@@ -98,6 +98,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
         </TableRow>
       </TableBody>
     </Table>
+    <CareerTeacherEditSheet v-if="editing" :key="editing.id" :teacher="editing" :open="true" @update:open="(value: boolean) => { if (!value) editing = null; }" @saved="emit('changed', $event)" />
     <TablePagination :meta="meta" mode="client" label="Paginación de docentes" @update:page="setPage" />
     <Dialog :open="removing !== null" @update:open="(value) => { if (!value) removing = null; }">
       <DialogContent>

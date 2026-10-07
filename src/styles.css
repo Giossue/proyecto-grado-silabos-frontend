@@ -165,17 +165,17 @@
     --muted-foreground: #5b6b7f;
     --accent: #e6edf5;
     --accent-foreground: var(--brand-blue);
-    --destructive: hsl(0 84.2% 48%);
+    --destructive: #b91c1c;
     --destructive-foreground: hsl(0 0% 98%);
     --overlay: hsl(0 0% 0%);
     --brand-surface: var(--brand-blue);
     --brand-foreground: hsl(0 0% 98%);
-    --success: hsl(142 72% 29%);
+    --success: #13733b;
     --success-foreground: hsl(0 0% 98%);
-    --warning: hsl(38 92% 35%);
+    --warning: #8a4f00;
     --warning-foreground: hsl(0 0% 98%);
     --border: #dbe3ec;
-    --input: #c3cfdc;
+    --input: #7c8c9f;
     --ring: #4a78a8;
     --chart-1: hsl(12 76% 61%);
     --chart-2: hsl(173 58% 39%);
@@ -233,8 +233,8 @@
     --card-foreground: #eef0f3;
     --popover: #21252b;
     --popover-foreground: #eef0f3;
-    --primary: #215587;
-    --primary-foreground: hsl(0 0% 98%);
+    --primary: #78a8d4;
+    --primary-foreground: #122c41;
     --selection-background: #b9d6f2;
     --selection-foreground: #122c41;
     --secondary: #2c3138;
@@ -243,24 +243,24 @@
     --muted-foreground: #a4abb4;
     --accent: #2c3138;
     --accent-foreground: #eef0f3;
-    --destructive: hsl(0 84% 48%);
-    --destructive-foreground: hsl(0 0% 98%);
+    --destructive: #f87171;
+    --destructive-foreground: #3b0a0a;
     --overlay: hsl(0 0% 0%);
     --brand-surface: var(--brand-blue);
     --brand-foreground: hsl(0 0% 98%);
-    --success: hsl(142 64% 39%);
-    --success-foreground: hsl(0 0% 98%);
-    --warning: hsl(38 92% 50%);
-    --warning-foreground: hsl(0 0% 9%);
+    --success: #4ade80;
+    --success-foreground: #052e16;
+    --warning: #fbbf24;
+    --warning-foreground: #422006;
     --border: #333940;
-    --input: #424952;
-    --ring: #5d8cc0;
+    --input: #65717e;
+    --ring: #78a8d4;
     --surface-ring: rgb(255 255 255 / 0.1);
     --shadow-control-value: 0 0 #0000;
     --shadow-surface-value:
         0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-menu-value: 0 0 #0000;
-    --shadow-modal-value: 0 0 #0000;
+    --shadow-menu-value: 0 8px 24px rgb(0 0 0 / 0.35);
+    --shadow-modal-value: 0 16px 40px rgb(0 0 0 / 0.5);
     --chart-1: hsl(220 70% 50%);
     --chart-2: hsl(160 60% 45%);
     --chart-3: hsl(30 80% 55%);
@@ -545,19 +545,19 @@
 
 /* Sidebar azul: hover suave y activo más marcado, ambos con tinte blanco. */
 [data-sidebar='menu-button'][data-active='true'] {
-    background-color: rgb(255 255 255 / 0.18);
-    color: #ffffff;
+    background-color: color-mix(in srgb, var(--sidebar-foreground) 18%, transparent);
+    color: var(--sidebar-foreground);
 }
 
 /* Textos secundarios dentro del sidebar azul: tono claro legible. */
 [data-slot='sidebar'] .text-muted-foreground,
 [data-sidebar='sidebar'] .text-muted-foreground {
-    color: rgb(255 255 255 / 0.72);
+    color: color-mix(in srgb, var(--sidebar-foreground) 72%, transparent);
 }
 
 /* Avatar sin foto dentro del sidebar: tinte claro con iniciales blancas. */
 [data-slot='sidebar'] [data-slot='avatar-fallback'],
 [data-sidebar='sidebar'] [data-slot='avatar-fallback'] {
-    background-color: rgb(255 255 255 / 0.18);
-    color: #ffffff;
+    background-color: color-mix(in srgb, var(--sidebar-foreground) 18%, transparent);
+    color: var(--sidebar-foreground);
 }

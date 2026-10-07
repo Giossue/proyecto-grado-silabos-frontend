@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { Check, Pencil } from '@lucide/vue';
+import { Check } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import { updateCareerTeacher } from '@/api/career-academics';
 import { ApiError } from '@/api/client';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
@@ -33,7 +32,6 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <DropdownMenuItem @select="(event: Event) => { event.preventDefault(); open = true; }"><Pencil aria-hidden="true" />Editar docente</DropdownMenuItem>
     <FormSheet v-model:open="open" trigger-label="Editar docente" :title="`Editar ${teacher.name}`" description="Corrija el nombre o el correo del docente. Solo cambia la cuenta, no sus paralelos." :show-trigger="false">
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
             <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`career-teacher-name-${teacher.id}`" required>Nombre completo</FieldLabel><Input :id="`career-teacher-name-${teacher.id}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
