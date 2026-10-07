@@ -151,7 +151,6 @@ const {
     alignmentTooltip,
     resetCell,
     insertNode,
-    insertVariable,
     keyFor,
 } = useTemplateTableActions(editor, props, selection);
 const marks = useSheetMarks({ editor, props, insertNode, keyFor, declared });
@@ -232,10 +231,7 @@ defineExpose({ getDocument });
             >
                 <TemplateTableInsertMenu
                     :disabled="pending"
-                    :variables="allVariables"
-                    @insert-variable="insertVariable"
                     @teacher="askName('teacher')"
-                    @yes-no="askName('yesNo')"
                     @table="insertTable"
                     @list="insertList"
                 />
