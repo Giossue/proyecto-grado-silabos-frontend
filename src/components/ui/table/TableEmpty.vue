@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Inbox } from "@lucide/vue"
-import type { HTMLAttributes } from "vue"
+import { computed, useSlots, type HTMLAttributes } from "vue"
+import { withoutEndPeriod } from "@/lib/text"
 import { reactiveOmit } from "@vueuse/core"
 import {
   Empty,
@@ -20,6 +21,13 @@ const props = withDefaults(defineProps<{
 })
 
 const delegatedProps = reactiveOmit(props, "class")
+const slots = useSlots()
+const plainText = computed(() => {
+  const nodes = slots.default?.() ?? []
+  return nodes.length > 0 && nodes.every((node) => typeof node.children === "string")
+    ? withoutEndPeriod(nodes.map((node) => node.children as string).join(""))
+    : null
+})
 </script>
 
 <template>
@@ -39,7 +47,8 @@ const delegatedProps = reactiveOmit(props, "class")
             <Inbox aria-hidden="true" />
           </EmptyMedia>
           <EmptyTitle class="text-sm text-muted-foreground">
-            <slot />
+            <template v-if="plainText !== null">{{ plainText }}</template>
+            <slot v-else />
           </EmptyTitle>
         </EmptyHeader>
       </Empty>

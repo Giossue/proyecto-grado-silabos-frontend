@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutEndPeriod } from '@/lib/text';
 import { Plus } from '@lucide/vue';
 import type { VNode } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -69,7 +70,7 @@ const close = (): void => {
         >
             <SheetHeader>
                 <SheetTitle>{{ title }}</SheetTitle>
-                <SheetDescription v-if="description">{{ description }}</SheetDescription>
+                <SheetDescription v-if="description">{{ withoutEndPeriod(description) }}</SheetDescription>
             </SheetHeader>
             <div class="flex-1 overflow-y-auto px-4 pt-1 pb-28">
                 <slot :close="close" />

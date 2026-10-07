@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutEndPeriod } from '@/lib/text';
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty';
 
 defineProps<{ title: string; description?: string }>();
@@ -7,8 +8,8 @@ defineProps<{ title: string; description?: string }>();
 <template>
     <Empty>
         <EmptyHeader>
-            <EmptyTitle>{{ title }}</EmptyTitle>
-            <EmptyDescription v-if="description">{{ description }}</EmptyDescription>
+            <EmptyTitle>{{ withoutEndPeriod(title) }}</EmptyTitle>
+            <EmptyDescription v-if="description">{{ withoutEndPeriod(description) }}</EmptyDescription>
         </EmptyHeader>
         <slot />
     </Empty>

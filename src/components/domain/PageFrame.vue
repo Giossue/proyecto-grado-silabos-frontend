@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutEndPeriod } from '@/lib/text';
 import { Plus, X } from '@lucide/vue';
 import type { Component, CSSProperties, VNode } from 'vue';
 import {
@@ -119,7 +120,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                     <div class="flex min-w-0 flex-col gap-1">
                         <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
                         <p v-if="description" class="max-w-3xl text-muted-foreground">
-                            {{ description }}
+                            {{ withoutEndPeriod(description) }}
                         </p>
                     </div>
                 </div>
