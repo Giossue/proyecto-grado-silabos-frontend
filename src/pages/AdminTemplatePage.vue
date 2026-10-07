@@ -176,7 +176,7 @@ onBeforeUnmount(() => {
                 <TabsTrigger value="preview">Vista previa</TabsTrigger>
             </TabsList>
             <TabsContent value="builder">
-                <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" @changed="reloadFromMutation" />
+                <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :can-format="template.sections.length === 0" :formatting="formatting" @changed="reloadFromMutation" @format="format" />
             </TabsContent>
             <TabsContent value="preview">
                 <TemplatePreview :template="template" :logos="payload?.logos" />

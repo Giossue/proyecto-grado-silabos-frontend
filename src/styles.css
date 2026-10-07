@@ -452,6 +452,27 @@
 }
 
 @layer components {
+    .template-stage {
+        background-color: var(--muted);
+        border-radius: var(--radius-xl);
+        padding: 1.5rem 0.5rem;
+    }
+
+    .template-sheet {
+        width: 100%;
+        max-width: 210mm;
+        min-height: 297mm;
+        aspect-ratio: 210 / 297;
+        margin-inline: auto;
+        padding: 2.2cm 2cm;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        background-color: var(--document-paper);
+        color: var(--document-text);
+        box-shadow: var(--document-paper-shadow);
+    }
+
     .document-table-header {
         background-color: var(--document-table-header-background);
         color: var(--document-table-header-color);

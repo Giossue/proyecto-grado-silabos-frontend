@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Pencil, Plus, Settings2, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Pencil, Plus, Settings2, Sparkles, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { deleteField, deleteSection, reorderFields, reorderSections } from '@/api/template-structure';
@@ -7,22 +7,28 @@ import TemplateFieldDialog from '@/components/domain/configuration/TemplateField
 import TemplateSectionDialog from '@/components/domain/configuration/TemplateSectionDialog.vue';
 import { apiMessage } from '@/components/domain/configuration/templateStructure';
 import TemplateTitleActions from '@/components/domain/configuration/TemplateTitleActions.vue';
+import FreeTextContent from '@/components/domain/fieldTypes/FreeTextContent.vue';
 import { fieldTypeEntry, sectionFields } from '@/components/domain/fieldTypes/registry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import type { TypedField } from '@/types/configuration';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 
-/** Constructor de la plantilla: secciones numeradas y, dentro, sus campos (I-195, etapa 7). */
-const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null }>();
-const emit = defineEmits<{ changed: [] }>();
+/** Constructor de la plantilla dibujado como hoja A4 con controles sobre lo seleccionado (I-195, etapa 7). */
+const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; canFormat?: boolean; formatting?: boolean }>();
+const emit = defineEmits<{ changed: []; format: [] }>();
 
 type Editable = { openEdit: () => void };
 const titleActions = ref<Editable | null>(null);
 const locked = computed(() => Boolean(props.processLock));
 const selectedField = ref<string | null>(null);
+const selectedSection = ref<string | null>(null);
+const selectField = (id: string): void => { selectedField.value = id; selectedSection.value = null; };
+const selectSection = (id: string): void => { selectedSection.value = id; selectedField.value = null; };
+const typed = (field: TemplateField): TypedField => ({ id: field.id, key: field.key, label: field.label, help: field.help, type: field.type, config: field.config, value: null });
 const busy = ref(false);
 const error = ref<string | null>(null);
 
@@ -75,47 +81,70 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
 </script>
 
 <template>
-  <div class="mx-auto flex w-full max-w-4xl flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
-    <Alert v-if="locked" role="status"><AlertDescription>Hay un proceso abierto: la plantilla no se puede cambiar hasta pausarlo o cerrarlo. Puede revisar la estructura y la vista previa.</AlertDescription></Alert>
-    <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
+  <div class="template-stage" aria-label="Constructor visual de la plantilla del sílabo" role="region">
+    <Alert v-if="locked" role="status" class="mx-auto max-w-3xl"><AlertDescription>Hay un proceso abierto: la plantilla no se puede cambiar hasta pausarlo o cerrarlo. Puede revisar la estructura y la vista previa.</AlertDescription></Alert>
+    <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
-    <div class="flex items-center justify-between gap-2 rounded-lg border bg-muted/30 p-3">
-      <div class="min-w-0"><p class="text-xs text-muted-foreground">Título del sílabo</p><p class="truncate font-medium">{{ template.titleBlock.text }}</p></div>
-      <Button type="button" variant="outline" size="sm" :disabled="locked" @click="titleActions?.openEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar título</Button>
-    </div>
-    <TemplateTitleActions ref="titleActions" :template-id="template.id" :title="template.titleBlock.text" />
+    <article data-sheet class="template-sheet">
+      <header class="flex flex-col gap-3">
+        <div v-if="logos" class="flex items-center justify-between gap-4">
+          <img :src="logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain">
+          <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain">
+        </div>
+        <div class="group relative flex items-center justify-center rounded-sm px-2 py-1 outline-offset-2 hover:outline hover:outline-1 hover:outline-primary/40">
+          <h2 class="text-center text-lg font-bold uppercase">{{ template.titleBlock.text }}</h2>
+          <Button type="button" variant="outline" size="sm" class="absolute -top-3 right-0 bg-background opacity-0 group-hover:opacity-100 focus-visible:opacity-100" :disabled="locked" @click="titleActions?.openEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar título</Button>
+        </div>
+      </header>
+      <TemplateTitleActions ref="titleActions" :template-id="template.id" :title="template.titleBlock.text" />
 
-    <p v-if="sections.length === 0" class="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">La plantilla no tiene secciones. Agregue la primera.</p>
-
-    <section v-for="({ section, fields }, sectionIndex) in sections" :key="section.id" :data-section="section.id" class="flex flex-col gap-2 rounded-lg border p-3">
-      <div class="flex flex-wrap items-center gap-2">
-        <h3 class="min-w-0 flex-1 truncate text-base font-semibold">{{ sectionIndex + 1 }}. {{ section.title }}</h3>
-        <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === 0" :aria-label="`Subir la sección ${section.title}`" @click="moveSection(sectionIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
-        <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === sections.length - 1" :aria-label="`Bajar la sección ${section.title}`" @click="moveSection(sectionIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
-        <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Renombrar la sección ${section.title}`" @click="sectionDialog = { open: true, section }"><Pencil aria-hidden="true" /></Button>
-        <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar la sección ${section.title}`" @click="removal = { kind: 'section', id: section.id, name: section.title, count: fields.length }"><Trash2 aria-hidden="true" /></Button>
+      <div v-if="sections.length === 0" class="flex flex-1 flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border p-8 text-center">
+        <p class="text-base font-medium">Esta hoja está en blanco</p>
+        <p class="max-w-sm text-sm text-muted-foreground">La plantilla no tiene secciones. Cargue el formato oficial o agregue la primera sección.</p>
+        <div class="flex flex-wrap justify-center gap-2">
+          <Button v-if="canFormat" type="button" :disabled="locked || formatting" @click="emit('format')"><Sparkles data-icon="inline-start" aria-hidden="true" />Cargar formato oficial UEB</Button>
+          <Button type="button" :variant="canFormat ? 'outline' : 'default'" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
+        </div>
       </div>
 
-      <ol class="flex flex-col gap-1">
-        <li v-for="(field, fieldIndex) in fields" :key="field.id">
-          <div :data-field="field.id" :class="cn('flex flex-wrap items-center gap-2 rounded-md border px-3 py-2', selectedField === field.id ? 'border-primary bg-primary/5' : 'bg-background')">
-            <Button type="button" variant="ghost" class="h-auto min-w-0 flex-1 justify-start gap-2 px-1 py-1 text-left font-normal" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectedField = field.id">
-              <component :is="fieldTypeEntry(field.type)!.icon" v-if="fieldTypeEntry(field.type)" class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              <span class="min-w-0 flex-1 truncate text-sm" :class="field.label.trim() ? 'font-medium' : 'italic text-muted-foreground'">{{ fieldName(field) }}</span>
-              <span class="hidden text-xs text-muted-foreground sm:inline">{{ typeLabel(field) }}</span>
-            </Button>
-            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === 0" :aria-label="`Subir el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === fields.length - 1" :aria-label="`Bajar el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Propiedades del campo ${fieldName(field)}`" @click="selectedField = field.id; fieldDialog = { open: true, sectionId: section.id, field }"><Settings2 aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar el campo ${fieldName(field)}`" @click="removal = { kind: 'field', id: field.id, name: fieldName(field), count: 0 }"><Trash2 aria-hidden="true" /></Button>
+      <section v-for="({ section, fields }, sectionIndex) in sections" :key="section.id" :data-section="section.id" class="flex flex-col gap-3">
+        <div :class="cn('group relative rounded-sm border-b px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
+          <Button type="button" variant="ghost" class="h-auto w-full min-w-0 justify-start px-0 py-0 text-left text-base font-bold hover:bg-transparent" :aria-pressed="selectedSection === section.id" :aria-label="`Sección ${section.title}`" @click="selectSection(section.id)">{{ sectionIndex + 1 }}. {{ section.title }}</Button>
+          <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
+            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === 0" :aria-label="`Subir la sección ${section.title}`" @click="moveSection(sectionIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
+            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === sections.length - 1" :aria-label="`Bajar la sección ${section.title}`" @click="moveSection(sectionIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
+            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Renombrar la sección ${section.title}`" @click="sectionDialog = { open: true, section }"><Pencil aria-hidden="true" /></Button>
+            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar la sección ${section.title}`" @click="removal = { kind: 'section', id: section.id, name: section.title, count: fields.length }"><Trash2 aria-hidden="true" /></Button>
           </div>
-        </li>
-      </ol>
-      <p v-if="fields.length === 0" class="text-sm text-muted-foreground">Sección sin campos.</p>
-      <Button type="button" variant="outline" size="sm" class="self-start" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
-    </section>
+        </div>
 
-    <Button type="button" class="self-start" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
+        <ol class="flex flex-col gap-3">
+          <li v-for="(field, fieldIndex) in fields" :key="field.id" :data-field="field.id" :class="cn('group relative rounded-sm px-2 py-1 outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : field.label.trim() ? 'hover:outline hover:outline-1 hover:outline-primary/40' : 'outline outline-1 outline-dashed outline-muted-foreground')">
+            <div role="button" tabindex="0" class="flex cursor-pointer flex-col gap-1" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
+              <div class="flex items-baseline justify-between gap-2">
+                <h4 v-if="field.label.trim()" class="text-sm font-semibold">{{ sectionIndex + 1 }}.{{ fieldIndex + 1 }} {{ field.label }}</h4>
+                <span v-else class="text-xs italic text-muted-foreground">Campo sin nombre</span>
+                <span class="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{{ typeLabel(field) }}</span>
+              </div>
+              <div class="pointer-events-none">
+                <component :is="fieldTypeEntry(field.type)!.ViewComponent" v-if="fieldTypeEntry(field.type)" :field="typed(field)" />
+                <FreeTextContent v-else :value="null" />
+              </div>
+            </div>
+            <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">
+              <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === 0" :aria-label="`Subir el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
+              <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === fields.length - 1" :aria-label="`Bajar el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
+              <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Propiedades del campo ${fieldName(field)}`" @click="selectedField = field.id; fieldDialog = { open: true, sectionId: section.id, field }"><Settings2 aria-hidden="true" /></Button>
+              <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar el campo ${fieldName(field)}`" @click="removal = { kind: 'field', id: field.id, name: fieldName(field), count: 0 }"><Trash2 aria-hidden="true" /></Button>
+            </div>
+          </li>
+        </ol>
+        <p v-if="fields.length === 0" class="text-sm text-muted-foreground">Sección sin campos.</p>
+        <Button type="button" variant="outline" size="sm" class="self-start border-dashed" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
+      </section>
+
+      <Button v-if="sections.length > 0" type="button" variant="outline" class="self-start border-dashed" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
+    </article>
 
     <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" @saved="emit('changed')" />
     <TemplateFieldDialog v-model:open="fieldDialog.open" :template-id="template.id" :section-id="fieldDialog.sectionId" :field="fieldDialog.field" :used-keys="usedFieldKeys" @saved="emit('changed')" />

@@ -64,12 +64,13 @@ describe("AdminTemplatePage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.get('[data-section="section-1"] h3').text()).toBe('1. Descripción de la asignatura');
+    expect(wrapper.get('[data-section="section-1"] [aria-label="Sección Descripción de la asignatura"]').text()).toBe('1. Descripción de la asignatura');
     expect(wrapper.get('[data-field="field-1"]').text()).toContain('Descripción');
     const unnamed = wrapper.get('[data-field="field-2"]');
     expect(unnamed.text()).toContain('Campo sin nombre');
-    await unnamed.get('button').trigger('click');
-    expect(unnamed.get('button').attributes('aria-pressed')).toBe('true');
+    await unnamed.get('[role="button"]').trigger('click');
+    expect(unnamed.get('[role="button"]').attributes('aria-pressed')).toBe('true');
+    expect(wrapper.find('[data-sheet], .template-sheet').exists()).toBe(true);
   });
 
   it("muestra la vista previa del sílabo con las vistas de cada tipo", async () => {
