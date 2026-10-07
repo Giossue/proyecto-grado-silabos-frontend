@@ -38,8 +38,6 @@ export const paths = {
     academic: '/admin/estructura-academica',
     academicWithSection: (section: string): string =>
       `/admin/estructura-academica?seccion=${encodeURIComponent(section)}`,
-    academicSection: (section: string): string =>
-      `/admin/estructura-academica/${segment(section)}`,
     convocations: '/admin/convocatorias',
     template: '/admin/plantilla',
     audit: '/admin/auditoria',
@@ -211,8 +209,8 @@ export const routeRegistry: readonly RouteDefinition[] = [
 
   { name: 'admin-panel', path: paths.admin.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...admin },
   { name: 'admin-users', path: paths.admin.users, component: 'AdminUsersPage', breadcrumb: 'Usuarios y roles', ...admin },
-  { name: 'admin-academic', path: paths.admin.academic, component: 'AcademicGovernancePage', breadcrumb: 'Estructura académica', ...admin },
-  { name: 'admin-academic-section', path: '/admin/estructura-academica/:section', component: 'AcademicGovernancePage', breadcrumb: 'Estructura académica', ...admin },
+  { name: 'admin-academic', path: paths.admin.academic, component: 'AcademicGovernancePage', breadcrumb: 'Facultades y carreras', ...admin },
+  { name: 'admin-academic-section', path: '/admin/estructura-academica/:section', component: 'AcademicGovernancePage', breadcrumb: 'Facultades y carreras', ...admin },
   { name: 'admin-convocations', path: paths.admin.convocations, component: 'AdminProcessesPage', breadcrumb: 'Convocatorias', ...admin },
   { name: 'admin-template', path: paths.admin.template, component: 'AdminTemplatePage', states: ['indice', 'lectura', 'edicion'], breadcrumb: 'Plantilla', ...admin },
   { name: 'admin-audit', path: paths.admin.audit, component: 'AdminAuditPage', breadcrumb: 'Auditoría', ...admin },

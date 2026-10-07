@@ -64,8 +64,7 @@ test.describe('frontera distribuida de identidad', () => {
     await dialog.getByRole('button', { name: 'Crear cuenta', exact: true }).click();
     await expect(page.getByText(email)).toBeVisible();
 
-    await mainNavigation(page).getByRole('button', { name: 'Estructura académica', exact: true }).click();
-    await mainNavigation(page).getByRole('link', { name: 'Facultades', exact: true }).click();
+    await mainNavigation(page).getByRole('link', { name: 'Facultades y carreras', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Facultades' })).toBeVisible();
 
     await mainNavigation(page).getByRole('link', { name: 'Auditoría', exact: true }).click();

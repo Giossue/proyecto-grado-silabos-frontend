@@ -86,8 +86,8 @@ export const router = createRouter({
 
     { path: "/admin/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Panel" } },
     { path: "/admin/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Usuarios y roles" } },
-    { path: "/admin/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Estructura académica" } },
-    { path: "/admin/estructura-academica/:section", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Estructura académica" } },
+    { path: "/admin/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Facultades y carreras" } },
+    { path: "/admin/estructura-academica/:section", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Facultades y carreras" } },
     { path: "/admin/convocatorias", component: AdminProcessesPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Convocatorias" } },
     { path: "/admin/plantilla", component: AdminTemplatePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Plantilla" } },
     { path: "/admin/auditoria", component: AdminAuditPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Auditoría" } },

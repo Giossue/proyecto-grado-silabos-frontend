@@ -14,12 +14,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { AcademicStructureProps, GovernanceCatalogEntity } from '@/types/academic';
 
-const props = withDefaults(defineProps<Pick<AcademicStructureProps, 'options'> & { entity: GovernanceCatalogEntity; disabled?: boolean }>(), { disabled: false });
+const props = withDefaults(defineProps<Pick<AcademicStructureProps, 'options'> & { entity: GovernanceCatalogEntity; disabled?: boolean; showTrigger?: boolean }>(), { disabled: false, showTrigger: true });
 const emit = defineEmits<{ saved: [message: string] }>();
 
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
-const open = ref(false);
+const open = defineModel<boolean>('open', { default: false });
 const form = ref({
     nombre: '', code: '', faculty_id: '', campus: '', modality: '',
     cycle_count: '', starts_on: '', ends_on: '',
@@ -50,7 +50,9 @@ const logoValidationError = (message: string | null): void => {
 const reset = (): void => {
     form.value = { nombre: '', code: '', faculty_id: '', campus: '', modality: '', cycle_count: '', starts_on: '', ends_on: '' };
     logo.value = null;
+    errors.value = {};
 };
+watch(open, (value) => { if (value) reset(); });
 const submit = async (): Promise<void> => {
     if (props.disabled) return;
     errors.value = {};
@@ -79,7 +81,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" :disabled="props.disabled" :trigger-label="labels.trigger" :title="labels.title" :description="labels.description">
+    <FormSheet v-model:open="open" :disabled="props.disabled" :show-trigger="props.showTrigger" :trigger-label="labels.trigger" :title="labels.title" :description="labels.description">
         <template #default="{ close }">
             <form @submit.prevent="submit">
                 <FieldGroup>

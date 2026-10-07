@@ -6,7 +6,9 @@ import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
 import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
 import CatalogSection from '@/components/domain/academic/CatalogSection.vue';
-import { Building2, GraduationCap } from '@lucide/vue';
+import { Building2, ChevronDown, GraduationCap, Plus } from '@lucide/vue';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -20,6 +22,8 @@ const route = useRoute();
 const data = ref<AcademicGovernance | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+const facultyOpen = ref(false);
+const careerOpen = ref(false);
 
 type CatalogEntity = Exclude<AcademicEntity, 'periodo'>;
 const sectionMap: Record<CatalogEntity, GovernanceSection> = { facultad: 'faculties', carrera: 'careers' };
@@ -52,7 +56,7 @@ const load = async (): Promise<void> => {
         if (periodRoute.value) { await router.replace(paths.admin.convocations); return; }
         data.value = await getAcademicGovernance();
     } catch (reason) {
-        error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la estructura académica.';
+        error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las facultades y carreras.';
     } finally { loading.value = false; }
 };
 const changed = async (notice: string): Promise<void> => { toast.success(notice); await load(); };
@@ -62,7 +66,27 @@ onMounted(load);
 <template>
     <PageFrame :title="sectionContent.title" :description="sectionContent.description">
         <template #actions>
-        <CatalogRecordSheet v-if="data" :entity="entity" :options="data.options" @saved="changed" />
+            <DropdownMenu v-if="data">
+                <DropdownMenuTrigger as-child>
+                    <Button type="button" class="w-full max-sm:size-14 max-sm:rounded-full max-sm:p-0 sm:w-auto" aria-label="Crear">
+                        <Plus data-icon="inline-start" aria-hidden="true" />
+                        <span class="max-sm:hidden">Crear</span>
+                        <ChevronDown class="max-sm:hidden" data-icon="inline-end" aria-hidden="true" />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" class="w-48">
+                    <DropdownMenuGroup>
+                        <DropdownMenuItem @select="facultyOpen = true">
+                            <Building2 aria-hidden="true" />
+                            Facultad
+                        </DropdownMenuItem>
+                        <DropdownMenuItem @select="careerOpen = true">
+                            <GraduationCap aria-hidden="true" />
+                            Carrera
+                        </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                </DropdownMenuContent>
+            </DropdownMenu>
         </template>
 
         <Tabs :model-value="entity" class="mb-4" @update:model-value="selectTab">
@@ -81,4 +105,6 @@ onMounted(load);
 
         <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" @changed="changed" />
     </PageFrame>
+    <CatalogRecordSheet v-if="data" v-model:open="facultyOpen" :show-trigger="false" entity="facultad" :options="data.options" @saved="changed" />
+    <CatalogRecordSheet v-if="data" v-model:open="careerOpen" :show-trigger="false" entity="carrera" :options="data.options" @saved="changed" />
 </template>

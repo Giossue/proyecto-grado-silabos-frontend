@@ -28,7 +28,7 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                   { title: 'Convocatorias', href: paths.admin.convocations, icon: CalendarRange },
                   { title: 'Usuarios y roles', href: paths.admin.users, icon: UsersRound },
                   {
-                      title: 'Estructura académica',
+                      title: 'Facultades y carreras',
                       href: paths.admin.academic,
                       icon: Building2,
                   },
