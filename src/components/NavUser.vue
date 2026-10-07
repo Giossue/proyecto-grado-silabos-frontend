@@ -30,11 +30,11 @@ const switcherOpen = ref(false);
             <Button
                 type="button"
                 variant="ghost"
-                class="h-11 rounded-lg px-2 sm:w-48 lg:w-56"
+                class="h-11 rounded-lg px-2"
                 aria-label="Menú de usuario"
             >
                 <div class="flex min-w-0 flex-1 items-center gap-2 [&>.grid]:hidden [&>.grid]:min-w-0 sm:[&>.grid]:grid">
-                    <UserInfo :user="user" />
+                    <UserInfo :user="user" :show-full-name="true" name-class="text-header-user" />
                     <ChevronDown class="hidden sm:block" data-icon="inline-end" aria-hidden="true" />
                 </div>
             </Button>

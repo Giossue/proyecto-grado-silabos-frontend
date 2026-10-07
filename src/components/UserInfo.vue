@@ -9,6 +9,7 @@ type Props = {
     user: User;
     showEmail?: boolean;
     showFullName?: boolean;
+    nameClass?: string;
     subtitle?: string | null;
 };
 
@@ -33,7 +34,7 @@ const showAvatar = computed(
     </Avatar>
 
     <div class="grid min-w-0 flex-1 text-left text-sm leading-tight">
-        <span :class="cn('font-medium', showFullName ? 'whitespace-normal wrap-break-word' : 'truncate')">{{ user.nombre }}</span>
+        <span :class="cn('font-medium', showFullName ? 'whitespace-normal wrap-break-word' : 'truncate', nameClass)">{{ user.nombre }}</span>
         <span
             v-if="subtitle || showEmail"
             class="truncate text-xs text-muted-foreground"
