@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Plus, X } from '@lucide/vue';
-import type { CSSProperties, VNode } from 'vue';
+import type { Component, CSSProperties, VNode } from 'vue';
 import {
     computed,
     Fragment,
@@ -23,6 +23,8 @@ const props = withDefaults(
         description: string;
         size?: 'full' | 'wide' | 'narrow';
         headerWidth?: number;
+        /** Sustituye el icono del menú cuando la página cambia de sección sin cambiar de ruta. */
+        icon?: Component;
     }>(),
     {
         size: 'full',
@@ -45,6 +47,7 @@ const headerStyle = computed<CSSProperties | undefined>(() =>
 
 const pageTitle = usePageTitle();
 const navItem = useActiveNavItem();
+const headerIcon = computed(() => props.icon ?? navItem.value?.icon ?? null);
 
 watchEffect(() => {
     pageTitle.value = props.title;
@@ -107,11 +110,11 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
 
                 <div class="flex items-start gap-3">
                     <div
-                        v-if="navItem?.icon"
+                        v-if="headerIcon"
                         class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground"
                         aria-hidden="true"
                     >
-                        <component :is="navItem.icon" class="size-5" />
+                        <component :is="headerIcon" class="size-5" />
                     </div>
                     <div class="flex min-w-0 flex-col gap-1">
                         <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
