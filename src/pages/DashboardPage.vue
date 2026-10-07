@@ -80,7 +80,7 @@ const load = async (): Promise<void> => {
 onMounted(() => { void load(); });
 </script>
 <template>
-  <PageFrame class="h-full flex-1" title="Panel de trabajo" description="">
+  <PageFrame class="h-full flex-1" size="wide" title="Panel de trabajo" description="">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <template v-else-if="dashboard">
       <div v-if="dashboard.metrics.length > 0" class="grid grid-cols-1 gap-3 sm:grid-cols-3">
