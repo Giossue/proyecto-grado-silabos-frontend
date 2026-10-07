@@ -23,6 +23,7 @@ const creating = ref(false);
 const chooserOpen = ref(true);
 const formatting = ref(false);
 const loadError = ref<string | null>(null);
+const SHEET_WIDTH = 794;
 const actionError = ref<string | null>(null);
 const template = computed(() => payload.value?.template ?? null);
 
@@ -167,13 +168,15 @@ onBeforeUnmount(() => {
         title="Plantilla de sílabo"
         description="El formato del sílabo: qué secciones y campos tiene, quién escribe cada uno y en qué orden. Cada sílabo entregado conserva su propia copia."
         size="wide"
-        :header-width="794"
+        :header-width="SHEET_WIDTH"
     >
-        <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
-        <Alert v-if="payload?.templateChangedDuringPause" class="mb-4">
-            <AlertDescription>Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.</AlertDescription>
-        </Alert>
-        <ProcessLockAlert v-if="payload?.processLock" class="mb-4" />
+        <div class="mx-auto flex flex-col gap-4 empty:hidden" :style="{ width: `${SHEET_WIDTH}px`, maxWidth: '100%' }">
+            <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
+            <Alert v-if="payload?.templateChangedDuringPause">
+                <AlertDescription>Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.</AlertDescription>
+            </Alert>
+            <ProcessLockAlert v-if="payload?.processLock" />
+        </div>
 
         <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :designs="payload?.sectionDesigns" :can-format="template.sections.length === 0" :formatting="formatting" @changed="reloadFromMutation" @format="format" />
     </PageFrame>
