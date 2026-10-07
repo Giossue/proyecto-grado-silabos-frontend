@@ -78,7 +78,8 @@ const canEdit = computed(() =>
 const allFields = computed(() => (syllabus.value?.sections ?? []).flatMap((section) => section.fields));
 const editableFieldIds = computed(() => new Set(allFields.value.map((field) => field.id)));
 /** El tipo del registro decide si el docente escribe el campo (la ficha, solo si es ajustable). */
-const isTeacherField = (field: SyllabusField): boolean => fieldTypeEntry(field.type)?.teacherEditable(fieldConfig(field)) ?? false;
+// El servidor manda `teacher_editable`: un dato heredado (p. ej. la formación del perfil) no se escribe en el sílabo.
+const isTeacherField = (field: SyllabusField): boolean => field.teacher_editable !== false && (fieldTypeEntry(field.type)?.teacherEditable(fieldConfig(field)) ?? false);
 const typed = (field: SyllabusField): TypedField => field;
 /** Los datos que el docente escribe dentro de la tabla de identificación se piden justo bajo ella; en la revisión y el Word solo aparece la tabla. */
 // Discapacidad: un «Sí/No» decide si se piden el tipo y la descripción (campos opcionales dentro de la tabla de identificación).
