@@ -82,7 +82,7 @@ const completedAssignments = computed(() =>
     <Sheet v-model:open="open">
         <SheetContent side="right" class="w-full sm:max-w-lg">
             <SheetHeader>
-                <SheetTitle>{{ props.user.nombre }}</SheetTitle>
+                <SheetTitle>Datos</SheetTitle>
                 <SheetDescription>
                     Ficha de solo lectura de la cuenta. Para corregirla, use
                     «Editar» en el mismo menú.

@@ -5,6 +5,7 @@ import { getManagedUsers, type ManagedUser, type ManagedUsersResponse } from '@/
 import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
+import ManagedUserAccessAction from '@/components/domain/identity/ManagedUserAccessAction.vue';
 import ManagedUserDetailSheet from '@/components/domain/identity/ManagedUserDetailSheet.vue';
 import ManagedUserEditSheet from '@/components/domain/identity/ManagedUserEditSheet.vue';
 import ManagedUserPendingActions from '@/components/domain/identity/ManagedUserPendingActions.vue';
@@ -76,7 +77,7 @@ onMounted(load);
                     <TableCell><div class="flex flex-col items-start gap-1"><span v-for="(item, index) in user.roles" :key="`rol-${index}`">{{ item.name }}</span><span v-if="user.roles.length === 0" class="text-sm text-muted-foreground">Sin rol vigente</span></div></TableCell>
                     <TableCell><div class="flex flex-col items-start gap-1 text-sm"><span v-for="(item, index) in user.roles" :key="`ambito-${index}`" :class="item.career_name ? '' : 'text-muted-foreground'">{{ careerOf(item) }}</span><span v-if="user.roles.length === 0" class="text-muted-foreground">—</span></div></TableCell>
                     <TableCell>{{ statusOf(user) }}</TableCell>
-                    <TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${user.nombre}`"><ManagedUserDetailSheet :user="user" /><ManagedUserPendingActions v-if="user.pending_activation && user.active" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
+                    <TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${user.nombre}`"><ManagedUserDetailSheet :user="user" /><ManagedUserAccessAction v-if="user.id !== currentUserId && !user.pending_activation" :user="user" @changed="changed" /><ManagedUserPendingActions v-if="user.pending_activation && user.active" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
                 </TableRow>
             </TableBody></Table>
             <ManagedUserEditSheet v-if="editing" :key="editing.id" display="none" :open="true" :user="editing" :roles="result.roles" :careers="result.careers" @update:open="(value: boolean) => { if (!value) editing = null; }" @saved="changed" />
