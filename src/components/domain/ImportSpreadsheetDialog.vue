@@ -26,7 +26,6 @@ const file = ref<File | null>(null);
 const result = ref<ImportResult | null>(null);
 const processing = ref(false);
 const error = ref<string | null>(null);
-const hasPreview = computed(() => result.value?.rows.some((row) => row.preview) ?? false);
 const failedRows = computed(() => result.value?.rows.filter((row) => row.errors.length > 0).length ?? 0);
 
 watch(open, (value) => { if (value) { file.value = null; result.value = null; error.value = null; } });
@@ -70,12 +69,11 @@ const download = async (): Promise<void> => {
                     <p v-if="result.valid" class="text-sm">Todas las filas son válidas ({{ result.rows.length }}). Confirme para importarlas.</p>
                     <p v-else class="text-sm text-destructive">{{ failedRows }} fila(s) con errores. Corrija el archivo y vuelva a subirlo; no se importó nada.</p>
                     <Table>
-                        <TableHeader><TableRow><TableHead>Fila</TableHead><TableHead v-for="column in columns" :key="column.key">{{ column.label }}</TableHead><TableHead v-if="hasPreview">Logo</TableHead><TableHead>Resultado</TableHead></TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Fila</TableHead><TableHead v-for="column in columns" :key="column.key">{{ column.label }}</TableHead><TableHead>Resultado</TableHead></TableRow></TableHeader>
                         <TableBody>
                             <TableRow v-for="row in result.rows" :key="row.line">
                                 <TableCell>{{ row.line }}</TableCell>
                                 <TableCell v-for="column in columns" :key="column.key">{{ row.values[column.key] }}</TableCell>
-                                <TableCell v-if="hasPreview"><img v-if="row.preview" :src="row.preview" alt="Logo detectado en esta fila" class="h-10 w-auto max-w-24 object-contain"><span v-else class="text-muted-foreground">—</span></TableCell>
                                 <TableCell :class="row.errors.length ? 'text-destructive' : 'text-muted-foreground'">{{ row.errors.length ? row.errors.join(' ') : 'Válida' }}</TableCell>
                             </TableRow>
                         </TableBody>
