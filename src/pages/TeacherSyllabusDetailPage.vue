@@ -25,6 +25,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -80,6 +81,18 @@ const editableFieldIds = computed(() => new Set(allFields.value.map((field) => f
 const isTeacherField = (field: SyllabusField): boolean => fieldTypeEntry(field.type)?.teacherEditable(fieldConfig(field)) ?? false;
 const typed = (field: SyllabusField): TypedField => field;
 /** Los datos que el docente escribe dentro de la tabla de identificación se piden justo bajo ella; en la revisión y el Word solo aparece la tabla. */
+// Discapacidad: un «Sí/No» decide si se piden el tipo y la descripción (campos opcionales dentro de la tabla de identificación).
+const isDisabilityField = (field: SyllabusField): boolean => isEmbeddedField(field) && fieldConfig(field).optional === true;
+const hasDisabilityChoice = ref<boolean | null>(null);
+const hasDisability = (fields: SyllabusField[]): boolean =>
+  hasDisabilityChoice.value ?? fields.filter(isDisabilityField).some((field) => !isFieldEmpty(field));
+const chooseDisability = (fields: SyllabusField[], value: string): void => {
+  hasDisabilityChoice.value = value === 'si';
+  if (value === 'si') return;
+  for (const field of fields.filter(isDisabilityField).filter((item) => !isFieldEmpty(item))) {
+    updateValue(field, { type: 'doc', content: [{ type: 'paragraph' }] });
+  }
+};
 const sectionEntries = (fields: SyllabusField[]): Array<{ field: SyllabusField; nested: boolean; hint: boolean }> => {
   const embedded = fields.filter(isEmbeddedField);
   const host = fields.find((field) => field.type === 'automatico' && fieldConfig(field).source === 'identification_card');
@@ -467,8 +480,17 @@ onBeforeUnmount(() => {
             <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionHeading(section.title, visibleSections.indexOf(section)) }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
             <FieldGroup>
               <template v-for="{ field, nested, hint } in sectionEntries(section.fields)" :key="field.id">
-                <p v-if="hint && canEdit" class="text-sm text-muted-foreground">Complete estos datos: se imprimen dentro de la tabla de identificación al enviar el sílabo. Los de discapacidad déjelos en blanco si no tiene estudiantes con discapacidad.</p>
-                <Field v-if="canEdit && isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0" :class="nested && 'border-l-2 border-border pl-4'">
+                <template v-if="hint && canEdit">
+                  <p class="text-sm text-muted-foreground">Complete estos datos: se imprimen dentro de la tabla de identificación al enviar el sílabo.</p>
+                  <Field v-if="section.fields.some(isDisabilityField)">
+                    <FieldLabel for="disability-choice">¿Tiene estudiantes con discapacidad?</FieldLabel>
+                    <Select :model-value="hasDisability(section.fields) ? 'si' : 'no'" :disabled="conflict" @update:model-value="chooseDisability(section.fields, String($event))">
+                      <SelectTrigger id="disability-choice" class="w-48"><SelectValue /></SelectTrigger>
+                      <SelectContent><SelectGroup><SelectItem value="no">No</SelectItem><SelectItem value="si">Sí</SelectItem></SelectGroup></SelectContent>
+                    </Select>
+                  </Field>
+                </template>
+                <Field v-if="canEdit && isTeacherField(field) && (!isDisabilityField(field) || hasDisability(section.fields))" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0" :class="nested && 'border-l-2 border-border pl-4'">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel>
                   <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
                   <component :is="fieldTypeEntry(field.type)!.EditorComponent" :field="typed(field)" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict" @update:model-value="updateValue(field, $event)" />

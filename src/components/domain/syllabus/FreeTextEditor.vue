@@ -14,7 +14,9 @@ const props = withDefaults(defineProps<{
     label: string;
     modelValue?: DocumentNode | null;
     disabled?: boolean;
-}>(), { modelValue: null, disabled: false });
+    /** Solo lista con viñetas: sin negrita, cursiva, lista numerada ni tablas. */
+    bulletsOnly?: boolean;
+}>(), { modelValue: null, disabled: false, bulletsOnly: false });
 
 const emit = defineEmits<{ 'update:modelValue': [value: DocumentNode] }>();
 
@@ -41,11 +43,9 @@ const editor = useEditor({
             link: false,
             strike: false,
             underline: false,
+            ...(props.bulletsOnly ? { bold: false, italic: false, orderedList: false } : {}),
         }),
-        Table.configure({ resizable: false }),
-        TableRow,
-        TableHeader,
-        TableCell,
+        ...(props.bulletsOnly ? [] : [Table.configure({ resizable: false }), TableRow, TableHeader, TableCell]),
     ],
     onUpdate: ({ editor: current }) => emit('update:modelValue', current.getJSON() as DocumentNode),
     onTransaction: () => {
@@ -68,39 +68,43 @@ const chain = () => editor.value?.chain().focus();
     <div class="free-text-editor flex min-w-0 flex-col rounded-md border bg-background" :data-disabled="disabled || undefined">
         <TooltipProvider v-if="!disabled" :delay-duration="150">
         <div class="flex flex-wrap items-center gap-1 border-b p-1" role="toolbar" :aria-label="`Formato de ${label}`">
-            <TemplateToolbarButton label="Negrita" :pressed="active('bold')" :variant="active('bold') ? 'secondary' : 'ghost'" @click="chain()?.toggleBold().run()">
-                <Bold aria-hidden="true" />
-            </TemplateToolbarButton>
-            <TemplateToolbarButton label="Cursiva" :pressed="active('italic')" :variant="active('italic') ? 'secondary' : 'ghost'" @click="chain()?.toggleItalic().run()">
-                <Italic aria-hidden="true" />
-            </TemplateToolbarButton>
-            <Separator orientation="vertical" class="h-6" />
+            <template v-if="!bulletsOnly">
+                <TemplateToolbarButton label="Negrita" :pressed="active('bold')" :variant="active('bold') ? 'secondary' : 'ghost'" @click="chain()?.toggleBold().run()">
+                    <Bold aria-hidden="true" />
+                </TemplateToolbarButton>
+                <TemplateToolbarButton label="Cursiva" :pressed="active('italic')" :variant="active('italic') ? 'secondary' : 'ghost'" @click="chain()?.toggleItalic().run()">
+                    <Italic aria-hidden="true" />
+                </TemplateToolbarButton>
+                <Separator orientation="vertical" class="h-6" />
+            </template>
             <TemplateToolbarButton label="Lista con viñetas" :pressed="active('bulletList')" :variant="active('bulletList') ? 'secondary' : 'ghost'" @click="chain()?.toggleBulletList().run()">
                 <List aria-hidden="true" />
             </TemplateToolbarButton>
-            <TemplateToolbarButton label="Lista numerada" :pressed="active('orderedList')" :variant="active('orderedList') ? 'secondary' : 'ghost'" @click="chain()?.toggleOrderedList().run()">
-                <ListOrdered aria-hidden="true" />
-            </TemplateToolbarButton>
-            <Separator orientation="vertical" class="h-6" />
-            <TemplateToolbarButton v-if="!active('table')" label="Insertar tabla" text="Tabla" @click="chain()?.insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run()">
-                <Table2 aria-hidden="true" />
-            </TemplateToolbarButton>
-            <template v-else>
-                <TemplateToolbarButton label="Agregar fila" text="Fila" @click="chain()?.addRowAfter().run()">
-                    <Rows3 aria-hidden="true" />
+            <template v-if="!bulletsOnly">
+                <TemplateToolbarButton label="Lista numerada" :pressed="active('orderedList')" :variant="active('orderedList') ? 'secondary' : 'ghost'" @click="chain()?.toggleOrderedList().run()">
+                    <ListOrdered aria-hidden="true" />
                 </TemplateToolbarButton>
-                <TemplateToolbarButton label="Agregar columna" text="Columna" @click="chain()?.addColumnAfter().run()">
-                    <Columns3 aria-hidden="true" />
+                <Separator orientation="vertical" class="h-6" />
+                <TemplateToolbarButton v-if="!active('table')" label="Insertar tabla" text="Tabla" @click="chain()?.insertTable({ rows: 2, cols: 2, withHeaderRow: true }).run()">
+                    <Table2 aria-hidden="true" />
                 </TemplateToolbarButton>
-                <TemplateToolbarButton label="Quitar fila" @click="chain()?.deleteRow().run()">
-                    <Rows3 class="text-destructive" aria-hidden="true" />
-                </TemplateToolbarButton>
-                <TemplateToolbarButton label="Quitar columna" @click="chain()?.deleteColumn().run()">
-                    <Columns3 class="text-destructive" aria-hidden="true" />
-                </TemplateToolbarButton>
-                <TemplateToolbarButton label="Quitar tabla" @click="chain()?.deleteTable().run()">
-                    <Trash2 class="text-destructive" aria-hidden="true" />
-                </TemplateToolbarButton>
+                <template v-else>
+                    <TemplateToolbarButton label="Agregar fila" text="Fila" @click="chain()?.addRowAfter().run()">
+                        <Rows3 aria-hidden="true" />
+                    </TemplateToolbarButton>
+                    <TemplateToolbarButton label="Agregar columna" text="Columna" @click="chain()?.addColumnAfter().run()">
+                        <Columns3 aria-hidden="true" />
+                    </TemplateToolbarButton>
+                    <TemplateToolbarButton label="Quitar fila" @click="chain()?.deleteRow().run()">
+                        <Rows3 class="text-destructive" aria-hidden="true" />
+                    </TemplateToolbarButton>
+                    <TemplateToolbarButton label="Quitar columna" @click="chain()?.deleteColumn().run()">
+                        <Columns3 class="text-destructive" aria-hidden="true" />
+                    </TemplateToolbarButton>
+                    <TemplateToolbarButton label="Quitar tabla" @click="chain()?.deleteTable().run()">
+                        <Trash2 class="text-destructive" aria-hidden="true" />
+                    </TemplateToolbarButton>
+                </template>
             </template>
         </div>
         </TooltipProvider>
