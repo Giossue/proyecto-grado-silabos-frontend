@@ -7,16 +7,20 @@ import FreeTextEditor from "@/components/domain/syllabus/FreeTextEditor.vue";
 import { copyTeacherSyllabus, getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField, startTeacherSyllabus } from "@/api/syllabi";
 import { ApiError } from "@/api/client";
 import { handleUnauthorized } from "@/lib/unauthorized";
+import { updateFormation } from "@/api/session";
+import { sessionState } from "@/state/session";
 
 const routeLeaveGuards: Array<() => Promise<boolean> | boolean> = [];
 
 vi.mock("vue-router", () => ({
-  useRoute: () => ({ params: { syllabus: "syllabus-1" } }),
+  useRoute: () => ({ params: { syllabus: "syllabus-1" }, fullPath: "/docente/silabos/syllabus-1" }),
   useRouter: () => ({ replace: vi.fn() }),
   onBeforeRouteLeave: (guard: () => Promise<boolean> | boolean) => routeLeaveGuards.push(guard),
 }));
 
 vi.mock("@/lib/unauthorized", () => ({ handleUnauthorized: vi.fn() }));
+
+vi.mock("@/api/session", () => ({ getSession: vi.fn(), updateFormation: vi.fn() }));
 
 vi.mock("@/api/syllabi", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/syllabi")>()),
@@ -115,6 +119,43 @@ const mountPage = () => mount(PageWithTooltips, {
   },
 });
 
+const passthrough = defineComponent({ template: "<div><slot /></div>" });
+const inlineDialog = defineComponent({ props: { open: Boolean }, emits: ["update:open"], template: '<div v-if="open" data-dialog><slot /></div>' });
+const mountWithDialogs = () => mount(PageWithTooltips, {
+  global: {
+    stubs: {
+      RouterLink: { template: "<a><slot /></a>" },
+      SyllabusUnitAssistant: { template: "<div />" },
+      FreeTextEditor: { props: ["modelValue"], emits: ["update:modelValue"], template: "<div />" },
+      Dialog: inlineDialog,
+      DialogContent: passthrough,
+      DialogHeader: passthrough,
+      DialogFooter: passthrough,
+      DialogTitle: passthrough,
+      DialogDescription: passthrough,
+    },
+  },
+});
+
+const FORMATION_LABEL = "FORMACIÓN Y EXPERIENCIA ACADÉMICA – INVESTIGATIVA:";
+const cardDocument = (formation: string) => ({
+  type: "doc",
+  content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [
+    { type: "paragraph", content: [{ type: "text", text: FORMATION_LABEL }] },
+    { type: "paragraph", content: [{ type: "text", text: formation }] },
+  ] }] }] }],
+});
+const cardSyllabus = (state: "borrador" | "en_revision", formation: string): SyllabusDetail => {
+  const detail = syllabus(state, "automatico");
+  detail.sections[0]!.fields[0]!.document = cardDocument(formation);
+  return detail;
+};
+const sessionWith = (formation: string) => ({
+  user: { id: "u-1", name: "DOCENTE UNO", email: "docente@ueb.edu.ec", email_verified: true, can_edit_identity: false, formation },
+  active_role: { id: "r-1", code: "docente", career_id: null, career_name: null },
+  available_roles: [],
+});
+
 const openTab = async (wrapper: ReturnType<typeof mountPage>, title: string): Promise<void> => {
   const tab = wrapper.findAll('[role="tab"]').find((candidate) => candidate.text().includes(title));
   await tab!.trigger("mousedown", { button: 0 });
@@ -131,6 +172,8 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.mocked(submitTeacherSyllabus).mockReset();
     vi.mocked(validateTeacherSyllabus).mockReset();
     vi.mocked(handleUnauthorized).mockReset();
+    vi.mocked(updateFormation).mockReset();
+    sessionState.clear();
     routeLeaveGuards.length = 0;
   });
 
@@ -558,5 +601,64 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(buttonNamed(wrapper, "Reenviar bibliografía")).toBeUndefined();
     expect(buttonNamed(wrapper, "Enviar sílabo")).toBeDefined();
     wrapper.unmount();
+  });
+
+  it("la etiqueta de formación y experiencia es un enlace solo cuando el sílabo se puede editar", async () => {
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: cardSyllabus("borrador", "Texto viejo") });
+    const editable = mountWithDialogs();
+    await flushPromises();
+    const link = editable.get('button[aria-label="Editar formación y experiencia"]');
+    expect(link.text()).toBe(FORMATION_LABEL);
+    expect(editable.findAll("button").filter((button) => button.text().includes("Texto viejo"))).toHaveLength(0);
+    editable.unmount();
+
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: cardSyllabus("en_revision", "Texto viejo") });
+    const readonly = mountWithDialogs();
+    await flushPromises();
+    expect(readonly.text()).toContain(FORMATION_LABEL);
+    expect(readonly.find('button[aria-label="Editar formación y experiencia"]').exists()).toBe(false);
+  });
+
+  it("el enlace abre el modal, guarda la formación y recarga el sílabo con el texto nuevo", async () => {
+    sessionState.replace(sessionWith("Texto viejo"));
+    vi.mocked(updateFormation).mockResolvedValue(sessionWith("Texto nuevo"));
+    vi.mocked(getTeacherSyllabus)
+      .mockResolvedValueOnce({ syllabus: cardSyllabus("borrador", "Texto viejo") })
+      .mockResolvedValueOnce({ syllabus: cardSyllabus("borrador", "Texto nuevo") });
+    const wrapper = mountWithDialogs();
+    await flushPromises();
+    expect(wrapper.find("[data-dialog]").exists()).toBe(false);
+
+    await wrapper.get('button[aria-label="Editar formación y experiencia"]').trigger("click");
+    const textarea = wrapper.get("#dialog-formation");
+    expect((textarea.element as HTMLTextAreaElement).value).toBe("Texto viejo");
+    expect(wrapper.get('[data-test="save-formation-button"]').attributes("disabled")).toBeDefined();
+
+    await textarea.setValue("Texto nuevo");
+    await wrapper.get("[data-dialog] form").trigger("submit");
+    await flushPromises();
+
+    expect(updateFormation).toHaveBeenCalledWith("Texto nuevo");
+    expect(getTeacherSyllabus).toHaveBeenCalledTimes(2);
+    expect(wrapper.find("[data-dialog]").exists()).toBe(false);
+    expect(wrapper.text()).toContain("Texto nuevo");
+    expect(wrapper.text()).not.toContain("Texto viejo");
+  });
+
+  it("si guardar falla, el modal sigue abierto con el error y no recarga el sílabo", async () => {
+    sessionState.replace(sessionWith("Texto viejo"));
+    vi.mocked(updateFormation).mockRejectedValue(new ApiError("La formación es obligatoria.", 422, { formacion_experiencia: ["La formación es obligatoria."] }));
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: cardSyllabus("borrador", "Texto viejo") });
+    const wrapper = mountWithDialogs();
+    await flushPromises();
+
+    await wrapper.get('button[aria-label="Editar formación y experiencia"]').trigger("click");
+    await wrapper.get("#dialog-formation").setValue("Otro texto");
+    await wrapper.get("[data-dialog] form").trigger("submit");
+    await flushPromises();
+
+    expect(wrapper.find("[data-dialog]").exists()).toBe(true);
+    expect(wrapper.get("[data-dialog]").text()).toContain("La formación es obligatoria.");
+    expect(getTeacherSyllabus).toHaveBeenCalledTimes(1);
   });
 });
