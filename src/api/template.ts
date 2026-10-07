@@ -10,6 +10,6 @@ export type SectionDesign = { key: string; title: string; summary: string; field
 export type TemplateSectionPayload = { id: string; key: string; title: string; description: string | null; blocks: TemplateBlock[] };
 export type TemplatePayload = { processLock: string | null; templateChangedDuringPause?: boolean; sectionDesigns?: SectionDesign[]; template: null | { id: string; name: string; description: string | null; titleBlock: { text: string }; sections: TemplateSectionPayload[] }; logos?: { institution: string; faculty: string; institution_size: { width: number; height: number }; faculty_size: { width: number; height: number } } };
 export const getTemplate = () => api<TemplatePayload>('/admin/template');
-export const createTemplate = () => api<{ message: string; template_id: string }>('/admin/template', { method: 'POST', body: JSON.stringify({}) });
+export const createTemplate = (official = false) => api<{ message: string; template_id: string }>('/admin/template', { method: 'POST', body: JSON.stringify({ official }) });
 export const formatTemplate = (id: string) => api<{ message: string }>(`/admin/template/${id}/format`, { method: 'POST', body: JSON.stringify({}) });
 export const uploadInstitutionLogo = (logo: File) => { const body = new FormData(); body.append('logo', logo); return api<{ message: string }>('/admin/template/logo', { method: 'POST', body }); };

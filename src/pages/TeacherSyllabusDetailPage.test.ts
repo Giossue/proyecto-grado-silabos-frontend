@@ -115,6 +115,12 @@ const mountPage = () => mount(PageWithTooltips, {
   },
 });
 
+const openTab = async (wrapper: ReturnType<typeof mountPage>, title: string): Promise<void> => {
+  const tab = wrapper.findAll('[role="tab"]').find((candidate) => candidate.text().includes(title));
+  await tab!.trigger("mousedown", { button: 0 });
+  await flushPromises();
+};
+
 describe("TeacherSyllabusDetailPage", () => {
   beforeEach(() => {
     vi.useRealTimers();
@@ -297,9 +303,10 @@ describe("TeacherSyllabusDetailPage", () => {
 
     expect(wrapper.text()).toContain("Descripción");
     expect(wrapper.text()).toContain("Revisión y aprobación");
-    expect(wrapper.text()).toContain("Firma del coordinador");
     expect(wrapper.text()).not.toContain("Resultados de validación");
     expect(wrapper.text()).toContain("está vacío");
+    await openTab(wrapper, "Revisión y aprobación");
+    expect(wrapper.text()).toContain("Firma del coordinador");
     expect(wrapper.findAll("button").some((button) => button.text() === "Validar sílabo")).toBe(false);
   });
 
@@ -541,6 +548,7 @@ describe("TeacherSyllabusDetailPage", () => {
 
     // I-173: no hay corrección parcial; se edita todo y el reenvío vuelve a empezar por biblioteca.
     expect(wrapper.find("#input-field-1").exists()).toBe(true);
+    await openTab(wrapper, "Bibliografía");
     expect(wrapper.find("#input-field-2").exists()).toBe(true);
     expect(wrapper.find(".library-correction").exists()).toBe(false);
     const commentCard = wrapper.get(".library-comment-card");

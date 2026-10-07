@@ -133,20 +133,26 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.get('[aria-label="Eliminar el campo Descripción"]').attributes('disabled')).toBeDefined();
   });
 
-  it("crea una plantilla vacía sin instalar el formato oficial", async () => {
+  it("ofrece crear la plantilla en blanco o con el formato oficial desde un modal", async () => {
     vi.mocked(getTemplate)
       .mockReset()
-      .mockResolvedValueOnce({ processLock: null, template: null })
-      .mockResolvedValueOnce(payload);
-    vi.mocked(createTemplate).mockResolvedValue({ message: 'Plantilla vacía creada.', template_id: 'template-1' });
+      .mockResolvedValue({ processLock: null, template: null });
+    vi.mocked(createTemplate).mockReset().mockResolvedValue({ message: 'Plantilla vacía creada.', template_id: 'template-1' });
 
-    const wrapper = mountPage();
+    mountPage();
     await flushPromises();
 
-    await wrapper.get('button').trigger('click');
+    const choose = (label: string) => [...document.body.querySelectorAll('button')].find((button) => button.textContent?.includes(label));
+    expect(document.body.textContent).toContain('Crear la plantilla del sílabo');
+    choose('En blanco')!.click();
     await flushPromises();
+    expect(createTemplate).toHaveBeenLastCalledWith(false);
 
-    expect(createTemplate).toHaveBeenCalledOnce();
+    [...document.body.querySelectorAll('button')].find((button) => button.textContent?.includes('Crear plantilla'))!.click();
+    await flushPromises();
+    choose('Plantilla oficial UEB')!.click();
+    await flushPromises();
+    expect(createTemplate).toHaveBeenLastCalledWith(true);
   });
 
   it("aplica el formato oficial únicamente desde una plantilla vacía", async () => {

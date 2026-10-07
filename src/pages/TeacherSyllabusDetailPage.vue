@@ -25,6 +25,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
@@ -133,7 +134,12 @@ const submitHint = computed(() => {
   if (emptyParts.value > 1) return `Faltan ${emptyParts.value} campos por completar`;
   return "";
 });
-const goToPart = (fieldId: string | null): void => {
+const goToPart = async (fieldId: string | null): Promise<void> => {
+  const owner = fieldId ? visibleSections.value.find((section) => section.fields.some((field) => field.id === fieldId)) : null;
+  if (owner && canEdit.value) {
+    activeSectionId.value = owner.id;
+    await nextTick();
+  }
   const target = fieldId ? document.getElementById(partTargets.value.get(fieldId) ?? `field-${fieldId}`) : null;
   if (!target) return;
   target.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -368,6 +374,15 @@ const sectionHeading = (title: string, index: number): string =>
   /^\s*\d+[.)]/.test(title) ? title : `${index + 1}. ${title}`;
 
 const visibleSections = computed(() => syllabus.value?.sections ?? []);
+// Al editar, el formulario se reparte en pestañas (una por sección); en solo lectura se ve completo.
+const chosenSectionId = ref<string | null>(null);
+const activeSectionId = computed<string>({
+  get: () => visibleSections.value.find((section) => section.id === chosenSectionId.value)?.id ?? visibleSections.value[0]?.id ?? "",
+  set: (value) => { chosenSectionId.value = value; },
+});
+const shownSections = computed(() => canEdit.value
+  ? visibleSections.value.filter((section) => section.id === activeSectionId.value)
+  : visibleSections.value);
 
 const warnBeforeUnload = (event: BeforeUnloadEvent): void => {
   if (!hasUnsavedChanges() && savingFieldId.value === null) return;
@@ -441,10 +456,15 @@ onBeforeUnmount(() => {
             </CardContent>
           </Card>
 
-          <template v-for="(section, sectionIndex) in visibleSections" :key="section.id">
-          <Separator v-if="sectionIndex > 0" />
+          <Tabs v-if="canEdit && visibleSections.length > 1" v-model="activeSectionId" class="w-full">
+            <TabsList class="h-auto w-full flex-wrap justify-start gap-1" aria-label="Secciones del sílabo">
+              <TabsTrigger v-for="(section, index) in visibleSections" :key="section.id" :value="section.id" class="max-w-56" :title="sectionHeading(section.title, index)"><span class="truncate">{{ sectionHeading(section.title, index) }}</span></TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <template v-for="section in shownSections" :key="section.id">
+          <Separator v-if="!canEdit && section.id !== visibleSections[0]?.id" />
           <section :id="`section-${section.id}`" class="flex scroll-mt-6 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
-            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionHeading(section.title, sectionIndex) }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
+            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionHeading(section.title, visibleSections.indexOf(section)) }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
             <FieldGroup>
               <template v-for="{ field, nested, hint } in sectionEntries(section.fields)" :key="field.id">
                 <p v-if="hint && canEdit" class="text-sm text-muted-foreground">Complete estos datos: se imprimen dentro de la tabla de identificación al enviar el sílabo.</p>

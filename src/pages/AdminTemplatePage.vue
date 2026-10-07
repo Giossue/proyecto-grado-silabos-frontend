@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Inbox, LoaderCircle, Plus } from '@lucide/vue';
+import { FileText, Inbox, LoaderCircle, Plus, Sparkles } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { createTemplate, formatTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
@@ -12,6 +12,7 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { paths } from '@/lib/routes';
 
@@ -19,6 +20,7 @@ const router = useRouter();
 const payload = ref<TemplatePayload | null>(null);
 const loading = ref(true);
 const creating = ref(false);
+const chooserOpen = ref(true);
 const formatting = ref(false);
 const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
@@ -57,12 +59,13 @@ const load = async ({ silent = false }: { silent?: boolean } = {}): Promise<void
     }
 };
 
-const create = async (): Promise<void> => {
+const create = async (official: boolean): Promise<void> => {
     if (creating.value) return;
     creating.value = true;
     actionError.value = null;
     try {
-        await createTemplate();
+        await createTemplate(official);
+        chooserOpen.value = false;
         await load();
     } catch (reason) {
         actionError.value = reason instanceof ApiError
@@ -121,10 +124,9 @@ onBeforeUnmount(() => {
         description="El formato del sílabo: qué secciones y campos tiene, y en qué orden. Se edita en el sitio; cada sílabo entregado conserva su propia copia."
     >
         <template #actions>
-            <Button :disabled="creating || Boolean(payload?.processLock)" @click="create">
-                <LoaderCircle v-if="creating" class="animate-spin" aria-hidden="true" />
-                <Plus v-else aria-hidden="true" />
-                {{ creating ? 'Creando plantilla…' : 'Crear plantilla vacía' }}
+            <Button :disabled="creating || Boolean(payload?.processLock)" @click="chooserOpen = true">
+                <Plus aria-hidden="true" />
+                Crear plantilla
             </Button>
         </template>
 
@@ -133,10 +135,31 @@ onBeforeUnmount(() => {
             <EmptyHeader class="gap-3">
                 <EmptyMedia variant="icon" class="text-muted-foreground"><Inbox aria-hidden="true" /></EmptyMedia>
                 <EmptyTitle class="text-sm font-normal text-muted-foreground">
-                    No hay una plantilla institucional. Cree el contenedor vacío y decida si desea configurarlo manualmente o aplicar el formato oficial.
+                    No hay una plantilla institucional. Créela en blanco o con el formato oficial de la UEB.
                 </EmptyTitle>
             </EmptyHeader>
         </Empty>
+        <Dialog v-model:open="chooserOpen">
+            <DialogContent class="sm:max-w-xl">
+                <DialogHeader>
+                    <DialogTitle>Crear la plantilla del sílabo</DialogTitle>
+                    <DialogDescription>Elija cómo empezar. Después podrá cambiar secciones y campos.</DialogDescription>
+                </DialogHeader>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <Button type="button" variant="outline" class="h-auto flex-col items-start gap-2 p-4 text-left whitespace-normal" :disabled="creating || Boolean(payload?.processLock)" @click="create(false)">
+                        <FileText class="size-5 text-muted-foreground" aria-hidden="true" />
+                        <span class="font-medium">En blanco</span>
+                        <span class="text-sm text-muted-foreground">Una plantilla sin secciones. Usted agrega cada sección y campo.</span>
+                    </Button>
+                    <Button type="button" variant="outline" class="h-auto flex-col items-start gap-2 p-4 text-left whitespace-normal" :disabled="creating || Boolean(payload?.processLock)" @click="create(true)">
+                        <Sparkles class="size-5 text-muted-foreground" aria-hidden="true" />
+                        <span class="font-medium">Plantilla oficial UEB</span>
+                        <span class="text-sm text-muted-foreground">El formato oficial del sílabo, con sus secciones en orden, listo para usar.</span>
+                    </Button>
+                </div>
+                <p v-if="creating" class="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle class="size-4 animate-spin" aria-hidden="true" />Creando plantilla…</p>
+            </DialogContent>
+        </Dialog>
     </PageFrame>
 
     <PageFrame
