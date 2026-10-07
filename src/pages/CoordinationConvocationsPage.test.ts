@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import CoordinationConvocationsPage from "@/pages/CoordinationConvocationsPage.vue";
 import { createConvocation, getConvocation, getConvocations } from "@/api/convocations";
 import { getSession } from "@/api/session";
-import { Select } from "@/components/ui/select";
 
 const push = vi.fn();
 
@@ -71,11 +70,8 @@ describe("CoordinationConvocationsPage", () => {
     });
     await flushPromises();
 
-    await wrapper.get("table tbody button").trigger("click");
-    await flushPromises();
-    const startItem = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'))
-      .find((item) => item.textContent?.includes('Abrir convocatoria'));
-    startItem?.click();
+    const open = wrapper.findAll("button").find((button) => button.text().includes("Abrir convocatoria"));
+    await open?.trigger("click");
     await flushPromises();
     const submit = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'))
       .find((button) => button.textContent?.includes('Abrir convocatoria'));
@@ -85,12 +81,12 @@ describe("CoordinationConvocationsPage", () => {
     await flushPromises();
 
     expect(createConvocation).toHaveBeenCalledWith("process-1");
-    expect(getConvocations).toHaveBeenLastCalledWith({ q: "", state: "", page: 1 });
+    expect(getConvocations).toHaveBeenLastCalledWith();
     expect(push).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 
-  it("abre el seguimiento en un modal al hacer clic en la fila", async () => {
+  it("abre el seguimiento en un modal desde el botón", async () => {
     vi.mocked(getConvocations).mockResolvedValue({
       filters: { q: null, state: null },
       convocations: {
@@ -133,10 +129,8 @@ describe("CoordinationConvocationsPage", () => {
     });
     await flushPromises();
 
-    await wrapper.get("table tbody button").trigger("click");
-    const menuItems = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]'));
-    expect(menuItems.some((item) => item.textContent?.includes("Ver seguimiento"))).toBe(false);
-    await wrapper.get("table tbody tr").trigger("click");
+    const tracking = wrapper.findAll("button").find((button) => button.text().includes("Ver seguimiento"));
+    await tracking?.trigger("click");
     await flushPromises();
 
     expect(getConvocation).toHaveBeenCalledWith("convocation-1");
@@ -147,32 +141,15 @@ describe("CoordinationConvocationsPage", () => {
     wrapper.unmount();
   });
 
-  it("aplica el filtro de estado al cambiar el Select", async () => {
+  it("ofrece un solo botón según el estado y sin tabla", async () => {
     const wrapper = mount(CoordinationConvocationsPage, {
       attachTo: document.body,
       global: { stubs: { RouterLink: { template: "<a><slot /></a>" } } },
     });
     await flushPromises();
 
-    const stateSelect = wrapper.find('form select[name="state"]');
-    expect(stateSelect.exists()).toBe(true);
-    await wrapper.findComponent(Select).vm.$emit("update:modelValue", "pausada");
-    await flushPromises();
-
-    expect(getConvocations).toHaveBeenLastCalledWith({ q: "", state: "pausada", page: 1 });
-    wrapper.unmount();
-  });
-
-  it("muestra solo los estados operativos y no el conteo de expedientes", async () => {
-    const wrapper = mount(CoordinationConvocationsPage, {
-      attachTo: document.body,
-      global: { stubs: { RouterLink: { template: "<a><slot /></a>" } } },
-    });
-    await flushPromises();
-
-    expect(wrapper.text()).not.toContain("Expedientes");
-    expect(wrapper.findAll("th")).toHaveLength(4);
-
+    expect(wrapper.find("table").exists()).toBe(false);
+    expect(wrapper.findAll("button").map((button) => button.text())).toEqual(["Abrir convocatoria"]);
     wrapper.unmount();
   });
 });
