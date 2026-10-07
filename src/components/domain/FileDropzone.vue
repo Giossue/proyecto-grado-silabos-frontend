@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { FileText, ImageIcon, Upload, X } from '@lucide/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
 
 type FileKind = 'pdf' | 'png';
@@ -137,14 +137,25 @@ const handleDrop = (event: DragEvent): void => {
   setFiles(Array.from(event.dataTransfer?.files ?? []));
 };
 
+const previewUrl = ref<string | null>(null);
+const releasePreview = (): void => {
+  if (previewUrl.value !== null) URL.revokeObjectURL(previewUrl.value);
+  previewUrl.value = null;
+};
+const showsPreview = computed(() => props.kind === 'png' && props.modelValue !== null && !props.multiple);
+
 watch(() => props.modelValue, (file) => {
   if (file === null && input.value) input.value.value = '';
-});
+  releasePreview();
+  if (file !== null && props.kind === 'png' && typeof URL.createObjectURL === 'function') previewUrl.value = URL.createObjectURL(file);
+}, { immediate: true });
+
+onBeforeUnmount(releasePreview);
 </script>
 
 <template>
   <div class="flex flex-col gap-2">
-    <Button type="button" variant="dropzone" size="dropzone"
+    <Button v-if="!showsPreview" type="button" variant="dropzone" size="dropzone"
       :data-dragging="isDragging" :aria-invalid="props.invalid"
       :disabled="props.disabled"
       :aria-label="modelValue ? copy.replaceLabel : copy.chooseLabel"
@@ -167,9 +178,9 @@ watch(() => props.modelValue, (file) => {
         <p class="text-sm text-muted-foreground">{{ copy.selectedDescription }}</p>
       </div>
     </Button>
-    <input ref="input" :id="inputId" class="sr-only" type="file" :multiple="multiple" :accept="copy.accept" :disabled="props.disabled" :required="props.required" :aria-invalid="props.invalid" :aria-required="props.required" tabindex="-1" @click.stop @change="selectFile" />
+    <input ref="input" :id="inputId" class="sr-only" type="file" :multiple="multiple" :accept="copy.accept" :disabled="props.disabled" :required="props.required && !modelValue" :aria-invalid="props.invalid" :aria-required="props.required" tabindex="-1" @click.stop @change="selectFile" />
     <Attachment v-if="modelValue" class="w-full" :state="props.invalid ? 'error' : props.state">
-      <AttachmentMedia><ImageIcon v-if="props.kind === 'png'" aria-hidden="true" /><FileText v-else aria-hidden="true" /></AttachmentMedia>
+      <AttachmentMedia><img v-if="previewUrl" :src="previewUrl" alt="Vista previa del PNG seleccionado" class="size-full rounded-[inherit] object-contain" /><ImageIcon v-else-if="props.kind === 'png'" aria-hidden="true" /><FileText v-else aria-hidden="true" /></AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle>{{ modelValue.name }}</AttachmentTitle>
         <AttachmentDescription>{{ fileDescription }}</AttachmentDescription>
