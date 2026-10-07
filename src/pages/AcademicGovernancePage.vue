@@ -74,7 +74,7 @@ onMounted(load);
                         <ChevronDown class="max-sm:hidden" data-icon="inline-end" aria-hidden="true" />
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" class="w-48">
+                <DropdownMenuContent align="end" class="w-max min-w-0">
                     <DropdownMenuGroup>
                         <DropdownMenuItem @select="facultyOpen = true">
                             <Building2 aria-hidden="true" />
