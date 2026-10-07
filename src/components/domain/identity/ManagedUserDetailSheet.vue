@@ -81,12 +81,9 @@ const completedAssignments = computed(() =>
 <template>
     <Sheet v-model:open="open">
         <SheetContent side="right" class="w-full sm:max-w-lg">
-            <SheetHeader>
+            <SheetHeader class="sr-only">
                 <SheetTitle>Datos</SheetTitle>
-                <SheetDescription>
-                    Ficha de solo lectura de la cuenta. Para corregirla, use
-                    «Editar» en el mismo menú.
-                </SheetDescription>
+                <SheetDescription>Ficha de solo lectura de la cuenta.</SheetDescription>
             </SheetHeader>
 
             <div class="flex flex-col gap-4 overflow-y-auto px-4 pt-1 pb-6">
