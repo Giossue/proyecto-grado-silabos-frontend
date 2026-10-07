@@ -4,8 +4,8 @@ import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { downloadImportTemplate, sendImport, type ImportResult } from '@/api/spreadsheet-import';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import FormSheet from '@/components/domain/FormSheet.vue';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -54,9 +54,10 @@ const download = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" trigger-label="Importar desde Excel" :title="title" :description="description" wide>
-        <template #trigger><Button type="button" variant="outline"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></template>
-        <template #default>
+    <Dialog v-model:open="open">
+        <DialogTrigger as-child><Button type="button" variant="outline"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></DialogTrigger>
+        <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+            <DialogHeader><DialogTitle>{{ title }}</DialogTitle><DialogDescription>{{ description }}</DialogDescription></DialogHeader>
             <div class="flex flex-col gap-4">
                 <div class="flex flex-col gap-2 text-sm">
                     <p>1. Descargue la plantilla y complete una fila por registro.</p>
@@ -84,6 +85,6 @@ const download = async (): Promise<void> => {
                     <Button type="button" :disabled="!result?.valid || processing" @click="run(true)"><Upload data-icon="inline-start" aria-hidden="true" />Importar</Button>
                 </div>
             </div>
-        </template>
-    </FormSheet>
+        </DialogContent>
+    </Dialog>
 </template>

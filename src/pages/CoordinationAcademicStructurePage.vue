@@ -22,7 +22,7 @@ import CurriculumCanvas from "@/components/domain/academic/curriculum/Curriculum
 import CurriculumConfigurationSheet from "@/components/domain/academic/curriculum/CurriculumConfigurationSheet.vue";
 import PeriodPreparationSheet from "@/components/domain/academic/PeriodPreparationSheet.vue";
 import ScheduledSubjectsTab from "@/components/domain/academic/ScheduledSubjectsTab.vue";
-import ImportSpreadsheetSheet from "@/components/domain/ImportSpreadsheetSheet.vue";
+import ImportSpreadsheetDialog from "@/components/domain/ImportSpreadsheetDialog.vue";
 import TeacherAssignmentsPanel from "@/components/domain/academic/TeacherAssignmentsPanel.vue";
 import ProcessLockAlert from "@/components/domain/ProcessLockAlert.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -210,7 +210,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         :disabled="Boolean(schedule.career.lock_reason)"
         @saved="handlePeriodPrepared"
       />
-      <ImportSpreadsheetSheet
+      <ImportSpreadsheetDialog
         v-if="mode === 'teachers' && assignments?.canCreateTeacher"
         title="Importar docentes"
         description="Cree varios docentes de su carrera a la vez. Cada uno recibe su invitación de activación."
@@ -220,7 +220,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }]"
         @imported="handleAssignmentChanged"
       />
-      <ImportSpreadsheetSheet
+      <ImportSpreadsheetDialog
         v-if="mode === 'schedule' && schedule?.selectedPeriodId"
         title="Importar materias y asignaciones"
         description="Cree paralelos del período seleccionado y asigne su docente. El docente es opcional."

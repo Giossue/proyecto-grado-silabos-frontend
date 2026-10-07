@@ -4,7 +4,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import FreeTextEditor from "@/components/domain/syllabus/FreeTextEditor.vue";
-import { copyTeacherSyllabus, getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, startTeacherSyllabus } from "@/api/syllabi";
+import { copyTeacherSyllabus, getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField, startTeacherSyllabus } from "@/api/syllabi";
 import { ApiError } from "@/api/client";
 import { handleUnauthorized } from "@/lib/unauthorized";
 
@@ -49,7 +49,28 @@ const appearance = {
   body_alignment: "left",
 };
 
-const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", type = "texto_largo"): SyllabusDetail => ({
+const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
+const tableConfig = {
+  columns: [{ key: "horas", label: "Horas" }, { key: "actividad", label: "Actividad" }],
+  rows: [{ key: "semana_1", label: "Semana 1" }, { key: "semana_2", label: "Semana 2" }],
+};
+const field = (id: string, type: string, overrides: Partial<SyllabusField> = {}): SyllabusField => ({
+  id,
+  key: `campo_${id}`,
+  label: "Contenido",
+  help: null,
+  type,
+  options: [],
+  required: true,
+  inherited: false,
+  teacher_editable: type === "texto" || type === "tabla",
+  legacy: false,
+  config: type === "tabla" ? tableConfig : type === "ficha" ? { adjustable: false } : type === "automatico" ? { source: "identification_card" } : {},
+  value: type === "tabla" ? { semana_1: { horas: "", actividad: "" }, semana_2: { horas: "", actividad: "" } } : doc("Texto enviado"),
+  ...overrides,
+});
+
+const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", type = "texto"): SyllabusDetail => ({
   id: "syllabus-1",
   subject: "Inteligencia Artificial",
   code: "SW-01",
@@ -70,26 +91,18 @@ const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", t
     key: "descripcion",
     title: "Descripción",
     description: null,
-    blocks: [{
-      id: "block-1",
-      title: "Contenido",
-      content_type: "text",
-      fields: [{
-        id: "field-1",
-        key: "contenido",
-        label: "Contenido",
-        help: null,
-        type,
-        options: [],
-        required: true,
-        inherited: false,
-        teacher_editable: true,
-
-        value: type === "booleano" ? null : "Texto enviado",
-      }],
-    }],
+    fields: [field("field-1", type, { key: "contenido" })],
   }],
 });
+
+// El editor de texto va simulado: se escribe emitiendo el documento.
+const typeText = async (wrapper: ReturnType<typeof mountPage>, text: string, index = 0) => {
+  wrapper.findAllComponents(FreeTextEditor)[index]!.vm.$emit("update:modelValue", doc(text));
+  await flushPromises();
+};
+
+const buttonNamed = (wrapper: ReturnType<typeof mountPage>, name: string) =>
+  wrapper.findAll("button").find((button) => button.text().includes(name));
 
 const PageWithTooltips = defineComponent({ setup: () => () => h(TooltipProvider, () => h(TeacherSyllabusDetailPage)) });
 const mountPage = () => mount(PageWithTooltips, {
@@ -121,14 +134,14 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.get(".syllabus-document-header").text()).toContain("PROGRAMA");
-    expect(wrapper.find("textarea").exists()).toBe(false);
+    expect(wrapper.findComponent(FreeTextEditor).exists()).toBe(false);
     expect(wrapper.get(".syllabus-readonly-field").text()).toContain("Texto enviado");
   });
 
-  it("el Texto libre se escribe con su editor y se guarda como documento", async () => {
+  it("el campo de texto se escribe con su editor y se guarda como documento", async () => {
     vi.useFakeTimers();
-    const detail = syllabus("borrador", "texto_libre");
-    detail.sections[0]!.blocks[0]!.fields[0]!.value = null;
+    const detail = syllabus("borrador", "texto");
+    detail.sections[0]!.fields[0]!.value = null;
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
     const wrapper = mountPage();
@@ -144,80 +157,53 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, document);
   });
 
-  it("guarda No como booleano explícito y no como campo vacío", async () => {
+  it("la tabla tiene filas y columnas fijas y guarda solo la celda cambiada", async () => {
     vi.useFakeTimers();
-    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador", "booleano") });
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador", "tabla") });
     vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
     const wrapper = mountPage();
     await flushPromises();
 
-    const options = wrapper.findAll('.boolean-options [role="radio"]');
-    expect(options).toHaveLength(2);
-    expect(
-      options.every((option) => option.attributes('aria-checked') === 'false'),
-    ).toBe(true);
-    await options[1]!.trigger('click');
+    const cells = wrapper.findAll(".table-field-editor input");
+    expect(cells).toHaveLength(4);
+    expect(wrapper.find(".table-field-editor").text()).not.toContain("Agregar fila");
+    await cells[1]!.setValue("Introducción");
     await vi.advanceTimersByTimeAsync(700);
     await flushPromises();
 
-    expect(saveTeacherField).toHaveBeenCalledWith(
-      "syllabus-1",
-      "field-1",
-      2,
-      false,
-    );
-  });
-
-  it("muestra un campo solo cuando se cumple su condición y no borra lo escrito", async () => {
-    vi.useFakeTimers();
-    const detail = syllabus("borrador", "booleano");
-    detail.sections[0]!.blocks[0]!.fields.push({
-      id: "field-2", key: "detalle", label: "Tipo de discapacidad", help: null, type: "texto_corto",
-      options: [], show_when: { key: "contenido", value: "true" }, required: true, inherited: false,
-      teacher_editable: true, value: "Visual",
+    expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, {
+      semana_1: { horas: "", actividad: "Introducción" },
+      semana_2: { horas: "", actividad: "" },
     });
-    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
-    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
-    const wrapper = mountPage();
-    await flushPromises();
-
-    expect(wrapper.find("#field-field-2").exists()).toBe(false);
-    const options = wrapper.findAll('.boolean-options [role="radio"]');
-    await options[0]!.trigger("click");
-    expect(wrapper.get("#input-field-2").element).toHaveProperty("value", "Visual");
-
-    await wrapper.findAll('.boolean-options [role="radio"]')[1]!.trigger("click");
-    expect(wrapper.find("#field-field-2").exists()).toBe(false);
-    await vi.advanceTimersByTimeAsync(700);
-    await flushPromises();
-    expect(saveTeacherField).toHaveBeenCalledTimes(1);
-    expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, false);
   });
 
-  it("guarda una selección múltiple como una lista de valores", async () => {
-    vi.useFakeTimers();
-    const draft = syllabus("borrador", "seleccion_multiple");
-    const field = draft.sections[0]!.blocks[0]!.fields[0]!;
-    field.options = [
-      { value: "etica", label: "Ética" },
-      { value: "datos", label: "Datos" },
-    ];
-    field.value = [];
-    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
-    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
+  it("la ficha se edita solo si es ajustable y si no se muestra heredada en solo lectura", async () => {
+    const detail = syllabus("borrador", "ficha");
+    detail.sections[0]!.fields.push(field("field-2", "ficha", { key: "ajustable", label: "Resultados", teacher_editable: true, config: { adjustable: true }, required: false }));
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.findAll('[role="checkbox"]')[1]!.trigger('click');
-    await vi.advanceTimersByTimeAsync(700);
+    expect(wrapper.find("#field-field-1 .syllabus-readonly-field, #field-field-1.syllabus-readonly-field").exists()).toBe(true);
+    expect(wrapper.get("#field-field-1").text()).toContain("Texto enviado");
+    expect(wrapper.findAllComponents(FreeTextEditor)).toHaveLength(1);
+    expect(wrapper.find("#input-field-2").exists()).toBe(true);
+    expect(wrapper.get("#field-field-2").text()).not.toContain("Heredado");
+  });
+
+  it("el dato automático y el texto fijo son de solo lectura y no cuentan como faltantes", async () => {
+    const detail = syllabus("borrador", "automatico");
+    detail.sections[0]!.fields[0]!.value = { career: "Software" };
+    detail.sections[0]!.fields[0]!.document = { type: "doc", content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph", content: [{ type: "text", text: "FACULTAD: Ciencias" }] }] }] }] }] };
+    detail.sections[0]!.fields.push(field("field-2", "fijo", { key: "conducta", label: "Conducta ética", value: doc("Texto institucional") }));
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    const wrapper = mountPage();
     await flushPromises();
 
-    expect(saveTeacherField).toHaveBeenCalledWith(
-      "syllabus-1",
-      "field-1",
-      2,
-      ["datos"],
-    );
+    expect(wrapper.findAllComponents(FreeTextEditor)).toHaveLength(0);
+    expect(wrapper.get("#field-field-1").text()).toContain("FACULTAD: Ciencias");
+    expect(wrapper.get("#field-field-2").text()).toContain("Texto institucional");
+    expect(buttonNamed(wrapper, "Enviar sílabo")!.attributes("disabled")).toBeUndefined();
   });
 
   it("muestra el comentario general de coordinación, sin observaciones por campo", async () => {
@@ -247,7 +233,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get("textarea").setValue("Cambio local");
+    await typeText(wrapper, "Cambio local");
     await vi.advanceTimersByTimeAsync(700);
     await flushPromises();
 
@@ -262,13 +248,7 @@ describe("TeacherSyllabusDetailPage", () => {
       key: "revision",
       title: "Revisión y aprobación",
       description: "Complete los campos aplicables.",
-      blocks: [{
-        id: "review-block",
-        title: "Firmas",
-        content_type: "fixed",
-          document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Firma del coordinador" }] }] },
-        fields: [],
-      }],
+      fields: [field("review-field", "fijo", { key: "firmas", label: "Firmas", value: doc("Firma del coordinador") })],
     });
     draft.validation = {
       version_bloqueo: draft.version_bloqueo,
@@ -293,12 +273,9 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.findAll("button").some((button) => button.text() === "Validar sílabo")).toBe(false);
   });
 
-  const buttonNamed = (wrapper: ReturnType<typeof mountPage>, name: string) =>
-    wrapper.findAll("button").find((button) => button.text().includes(name));
-
-  it("deshabilita Enviar mientras algún campo del docente sigue vacío", async () => {
+    it("deshabilita Enviar mientras algún campo del docente sigue vacío", async () => {
     const draft = syllabus("borrador");
-    draft.sections[0].blocks[0].fields[0].value = "";
+    draft.sections[0]!.fields[0]!.value = null;
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
     const wrapper = mountPage();
     await flushPromises();
@@ -309,7 +286,7 @@ describe("TeacherSyllabusDetailPage", () => {
     // El aviso de campos faltantes ya no se muestra como texto; solo en el tooltip de Enviar.
     expect(wrapper.find(".submit-hint").exists()).toBe(false);
 
-    await wrapper.get("#input-field-1").setValue("Contenido");
+    await typeText(wrapper, "Contenido");
     expect(send!.attributes("disabled")).toBeUndefined();
     expect(wrapper.find(".submit-hint").exists()).toBe(false);
     wrapper.unmount();
@@ -377,7 +354,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.text()).not.toContain("Pulse cada una");
     expect(wrapper.get("#field-field-1").attributes("data-invalid")).toBe("true");
 
-    await wrapper.get("#input-field-1").setValue("Contenido nuevo");
+    await typeText(wrapper, "Contenido nuevo");
     expect(wrapper.get("#field-field-1").attributes("data-invalid")).toBe("false");
     wrapper.unmount();
   });
@@ -406,7 +383,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.get("header").text()).not.toContain("Inteligencia Artificial");
     expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();
     expect(wrapper.text()).not.toContain("Listo para iniciar");
-    expect(wrapper.find("textarea, [contenteditable='true'], input").exists()).toBe(true);
+    expect(wrapper.findComponent(FreeTextEditor).exists()).toBe(true);
   });
 
   it("muestra el motivo y no ofrece iniciar cuando la convocatoria está en pausa", async () => {
@@ -429,11 +406,11 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get("textarea").setValue("Cambio local");
+    await typeText(wrapper, "Cambio local");
     await vi.advanceTimersByTimeAsync(700);
     await flushPromises();
 
-    expect(wrapper.find("textarea").exists()).toBe(false);
+    expect(wrapper.findComponent(FreeTextEditor).exists()).toBe(false);
     expect(wrapper.get(".edit-blocked").text()).toContain("La convocatoria está en pausa. Podrá seguir editando cuando se reanude.");
     expect(buttonNamed(wrapper, "Enviar sílabo")).toBeUndefined();
   });
@@ -447,7 +424,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get("textarea").setValue("Cambio local");
+    await typeText(wrapper, "Cambio local");
     await vi.advanceTimersByTimeAsync(700);
     await flushPromises();
 
@@ -456,7 +433,7 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(saveTeacherField).toHaveBeenCalledTimes(2);
-    expect(saveTeacherField).toHaveBeenLastCalledWith("syllabus-1", "field-1", 2, "Cambio local");
+    expect(saveTeacherField).toHaveBeenLastCalledWith("syllabus-1", "field-1", 2, doc("Cambio local"));
     expect(wrapper.find(".save-status").exists()).toBe(false);
   });
 
@@ -467,7 +444,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get("textarea").setValue("Cambio local");
+    await typeText(wrapper, "Cambio local");
     await vi.advanceTimersByTimeAsync(700);
     await flushPromises();
 
@@ -482,7 +459,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get("textarea").setValue("Antes de salir");
+    await typeText(wrapper, "Antes de salir");
     const event = new Event("beforeunload", { cancelable: true });
     window.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
@@ -490,7 +467,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const allowed = await routeLeaveGuards[0]!();
 
     expect(allowed).toBe(true);
-    expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, "Antes de salir");
+    expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, doc("Antes de salir"));
     wrapper.unmount();
   });
 
@@ -504,7 +481,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get("textarea").setValue("Antes de salir");
+    await typeText(wrapper, "Antes de salir");
     const leaving = routeLeaveGuards[0]!();
     await flushPromises();
     const choice = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find((item) => item.textContent?.trim() === button);
@@ -522,23 +499,7 @@ describe("TeacherSyllabusDetailPage", () => {
       key: "bibliografia",
       title: "Bibliografía",
       description: null,
-      blocks: [{
-        id: "block-2",
-        title: "Bibliografía",
-        content_type: "text",
-        fields: [{
-          id: "field-2",
-          key: "bibliografia_basica",
-          label: "Bibliografía básica",
-          help: null,
-          type: "texto_largo",
-          options: [],
-          required: true,
-          inherited: false,
-          teacher_editable: true,
-          value: "Sommerville, 10.ª ed.",
-        }],
-      }],
+      fields: [field("field-2", "texto", { key: "bibliografia_basica", label: "Bibliografía básica" })],
     });
     detail.review_comments = [
       { stage: "biblioteca", comment: "Comentario anterior.", commented_at: "2026-09-20T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 1 },

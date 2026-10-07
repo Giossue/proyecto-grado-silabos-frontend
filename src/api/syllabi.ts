@@ -70,7 +70,8 @@ export type SyllabusDetail = {
     title: string;
     description: string | null;
     fields: SyllabusField[];
-    blocks: SyllabusBlock[];
+    /** Estructura anterior por bloques; la pantalla usa `fields`. */
+    blocks?: SyllabusBlock[];
   }>;
   review_stage?: "biblioteca" | "coordinacion" | null;
   review_comments?: Array<{

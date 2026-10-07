@@ -9,12 +9,13 @@ import { RouterLink, useRoute } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { commentLibraryReview, getLibraryReview, verifyLibraryReview, type LibraryReviewDetail } from '@/api/library';
 import type { SnapshotField } from '@/api/reviews';
-import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
+import FieldView from '@/components/domain/fieldTypes/FieldView.vue';
+import { sectionFields } from '@/components/domain/fieldTypes/registry';
+import type { TypedField } from '@/types/configuration';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
-import { freeTextLines, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -25,7 +26,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { Checkbox } from '@/components/ui/checkbox';
 import { libraryStateLabel, libraryStateVariant } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
-import type { DocumentField } from '@/lib/templateDocument';
 import { toast } from '@/lib/toast';
 
 const route = useRoute();
@@ -44,15 +44,7 @@ const verifyKey = ref('');
 
 const formatDate = (value: string): string =>
   formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' });
-const documentFields = (fields: SnapshotField[]): DocumentField[] => fields.map((field) => ({ ...field }));
-const formatValue = (value: unknown): string => {
-  if (value === null || value === '') return 'Sin contenido';
-  if (typeof value === 'boolean') return value ? 'Sí' : 'No';
-  if (isFreeTextDocument(value)) return freeTextLines(value);
-  if (Array.isArray(value)) return value.map(String).join(', ');
-  if (typeof value === 'object') return JSON.stringify(value, null, 2);
-  return String(value);
-};
+const typed = (field: SnapshotField): TypedField => field;
 const toggleReason = (code: string, checked: boolean | 'indeterminate'): void => {
   selectedReasons.value = checked === true
     ? [...selectedReasons.value, code]
@@ -163,16 +155,7 @@ onMounted(load);
         <Card v-for="section in review.sections" :id="`section-${section.key}`" :key="section.key">
           <CardHeader><CardTitle>{{ section.title }}</CardTitle><CardDescription>Libros que propuso el docente en la revisión {{ review.revision_number }}. Solo lectura.</CardDescription></CardHeader>
           <CardContent class="flex flex-col gap-6">
-            <section v-for="block in section.blocks" :key="block.key" class="flex flex-col gap-4">
-              <h3 v-if="section.blocks.length > 1" class="font-medium">{{ block.title }}</h3>
-              <TemplateDocumentView v-if="block.document" :document="block.document" :fields="documentFields(block.fields)" :variables="review.template_variables" />
-              <dl v-else class="grid gap-4">
-                <div v-for="field in block.fields" :key="field.key" class="rounded-md border p-4">
-                  <dt class="font-medium">{{ field.label }}</dt>
-                  <dd class="mt-2 text-sm whitespace-pre-wrap">{{ formatValue(field.value) }}</dd>
-                </div>
-              </dl>
-            </section>
+            <FieldView v-for="field in sectionFields(section)" :key="field.key" :field="typed(field)" />
           </CardContent>
         </Card>
         <Card v-if="review.sections.length === 0">

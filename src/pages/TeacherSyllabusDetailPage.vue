@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import CommentEntry from '@/components/domain/CommentEntry.vue';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
-import BooleanChoice from '@/components/domain/BooleanChoice.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -21,27 +20,20 @@ import {
 import SyllabusUnitAssistant from '@/components/domain/ai/SyllabusUnitAssistant.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
-import SyllabusAcademicContext from '@/components/domain/syllabus/SyllabusAcademicContext.vue';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
-import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
-import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
-import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
-import { freeTextLines, freeTextPlain, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
+import { fieldConfig } from '@/components/domain/fieldTypes/fieldConfig';
+import { fieldTypeEntry } from '@/components/domain/fieldTypes/registry';
+import FieldView from '@/components/domain/fieldTypes/FieldView.vue';
+import type { TypedField } from '@/types/configuration';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
-import { hiddenKeys } from '@/lib/fieldConditions';
 import { ArrowLeft, Copy, Library, Send } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
@@ -81,10 +73,11 @@ const canEdit = computed(() =>
   ["borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? "") &&
   editBlockReason.value === null,
 );
-const sectionEditable = (): boolean => canEdit.value;
-const editableFieldIds = computed(() => new Set(
-  (syllabus.value?.sections ?? []).flatMap((section) => section.blocks.flatMap((block) => block.fields.map((field) => field.id))),
-));
+const allFields = computed(() => (syllabus.value?.sections ?? []).flatMap((section) => section.fields));
+const editableFieldIds = computed(() => new Set(allFields.value.map((field) => field.id)));
+/** El tipo del registro decide si el docente escribe el campo (la ficha, solo si es ajustable). */
+const isTeacherField = (field: SyllabusField): boolean => fieldTypeEntry(field.type)?.teacherEditable(fieldConfig(field)) ?? false;
+const typed = (field: SyllabusField): TypedField => field;
 const REVIEW_STAGE_TEXT: Record<string, string> = { biblioteca: 'Biblioteca revisa la bibliografía.', coordinacion: 'Biblioteca aprobó; coordinación revisa y decide.' };
 const reviewStageLabel = computed(() => REVIEW_STAGE_TEXT[syllabus.value?.review_stage ?? ''] ?? '');
 const STAGE_NAME: Record<string, string> = { biblioteca: 'Biblioteca', coordinacion: 'Coordinación' };
@@ -102,17 +95,7 @@ const validationFor = (fieldId: string) =>
   validationResults.value.filter((result) => result.field_id === fieldId);
 const visibleValidationMessages = (fieldId: string): string[] =>
   validationFor(fieldId).map((result) => result.message);
-const partTargets = computed(() => {
-  const targets = new Map<string, string>();
-  for (const section of syllabus.value?.sections ?? []) {
-    for (const block of section.blocks) {
-      for (const field of block.fields) {
-        targets.set(field.id, usesTabularDocument(block) ? `block-${block.id}` : `field-${field.id}`);
-      }
-    }
-  }
-  return targets;
-});
+const partTargets = computed(() => new Map(allFields.value.map((field) => [field.id, `field-${field.id}`])));
 const blockingResults = computed(() => {
   const seen = new Set<string>();
   return validationResults.value
@@ -131,21 +114,9 @@ const partsWithErrors = computed(() => {
 const orphanResults = computed(() =>
   blockingResults.value.filter((result) => !result.field_id || !partTargets.value.has(result.field_id)),
 );
-const blockErrors = (fields: SyllabusField[]): string[] =>
-  [...new Set(fields.flatMap((field) => visibleValidationMessages(field.id)))];
-const isFieldEmpty = (field: SyllabusField): boolean => {
-  if (field.type === "booleano") return typeof field.value !== "boolean";
-  if (isFreeTextDocument(field.value)) return freeTextPlain(field.value).trim() === "";
-  if (Array.isArray(field.value)) return field.value.length === 0;
-  if (typeof field.value === "number") return false;
-  return typeof field.value !== "string" || field.value.trim() === "";
-};
+const isFieldEmpty = (field: SyllabusField): boolean => fieldTypeEntry(field.type)?.isEmpty(field.value, fieldConfig(field)) ?? false;
 const emptyParts = computed(() =>
-  (syllabus.value?.sections ?? [])
-    .flatMap((section) => section.blocks.flatMap((block) => block.fields))
-    .filter((field) => editableFieldIds.value.has(field.id))
-    .filter((field) => field.teacher_editable && !hiddenParts.value.has(field.key))
-    .filter(isFieldEmpty).length,
+  allFields.value.filter((field) => field.required && isTeacherField(field)).filter(isFieldEmpty).length,
 );
 const submitHint = computed(() => {
   if (emptyParts.value === 1) return "Falta 1 campo por completar";
@@ -290,66 +261,10 @@ const scheduleSave = (field: SyllabusField): void => {
   );
 };
 
-const selectedValues = (field: SyllabusField): string[] => {
-  const value = (field as unknown as { value: unknown }).value;
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === "string")
-    : [];
-};
-
-const toggleChoice = (
-  field: SyllabusField,
-  value: string,
-  checked: boolean,
-): void => {
-  const next = checked
-    ? Array.from(new Set([...selectedValues(field), value]))
-    : selectedValues(field).filter((item) => item !== value);
-  (field as unknown as { value: string[] }).value = next;
+const updateValue = (field: SyllabusField, value: unknown): void => {
+  field.value = value as SyllabusField['value'];
   clearFieldValidation(field.id);
   scheduleSave(field);
-};
-
-const toggleBoolean = (field: SyllabusField, checked: boolean): void => {
-  (field as unknown as { value: boolean }).value = checked;
-  clearFieldValidation(field.id);
-  scheduleSave(field);
-};
-
-const scalarValue = (field: SyllabusField): string | number =>
-  typeof field.value === "string" || typeof field.value === "number"
-    ? field.value
-    : "";
-
-const masterValue = (value: unknown): string => {
-  if (value === null || value === undefined || value === '') return 'Pendiente de Coordinación';
-  if (typeof value !== 'object') return typeof value === 'boolean' ? (value ? 'Sí' : 'No') : String(value);
-  if (Array.isArray(value)) return value.map(String).join(', ');
-  if (isFreeTextDocument(value)) return freeTextLines(value);
-  return Object.values(value)
-    .map((item) => String(item ?? '—'))
-    .join(' · ');
-};
-
-const updateScalar = (field: SyllabusField, value: string): void => {
-  field.value = field.type === "numero" && value !== "" ? Number(value) : value;
-  clearFieldValidation(field.id);
-  scheduleSave(field);
-};
-
-const usesTabularDocument = (block: { content_type: string; document?: DocumentNode | null }): block is { content_type: string; document: DocumentNode } =>
-  block.content_type !== 'institutional' && block.document != null;
-
-const hiddenParts = computed(() => hiddenKeys(
-  (syllabus.value?.sections ?? []).flatMap((section) => section.blocks.flatMap((block) => block.fields)),
-));
-const designFields = (fields: SyllabusField[]): DocumentField[] => fields.map((field) => ({
-  ...field,
-  hidden: hiddenParts.value.has(field.key),
-}));
-const updateDesignValue = (fields: SyllabusField[], key: string, value: string | number | boolean | string[] | DocumentNode): void => {
-  const field = fields.find((item) => item.key === key);
-  if (field) { field.value = value; clearFieldValidation(field.id); scheduleSave(field); }
 };
 const flushAutosave = async (): Promise<boolean> => {
   if (canEdit.value && !conflict.value) {
@@ -520,41 +435,17 @@ onBeforeUnmount(() => {
           <Separator v-if="sectionIndex > 0" />
           <section :id="`section-${section.id}`" class="flex scroll-mt-6 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
             <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionHeading(section.title, sectionIndex) }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
-            <SyllabusAcademicContext v-if="section.blocks.some((block) => block.content_type === 'institutional')" :variables="syllabus.template_variables ?? {}" />
-
-            <FieldSet v-for="block in section.blocks" :id="`block-${block.id}`" :key="block.id" class="scroll-mt-6 gap-5">
-              <FieldLegend v-if="(block.title ?? '').trim() !== '' && section.blocks.length > 1 && (usesTabularDocument(block) || !(block.fields.length === 1 && block.title === block.fields[0]?.label))" :required="block.fields.length === 1 && block.fields[0]?.required">{{ block.title }}</FieldLegend>
-              <TemplateDocumentView v-if="usesTabularDocument(block)" :document="block.document" :fields="designFields(block.fields)" :variables="syllabus.template_variables ?? {}" :editable="sectionEditable() && !conflict" presentation="form" @value="(key, value) => updateDesignValue(block.fields, key, value)" />
-              <FieldError v-if="usesTabularDocument(block)" class="block-errors" :errors="blockErrors(block.fields)" />
-              <template v-if="!usesTabularDocument(block)">
-                <FieldGroup>
-                <template v-for="field in block.fields.filter((item) => !hiddenParts.has(item.key) && (block.content_type !== 'institutional' || (item.teacher_editable && !item.inherited)))" :key="field.id">
-                <Field v-if="sectionEditable() && field.teacher_editable && ['texto_corto', 'numero', 'fecha'].includes(field.type)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                  <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Input :id="`input-${field.id}`" :model-value="scalarValue(field)" :type="field.type === 'fecha' ? 'date' : field.type === 'numero' ? 'number' : 'text'" @update:model-value="updateScalar(field, String($event))" />
+            <FieldGroup>
+              <template v-for="field in section.fields" :key="field.id">
+                <Field v-if="canEdit && isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                  <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel>
+                  <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
+                  <component :is="fieldTypeEntry(field.type)!.EditorComponent" :field="typed(field)" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict" @update:model-value="updateValue(field, $event)" />
                 </Field>
-
-                <Field v-else-if="sectionEditable() && field.teacher_editable && field.type === 'texto_libre'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                  <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><FreeTextEditor :id="`input-${field.id}`" :label="field.label.trim() || section.title" :model-value="isFreeTextDocument(field.value) ? field.value : null" @update:model-value="updateDesignValue([field], field.key, $event)" />
-                </Field>
-
-                <Field v-else-if="sectionEditable() && field.teacher_editable && field.type === 'texto_largo'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                  <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><FieldDescription v-if="field.help">{{ field.help }}</FieldDescription><Textarea :id="`input-${field.id}`" :model-value="scalarValue(field)" class="min-h-32" @update:model-value="updateScalar(field, String($event))" />
-                </Field>
-
-                <Field v-else-if="sectionEditable() && field.teacher_editable && field.type === 'seleccion_unica'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                  <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><Select :model-value="String(scalarValue(field))" @update:model-value="updateScalar(field, String($event))"><SelectTrigger :id="`input-${field.id}`"><SelectValue placeholder="Seleccione una opción" /></SelectTrigger><SelectContent><SelectItem v-for="option in field.options" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select>
-                </Field>
-
-                <FieldSet v-else-if="sectionEditable() && field.teacher_editable && field.type === 'seleccion_multiple'" :id="`field-${field.id}`" :aria-required="field.required"><FieldLegend class="text-sm" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLegend><Field v-for="option in field.options" :key="option.value" orientation="horizontal"><Checkbox :id="`field-${field.id}-${option.value}`" :model-value="selectedValues(field).includes(option.value)" @update:model-value="toggleChoice(field, option.value, Boolean($event))" /><FieldLabel :for="`field-${field.id}-${option.value}`">{{ option.label }}</FieldLabel></Field></FieldSet>
-
-                <Field v-else-if="sectionEditable() && field.teacher_editable && field.type === 'booleano'" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0"><FieldLabel :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel><BooleanChoice class="boolean-options" :model-value="typeof field.value === 'boolean' ? field.value : null" :label="field.label.trim() || section.title" :aria-invalid="validationFor(field.id).length > 0" @update:model-value="toggleBoolean(field, $event)" /><FieldDescription>Seleccione una respuesta.</FieldDescription></Field>
-
-                <div v-else :id="`field-${field.id}`" class="syllabus-readonly-field rounded-md border bg-muted/30 p-4"><div v-if="field.label.trim() || field.inherited" class="mb-2 flex flex-wrap items-center gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Dato automático</Badge></div><span class="whitespace-pre-line">{{ masterValue(field.value) }}</span></div>
+                <FieldView v-else :id="`field-${field.id}`" :field="typed(field)" :badge="field.inherited ? 'Dato automático' : undefined" />
                 <FieldError :errors="visibleValidationMessages(field.id)" />
-                </template>
-                </FieldGroup>
               </template>
-            </FieldSet>
+            </FieldGroup>
           </section>
           </template>
 

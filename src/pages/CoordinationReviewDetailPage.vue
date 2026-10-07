@@ -14,7 +14,9 @@ import {
   type ReviewDetail,
   type SnapshotField,
 } from '@/api/reviews';
-import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
+import FieldView from '@/components/domain/fieldTypes/FieldView.vue';
+import { sectionFields } from '@/components/domain/fieldTypes/registry';
+import type { TypedField } from '@/types/configuration';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -28,8 +30,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import type { DocumentField } from '@/lib/templateDocument';
-import { freeTextLines, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
 import { paths, reviewAreaPaths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -89,14 +89,7 @@ const deleted = async (message: string): Promise<void> => {
   await router.replace(area.value.reviews);
 };
 
-const documentFields = (fields: SnapshotField[]): DocumentField[] => fields.map((field) => ({ ...field }));
-const formatValue = (value: unknown): string => {
-  if (value === null || value === '') return 'Sin contenido';
-  if (typeof value === 'boolean') return value ? 'Sí' : 'No';
-  if (isFreeTextDocument(value)) return freeTextLines(value);
-  if (typeof value === 'object') return JSON.stringify(value, null, 2);
-  return String(value);
-};
+const typed = (field: SnapshotField): TypedField => field;
 const submitCorrection = (): Promise<void> => run(() => requestCorrection(data.value!.revision.id, {
   justification: correctionJustification.value,
 }));
@@ -128,16 +121,7 @@ onMounted(load);
         <Card v-for="section in data.revision.snapshot.sections" :id="`section-${section.key}`" :key="section.key">
           <CardHeader><CardTitle>{{ section.title }}</CardTitle><CardDescription>Contenido exacto enviado en la revisión {{ data.revision.number }}.</CardDescription></CardHeader>
           <CardContent class="flex flex-col gap-6">
-            <section v-for="block in section.blocks" :key="block.key" class="flex flex-col gap-4">
-              <h3 v-if="section.blocks.length > 1" class="font-medium">{{ block.title }}</h3>
-              <TemplateDocumentView v-if="block.document" :document="block.document" :fields="documentFields(block.fields)" :variables="data.revision.snapshot.template_variables ?? {}" />
-              <dl v-else class="grid gap-4">
-                <div v-for="field in block.fields" :key="field.key" class="rounded-md border p-4">
-                  <dt class="flex flex-wrap gap-2 font-medium">{{ field.label }}<Badge v-if="field.inherited" variant="outline">Institucional</Badge></dt>
-                  <dd class="mt-2 text-sm whitespace-pre-wrap">{{ formatValue(field.value) }}</dd>
-                </div>
-              </dl>
-            </section>
+            <FieldView v-for="field in sectionFields(section)" :key="field.key" :field="typed(field)" :badge="field.inherited ? 'Institucional' : undefined" />
           </CardContent>
         </Card>
       </main>

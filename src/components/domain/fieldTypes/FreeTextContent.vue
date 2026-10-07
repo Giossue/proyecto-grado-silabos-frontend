@@ -9,7 +9,8 @@ const Rendered = (rendered: { node: NonNullable<typeof document.value> }) => ren
 </script>
 
 <template>
-  <p v-if="empty" class="text-sm text-muted-foreground">{{ emptyText }}</p>
+  <p v-if="typeof value === 'string' && value.trim() !== '' || typeof value === 'number'" class="whitespace-pre-wrap text-sm">{{ value }}</p>
+  <p v-else-if="empty" class="text-sm text-muted-foreground">{{ emptyText }}</p>
   <div v-else class="free-text-content text-sm"><Rendered :node="document!" /></div>
 </template>
 

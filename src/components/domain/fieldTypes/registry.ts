@@ -83,7 +83,7 @@ export const fieldTypeEntry = (type: string): FieldTypeEntry | null =>
     Object.hasOwn(fieldTypeRegistry, type) ? fieldTypeRegistry[type as FieldTypeKey] as FieldTypeEntry : null;
 
 /** Campos de una sección: v7 trae `fields`; las fotografías anteriores solo `blocks`. */
-export const sectionFields = <T extends { fields?: T[] | unknown }>(section: { fields?: T[]; blocks?: Array<{ fields: T[] }> }): T[] =>
+export const sectionFields = <F>(section: { fields?: F[]; blocks?: Array<{ fields: F[] }> }): F[] =>
     section.fields ?? (section.blocks ?? []).flatMap((block) => block.fields);
 
 export const canTeacherEdit = (field: TypedField): boolean => {
