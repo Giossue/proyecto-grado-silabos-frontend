@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { Lock, Pause, Play } from '@lucide/vue';
+import { Pause, Play } from '@lucide/vue';
 import { ref } from 'vue';
 import { ApiError } from '@/api/client';
-import { transitionConvocation, type ConvocationItem } from '@/api/convocations';
+import { transitionConvocation } from '@/api/convocations';
+import type { CoordinationConvocation } from '@/api/dashboard';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
 
 type Transition = 'pausar' | 'reanudar';
-const props = defineProps<{ convocation: ConvocationItem }>();
+const props = defineProps<{ convocation: CoordinationConvocation }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const pending = ref<Transition | null>(null);
 const processing = ref(false);
@@ -29,8 +30,8 @@ const submit = async (): Promise<void> => {
   processing.value = true;
   error.value = null;
   try {
-    if (!props.convocation.id) return;
-    const result = await transitionConvocation(props.convocation.id, pending.value);
+    if (!props.convocation.convocation_id) return;
+    const result = await transitionConvocation(props.convocation.convocation_id, pending.value);
     pending.value = null;
     emit('changed', result.message);
   } catch (failure) {
@@ -41,13 +42,11 @@ const opened = (message: string): void => emit('changed', message);
 </script>
 
 <template>
-  <Button v-if="convocation.id === null" type="button" size="lg" :disabled="convocation.process_state !== 'abierto'" @click="openingOpen = true"><Play data-icon="inline-start" aria-hidden="true" />Abrir convocatoria</Button>
-  <Button v-else-if="convocation.state === 'abierta'" type="button" size="lg" variant="outline" @click="select('pausar')"><Pause data-icon="inline-start" aria-hidden="true" />Pausar convocatoria</Button>
-  <Button v-else-if="convocation.state === 'pausada'" type="button" size="lg" :disabled="convocation.process_state !== 'abierto'" @click="select('reanudar')"><Play data-icon="inline-start" aria-hidden="true" />Reanudar convocatoria</Button>
-  <p v-else class="flex items-center gap-2 text-sm text-muted-foreground"><Lock class="size-4" aria-hidden="true" />Convocatoria finalizada</p>
-  <p v-if="convocation.process_state !== 'abierto' && convocation.state !== 'cerrada'" class="text-sm text-muted-foreground">{{ convocation.process_state === 'pausado' ? 'La convocatoria institucional está pausada.' : convocation.process_state === 'cerrado' ? 'La convocatoria institucional finalizó.' : 'Pendiente de apertura institucional.' }}</p>
+  <Button v-if="convocation.convocation_id === null" type="button" :disabled="!convocation.can_open" @click="openingOpen = true"><Play data-icon="inline-start" aria-hidden="true" />Abrir convocatoria</Button>
+  <Button v-else-if="convocation.state === 'abierta'" type="button" variant="outline" @click="select('pausar')"><Pause data-icon="inline-start" aria-hidden="true" />Pausar convocatoria</Button>
+  <Button v-else-if="convocation.state === 'pausada'" type="button" :disabled="!convocation.process_open" @click="select('reanudar')"><Play data-icon="inline-start" aria-hidden="true" />Reanudar convocatoria</Button>
   <ConvocationOpeningDialog
-    v-if="convocation.id === null"
+    v-if="convocation.convocation_id === null"
     v-model:open="openingOpen"
     :process-id="convocation.process_id"
     :period="convocation.period"

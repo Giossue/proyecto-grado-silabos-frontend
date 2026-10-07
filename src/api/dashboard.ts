@@ -39,6 +39,8 @@ export type CoordinationConvocation = {
   period: string;
   convocation_id: string | null;
   can_open: boolean;
+  state: 'abierta' | 'pausada' | 'cerrada' | null;
+  process_open: boolean;
 };
 
 export type Dashboard = {

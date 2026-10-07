@@ -14,6 +14,7 @@ const props = defineProps<{
   role: 'coordinador' | 'docente';
 }>();
 
+const slots = defineSlots<{ actions?: () => unknown }>();
 const emit = defineEmits<{ tracking: [] }>();
 
 const formatDate = (value: string): string => formatDateDisplay(value, {
@@ -82,11 +83,12 @@ const summary = computed(() => {
         <Progress :model-value="elapsed" class="h-2" :aria-label="`Avance del plazo: ${elapsed} %`" />
       </div>
     </CardContent>
-    <CardFooter v-if="role === 'docente' || deadline.convocation_id">
+    <CardFooter v-if="role === 'docente' || deadline.convocation_id || slots.actions" class="flex flex-wrap gap-3">
       <Button v-if="role === 'docente'" as-child class="max-sm:w-full">
         <RouterLink :to="paths.teacher.syllabi"><ArrowRight data-icon="inline-start" aria-hidden="true" />Continuar mis sílabos</RouterLink>
       </Button>
-      <Button v-else type="button" class="max-sm:w-full" @click="emit('tracking')"><Eye data-icon="inline-start" aria-hidden="true" />Ver seguimiento</Button>
+      <slot name="actions" />
+      <Button v-if="role !== 'docente' && deadline.convocation_id" type="button" variant="outline" class="max-sm:w-full" @click="emit('tracking')"><Eye data-icon="inline-start" aria-hidden="true" />Ver seguimiento</Button>
     </CardFooter>
   </Card>
 </template>

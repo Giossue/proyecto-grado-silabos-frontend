@@ -12,6 +12,7 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ConvocationDeadlineCard from '@/components/domain/ConvocationDeadlineCard.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
 import StatTile from '@/components/domain/StatTile.vue';
+import ConvocationActions from '@/components/domain/syllabus/ConvocationActions.vue';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
 import ConvocationTrackingDialog from '@/components/domain/syllabus/ConvocationTrackingDialog.vue';
 import { paths } from '@/lib/routes';
@@ -86,7 +87,7 @@ onMounted(() => { void load(); });
         <StatTile v-for="metric in dashboard.metrics.slice(0, 3)" :key="metric.key" :label="metric.label" :value="metric.value" :suffix="metric.suffix ?? undefined" :hint="metric.hint" :icon="icons[metric.key]" />
       </div>
       <p v-else class="text-sm text-muted-foreground">No hay indicadores disponibles para este rol.</p>
-      <ConvocationDeadlineCard v-if="dashboard.deadline && deadlineRole" :deadline="dashboard.deadline" :role="deadlineRole" @tracking="trackingOpen = true" />
+      <ConvocationDeadlineCard v-if="dashboard.deadline && deadlineRole" :deadline="dashboard.deadline" :role="deadlineRole" @tracking="trackingOpen = true"><template v-if="roleCode === 'coordinador' && dashboard.coordination_convocation" #actions><ConvocationActions :convocation="dashboard.coordination_convocation" @changed="handleOpened" /></template></ConvocationDeadlineCard>
       <SetupChecklist v-if="setup" :setup="setup" @action="handleSetupAction" />
     </template>
     <LoadingSkeleton v-else variant="dashboard" :dashboard-role="roleCode ?? undefined" />
