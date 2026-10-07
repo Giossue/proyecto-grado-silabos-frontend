@@ -4,7 +4,7 @@ import { FileText, ImageIcon, Upload, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
 
-type FileKind = 'pdf' | 'png';
+type FileKind = 'pdf' | 'png' | 'xlsx';
 
 const props = withDefaults(defineProps<{
   modelValue: File | null;
@@ -45,7 +45,19 @@ const formatLimit = (bytes: number): string => {
   return Number.isInteger(megabytes) ? `${megabytes} MB` : formatBytes(bytes);
 };
 
-const copy = computed(() => props.kind === 'png' ? {
+const copy = computed(() => props.kind === 'xlsx' ? {
+  accept: '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  label: 'Excel',
+  invalid: 'Seleccione un archivo Excel (.xlsx).',
+  maxError: `El archivo no puede superar los ${formatLimit(props.maxBytes)}.`,
+  emptyTitle: 'Arrastra tu Excel aquí',
+  selectedTitle: 'Excel seleccionado',
+  selectedDescription: 'Arrastra otro archivo o haz clic para reemplazarlo',
+  replaceLabel: 'Reemplazar Excel seleccionado',
+  chooseLabel: 'Cargar archivo Excel',
+  removeLabel: 'Quitar Excel',
+  dropAnnouncement: 'Suelta el Excel para seleccionarlo.',
+} : props.kind === 'png' ? {
   accept: 'image/png,.png',
   label: 'PNG',
   invalid: 'Seleccione un archivo PNG.',
@@ -76,9 +88,12 @@ const chooseFile = (): void => {
 };
 
 const isValidFile = (file: File): boolean => {
+  const name = file.name.toLowerCase();
   const isAccepted = props.kind === 'png'
-    ? file.name.toLowerCase().endsWith('.png') || file.type === 'image/png'
-    : file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf';
+    ? name.endsWith('.png') || file.type === 'image/png'
+    : props.kind === 'xlsx'
+      ? name.endsWith('.xlsx')
+      : name.endsWith('.pdf') || file.type === 'application/pdf';
   if (!isAccepted || file.size > props.maxBytes) {
     emit('validation-error', !isAccepted ? copy.value.invalid : copy.value.maxError);
     return false;
