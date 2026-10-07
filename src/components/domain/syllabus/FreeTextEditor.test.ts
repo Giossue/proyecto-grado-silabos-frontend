@@ -2,9 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { renderFreeText } from '@/components/domain/syllabus/freeTextRender';
-import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
-import type { DocumentField, DocumentNode } from '@/lib/templateDocument';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import type { DocumentNode } from '@/lib/templateDocument';
 
 const wrappers: Array<ReturnType<typeof mount>> = [];
 afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
@@ -48,23 +46,5 @@ describe('Texto libre del docente', () => {
         expect(wrapper.find('strong').text()).toBe('Enfoque');
         expect(wrapper.find('li').text()).toBe('Proyecto');
         expect(wrapper.find('th').text()).toBe('Unidad');
-    });
-
-    it('la hoja del sílabo usa el editor cuando el docente puede escribir y la lectura si no', async () => {
-        const field: DocumentField = { key: 'metodologia', label: 'Metodología', type: 'texto_libre', teacher_editable: true, value: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Aula invertida' }] }] } };
-        const document: DocumentNode = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'field', attrs: { key: 'metodologia', label: 'Metodología', kind: 'texto_libre' } }] }] };
-        const editable = mount({
-            components: { TemplateDocumentView, TooltipProvider },
-            setup: () => ({ document, fields: [field] }),
-            template: '<TooltipProvider><TemplateDocumentView :document="document" :fields="fields" :variables="{}" editable presentation="form" /></TooltipProvider>',
-        });
-        wrappers.push(editable);
-        await flushPromises();
-        expect(editable.findComponent(FreeTextEditor).exists()).toBe(true);
-
-        const readonly = mount(TemplateDocumentView, { props: { document, fields: [field], variables: {} } });
-        wrappers.push(readonly);
-        expect(readonly.findComponent(FreeTextEditor).exists()).toBe(false);
-        expect(readonly.text()).toContain('Aula invertida');
     });
 });

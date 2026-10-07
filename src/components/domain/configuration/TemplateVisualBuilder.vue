@@ -1,927 +1,140 @@
 <script setup lang="ts">
-import {
-    ArrowDown,
-    ArrowUp,
-    Pencil,
-    Settings,
-    Settings2,
-    Trash2,
-} from '@lucide/vue';
+import { ArrowDown, ArrowUp, Pencil, Plus, Settings2, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
-import type { CSSProperties } from 'vue';
-import TemplateController from '@/api/template-routes';
-import TemplateBlockCreator from '@/components/domain/configuration/TemplateBlockCreator.vue';
-import TemplateDocumentView from '@/components/domain/configuration/TemplateDocumentView.vue';
-import TemplateFieldActions from '@/components/domain/configuration/TemplateFieldActions.vue';
-import TemplateInsertPopover from '@/components/domain/configuration/TemplateInsertPopover.vue';
-import TemplateSectionActions from '@/components/domain/configuration/TemplateSectionActions.vue';
-import TemplateTableDesigner from '@/components/domain/configuration/TemplateTableDesigner.vue';
+import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
+import { deleteField, deleteSection, reorderFields, reorderSections } from '@/api/template-structure';
+import TemplateFieldDialog from '@/components/domain/configuration/TemplateFieldDialog.vue';
+import TemplateSectionDialog from '@/components/domain/configuration/TemplateSectionDialog.vue';
+import { apiMessage } from '@/components/domain/configuration/templateStructure';
 import TemplateTitleActions from '@/components/domain/configuration/TemplateTitleActions.vue';
-import TemplateToolbarButton from '@/components/domain/configuration/TemplateToolbarButton.vue';
-import PaginatedDocument from '@/components/domain/PaginatedDocument.vue';
+import { fieldTypeEntry, sectionFields } from '@/components/domain/fieldTypes/registry';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { defaultDocument } from '@/lib/templateDocument';
-import {
-    COMPACT_SHEET,
-    isFreeTextPart,
-    sectionCompact,
-    sectionOrientation,
-} from '@/lib/templateParts';
-import { templatePreviewFields } from '@/lib/templatePreview';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
-import { apiRouter as router } from '@/lib/apiVisit';
-import type {
-    TemplateAppearance,
-    TemplateBuilderProps,
-    TemplateFieldContainer,
-    TemplateSection,
-} from '@/types/configuration';
 
-const props = withDefaults(
-    defineProps<{
-        template: TemplateBuilderProps['template'];
-        appearance: TemplateAppearance;
-        blockTypes: TemplateBuilderProps['blockTypes'];
-        presets?: TemplateBuilderProps['presets'];
-        variables: TemplateBuilderProps['variables'];
-        logos: TemplateBuilderProps['logos'];
-        identificationDesign: TemplateBuilderProps['identificationDesign'];
-        colorOptions: TemplateBuilderProps['appearanceOptions']['colors'];
-        readonly: boolean;
-        ribbon?: boolean;
-        fixedRibbon?: boolean;
-    }>(),
-    { ribbon: false, presets: () => [] },
-);
+/** Constructor de la plantilla: secciones numeradas y, dentro, sus campos (I-195, etapa 7). */
+const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null }>();
+const emit = defineEmits<{ changed: [] }>();
 
-const emit = defineEmits<{ personalize: [] }>();
-type Editable = { openEdit: () => void; openDelete: () => void };
-type TitleActions = { openEdit: () => void };
-type TableDesigner = { start: () => void };
-type MoveDirection = -1 | 1;
-type Selection =
-    | { kind: 'document' }
-    | { kind: 'title' }
-    | { kind: 'section'; sectionId: string }
-    | { kind: 'field'; sectionId: string; blockId: string };
+type Editable = { openEdit: () => void };
+const titleActions = ref<Editable | null>(null);
+const locked = computed(() => Boolean(props.processLock));
+const selectedField = ref<string | null>(null);
+const busy = ref(false);
+const error = ref<string | null>(null);
 
-const selection = ref<Selection>({ kind: 'document' });
-const activeTable = ref<string | null>(null);
-const reorderPending = ref(false);
-const sectionActions = ref<Record<string, Editable>>({});
-const fieldActions = ref<Record<string, Editable>>({});
-const tableDesigners = ref<Record<string, TableDesigner>>({});
-const titleActions = ref<TitleActions | null>(null);
+const sections = computed(() => props.template.sections.map((section) => ({ section, fields: sectionFields(section) })));
+const usedSectionKeys = computed(() => props.template.sections.map((section) => section.key));
+const usedFieldKeys = computed(() => sections.value.flatMap((entry) => entry.fields.map((field) => field.key)));
 
-const bindHandle = <T,>(
-    collection: Record<string, T>,
-    id: string,
-    instance: unknown,
-): void => {
-    if (instance) {
-        collection[id] = instance as T;
+const sectionDialog = ref<{ open: boolean; section: TemplateSectionPayload | null }>({ open: false, section: null });
+const fieldDialog = ref<{ open: boolean; sectionId: string; field: TemplateField | null }>({ open: false, sectionId: '', field: null });
+const removal = ref<{ kind: 'section' | 'field'; id: string; name: string; count: number } | null>(null);
 
-        return;
-    }
-
-    delete collection[id];
-};
-
-const selectedSection = computed<TemplateSection | null>(() => {
-    const current = selection.value;
-
-    if (current.kind !== 'section' && current.kind !== 'field') {
-        return null;
-    }
-
-    return (
-        props.template.sections.find(
-            (section) => section.id === current.sectionId,
-        ) ?? null
-    );
-});
-
-const selectedField = computed<TemplateFieldContainer | null>(() => {
-    const current = selection.value;
-
-    if (current.kind !== 'field') {
-        return null;
-    }
-
-    return (
-        selectedSection.value?.blocks.find(
-            (block) => block.id === current.blockId,
-        ) ?? null
-    );
-});
-
-const variableSamples = computed(() =>
-    Object.fromEntries(
-        props.variables.map((variable) => [variable.key, variable.sample]),
-    ),
-);
-
-const titleStyle = computed<CSSProperties>(() => ({
-    color: props.appearance.accent_color,
-    fontFamily: props.appearance.font_family,
-    fontSize: `${props.appearance.title_font_size}pt`,
-    fontWeight: props.appearance.title_bold ? '700' : '400',
-    fontStyle: props.appearance.title_italic ? 'italic' : 'normal',
-    textAlign: props.appearance.title_alignment,
-}));
-
-const sectionStyle = computed<CSSProperties>(() => ({
-    color: props.appearance.text_color,
-    fontFamily: props.appearance.font_family,
-    fontSize: `${props.appearance.section_font_size}pt`,
-    fontWeight: props.appearance.section_bold ? '700' : '400',
-    fontStyle: props.appearance.section_italic ? 'italic' : 'normal',
-    textAlign: props.appearance.section_alignment,
-}));
-
-const fieldStyle = computed<CSSProperties>(() => ({
-    color: props.appearance.text_color,
-    fontFamily: props.appearance.font_family,
-    fontSize: `${props.appearance.field_font_size}pt`,
-}));
-
-const documentFor = (block: TemplateFieldContainer) =>
-    block.content_type === 'institutional'
-        ? defaultDocument(block, props.identificationDesign)
-        : (block.document ?? defaultDocument(block, props.identificationDesign));
-const fieldsFor = (block: TemplateFieldContainer) =>
-    templatePreviewFields(block.fields);
-const partNumber = (section: TemplateSection, index: number): number =>
-    section.blocks
-        .slice(0, index + 1)
-        .filter((block) => block.title.trim() !== '').length;
-/** Hoja sin nada escrito: sin nombre ni contenido el campo no se vería ni se podría elegir. */
-const isBlank = (block: TemplateFieldContainer): boolean => {
-    const nodes = documentFor(block).content ?? [];
-
-    return block.title.trim() === ''
-        && nodes.every((node) => node.type === 'paragraph' && (node.content ?? []).length === 0);
-};
-// Texto libre no tiene hoja que editar: el docente escribe ahí; el admin solo le pone nombre.
-const editableOnSheet = (block: TemplateFieldContainer): boolean =>
-    !isFreeTextPart(block) && block.content_type !== 'institutional';
-
-type SheetGroup = {
-    orientation: TemplateAppearance['orientation'];
-    compact: boolean;
-    sections: { section: TemplateSection; index: number }[];
-};
-
-const sheetGroups = computed<SheetGroup[]>(() => {
-    const groups: SheetGroup[] = [];
-
-    props.template.sections.forEach((section, index) => {
-        const orientation = sectionOrientation(
-            section.blocks,
-            props.appearance.orientation,
-        );
-        const compact = sectionCompact(section.blocks);
-        const last = groups.at(-1);
-
-        if (
-            last &&
-            last.orientation === orientation &&
-            last.compact === compact
-        ) {
-            last.sections.push({ section, index });
-
-            return;
-        }
-
-        groups.push({ orientation, compact, sections: [{ section, index }] });
-    });
-
-    return groups.length > 0
-        ? groups
-        : [
-              {
-                  orientation: props.appearance.orientation,
-                  compact: false,
-                  sections: [],
-              },
-          ];
-});
-const groupPages = ref<number[]>([]);
-const startPage = (groupIndex: number): number =>
-    1 +
-    groupPages.value
-        .slice(0, groupIndex)
-        .reduce((total, count) => total + (count ?? 1), 0);
-const updateGroupPages = (groupIndex: number, count: number): void => {
-    const next = [...groupPages.value];
-    next[groupIndex] = count;
-    groupPages.value = next;
-};
-
-const shiftedIds = (
-    ids: string[],
-    id: string,
-    direction: MoveDirection,
-): string[] | null => {
-    const current = ids.indexOf(id);
-    const target = current + direction;
-
-    if (current < 0 || target < 0 || target >= ids.length) {
-        return null;
-    }
-
-    const reordered = [...ids];
-    [reordered[current], reordered[target]] = [
-        reordered[target],
-        reordered[current],
-    ];
-
-    return reordered;
-};
-
-const moveSection = (sectionId: string, direction: MoveDirection): void => {
-    if (reorderPending.value) {
-        return;
-    }
-
-    const sectionIds = shiftedIds(
-        props.template.sections.map((section) => section.id),
-        sectionId,
-        direction,
-    );
-
-    if (!sectionIds) {
-        return;
-    }
-
-    reorderPending.value = true;
-    router.patch(
-        TemplateController.reorderSections.url(props.template.id),
-        { section_ids: sectionIds },
-        {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => toast.success('Sección movida'),
-            onError: (errors) =>
-                toast.error(
-                    Object.values(errors)[0] ??
-                        'No se pudo cambiar el orden de la sección',
-                ),
-            onFinish: () => {
-                reorderPending.value = false;
-            },
-        },
-    );
-};
-
-const moveField = (
-    section: TemplateSection,
-    blockId: string,
-    direction: MoveDirection,
-): void => {
-    if (reorderPending.value) {
-        return;
-    }
-
-    const blockIds = shiftedIds(
-        section.blocks.map((block) => block.id),
-        blockId,
-        direction,
-    );
-
-    if (!blockIds) {
-        return;
-    }
-
-    reorderPending.value = true;
-    router.patch(
-        TemplateController.reorderBlocks.url(props.template.id),
-        { section_id: section.id, block_ids: blockIds },
-        {
-            preserveScroll: true,
-            preserveState: true,
-            onSuccess: () => toast.success('Campo movido'),
-            onError: (errors) =>
-                toast.error(
-                    Object.values(errors)[0] ??
-                        'No se pudo cambiar el orden del campo',
-                ),
-            onFinish: () => {
-                reorderPending.value = false;
-            },
-        },
-    );
-};
-
-const selectSection = (sectionId: string): void => {
-    if (!activeTable.value) {
-        selection.value = { kind: 'section', sectionId };
+const run = async (action: () => Promise<unknown>, fallback: string): Promise<void> => {
+    if (busy.value) return;
+    busy.value = true;
+    error.value = null;
+    try {
+        await action();
+        emit('changed');
+    } catch (reason) {
+        error.value = apiMessage(reason, fallback);
+    } finally {
+        busy.value = false;
     }
 };
 
-const selectTitle = (): void => {
-    if (!activeTable.value) {
-        selection.value = { kind: 'title' };
-    }
+const moved = <T,>(items: T[], index: number, direction: -1 | 1): T[] => {
+    const next = [...items];
+    const [item] = next.splice(index, 1);
+    next.splice(index + direction, 0, item!);
+    return next;
+};
+const moveSection = (index: number, direction: -1 | 1): Promise<void> =>
+    run(() => reorderSections(props.template.id, moved(props.template.sections, index, direction).map((section) => section.id)), 'No se pudo cambiar el orden.');
+const moveField = (sectionId: string, fields: TemplateField[], index: number, direction: -1 | 1): Promise<void> =>
+    run(() => reorderFields(props.template.id, sectionId, moved(fields, index, direction).map((field) => field.id)), 'No se pudo cambiar el orden.');
+
+const confirmRemoval = (): Promise<void> => {
+    const target = removal.value;
+    if (!target) return Promise.resolve();
+    return run(async () => {
+        if (target.kind === 'section') await deleteSection(props.template.id, target.id);
+        else await deleteField(props.template.id, target.id);
+        toast.success(target.kind === 'section' ? 'Sección eliminada.' : 'Campo eliminado.');
+        removal.value = null;
+    }, 'No se pudo eliminar.');
 };
 
-const selectField = (sectionId: string, blockId: string): void => {
-    if (activeTable.value && activeTable.value !== blockId) {
-        return;
-    }
-
-    selection.value = { kind: 'field', sectionId, blockId };
-};
-
-const updateTableEditing = (
-    sectionId: string,
-    blockId: string,
-    editing: boolean,
-): void => {
-    if (editing) {
-        activeTable.value = blockId;
-        selection.value = { kind: 'field', sectionId, blockId };
-
-        return;
-    }
-
-    if (activeTable.value === blockId) {
-        activeTable.value = null;
-    }
-};
-
-const sectionSelectionListeners = (sectionId: string) =>
-    props.readonly
-        ? {}
-        : {
-              pointerdown: () => selectSection(sectionId),
-              keydown: (event: KeyboardEvent) => {
-                  if (
-                      event.key === 'Enter' &&
-                      event.target === event.currentTarget
-                  ) {
-                      selectSection(sectionId);
-                  }
-              },
-          };
-
-const fieldSelectionListeners = (sectionId: string, blockId: string) =>
-    props.readonly || activeTable.value
-        ? {}
-        : {
-              pointerdown: (event: PointerEvent) => {
-                  event.stopPropagation();
-                  selectField(sectionId, blockId);
-              },
-              keydown: (event: KeyboardEvent) => {
-                  if (
-                      event.key === 'Enter' &&
-                      event.target === event.currentTarget
-                  ) {
-                      selectField(sectionId, blockId);
-                  }
-              },
-          };
-
-const clearSelectionFromBackground = (event: PointerEvent): void => {
-    if (props.readonly || activeTable.value) {
-        return;
-    }
-
-    const target = event.target;
-
-    if (
-        !(target instanceof Element) ||
-        target.closest('[data-template-selectable]') ||
-        target.closest('#template-editor-ribbon')
-    ) {
-        return;
-    }
-
-    selection.value = { kind: 'document' };
-};
+const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo sin nombre';
+const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.adminLabel ?? field.type;
 </script>
 
 <template>
-    <div
-        class="min-w-0"
-        :aria-label="
-            readonly
-                ? 'Plantilla del sílabo, solo lectura'
-                : 'Constructor visual de la plantilla del sílabo'
-        "
-        @pointerdown.capture="clearSelectionFromBackground"
-    >
-        <Teleport to="body" :disabled="!fixedRibbon">
-            <header
-                v-if="ribbon && !readonly"
-                id="template-editor-ribbon"
-                aria-label="Herramientas del editor de plantilla"
-                :class="
-                    cn(
-                        'min-w-0 bg-background/95 backdrop-blur',
-                        fixedRibbon
-                            ? 'fixed inset-x-0 top-0 z-40 border-b shadow-sm'
-                            : 'sticky top-2 z-20 mb-4 rounded-lg border shadow-sm',
-                    )
-                "
-            >
-                <div
-                    class="flex min-h-14 min-w-0 items-center gap-2 overflow-hidden px-3 py-2 sm:px-5"
-                >
-                    <div class="flex min-w-fit flex-1 items-center">
-                        <slot name="ribbon-start" />
-                    </div>
+  <div class="mx-auto flex w-full max-w-4xl flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
+    <Alert v-if="locked" role="status"><AlertDescription>Hay un proceso abierto: la plantilla no se puede cambiar hasta pausarlo o cerrarlo. Puede revisar la estructura y la vista previa.</AlertDescription></Alert>
+    <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
-                    <div
-                        id="template-editor-ribbon-tools"
-                        class="flex min-w-0 items-center gap-2 overflow-x-auto"
-                    >
-                        <template v-if="!activeTable">
-                            <Button
-                                v-if="selection.kind === 'title'"
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                @click="titleActions?.openEdit()"
-                            >
-                                <Pencil
-                                    data-icon="inline-start"
-                                    aria-hidden="true"
-                                />
-                                Editar título
-                            </Button>
-                            <template v-if="selectedSection && !selectedField">
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    @click="
-                                        sectionActions[
-                                            selectedSection.id
-                                        ]?.openEdit()
-                                    "
-                                >
-                                    <Pencil
-                                        data-icon="inline-start"
-                                        aria-hidden="true"
-                                    />
-                                    Renombrar sección
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    class="text-destructive hover:text-destructive"
-                                    @click="
-                                        sectionActions[
-                                            selectedSection.id
-                                        ]?.openDelete()
-                                    "
-                                >
-                                    <Trash2
-                                        data-icon="inline-start"
-                                        aria-hidden="true"
-                                    />
-                                    Eliminar sección
-                                </Button>
-                            </template>
-
-                            <template v-if="selectedField && selectedSection">
-                                <Button
-                                    v-if="editableOnSheet(selectedField)"
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    @click="
-                                        tableDesigners[
-                                            selectedField.id
-                                        ]?.start()
-                                    "
-                                >
-                                    <Pencil
-                                        data-icon="inline-start"
-                                        aria-hidden="true"
-                                    />
-                                    Editar
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    @click="
-                                        fieldActions[
-                                            selectedField.id
-                                        ]?.openEdit()
-                                    "
-                                >
-                                    <Settings2
-                                        data-icon="inline-start"
-                                        aria-hidden="true"
-                                    />
-                                    Propiedades
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    class="text-destructive hover:text-destructive"
-                                    @click="
-                                        fieldActions[
-                                            selectedField.id
-                                        ]?.openDelete()
-                                    "
-                                >
-                                    <Trash2
-                                        data-icon="inline-start"
-                                        aria-hidden="true"
-                                    />
-                                    Eliminar campo
-                                </Button>
-                            </template>
-                        </template>
-                    </div>
-
-                    <div
-                        id="template-editor-ribbon-actions"
-                        class="flex min-w-fit flex-1 items-center justify-end gap-2"
-                    >
-                        <Button
-                            v-if="!activeTable"
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            @click="emit('personalize')"
-                        >
-                            <Settings
-                                data-icon="inline-start"
-                                aria-hidden="true"
-                            />
-                            Documento
-                        </Button>
-                    </div>
-                </div>
-            </header>
-        </Teleport>
-
-        <div class="flex min-w-0 flex-col gap-6 overflow-x-auto p-1 pb-4">
-            <PaginatedDocument
-                v-for="(group, groupIndex) in sheetGroups"
-                :key="groupIndex"
-                :orientation="group.orientation"
-                :margin-cm="group.compact ? COMPACT_SHEET.marginCm : appearance.margin_cm"
-                :font-family="appearance.font_family"
-                :font-size="group.compact ? COMPACT_SHEET.fontSize : appearance.body_font_size"
-                :text-color="appearance.text_color"
-                :start-page="startPage(groupIndex)"
-                :data-sheet-orientation="group.orientation"
-                @pages="updateGroupPages(groupIndex, $event)"
-            >
-                <template v-if="groupIndex === 0">
-                <div
-                    class="mb-5 flex w-full items-center justify-between gap-6"
-                    :style="{
-                        marginTop: `-${appearance.margin_cm * 0.4}cm`,
-                    }"
-                    data-page-unit
-                    data-page-keep-next
-                >
-                    <div class="flex min-w-0 flex-1 justify-start">
-                        <img
-                            :src="logos.institution"
-                            alt="Universidad Estatal de Bolívar"
-                            class="h-auto max-h-10 max-w-full object-contain object-left"
-                        />
-                    </div>
-                    <div class="flex min-w-0 flex-1 justify-end">
-                        <img
-                            :src="logos.faculty"
-                            alt="Ejemplo de logo de facultad"
-                            class="h-auto max-h-14 max-w-full object-contain object-right"
-                        />
-                    </div>
-                </div>
-
-                <TemplateTitleActions
-                    v-if="!readonly"
-                    :ref="
-                        (instance) => {
-                            titleActions = (instance as TitleActions | null) ?? null;
-                        }
-                    "
-                    :template-id="template.id"
-                    :title="template.titleBlock.text"
-                />
-                <Button
-                    v-if="!readonly"
-                    type="button"
-                    variant="document"
-                    size="inline"
-                    class="mb-8 w-full justify-start rounded-xs leading-tight outline-offset-4 transition-shadow"
-                    :class="{
-                        'cursor-pointer outline-2 outline-primary':
-                            selection.kind === 'title',
-                    }"
-                    :aria-label="`Título ${template.titleBlock.text}`"
-                    :aria-pressed="selection.kind === 'title'"
-                    data-template-selectable="title"
-                    data-page-unit
-                    data-page-keep-next
-                    @pointerdown.stop="selectTitle"
-                    @click.stop="selectTitle"
-                >
-                    <span
-                        role="heading"
-                        aria-level="1"
-                        class="w-full whitespace-normal"
-                        :style="titleStyle"
-                    >
-                        {{ template.titleBlock.text }}
-                    </span>
-                </Button>
-                <h1
-                    v-else
-                    class="mb-8 leading-tight"
-                    :style="titleStyle"
-                    data-page-unit
-                    data-page-keep-next
-                >
-                    {{ template.titleBlock.text }}
-                </h1>
-
-                <div
-                    v-if="template.sections.length === 0"
-                    class="flex min-h-80 items-center justify-center"
-                    data-page-unit
-                >
-                    <TemplateBlockCreator
-                        v-if="!readonly"
-                        :template-id="template.id"
-                        :position="0"
-                        :block-types="blockTypes"
-                        :presets="presets"
-                        empty
-                    />
-                    <p v-else class="text-center text-muted-foreground">
-                        La plantilla todavía no tiene secciones.
-                    </p>
-                </div>
-                </template>
-
-                <section
-                    v-for="{ section, index: sectionIndex } in group.sections"
-                    :key="section.id"
-                    data-template-selectable="section"
-                    class="relative mb-6 rounded-none outline-offset-4 transition-shadow"
-                    :class="{
-                        'cursor-pointer outline-2 outline-primary':
-                            !readonly &&
-                            selection.kind === 'section' &&
-                            selection.sectionId === section.id,
-                    }"
-                    :aria-label="`Sección ${section.title}`"
-                    :role="readonly ? undefined : 'button'"
-                    :aria-pressed="
-                        readonly
-                            ? undefined
-                            : selection.kind === 'section' &&
-                              selection.sectionId === section.id
-                    "
-                    :tabindex="readonly ? undefined : 0"
-                    v-on="sectionSelectionListeners(section.id)"
-                >
-                    <div v-if="!readonly" class="hidden" aria-hidden="true">
-                        <TemplateSectionActions
-                            :ref="
-                                (instance) =>
-                                    bindHandle(
-                                        sectionActions,
-                                        section.id,
-                                        instance,
-                                    )
-                            "
-                            :template-id="template.id"
-                            :section="section"
-                        />
-                        <TemplateFieldActions
-                            v-for="block in section.blocks"
-                            :key="block.id"
-                            :ref="
-                                (instance) =>
-                                    bindHandle(fieldActions, block.id, instance)
-                            "
-                            :template-id="template.id"
-                            :section-title="section.title"
-                            :field="block"
-                        />
-                    </div>
-
-                    <h2
-                        :id="`template-section-${section.id}`"
-                        class="mb-3 min-w-0 scroll-mt-40 leading-snug"
-                        :style="sectionStyle"
-                        data-page-unit
-                        data-page-keep-next
-                        tabindex="-1"
-                    >
-                        {{ sectionIndex + 1 }}. {{ section.title }}
-                    </h2>
-
-                    <p
-                        v-if="section.blocks.length === 0"
-                        class="mb-3 text-sm text-muted-foreground"
-                        data-page-unit
-                    >
-                        Esta sección todavía no tiene campos.
-                    </p>
-
-                    <article
-                        v-for="(block, fieldIndex) in section.blocks"
-                        :key="block.id"
-                        :id="`template-field-${block.id}`"
-                        data-template-selectable="field"
-                        class="relative mb-4 scroll-mt-40 rounded-none outline-offset-4 transition-shadow"
-                        :class="{
-                            'min-h-14 border border-dashed border-muted-foreground/50 p-2':
-                                !readonly && isBlank(block),
-                            'cursor-pointer outline-2 outline-primary':
-                                !readonly &&
-                                !activeTable &&
-                                selection.kind === 'field' &&
-                                selection.blockId === block.id,
-                        }"
-                        :aria-label="`Campo ${block.title.trim() || 'sin nombre'}`"
-                        :role="readonly || activeTable ? undefined : 'button'"
-                        :aria-pressed="
-                            readonly || activeTable
-                                ? undefined
-                                : selection.kind === 'field' &&
-                                  selection.blockId === block.id
-                        "
-                        :tabindex="readonly || activeTable ? undefined : 0"
-                        v-on="fieldSelectionListeners(section.id, block.id)"
-                    >
-                        <p
-                            v-if="!readonly && isBlank(block)"
-                            class="mb-1 text-xs text-muted-foreground"
-                            data-page-unit
-                        >
-                            Campo en blanco: haga clic para editarlo o inserte contenido.
-                        </p>
-                        <h3
-                            v-if="block.title.trim() !== ''"
-                            class="mb-2 leading-snug font-semibold"
-                            :style="fieldStyle"
-                            data-page-unit
-                            data-page-keep-next
-                            tabindex="-1"
-                        >
-                            {{ sectionIndex + 1 }}.{{ partNumber(section, fieldIndex) }}
-                            {{ block.title }}
-                        </h3>
-
-                        <TemplateTableDesigner
-                            v-if="!readonly && editableOnSheet(block)"
-                            :ref="
-                                (instance) =>
-                                    bindHandle(
-                                        tableDesigners,
-                                        block.id,
-                                        instance,
-                                    )
-                            "
-                            :template-id="template.id"
-                            :block-id="block.id"
-                            :fingerprint="block.fingerprint ?? ''"
-                            :document="documentFor(block)"
-                            :fields="fieldsFor(block)"
-                            :variables="variables"
-                            :variable-samples="variableSamples"
-                            :appearance="appearance"
-                            :colors="colorOptions"
-                            ribbon-target="#template-editor-ribbon"
-                            :section-title="section.title"
-                            :part-title="block.title"
-                            @activate="selectField(section.id, block.id)"
-                            @editing-change="
-                                updateTableEditing(section.id, block.id, $event)
-                            "
-                        />
-                        <TemplateDocumentView
-                            v-else
-                            :document="documentFor(block)"
-                            :fields="fieldsFor(block)"
-                            :variables="variableSamples"
-                            :font-family="appearance.font_family"
-                            :font-size="
-                                block.compact
-                                    ? COMPACT_SHEET.fontSize
-                                    : appearance.body_font_size
-                            "
-                            :text-color="appearance.text_color"
-                            :text-align="appearance.body_alignment"
-                            :table-header-background="
-                                appearance.table_header_background
-                            "
-                            :table-header-color="appearance.table_header_color"
-                            preview
-                        />
-                        <div
-                            v-if="
-                                !readonly &&
-                                !activeTable &&
-                                selection.kind === 'field' &&
-                                selection.blockId === block.id
-                            "
-                            class="absolute top-1/2 -right-1 z-10 flex h-7 translate-x-1/2 -translate-y-1/2 items-center justify-center"
-                            data-template-insert="content"
-                            @pointerdown.stop
-                            @click.stop
-                        >
-                            <TemplateInsertPopover
-                                :template-id="template.id"
-                                :section-id="section.id"
-                                :field-position="fieldIndex + 1"
-                                :block-position="sectionIndex + 1"
-                                :block-types="blockTypes"
-                                :presets="presets"
-                            />
-                            <div
-                                class="absolute top-1/2 left-full ms-1 flex -translate-y-1/2 items-center gap-1"
-                            >
-                                <TemplateToolbarButton
-                                    label="Mover campo arriba"
-                                    variant="outline"
-                                    :disabled="
-                                        reorderPending || fieldIndex === 0
-                                    "
-                                    @click="moveField(section, block.id, -1)"
-                                >
-                                    <ArrowUp aria-hidden="true" />
-                                </TemplateToolbarButton>
-                                <TemplateToolbarButton
-                                    label="Mover campo abajo"
-                                    variant="outline"
-                                    :disabled="
-                                        reorderPending ||
-                                        fieldIndex === section.blocks.length - 1
-                                    "
-                                    @click="moveField(section, block.id, 1)"
-                                >
-                                    <ArrowDown aria-hidden="true" />
-                                </TemplateToolbarButton>
-                            </div>
-                        </div>
-                    </article>
-
-                    <div
-                        v-if="
-                            !readonly &&
-                            !activeTable &&
-                            selection.kind === 'section' &&
-                            selection.sectionId === section.id
-                        "
-                        class="absolute top-1/2 -right-1 z-10 flex h-7 translate-x-1/2 -translate-y-1/2 items-center justify-center"
-                        data-template-insert="content"
-                        @pointerdown.stop
-                        @click.stop
-                    >
-                        <TemplateInsertPopover
-                            :template-id="template.id"
-                            :section-id="section.id"
-                            :field-position="section.blocks.length"
-                            :block-position="sectionIndex + 1"
-                            :block-types="blockTypes"
-                                :presets="presets"
-                        />
-                        <div
-                            class="absolute top-1/2 left-full ms-1 flex -translate-y-1/2 items-center gap-1"
-                        >
-                            <TemplateToolbarButton
-                                label="Mover sección arriba"
-                                variant="outline"
-                                :disabled="reorderPending || sectionIndex === 0"
-                                @click="moveSection(section.id, -1)"
-                            >
-                                <ArrowUp aria-hidden="true" />
-                            </TemplateToolbarButton>
-                            <TemplateToolbarButton
-                                label="Mover sección abajo"
-                                variant="outline"
-                                :disabled="
-                                    reorderPending ||
-                                    sectionIndex ===
-                                        template.sections.length - 1
-                                "
-                                @click="moveSection(section.id, 1)"
-                            >
-                                <ArrowDown aria-hidden="true" />
-                            </TemplateToolbarButton>
-                        </div>
-                    </div>
-                </section>
-            </PaginatedDocument>
-        </div>
+    <div class="flex items-center justify-between gap-2 rounded-lg border bg-muted/30 p-3">
+      <div class="min-w-0"><p class="text-xs text-muted-foreground">Título del sílabo</p><p class="truncate font-medium">{{ template.titleBlock.text }}</p></div>
+      <Button type="button" variant="outline" size="sm" :disabled="locked" @click="titleActions?.openEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar título</Button>
     </div>
+    <TemplateTitleActions ref="titleActions" :template-id="template.id" :title="template.titleBlock.text" />
+
+    <p v-if="sections.length === 0" class="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">La plantilla no tiene secciones. Agregue la primera.</p>
+
+    <section v-for="({ section, fields }, sectionIndex) in sections" :key="section.id" :data-section="section.id" class="flex flex-col gap-2 rounded-lg border p-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <h3 class="min-w-0 flex-1 truncate text-base font-semibold">{{ sectionIndex + 1 }}. {{ section.title }}</h3>
+        <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === 0" :aria-label="`Subir la sección ${section.title}`" @click="moveSection(sectionIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
+        <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === sections.length - 1" :aria-label="`Bajar la sección ${section.title}`" @click="moveSection(sectionIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
+        <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Renombrar la sección ${section.title}`" @click="sectionDialog = { open: true, section }"><Pencil aria-hidden="true" /></Button>
+        <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar la sección ${section.title}`" @click="removal = { kind: 'section', id: section.id, name: section.title, count: fields.length }"><Trash2 aria-hidden="true" /></Button>
+      </div>
+
+      <ol class="flex flex-col gap-1">
+        <li v-for="(field, fieldIndex) in fields" :key="field.id">
+          <div :data-field="field.id" :class="cn('flex flex-wrap items-center gap-2 rounded-md border px-3 py-2', selectedField === field.id ? 'border-primary bg-primary/5' : 'bg-background')">
+            <Button type="button" variant="ghost" class="h-auto min-w-0 flex-1 justify-start gap-2 px-1 py-1 text-left font-normal" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectedField = field.id">
+              <component :is="fieldTypeEntry(field.type)!.icon" v-if="fieldTypeEntry(field.type)" class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+              <span class="min-w-0 flex-1 truncate text-sm" :class="field.label.trim() ? 'font-medium' : 'italic text-muted-foreground'">{{ fieldName(field) }}</span>
+              <span class="hidden text-xs text-muted-foreground sm:inline">{{ typeLabel(field) }}</span>
+            </Button>
+            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === 0" :aria-label="`Subir el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
+            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === fields.length - 1" :aria-label="`Bajar el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
+            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Propiedades del campo ${fieldName(field)}`" @click="selectedField = field.id; fieldDialog = { open: true, sectionId: section.id, field }"><Settings2 aria-hidden="true" /></Button>
+            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar el campo ${fieldName(field)}`" @click="removal = { kind: 'field', id: field.id, name: fieldName(field), count: 0 }"><Trash2 aria-hidden="true" /></Button>
+          </div>
+        </li>
+      </ol>
+      <p v-if="fields.length === 0" class="text-sm text-muted-foreground">Sección sin campos.</p>
+      <Button type="button" variant="outline" size="sm" class="self-start" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
+    </section>
+
+    <Button type="button" class="self-start" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
+
+    <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" @saved="emit('changed')" />
+    <TemplateFieldDialog v-model:open="fieldDialog.open" :template-id="template.id" :section-id="fieldDialog.sectionId" :field="fieldDialog.field" :used-keys="usedFieldKeys" @saved="emit('changed')" />
+
+    <Dialog :open="removal !== null" @update:open="(value: boolean) => { if (!value) removal = null }">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{{ removal?.kind === 'section' ? 'Eliminar sección' : 'Eliminar campo' }}</DialogTitle>
+          <DialogDescription>
+            {{ removal?.kind === 'section' ? `Se quitará «${removal?.name}» con sus ${removal?.count} campos de la plantilla.` : `Se quitará «${removal?.name}» de la plantilla.` }}
+            Los sílabos ya entregados conservan su propia copia.
+          </DialogDescription>
+        </DialogHeader>
+        <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
+        <DialogFooter>
+          <Button type="button" variant="outline" :disabled="busy" @click="removal = null">Cancelar</Button>
+          <Button type="button" variant="destructive" :disabled="busy" @click="confirmRemoval"><Spinner v-if="busy" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Eliminar</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
 </template>

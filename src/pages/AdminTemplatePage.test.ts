@@ -23,52 +23,29 @@ vi.mock("@/api/template", async (importOriginal) => ({
 
 const payload: TemplatePayload = {
   processLock: null,
-  variables: [{ key: "nombre_asignatura", label: "Asignatura", sample: "Inteligencia Artificial" }],
-  identificationDesign: { type: "doc", content: [] },
   logos: {
     institution: '/logo.png', faculty: '/faculty.png',
     institution_size: { width: 120, height: 40 }, faculty_size: { width: 120, height: 40 },
-  },
-  blockTypes: [{ value: 'free_text', label: 'Texto libre' }],
-  appearanceOptions: {
-    fonts: [{ value: 'Arial', label: 'Arial' }],
-    body_sizes: [{ value: 11, label: '11' }],
-    title_sizes: [{ value: 16, label: '16' }],
-    section_sizes: [{ value: 13, label: '13' }],
-    field_sizes: [{ value: 11, label: '11' }],
-    margins: [{ value: 2.5, label: '2.5' }],
-    colors: [{ value: '#075da9', label: 'Azul' }],
-    alignments: [{ value: 'left', label: 'Izquierda' }],
-    orientations: [{ value: 'portrait', label: 'Vertical' }],
   },
   template: {
     id: "template-1",
     name: "Plantilla institucional",
     description: null,
-    appearance: {
-      font_family: "Arial", body_font_size: 11, title_font_size: 16, section_font_size: 13,
-      field_font_size: 11, text_color: "#000000", accent_color: "#075da9",
-      table_header_background: "#dbe6f4", table_header_color: "#315f92", margin_cm: 2.5,
-      orientation: "portrait", title_bold: true, title_italic: false, title_alignment: "center",
-      section_bold: true, section_italic: false, section_alignment: "left", body_alignment: "left",
-    },
     titleBlock: { text: "PROGRAMA DE ASIGNATURA (SÍLABO)" },
     sections: [{
       id: "section-1", key: "descripcion", title: "Descripción de la asignatura", description: null,
-      blocks: [{
-        id: "block-1", key: "descripcion_principal", title: "Descripción", type: "narrativa",
-        content_type: "text", fingerprint: "a".repeat(64),
-        document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Fundamentos de la asignatura. " }, { type: "field", attrs: { key: "descripcion", label: "Descripción de la asignatura", kind: "texto_largo", choice: null } }] }] },
-        fields: [{
-          id: "field-1", block_id: "block-1", key: "descripcion", label: "Descripción de la asignatura",
-          help: null, type: "texto_largo", options: [], required: true, inherited: false,
-          master_source: null, teacher_editable: true,
-          content_type: "text",
-        }],
-      }],
+      blocks: [
+        { id: "block-1", key: "descripcion", title: "Descripción", fields: [{ id: "field-1", block_id: "block-1", key: "descripcion", label: "Descripción", help: null, type: "texto", config: [] }] },
+        { id: "block-2", key: "sin_nombre", title: "", fields: [{ id: "field-2", block_id: "block-2", key: "sin_nombre", label: "", help: null, type: "texto", config: [] }] },
+      ],
     }],
   },
 };
+
+const mountPage = () => mount({
+  components: { AdminTemplatePage, TooltipProvider },
+  template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
+}, { attachTo: document.body });
 
 describe("AdminTemplatePage", () => {
   enableAutoUnmount(afterEach);
@@ -79,164 +56,78 @@ describe("AdminTemplatePage", () => {
       active_role: { id: "role-1", code: "administrador", career_id: null, career_name: null },
       available_roles: [],
     });
+    vi.mocked(getTemplate).mockReset();
     vi.mocked(getTemplate).mockResolvedValue(payload);
   });
 
-  it("muestra el documento estructurado y activa el editor canónico", async () => {
-    const wrapper = mount({
-      components: { AdminTemplatePage, TooltipProvider },
-      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
-    }, { attachTo: document.body });
+  it("lista las secciones numeradas con sus campos, incluso el que no tiene nombre", async () => {
+    const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.get(".template-document-view").text()).toContain("Fundamentos de la asignatura.");
-    expect(wrapper.get("#template-field-block-1 h3").text()).toContain("Descripción");
-    const edit = wrapper.findAll('button').find((button) => button.text().trim() === 'Editar');
-    expect(edit).toBeDefined();
-    await edit!.trigger("click");
-    await flushPromises();
-    await wrapper.get('[aria-label="Campo Descripción"]').trigger("pointerdown");
-    await flushPromises();
-
-    expect(document.querySelector('#template-editor-ribbon-tools')?.textContent).toContain('Propiedades');
-    expect(document.body.textContent).not.toContain('Selección:');
-    expect(document.querySelector('#template-editor-ribbon')?.classList.contains('top-0')).toBe(true);
-    expect(wrapper.find('#template-editor-header-selection').exists()).toBe(false);
-
-    const back = document.querySelector<HTMLButtonElement>('#template-editor-ribbon button');
-    expect(back?.textContent).toContain('Volver a la vista');
-    back!.click();
-    await flushPromises();
-
-    expect(document.querySelector('#template-editor-ribbon')).toBeNull();
-    expect(wrapper.get('[aria-label="Plantilla del sílabo, solo lectura"]')).toBeDefined();
+    expect(wrapper.get('[data-section="section-1"] h3').text()).toBe('1. Descripción de la asignatura');
+    expect(wrapper.get('[data-field="field-1"]').text()).toContain('Descripción');
+    const unnamed = wrapper.get('[data-field="field-2"]');
+    expect(unnamed.text()).toContain('Campo sin nombre');
+    await unnamed.get('button').trigger('click');
+    expect(unnamed.get('button').attributes('aria-pressed')).toBe('true');
   });
 
-  it("mantiene la acción contextual del texto fijo sin la etiqueta de selección", async () => {
-    const withFixed: TemplatePayload = {
-      ...payload,
-      template: {
-        ...payload.template!,
-        sections: [{
-          ...payload.template!.sections[0]!,
-          blocks: [
-            ...payload.template!.sections[0]!.blocks,
-            {
-              id: "block-2", key: "firmas", title: "Firmas", type: "fijo", content_type: "fixed",
-              fingerprint: "b".repeat(64), fields: [],
-              document: { type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text: "Firma" }] }] },
-            },
-          ],
-        }],
-      },
-    };
-    vi.mocked(getTemplate).mockResolvedValue(withFixed);
-    const wrapper = mount({
-      components: { AdminTemplatePage, TooltipProvider },
-      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
-    }, { attachTo: document.body });
+  it("muestra la vista previa del sílabo con las vistas de cada tipo", async () => {
+    const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.get("#template-field-block-2 h3").text()).toBe("1.2 Firmas");
-    const edit = wrapper.findAll("button").find((button) => button.text() === "Editar");
-    await edit!.trigger("click");
+    await wrapper.findAll('[role="tab"]').find((tab) => tab.text() === 'Vista previa')!.trigger('mousedown');
     await flushPromises();
-    await wrapper.get('[aria-label="Campo Firmas"]').trigger("pointerdown");
-    await flushPromises();
-
-    expect(document.querySelector('#template-editor-ribbon-tools')?.textContent).toContain('Propiedades');
-    expect(document.body.textContent).not.toContain("Selección:");
-    wrapper.unmount();
+    const preview = document.body.querySelector('[aria-label="Vista previa del sílabo"]');
+    expect(preview?.textContent).toContain('PROGRAMA DE ASIGNATURA (SÍLABO)');
+    expect(preview?.textContent).toContain('1. Descripción de la asignatura');
   });
 
-  it("muestra horizontal la hoja de una sección con un campo en hoja horizontal", async () => {
-    const landscape: TemplatePayload = {
-      ...payload,
-      template: {
-        ...payload.template!,
-        sections: [
-          ...payload.template!.sections,
-          {
-            id: "section-2", key: "planificacion", title: "Planificación", description: null,
-            blocks: [{
-              id: "block-plan", key: "plan", title: "Planificación", type: "narrativa", content_type: "text",
-              page_orientation: "landscape", document: null, fingerprint: "c".repeat(64), fields: [],
-            }],
-          },
-        ],
-      },
-    };
-    vi.mocked(getTemplate).mockResolvedValue(landscape);
-    const wrapper = mount({
-      components: { AdminTemplatePage, TooltipProvider },
-      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
-    }, { attachTo: document.body });
-    await flushPromises();
-
-    const sheets = wrapper.findAll("[data-sheet-orientation]").map((sheet) => sheet.attributes("data-sheet-orientation"));
-    expect(sheets).toEqual(["portrait", "landscape"]);
-    expect(wrapper.findAll("[data-sheet-orientation]")[1]!.text()).toContain("2. Planificación");
-    wrapper.unmount();
-  });
-
-  it('advierte que reanudar rehace los sílabos si la plantilla cambió durante la pausa', async () => {
+  it("avisa que reanudar rehace los sílabos si la plantilla cambió durante la pausa", async () => {
     vi.mocked(getTemplate).mockResolvedValue({ ...payload, templateChangedDuringPause: true });
-    const wrapper = mount({
-      components: { AdminTemplatePage, TooltipProvider },
-      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
-    }, { attachTo: document.body });
+    const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.');
-    const edit = wrapper.findAll('button').find((button) => button.text().trim() === 'Editar');
-    await edit!.trigger('click');
-    await flushPromises();
     expect(wrapper.text()).toContain('Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.');
   });
 
-  it("sincroniza una mutación sin desmontar el constructor visual", async () => {
-    const refreshedPayload: TemplatePayload = {
-      ...payload,
-      template: {
-        ...payload.template!,
-        name: "Plantilla institucional actualizada",
-      },
-    };
+  it("sincroniza una mutación sin desmontar el constructor", async () => {
     vi.mocked(getTemplate).mockReset();
     vi.mocked(getTemplate)
       .mockResolvedValueOnce(payload)
-      .mockResolvedValueOnce(refreshedPayload);
-
-    const wrapper = mount({
-      components: { AdminTemplatePage, TooltipProvider },
-      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
-    }, { attachTo: document.body });
+      .mockResolvedValueOnce({ ...payload, template: { ...payload.template!, titleBlock: { text: "OTRO TÍTULO" } } });
+    const wrapper = mountPage();
     await flushPromises();
 
-    const edit = wrapper.findAll('button').find((button) => button.text().trim() === 'Editar');
-    await edit!.trigger("click");
-    await flushPromises();
-
-    const editor = wrapper.get('[aria-label="Constructor visual de la plantilla del sílabo"]');
-    const editorElement = editor.element;
+    const editor = wrapper.get('[aria-label="Constructor visual de la plantilla del sílabo"]').element;
     window.dispatchEvent(new CustomEvent('silabos:template-changed'));
     await flushPromises();
 
     expect(getTemplate).toHaveBeenCalledTimes(2);
-    expect(wrapper.get('[aria-label="Constructor visual de la plantilla del sílabo"]').element)
-      .toBe(editorElement);
+    expect(wrapper.get('[aria-label="Constructor visual de la plantilla del sílabo"]').element).toBe(editor);
+    expect(wrapper.text()).toContain('OTRO TÍTULO');
+  });
+
+  it("bloquea los cambios con un proceso abierto y lo explica", async () => {
+    vi.mocked(getTemplate).mockResolvedValue({ ...payload, processLock: 'Hay un proceso abierto' });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Edición bloqueada');
+    expect(wrapper.text()).toContain('la plantilla no se puede cambiar');
+    const nueva = wrapper.findAll('button').find((button) => button.text() === 'Nueva sección');
+    expect(nueva!.attributes('disabled')).toBeDefined();
+    expect(wrapper.get('[aria-label="Eliminar el campo Descripción"]').attributes('disabled')).toBeDefined();
   });
 
   it("crea una plantilla vacía sin instalar el formato oficial", async () => {
     vi.mocked(getTemplate)
+      .mockReset()
       .mockResolvedValueOnce({ processLock: null, template: null })
       .mockResolvedValueOnce(payload);
     vi.mocked(createTemplate).mockResolvedValue({ message: 'Plantilla vacía creada.', template_id: 'template-1' });
 
-    const wrapper = mount({
-      components: { AdminTemplatePage, TooltipProvider },
-      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
-    }, { attachTo: document.body });
+    const wrapper = mountPage();
     await flushPromises();
 
     await wrapper.get('button').trigger('click');
@@ -246,17 +137,10 @@ describe("AdminTemplatePage", () => {
   });
 
   it("aplica el formato oficial únicamente desde una plantilla vacía", async () => {
-    const emptyPayload: TemplatePayload = {
-      ...payload,
-      template: { ...payload.template!, sections: [] },
-    };
-    vi.mocked(getTemplate).mockResolvedValue(emptyPayload);
+    vi.mocked(getTemplate).mockResolvedValue({ ...payload, template: { ...payload.template!, sections: [] } });
     vi.mocked(formatTemplate).mockResolvedValue({ message: 'Formato oficial aplicado.' });
 
-    const wrapper = mount({
-      components: { AdminTemplatePage, TooltipProvider },
-      template: '<TooltipProvider><AdminTemplatePage /></TooltipProvider>',
-    }, { attachTo: document.body });
+    const wrapper = mountPage();
     await flushPromises();
 
     const formatButton = wrapper.findAll('button').find((button) => button.text().trim() === 'Cargar formato oficial UEB');

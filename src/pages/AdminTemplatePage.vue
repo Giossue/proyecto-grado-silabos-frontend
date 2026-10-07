@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { ArrowLeft, Inbox, LoaderCircle, Pencil, Plus, Sparkles } from '@lucide/vue';
+import { Inbox, LoaderCircle, Palette, Plus, Sparkles } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { createTemplate, formatTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
 import TemplateAppearanceSheet from '@/components/domain/configuration/TemplateAppearanceSheet.vue';
+import TemplatePreview from '@/components/domain/configuration/TemplatePreview.vue';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -14,70 +15,18 @@ import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import type { TemplateAppearance, TemplateBuilderProps } from '@/types/configuration';
-import { LETTER_PAGE } from '@/lib/documentPagination';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { paths } from '@/lib/routes';
-import { sectionOrientation } from '@/lib/templateParts';
-import { templateEditorState } from '@/state/templateEditor';
 
 const router = useRouter();
 const payload = ref<TemplatePayload | null>(null);
 const loading = ref(true);
 const creating = ref(false);
 const formatting = ref(false);
-const editing = ref(false);
 const appearanceOpen = ref(false);
 const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
-const previewAppearance = ref<TemplateAppearance | null>(null);
-
-const builder = computed<TemplateBuilderProps | null>(() => {
-    const value = payload.value;
-    if (
-        !value?.template ||
-        !value.variables ||
-        !value.identificationDesign ||
-        !value.logos ||
-        !value.blockTypes ||
-        !value.appearanceOptions
-    ) return null;
-
-    return {
-        processLock: value.processLock,
-        variables: value.variables,
-        identificationDesign: value.identificationDesign,
-        logos: value.logos,
-        template: value.template as TemplateBuilderProps['template'],
-        blockTypes: value.blockTypes,
-        presets: value.presets ?? [],
-        appearanceOptions: value.appearanceOptions as TemplateBuilderProps['appearanceOptions'],
-    };
-});
-const templateHeaderWidth = computed<number | undefined>(() => {
-    const template = builder.value?.template;
-
-    if (!template) return undefined;
-
-    const firstSection = template.sections[0];
-    const orientation = firstSection
-        ? sectionOrientation(firstSection.blocks, template.appearance.orientation)
-        : template.appearance.orientation;
-
-    return orientation === 'landscape' ? LETTER_PAGE.height : LETTER_PAGE.width;
-});
-
-watch(
-    () => builder.value?.template.appearance,
-    (appearance) => {
-        if (appearance) previewAppearance.value = { ...appearance };
-    },
-    { deep: true, immediate: true },
-);
-watch(
-    editing,
-    (value) => templateEditorState.setOpen(value),
-    { immediate: true },
-);
+const template = computed(() => payload.value?.template ?? null);
 
 const load = async ({ silent = false }: { silent?: boolean } = {}): Promise<void> => {
     if (!silent) {
@@ -156,7 +105,6 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
     window.removeEventListener('silabos:template-changed', reloadFromMutation);
-    templateEditorState.setOpen(false);
 });
 </script>
 
@@ -172,7 +120,7 @@ onBeforeUnmount(() => {
     </PageFrame>
 
     <PageFrame
-        v-else-if="!payload?.template"
+        v-else-if="!template"
         title="Plantilla de sílabo"
         description="El formato del sílabo: qué secciones y campos tiene, y en qué orden. Se edita en el sitio; cada sílabo entregado conserva su propia copia."
     >
@@ -195,56 +143,24 @@ onBeforeUnmount(() => {
         </Empty>
     </PageFrame>
 
-    <div v-else-if="editing && builder && previewAppearance" class="min-h-dvh min-w-0">
-        <main class="min-w-0 pb-5 pt-19 sm:pb-6 sm:pt-20">
-            <Alert v-if="payload?.templateChangedDuringPause" class="mx-auto mb-4 max-w-7xl">
-                <AlertDescription>Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.</AlertDescription>
-            </Alert>
-            <TemplateVisualBuilder
-                :template="builder.template"
-                :appearance="previewAppearance"
-                :block-types="builder.blockTypes"
-                :presets="builder.presets"
-                :variables="builder.variables"
-                :logos="builder.logos"
-                :identification-design="builder.identificationDesign"
-                :color-options="builder.appearanceOptions.colors"
-                :readonly="false"
-                ribbon
-                fixed-ribbon
-                @personalize="appearanceOpen = true"
-            >
-                <template #ribbon-start>
-                    <Button variant="link" size="sm" class="h-auto px-0" @click="editing = false"><ArrowLeft aria-hidden="true" />Volver a la vista</Button>
-                </template>
-            </TemplateVisualBuilder>
-        </main>
-
-        <TemplateAppearanceSheet
-            v-model:open="appearanceOpen"
-            :institution-logo-url="builder.logos.institution"
-        />
-    </div>
-
     <PageFrame
-        v-else-if="builder"
+        v-else-if="template"
         title="Plantilla de sílabo"
-        description="Hoja base de la plantilla institucional."
+        description="El formato del sílabo: qué secciones y campos tiene, quién escribe cada uno y en qué orden. Cada sílabo entregado conserva su propia copia."
         size="wide"
-        :header-width="templateHeaderWidth"
     >
         <template #actions>
             <Button
-                v-if="builder.template.sections.length === 0"
-                :disabled="formatting || Boolean(builder.processLock)"
+                v-if="template.sections.length === 0"
+                :disabled="formatting || Boolean(payload?.processLock)"
                 @click="format"
             >
                 <LoaderCircle v-if="formatting" class="animate-spin" data-icon="inline-start" aria-hidden="true" />
                 <Sparkles v-else data-icon="inline-start" aria-hidden="true" />
                 {{ formatting ? 'Cargando formato…' : 'Cargar formato oficial UEB' }}
             </Button>
-            <Button :disabled="Boolean(builder.processLock)" @click="editing = true">
-                <Pencil data-icon="inline-start" aria-hidden="true" />Editar
+            <Button variant="outline" @click="appearanceOpen = true">
+                <Palette data-icon="inline-start" aria-hidden="true" />Personalizar plantilla
             </Button>
         </template>
 
@@ -252,17 +168,25 @@ onBeforeUnmount(() => {
         <Alert v-if="payload?.templateChangedDuringPause" class="mb-4">
             <AlertDescription>Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.</AlertDescription>
         </Alert>
-        <ProcessLockAlert v-if="builder.processLock" />
-        <TemplateVisualBuilder
-            :template="builder.template"
-            :appearance="builder.template.appearance"
-            :block-types="builder.blockTypes"
-            :presets="builder.presets"
-            :variables="builder.variables"
-            :logos="builder.logos"
-            :identification-design="builder.identificationDesign"
-            :color-options="builder.appearanceOptions.colors"
-            :readonly="true"
+        <ProcessLockAlert v-if="payload?.processLock" class="mb-4" />
+
+        <Tabs default-value="builder" class="gap-4">
+            <TabsList>
+                <TabsTrigger value="builder">Constructor</TabsTrigger>
+                <TabsTrigger value="preview">Vista previa</TabsTrigger>
+            </TabsList>
+            <TabsContent value="builder">
+                <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" @changed="reloadFromMutation" />
+            </TabsContent>
+            <TabsContent value="preview">
+                <TemplatePreview :template="template" :logos="payload?.logos" />
+            </TabsContent>
+        </Tabs>
+
+        <TemplateAppearanceSheet
+            v-if="payload?.logos"
+            v-model:open="appearanceOpen"
+            :institution-logo-url="payload.logos.institution"
         />
     </PageFrame>
 </template>
