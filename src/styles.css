@@ -477,6 +477,19 @@
         box-shadow: var(--document-paper-shadow);
     }
 
+    /* Sección en hoja horizontal (carta apaisada): se ensancha sobre la hoja vertical, como en el Word. */
+    .template-sheet-landscape {
+        position: relative;
+        left: 50%;
+        width: min(279mm, calc(100vw - 3rem));
+        max-width: none;
+        transform: translateX(-50%);
+        padding: 1cm;
+        background-color: var(--document-paper);
+        box-shadow: var(--document-paper-shadow);
+        outline: 1px dashed var(--border);
+    }
+
     .template-sheet-title {
         color: var(--document-official-blue);
         text-align: center;

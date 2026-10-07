@@ -33,7 +33,8 @@ const typed = (field: TemplateField): TypedField => ({ id: field.id, key: field.
 const busy = ref(false);
 const error = ref<string | null>(null);
 
-const sections = computed(() => props.template.sections.map((section) => ({ section, fields: sectionFields(section) })));
+const isLandscape = (section: TemplateSectionPayload): boolean => section.blocks.some((block) => block.page_orientation === 'landscape');
+const sections = computed(() => props.template.sections.map((section) => ({ section, fields: sectionFields(section), landscape: isLandscape(section) })));
 const usedSectionKeys = computed(() => props.template.sections.map((section) => section.key));
 const usedFieldKeys = computed(() => sections.value.flatMap((entry) => entry.fields.map((field) => field.key)));
 
@@ -108,7 +109,8 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
         </div>
       </div>
 
-      <section v-for="({ section, fields }, sectionIndex) in sections" :key="section.id" :data-section="section.id" class="flex min-w-0 flex-col gap-3">
+      <section v-for="({ section, fields, landscape }, sectionIndex) in sections" :key="section.id" :data-section="section.id" :data-orientation="landscape ? 'landscape' : 'portrait'" :class="cn('flex min-w-0 flex-col gap-3', landscape && 'template-sheet-landscape')">
+        <p v-if="landscape" class="-mb-1 text-xs italic text-muted-foreground">Hoja horizontal</p>
         <div :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
           <Button type="button" variant="ghost" class="h-auto w-full min-w-0 justify-start whitespace-normal px-0 py-0 text-left font-bold [overflow-wrap:anywhere] hover:bg-transparent" :aria-pressed="selectedSection === section.id" :aria-label="`Sección ${section.title}`" @click="selectSection(section.id)">{{ sectionIndex + 1 }}. {{ section.title }}</Button>
           <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
