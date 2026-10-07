@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
 import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
 import CatalogSection from '@/components/domain/academic/CatalogSection.vue';
+import { Building2, GraduationCap } from '@lucide/vue';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -25,6 +26,7 @@ const sectionMap: Record<CatalogEntity, GovernanceSection> = { facultad: 'facult
 const routeSections: Array<{ value: CatalogEntity; label: string }> = [
     { value: 'facultad', label: 'Facultades' }, { value: 'carrera', label: 'Carreras' },
 ];
+const tabIcons = { facultad: Building2, carrera: GraduationCap };
 const routeParamSections: Record<string, CatalogEntity> = { facultades: 'facultad', carreras: 'carrera' };
 // Los periodos viven ahora en Convocatorias; las rutas antiguas redirigen allí.
 const periodRoute = computed(() => route.query.seccion === 'periodo' || route.params.section === 'periodos-academicos');
@@ -64,8 +66,13 @@ onMounted(load);
         </template>
 
         <Tabs :model-value="entity" class="mb-4" @update:model-value="selectTab">
-            <TabsList>
-                <TabsTrigger v-for="item in routeSections" :key="item.value" :value="item.value">{{ item.label }}</TabsTrigger>
+            <TabsList class="h-11 w-fit justify-start gap-2 rounded-lg bg-muted px-2 py-0">
+                <TabsTrigger
+                    v-for="item in routeSections" :key="item.value" :value="item.value"
+                    class="h-full flex-none gap-2 rounded-none border-0 border-b-2 border-transparent bg-transparent px-4 text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-primary data-[state=active]:hover:bg-transparent"
+                >
+                    <component :is="tabIcons[item.value]" />{{ item.label }}
+                </TabsTrigger>
             </TabsList>
         </Tabs>
 
