@@ -7,16 +7,16 @@ import { alertVariants } from "."
 const props = defineProps<{
   class?: HTMLAttributes["class"]
   variant?: AlertVariants["variant"]
+  appearance?: AlertVariants["appearance"]
 }>()
 </script>
 
 <template>
   <div
     data-slot="alert"
-    :class="cn(alertVariants({ variant }), props.class)"
+    :class="cn(alertVariants({ variant, appearance }), props.class)"
     role="alert"
   >
     <slot />
   </div>
 </template>
-

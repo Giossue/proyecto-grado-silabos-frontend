@@ -14,12 +14,16 @@ export const alertVariants = cva(
         destructive:
           "text-destructive bg-card [&>svg]:text-current *:data-[slot=alert-description]:text-destructive/90",
       },
+      appearance: {
+        default: "",
+        plain: "rounded-none border-0 bg-transparent p-0",
+      },
     },
     defaultVariants: {
       variant: "default",
+      appearance: "default",
     },
   },
 )
 
 export type AlertVariants = VariantProps<typeof alertVariants>
-

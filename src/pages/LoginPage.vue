@@ -49,7 +49,7 @@ const submit = async (): Promise<void> => {
 
 <template>
   <AuthSimpleLayout title="Iniciar sesión">
-    <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />
+    <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" appearance="plain" />
     <form class="flex flex-col gap-6" @submit.prevent="submit">
       <FieldGroup>
         <Field :data-invalid="Boolean(errors.email || errors.correo_electronico)">
