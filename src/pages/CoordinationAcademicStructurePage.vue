@@ -22,6 +22,7 @@ import CurriculumCanvas from "@/components/domain/academic/curriculum/Curriculum
 import CurriculumConfigurationSheet from "@/components/domain/academic/curriculum/CurriculumConfigurationSheet.vue";
 import PeriodPreparationSheet from "@/components/domain/academic/PeriodPreparationSheet.vue";
 import ScheduledSubjectsTab from "@/components/domain/academic/ScheduledSubjectsTab.vue";
+import ImportSpreadsheetSheet from "@/components/domain/ImportSpreadsheetSheet.vue";
 import TeacherAssignmentsPanel from "@/components/domain/academic/TeacherAssignmentsPanel.vue";
 import ProcessLockAlert from "@/components/domain/ProcessLockAlert.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -208,6 +209,27 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         :initial-period-id="schedule.selectedPeriodId"
         :disabled="Boolean(schedule.career.lock_reason)"
         @saved="handlePeriodPrepared"
+      />
+      <ImportSpreadsheetSheet
+        v-if="mode === 'teachers' && assignments?.canCreateTeacher"
+        title="Importar docentes"
+        description="Cree varios docentes de su carrera a la vez. Cada uno recibe su invitación de activación."
+        endpoint="/coordination/academic/teachers/import"
+        template-endpoint="/coordination/academic/teachers/import-template"
+        template-name="plantilla-docentes.xlsx"
+        :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }]"
+        @imported="handleAssignmentChanged"
+      />
+      <ImportSpreadsheetSheet
+        v-if="mode === 'schedule' && schedule?.selectedPeriodId"
+        title="Importar materias y asignaciones"
+        description="Cree paralelos del período seleccionado y asigne su docente. El docente es opcional."
+        endpoint="/coordination/academic/scheduled-import"
+        template-endpoint="/coordination/academic/scheduled-import-template"
+        template-name="plantilla-materias-y-asignaciones.xlsx"
+        :columns="[{ key: 'materia', label: 'Código de materia' }, { key: 'paralelo', label: 'Paralelo' }, { key: 'jornada', label: 'Jornada' }, { key: 'docente', label: 'Correo del docente' }]"
+        :extra="{ period_id: schedule.selectedPeriodId }"
+        @imported="handleAssignmentChanged"
       />
       <Button v-if="mode === 'teachers' && assignments?.canCreateTeacher" @click="teacherOpen = true"><UserPlus data-icon="inline-start" aria-hidden="true" />Crear docente</Button>
       <Button

@@ -69,6 +69,7 @@ export type SyllabusDetail = {
     key: string;
     title: string;
     description: string | null;
+    fields: SyllabusField[];
     blocks: SyllabusBlock[];
   }>;
   review_stage?: "biblioteca" | "coordinacion" | null;
@@ -92,7 +93,11 @@ export type SyllabusField = {
   required: boolean;
   inherited: boolean;
   teacher_editable: boolean;
-  value: string | number | boolean | string[] | DocumentNode | null;
+  value: string | number | boolean | string[] | DocumentNode | Record<string, unknown> | null;
+  /** I-195: configuración propia del tipo (`adjustable`, `columns`/`rows`, `source`, `content`). */
+  config?: Record<string, unknown> | unknown[] | null;
+  legacy?: boolean;
+  document?: DocumentNode | null;
 };
 
 export type AiChatCitation = {

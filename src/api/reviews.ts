@@ -36,10 +36,14 @@ export type SnapshotField = {
   type: string;
   inherited: boolean;
   value: unknown;
+  config?: Record<string, unknown> | unknown[] | null;
+  document?: DocumentNode | null;
 };
 export type SnapshotSection = {
   key: string;
   title: string;
+  /** Snapshot v7: campos planos con su tipo y configuración. Las versiones anteriores solo traen `blocks`. */
+  fields?: SnapshotField[];
   blocks: Array<{
     key: string;
     title: string;

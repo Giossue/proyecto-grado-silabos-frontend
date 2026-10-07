@@ -10,6 +10,7 @@ import ManagedUserDetailSheet from '@/components/domain/identity/ManagedUserDeta
 import ManagedUserEditSheet from '@/components/domain/identity/ManagedUserEditSheet.vue';
 import ManagedUserPendingActions from '@/components/domain/identity/ManagedUserPendingActions.vue';
 import ManagedUserSheet from '@/components/domain/identity/ManagedUserSheet.vue';
+import ImportSpreadsheetSheet from '@/components/domain/ImportSpreadsheetSheet.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -56,7 +57,7 @@ onMounted(load);
 
 <template>
     <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca. Coordinación y docencia van con su carrera; biblioteca trabaja con toda la universidad. Al desactivar una, su sesión se cierra.">
-        <template #actions><ManagedUserSheet v-if="result" :roles="result.roles" :careers="result.careers" @saved="changed" /></template>
+        <template #actions><div v-if="result" class="flex flex-wrap gap-2"><ImportSpreadsheetSheet title="Importar cuentas" description="Cree varias cuentas a la vez. Cada una recibe su invitación de activación." endpoint="/admin/users/import" template-endpoint="/admin/users/import-template" template-name="plantilla-usuarios.xlsx" :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }, { key: 'rol', label: 'Rol' }, { key: 'carrera', label: 'Carrera' }]" @imported="changed" /><ManagedUserSheet :roles="result.roles" :careers="result.careers" @saved="changed" /></div></template>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="5" :filters="3" :cell-lines="2" />
 
