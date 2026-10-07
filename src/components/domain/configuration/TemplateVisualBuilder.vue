@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, Pencil, Plus, Settings2, Sparkles, Trash2 } from '@
 import { computed, ref } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { deleteField, deleteSection, reorderFields, reorderSections } from '@/api/template-structure';
+import TemplateLogoControl from '@/components/domain/configuration/TemplateLogoControl.vue';
 import TemplateFieldDialog from '@/components/domain/configuration/TemplateFieldDialog.vue';
 import TemplateSectionDialog from '@/components/domain/configuration/TemplateSectionDialog.vue';
 import { apiMessage } from '@/components/domain/configuration/templateStructure';
@@ -77,22 +78,23 @@ const confirmRemoval = (): Promise<void> => {
 };
 
 const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo sin nombre';
+const boxed = (field: TemplateField): boolean => ['texto', 'ficha', 'fijo'].includes(field.type);
 const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.adminLabel ?? field.type;
 </script>
 
 <template>
   <div class="template-stage" aria-label="Constructor visual de la plantilla del sílabo" role="region">
-    <Alert v-if="locked" role="status" class="mx-auto max-w-3xl"><AlertDescription>Hay un proceso abierto: la plantilla no se puede cambiar hasta pausarlo o cerrarlo. Puede revisar la estructura y la vista previa.</AlertDescription></Alert>
+    <Alert v-if="locked" role="status" class="mx-auto max-w-3xl"><AlertDescription>Hay un proceso abierto: la plantilla no se puede cambiar hasta pausarlo o cerrarlo. Puede revisar la estructura.</AlertDescription></Alert>
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
     <article data-sheet class="template-sheet">
       <header class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
-          <img :src="logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain">
+          <TemplateLogoControl :logo-url="logos.institution" :disabled="locked" />
           <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain">
         </div>
         <div class="group relative flex items-center justify-center rounded-sm px-2 py-1 outline-offset-2 hover:outline hover:outline-1 hover:outline-primary/40">
-          <h2 class="text-center text-lg font-bold uppercase">{{ template.titleBlock.text }}</h2>
+          <h2 class="template-sheet-title">{{ template.titleBlock.text }}</h2>
           <Button type="button" variant="outline" size="sm" class="absolute -top-3 right-0 bg-background opacity-0 group-hover:opacity-100 focus-visible:opacity-100" :disabled="locked" @click="titleActions?.openEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar título</Button>
         </div>
       </header>
@@ -108,8 +110,8 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
       </div>
 
       <section v-for="({ section, fields }, sectionIndex) in sections" :key="section.id" :data-section="section.id" class="flex flex-col gap-3">
-        <div :class="cn('group relative rounded-sm border-b px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
-          <Button type="button" variant="ghost" class="h-auto w-full min-w-0 justify-start px-0 py-0 text-left text-base font-bold hover:bg-transparent" :aria-pressed="selectedSection === section.id" :aria-label="`Sección ${section.title}`" @click="selectSection(section.id)">{{ sectionIndex + 1 }}. {{ section.title }}</Button>
+        <div :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
+          <Button type="button" variant="ghost" class="h-auto w-full min-w-0 justify-start px-0 py-0 text-left font-bold hover:bg-transparent" :aria-pressed="selectedSection === section.id" :aria-label="`Sección ${section.title}`" @click="selectSection(section.id)">{{ sectionIndex + 1 }}. {{ section.title }}</Button>
           <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
             <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === 0" :aria-label="`Subir la sección ${section.title}`" @click="moveSection(sectionIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
             <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === sections.length - 1" :aria-label="`Bajar la sección ${section.title}`" @click="moveSection(sectionIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
@@ -123,11 +125,11 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
             <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -->
             <Button as="div" variant="ghost" role="button" tabindex="0" class="h-auto w-full cursor-pointer flex-col items-stretch gap-1 whitespace-normal rounded-sm p-0 text-left font-normal hover:bg-transparent" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
               <div class="flex items-baseline justify-between gap-2">
-                <h4 v-if="field.label.trim()" class="text-sm font-semibold">{{ sectionIndex + 1 }}.{{ fieldIndex + 1 }} {{ field.label }}</h4>
+                <h4 v-if="field.label.trim()" class="font-bold">{{ sectionIndex + 1 }}.{{ fieldIndex + 1 }} {{ field.label }}</h4>
                 <span v-else class="text-xs italic text-muted-foreground">Campo sin nombre</span>
                 <span class="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{{ typeLabel(field) }}</span>
               </div>
-              <div class="pointer-events-none">
+              <div :class="cn('pointer-events-none', boxed(field) && 'template-sheet-box')">
                 <component :is="fieldTypeEntry(field.type)!.ViewComponent" v-if="fieldTypeEntry(field.type)" :field="typed(field)" />
                 <FreeTextContent v-else :value="null" />
               </div>

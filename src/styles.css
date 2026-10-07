@@ -209,6 +209,7 @@
     --document-mark-signature-background: hsl(262 83% 95%);
     --document-mark-signature-border: hsl(262 52% 50%);
     --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+    --document-official-blue: #2f5597;
     --curriculum-unit-1-background: hsl(213 55% 47%);
     --curriculum-unit-1-foreground: hsl(0 0% 100%);
     --curriculum-unit-2-background: hsl(210 52% 80%);
@@ -464,13 +465,28 @@
         min-height: 297mm;
         aspect-ratio: 210 / 297;
         margin-inline: auto;
-        padding: 2.2cm 2cm;
+        padding: 1.8cm 2cm;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 10pt;
+        text-align: justify;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
         background-color: var(--document-paper);
         color: var(--document-text);
         box-shadow: var(--document-paper-shadow);
+    }
+
+    .template-sheet-title {
+        color: var(--document-official-blue);
+        text-align: center;
+        font-weight: 700;
+        font-size: 10pt;
+    }
+
+    .template-sheet-box {
+        border: 1px solid var(--document-official-blue);
+        padding: 0.3cm 0.4cm;
     }
 
     .document-table-header {

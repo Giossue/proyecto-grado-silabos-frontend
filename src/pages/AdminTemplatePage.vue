@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Inbox, LoaderCircle, Palette, Plus, Sparkles } from '@lucide/vue';
+import { Inbox, LoaderCircle, Plus, Sparkles } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { createTemplate, formatTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
-import TemplateAppearanceSheet from '@/components/domain/configuration/TemplateAppearanceSheet.vue';
-import TemplatePreview from '@/components/domain/configuration/TemplatePreview.vue';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -15,7 +13,6 @@ import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { paths } from '@/lib/routes';
 
 const router = useRouter();
@@ -23,7 +20,6 @@ const payload = ref<TemplatePayload | null>(null);
 const loading = ref(true);
 const creating = ref(false);
 const formatting = ref(false);
-const appearanceOpen = ref(false);
 const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
 const template = computed(() => payload.value?.template ?? null);
@@ -159,9 +155,6 @@ onBeforeUnmount(() => {
                 <Sparkles v-else data-icon="inline-start" aria-hidden="true" />
                 {{ formatting ? 'Cargando formato…' : 'Cargar formato oficial UEB' }}
             </Button>
-            <Button variant="outline" @click="appearanceOpen = true">
-                <Palette data-icon="inline-start" aria-hidden="true" />Personalizar plantilla
-            </Button>
         </template>
 
         <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
@@ -170,23 +163,6 @@ onBeforeUnmount(() => {
         </Alert>
         <ProcessLockAlert v-if="payload?.processLock" class="mb-4" />
 
-        <Tabs default-value="builder" class="gap-4">
-            <TabsList>
-                <TabsTrigger value="builder">Constructor</TabsTrigger>
-                <TabsTrigger value="preview">Vista previa</TabsTrigger>
-            </TabsList>
-            <TabsContent value="builder">
-                <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :can-format="template.sections.length === 0" :formatting="formatting" @changed="reloadFromMutation" @format="format" />
-            </TabsContent>
-            <TabsContent value="preview">
-                <TemplatePreview :template="template" :logos="payload?.logos" />
-            </TabsContent>
-        </Tabs>
-
-        <TemplateAppearanceSheet
-            v-if="payload?.logos"
-            v-model:open="appearanceOpen"
-            :institution-logo-url="payload.logos.institution"
-        />
+        <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :can-format="template.sections.length === 0" :formatting="formatting" @changed="reloadFromMutation" @format="format" />
     </PageFrame>
 </template>

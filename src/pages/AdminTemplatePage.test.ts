@@ -73,15 +73,17 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.find('[data-sheet], .template-sheet').exists()).toBe(true);
   });
 
-  it("muestra la vista previa del sílabo con las vistas de cada tipo", async () => {
+  it("no tiene pestañas ni «Personalizar plantilla» y el logo se cambia sobre la hoja", async () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.findAll('[role="tab"]').find((tab) => tab.text() === 'Vista previa')!.trigger('mousedown');
-    await flushPromises();
-    const preview = document.body.querySelector('[aria-label="Vista previa del sílabo"]');
-    expect(preview?.textContent).toContain('PROGRAMA DE ASIGNATURA (SÍLABO)');
-    expect(preview?.textContent).toContain('1. Descripción de la asignatura');
+    expect(wrapper.find('[role="tab"]').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Personalizar plantilla');
+    expect(wrapper.text()).not.toContain('Vista previa');
+    expect(wrapper.get('[data-sheet]').text()).toContain('Cambiar logo');
+    expect(wrapper.get('input[type="file"][accept="image/png"]').attributes('name')).toBe('logo');
+    expect(wrapper.get('[data-sheet] h2').classes()).toContain('template-sheet-title');
+    expect(wrapper.get('[data-field="field-1"] .template-sheet-box').element).toBeTruthy();
   });
 
   it("avisa que reanudar rehace los sílabos si la plantilla cambió durante la pausa", async () => {
