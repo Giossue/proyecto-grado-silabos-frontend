@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutEndPeriod } from '@/lib/text';
 import { Plus, X } from '@lucide/vue';
 import type { VNode } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -54,7 +55,7 @@ const close = (): void => {
             </DialogClose>
             <DialogHeader class="px-6 pt-6 pr-12 pb-4">
                 <DialogTitle>{{ title }}</DialogTitle>
-                <DialogDescription>{{ description }}</DialogDescription>
+                <DialogDescription>{{ withoutEndPeriod(description) }}</DialogDescription>
             </DialogHeader>
             <div class="relative flex min-h-0 flex-1 flex-col">
                 <div class="flex-1 overflow-y-auto px-6 pt-1 pb-28">

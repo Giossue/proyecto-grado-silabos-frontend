@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutEndPeriod } from '@/lib/text';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { RouterLink } from 'vue-router';
@@ -44,7 +45,7 @@ const nextKey = computed(
         <CardHeader>
             <CardTitle>{{ setup.title }}</CardTitle>
             <CardDescription v-if="setup.intro">{{
-                setup.intro
+                withoutEndPeriod(setup.intro)
             }}</CardDescription>
             <div class="flex items-center gap-3 pt-1">
                 <Progress :model-value="setup.done" :max="setup.total" class="flex-1" :aria-label="`${setup.done} de ${setup.total} pasos`" />
@@ -73,13 +74,13 @@ const nextKey = computed(
                                 'text-muted-foreground line-through': step.done,
                             }"
                         >
-                            {{ step.label }}
+                            {{ withoutEndPeriod(step.label) }}
                         </p>
                         <p
                             v-if="!step.done"
                             class="text-sm text-muted-foreground"
                         >
-                            {{ step.hint }}
+                            {{ withoutEndPeriod(step.hint) }}
                         </p>
                     </div>
                     <Button

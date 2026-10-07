@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutEndPeriod } from '@/lib/text';
 import type { Component } from 'vue';
 import { computed } from 'vue';
 import { Card, CardContent } from '@/components/ui/card';
@@ -41,7 +42,7 @@ const formatted = computed(() =>
                 >
             </span>
             <span v-if="hint" class="text-xs text-muted-foreground">
-                {{ hint }}
+                {{ withoutEndPeriod(hint) }}
             </span>
         </CardContent>
     </Card>

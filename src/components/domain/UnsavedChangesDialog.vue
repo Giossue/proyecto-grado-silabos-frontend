@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutEndPeriod } from '@/lib/text';
 import { Trash2 } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,7 +33,7 @@ const emit = defineEmits<{
         <DialogContent class="sm:max-w-md">
             <DialogHeader>
                 <DialogTitle>{{ title }}</DialogTitle>
-                <DialogDescription>{{ description }}</DialogDescription>
+                <DialogDescription>{{ withoutEndPeriod(description) }}</DialogDescription>
             </DialogHeader>
             <DialogFooter>
                 <Button type="button" variant="outline" @click="emit('continue')">

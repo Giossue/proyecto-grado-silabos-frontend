@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutEndPeriod } from '@/lib/text';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { Input } from '@/components/ui/input';
 import { Download, FileSignature, Library, RefreshCw, ShieldCheck } from '@lucide/vue';
@@ -156,7 +157,7 @@ onMounted(load);
         <Skeleton v-else-if="loading" aria-hidden="true" class="h-5 w-32 shrink-0 rounded-full" />
       </div>
       <CardDescription v-if="loading && !status" aria-hidden="true"><Skeleton class="h-4 w-full" /></CardDescription>
-      <CardDescription v-else>{{ description }}</CardDescription>
+      <CardDescription v-else>{{ withoutEndPeriod(description) }}</CardDescription>
     </CardHeader>
     <CardContent class="flex flex-col gap-4">
       <Alert v-if="loadError" variant="destructive"><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ loadError }}</span><Button size="sm" variant="outline" @click="load">Reintentar</Button></AlertDescription></Alert>

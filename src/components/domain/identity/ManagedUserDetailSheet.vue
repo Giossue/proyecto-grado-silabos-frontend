@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutEndPeriod } from '@/lib/text';
 import { Eye } from '@lucide/vue';
 import { computed } from 'vue';
 import { Badge } from '@/components/ui/badge';
@@ -90,7 +91,7 @@ const completedAssignments = computed(() =>
                 <Card>
                     <CardHeader>
                         <CardTitle>Datos de la cuenta</CardTitle>
-                        <CardDescription>{{ status.hint }}</CardDescription>
+                        <CardDescription>{{ withoutEndPeriod(status.hint) }}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <dl class="grid gap-3 text-sm">

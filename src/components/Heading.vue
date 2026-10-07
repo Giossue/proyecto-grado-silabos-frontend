@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutEndPeriod } from '@/lib/text';
 type Props = {
     title: string;
     description?: string;
@@ -22,7 +23,7 @@ withDefaults(defineProps<Props>(), {
             {{ title }}
         </h2>
         <p v-if="description" class="text-sm text-muted-foreground">
-            {{ description }}
+            {{ withoutEndPeriod(description) }}
         </p>
     </header>
 </template>
