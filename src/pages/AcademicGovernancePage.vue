@@ -90,10 +90,10 @@ onMounted(load);
         </template>
 
         <Tabs :model-value="entity" class="mb-4" @update:model-value="selectTab">
-            <TabsList class="h-11 w-fit justify-start gap-2 rounded-lg bg-muted px-2 py-0">
+            <TabsList class="h-11 w-fit justify-start gap-2 bg-transparent p-0">
                 <TabsTrigger
                     v-for="item in routeSections" :key="item.value" :value="item.value"
-                    class="h-full flex-none gap-2 rounded-none border-0 border-b-2 border-transparent bg-transparent px-4 text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-primary data-[state=active]:hover:bg-transparent"
+                    class="h-full flex-none gap-2 rounded-none border-0 border-b-2 border-transparent bg-transparent px-4 text-muted-foreground shadow-none data-[state=active]:border-foreground data-[state=active]:bg-transparent data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:hover:bg-transparent"
                 >
                     <component :is="tabIcons[item.value]" />{{ item.label }}
                 </TabsTrigger>

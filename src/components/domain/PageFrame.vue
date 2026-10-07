@@ -108,7 +108,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 <div class="flex items-start gap-3">
                     <div
                         v-if="navItem?.icon"
-                        class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                        class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground"
                         aria-hidden="true"
                     >
                         <component :is="navItem.icon" class="size-5" />
