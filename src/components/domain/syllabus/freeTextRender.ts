@@ -30,6 +30,8 @@ export const renderFreeText = (node: DocumentNode): VNodeChild => {
         let content: VNodeChild = node.text ?? '';
         if (marks.has('italic')) content = h('em', {}, content);
         if (marks.has('bold')) content = h('strong', {}, content);
+        const color = (node.marks ?? []).find((mark) => mark.type === 'textStyle')?.attrs?.color;
+        if (typeof color === 'string') content = h('span', { style: { color } }, content);
 
         return content;
     }
@@ -45,7 +47,11 @@ export const renderFreeText = (node: DocumentNode): VNodeChild => {
     }
     const tag = TAGS[node.type] ?? 'div';
     const span = node.type === 'tableCell' || node.type === 'tableHeader'
-        ? { colspan: Number(node.attrs?.colspan ?? 1), rowspan: Number(node.attrs?.rowspan ?? 1) }
+        ? {
+            colspan: Number(node.attrs?.colspan ?? 1),
+            rowspan: Number(node.attrs?.rowspan ?? 1),
+            ...(typeof node.attrs?.backgroundColor === 'string' ? { style: { backgroundColor: node.attrs.backgroundColor } } : {}),
+        }
         : {};
 
     return h(tag, span, children);
