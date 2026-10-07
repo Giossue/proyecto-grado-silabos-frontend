@@ -44,7 +44,7 @@ export type SnapshotSection = {
   title: string;
   /** Snapshot v7: campos planos con su tipo y configuración. Las versiones anteriores solo traen `blocks`. */
   fields?: SnapshotField[];
-  blocks: Array<{
+  blocks?: Array<{
     key: string;
     title: string;
     content_type: string;
