@@ -16,7 +16,7 @@ import { roleNeedsCareer } from '@/lib/roles';
 
 const props = withDefaults(defineProps<{
     user: ManagedUser; roles: { codigo: string; nombre: string }[];
-    careers: { id: string; nombre: string }[]; display?: 'button' | 'menu';
+    careers: { id: string; nombre: string }[]; display?: 'button' | 'menu' | 'none';
 }>(), { display: 'button' });
 const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
@@ -44,7 +44,7 @@ const submit = async (): Promise<void> => {
 
 <template>
     <DropdownMenuItem v-if="display === 'menu'" @select="(event: Event) => { event.preventDefault(); open = true; }"><Pencil aria-hidden="true" />Editar</DropdownMenuItem>
-    <FormSheet v-model:open="open" trigger-label="Editar cuenta" :title="`Editar ${user.nombre}`" description="Corrija su identidad, estado o agregue una nueva asignación de rol." :show-trigger="display !== 'menu'">
+    <FormSheet v-model:open="open" trigger-label="Editar cuenta" :title="`Editar ${user.nombre}`" description="Corrija su identidad, estado o agregue una nueva asignación de rol." :show-trigger="display === 'button'">
         <template #trigger><Button type="button" variant="outline"><Pencil />Editar cuenta</Button></template>
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
             <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`managed-edit-name-${user.id}`" required>Nombre completo</FieldLabel><Input :id="`managed-edit-name-${user.id}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>

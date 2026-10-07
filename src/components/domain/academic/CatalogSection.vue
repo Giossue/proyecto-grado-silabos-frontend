@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { X } from '@lucide/vue';
 import { computed, ref } from 'vue';
+import type { ComponentPublicInstance } from 'vue';
 import CatalogActions from '@/components/domain/academic/CatalogActions.vue';
+import { activateRow } from '@/lib/rowActivation';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Button } from '@/components/ui/button';
@@ -32,6 +34,12 @@ import type {
     GovernanceSection,
 } from '@/types/academic';
 
+const actionsById = new Map<string, { edit: () => void }>();
+const setActions = (id: string, actions: Element | ComponentPublicInstance | null): void => {
+    if (actions === null) actionsById.delete(id);
+    else actionsById.set(id, actions as unknown as { edit: () => void });
+};
+const editRecord = (id: string): void => actionsById.get(id)?.edit();
 const props = defineProps<
     Pick<AcademicStructureProps, 'catalogs' | 'options'> & {
         section: GovernanceSection;
@@ -148,6 +156,11 @@ const {
                         v-for="faculty in facultyPage"
                         v-else
                         :key="faculty.id"
+                        class="cursor-pointer"
+                        tabindex="0"
+                        :aria-label="`Editar ${faculty.nombre}`"
+                        @click="activateRow($event, () => editRecord(faculty.id))"
+                        @keydown.enter.self.prevent="editRecord(faculty.id)"
                     >
                         <TableCell>
                             {{ faculty.nombre }}
@@ -170,6 +183,7 @@ const {
                         </TableCell>
                         <TableCell class="text-right">
                             <CatalogActions
+                                :ref="(actions) => setActions(faculty.id, actions)"
                                 entity="facultad"
                                 :record-id="faculty.id"
                                 :record-name="faculty.nombre"
@@ -248,6 +262,11 @@ const {
                         v-for="career in careerPage"
                         v-else
                         :key="career.id"
+                        class="cursor-pointer"
+                        tabindex="0"
+                        :aria-label="`Editar ${career.name}`"
+                        @click="activateRow($event, () => editRecord(career.id))"
+                        @keydown.enter.self.prevent="editRecord(career.id)"
                     >
                         <TableCell>
                             {{ career.name }}
@@ -263,6 +282,7 @@ const {
                         </TableCell>
                         <TableCell class="text-right">
                             <CatalogActions
+                                :ref="(actions) => setActions(career.id, actions)"
                                 entity="carrera"
                                 :record-id="career.id"
                                 :record-name="career.name"

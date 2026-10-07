@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { CalendarPlus, LockKeyhole, Pencil, Trash2, UserRoundCog } from '@lucide/vue';
+import { CalendarPlus, LockKeyhole, Trash2, UserRoundCog } from '@lucide/vue';
 import { ref } from 'vue';
 import { deleteAcademicRecord } from '@/api/academic';
 import { ApiError } from '@/api/client';
@@ -26,6 +26,9 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const editOpen = ref(false);
+/** Lo usa la fila de la tabla: un clic en ella equivale a Editar. */
+const edit = (): void => { if (!props.lockReason) editOpen.value = true; };
+defineExpose({ edit });
 const coordinatorOpen = ref(false);
 const processOpen = ref(false);
 const deleteOpen = ref(false);
@@ -50,8 +53,7 @@ const remove = async (): Promise<void> => {
 <template>
     <div class="flex justify-end">
         <TableActionsMenu :label="`Acciones para ${recordName}`" :disabled="Boolean(lockReason)">
-            <DropdownMenuItem v-if="!lockReason" @select="editOpen = true"><Pencil aria-hidden="true" />Editar</DropdownMenuItem>
-            <DropdownMenuItem v-else disabled><LockKeyhole aria-hidden="true" />{{ lockReason }}</DropdownMenuItem>
+            <DropdownMenuItem v-if="lockReason" disabled><LockKeyhole aria-hidden="true" />{{ lockReason }}</DropdownMenuItem>
             <DropdownMenuItem v-if="entity === 'periodo' && !institutionalProcess && !lockReason" @select="processOpen = true"><CalendarPlus aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
             <DropdownMenuItem v-else-if="entity === 'periodo' && institutionalProcess" disabled><LockKeyhole aria-hidden="true" />Convocatoria {{ processStateLabel(institutionalProcess.state) }}</DropdownMenuItem>
             <DropdownMenuItem v-if="entity === 'carrera' && active && !lockReason" @select="coordinatorOpen = true"><UserRoundCog aria-hidden="true" />{{ coordinator ? 'Reemplazar coordinador' : 'Asignar coordinador' }}</DropdownMenuItem>

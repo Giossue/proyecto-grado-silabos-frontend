@@ -6,6 +6,7 @@ import { removeCareerTeacher, resendCareerTeacherInvitation, type TeacherAssignm
 import { ApiError } from "@/api/client";
 import CareerTeacherEditSheet from "@/components/domain/academic/CareerTeacherEditSheet.vue";
 import ClientFilterBar from "@/components/domain/ClientFilterBar.vue";
+import { activateRow } from "@/lib/rowActivation";
 import TableActionsMenu from "@/components/domain/TableActionsMenu.vue";
 import TablePagination from "@/components/domain/TablePagination.vue";
 import { Button } from "@/components/ui/button";
@@ -85,11 +86,11 @@ const resendInvitation = async (userId: string): Promise<void> => {
     <Table><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
       <TableBody>
         <TableEmpty v-if="!items.length" :colspan="4">{{ filter.active.value ? "Ningún docente coincide con la búsqueda." : "No existen docentes en esta carrera." }}</TableEmpty>
-        <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="editing = item" @keydown.enter.self="editing = item">
+        <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="activateRow($event, () => editing = item)" @keydown.enter.self.prevent="editing = item">
           <TableCell>{{ item.name }}</TableCell>
           <TableCell>{{ item.email }}</TableCell>
           <TableCell>{{ statusOf(item) }}</TableCell>
-          <TableCell class="text-right" @click.stop>
+          <TableCell class="text-right">
             <TableActionsMenu :label="`Acciones para ${item.name}`">
               <DropdownMenuItem v-if="item.pending_activation" :disabled="resendingId !== null" @select="resendInvitation(item.id)"><Spinner v-if="resendingId === item.id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
               <DropdownMenuItem variant="destructive" :disabled="Boolean(data.career.lock_reason)" @select="removing = item; removeError = null"><UserMinus aria-hidden="true" />Quitar de la carrera</DropdownMenuItem>

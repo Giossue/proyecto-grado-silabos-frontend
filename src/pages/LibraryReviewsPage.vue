@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Eye } from '@lucide/vue';
+import { activateRow } from '@/lib/rowActivation';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -8,11 +8,9 @@ import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
-import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -69,7 +67,7 @@ onMounted(() => { void load(initialPage); });
 <template>
   <PageFrame :title="pageTitle" description="Biblioteca revisa primero la bibliografía de cada sílabo enviado; después sigue coordinación.">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="6" :filters="1" :cell-lines="2" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="5" :filters="1" :cell-lines="2" />
     <Card v-if="data">
       <CardContent class="flex flex-col gap-4">
         <form @submit.prevent="load()">
@@ -104,23 +102,17 @@ onMounted(() => { void load(initialPage); });
               <TableHead>Paralelo</TableHead>
               <TableHead>Docente(s)</TableHead>
               <TableHead>Estado</TableHead>
-              <TableHead class="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="item in data.reviews.data" :key="item.revision_id">
+            <TableRow v-for="item in data.reviews.data" :key="item.revision_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(paths.library.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(paths.library.review(item.revision_id))">
               <TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }}</div></TableCell>
               <TableCell>{{ item.career }}</TableCell>
               <TableCell>{{ item.parallels.join(', ') }}</TableCell>
               <TableCell>{{ item.teachers.join(', ') }}</TableCell>
               <TableCell><Badge :variant="libraryStateVariant(item.state)">{{ libraryStateLabel(item.state) }}</Badge></TableCell>
-              <TableCell class="text-right">
-                <TableActionsMenu :label="`Acciones para ${item.subject}`">
-                  <DropdownMenuItem @select="router.push(paths.library.review(item.revision_id))"><Eye aria-hidden="true" />Abrir</DropdownMenuItem>
-                </TableActionsMenu>
-              </TableCell>
             </TableRow>
-            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="6">No hay sílabos para los filtros seleccionados.</TableEmpty>
+            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="5">No hay sílabos para los filtros seleccionados.</TableEmpty>
           </TableBody>
         </Table>
         <TablePagination :meta="data.reviews" label="Paginación de revisiones de biblioteca" @update:page="load" />

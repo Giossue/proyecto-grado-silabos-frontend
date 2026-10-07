@@ -60,6 +60,7 @@ const selectedPeriodOption = computed(() => props.data.options.periods.find((ite
 const emptyMessage = computed(() => filter.active.value ? "No hay materias que coincidan con los filtros." : "No hay materias para este período.");
 const selectedProfile = ref<ScheduledRow | null>(null);
 const profileOpen = ref(false);
+import { activateRow } from '@/lib/rowActivation';
 const openProfile = (item: ScheduledRow) => { selectedProfile.value = item; profileOpen.value = true; };
 watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = value ?? ""; });
 </script>
@@ -94,7 +95,7 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
         <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Ciclo</TableHead><TableHead>Paralelos</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="!items.length" :colspan="6">{{ emptyMessage }}</TableEmpty>
-          <TableRow v-for="item in items" v-else :key="item.subject_id">
+          <TableRow v-for="item in items" v-else :key="item.subject_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir ficha de ${item.subject_name}`" @click="activateRow($event, () => openProfile(item))" @keydown.enter.self.prevent="openProfile(item)">
             <TableCell><div class="flex flex-col gap-1"><span>{{ item.subject_name }}</span><Badge variant="outline" class="w-fit">{{ item.profile_complete ? 'Ficha completa' : 'Ficha incompleta' }}</Badge></div></TableCell>
             <TableCell>{{ item.subject_cycle === null ? "Sin ciclo" : `${item.subject_cycle}.º` }}</TableCell>
             <TableCell><ul v-if="item.parallels.length" class="flex flex-col gap-1"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-6 items-center"><Badge variant="outline">{{ parallel.code }}</Badge></li></ul><span v-else class="text-muted-foreground">Sin paralelos</span></TableCell>
