@@ -21,8 +21,7 @@ import type { NavItem } from '@/types';
 
 const route = useRoute();
 const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
-// El docente no tiene Panel: su logo no enlaza ni se ve como botón.
-const logoLinksToPanel = computed(() => ['administrador', 'coordinador', 'bibliotecario'].includes(activeRole.value?.code ?? ''));
+const logoTarget = computed(() => activeRole.value?.code === 'docente' ? paths.teacher.syllabi : paths.dashboard);
 const mainNavItems = useMainNavItems();
 const footerNavItems: NavItem[] = [];
 const { isMobile, setOpenMobile } = useSidebar();
@@ -37,12 +36,9 @@ watch(() => route.fullPath, () => {
         <SidebarHeader>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton v-if="logoLinksToPanel" size="lg" as-child>
-                        <RouterLink :to="paths.dashboard" aria-label="Ir al inicio"><AppLogo /></RouterLink>
+                    <SidebarMenuButton size="lg" as-child>
+                        <RouterLink :to="logoTarget" aria-label="Ir al inicio"><AppLogo /></RouterLink>
                     </SidebarMenuButton>
-                    <div v-else class="flex h-12 items-center gap-2 p-2 group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:p-0">
-                        <AppLogo />
-                    </div>
                 </SidebarMenuItem>
             </SidebarMenu>
         </SidebarHeader>
