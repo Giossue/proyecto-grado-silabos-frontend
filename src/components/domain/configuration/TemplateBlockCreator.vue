@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { VALIDATION_LIMITS } from '@/lib/validationLimits';
-import { Blocks, Check, FilePlus2, FileText, Trash2 } from '@lucide/vue';
+import { ArrowLeft, Blocks, ChevronRight, FilePlus2, LibraryBig, Search, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
@@ -19,10 +19,9 @@ import {
     FieldError,
     FieldGroup,
     FieldLabel,
-    FieldLegend,
-    FieldSet,
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
@@ -68,22 +67,38 @@ const form = useForm({
     preset: '',
 });
 
-const BLANK = 'en_blanco';
+const step = ref<'start' | 'catalog' | 'details'>('start');
+const view = computed(() => (props.presets.length === 0 ? 'details' : step.value));
+const search = ref('');
 const chosen = computed(() => props.presets.find((preset) => preset.key === form.preset) ?? null);
-const presetModel = computed({
-    get: () => (form.preset === '' ? BLANK : form.preset),
-    set: (value: string) => {
-        form.preset = value === BLANK ? '' : value;
-        if (chosen.value !== null && form.title.trim() === '') {
-            form.title = chosen.value.title;
-        }
-    },
+const matches = computed(() => {
+    const term = search.value.trim().toLowerCase();
+
+    return props.presets.filter((preset) => term === '' || preset.title.toLowerCase().includes(term));
 });
 
-const options = computed(() => [
-    { key: BLANK, title: 'En blanco', summary: 'Empiece desde cero y arme los campos usted.' },
-    ...props.presets.map((preset) => ({ key: preset.key, title: preset.title, summary: preset.summary })),
-]);
+const startBlank = (): void => {
+    form.preset = '';
+    step.value = 'details';
+};
+
+const pickPreset = (key: string): void => {
+    form.preset = key;
+    if (chosen.value !== null && form.title.trim() === '') {
+        form.title = chosen.value.title;
+    }
+    step.value = 'details';
+};
+
+const back = (): void => {
+    if (chosen.value !== null) {
+        form.preset = '';
+        step.value = 'catalog';
+
+        return;
+    }
+    step.value = 'start';
+};
 
 const reset = (): void => {
     form.clearErrors();
@@ -92,6 +107,8 @@ const reset = (): void => {
     form.position = props.position + 1;
     form.fields = [newField()];
     form.preset = '';
+    step.value = 'start';
+    search.value = '';
 };
 
 const addField = (): void => {
@@ -170,7 +187,7 @@ const updateOpen = (value: boolean): void => {
                 {{ empty ? 'Agregar primera sección' : 'Agregar sección' }}
             </Button>
         </DialogTrigger>
-        <DialogContent class="sm:max-w-3xl">
+        <DialogContent class="sm:max-w-xl">
             <DialogHeader>
                 <DialogTitle>Nueva sección</DialogTitle>
                 <DialogDescription>
@@ -180,31 +197,67 @@ const updateOpen = (value: boolean): void => {
             <form class="flex flex-col gap-6" @submit.prevent="submit">
                 <div>
                     <FieldGroup>
-                        <FieldSet v-if="presets.length > 0">
-                            <FieldLegend variant="label">Plantilla</FieldLegend>
-                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" role="radiogroup" aria-label="Plantilla">
-                                <Button
-                                    v-for="option in options"
-                                    :key="option.key"
-                                    type="button"
-                                    variant="outline"
-                                    role="radio"
-                                    :aria-checked="presetModel === option.key"
-                                    :disabled="form.processing"
-                                    class="h-auto flex-col items-start gap-2 whitespace-normal p-3 text-left aria-checked:border-primary aria-checked:bg-accent aria-checked:ring-1 aria-checked:ring-primary"
-                                    @click="presetModel = option.key"
-                                >
-                                    <span class="flex w-full items-center gap-2">
-                                        <span class="flex size-8 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                                            <component :is="option.key === BLANK ? FilePlus2 : FileText" class="size-4" aria-hidden="true" />
-                                        </span>
-                                        <span class="text-sm font-medium">{{ option.title }}</span>
-                                        <Check v-if="presetModel === option.key" class="ml-auto size-4 text-primary" aria-hidden="true" />
-                                    </span>
-                                    <span class="text-xs text-muted-foreground">{{ option.summary }}</span>
-                                </Button>
-                            </div>
-                        </FieldSet>
+                        <div v-if="view === 'start'" class="grid gap-3 sm:grid-cols-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                class="h-auto flex-col items-start gap-2 whitespace-normal p-4 text-left"
+                                @click="startBlank"
+                            >
+                                <FilePlus2 class="size-6 text-muted-foreground" aria-hidden="true" />
+                                <span class="text-sm font-medium">Empezar en blanco</span>
+                                <span class="text-xs font-normal text-muted-foreground">Usted arma los campos.</span>
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                class="h-auto flex-col items-start gap-2 whitespace-normal p-4 text-left"
+                                @click="step = 'catalog'"
+                            >
+                                <LibraryBig class="size-6 text-muted-foreground" aria-hidden="true" />
+                                <span class="text-sm font-medium">Usar un diseño oficial</span>
+                                <span class="text-xs font-normal text-muted-foreground">Una sección ya armada.</span>
+                            </Button>
+                        </div>
+                        <div v-else-if="view === 'catalog'" class="flex flex-col gap-3">
+                            <Button type="button" variant="ghost" size="sm" class="self-start" @click="step = 'start'">
+                                <ArrowLeft data-icon="inline-start" aria-hidden="true" />
+                                Volver
+                            </Button>
+                            <InputGroup>
+                                <InputGroupAddon><Search aria-hidden="true" /></InputGroupAddon>
+                                <InputGroupInput v-model="search" placeholder="Buscar" aria-label="Buscar diseño" />
+                            </InputGroup>
+                            <ul class="flex max-h-72 flex-col gap-1 overflow-y-auto">
+                                <li v-for="preset in matches" :key="preset.key">
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        class="h-auto w-full justify-between gap-2 whitespace-normal py-2 text-left"
+                                        @click="pickPreset(preset.key)"
+                                    >
+                                        <span class="text-sm">{{ preset.title }}</span>
+                                        <ChevronRight class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                                    </Button>
+                                </li>
+                                <li v-if="matches.length === 0" class="px-2 py-3 text-sm text-muted-foreground">
+                                    Ningún diseño coincide.
+                                </li>
+                            </ul>
+                        </div>
+                        <template v-else>
+                        <Button
+                            v-if="presets.length > 0"
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            class="self-start"
+                            :disabled="form.processing"
+                            @click="back"
+                        >
+                            <ArrowLeft data-icon="inline-start" aria-hidden="true" />
+                            {{ chosen ? `Diseño: ${chosen.title}` : 'Volver' }}
+                        </Button>
                         <Field :data-invalid="Boolean(errorFor('title'))">
                             <FieldLabel for="new-template-block-title" required>
                                 Nombre de la sección
@@ -287,6 +340,7 @@ const updateOpen = (value: boolean): void => {
                             />
                             </div>
                         </FieldGroup>
+                        </template>
                     </FieldGroup>
 
                     <Button
@@ -294,7 +348,7 @@ const updateOpen = (value: boolean): void => {
                         variant="outline"
                         class="mt-4 w-full"
                         :disabled="form.processing || form.fields.length >= 20"
-                        v-if="!chosen"
+                        v-if="view === 'details' && !chosen"
                         @click="addField"
                     >
                         Agregar otro campo
@@ -304,7 +358,7 @@ const updateOpen = (value: boolean): void => {
                     <Button type="button" variant="outline" @click="updateOpen(false)">
                         Cancelar
                     </Button>
-                    <Button type="submit" :disabled="form.processing">
+                    <Button v-if="view === 'details'" type="submit" :disabled="form.processing">
                         <Spinner v-if="form.processing" data-icon="inline-start" />
                         <Blocks v-else data-icon="inline-start" aria-hidden="true" />
                         Crear sección

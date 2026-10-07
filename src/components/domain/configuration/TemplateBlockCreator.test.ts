@@ -20,8 +20,21 @@ describe('TemplateBlockCreator — plantillas de campo en la sección nueva', ()
     afterEach(() => vi.mocked(api).mockClear());
 
     it('ofrece las plantillas del catálogo solo si existen', () => {
-        expect(mountCreator().text()).toContain('Plantilla');
-        expect(mountCreator([]).text()).not.toContain('Plantilla');
+        expect(mountCreator().text()).toContain('Usar un diseño oficial');
+        expect(mountCreator([]).text()).not.toContain('Usar un diseño oficial');
+    });
+
+    it('primero pregunta cómo empezar; elegir un diseño pasa al nombre', async () => {
+        const wrapper = mountCreator();
+        expect(wrapper.text()).toContain('Empezar en blanco');
+        expect(wrapper.text()).not.toContain('Nombre de la sección');
+
+        await wrapper.findAll('button').find((b) => b.text().includes('Usar un diseño oficial'))!.trigger('click');
+        await wrapper.findAll('button').find((b) => b.text().includes('Descripción de la asignatura'))!.trigger('click');
+
+        expect(wrapper.text()).toContain('Nombre de la sección');
+        expect((wrapper.get('#new-template-block-title').element as HTMLInputElement).value).toBe('Descripción de la asignatura');
+        expect(wrapper.text()).not.toContain('Campo 1');
     });
 
     it('al elegir una plantilla envía su clave, sin campos, y completa el nombre', async () => {
