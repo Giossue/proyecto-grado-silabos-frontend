@@ -56,7 +56,7 @@ const download = async (): Promise<void> => {
 <template>
     <Dialog v-model:open="open">
         <DialogTrigger as-child><Button type="button" variant="outline"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></DialogTrigger>
-        <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
+        <DialogContent class="max-h-screen overflow-y-auto sm:max-w-3xl">
             <DialogHeader><DialogTitle>{{ title }}</DialogTitle><DialogDescription>{{ description }}</DialogDescription></DialogHeader>
             <div class="flex flex-col gap-4">
                 <div class="flex flex-col gap-2 text-sm">
