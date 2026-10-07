@@ -4,7 +4,7 @@ import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
 import {
@@ -17,8 +17,6 @@ import {
   type SyllabusDetail,
   type SyllabusField,
 } from "@/api/syllabi";
-import TeacherFormationDialog from '@/components/domain/identity/TeacherFormationDialog.vue';
-import { formationEditorKey } from '@/components/domain/identity/formationEditor';
 import SyllabusUnitAssistant from '@/components/domain/ai/SyllabusUnitAssistant.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -77,8 +75,6 @@ const canEdit = computed(() =>
   ["borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? "") &&
   editBlockReason.value === null,
 );
-const formationOpen = ref(false);
-provide(formationEditorKey, computed(() => (canEdit.value ? () => { formationOpen.value = true; } : null)));
 const allFields = computed(() => (syllabus.value?.sections ?? []).flatMap((section) => section.fields));
 const editableFieldIds = computed(() => new Set(allFields.value.map((field) => field.id)));
 /** El tipo del registro decide si el docente escribe el campo (la ficha, solo si es ajustable). */
@@ -194,25 +190,6 @@ const load = async (): Promise<void> => {
       return;
     }
     error.value = reason instanceof ApiError ? reason.message : "No se pudo cargar el sílabo.";
-  }
-};
-
-const refreshAfterFormation = async (): Promise<void> => {
-  if (await flushAutosave()) {
-    await load();
-    return;
-  }
-  try {
-    const fresh = (await getTeacherSyllabus(syllabusId())).syllabus;
-    const byId = new Map(fresh.sections.flatMap((section) => section.fields).map((item) => [item.id, item]));
-    for (const item of allFields.value) {
-      const updated = byId.get(item.id);
-      if (!updated) continue;
-      item.document = updated.document;
-      if (item.inherited) item.value = updated.value;
-    }
-  } catch {
-    error.value = "No se pudo actualizar la tabla de identificación. Recargue la página.";
   }
 };
 
@@ -537,7 +514,6 @@ onBeforeUnmount(() => {
       </WorkspaceLayout>
     </template>
 
-    <TeacherFormationDialog v-model:open="formationOpen" @saved="refreshAfterFormation" />
     <Dialog v-model:open="confirmSubmitOpen">
       <DialogContent>
         <DialogHeader>
