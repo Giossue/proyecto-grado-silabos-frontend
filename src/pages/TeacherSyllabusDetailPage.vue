@@ -470,9 +470,9 @@ onBeforeUnmount(() => {
             </CardContent>
           </Card>
 
-          <Tabs v-if="canEdit && visibleSections.length > 1" v-model="activeSectionId" class="w-full">
-            <TabsList class="h-auto w-full flex-wrap justify-start gap-1" aria-label="Secciones del sílabo">
-              <TabsTrigger v-for="(section, index) in visibleSections" :key="section.id" :value="section.id" class="max-w-56" :title="sectionHeading(section.title, index)"><span class="truncate">{{ sectionHeading(section.title, index) }}</span></TabsTrigger>
+          <Tabs v-if="canEdit && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
+            <TabsList class="h-auto min-h-9 w-full shrink-0 flex-wrap justify-start gap-1" aria-label="Secciones del sílabo">
+              <TabsTrigger v-for="(section, index) in visibleSections" :key="section.id" :value="section.id" class="h-8 max-w-56 flex-none" :title="sectionHeading(section.title, index)"><span class="truncate">{{ sectionHeading(section.title, index) }}</span></TabsTrigger>
             </TabsList>
           </Tabs>
           <template v-for="section in shownSections" :key="section.id">

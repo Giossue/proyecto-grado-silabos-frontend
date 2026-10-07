@@ -59,6 +59,7 @@ export const paths = {
     academic: '/coordinacion/estructura-academica',
     curriculum: '/coordinacion/malla',
     scheduledSubjects: '/coordinacion/materias-asignaciones',
+    careerProject: '/coordinacion/proyecto-carrera',
     teachers: '/coordinacion/docentes',
     teacherAssignments: '/coordinacion/asignaciones-docentes',
     documents: (revision: string): string =>
@@ -225,6 +226,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-review', path: '/coordinacion/revisiones/:revision', component: 'CoordinationReviewDetailPage', breadcrumb: 'Detalle de revisión', ...coordinator },
   { name: 'coordination-comparison', path: '/coordinacion/revisiones/:before/comparar/:after', component: 'CoordinationReviewComparisonPage', breadcrumb: 'Comparar revisiones', ...coordinator },
   { name: 'coordination-curriculum', path: paths.coordination.curriculum, component: 'CoordinationAcademicStructurePage', states: ['curriculum'], breadcrumb: 'Malla', ...coordinator },
+  { name: 'coordination-career-project', path: paths.coordination.careerProject, component: 'CoordinationCareerProjectPage', breadcrumb: 'Proyecto de carrera', ...coordinator },
   { name: 'coordination-scheduled-subjects', path: paths.coordination.scheduledSubjects, component: 'CoordinationAcademicStructurePage', states: ['schedule'], breadcrumb: 'Materias y asignaciones', ...coordinator },
   { name: 'coordination-teachers', path: paths.coordination.teachers, component: 'CoordinationAcademicStructurePage', states: ['teachers'], breadcrumb: 'Docentes', ...coordinator },
   { name: 'coordination-documents', path: '/coordinacion/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...coordinator },

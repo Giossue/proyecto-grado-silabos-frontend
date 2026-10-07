@@ -4,6 +4,7 @@ import {
     CalendarRange,
     ClipboardCheck,
     FileStack,
+    FolderOpen,
     LayoutGrid,
     Library,
     ScrollText,
@@ -47,6 +48,7 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                   { title: 'Materias y asignaciones', href: paths.coordination.scheduledSubjects, icon: Building2 },
                   { title: 'Docentes', href: paths.coordination.teachers, icon: UsersRound },
                   { title: 'Malla', href: paths.coordination.curriculum, icon: BookOpenCheck },
+                  { title: 'Proyecto de carrera', href: paths.coordination.careerProject, icon: FolderOpen },
               ]
             : []),
         ...(activeRole.value?.code === 'docente'

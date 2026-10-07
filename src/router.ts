@@ -13,6 +13,7 @@ import {
 
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
+const CoordinationCareerProjectPage = () => import("@/pages/CoordinationCareerProjectPage.vue");
 const DashboardPage = () => import("@/pages/DashboardPage.vue");
 const TeacherSyllabiPage = () => import("@/pages/TeacherSyllabiPage.vue");
 const TeacherSyllabusDetailPage = () => import("@/pages/TeacherSyllabusDetailPage.vue");
@@ -104,6 +105,7 @@ export const router = createRouter({
     { path: "/coordinacion/fuentes", redirect: "/dashboard" },
     { path: "/coordinacion/fuentes/:source", redirect: "/dashboard" },
     { path: "/coordinacion/estructura-academica", redirect: "/coordinacion/malla", meta: { requiresAuth: true, roles: ["coordinador"] } },
+    { path: "/coordinacion/proyecto-carrera", component: CoordinationCareerProjectPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Proyecto de carrera" } },
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },
     { path: "/coordinacion/materias-asignaciones", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y asignaciones" } },
     { path: "/coordinacion/docentes", component: CoordinationAcademicStructurePage, props: { mode: "teachers" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Docentes" } },

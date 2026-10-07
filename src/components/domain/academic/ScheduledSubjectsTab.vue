@@ -2,12 +2,10 @@
 import { computed, ref, watch } from "vue";
 import { type ScheduledSubjects, type TeacherAssignments } from "@/api/career-academics";
 import CareerAcademicActions from "@/components/domain/academic/CareerAcademicActions.vue";
-import SubjectProfileSheet from "@/components/domain/academic/SubjectProfileSheet.vue";
 import ClientFilterBar from "@/components/domain/ClientFilterBar.vue";
 import TablePagination from "@/components/domain/TablePagination.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
@@ -58,10 +56,6 @@ const shiftOptions = computed(() => [...new Map(periodRows.value.flatMap((item) 
 const { items, meta, setPage } = useClientPagination(() => filter.items.value);
 const selectedPeriodOption = computed(() => props.data.options.periods.find((item) => item.id === selectedPeriod.value));
 const emptyMessage = computed(() => filter.active.value ? "No hay materias que coincidan con los filtros." : "No hay materias para este período.");
-const selectedProfile = ref<ScheduledRow | null>(null);
-const profileOpen = ref(false);
-import { activateRow } from '@/lib/rowActivation';
-const openProfile = (item: ScheduledRow) => { selectedProfile.value = item; profileOpen.value = true; };
 watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = value ?? ""; });
 </script>
 
@@ -95,18 +89,17 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
         <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Ciclo</TableHead><TableHead>Paralelos</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="!items.length" :colspan="6">{{ emptyMessage }}</TableEmpty>
-          <TableRow v-for="item in items" v-else :key="item.subject_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir ficha de ${item.subject_name}`" @click="activateRow($event, () => openProfile(item))" @keydown.enter.self.prevent="openProfile(item)">
-            <TableCell><div class="flex flex-col gap-1"><span>{{ item.subject_name }}</span><Badge variant="outline" class="w-fit">{{ item.profile_complete ? 'Ficha completa' : 'Ficha incompleta' }}</Badge></div></TableCell>
+          <TableRow v-for="item in items" v-else :key="item.subject_id">
+            <TableCell>{{ item.subject_name }}</TableCell>
             <TableCell>{{ item.subject_cycle === null ? "Sin ciclo" : `${item.subject_cycle}.º` }}</TableCell>
             <TableCell><ul v-if="item.parallels.length" class="flex flex-col gap-1"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-6 items-center"><Badge variant="outline">{{ parallel.code }}</Badge></li></ul><span v-else class="text-muted-foreground">Sin paralelos</span></TableCell>
             <TableCell><ul v-if="item.parallels.length" class="flex flex-col gap-1"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-6 items-center">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
             <TableCell><ul v-if="item.parallels.length" class="flex flex-col gap-1"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-6 items-center" :class="teacherByParallel.get(parallel.id) ? '' : 'text-muted-foreground'">{{ teacherByParallel.get(parallel.id) ?? 'Sin docente' }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
-            <TableCell class="text-right"><div class="flex justify-end gap-2"><Button type="button" variant="outline" size="sm" @click="openProfile(item)">Ficha</Button><CareerAcademicActions :shift-options="data.options.shiftOptions" :teacher-users="teacherUsers" :assignments="assignments" entity="materia" :record="item" :record-label="item.label" :editable="item.editable" allow-locked-actions :parallel-creation-supported="!data.career.lock_reason && item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? 'Período finalizado · solo lectura' : data.career.lock_reason ?? undefined" @changed="emit('changed', $event)" /></div></TableCell>
+            <TableCell class="text-right"><div class="flex justify-end gap-2"><CareerAcademicActions :shift-options="data.options.shiftOptions" :teacher-users="teacherUsers" :assignments="assignments" entity="materia" :record="item" :record-label="item.label" :editable="item.editable" allow-locked-actions :parallel-creation-supported="!data.career.lock_reason && item.period_planning_enabled" :locked-label="!item.period_planning_enabled ? 'Período finalizado · solo lectura' : data.career.lock_reason ?? undefined" @changed="emit('changed', $event)" /></div></TableCell>
           </TableRow>
         </TableBody>
       </Table>
       <TablePagination :meta="meta" mode="client" label="Paginación de materias programadas" @update:page="setPage" />
-      <SubjectProfileSheet v-if="selectedProfile" v-model:open="profileOpen" :subject-id="selectedProfile.subject_id" :subject-name="selectedProfile.subject_name" :disabled="Boolean(data.career.lock_reason)" @saved="emit('changed', 'Ficha de asignatura guardada.')" />
     </CardContent>
   </Card>
 </template>

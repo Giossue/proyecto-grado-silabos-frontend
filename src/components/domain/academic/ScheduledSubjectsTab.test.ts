@@ -49,10 +49,10 @@ const mountTab = () => mount(ScheduledSubjectsTab, {
 });
 
 describe('ScheduledSubjectsTab', () => {
-    it('shows profile completeness and offers the profile editor for each subject', () => {
+    it('no muestra la ficha: vive en Proyecto de carrera', () => {
         const wrapper = mountTab();
-        expect(wrapper.text()).toContain('Ficha incompleta');
-        expect(wrapper.findAll('button').filter((button) => button.text() === 'Ficha')).toHaveLength(3);
+        expect(wrapper.text()).not.toContain('Ficha');
+        expect(wrapper.findAll('button').filter((button) => button.text() === 'Ficha')).toHaveLength(0);
     });
     it('ofrece selectores de ciclo, paralelo y jornada derivados de los datos', () => {
         const text = mountTab().text();
