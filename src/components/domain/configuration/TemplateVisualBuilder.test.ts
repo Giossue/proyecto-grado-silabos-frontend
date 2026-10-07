@@ -2,9 +2,9 @@ import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as structure from '@/api/template-structure';
 import { ApiError } from '@/api/client';
-import type { TemplatePayload } from '@/api/template';
+import type { SectionDesign, TemplatePayload } from '@/api/template';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
-import { fieldTypeKeys, fieldTypeRegistry } from '@/components/domain/fieldTypes/registry';
+import { fieldTypeKeys, fieldTypeRegistry, manualFieldTypeKeys } from '@/components/domain/fieldTypes/registry';
 
 vi.mock('@/api/template-structure');
 
@@ -18,7 +18,12 @@ const template: Template = {
   ],
 };
 
-const mountBuilder = (props: { processLock?: string | null } = {}) => mount(TemplateVisualBuilder, { props: { template, ...props }, attachTo: document.body });
+const designs: SectionDesign[] = [
+  { key: 'identificacion', title: 'Identificación Institucional', summary: 'Tabla oficial con los datos de la asignatura.', in_use: false, fields: [{ label: '', type: 'automatico' }, { label: 'Formación y experiencia', type: 'texto' }] },
+  { key: 'etica', title: 'Conducta y comportamiento ético', summary: 'Compromisos y estándares de la UEB.', in_use: false, fields: [{ label: '', type: 'fijo' }] },
+  { key: 'descripcion', title: 'Descripción de la asignatura', summary: 'Texto de la ficha.', in_use: true, fields: [{ label: '', type: 'ficha' }] },
+];
+const mountBuilder = (props: { processLock?: string | null } = {}) => mount(TemplateVisualBuilder, { props: { template, designs, ...props }, attachTo: document.body });
 
 const body = () => document.body;
 const byText = (selector: string, text: string) => [...body().querySelectorAll<HTMLElement>(selector)].find((el) => el.textContent?.trim() === text);
@@ -39,15 +44,18 @@ describe('TemplateVisualBuilder', () => {
     for (const fn of Object.values(structure)) if (vi.isMockFunction(fn)) fn.mockResolvedValue({ message: 'ok', section_id: 'new-section' } as never);
   });
 
-  it('ofrece los tipos desde el registro con lenguaje para Administración', async () => {
+  it('ofrece solo los tipos que se pueden elegir a mano, con lenguaje para Administración', async () => {
     mountBuilder();
     await click(byText('button', 'Agregar campo'));
-    for (const key of fieldTypeKeys) expect(body().querySelector(`#template-field-type-${key}`), key).toBeTruthy();
+    expect(manualFieldTypeKeys).toEqual(['texto', 'ficha', 'tabla']);
+    for (const key of manualFieldTypeKeys) expect(body().querySelector(`#template-field-type-${key}`), key).toBeTruthy();
+    for (const key of fieldTypeKeys.filter((candidate) => !manualFieldTypeKeys.includes(candidate))) expect(body().querySelector(`#template-field-type-${key}`), key).toBeNull();
     expect(body().textContent).toContain('Lo escribe el docente');
     expect(body().textContent).toContain('Lo escribe Coordinación en la ficha de la asignatura');
     expect(body().textContent).toContain('Tabla de filas fijas');
-    expect(body().textContent).toContain('Dato automático');
-    expect(body().textContent).toContain('Texto fijo igual para todos');
+    expect(body().textContent).not.toContain('Dato que se completa solo');
+    expect(body().textContent).not.toContain('Nadie lo escribe: se toma de los datos de la asignatura al enviar el sílabo.');
+    expect(body().textContent).not.toContain('Texto fijo igual para todos');
   });
 
   it('dibuja la tabla oficial de identificación y no subtitula los campos sin nombre', () => {
@@ -65,6 +73,7 @@ describe('TemplateVisualBuilder', () => {
     expect(body().textContent).toContain('1. Identificación Institucional');
     expect(body().querySelector('[data-field="a"] h4')).toBeNull();
     expect(body().querySelector('[data-field="d"] h4')?.textContent?.trim()).toBe('Estudiantes con discapacidad: Tipo de discapacidad');
+    expect(body().querySelector('[data-field="a"] [data-field-type]')?.textContent).toContain('Se completa solo');
     expect(body().textContent).not.toMatch(/\b1\.[1-9]\b/);
   });
 
@@ -115,24 +124,6 @@ describe('TemplateVisualBuilder', () => {
     expect(config.rows).toHaveLength(2);
   });
 
-  it('agrega un dato automático eligiendo la fuente', async () => {
-    mountBuilder();
-    await click(byText('button', 'Agregar campo'));
-    await choose('automatico');
-    expect(body().querySelector('#field-config-source')).toBeTruthy();
-    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ type: 'automatico', config: { source: 'identification_card' } }));
-  });
-
-  it('exige el contenido de un texto fijo', async () => {
-    mountBuilder();
-    await click(byText('button', 'Agregar campo'));
-    await choose('fijo');
-    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(body().textContent).toContain('Escriba el texto fijo; no puede quedar vacío.');
-    expect(structure.createField).not.toHaveBeenCalled();
-  });
-
   it('cada tipo del registro aporta su pieza de configuración y su validación', () => {
     for (const key of fieldTypeKeys) {
       expect(fieldTypeRegistry[key].BuilderComponent, key).toBeTruthy();
@@ -141,9 +132,43 @@ describe('TemplateVisualBuilder', () => {
     }
   });
 
-  it('crea una sección en dos pasos', async () => {
+  it('la nueva sección ofrece el catálogo de diseños oficiales y «En blanco»', async () => {
     mountBuilder();
     await click(byText('button', 'Nueva sección'));
+    expect(body().textContent).toContain('Usar un diseño oficial');
+    const titles = [...body().querySelectorAll('[data-design]')].map((el) => el.getAttribute('data-design'));
+    expect(titles).toEqual(['identificacion', 'etica', 'descripcion']);
+    expect(body().querySelector('[data-design="identificacion"]')?.textContent).toContain('Incluye: Texto de la sección (Dato automático), Formación y experiencia (Texto)');
+    expect(body().querySelector('[data-design="etica"]')?.textContent).toContain('(Texto fijo)');
+    expect(body().querySelector('[data-design="descripcion"]')?.textContent).toContain('Ya está en la plantilla');
+    expect(body().querySelector('#section-design-descripcion')?.hasAttribute('disabled')).toBe(true);
+    expect(body().textContent).toContain('En blanco');
+  });
+
+  it('agrega una sección desde un diseño oficial con un solo paso', async () => {
+    const wrapper = mountBuilder();
+    await click(byText('button', 'Nueva sección'));
+    await click(body().querySelector('#section-design-etica'));
+    expect(byText('[role="dialog"] button[type="submit"]', 'Agregar sección')).toBeTruthy();
+    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
+    expect(structure.createSectionFromDesign).toHaveBeenCalledWith('t1', 'etica');
+    expect(structure.createSection).not.toHaveBeenCalled();
+    expect(wrapper.emitted('changed')).toHaveLength(1);
+  });
+
+  it('muestra el error del servidor si el diseño ya no se puede agregar', async () => {
+    vi.mocked(structure.createSectionFromDesign).mockRejectedValue(new ApiError('La plantilla ya tiene «Conducta y comportamiento ético».', 422, { design: ['La plantilla ya tiene «Conducta y comportamiento ético».'] }));
+    mountBuilder();
+    await click(byText('button', 'Nueva sección'));
+    await click(body().querySelector('#section-design-etica'));
+    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
+    expect(body().textContent).toContain('La plantilla ya tiene «Conducta y comportamiento ético».');
+  });
+
+  it('crea una sección en blanco en dos pasos', async () => {
+    mountBuilder();
+    await click(byText('button', 'Nueva sección'));
+    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
     expect(body().textContent).toContain('Escriba el nombre de la sección.');
     await type('template-section-title', 'Objetivos de la asignatura');
@@ -152,16 +177,30 @@ describe('TemplateVisualBuilder', () => {
     await click(byText('button', 'Crear sin campos'));
     expect(structure.createSection).toHaveBeenCalledWith('t1', { key: 'objetivos_de_la_asignatura', title: 'Objetivos de la asignatura' });
     expect(structure.createField).not.toHaveBeenCalled();
+    expect(structure.createSectionFromDesign).not.toHaveBeenCalled();
   });
 
-  it('crea una sección con su primer campo', async () => {
+  it('crea una sección en blanco con su primer campo', async () => {
     mountBuilder();
     await click(byText('button', 'Nueva sección'));
+    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
     await type('template-section-title', 'Firmas');
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
     await type('new-section-field-label', 'Cuerpo');
     await click(byText('button', 'Crear sección con este campo'));
     expect(structure.createField).toHaveBeenCalledWith('t1', 'new-section', expect.objectContaining({ type: 'texto', label: 'Cuerpo' }));
+  });
+
+  it('la hoja no repite los textos que el docente escribe dentro de la tabla de identificación', () => {
+    const inside = { ...field('f', 'Formación y experiencia académica – investigativa'), config: { inside: 'identification_card' } };
+    const official: Template = { ...template, sections: [{ id: 's1', key: 'identificacion', title: 'Identificación Institucional', description: null, blocks: [
+      { id: 'b-a', key: 'a', title: '', fields: [{ ...field('a', '', 'automatico'), config: { source: 'identification_card' } }] },
+      { id: 'b-f', key: 'f', title: '', fields: [inside] },
+    ] }] };
+    mount(TemplateVisualBuilder, { props: { template: official }, attachTo: document.body });
+    expect(body().querySelector('[data-field="a"]')).toBeTruthy();
+    expect(body().querySelector('[data-field="f"]')).toBeNull();
+    expect(body().textContent).not.toContain('Formación y experiencia académica');
   });
 
   it('renombra una sección y cambia las propiedades de un campo', async () => {

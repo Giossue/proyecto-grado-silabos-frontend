@@ -17,6 +17,8 @@ export type FieldInput = {
 
 export const createSection = (template: string, input: { key: string; title: string }) =>
     api<{ message: string; section_id: string }>(`${base(template)}/sections`, json('POST', input));
+export const createSectionFromDesign = (template: string, design: string) =>
+    api<{ message: string; section_id: string }>(`${base(template)}/sections`, json('POST', { design }));
 export const renameSection = (template: string, section: string, title: string) =>
     api<{ message: string }>(`${base(template)}/sections/${section}`, json('PATCH', { title }));
 export const deleteSection = (template: string, section: string) =>

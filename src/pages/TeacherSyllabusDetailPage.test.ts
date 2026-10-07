@@ -206,6 +206,36 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(buttonNamed(wrapper, "Enviar sílabo")!.attributes("disabled")).toBeUndefined();
   });
 
+  it("pide los datos de la tabla de identificación justo debajo de ella, sin repetirlos como campos aparte", async () => {
+    const detail = syllabus("borrador", "automatico");
+    detail.sections[0]!.fields.push(
+      field("field-2", "texto", { key: "formacion_experiencia", label: "Formación y experiencia académica – investigativa", config: { inside: "identification_card" }, value: doc("") }),
+      field("field-3", "texto", { key: "otro", label: "Otro dato", value: doc("") }),
+    );
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const ids = wrapper.findAll("[id^='field-field-']").map((node) => node.attributes("id"));
+    expect(ids).toEqual(["field-field-1", "field-field-2", "field-field-3"]);
+    expect(wrapper.text()).toContain("Complete estos datos: se imprimen dentro de la tabla de identificación");
+    expect(wrapper.get("#field-field-2").classes()).toContain("border-l-2");
+    expect(wrapper.get("#field-field-3").classes()).not.toContain("border-l-2");
+    expect(wrapper.findAllComponents(FreeTextEditor)).toHaveLength(2);
+  });
+
+  it("en un sílabo de solo lectura no repite los datos que viven dentro de la tabla de identificación", async () => {
+    const detail = syllabus("en_revision", "automatico");
+    detail.sections[0]!.fields.push(field("field-2", "texto", { key: "formacion_experiencia", label: "Formación y experiencia", config: { inside: "identification_card" }, value: doc("Texto") }));
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find("#field-field-1").exists()).toBe(true);
+    expect(wrapper.find("#field-field-2").exists()).toBe(false);
+    expect(wrapper.text()).not.toContain("Complete estos datos");
+  });
+
   it("muestra el comentario general de coordinación, sin observaciones por campo", async () => {
     const draft = syllabus("correccion_solicitada");
     draft.review_comments = [{

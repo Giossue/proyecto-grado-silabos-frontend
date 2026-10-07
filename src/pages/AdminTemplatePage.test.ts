@@ -86,6 +86,16 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.get('[data-field="field-1"] .template-sheet-box').element).toBeTruthy();
   });
 
+  it("pone la hoja directo sobre el fondo de la página, sin contenedor gris", async () => {
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const region = wrapper.get('[aria-label="Constructor visual de la plantilla del sílabo"]');
+    expect(wrapper.find('.template-stage').exists()).toBe(false);
+    expect(region.classes().some((name) => /^(bg-|rounded|p-|px-|py-)/.test(name))).toBe(false);
+    expect(wrapper.get('[data-sheet]').element.parentElement).toBe(region.element);
+  });
+
   it("avisa que reanudar rehace los sílabos si la plantilla cambió durante la pausa", async () => {
     vi.mocked(getTemplate).mockResolvedValue({ ...payload, templateChangedDuringPause: true });
     const wrapper = mountPage();

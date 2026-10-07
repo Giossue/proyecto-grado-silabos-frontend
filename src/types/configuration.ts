@@ -8,7 +8,7 @@ export type TableAxisItem = { key: string; label: string };
 export type TableValue = Record<string, Record<string, string>>;
 
 export type FieldTypeConfigs = {
-    texto: Record<string, never>;
+    texto: { inside?: 'identification_card' };
     ficha: { adjustable: boolean };
     tabla: { columns: TableAxisItem[]; rows: TableAxisItem[] };
     automatico: { source: 'identification_card' };

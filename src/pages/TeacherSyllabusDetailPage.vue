@@ -29,7 +29,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { fieldConfig } from '@/components/domain/fieldTypes/fieldConfig';
-import { fieldTypeEntry } from '@/components/domain/fieldTypes/registry';
+import { fieldTypeEntry, isEmbeddedField } from '@/components/domain/fieldTypes/registry';
 import FieldView from '@/components/domain/fieldTypes/FieldView.vue';
 import type { TypedField } from '@/types/configuration';
 import { paths } from '@/lib/routes';
@@ -78,6 +78,16 @@ const editableFieldIds = computed(() => new Set(allFields.value.map((field) => f
 /** El tipo del registro decide si el docente escribe el campo (la ficha, solo si es ajustable). */
 const isTeacherField = (field: SyllabusField): boolean => fieldTypeEntry(field.type)?.teacherEditable(fieldConfig(field)) ?? false;
 const typed = (field: SyllabusField): TypedField => field;
+/** Los datos que el docente escribe dentro de la tabla de identificación se piden justo bajo ella; en la revisión y el Word solo aparece la tabla. */
+const sectionEntries = (fields: SyllabusField[]): Array<{ field: SyllabusField; nested: boolean; hint: boolean }> => {
+  const embedded = fields.filter(isEmbeddedField);
+  const host = fields.find((field) => field.type === 'automatico' && fieldConfig(field).source === 'identification_card');
+  if (embedded.length === 0 || !host) return fields.map((field) => ({ field, nested: false, hint: false }));
+  return fields.filter((field) => !isEmbeddedField(field)).flatMap((field) => [
+    { field, nested: false, hint: false },
+    ...(field === host ? embedded.map((item, index) => ({ field: item, nested: true, hint: index === 0 })) : []),
+  ]);
+};
 const REVIEW_STAGE_TEXT: Record<string, string> = { biblioteca: 'Biblioteca revisa la bibliografía.', coordinacion: 'Biblioteca aprobó; coordinación revisa y decide.' };
 const reviewStageLabel = computed(() => REVIEW_STAGE_TEXT[syllabus.value?.review_stage ?? ''] ?? '');
 const STAGE_NAME: Record<string, string> = { biblioteca: 'Biblioteca', coordinacion: 'Coordinación' };
@@ -436,13 +446,14 @@ onBeforeUnmount(() => {
           <section :id="`section-${section.id}`" class="flex scroll-mt-6 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
             <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionHeading(section.title, sectionIndex) }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
             <FieldGroup>
-              <template v-for="field in section.fields" :key="field.id">
-                <Field v-if="canEdit && isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+              <template v-for="{ field, nested, hint } in sectionEntries(section.fields)" :key="field.id">
+                <p v-if="hint && canEdit" class="text-sm text-muted-foreground">Complete estos datos: se imprimen dentro de la tabla de identificación al enviar el sílabo.</p>
+                <Field v-if="canEdit && isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0" :class="nested && 'border-l-2 border-border pl-4'">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel>
                   <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
                   <component :is="fieldTypeEntry(field.type)!.EditorComponent" :field="typed(field)" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict" @update:model-value="updateValue(field, $event)" />
                 </Field>
-                <FieldView v-else :id="`field-${field.id}`" :field="typed(field)" :badge="field.inherited ? 'Dato automático' : undefined" />
+                <FieldView v-else-if="!nested" :id="`field-${field.id}`" :field="typed(field)" :badge="field.inherited ? 'Dato automático' : undefined" />
                 <FieldError :errors="visibleValidationMessages(field.id)" />
               </template>
             </FieldGroup>

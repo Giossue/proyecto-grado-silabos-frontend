@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fieldTypeEntry, fieldTypeKeys, fieldTypeRegistry, sectionFields } from '@/components/domain/fieldTypes/registry';
+import { fieldTypeEntry, fieldTypeKeys, fieldTypeRegistry, isEmbeddedField, manualFieldTypeKeys, sectionFields } from '@/components/domain/fieldTypes/registry';
 
 /**
  * Claves de config/field_types.php del backend (FieldTypeRegistry::keys()). Si el backend suma un tipo,
@@ -44,7 +44,25 @@ describe('Registro de tipos de campo', () => {
     });
 
     it('toma los campos de la sección v7 y, en fotografías anteriores, de sus bloques', () => {
-        expect(sectionFields({ fields: [1, 2] })).toEqual([1, 2]);
-        expect(sectionFields({ blocks: [{ fields: [1] }, { fields: [2] }] })).toEqual([1, 2]);
+        const a = { key: 'a', config: [] };
+        const b = { key: 'b', config: [] };
+        expect(sectionFields({ fields: [a, b] })).toEqual([a, b]);
+        expect(sectionFields({ blocks: [{ fields: [a] }, { fields: [b] }] })).toEqual([a, b]);
+    });
+
+    it('solo ofrece a mano los tipos generales: los técnicos nacen de los diseños oficiales', () => {
+        expect(manualFieldTypeKeys).toEqual(['texto', 'ficha', 'tabla']);
+        expect(fieldTypeRegistry.automatico.manual).toBe(false);
+        expect(fieldTypeRegistry.fijo.manual).toBe(false);
+        for (const key of manualFieldTypeKeys) expect(fieldTypeRegistry[key].adminLabel, key).not.toMatch(/autom|fijo/i);
+    });
+
+    it('no cuenta como campo de la sección el texto que se escribe dentro de la tabla de identificación', () => {
+        const table = { key: 'asignatura', type: 'automatico', config: { source: 'identification_card' } };
+        const inside = { key: 'formacion', type: 'texto', config: { inside: 'identification_card' } };
+        const plain = { key: 'otro', type: 'texto', config: [] };
+        expect(isEmbeddedField(inside)).toBe(true);
+        expect(isEmbeddedField(plain)).toBe(false);
+        expect(sectionFields({ fields: [table, inside, plain] })).toEqual([table, plain]);
     });
 });

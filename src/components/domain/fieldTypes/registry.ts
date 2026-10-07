@@ -27,6 +27,8 @@ export type FieldTypeEntry<K extends FieldTypeKey = FieldTypeKey> = {
     /** Cómo lo nombra Administración al elegir el tipo de un campo. */
     adminLabel: string;
     adminHint: string;
+    /** ¿Puede Administración elegirlo a mano al crear un campo? Los técnicos solo nacen de un diseño oficial. */
+    manual: boolean;
     /** Pieza que configura el tipo en el constructor de plantilla. */
     BuilderComponent: Component;
     /** Mensaje si la configuración no se puede guardar; null si es válida. */
@@ -47,7 +49,8 @@ export const fieldTypeRegistry: { [K in FieldTypeKey]: FieldTypeEntry<K> } = {
         label: 'Texto',
         icon: Type,
         adminLabel: 'Lo escribe el docente',
-        adminHint: 'El docente lo redacta en su sílabo.',
+        adminHint: 'El docente lo redacta en su propio sílabo. Sirve para metodología, comentarios y cualquier texto propio de cada docente.',
+        manual: true,
         BuilderComponent: TextFieldBuilder,
         validateConfig: () => null,
         EditorComponent: TextFieldEditor,
@@ -60,7 +63,8 @@ export const fieldTypeRegistry: { [K in FieldTypeKey]: FieldTypeEntry<K> } = {
         label: 'Ficha de la asignatura',
         icon: ClipboardList,
         adminLabel: 'Lo escribe Coordinación en la ficha de la asignatura',
-        adminHint: 'Se escribe una vez por asignatura y pasa al sílabo.',
+        adminHint: 'Coordinación lo escribe una sola vez por asignatura y pasa solo al sílabo. Sirve para objetivos, resultados de aprendizaje o bibliografía.',
+        manual: true,
         BuilderComponent: ProfileFieldBuilder,
         validateConfig: () => null,
         EditorComponent: ProfileFieldEditor,
@@ -73,7 +77,8 @@ export const fieldTypeRegistry: { [K in FieldTypeKey]: FieldTypeEntry<K> } = {
         label: 'Tabla',
         icon: Table2,
         adminLabel: 'Tabla de filas fijas',
-        adminHint: 'Define columnas y filas; el docente llena las celdas.',
+        adminHint: 'Usted define las columnas y las filas; el docente solo llena las celdas. Sirve para cuadros como la planificación semanal.',
+        manual: true,
         BuilderComponent: TableFieldBuilder,
         validateConfig: validateTableConfig,
         EditorComponent: TableFieldEditor,
@@ -85,8 +90,9 @@ export const fieldTypeRegistry: { [K in FieldTypeKey]: FieldTypeEntry<K> } = {
     automatico: {
         label: 'Dato automático',
         icon: Zap,
-        adminLabel: 'Dato automático',
-        adminHint: 'Se completa solo con datos de la asignatura.',
+        adminLabel: 'Se completa solo con los datos de la asignatura',
+        adminHint: 'Nadie lo escribe: se toma de los datos de la asignatura. Solo viene en los diseños oficiales.',
+        manual: false,
         BuilderComponent: AutomaticFieldBuilder,
         validateConfig: validateAutomaticConfig,
         EditorComponent: AutomaticFieldEditor,
@@ -99,7 +105,8 @@ export const fieldTypeRegistry: { [K in FieldTypeKey]: FieldTypeEntry<K> } = {
         label: 'Texto fijo',
         icon: Lock,
         adminLabel: 'Texto fijo igual para todos',
-        adminHint: 'Administración lo escribe aquí y el docente no lo cambia.',
+        adminHint: 'Administración lo escribe en la plantilla y el docente no lo cambia. Solo viene en los diseños oficiales.',
+        manual: false,
         BuilderComponent: FixedFieldBuilder,
         validateConfig: validateFixedConfig,
         EditorComponent: FixedFieldEditor,
@@ -112,12 +119,21 @@ export const fieldTypeRegistry: { [K in FieldTypeKey]: FieldTypeEntry<K> } = {
 
 export const fieldTypeKeys = Object.keys(fieldTypeRegistry) as FieldTypeKey[];
 
+export const manualFieldTypeKeys = fieldTypeKeys.filter((key) => fieldTypeRegistry[key].manual);
+
 export const fieldTypeEntry = (type: string): FieldTypeEntry | null =>
     Object.hasOwn(fieldTypeRegistry, type) ? fieldTypeRegistry[type as FieldTypeKey] as FieldTypeEntry : null;
 
-/** Campos de una sección: v7 trae `fields`; las fotografías anteriores solo `blocks`. */
-export const sectionFields = <F>(section: { fields?: F[]; blocks?: Array<{ fields: F[] }> }): F[] =>
+const allSectionFields = <F,>(section: { fields?: F[]; blocks?: Array<{ fields: F[] }> }): F[] =>
     section.fields ?? (section.blocks ?? []).flatMap((block) => block.fields);
+
+/** El texto del docente que se escribe dentro de la tabla oficial de identificación (no es un campo aparte en la hoja ni en la revisión). */
+export const isEmbeddedField = (field: { config?: Record<string, unknown> | unknown[] | null }): boolean =>
+    fieldConfig(field).inside === 'identification_card';
+
+/** Campos visibles de una sección: v7 trae `fields`; las fotografías anteriores solo `blocks`. Omite los que viven dentro de la tabla de identificación. */
+export const sectionFields = <F extends { config?: Record<string, unknown> | unknown[] | null }>(section: { fields?: F[]; blocks?: Array<{ fields: F[] }> }): F[] =>
+    allSectionFields(section).filter((field) => !isEmbeddedField(field));
 
 export const canTeacherEdit = (field: TypedField): boolean => {
     const entry = fieldTypeEntry(field.type);

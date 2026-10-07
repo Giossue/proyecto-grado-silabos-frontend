@@ -152,6 +152,6 @@ onBeforeUnmount(() => {
         </Alert>
         <ProcessLockAlert v-if="payload?.processLock" class="mb-4" />
 
-        <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :can-format="template.sections.length === 0" :formatting="formatting" @changed="reloadFromMutation" @format="format" />
+        <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :designs="payload?.sectionDesigns" :can-format="template.sections.length === 0" :formatting="formatting" @changed="reloadFromMutation" @format="format" />
     </PageFrame>
 </template>

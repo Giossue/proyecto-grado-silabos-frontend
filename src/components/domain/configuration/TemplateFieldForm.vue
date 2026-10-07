@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { fieldTypeKeys, fieldTypeRegistry } from '@/components/domain/fieldTypes/registry';
+import { fieldTypeRegistry, manualFieldTypeKeys } from '@/components/domain/fieldTypes/registry';
 import { newFieldForm, type FieldForm } from '@/components/domain/configuration/templateStructure';
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,7 @@ const chooseType = (type: FieldTypeKey): void => {
     <FieldSet v-if="!lockType">
       <FieldLegend variant="label">¿Quién escribe este campo?</FieldLegend>
       <RadioGroup :model-value="form.type" class="gap-2" @update:model-value="chooseType($event as FieldTypeKey)">
-        <label v-for="key in fieldTypeKeys" :key="key" :for="`${props.idPrefix}-type-${key}`" class="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[[data-state=checked]]:border-primary">
+        <label v-for="key in manualFieldTypeKeys" :key="key" :for="`${props.idPrefix}-type-${key}`" class="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[[data-state=checked]]:border-primary">
           <RadioGroupItem :id="`${props.idPrefix}-type-${key}`" :value="key" class="mt-0.5" />
           <span class="flex flex-col gap-0.5 text-sm">
             <span class="font-medium">{{ fieldTypeRegistry[key].adminLabel }}</span>
@@ -30,7 +30,7 @@ const chooseType = (type: FieldTypeKey): void => {
         </label>
       </RadioGroup>
     </FieldSet>
-    <p v-else class="text-sm"><span class="font-medium">{{ fieldTypeRegistry[form.type].adminLabel }}</span>. El tipo no se puede cambiar; para otro tipo, cree un campo nuevo.</p>
+    <p v-else class="text-sm"><span class="font-medium">{{ fieldTypeRegistry[form.type].adminLabel }}</span>. {{ fieldTypeRegistry[form.type].manual ? 'El tipo no se puede cambiar; para otro tipo, cree un campo nuevo.' : 'Este campo viene de un diseño oficial: puede cambiar su nombre y su contenido, pero no su tipo.' }}</p>
 
     <Field>
       <FieldLabel :for="`${props.idPrefix}-label`">Nombre del campo (opcional)</FieldLabel>

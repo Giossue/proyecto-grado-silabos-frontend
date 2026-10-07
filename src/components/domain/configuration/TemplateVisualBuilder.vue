@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ArrowDown, ArrowUp, Pencil, Plus, Settings2, Sparkles, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
-import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
+import type { SectionDesign, TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { deleteField, deleteSection, reorderFields, reorderSections } from '@/api/template-structure';
 import TemplateLogoControl from '@/components/domain/configuration/TemplateLogoControl.vue';
 import TemplateFieldDialog from '@/components/domain/configuration/TemplateFieldDialog.vue';
@@ -19,7 +19,7 @@ import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 
 /** Constructor de la plantilla dibujado como hoja A4 con controles sobre lo seleccionado (I-195, etapa 7). */
-const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; canFormat?: boolean; formatting?: boolean }>();
+const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; designs?: SectionDesign[]; canFormat?: boolean; formatting?: boolean }>();
 const emit = defineEmits<{ changed: []; format: [] }>();
 
 type Editable = { openEdit: () => void };
@@ -83,7 +83,7 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
 </script>
 
 <template>
-  <div class="template-stage" aria-label="Constructor visual de la plantilla del sílabo" role="region">
+  <div class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
     <Alert v-if="locked" role="status" class="mx-auto max-w-3xl"><AlertDescription>Hay un proceso abierto: la plantilla no se puede cambiar hasta pausarlo o cerrarlo. Puede revisar la estructura.</AlertDescription></Alert>
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
@@ -149,7 +149,7 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
       <Button v-if="sections.length > 0" type="button" variant="outline" class="self-start border-dashed" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
     </article>
 
-    <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" @saved="emit('changed')" />
+    <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" :designs="designs" @saved="emit('changed')" />
     <TemplateFieldDialog v-model:open="fieldDialog.open" :template-id="template.id" :section-id="fieldDialog.sectionId" :field="fieldDialog.field" :used-keys="usedFieldKeys" @saved="emit('changed')" />
 
     <Dialog :open="removal !== null" @update:open="(value: boolean) => { if (!value) removal = null }">
