@@ -3,7 +3,6 @@ import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { ListPlus } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
-import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
@@ -46,7 +45,7 @@ const form = useForm({
     position: props.position + 1,
     key: '',
     label: '',
-    content_type: 'free_text',
+    content_type: 'template',
     preset: '',
 });
 
@@ -59,7 +58,7 @@ const reset = (): void => {
     form.position = props.position + 1;
     form.key = keyFor();
     form.label = '';
-    form.content_type = 'free_text';
+    form.content_type = 'template';
     form.preset = '';
 };
 
@@ -170,14 +169,6 @@ const updateOpen = (value: boolean): void => {
                         />
                     </Field>
                 </FieldGroup>
-                <TemplatePartFormSelect
-                    v-if="!chosen"
-                    id="new-field-form"
-                    v-model="form.content_type"
-                    :forms="blockTypes"
-                    :disabled="form.processing"
-                    :error="errorFor('content_type')"
-                />
                 <FormSheetActions
                     :label="texts.action"
                     :close="close"

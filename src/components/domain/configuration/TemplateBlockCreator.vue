@@ -3,7 +3,6 @@ import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { ArrowLeft, Blocks, ChevronRight, FilePlus2, LibraryBig, Search, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
-import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -54,7 +53,7 @@ const technicalKey = (prefix: string): string => {
 const newField = () => ({
     key: technicalKey('campo'),
     label: '',
-    content_type: 'free_text',
+    content_type: 'template',
 });
 
 const open = ref(false);
@@ -331,13 +330,6 @@ const updateOpen = (value: boolean): void => {
                                 />
                             </Field>
 
-                            <TemplatePartFormSelect
-                                :id="`new-section-field-${index}-form`"
-                                v-model="field.content_type"
-                                :forms="blockTypes"
-                                :disabled="form.processing"
-                                :error="errorFor(`fields.${index}.content_type`)"
-                            />
                             </div>
                         </FieldGroup>
                         </template>
