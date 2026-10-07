@@ -7,6 +7,8 @@ const TAGS: Record<string, string> = {
     table: 'table', tableRow: 'tr', tableCell: 'td', tableHeader: 'th',
 };
 
+export type FreeTextAction = { text: string; label: string; run: () => void };
+
 export const isFreeTextDocument = (value: unknown): value is DocumentNode =>
     typeof value === 'object' && value !== null && (value as DocumentNode).type === 'doc';
 
@@ -24,7 +26,7 @@ export const freeTextLines = (node: DocumentNode): string => {
     return children.join('\n');
 };
 
-export const renderFreeText = (node: DocumentNode): VNodeChild => {
+export const renderFreeText = (node: DocumentNode, action?: FreeTextAction): VNodeChild => {
     if (node.type === 'text') {
         const marks = new Set((node.marks ?? []).map((mark) => mark.type));
         let content: VNodeChild = node.text ?? '';
@@ -38,7 +40,7 @@ export const renderFreeText = (node: DocumentNode): VNodeChild => {
     if (node.type === 'hardBreak') {
         return h('br');
     }
-    const children = (node.content ?? []).map(renderFreeText);
+    const children = (node.content ?? []).map((child) => renderFreeText(child, action));
     if (node.type === 'doc') {
         return h('div', { class: 'free-text-view' }, children);
     }
@@ -53,6 +55,15 @@ export const renderFreeText = (node: DocumentNode): VNodeChild => {
             ...(typeof node.attrs?.backgroundColor === 'string' ? { style: { backgroundColor: node.attrs.backgroundColor } } : {}),
         }
         : {};
+
+    if (action && node.type === 'paragraph' && freeTextPlain(node).trim() === action.text) {
+        return h(tag, span, [h('button', {
+            type: 'button',
+            class: 'cursor-pointer rounded-sm text-left font-semibold text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+            'aria-label': action.label,
+            onClick: action.run,
+        }, children)]);
+    }
 
     return h(tag, span, children);
 };

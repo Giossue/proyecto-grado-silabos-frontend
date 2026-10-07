@@ -73,7 +73,7 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
     <DialogContent class="max-h-screen overflow-y-auto sm:max-w-3xl">
       <DialogHeader>
         <DialogTitle>Importar el proyecto de carrera</DialogTitle>
-        <DialogDescription>Suba los documentos de la carrera (PDF o Excel). El asistente propone la ficha de cada materia y usted decide cuáles aplicar.</DialogDescription>
+        <DialogDescription>Suba los archivos de Excel de la carrera. El asistente propone la ficha de cada materia y usted decide cuáles aplicar.</DialogDescription>
       </DialogHeader>
       <div class="flex flex-col gap-4">
         <FeedbackAlert v-if="error" :message="error" />
@@ -112,8 +112,8 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
 
         <template v-else>
           <div class="flex flex-col gap-2">
-            <FieldLabel for="ficha-import-files">Documentos (PDF o Excel, hasta 6)</FieldLabel>
-            <Input id="ficha-import-files" type="file" multiple accept=".pdf,.xlsx,.xls,application/pdf" :disabled="busy" @change="pick" />
+            <FieldLabel for="ficha-import-files">Documentos de Excel (hasta 6)</FieldLabel>
+            <Input id="ficha-import-files" type="file" multiple accept=".xlsx,.xls" :disabled="busy" @change="pick" />
             <p v-if="files.length" class="text-sm text-muted-foreground">{{ files.map((file) => file.name).join(', ') }}</p>
           </div>
         </template>

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { freeTextPlain, isFreeTextDocument, renderFreeText } from '@/components/domain/syllabus/freeTextRender';
+import { freeTextPlain, isFreeTextDocument, renderFreeText, type FreeTextAction } from '@/components/domain/syllabus/freeTextRender';
 
-const props = withDefaults(defineProps<{ value: unknown; emptyText?: string }>(), { emptyText: 'Sin contenido' });
+const props = withDefaults(defineProps<{ value: unknown; emptyText?: string; action?: FreeTextAction }>(), { emptyText: 'Sin contenido' });
 const document = computed(() => (isFreeTextDocument(props.value) ? props.value : null));
 const empty = computed(() => document.value === null || freeTextPlain(document.value).trim() === '' && !JSON.stringify(document.value).includes('"table"'));
-const Rendered = (rendered: { node: NonNullable<typeof document.value> }) => renderFreeText(rendered.node);
+const Rendered = (rendered: { node: NonNullable<typeof document.value> }) => renderFreeText(rendered.node, props.action);
 </script>
 
 <template>
