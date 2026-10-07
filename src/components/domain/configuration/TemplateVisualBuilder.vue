@@ -124,7 +124,7 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
               <div class="flex items-baseline justify-between gap-2">
                 <h4 v-if="field.label.trim()" class="text-sm font-semibold">{{ sectionIndex + 1 }}.{{ fieldIndex + 1 }} {{ field.label }}</h4>
                 <span v-else class="text-xs italic text-muted-foreground">Campo sin nombre</span>
-                <span class="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">{{ typeLabel(field) }}</span>
+                <span class="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{{ typeLabel(field) }}</span>
               </div>
               <div class="pointer-events-none">
                 <component :is="fieldTypeEntry(field.type)!.ViewComponent" v-if="fieldTypeEntry(field.type)" :field="typed(field)" />
