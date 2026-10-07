@@ -152,7 +152,7 @@ const cardSyllabus = (state: "borrador" | "en_revision", formation: string): Syl
 };
 const sessionWith = (formation: string) => ({
   user: { id: "u-1", name: "DOCENTE UNO", email: "docente@ueb.edu.ec", email_verified: true, can_edit_identity: false, formation },
-  active_role: { id: "r-1", code: "docente", career_id: null, career_name: null },
+  active_role: { id: "r-1", code: "docente" as const, career_id: null, career_name: null },
   available_roles: [],
 });
 

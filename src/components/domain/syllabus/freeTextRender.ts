@@ -1,5 +1,6 @@
 import { h } from 'vue';
 import type { VNodeChild } from 'vue';
+import { Button } from '@/components/ui/button';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const TAGS: Record<string, string> = {
@@ -57,12 +58,14 @@ export const renderFreeText = (node: DocumentNode, action?: FreeTextAction): VNo
         : {};
 
     if (action && node.type === 'paragraph' && freeTextPlain(node).trim() === action.text) {
-        return h(tag, span, [h('button', {
+        return h(tag, span, [h(Button, {
             type: 'button',
-            class: 'cursor-pointer rounded-sm text-left font-semibold text-primary underline underline-offset-2 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+            variant: 'link',
+            size: 'inline',
+            class: 'text-left font-semibold whitespace-normal underline',
             'aria-label': action.label,
             onClick: action.run,
-        }, children)]);
+        }, () => children)]);
     }
 
     return h(tag, span, children);
