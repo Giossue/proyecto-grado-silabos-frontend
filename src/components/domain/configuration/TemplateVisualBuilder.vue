@@ -21,7 +21,12 @@ import TemplateToolbarButton from '@/components/domain/configuration/TemplateToo
 import PaginatedDocument from '@/components/domain/PaginatedDocument.vue';
 import { Button } from '@/components/ui/button';
 import { defaultDocument } from '@/lib/templateDocument';
-import { isFreeTextPart, sectionOrientation } from '@/lib/templateParts';
+import {
+    COMPACT_SHEET,
+    isFreeTextPart,
+    sectionCompact,
+    sectionOrientation,
+} from '@/lib/templateParts';
 import { templatePreviewFields } from '@/lib/templatePreview';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
@@ -157,6 +162,7 @@ const editableOnSheet = (block: TemplateFieldContainer): boolean =>
 
 type SheetGroup = {
     orientation: TemplateAppearance['orientation'];
+    compact: boolean;
     sections: { section: TemplateSection; index: number }[];
 };
 
@@ -168,20 +174,31 @@ const sheetGroups = computed<SheetGroup[]>(() => {
             section.blocks,
             props.appearance.orientation,
         );
+        const compact = sectionCompact(section.blocks);
         const last = groups.at(-1);
 
-        if (last && last.orientation === orientation) {
+        if (
+            last &&
+            last.orientation === orientation &&
+            last.compact === compact
+        ) {
             last.sections.push({ section, index });
 
             return;
         }
 
-        groups.push({ orientation, sections: [{ section, index }] });
+        groups.push({ orientation, compact, sections: [{ section, index }] });
     });
 
     return groups.length > 0
         ? groups
-        : [{ orientation: props.appearance.orientation, sections: [] }];
+        : [
+              {
+                  orientation: props.appearance.orientation,
+                  compact: false,
+                  sections: [],
+              },
+          ];
 });
 const groupPages = ref<number[]>([]);
 const startPage = (groupIndex: number): number =>
@@ -546,9 +563,9 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                 v-for="(group, groupIndex) in sheetGroups"
                 :key="groupIndex"
                 :orientation="group.orientation"
-                :margin-cm="appearance.margin_cm"
+                :margin-cm="group.compact ? COMPACT_SHEET.marginCm : appearance.margin_cm"
                 :font-family="appearance.font_family"
-                :font-size="appearance.body_font_size"
+                :font-size="group.compact ? COMPACT_SHEET.fontSize : appearance.body_font_size"
                 :text-color="appearance.text_color"
                 :start-page="startPage(groupIndex)"
                 :data-sheet-orientation="group.orientation"
@@ -781,7 +798,11 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                             :fields="fieldsFor(block)"
                             :variables="variableSamples"
                             :font-family="appearance.font_family"
-                            :font-size="appearance.body_font_size"
+                            :font-size="
+                                block.compact
+                                    ? COMPACT_SHEET.fontSize
+                                    : appearance.body_font_size
+                            "
                             :text-color="appearance.text_color"
                             :text-align="appearance.body_alignment"
                             :table-header-background="

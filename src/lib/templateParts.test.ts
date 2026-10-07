@@ -46,3 +46,11 @@ describe('templateParts', () => {
         expect(sheetMark('variable', { id: 'nombre_carrera' })).toBe('automatic');
     });
 });
+
+describe('sectionCompact', () => {
+    it('es compacta si algún bloque lo pide', async () => {
+        const { sectionCompact } = await import('./templateParts');
+        expect(sectionCompact([{ compact: true } as never])).toBe(true);
+        expect(sectionCompact([{} as never])).toBe(false);
+    });
+});

@@ -47,3 +47,8 @@ export const sectionOrientation = (
             block.page_orientation === 'landscape' ||
             block.page_orientation === 'portrait',
     )?.page_orientation ?? fallback;
+
+export const COMPACT_SHEET = { fontSize: 9, marginCm: 1.5 } as const;
+
+export const sectionCompact = (blocks: TemplateFieldContainer[]): boolean =>
+    blocks.some((block) => block.compact === true);

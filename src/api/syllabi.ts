@@ -131,6 +131,7 @@ export type SyllabusBlock = {
   title: string | null;
   content_type: string;
   page_orientation?: string;
+  compact?: boolean;
   document?: DocumentNode | null;
   fields: SyllabusField[];
 };

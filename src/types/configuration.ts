@@ -35,6 +35,7 @@ export type TemplateFieldContainer = {
     type: string;
     content_type: TemplateContentType;
     page_orientation?: 'portrait' | 'landscape' | null;
+    compact?: boolean;
     document?: DocumentNode | null;
     fingerprint?: string;
     fields: TemplateField[];
