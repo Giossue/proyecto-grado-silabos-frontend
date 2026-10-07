@@ -156,6 +156,13 @@ const partNumber = (section: TemplateSection, index: number): number =>
     section.blocks
         .slice(0, index + 1)
         .filter((block) => block.title.trim() !== '').length;
+/** Hoja sin nada escrito: sin nombre ni contenido el campo no se vería ni se podría elegir. */
+const isBlank = (block: TemplateFieldContainer): boolean => {
+    const nodes = documentFor(block).content ?? [];
+
+    return block.title.trim() === ''
+        && nodes.every((node) => node.type === 'paragraph' && (node.content ?? []).length === 0);
+};
 // Texto libre no tiene hoja que editar: el docente escribe ahí; el admin solo le pone nombre.
 const editableOnSheet = (block: TemplateFieldContainer): boolean =>
     !isFreeTextPart(block) && block.content_type !== 'institutional';
@@ -736,6 +743,8 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         data-template-selectable="field"
                         class="relative mb-4 scroll-mt-40 rounded-none outline-offset-4 transition-shadow"
                         :class="{
+                            'min-h-14 border border-dashed border-muted-foreground/50 p-2':
+                                !readonly && isBlank(block),
                             'cursor-pointer outline-2 outline-primary':
                                 !readonly &&
                                 !activeTable &&
@@ -753,6 +762,13 @@ const clearSelectionFromBackground = (event: PointerEvent): void => {
                         :tabindex="readonly || activeTable ? undefined : 0"
                         v-on="fieldSelectionListeners(section.id, block.id)"
                     >
+                        <p
+                            v-if="!readonly && isBlank(block)"
+                            class="mb-1 text-xs text-muted-foreground"
+                            data-page-unit
+                        >
+                            Campo en blanco: haga clic para editarlo o inserte contenido.
+                        </p>
                         <h3
                             v-if="block.title.trim() !== ''"
                             class="mb-2 leading-snug font-semibold"
