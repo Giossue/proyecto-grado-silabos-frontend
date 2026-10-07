@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { firstWeek, formatHours, unitsOf, unitTotals } from '@/components/domain/fieldTypes/unitsField';
+import { emptyWeek, firstWeek, formatHours, unitsOf, unitTotals } from '@/components/domain/fieldTypes/unitsField';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { TypedField } from '@/types/configuration';
 
 const props = defineProps<{ field: TypedField }>();
-const units = (): ReturnType<typeof unitsOf> => unitsOf(props.field.value);
+// Sin unidades se dibuja una de ejemplo en blanco: así la plantilla muestra el formato oficial.
+const units = (): ReturnType<typeof unitsOf> => {
+  const value = unitsOf(props.field.value);
+  return value.length > 0 ? value : [{ nombre: '', resultado: '', semanas: Array.from({ length: 4 }, emptyWeek) }];
+};
 </script>
 
 <template>
   <div class="units-field-view flex flex-col gap-6">
-    <p v-if="units().length === 0" class="text-sm text-muted-foreground">Sin unidades registradas.</p>
     <section v-for="(unit, index) in units()" :key="index" class="overflow-x-auto rounded-md border" :aria-label="`Unidad ${index + 1}`">
       <Table>
         <TableHeader>
