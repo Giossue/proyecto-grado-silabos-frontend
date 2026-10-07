@@ -9,12 +9,11 @@ vi.mock('@/api/client', async (importOriginal) => ({
     api: vi.fn().mockResolvedValue({}),
 }));
 
-const sheet = defineComponent({ template: '<div><slot name="default" :close="() => undefined" /></div>' });
-const actions = defineComponent({ template: '<button type="submit">Crear sección</button>' });
+const passthrough = defineComponent({ template: '<div><slot /></div>' });
 
 const mountCreator = (presets = [{ key: 'descripcion', title: 'Descripción de la asignatura', summary: 'Texto que Coordinación escribe una vez.' }]) => mount(TemplateBlockCreator, {
     props: { templateId: 'template-1', position: 0, blockTypes: [{ value: 'free_text', label: 'Texto libre' }], presets, empty: true },
-    global: { stubs: { FormSheet: sheet, FormSheetActions: actions } },
+    global: { stubs: { Dialog: passthrough, DialogTrigger: passthrough, DialogContent: passthrough, DialogHeader: passthrough, DialogFooter: passthrough, DialogTitle: passthrough, DialogDescription: passthrough } },
 });
 
 describe('TemplateBlockCreator — plantillas de campo en la sección nueva', () => {

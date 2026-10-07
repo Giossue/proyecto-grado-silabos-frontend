@@ -4,9 +4,16 @@ import { Blocks, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import TemplateController from '@/api/template-routes';
 import TemplatePartFormSelect from '@/components/domain/configuration/TemplatePartFormSelect.vue';
-import FormSheet from '@/components/domain/FormSheet.vue';
-import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
 import {
     Field,
     FieldDescription,
@@ -16,6 +23,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/lib/toast';
 import { useApiForm as useForm } from '@/lib/apiVisit';
 import type { PartForm, TemplatePreset } from '@/types/configuration';
@@ -145,14 +153,8 @@ const updateOpen = (value: boolean): void => {
 </script>
 
 <template>
-    <FormSheet
-        :open="open"
-        :trigger-label="empty ? 'Agregar primera sección' : 'Agregar sección'"
-        title="Nueva sección"
-        description="La sección es un título numerado del sílabo. Dentro van sus campos."
-        @update:open="updateOpen"
-    >
-        <template #trigger>
+    <Dialog :open="open" @update:open="updateOpen">
+        <DialogTrigger as-child>
             <Button
                 type="button"
                 :variant="empty ? 'default' : choice ? 'ghost' : 'outline'"
@@ -162,11 +164,18 @@ const updateOpen = (value: boolean): void => {
                 <Blocks data-icon="inline-start" aria-hidden="true" />
                 {{ empty ? 'Agregar primera sección' : 'Agregar sección' }}
             </Button>
-        </template>
-        <template #default="{ close }">
-            <form class="flex flex-col gap-4" @submit.prevent="submit">
+        </DialogTrigger>
+        <DialogContent class="sm:max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>Nueva sección</DialogTitle>
+                <DialogDescription>
+                    La sección es un título numerado del sílabo. Dentro van sus campos.
+                </DialogDescription>
+            </DialogHeader>
+            <form class="flex flex-col gap-6" @submit.prevent="submit">
                 <div>
                     <FieldGroup>
+                        <div class="grid gap-4 sm:grid-cols-2">
                         <Field v-if="presets.length > 0">
                             <FieldLabel for="new-section-preset">Plantilla</FieldLabel>
                             <Select v-model="presetModel" :disabled="form.processing">
@@ -201,6 +210,7 @@ const updateOpen = (value: boolean): void => {
                                 :errors="[errorFor('title')]"
                             />
                         </Field>
+                        </div>
 
                         <FieldGroup
                             v-for="(field, index) in chosen ? [] : form.fields"
@@ -226,6 +236,7 @@ const updateOpen = (value: boolean): void => {
                                 </Button>
                             </div>
 
+                            <div class="grid gap-3 sm:grid-cols-2">
                             <Field
                                 :data-invalid="
                                     Boolean(errorFor(`fields.${index}.label`))
@@ -263,6 +274,7 @@ const updateOpen = (value: boolean): void => {
                                 :disabled="form.processing"
                                 :error="errorFor(`fields.${index}.content_type`)"
                             />
+                            </div>
                         </FieldGroup>
                     </FieldGroup>
 
@@ -277,13 +289,17 @@ const updateOpen = (value: boolean): void => {
                         Agregar otro campo
                     </Button>
                 </div>
-                <FormSheetActions
-                    label="Crear sección"
-                    :close="close"
-                    :processing="form.processing"
-                    :icon="Blocks"
-                />
+                <DialogFooter>
+                    <Button type="button" variant="outline" @click="updateOpen(false)">
+                        Cancelar
+                    </Button>
+                    <Button type="submit" :disabled="form.processing">
+                        <Spinner v-if="form.processing" data-icon="inline-start" />
+                        <Blocks v-else data-icon="inline-start" aria-hidden="true" />
+                        Crear sección
+                    </Button>
+                </DialogFooter>
             </form>
-        </template>
-    </FormSheet>
+        </DialogContent>
+    </Dialog>
 </template>
