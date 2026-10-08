@@ -2,7 +2,7 @@
 import { PersonStanding, RotateCcw } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAccessibility, type TextSize } from '@/composables/useAccessibility';
@@ -53,6 +53,9 @@ const setSize = (value: string): void => { settings.value.textSize = value as Te
       </div>
       <DialogFooter>
         <Button type="button" variant="outline" @click="reset"><RotateCcw data-icon="inline-start" aria-hidden="true" />Restablecer</Button>
+        <DialogClose as-child>
+          <Button type="button" variant="outline">Cerrar</Button>
+        </DialogClose>
       </DialogFooter>
     </DialogContent>
   </Dialog>
