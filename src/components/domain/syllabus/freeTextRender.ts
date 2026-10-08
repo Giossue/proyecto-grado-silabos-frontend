@@ -27,6 +27,21 @@ export const freeTextLines = (node: DocumentNode): string => {
     return children.join('\n');
 };
 
+/** Anchos de columna guardados en la primera celda que los trae completos (uno por columna de la tabla). */
+const tableColumnWidths = (table: DocumentNode): number[] | null => {
+    for (const row of table.content ?? []) {
+        for (const cell of row.content ?? []) {
+            const widths = cell.attrs?.colwidth;
+            const span = Number(cell.attrs?.colspan ?? 1);
+            if (Array.isArray(widths) && widths.length === span && span > 1 && widths.every((width) => typeof width === 'number' && width > 0)) {
+                return widths as number[];
+            }
+        }
+    }
+
+    return null;
+};
+
 export const renderFreeText = (node: DocumentNode, action?: FreeTextAction): VNodeChild => {
     if (node.type === 'text') {
         const marks = new Set((node.marks ?? []).map((mark) => mark.type));
@@ -46,7 +61,14 @@ export const renderFreeText = (node: DocumentNode, action?: FreeTextAction): VNo
         return h('div', { class: 'free-text-view' }, children);
     }
     if (node.type === 'table') {
-        return h('table', { class: 'free-text-table' }, [h('tbody', {}, children)]);
+        const widths = tableColumnWidths(node);
+        if (widths === null) return h('table', { class: 'free-text-table' }, [h('tbody', {}, children)]);
+        const total = widths.reduce((sum, width) => sum + width, 0);
+
+        return h('table', { class: 'free-text-table', style: { tableLayout: 'fixed' } }, [
+            h('colgroup', {}, widths.map((width) => h('col', { style: { width: `${(width / total) * 100}%` } }))),
+            h('tbody', {}, children),
+        ]);
     }
     const tag = TAGS[node.type] ?? 'div';
     const span = node.type === 'tableCell' || node.type === 'tableHeader'
