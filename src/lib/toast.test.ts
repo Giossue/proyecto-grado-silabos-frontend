@@ -24,16 +24,23 @@ describe('toast', () => {
         toast.error('No se pudo guardar.');
         toast.loading('Cargando');
 
-        expect(sonner.success).toHaveBeenCalledWith('Cambios guardados', undefined);
-        expect(sonner.info).toHaveBeenCalledWith('Proceso en cola', undefined);
-        expect(sonner.warning).toHaveBeenCalledWith('Revisa el campo', { duration: 10000 });
-        expect(sonner.error).toHaveBeenCalledWith('No se pudo guardar', { duration: 10000 });
-        expect(sonner.loading).toHaveBeenCalledWith('Cargando', undefined);
+        expect(sonner.success).toHaveBeenCalledWith('Cambios guardados', { id: 'success:Cambios guardados' });
+        expect(sonner.info).toHaveBeenCalledWith('Proceso en cola', { id: 'info:Proceso en cola' });
+        expect(sonner.warning).toHaveBeenCalledWith('Revisa el campo', { id: 'warning:Revisa el campo', duration: 10000 });
+        expect(sonner.error).toHaveBeenCalledWith('No se pudo guardar', { id: 'error:No se pudo guardar', duration: 10000 });
+        expect(sonner.loading).toHaveBeenCalledWith('Cargando', { id: 'loading:Cargando' });
+    });
+
+    it('el mismo aviso repetido usa el mismo id para no apilarse', () => {
+        toast.success('Relación académica agregada.');
+        toast.success('Relación académica agregada.');
+
+        expect(sonner.success.mock.calls.map((call) => call[1].id)).toEqual(['success:Relación académica agregada', 'success:Relación académica agregada']);
     });
 
     it('respeta la duración pedida en errores', () => {
         toast.error('Falló', { duration: 3000 });
 
-        expect(sonner.error).toHaveBeenCalledWith('Falló', { duration: 3000 });
+        expect(sonner.error).toHaveBeenCalledWith('Falló', { id: 'error:Falló', duration: 3000 });
     });
 });

@@ -8,6 +8,7 @@ import 'vue-sonner/style.css';
 
 const props = withDefaults(defineProps<ToasterProps>(), {
   position: "top-center",
+  expand: true,
 })
 </script>
 

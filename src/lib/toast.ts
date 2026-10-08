@@ -12,8 +12,17 @@ const show = (
     type: 'success' | 'info' | 'warning' | 'error' | 'loading',
     message: ToastMessage,
     options?: ToastOptions,
-): string | number =>
-    sonnerToast[type](normalizeMessage(message), type === 'error' || type === 'warning' ? { duration: LONG_TOAST_MS, ...options } : options);
+): string | number => {
+    const text = normalizeMessage(message);
+    // El mismo aviso repetido reemplaza al anterior en vez de apilarse debajo.
+    const id = typeof text === 'string' ? `${type}:${text}` : undefined;
+
+    return sonnerToast[type](text, {
+        ...(id ? { id } : {}),
+        ...(type === 'error' || type === 'warning' ? { duration: LONG_TOAST_MS } : {}),
+        ...options,
+    });
+};
 
 export const toast = {
     success: (message: ToastMessage, options?: ToastOptions) =>
