@@ -74,15 +74,15 @@ const close = (): void => {
                 })
             "
         >
-            <div v-if="$slots['header-actions']" class="absolute top-3 right-3 flex items-center gap-1">
-                <slot name="header-actions" />
-            </div>
             <SheetHeader>
                 <SheetTitle>{{ title }}</SheetTitle>
                 <SheetDescription v-if="description">{{ withoutEndPeriod(description) }}</SheetDescription>
             </SheetHeader>
             <div class="flex-1 overflow-y-auto px-4 pt-1 pb-28">
                 <slot :close="close" />
+            </div>
+            <div v-if="$slots['header-actions']" class="absolute top-3 right-3 flex items-center gap-1">
+                <slot name="header-actions" />
             </div>
         </SheetContent>
     </Sheet>
