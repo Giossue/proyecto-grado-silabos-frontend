@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Trash2 } from "@lucide/vue";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { removeCareerTeacher, resendCareerTeacherInvitation, type TeacherAssignments } from "@/api/career-academics";
 import { ApiError } from "@/api/client";
 import CareerTeacherEditSheet from "@/components/domain/academic/CareerTeacherEditSheet.vue";
@@ -44,11 +44,14 @@ const filter = useClientFilter(() => rows.value, (item) => [item.name, item.emai
 });
 const { items, meta, setPage } = useClientPagination(() => filter.items.value);
 const editing = ref<TeacherRow | null>(null);
+const sheetOpen = ref(false);
+const openEditor = (item: TeacherRow): void => { editing.value = item; sheetOpen.value = true; };
+watch(sheetOpen, (value) => { if (!value) window.setTimeout(() => { if (!sheetOpen.value) editing.value = null; }, 350); });
 const removing = ref<TeacherRow | null>(null);
 const removeProcessing = ref(false);
 const removeError = ref<string | null>(null);
 const askRemoval = (item: TeacherRow): void => {
-  editing.value = null;
+  sheetOpen.value = false;
   removing.value = item;
   removeError.value = null;
 };
@@ -71,7 +74,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
   resendError.value = null;
   try {
     const result = await resendCareerTeacherInvitation(userId);
-    editing.value = null;
+    sheetOpen.value = false;
     emit("changed", result.message);
   } catch (reason) {
     resendError.value = reason instanceof ApiError ? reason.message : "No se pudo reenviar la invitación.";
@@ -90,14 +93,14 @@ const resendInvitation = async (userId: string): Promise<void> => {
     <Table label="Docentes de la carrera"><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
       <TableBody>
         <TableEmpty v-if="!items.length" :colspan="3">{{ filter.active.value ? "Ningún docente coincide con la búsqueda." : "No existen docentes en esta carrera." }}</TableEmpty>
-        <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="activateRow($event, () => editing = item)" @keydown.enter.self.prevent="editing = item" @keydown.space.self.prevent="editing = item">
+        <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="activateRow($event, () => openEditor(item))" @keydown.enter.self.prevent="openEditor(item)" @keydown.space.self.prevent="openEditor(item)">
           <TableCell>{{ item.name }}</TableCell>
           <TableCell>{{ item.email }}</TableCell>
           <TableCell>{{ statusOf(item) }}</TableCell>
         </TableRow>
       </TableBody>
     </Table>
-    <CareerTeacherEditSheet v-if="editing" :key="editing.id" :teacher="editing" :open="true" :remove-disabled="Boolean(data.career.lock_reason)" :resending="resendingId === editing.id" @update:open="(value: boolean) => { if (!value) editing = null; }" @saved="emit('changed', $event)" @remove="askRemoval(editing)" @resend="resendInvitation(editing.id)" />
+    <CareerTeacherEditSheet v-if="editing" :key="editing.id" :teacher="editing" v-model:open="sheetOpen" :remove-disabled="Boolean(data.career.lock_reason)" :resending="resendingId === editing.id" @saved="emit('changed', $event)" @remove="askRemoval(editing)" @resend="resendInvitation(editing.id)" />
     <TablePagination :meta="meta" mode="client" label="Paginación de docentes" @update:page="setPage" />
     <Dialog :open="removing !== null" @update:open="(value) => { if (!value) removing = null; }">
       <DialogContent>
