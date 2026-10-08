@@ -161,8 +161,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       </div>
 
       <template v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id">
-      <TemplateInsertPoint v-if="!preview && !locked" label="Nueva sección" @insert="sectionDialog = { open: true, section: null, index: sectionIndex }" />
-      <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="flex min-w-0 flex-col gap-3">
+      <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 flex-col gap-3">
+        <TemplateInsertPoint v-if="!preview" :disabled="locked" label="Nueva sección" position="top" gap="section" @insert="sectionDialog = { open: true, section: null, index: sectionIndex }" />
+        <TemplateInsertPoint v-if="!preview && sectionIndex === sections.length - 1" :disabled="locked" label="Nueva sección" position="bottom" gap="section" @insert="sectionDialog = { open: true, section: null }" />
         <p v-if="sheet.landscape && !preview" class="-mb-1 text-xs italic text-muted-foreground">Hoja horizontal</p>
         <h3 v-if="preview" class="font-bold">{{ sectionIndex + 1 }}. {{ section.title }}</h3>
         <div v-else data-section-heading :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
@@ -178,8 +179,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
         <ol class="flex flex-col gap-3">
           <template v-for="(field, fieldIndex) in fields" :key="field.id">
-          <li v-if="!preview && !locked" role="presentation"><TemplateInsertPoint label="Agregar campo" @insert="fieldDialog = { open: true, sectionId: section.id, field: null, index: fieldIndex }" /></li>
           <li :data-field="field.id" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
+            <TemplateInsertPoint v-if="!preview" :disabled="locked" label="Agregar campo" position="top" gap="field" @insert="fieldDialog = { open: true, sectionId: section.id, field: null, index: fieldIndex }" />
+            <TemplateInsertPoint v-if="!preview && fieldIndex === fields.length - 1" :disabled="locked" label="Agregar campo" position="bottom" gap="field" @insert="fieldDialog = { open: true, sectionId: section.id, field: null }" />
             <span v-if="!preview" aria-hidden="true" :class="cn('pointer-events-none absolute top-1 right-full mr-2 rounded bg-primary px-1.5 py-0.5 font-sans text-xs font-medium text-primary-foreground group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">Campo</span>
             <TemplateFieldContent v-if="preview" :field="field" preview />
             <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -->
@@ -196,11 +198,10 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
           </template>
         </ol>
         <p v-if="fields.length === 0 && !preview" class="text-sm text-muted-foreground">Sección sin campos.</p>
-        <Button v-if="!preview" type="button" variant="outline" size="sm" class="self-start rounded-full border-dashed font-sans" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
+        <Button v-if="!preview && fields.length === 0" type="button" variant="outline" size="sm" class="self-start rounded-full border-dashed font-sans" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
       </section>
       </template>
 
-      <Button v-if="sections.length > 0 && sheetIndex === sheets.length - 1 && !preview" type="button" variant="outline" class="self-start rounded-full border-dashed font-sans" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
     </article>
     </div>
 

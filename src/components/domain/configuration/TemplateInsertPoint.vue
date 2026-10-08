@@ -2,12 +2,16 @@
 import { Plus } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 
-defineProps<{ label: string; disabled?: boolean }>();
+defineProps<{ label: string; position: 'top' | 'bottom'; gap: 'field' | 'section'; disabled?: boolean }>();
 const emit = defineEmits<{ insert: [] }>();
 </script>
 
 <template>
-    <div class="group/insert relative -my-1.5 flex h-6 items-center justify-center" data-insert-point>
+    <div
+        class="group/insert absolute inset-x-0 z-0 flex h-6 items-center justify-center"
+        :class="[position === 'top' ? (gap === 'field' ? '-top-4.5' : '-top-6') : (gap === 'field' ? '-bottom-4.5' : '-bottom-6')]"
+        data-insert-point
+    >
         <span class="pointer-events-none absolute inset-x-0 top-1/2 border-t border-dashed border-primary/60 opacity-0 transition-opacity group-hover/insert:opacity-100" aria-hidden="true" />
         <Button
             type="button"
