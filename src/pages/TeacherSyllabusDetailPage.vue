@@ -466,7 +466,7 @@ onBeforeUnmount(() => {
 
     <template v-if="syllabus">
       <h1 class="sr-only">Sílabo de {{ syllabus.subject }} · {{ syllabus.period }}</h1>
-      <ProcessLockAlert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
+      <ProcessLockAlert v-if="editBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
       <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
@@ -530,7 +530,10 @@ onBeforeUnmount(() => {
 
         </div>
 
-        <aside class="min-w-0" aria-label="Asistente de unidades">
+        <aside v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="min-w-0" aria-label="Aviso de edición">
+          <ProcessLockAlert class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
+        </aside>
+        <aside v-else class="min-w-0" aria-label="Asistente de unidades">
           <SyllabusUnitAssistant
             :syllabus-id="syllabus.id"
             :enabled="canEdit && !conflict"
