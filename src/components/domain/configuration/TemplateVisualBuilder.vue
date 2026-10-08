@@ -32,6 +32,16 @@ const selectedField = ref<string | null>(null);
 const selectedSection = ref<string | null>(null);
 const selectField = (id: string): void => { selectedField.value = id; selectedSection.value = null; };
 const selectSection = (id: string): void => { selectedSection.value = id; selectedField.value = null; };
+const root = ref<HTMLElement | null>(null);
+const available = ref(0);
+let resizeObserver: ResizeObserver | null = null;
+/** Las hojas A4 se achican para caber en pantalla en vez de mostrar una barra de desplazamiento. */
+const SHEET_PX = { portrait: 794, landscape: 1123 };
+const scaleFor = (landscape: boolean): number => {
+    const width = landscape ? SHEET_PX.landscape : SHEET_PX.portrait;
+
+    return available.value > 0 ? Math.min(1, available.value / width) : 1;
+};
 const clearSelectionOutside = (event: PointerEvent): void => {
     const target = event.target;
     if (!(target instanceof Element)) return;
@@ -39,8 +49,18 @@ const clearSelectionOutside = (event: PointerEvent): void => {
     selectedField.value = null;
     selectedSection.value = null;
 };
-onMounted(() => document.addEventListener('pointerdown', clearSelectionOutside));
-onBeforeUnmount(() => document.removeEventListener('pointerdown', clearSelectionOutside));
+onMounted(() => {
+    document.addEventListener('pointerdown', clearSelectionOutside);
+    if (root.value && typeof ResizeObserver !== 'undefined') {
+        available.value = root.value.clientWidth;
+        resizeObserver = new ResizeObserver(() => { available.value = root.value?.clientWidth ?? 0; });
+        resizeObserver.observe(root.value);
+    }
+});
+onBeforeUnmount(() => {
+    document.removeEventListener('pointerdown', clearSelectionOutside);
+    resizeObserver?.disconnect();
+});
 const busy = ref(false);
 const error = ref<string | null>(null);
 
@@ -131,11 +151,11 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
 <template>
   <TooltipProvider>
-  <div class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
+  <div ref="root" class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
     <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto py-4" tabindex="0" role="region" :aria-label="`Hoja ${sheetIndex + 1} de la plantilla con desplazamiento horizontal`">
-    <article data-sheet :data-preview="preview" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
+    <article data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape) }" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
       <Tooltip>
         <TooltipTrigger as-child>
           <Button type="button" variant="ghost" size="icon" class="absolute top-2 right-2" :aria-label="previewLabel" :aria-pressed="preview" @click="preview = !preview"><EyeOff v-if="preview" aria-hidden="true" /><Eye v-else aria-hidden="true" /></Button>
