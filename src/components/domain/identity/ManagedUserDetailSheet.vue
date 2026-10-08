@@ -8,13 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Badge } from '@/components/ui/badge';
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from '@/components/ui/card';
-import {
     Sheet,
     SheetContent,
     SheetDescription,
@@ -106,111 +99,53 @@ const completedAssignments = computed(() =>
                 <ManagedUserEditForm :user="props.user" :roles="roles" :careers="careers" @saved="saved" @cancel="editing = false" />
             </div>
 
-            <div v-else class="flex-1 overflow-y-auto px-4 pt-1 pb-28 flex flex-col gap-4">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Datos de la cuenta</CardTitle>
-                        <CardDescription>{{ withoutEndPeriod(status.hint) }}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <dl class="grid gap-3 text-sm">
-                            <div class="flex flex-col gap-1">
-                                <dt class="text-muted-foreground">Estado</dt>
-                                <dd>
-                                    <Badge :variant="status.variant">
-                                        {{ status.label }}
-                                    </Badge>
-                                </dd>
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <dt class="text-muted-foreground">
-                                    Nombre completo
-                                </dt>
-                                <dd class="font-medium">
-                                    {{ props.user.nombre }}
-                                </dd>
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <dt class="text-muted-foreground">
-                                    Correo institucional
-                                </dt>
-                                <dd class="font-medium">
-                                    {{ props.user.correo_electronico }}
-                                </dd>
-                            </div>
-                            <div class="flex flex-col gap-1">
-                                <dt class="text-muted-foreground">
-                                    Acceso en dos pasos
-                                </dt>
-                                <dd class="font-medium">
-                                    {{
-                                        props.user.two_factor_enabled
-                                            ? 'Configurado por su titular'
-                                            : 'Sin configurar'
-                                    }}
-                                </dd>
-                            </div>
-                        </dl>
-                    </CardContent>
-                </Card>
+            <div v-else class="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pt-1 pb-28">
+                <dl class="grid gap-3 text-sm">
+                    <div class="flex flex-col gap-1">
+                        <dt class="text-muted-foreground">Estado</dt>
+                        <dd class="flex flex-col items-start gap-1">
+                            <Badge :variant="status.variant">{{ status.label }}</Badge>
+                            <span class="text-muted-foreground">{{ withoutEndPeriod(status.hint) }}</span>
+                        </dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <dt class="text-muted-foreground">Nombre completo</dt>
+                        <dd class="font-medium">{{ props.user.nombre }}</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <dt class="text-muted-foreground">Correo institucional</dt>
+                        <dd class="font-medium">{{ props.user.correo_electronico }}</dd>
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <dt class="text-muted-foreground">Acceso en dos pasos</dt>
+                        <dd class="font-medium">
+                            {{ props.user.two_factor_enabled ? 'Configurado por su titular' : 'Sin configurar' }}
+                        </dd>
+                    </div>
+                </dl>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Roles vigentes</CardTitle>
-                        <CardDescription>
-                            Cada rol dice qué puede hacer y sobre qué carrera.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <p
-                            v-if="currentAssignments.length === 0"
-                            class="text-sm text-muted-foreground"
-                        >
-                            Sin rol vigente: la cuenta no accede a ningún
-                            módulo.
-                        </p>
-                        <ul v-else class="flex flex-col gap-3 text-sm">
-                            <li
-                                v-for="assignment in currentAssignments"
-                                :key="assignment.id"
-                                class="flex flex-col gap-1"
-                            >
-                                <span class="font-medium">
-                                    {{ assignment.role_name }}
-                                </span>
-                                <span class="text-muted-foreground">
-                                    {{ scopeOf(assignment) }}
-                                </span>
-                            </li>
-                        </ul>
-                    </CardContent>
-                </Card>
+                <section class="flex flex-col gap-2">
+                    <h3 class="text-sm font-medium">Roles vigentes</h3>
+                    <p v-if="currentAssignments.length === 0" class="text-sm text-muted-foreground">
+                        Sin rol vigente: la cuenta no accede a ningún módulo.
+                    </p>
+                    <ul v-else class="flex flex-col gap-3 text-sm">
+                        <li v-for="assignment in currentAssignments" :key="assignment.id" class="flex flex-col gap-1">
+                            <span class="font-medium">{{ assignment.role_name }}</span>
+                            <span class="text-muted-foreground">{{ scopeOf(assignment) }}</span>
+                        </li>
+                    </ul>
+                </section>
 
-                <Card v-if="completedAssignments.length > 0">
-                    <CardHeader>
-                        <CardTitle>Roles finalizados</CardTitle>
-                        <CardDescription>
-                            Asignaciones retiradas que se conservan como
-                            historial.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ul class="flex flex-col gap-3 text-sm">
-                            <li
-                                v-for="assignment in completedAssignments"
-                                :key="assignment.id"
-                                class="flex flex-col gap-1"
-                            >
-                                <span class="font-medium">
-                                    {{ assignment.role_name }}
-                                </span>
-                                <span class="text-muted-foreground">
-                                    {{ scopeOf(assignment) }}
-                                </span>
-                            </li>
-                        </ul>
-                    </CardContent>
-                </Card>
+                <section v-if="completedAssignments.length > 0" class="flex flex-col gap-2">
+                    <h3 class="text-sm font-medium">Roles finalizados</h3>
+                    <ul class="flex flex-col gap-3 text-sm">
+                        <li v-for="assignment in completedAssignments" :key="assignment.id" class="flex flex-col gap-1">
+                            <span class="font-medium">{{ assignment.role_name }}</span>
+                            <span class="text-muted-foreground">{{ scopeOf(assignment) }}</span>
+                        </li>
+                    </ul>
+                </section>
             </div>
 
             <SheetFooter v-if="!editing" class="absolute inset-x-0 bottom-0 border-t bg-card pb-(--safe-footer-inset)">
