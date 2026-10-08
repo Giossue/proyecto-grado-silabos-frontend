@@ -8,8 +8,8 @@ const BLOCKS = ':scope > header, :scope > section > h3, [data-section-heading], 
 
 /**
  * Reparte el contenido de la hoja en páginas A4: un bloque que no cabe en lo que queda de la
- * página baja a la siguiente, y el fondo dibuja cada página separada. Los bloques más altos que
- * una página (tablas grandes) se dejan cruzar el salto.
+ * página baja a la siguiente, y el fondo dibuja cada página separada. Las tablas no se mueven:
+ * empiezan donde quedan y siguen en la página siguiente, como en Word.
  */
 export const paginateSheet = (sheet: HTMLElement, landscape: boolean): void => {
     const blocks = [...sheet.querySelectorAll<HTMLElement>(BLOCKS)];
@@ -31,7 +31,7 @@ export const paginateSheet = (sheet: HTMLElement, landscape: boolean): void => {
         const contentBottom = index * stride + page - MARGIN;
         let shift = 0;
         if (top < contentTop) shift = contentTop - top;
-        else if (top + height > contentBottom && height <= usable) shift = (index + 1) * stride + MARGIN - top;
+        else if (top + height > contentBottom && height <= usable && !block.querySelector('table')) shift = (index + 1) * stride + MARGIN - top;
         if (shift > 0) block.style.marginTop = `${shift}px`;
         bottom = Math.max(bottom, top + shift + height);
     }
