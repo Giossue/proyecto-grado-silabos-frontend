@@ -8,6 +8,7 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { fieldTypeRegistry } from '@/components/domain/fieldTypes/registry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const props = defineProps<{ subjectId: string; subjectName: string; disabled?: boolean }>();
@@ -18,6 +19,15 @@ const values = ref<Record<string, DocumentNode | null>>({});
 const loading = ref(false);
 const saving = ref(false);
 const error = ref<string | null>(null);
+const GENERAL = 'General';
+const sectionOf = (field: SubjectProfileField): string => field.section?.trim() || GENERAL;
+const sections = computed(() => [...new Set(fields.value.map(sectionOf))]);
+const chosen = ref<string | null>(null);
+const activeSection = computed<string>({
+  get: () => (chosen.value !== null && sections.value.includes(chosen.value) ? chosen.value : sections.value[0] ?? ''),
+  set: (value) => { chosen.value = value; },
+});
+const shownFields = computed(() => fields.value.filter((field) => sectionOf(field) === activeSection.value));
 const canSave = computed(() => !loading.value && !saving.value && !props.disabled && fields.value.length > 0);
 
 watch(open, async (value) => {
@@ -60,9 +70,14 @@ const save = async (close: () => void) => {
           <LoadingSkeleton v-if="loading" variant="form" :rows="4" />
           <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos marcados «se llena desde la ficha». Pídale a Administración que los marque.</AlertDescription></Alert>
           <template v-else>
+            <Tabs v-if="sections.length > 1" v-model="activeSection" class="w-full shrink-0">
+              <TabsList class="h-auto min-h-9 w-full shrink-0 flex-wrap justify-start gap-1" aria-label="Secciones de la ficha">
+                <TabsTrigger v-for="section in sections" :key="section" :value="section" class="h-8 max-w-56 flex-none" :title="section"><span class="truncate">{{ section }}</span></TabsTrigger>
+              </TabsList>
+            </Tabs>
             <fieldset class="contents" :disabled="disabled">
-              <Field v-for="field in fields" :key="field.id">
-                <FieldLabel :for="`ficha-${field.id}`">{{ field.label }}</FieldLabel>
+              <Field v-for="field in shownFields" :key="field.id">
+                <FieldLabel :for="`ficha-${field.id}`" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || sectionOf(field) }}</FieldLabel>
                 <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
                 <component
                   :is="fieldTypeRegistry.texto.EditorComponent"

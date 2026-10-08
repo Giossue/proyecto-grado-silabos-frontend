@@ -40,7 +40,7 @@ describe('SubjectProfileSheet', () => {
     vi.mocked(getSubjectProfile).mockResolvedValue({
       fields: [
         { id: 'f1', key: 'descripcion', label: 'Descripción de la asignatura', help: null, section: 'Descripción' },
-        { id: 'f2', key: 'vinculacion', label: 'Vinculación con la sociedad', help: null, section: null },
+        { id: 'f2', key: 'vinculacion', label: 'Vinculación con la sociedad', help: null, section: 'Descripción' },
       ],
       values: { f1: { type: 'doc', content: [] } },
       complete: false,
@@ -59,6 +59,29 @@ describe('SubjectProfileSheet', () => {
       f2: { type: 'doc', content: [] },
     });
     expect(wrapper.emitted('saved')).toHaveLength(1);
+  });
+
+  it('divide la ficha en pestañas por sección y usa el nombre de la sección si el campo no tiene nombre', async () => {
+    vi.mocked(getSubjectProfile).mockResolvedValue({
+      fields: [
+        { id: 'f1', key: 'descripcion', label: '', help: null, section: 'Descripción de la asignatura' },
+        { id: 'f2', key: 'objetivo', label: 'Objetivo General', help: null, section: 'Objetivos' },
+      ],
+      values: {},
+      complete: false,
+    });
+    const wrapper = mountSheet();
+    await wrapper.setProps({ open: true });
+    await flushPromises();
+
+    const tabs = wrapper.findAll('[role="tab"]').map((tab) => tab.text());
+    expect(tabs).toEqual(['Descripción de la asignatura', 'Objetivos']);
+    expect(wrapper.find('[data-id="ficha-f1"]').exists()).toBe(true);
+    expect(wrapper.find('[data-id="ficha-f2"]').exists()).toBe(false);
+
+    await wrapper.findAll('[role="tab"]')[1]!.trigger('mousedown');
+    await flushPromises();
+    expect(wrapper.find('[data-id="ficha-f2"]').exists()).toBe(true);
   });
 
   it('explains that the template has no profile fields yet', async () => {
