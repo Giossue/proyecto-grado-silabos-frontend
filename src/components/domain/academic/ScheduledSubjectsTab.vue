@@ -45,7 +45,7 @@ const filter = useClientFilter(periodRows, (item) => [item.subject_name, item.su
 });
 const cycleOptions = computed(() => [...new Map(periodRows.value.map((item) => [
   cycleKey(item),
-  { value: cycleKey(item), label: item.subject_cycle === null ? "Sin ciclo" : `${item.subject_cycle}.º ciclo`, order: item.subject_cycle ?? Number.MAX_SAFE_INTEGER },
+  { value: cycleKey(item), label: item.subject_cycle === null ? "Sin ciclo" : String(item.subject_cycle), order: item.subject_cycle ?? Number.MAX_SAFE_INTEGER },
 ])).values()].sort((a, b) => a.order - b.order));
 const parallelOptions = computed(() => [...new Set(periodRows.value.flatMap((item) => item.parallels.map((parallel) => parallel.code)))]
   .sort((a, b) => a.localeCompare(b, "es", { numeric: true })));
