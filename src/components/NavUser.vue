@@ -34,7 +34,7 @@ const switcherOpen = ref(false);
                 aria-label="Menú de usuario"
             >
                 <div class="flex min-w-0 flex-1 items-center gap-2 [&>.grid]:hidden [&>.grid]:min-w-0 sm:[&>.grid]:grid">
-                    <UserInfo :user="user" :show-full-name="true" name-class="text-header-user" />
+                    <UserInfo :user="user" :show-full-name="true" />
                     <ChevronDown class="hidden sm:block" data-icon="inline-end" aria-hidden="true" />
                 </div>
             </Button>
