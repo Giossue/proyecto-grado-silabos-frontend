@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getManagedUsers, type ManagedUser, type ManagedUsersResponse } from '@/api/admin-users';
 import { ApiError } from '@/api/client';
@@ -14,7 +14,6 @@ import { Badge } from '@/components/ui/badge';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
-import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -51,7 +50,11 @@ const load = async (page = 1): Promise<void> => {
 const viewing = ref<ManagedUser | null>(null);
 const viewOpen = ref(false);
 const openUser = (user: ManagedUser): void => { viewing.value = user; viewOpen.value = true; };
-const hasActions = (user: ManagedUser): boolean => (user.id !== currentUserId.value && !user.pending_activation) || (user.pending_activation && user.active);
+const dialog = ref<'access' | 'resend' | 'delete' | null>(null);
+const dialogOpen = (kind: 'access' | 'resend' | 'delete') => computed({ get: () => dialog.value === kind, set: (value: boolean) => { if (!value) dialog.value = null; } });
+const accessOpen = dialogOpen('access');
+const resendOpen = dialogOpen('resend');
+const deleteOpen = dialogOpen('delete');
 const changed = async (notice: string): Promise<void> => { toast.success(notice); await load(); };
 const clearFilters = (): void => { q.value = ''; status.value = 'all'; role.value = 'all'; career.value = 'all'; void load(); };
 onMounted(load);
@@ -73,17 +76,19 @@ onMounted(load);
                 </template>
             </FilterToolbar></form>
 
-            <Table label="Usuarios y roles"><TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Rol vigente</TableHead><TableHead>Carrera</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
-                <TableEmpty v-if="result.users.data.length === 0" :colspan="5">No se encontraron cuentas con estos filtros.</TableEmpty>
+            <Table label="Usuarios y roles"><TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Rol vigente</TableHead><TableHead>Carrera</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader><TableBody>
+                <TableEmpty v-if="result.users.data.length === 0" :colspan="4">No se encontraron cuentas con estos filtros.</TableEmpty>
                 <TableRow v-for="user in result.users.data" v-else :key="user.id" class="cursor-pointer" tabindex="0" :aria-label="`Ver ${user.nombre}`" @click="activateRow($event, () => openUser(user))" @keydown.enter.self.prevent="openUser(user)" @keydown.space.self.prevent="openUser(user)">
                     <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span></div></TableCell>
                     <TableCell><div class="flex items-center gap-2"><span v-if="user.roles[0]">{{ user.roles[0].name }}</span><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span><Badge v-if="user.roles.length > 1" variant="secondary">+{{ user.roles.length - 1 }}<span class="sr-only"> más</span></Badge></div></TableCell>
                     <TableCell><div class="flex items-center gap-2 text-sm"><span v-if="user.roles[0]" :class="user.roles[0].career_name ? '' : 'text-muted-foreground'">{{ careerOf(user.roles[0]) }}</span><span v-else class="text-muted-foreground">—</span><Badge v-if="user.roles.length > 1" variant="secondary">+{{ user.roles.length - 1 }}<span class="sr-only"> más</span></Badge></div></TableCell>
                     <TableCell>{{ statusOf(user) }}</TableCell>
-                    <TableCell class="text-right"><TableActionsMenu v-if="hasActions(user)" :label="`Acciones para ${user.nombre}`"><ManagedUserAccessAction v-if="user.id !== currentUserId && !user.pending_activation" :user="user" @changed="changed" /><ManagedUserPendingActions v-if="user.pending_activation && user.active" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
+                    
                 </TableRow>
             </TableBody></Table>
-            <ManagedUserDetailSheet v-if="viewing" :key="viewing.id" v-model:open="viewOpen" :user="viewing" :roles="result.roles" :careers="result.careers" :can-edit="viewing.id !== currentUserId" @saved="changed" />
+            <ManagedUserDetailSheet v-if="viewing" :key="viewing.id" v-model:open="viewOpen" :user="viewing" :roles="result.roles" :careers="result.careers" :can-edit="viewing.id !== currentUserId" @saved="changed" @action="(key) => { dialog = key; }" />
+            <ManagedUserAccessAction v-if="viewing" v-model:open="accessOpen" :user="viewing" @changed="changed" />
+            <ManagedUserPendingActions v-if="viewing" v-model:resend-open="resendOpen" v-model:delete-open="deleteOpen" :user-id="viewing.id" :user-name="viewing.nombre" :user-email="viewing.correo_electronico" @changed="changed" />
             <TablePagination :meta="result.users" label="Paginación de usuarios" @update:page="load" />
         </CardContent></Card>
     </PageFrame>

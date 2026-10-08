@@ -1,61 +1,48 @@
-import { mount } from '@vue/test-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { defineComponent } from 'vue';
+import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ManagedUserPendingActions from '@/components/domain/identity/ManagedUserPendingActions.vue';
 
 const { resendManagedUserInvitation, deleteManagedUser } = vi.hoisted(() => ({
-    resendManagedUserInvitation: vi.fn(),
-    deleteManagedUser: vi.fn(),
+    resendManagedUserInvitation: vi.fn().mockResolvedValue({ message: 'Invitación enviada.' }),
+    deleteManagedUser: vi.fn().mockResolvedValue({ message: 'Cuenta eliminada.' }),
 }));
 
-vi.mock('@/api/admin-users', () => ({
-    resendManagedUserInvitation,
-    deleteManagedUser,
-}));
+vi.mock('@/api/admin-users', () => ({ resendManagedUserInvitation, deleteManagedUser }));
 
-const passthrough = defineComponent({ template: '<div><slot /></div>' });
-const menuItem = defineComponent({
-    emits: ['select'],
-    template: `<button class="menu-item" @click="$emit('select', $event)"><slot /></button>`,
-});
-const dialog = defineComponent({
-    props: { open: Boolean },
-    template: '<div v-if="open" data-dialog><slot /></div>',
-});
+enableAutoUnmount(afterEach);
+
+const props = { userId: 'user-1', userName: 'Docente', userEmail: 'docente@example.test' };
 
 describe('ManagedUserPendingActions', () => {
     beforeEach(() => {
-        resendManagedUserInvitation.mockReset();
-        deleteManagedUser.mockReset();
+        resendManagedUserInvitation.mockClear();
+        deleteManagedUser.mockClear();
+        document.body.innerHTML = '';
     });
 
-    it('mantiene abierta la confirmación al seleccionar el reenvío desde el menú', async () => {
-        const wrapper = mount(ManagedUserPendingActions, {
-            global: {
-                stubs: {
-                    DropdownMenuItem: menuItem,
-                    Dialog: dialog,
-                    DialogClose: passthrough,
-                    DialogContent: passthrough,
-                    DialogDescription: passthrough,
-                    DialogFooter: passthrough,
-                    DialogHeader: passthrough,
-                    DialogTitle: passthrough,
-                    Button: passthrough,
-                    MailCheck: passthrough,
-                    Spinner: passthrough,
-                    Trash2: passthrough,
-                },
-            },
-            props: {
-                userId: 'user-1',
-                userName: 'Docente',
-                userEmail: 'docente@example.test',
-            },
-        });
+    it('muestra la confirmación de reenvío solo cuando se pide abrirla y reenvía al confirmar', async () => {
+        const wrapper = mount(ManagedUserPendingActions, { attachTo: document.body, props: { ...props, resendOpen: false } });
+        expect(document.body.textContent).not.toContain('Reenviar invitación de activación');
 
-        await wrapper.find('.menu-item').trigger('click');
+        await wrapper.setProps({ resendOpen: true });
+        await flushPromises();
+        expect(document.body.textContent).toContain('docente@example.test');
 
-        expect(wrapper.find('[data-dialog]').exists()).toBe(true);
+        const confirm = [...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Reenviar invitación') as HTMLButtonElement;
+        confirm.click();
+        await flushPromises();
+        expect(resendManagedUserInvitation).toHaveBeenCalledWith('user-1');
+        expect(wrapper.emitted('changed')?.[0]).toEqual(['Invitación enviada.']);
+    });
+
+    it('elimina la cuenta pendiente al confirmar', async () => {
+        const wrapper = mount(ManagedUserPendingActions, { attachTo: document.body, props: { ...props, deleteOpen: true } });
+        await flushPromises();
+
+        const confirm = [...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Eliminar cuenta') as HTMLButtonElement;
+        confirm.click();
+        await flushPromises();
+        expect(deleteManagedUser).toHaveBeenCalledWith('user-1');
+        expect(wrapper.emitted('changed')?.[0]).toEqual(['Cuenta eliminada.']);
     });
 });

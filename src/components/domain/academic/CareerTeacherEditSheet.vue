@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import { Check, MailCheck, UserMinus } from '@lucide/vue';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { updateCareerTeacher } from '@/api/career-academics';
 import { ApiError } from '@/api/client';
 import FormSheet from '@/components/domain/FormSheet.vue';
-import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
-import { Button } from '@/components/ui/button';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Spinner } from '@/components/ui/spinner';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import SheetActions, { type SheetAction } from '@/components/domain/SheetActions.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -20,6 +16,11 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ saved: [message: string]; remove: []; resend: [] }>();
 const open = defineModel<boolean>('open', { default: false });
+const actions = computed<SheetAction[]>(() => [
+    ...(props.teacher.pending_activation ? [{ key: 'resend', label: 'Reenviar invitación', icon: MailCheck, loading: props.resending }] : []),
+    { key: 'remove', label: 'Quitar de la carrera', icon: UserMinus, destructive: true, disabled: props.removeDisabled },
+]);
+const select = (key: string): void => { if (key === 'resend') emit('resend'); else emit('remove'); };
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const form = ref({ nombre: '', correo_electronico: '' });
@@ -43,18 +44,7 @@ const submit = async (): Promise<void> => {
 <template>
     <FormSheet v-model:open="open" trigger-label="Editar docente" title="Editar docente" description="Corrija el nombre o el correo del docente." :show-trigger="false">
         <template #header-actions>
-            <TableActionsMenu v-if="teacher.pending_activation" :label="`Acciones para ${teacher.name}`">
-                <DropdownMenuItem :disabled="resending" @select="emit('resend')"><Spinner v-if="resending" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
-                <DropdownMenuItem variant="destructive" :disabled="removeDisabled" @select="emit('remove')"><UserMinus aria-hidden="true" />Quitar de la carrera</DropdownMenuItem>
-            </TableActionsMenu>
-            <TooltipProvider v-else>
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <Button type="button" variant="ghost" size="icon-sm" class="text-destructive hover:bg-destructive/10 hover:text-destructive" aria-label="Quitar de la carrera" :disabled="removeDisabled" @click="emit('remove')"><UserMinus aria-hidden="true" /></Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Quitar de la carrera</TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            <SheetActions :actions="actions" :menu-label="`Acciones para ${teacher.name}`" @select="select" />
         </template>
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
             <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`career-teacher-name-${teacher.id}`" required>Nombre completo</FieldLabel><Input :id="`career-teacher-name-${teacher.id}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>

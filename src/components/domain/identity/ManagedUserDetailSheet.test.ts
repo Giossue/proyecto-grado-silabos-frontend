@@ -41,4 +41,30 @@ describe('ManagedUserDetailSheet', () => {
 
     expect([...document.body.querySelectorAll('button')].some((button) => button.textContent?.includes('Editar'))).toBe(false);
   });
+
+  it('con una sola acción muestra el icono directo, y con varias, el menú', async () => {
+    const wrapper = mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...props, canEdit: true } });
+    await flushPromises();
+
+    expect(document.body.querySelector('button[aria-label="Deshabilitar acceso"]')).not.toBeNull();
+    expect(document.body.querySelector('button[aria-label^="Acciones para"]')).toBeNull();
+
+    (document.body.querySelector('button[aria-label="Deshabilitar acceso"]') as HTMLButtonElement).click();
+    await flushPromises();
+    expect(wrapper.emitted('action')?.[0]).toEqual(['access']);
+    wrapper.unmount();
+
+    const pending = { ...props, user: { ...user, pending_activation: true } as ManagedUser };
+    mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...pending, canEdit: true } });
+    await flushPromises();
+    expect(document.body.querySelector('button[aria-label="Acciones para Ana Pérez"]')).not.toBeNull();
+  });
+
+  it('no ofrece acciones en la propia cuenta', async () => {
+    mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...props, canEdit: false } });
+    await flushPromises();
+
+    expect(document.body.querySelector('button[aria-label="Deshabilitar acceso"]')).toBeNull();
+    expect(document.body.querySelector('button[aria-label^="Acciones para"]')).toBeNull();
+  });
 });

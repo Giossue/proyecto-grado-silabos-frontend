@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Pencil } from '@lucide/vue';
+import { Ban, CircleCheck, MailCheck, Pencil, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import type { ManagedUser } from '@/api/admin-users';
+import SheetActions, { type SheetAction } from '@/components/domain/SheetActions.vue';
 import ManagedUserEditForm from '@/components/domain/identity/ManagedUserEditForm.vue';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
@@ -40,10 +41,29 @@ const props = defineProps<{
     careers: { id: string; nombre: string }[];
     canEdit: boolean;
 }>();
-const emit = defineEmits<{ saved: [message: string] }>();
+const emit = defineEmits<{ saved: [message: string]; action: [key: 'access' | 'resend' | 'delete'] }>();
 
 const open = defineModel<boolean>('open', { default: false });
 const editing = ref(false);
+const actions = computed<SheetAction[]>(() => {
+    if (!props.canEdit) return [];
+    if (props.user.pending_activation) {
+        return props.user.active
+            ? [
+                { key: 'resend', label: 'Reenviar invitación', icon: MailCheck },
+                { key: 'delete', label: 'Eliminar cuenta pendiente', icon: Trash2, destructive: true },
+            ]
+            : [];
+    }
+
+    return [props.user.active
+        ? { key: 'access', label: 'Deshabilitar acceso', icon: Ban, destructive: true }
+        : { key: 'access', label: 'Habilitar acceso', icon: CircleCheck }];
+});
+const runAction = (key: string): void => {
+    open.value = false;
+    emit('action', key as 'access' | 'resend' | 'delete');
+};
 watch(open, (value) => { if (!value) editing.value = false; });
 const saved = (message: string): void => {
     editing.value = false;
@@ -115,6 +135,10 @@ const currentAssignments = computed(() =>
                     </ul>
                 </section>
 
+            </div>
+
+            <div v-if="!editing && actions.length > 0" class="absolute top-3 right-3 flex items-center gap-1">
+                <SheetActions :actions="actions" :menu-label="`Acciones para ${props.user.nombre}`" @select="runAction" />
             </div>
 
             <SheetFooter v-if="!editing" class="absolute inset-x-0 bottom-0 border-t bg-card pb-(--safe-footer-inset)">
