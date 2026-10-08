@@ -91,7 +91,7 @@ describe('TeacherAssignmentsPanel', () => {
         });
 
         expect(wrapper.text()).toContain('Docente pendiente');
-        expect(wrapper.text()).toContain('Pendiente de activación');
+        expect(wrapper.text()).toContain('Pendiente');
         expect(wrapper.text()).toContain('activo@example.test');
         expect(wrapper.text()).not.toContain('Acciones');
         expect(wrapper.text()).not.toContain('Reenviar invitación');
@@ -135,7 +135,7 @@ describe('TeacherAssignmentsPanel', () => {
         });
 
         expect(wrapper.text()).toContain('Docente retirado');
-        expect(wrapper.text()).toContain('Pendiente de activación');
+        expect(wrapper.text()).toContain('Pendiente');
         expect(wrapper.text()).not.toContain('Inteligencia Artificial');
     });
 
@@ -179,7 +179,7 @@ describe('TeacherAssignmentsPanel', () => {
         expect(text).toContain('Docente sin paralelo');
         expect(text).toContain('docente2.pruebas@example.test');
         expect(text).toContain('Activa');
-        expect(text).not.toContain('Pendiente de activación');
+        expect(text).not.toContain('Pendiente');
         expect(text).not.toContain('Reenviar invitación');
     });
 

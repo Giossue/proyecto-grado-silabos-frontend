@@ -37,7 +37,7 @@ const rows = computed<TeacherRow[]>(() => props.data.careerTeachers.map((teacher
   pending_activation: teacher.pending_activation,
 })));
 const statusOf = (item: TeacherRow): string => item.pending_activation
-  ? "Pendiente de activación"
+  ? "Pendiente"
   : "Activa";
 const filter = useClientFilter(() => rows.value, (item) => [item.name, item.email, statusOf(item)], {
   estado: { matches: (item, value) => value === "pending" ? item.pending_activation : !item.pending_activation },
@@ -87,7 +87,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
 <template>
   <Card><CardContent class="flex flex-col gap-4">
     <ClientFilterBar :filter="filter" input-id="teacher-assignments-search" label="Buscar docente" placeholder="Buscar por docente o correo">
-      <template #filters><Field><FieldLabel for="teacher-assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="teacher-assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="pending">Pendiente de activación</SelectItem></SelectGroup></SelectContent></Select></Field></template>
+      <template #filters><Field><FieldLabel for="teacher-assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="teacher-assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="pending">Pendiente</SelectItem></SelectGroup></SelectContent></Select></Field></template>
     </ClientFilterBar>
     <FeedbackAlert v-if="resendError" :message="resendError" />
     <Table label="Docentes de la carrera"><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
