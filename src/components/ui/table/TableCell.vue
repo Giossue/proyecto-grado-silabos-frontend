@@ -13,7 +13,7 @@ const props = defineProps<{
     role="cell"
     :class="
       cn(
-        'p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5',
+        'p-2 align-middle whitespace-normal break-words [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5',
         props.class,
       )
     "
