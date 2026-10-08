@@ -6,6 +6,7 @@ import type { ManagedUser } from '@/api/admin-users';
 import ManagedUserEditForm from '@/components/domain/identity/ManagedUserEditForm.vue';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
+import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import {
     Sheet,
@@ -123,6 +124,8 @@ const completedAssignments = computed(() =>
                         </dd>
                     </div>
                 </dl>
+
+                <Separator />
 
                 <section class="flex flex-col gap-2">
                     <h3 class="text-sm font-medium">Roles vigentes</h3>
