@@ -179,7 +179,7 @@ const {
                         @click="activateRow($event, () => editRecord(faculty.id))"
                         @keydown.enter.self.prevent="editRecord(faculty.id)" @keydown.space.self.prevent="editRecord(faculty.id)"
                     >
-                        <TableCell>
+                        <TableCell class="whitespace-normal">
                             {{ faculty.nombre }}
                             <CatalogActions
                                 :ref="(actions) => setActions(faculty.id, actions)"
@@ -195,7 +195,7 @@ const {
                                 @changed="emit('changed', $event)"
                             />
                         </TableCell>
-                        <TableCell>
+                        <TableCell class="whitespace-normal">
                             {{ faculty.campus ?? 'Sin campus' }}
                         </TableCell>
                         <TableCell>
@@ -306,7 +306,7 @@ const {
                         @click="activateRow($event, () => editRecord(career.id))"
                         @keydown.enter.self.prevent="editRecord(career.id)" @keydown.space.self.prevent="editRecord(career.id)"
                     >
-                        <TableCell>
+                        <TableCell class="whitespace-normal">
                             {{ career.name }}
                             <CatalogActions
                                 :ref="(actions) => setActions(career.id, actions)"
@@ -324,13 +324,13 @@ const {
                                 @changed="emit('changed', $event)"
                             />
                         </TableCell>
-                        <TableCell>
+                        <TableCell class="whitespace-normal">
                             {{ facultyName(career.faculty_id) }}
                         </TableCell>
                         <TableCell>
                             {{ career.modality_label ?? 'Sin modalidad' }}
                         </TableCell>
-                        <TableCell>
+                        <TableCell class="whitespace-normal">
                             {{ career.campus_name ?? 'Sin campus' }}
                         </TableCell>
                     </TableRow>
