@@ -50,7 +50,9 @@ const load = async (): Promise<void> => {
 };
 
 const subjects = computed<Subject[]>(() => data.value?.options.activeSubjects ?? []);
-const statusOf = (subject: Subject): string => (subject.profile_complete ? 'Completa' : 'Incompleta');
+const statusOf = (subject: Subject): string => (subject.profile_complete
+    ? 'Completa'
+    : subject.profile_total ? `${subject.profile_filled ?? 0} de ${subject.profile_total} campos` : 'Incompleta');
 const cycleLabel = (subject: Subject): string => (subject.ciclo ? String(subject.ciclo) : 'Sin ciclo');
 const filter = useClientFilter(() => subjects.value, (subject) => [subject.nombre], {
     ciclo: { matches: (subject, value) => cycleLabel(subject) === value },

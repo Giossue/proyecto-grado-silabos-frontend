@@ -120,6 +120,8 @@ export type ScheduledSubjects = {
       nombre: string;
       ciclo: number;
       profile_complete?: boolean;
+      profile_filled?: number;
+      profile_total?: number;
     }>;
     scheduledSubjects: Array<{
       label: string;

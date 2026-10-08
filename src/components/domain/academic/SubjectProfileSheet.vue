@@ -9,6 +9,8 @@ import { fieldTypeRegistry } from '@/components/domain/fieldTypes/registry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import StatusBadge from '@/components/domain/StatusBadge.vue';
+import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const props = defineProps<{ subjectId: string; subjectName: string; disabled?: boolean }>();
@@ -27,6 +29,11 @@ const activeSection = computed<string>({
   get: () => (chosen.value !== null && sections.value.includes(chosen.value) ? chosen.value : sections.value[0] ?? ''),
   set: (value) => { chosen.value = value; },
 });
+const isEmpty = (fieldId: string): boolean => {
+  const value = values.value[fieldId];
+  return !value || freeTextPlain(value).trim() === '';
+};
+const sectionHasEmpty = (section: string): boolean => fields.value.some((field) => sectionOf(field) === section && isEmpty(field.id));
 const shownFields = computed(() => fields.value.filter((field) => sectionOf(field) === activeSection.value));
 const canSave = computed(() => !loading.value && !saving.value && !props.disabled && fields.value.length > 0);
 
@@ -72,12 +79,15 @@ const save = async (close: () => void) => {
           <template v-else>
             <Tabs v-if="sections.length > 1" v-model="activeSection" class="w-full shrink-0">
               <TabsList class="h-auto min-h-9 w-full shrink-0 flex-wrap justify-start gap-1" aria-label="Secciones de la ficha">
-                <TabsTrigger v-for="section in sections" :key="section" :value="section" class="h-auto flex-none whitespace-normal py-1.5 text-left">{{ section }}</TabsTrigger>
+                <TabsTrigger v-for="section in sections" :key="section" :value="section" class="h-auto flex-none whitespace-normal py-1.5 text-left">{{ section }}<span v-if="sectionHasEmpty(section)" class="ml-1 text-warning" aria-hidden="true">●</span><span v-if="sectionHasEmpty(section)" class="sr-only"> (con campos sin llenar)</span></TabsTrigger>
               </TabsList>
             </Tabs>
             <fieldset class="contents" :disabled="disabled">
               <Field v-for="field in shownFields" :key="field.id">
-                <FieldLabel :for="`ficha-${field.id}`" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || sectionOf(field) }}</FieldLabel>
+                <div class="flex flex-wrap items-center gap-2">
+                  <FieldLabel :for="`ficha-${field.id}`" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || sectionOf(field) }}</FieldLabel>
+                  <StatusBadge v-if="isEmpty(field.id)" label="Sin llenar" tone="warning" />
+                </div>
                 <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
                 <component
                   :is="fieldTypeRegistry.texto.EditorComponent"

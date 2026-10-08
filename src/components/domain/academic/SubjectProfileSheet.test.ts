@@ -75,7 +75,10 @@ describe('SubjectProfileSheet', () => {
     await flushPromises();
 
     const tabs = wrapper.findAll('[role="tab"]').map((tab) => tab.text());
-    expect(tabs).toEqual(['Descripción de la asignatura', 'Objetivos']);
+    expect(tabs[0]).toContain('Descripción de la asignatura');
+    expect(tabs[1]).toContain('Objetivos');
+    expect(tabs[0]).toContain('con campos sin llenar');
+    expect(wrapper.text()).toContain('Sin llenar');
     expect(wrapper.find('[data-id="ficha-f1"]').exists()).toBe(true);
     expect(wrapper.find('[data-id="ficha-f2"]').exists()).toBe(false);
 
