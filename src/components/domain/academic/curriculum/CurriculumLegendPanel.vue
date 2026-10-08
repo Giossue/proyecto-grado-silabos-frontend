@@ -39,7 +39,7 @@ const contentId = 'curriculum-legend-content';
                 <ChevronUp v-if="open" aria-hidden="true" />
                 <ChevronDown v-else aria-hidden="true" />
             </Button>
-            <CollapsibleContent :id="contentId" class="px-3 py-2 pr-10">
+            <CollapsibleContent :id="contentId" class="px-3 py-2">
                 <CurriculumLegend :units="units" :rows="rows" />
             </CollapsibleContent>
         </Collapsible>
