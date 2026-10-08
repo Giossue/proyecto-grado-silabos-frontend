@@ -60,7 +60,7 @@ describe('ScheduledSubjectsTab', () => {
         expect(text).toContain('Todos los ciclos');
         expect(text).toContain('Todos los ciclos136');
         expect(text).toContain('Todos los paralelos');
-        expect(text).toContain('Paralelo B');
+        expect(text).toContain('Todos los paralelosAB');
         expect(text).toContain('Todas las jornadas');
         expect(text).toContain('Nocturna');
     });

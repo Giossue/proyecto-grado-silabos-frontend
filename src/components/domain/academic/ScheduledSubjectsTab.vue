@@ -79,7 +79,7 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
           <Field><FieldLabel for="scheduled-subject-parallel" class="sr-only">Paralelo</FieldLabel>
             <Select v-model="filter.values.paralelo.value" @update:model-value="setPage(1)">
               <SelectTrigger id="scheduled-subject-parallel"><SelectValue placeholder="Todos los paralelos" /></SelectTrigger>
-              <SelectContent><SelectGroup><SelectItem value="all">Todos los paralelos</SelectItem><SelectItem v-for="code in parallelOptions" :key="code" :value="code">Paralelo {{ code }}</SelectItem></SelectGroup></SelectContent>
+              <SelectContent><SelectGroup><SelectItem value="all">Todos los paralelos</SelectItem><SelectItem v-for="code in parallelOptions" :key="code" :value="code">{{ code }}</SelectItem></SelectGroup></SelectContent>
             </Select>
           </Field>
           <Field><FieldLabel for="scheduled-subject-shift" class="sr-only">Jornada</FieldLabel>
