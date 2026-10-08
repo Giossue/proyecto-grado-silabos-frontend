@@ -52,10 +52,10 @@ const saved = (message: string): void => {
 };
 
 const status = computed(() => {
-    if (!props.user.active) return { label: 'Inactivo', dot: 'bg-muted-foreground' };
-    if (props.user.pending_activation) return { label: 'Pendiente de activación', dot: 'bg-warning' };
+    if (!props.user.active) return { label: 'Inactivo' };
+    if (props.user.pending_activation) return { label: 'Pendiente de activación' };
 
-    return { label: 'Activo', dot: 'bg-success' };
+    return { label: 'Activo' };
 });
 
 const scopeOf = (assignment: ManagedUserRoleAssignment): string =>
@@ -82,10 +82,7 @@ const currentAssignments = computed(() =>
                 <dl class="grid gap-3 text-sm">
                     <div class="flex flex-col gap-1">
                         <dt class="font-semibold">Estado</dt>
-                        <dd class="flex items-center gap-2">
-                            <span :class="['size-2 rounded-full', status.dot]" aria-hidden="true" />
-                            <span>{{ status.label }}</span>
-                        </dd>
+                        <dd>{{ status.label }}</dd>
                     </div>
                     <div class="flex flex-col gap-1">
                         <dt class="font-semibold">Nombre completo</dt>
