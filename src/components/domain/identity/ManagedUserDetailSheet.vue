@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { withoutEndPeriod } from '@/lib/text';
-import { Eye } from '@lucide/vue';
-import { computed } from 'vue';
+import { Pencil } from '@lucide/vue';
+import { computed, ref, watch } from 'vue';
+import type { ManagedUser } from '@/api/admin-users';
+import ManagedUserEditForm from '@/components/domain/identity/ManagedUserEditForm.vue';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -10,7 +13,6 @@ import {
     CardHeader,
     CardTitle,
 } from '@/components/ui/card';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import {
     Sheet,
     SheetContent,
@@ -39,10 +41,21 @@ export type ManagedUserRow = {
 };
 
 const props = defineProps<{
-    user: ManagedUserRow;
+    user: ManagedUser;
+    roles: { codigo: string; nombre: string }[];
+    careers: { id: string; nombre: string }[];
+    canEdit: boolean;
 }>();
+const emit = defineEmits<{ saved: [message: string] }>();
 
 const open = defineModel<boolean>('open', { default: false });
+const editing = ref(false);
+watch(open, (value) => { if (!value) editing.value = false; });
+const saved = (message: string): void => {
+    editing.value = false;
+    open.value = false;
+    emit('saved', message);
+};
 
 const status = computed(() => {
     if (!props.user.active) {
@@ -82,12 +95,17 @@ const completedAssignments = computed(() =>
 <template>
     <Sheet v-model:open="open">
         <SheetContent side="right" class="w-full sm:max-w-lg">
-            <SheetHeader class="sr-only">
-                <SheetTitle>Datos</SheetTitle>
-                <SheetDescription>Ficha de solo lectura de la cuenta.</SheetDescription>
+            <SheetHeader>
+                <SheetTitle>{{ editing ? 'Editar usuario' : 'Datos de la cuenta' }}</SheetTitle>
+                <SheetDescription>{{ editing ? 'Corrija su identidad, quite un rol o agregue una nueva asignación' : props.user.nombre }}</SheetDescription>
             </SheetHeader>
 
-            <div class="flex flex-col gap-4 overflow-y-auto px-4 pt-1 pb-6">
+            <div v-if="editing" class="flex-1 overflow-y-auto px-4 pt-1 pb-28">
+                <ManagedUserEditForm :user="props.user" :roles="roles" :careers="careers" @saved="saved" @cancel="editing = false" />
+            </div>
+
+            <div v-else class="flex flex-col gap-4 overflow-y-auto px-4 pt-1 pb-6">
+                <Button v-if="canEdit" type="button" variant="outline" class="w-fit" @click="editing = true"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
                 <Card>
                     <CardHeader>
                         <CardTitle>Datos de la cuenta</CardTitle>
@@ -195,16 +213,4 @@ const completedAssignments = computed(() =>
             </div>
         </SheetContent>
     </Sheet>
-
-    <DropdownMenuItem
-        @select="
-            (event: Event) => {
-                event.preventDefault();
-                open = true;
-            }
-        "
-    >
-        <Eye aria-hidden="true" />
-        Ver
-    </DropdownMenuItem>
 </template>

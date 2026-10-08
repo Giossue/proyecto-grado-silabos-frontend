@@ -7,7 +7,6 @@ import { getSession } from '@/api/session';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import ManagedUserAccessAction from '@/components/domain/identity/ManagedUserAccessAction.vue';
 import ManagedUserDetailSheet from '@/components/domain/identity/ManagedUserDetailSheet.vue';
-import ManagedUserEditSheet from '@/components/domain/identity/ManagedUserEditSheet.vue';
 import ManagedUserPendingActions from '@/components/domain/identity/ManagedUserPendingActions.vue';
 import ManagedUserSheet from '@/components/domain/identity/ManagedUserSheet.vue';
 import ImportSpreadsheetDialog from '@/components/domain/ImportSpreadsheetDialog.vue';
@@ -48,8 +47,10 @@ const load = async (page = 1): Promise<void> => {
     } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los usuarios.'; }
     finally { loading.value = false; }
 };
-const editing = ref<ManagedUser | null>(null);
-const openUser = (user: ManagedUser): void => { if (user.id !== currentUserId.value) editing.value = user; };
+const viewing = ref<ManagedUser | null>(null);
+const viewOpen = ref(false);
+const openUser = (user: ManagedUser): void => { viewing.value = user; viewOpen.value = true; };
+const hasActions = (user: ManagedUser): boolean => (user.id !== currentUserId.value && !user.pending_activation) || (user.pending_activation && user.active);
 const changed = async (notice: string): Promise<void> => { toast.success(notice); await load(); };
 const clearFilters = (): void => { q.value = ''; status.value = 'all'; role.value = 'all'; career.value = 'all'; void load(); };
 onMounted(load);
@@ -73,15 +74,15 @@ onMounted(load);
 
             <Table label="Usuarios y roles"><TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Rol vigente</TableHead><TableHead>Carrera</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
                 <TableEmpty v-if="result.users.data.length === 0" :colspan="5">No se encontraron cuentas con estos filtros.</TableEmpty>
-                <TableRow v-for="user in result.users.data" v-else :key="user.id" :class="user.id !== currentUserId ? 'cursor-pointer' : ''" :tabindex="user.id !== currentUserId ? 0 : undefined" :aria-label="user.id !== currentUserId ? `Editar ${user.nombre}` : undefined" @click="activateRow($event, () => openUser(user))" @keydown.enter.self.prevent="openUser(user)" @keydown.space.self.prevent="openUser(user)">
+                <TableRow v-for="user in result.users.data" v-else :key="user.id" class="cursor-pointer" tabindex="0" :aria-label="`Ver ${user.nombre}`" @click="activateRow($event, () => openUser(user))" @keydown.enter.self.prevent="openUser(user)" @keydown.space.self.prevent="openUser(user)">
                     <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span></div></TableCell>
-                    <TableCell><div class="flex flex-col items-start gap-1"><span v-for="(item, index) in user.roles" :key="`rol-${index}`">{{ item.name }}</span><span v-if="user.roles.length === 0" class="text-sm text-muted-foreground">Sin rol vigente</span></div></TableCell>
-                    <TableCell><div class="flex flex-col items-start gap-1 text-sm"><span v-for="(item, index) in user.roles" :key="`ambito-${index}`" :class="item.career_name ? '' : 'text-muted-foreground'">{{ careerOf(item) }}</span><span v-if="user.roles.length === 0" class="text-muted-foreground">—</span></div></TableCell>
+                    <TableCell><div class="flex flex-col items-start gap-1"><span v-if="user.roles[0]">{{ user.roles[0].name }}</span><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span></div></TableCell>
+                    <TableCell><div class="flex flex-col items-start gap-1 text-sm"><span v-if="user.roles[0]" :class="user.roles[0].career_name ? '' : 'text-muted-foreground'">{{ careerOf(user.roles[0]) }}</span><span v-else class="text-muted-foreground">—</span></div></TableCell>
                     <TableCell>{{ statusOf(user) }}</TableCell>
-                    <TableCell class="text-right"><TableActionsMenu :label="`Acciones para ${user.nombre}`"><ManagedUserDetailSheet :user="user" /><ManagedUserAccessAction v-if="user.id !== currentUserId && !user.pending_activation" :user="user" @changed="changed" /><ManagedUserPendingActions v-if="user.pending_activation && user.active" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
+                    <TableCell class="text-right"><TableActionsMenu v-if="hasActions(user)" :label="`Acciones para ${user.nombre}`"><ManagedUserAccessAction v-if="user.id !== currentUserId && !user.pending_activation" :user="user" @changed="changed" /><ManagedUserPendingActions v-if="user.pending_activation && user.active" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
                 </TableRow>
             </TableBody></Table>
-            <ManagedUserEditSheet v-if="editing" :key="editing.id" display="none" :open="true" :user="editing" :roles="result.roles" :careers="result.careers" @update:open="(value: boolean) => { if (!value) editing = null; }" @saved="changed" />
+            <ManagedUserDetailSheet v-if="viewing" :key="viewing.id" v-model:open="viewOpen" :user="viewing" :roles="result.roles" :careers="result.careers" :can-edit="viewing.id !== currentUserId" @saved="changed" />
             <TablePagination :meta="result.users" label="Paginación de usuarios" @update:page="load" />
         </CardContent></Card>
     </PageFrame>
