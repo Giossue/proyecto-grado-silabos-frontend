@@ -54,7 +54,7 @@ const download = async (): Promise<void> => {
 
 <template>
     <Dialog v-model:open="open">
-        <DialogTrigger as-child><Button type="button" variant="outline"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></DialogTrigger>
+        <DialogTrigger as-child><Button type="button" variant="success"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></DialogTrigger>
         <DialogContent class="max-h-screen overflow-y-auto sm:max-w-3xl">
             <DialogHeader><DialogTitle>{{ title }}</DialogTitle><DialogDescription>{{ withoutEndPeriod(description) }}</DialogDescription></DialogHeader>
             <div class="flex flex-col gap-4">
@@ -81,7 +81,7 @@ const download = async (): Promise<void> => {
                 </template>
                 <div class="flex flex-wrap justify-end gap-2">
                     <Button type="button" variant="outline" :disabled="processing" @click="open = false">Cancelar</Button>
-                    <Button v-if="result?.valid" type="button" :disabled="processing" @click="run(true)"><Spinner v-if="processing" data-icon="inline-start" /><Upload v-else data-icon="inline-start" aria-hidden="true" />Importar</Button>
+                    <Button v-if="result?.valid" type="button" variant="success" :disabled="processing" @click="run(true)"><Spinner v-if="processing" data-icon="inline-start" /><Upload v-else data-icon="inline-start" aria-hidden="true" />Importar</Button>
                     <Button v-else type="button" :disabled="!file || processing" @click="run(false)"><Spinner v-if="processing" data-icon="inline-start" />Revisar</Button>
                 </div>
             </div>
