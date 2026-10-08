@@ -62,7 +62,7 @@ provideSidebarContext({
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="0">
+  <TooltipProvider :delay-duration="0" ignore-non-keyboard-focus>
     <div
       data-slot="sidebar-wrapper"
       :style="{

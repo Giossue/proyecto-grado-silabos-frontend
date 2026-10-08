@@ -15,6 +15,7 @@ describe('ScreenHelpEditSheet', () => {
     mount(ScreenHelpEditSheet, { attachTo: document.body, props: { screen, help, open: true } });
     await flushPromises();
 
+    expect(document.body.querySelector('[data-slot="tooltip-content"]')).toBeNull();
     const role = document.body.querySelector('#screen-help-role') as HTMLInputElement;
     expect(role.value).toBe('Administrador');
     expect(document.body.textContent).toContain('Rol que la verá');
