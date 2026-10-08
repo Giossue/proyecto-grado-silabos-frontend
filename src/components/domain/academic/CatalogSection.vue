@@ -146,13 +146,12 @@ const {
                         <TableHead>Facultad</TableHead>
                         <TableHead>Campus</TableHead>
                         <TableHead class="w-36">Logo</TableHead>
-                        <TableHead class="text-right">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableEmpty
                         v-if="facultyPage.length === 0"
-                        :colspan="4"
+                        :colspan="3"
                     >
                         {{ facultyFilter.active.value ? 'Ninguna facultad coincide con los filtros.' : 'No existen facultades registradas.' }}
                     </TableEmpty>
@@ -168,6 +167,18 @@ const {
                     >
                         <TableCell>
                             {{ faculty.nombre }}
+                            <CatalogActions
+                                :ref="(actions) => setActions(faculty.id, actions)"
+                                entity="facultad"
+                                :record-id="faculty.id"
+                                :record-name="faculty.nombre"
+                                :active="faculty.activo"
+                                :campus="faculty.campus"
+                                :campus-options="options.campusOptions" :modality-options="options.modalityOptions"
+                                :logo-url="faculty.logo_url"
+                                :faculties="catalogs.faculties"
+                                @changed="emit('changed', $event)"
+                            />
                         </TableCell>
                         <TableCell>
                             {{ faculty.campus ?? 'Sin campus' }}
@@ -184,20 +195,6 @@ const {
                                 <img :src="faculty.logo_url" alt="" class="size-full object-contain" />
                             </Button>
                             <span v-else class="text-sm text-muted-foreground">Sin logo</span>
-                        </TableCell>
-                        <TableCell class="text-right">
-                            <CatalogActions
-                                :ref="(actions) => setActions(faculty.id, actions)"
-                                entity="facultad"
-                                :record-id="faculty.id"
-                                :record-name="faculty.nombre"
-                                :active="faculty.activo"
-                                :campus="faculty.campus"
-                                :campus-options="options.campusOptions" :modality-options="options.modalityOptions"
-                                :logo-url="faculty.logo_url"
-                                :faculties="catalogs.faculties"
-                                @changed="emit('changed', $event)"
-                            />
                         </TableCell>
                     </TableRow>
                 </TableBody>
@@ -252,13 +249,12 @@ const {
                         <TableHead>Facultad</TableHead>
                         <TableHead>Modalidad</TableHead>
                         <TableHead>Campus</TableHead>
-                        <TableHead class="text-right">Acciones</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     <TableEmpty
                         v-if="careerPage.length === 0"
-                        :colspan="5"
+                        :colspan="4"
                     >
                         {{ careerFilter.active.value ? 'Ninguna carrera coincide con los filtros.' : 'No existen carreras registradas.' }}
                     </TableEmpty>
@@ -274,17 +270,6 @@ const {
                     >
                         <TableCell>
                             {{ career.name }}
-                        </TableCell>
-                        <TableCell>
-                            {{ facultyName(career.faculty_id) }}
-                        </TableCell>
-                        <TableCell>
-                            {{ career.modality_label ?? 'Sin modalidad' }}
-                        </TableCell>
-                        <TableCell>
-                            {{ career.campus_name ?? 'Sin campus' }}
-                        </TableCell>
-                        <TableCell class="text-right">
                             <CatalogActions
                                 :ref="(actions) => setActions(career.id, actions)"
                                 entity="carrera"
@@ -300,6 +285,15 @@ const {
                                 :coordinator-users="options.coordinatorUsers"
                                 @changed="emit('changed', $event)"
                             />
+                        </TableCell>
+                        <TableCell>
+                            {{ facultyName(career.faculty_id) }}
+                        </TableCell>
+                        <TableCell>
+                            {{ career.modality_label ?? 'Sin modalidad' }}
+                        </TableCell>
+                        <TableCell>
+                            {{ career.campus_name ?? 'Sin campus' }}
                         </TableCell>
                     </TableRow>
                 </TableBody>

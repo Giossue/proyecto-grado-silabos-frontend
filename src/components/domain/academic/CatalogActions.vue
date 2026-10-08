@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { CalendarPlus, LockKeyhole, Trash2, UserRoundCog } from '@lucide/vue';
-import { ref } from 'vue';
+import { CalendarPlus, Trash2, UserRoundCog } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import { deleteAcademicRecord } from '@/api/academic';
 import { ApiError } from '@/api/client';
 import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
+import type { SheetAction } from '@/components/domain/SheetActions.vue';
 import CoordinatorReplacementSheet from '@/components/domain/academic/CoordinatorReplacementSheet.vue';
-import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import type { CatalogRecord, GovernanceCatalogEntity, Option } from '@/types/academic';
 
@@ -29,16 +28,26 @@ const editOpen = ref(false);
 /** Lo usa la fila de la tabla: un clic en ella equivale a Editar. */
 const edit = (): void => { if (!props.lockReason) editOpen.value = true; };
 defineExpose({ edit });
+const sheetActions = computed<SheetAction[]>(() => {
+    if (props.lockReason) return [];
+    const list: SheetAction[] = [];
+    if (props.entity === 'periodo' && !props.institutionalProcess) list.push({ key: 'process', label: 'Abrir convocatoria', icon: CalendarPlus });
+    if (props.entity === 'carrera' && props.active) list.push({ key: 'coordinator', label: props.coordinator ? 'Reemplazar coordinador' : 'Asignar coordinador', icon: UserRoundCog });
+    list.push({ key: 'delete', label: 'Eliminar', icon: Trash2, destructive: true });
+
+    return list;
+});
+const runAction = (key: string): void => {
+    editOpen.value = false;
+    if (key === 'process') processOpen.value = true;
+    if (key === 'coordinator') coordinatorOpen.value = true;
+    if (key === 'delete') deleteOpen.value = true;
+};
 const coordinatorOpen = ref(false);
 const processOpen = ref(false);
 const deleteOpen = ref(false);
 const deleting = ref(false);
 const error = ref<string | null>(null);
-const processStateLabel = (state: NonNullable<typeof props.institutionalProcess>['state']): string => ({
-    abierto: 'abierta',
-    pausado: 'en pausa',
-    cerrado: 'cerrada',
-}[state]);
 const remove = async (): Promise<void> => {
     deleting.value = true; error.value = null;
     try {
@@ -51,18 +60,10 @@ const remove = async (): Promise<void> => {
 </script>
 
 <template>
-    <div class="flex justify-end">
-        <TableActionsMenu :label="`Acciones para ${recordName}`" :disabled="Boolean(lockReason)">
-            <DropdownMenuItem v-if="lockReason" disabled><LockKeyhole aria-hidden="true" />{{ lockReason }}</DropdownMenuItem>
-            <DropdownMenuItem v-if="entity === 'periodo' && !institutionalProcess && !lockReason" @select="processOpen = true"><CalendarPlus aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
-            <DropdownMenuItem v-else-if="entity === 'periodo' && institutionalProcess" disabled><LockKeyhole aria-hidden="true" />Convocatoria {{ processStateLabel(institutionalProcess.state) }}</DropdownMenuItem>
-            <DropdownMenuItem v-if="entity === 'carrera' && active && !lockReason" @select="coordinatorOpen = true"><UserRoundCog aria-hidden="true" />{{ coordinator ? 'Reemplazar coordinador' : 'Asignar coordinador' }}</DropdownMenuItem>
-            <DropdownMenuItem v-if="!lockReason" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
-        </TableActionsMenu>
-
+    <div class="contents">
         <CoordinatorReplacementSheet v-if="entity === 'carrera'" :key="`coordinator-${recordId}`" v-model:open="coordinatorOpen" :career-id="recordId" :career-name="recordName" :coordinator="coordinator ?? null" :users="coordinatorUsers ?? []" @saved="emit('changed', $event)" />
         <SyllabusProcessSheet v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName, starts_on: startsOn ?? undefined, ends_on: endsOn ?? undefined }" display="menu" trigger-label="Abrir convocatoria" @saved="emit('changed', $event)" />
-        <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" @saved="emit('changed', $event)" />
+        <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" :actions="sheetActions" @action="runAction" @saved="emit('changed', $event)" />
 
         <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar registro institucional</DialogTitle><DialogDescription>Se eliminará «{{ recordName }}». La operación se rechazará si tiene carreras, materias programadas, procesos u otro historial relacionado.</DialogDescription></DialogHeader>
             <FeedbackAlert v-if="error" :message="error" />

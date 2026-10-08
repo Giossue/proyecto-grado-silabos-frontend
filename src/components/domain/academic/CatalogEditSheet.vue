@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
+import SheetActions, { type SheetAction } from '@/components/domain/SheetActions.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -20,9 +21,9 @@ const props = withDefaults(defineProps<{
     startsOn?: string | null; endsOn?: string | null;
     modalityOptions: Array<{ value: string; label: string }>;
     faculties: CatalogRecord[]; campusOptions: Array<{ value: string; label: string }>;
-    logoUrl?: string | null; showTrigger?: boolean;
-}>(), { showTrigger: true });
-const emit = defineEmits<{ saved: [message: string] }>();
+    logoUrl?: string | null; showTrigger?: boolean; actions?: SheetAction[];
+}>(), { showTrigger: true, actions: () => [] });
+const emit = defineEmits<{ saved: [message: string]; action: [key: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
@@ -89,6 +90,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
 
 <template>
     <FormSheet v-model:open="open" trigger-label="Editar" :title="`Editar ${entityLabel}`" :description="formDescription" :show-trigger="showTrigger">
+        <template v-if="actions.length > 0" #header-actions><SheetActions :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
         <template #default="{ close }">
             <form @submit.prevent="submit()"><FieldGroup>
                 <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
