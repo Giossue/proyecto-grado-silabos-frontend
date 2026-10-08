@@ -4,6 +4,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
+import { helpScreens } from '@/lib/helpScreens';
 import { screenHelpState } from '@/state/screenHelp';
 
 type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -27,6 +28,7 @@ const help = computed(() => screenHelpState.forScreen(screen.value));
 const ready = ref(false);
 const animating = ref(false);
 const paragraphs = computed(() => (help.value?.content ?? '').split(/\n{2,}/).map((text) => text.trim()).filter(Boolean));
+const title = computed(() => helpScreens.find((item) => item.key === screen.value)?.label ?? help.value?.title ?? '');
 const isTop = computed(() => corner.value.startsWith('top'));
 const isLeft = computed(() => corner.value.endsWith('left'));
 
@@ -197,7 +199,7 @@ onBeforeUnmount(() => {
       </Button>
     </PopoverAnchor>
     <PopoverContent :id="panelId" class="flex max-h-96 w-80 flex-col gap-3 overflow-y-auto" :side="isTop ? 'bottom' : 'top'" :align="isLeft ? 'start' : 'end'" @close-auto-focus.prevent="button?.$el.focus()">
-      <h2 class="text-sm font-semibold">{{ help.title }}</h2>
+      <h2 class="text-sm font-semibold">{{ title }}</h2>
       <p v-for="(text, index) in paragraphs" :key="index" class="text-sm whitespace-pre-line text-muted-foreground">{{ text }}</p>
     </PopoverContent>
   </Popover>

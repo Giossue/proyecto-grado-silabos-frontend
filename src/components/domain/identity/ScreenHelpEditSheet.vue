@@ -20,11 +20,11 @@ const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const confirmRemoval = ref(false);
 const errors = ref<Record<string, string[]>>({});
-const form = ref({ title: '', content: '', active: true });
+const form = ref({ content: '', active: true });
 
 watch(open, (value) => {
     if (!value) return;
-    form.value = { title: props.help?.title ?? props.screen.label, content: props.help?.content ?? '', active: props.help?.active ?? true };
+    form.value = { content: props.help?.content ?? '', active: props.help?.active ?? true };
     errors.value = {};
 }, { immediate: true });
 
@@ -32,7 +32,7 @@ const submit = async (): Promise<void> => {
     processing.value = true;
     errors.value = {};
     try {
-        await saveScreenHelp({ screen: props.screen.key, ...form.value });
+        await saveScreenHelp({ screen: props.screen.key, title: props.screen.label, ...form.value });
         open.value = false;
         emit('saved', 'Ayuda guardada.');
     } catch (reason) {
@@ -71,7 +71,6 @@ const remove = async (): Promise<void> => {
         </template>
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
             <Field><FieldLabel for="screen-help-role">Rol que la verá</FieldLabel><Input id="screen-help-role" :model-value="screen.roleLabel" disabled /></Field>
-            <Field :data-invalid="Boolean(errors.title)"><FieldLabel for="screen-help-title" required>Título</FieldLabel><Input id="screen-help-title" v-model="form.title" required /><FieldError :errors="errors.title" /></Field>
             <Field :data-invalid="Boolean(errors.content)"><FieldLabel for="screen-help-content" required>Texto</FieldLabel><Textarea id="screen-help-content" v-model="form.content" rows="8" required /><FieldError :errors="errors.content" /></Field>
             <Field orientation="horizontal"><Switch id="screen-help-active" v-model="form.active" aria-describedby="screen-help-active-state" /><div class="flex flex-col"><FieldLabel for="screen-help-active">Mostrar ayuda en esta pantalla</FieldLabel><FieldDescription id="screen-help-active-state">{{ form.active ? 'La ayuda se ve en la pantalla.' : 'La ayuda está oculta.' }}</FieldDescription></div></Field>
             <FormSheetActions :close="close" :processing="processing" :icon="Check" label="Guardar ayuda" />

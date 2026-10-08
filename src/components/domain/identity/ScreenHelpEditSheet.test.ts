@@ -1,9 +1,9 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { deleteScreenHelp } from '@/api/screen-help';
+import { deleteScreenHelp, saveScreenHelp } from '@/api/screen-help';
 import ScreenHelpEditSheet from '@/components/domain/identity/ScreenHelpEditSheet.vue';
 
-vi.mock('@/api/screen-help', () => ({ saveScreenHelp: vi.fn(), deleteScreenHelp: vi.fn().mockResolvedValue(undefined) }));
+vi.mock('@/api/screen-help', () => ({ saveScreenHelp: vi.fn().mockResolvedValue({}), deleteScreenHelp: vi.fn().mockResolvedValue(undefined) }));
 
 enableAutoUnmount(afterEach);
 
@@ -38,5 +38,16 @@ describe('ScreenHelpEditSheet', () => {
     await flushPromises();
 
     expect(document.body.querySelector('button[aria-label="Eliminar ayuda"]')).toBeNull();
+  });
+
+  it('el título no se edita: se guarda siempre el nombre de la pantalla', async () => {
+    mount(ScreenHelpEditSheet, { attachTo: document.body, props: { screen, help, open: true } });
+    await flushPromises();
+
+    expect(document.body.querySelector('#screen-help-title')).toBeNull();
+    (document.body.querySelector('form') as HTMLFormElement).dispatchEvent(new Event('submit', { cancelable: true }));
+    await flushPromises();
+
+    expect(saveScreenHelp).toHaveBeenCalledWith({ screen: '/admin/panel', title: 'Panel', content: 'Texto', active: true });
   });
 });
