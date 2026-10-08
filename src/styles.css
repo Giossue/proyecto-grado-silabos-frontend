@@ -281,13 +281,13 @@
     --chart-3: hsl(30 80% 55%);
     --chart-4: hsl(280 65% 60%);
     --chart-5: hsl(340 75% 55%);
-    --sidebar-background: #17233f;
-    --sidebar-foreground: #ffffff;
+    --sidebar-background: #171a20;
+    --sidebar-foreground: #eef0f3;
     --sidebar-primary: #4669c8;
     --sidebar-primary-foreground: #ffffff;
-    --sidebar-accent: #4669c8;
-    --sidebar-accent-foreground: #ffffff;
-    --sidebar-border: #536cad;
+    --sidebar-accent: #28344a;
+    --sidebar-accent-foreground: #eef0f3;
+    --sidebar-border: #343a44;
     --sidebar-ring: #8297e2;
     --sidebar: var(--sidebar-background);
 
