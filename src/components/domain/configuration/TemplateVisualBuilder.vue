@@ -164,7 +164,6 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 flex-col gap-3">
         <TemplateInsertPoint v-if="!preview" :disabled="locked" label="Nueva sección" position="top" gap="section" @insert="sectionDialog = { open: true, section: null, index: sectionIndex }" />
         <TemplateInsertPoint v-if="!preview && sectionIndex === sections.length - 1" :disabled="locked" label="Nueva sección" position="bottom" gap="section" @insert="sectionDialog = { open: true, section: null }" />
-        <p v-if="sheet.landscape && !preview" class="-mb-1 text-xs italic text-muted-foreground">Hoja horizontal</p>
         <h3 v-if="preview" class="font-bold">{{ sectionIndex + 1 }}. {{ section.title }}</h3>
         <div v-else data-section-heading :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
           <span aria-hidden="true" :class="cn('pointer-events-none absolute top-0.5 right-full mr-2 whitespace-nowrap rounded bg-primary px-1.5 py-0.5 font-sans text-xs font-medium text-primary-foreground group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">Sección</span>
