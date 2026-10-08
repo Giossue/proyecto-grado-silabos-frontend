@@ -42,10 +42,10 @@ const reason = computed(() => {
 </script>
 
 <template>
-    <Alert class="w-fit max-w-full border-warning/30 bg-warning/10 text-foreground">
-        <Lock class="text-warning" aria-hidden="true" />
+    <Alert class="w-fit max-w-full border-primary/20 bg-accent text-accent-foreground">
+        <Lock class="text-primary" aria-hidden="true" />
         <AlertTitle>{{ headline }}</AlertTitle>
-        <AlertDescription class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <AlertDescription class="flex flex-wrap items-center gap-x-3 gap-y-1 text-accent-foreground/80">
             <span>{{ summary }}</span>
             <span class="flex flex-wrap items-center gap-2">
                 <Popover v-if="reason">
