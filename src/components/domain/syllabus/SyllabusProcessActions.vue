@@ -21,7 +21,7 @@ import { Spinner } from '@/components/ui/spinner';
 
 type Transition = 'pausar' | 'reanudar' | 'cerrar';
 
-const props = defineProps<{ process: SyllabusProcess }>();
+const props = withDefaults(defineProps<{ process: SyllabusProcess; menu?: boolean }>(), { menu: true });
 const emit = defineEmits<{
   completed: [message: string];
 }>();
@@ -98,6 +98,13 @@ const openDelete = (event: Event): void => {
   deleteOpen.value = true;
 };
 
+const run = (key: 'pausar' | 'reanudar' | 'cerrar' | 'prorrogar' | 'eliminar'): void => {
+  if (key === 'prorrogar') deadlineOpen.value = true;
+  else if (key === 'eliminar') { deleteError.value = null; deleteOpen.value = true; }
+  else pending.value = key;
+};
+defineExpose({ run });
+
 const remove = async (): Promise<void> => {
   deleting.value = true;
   deleteError.value = null;
@@ -116,7 +123,7 @@ const remove = async (): Promise<void> => {
 </script>
 
 <template>
-  <TableActionsMenu :label="`Acciones para ${process.name}`">
+  <TableActionsMenu v-if="menu" :label="`Acciones para ${process.name}`">
     <slot />
     <DropdownMenuItem v-if="process.state === 'abierto'" @select="pending = 'pausar'"><Pause />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'pausado'" @select="pending = 'reanudar'"><Play />Reanudar</DropdownMenuItem>

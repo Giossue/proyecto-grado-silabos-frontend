@@ -8,7 +8,7 @@ export type ConvocationRow = PeriodRecord & { process: SyllabusProcess | null };
 
 <script setup lang="ts">
 import { formatDateDisplay } from '@/lib/dateDisplay';
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue';
 import { useRouter } from 'vue-router';
 import { getAcademicGovernance, type AcademicGovernance } from '@/api/academic';
 import { getProcesses, type Processes } from '@/api/processes';
@@ -20,6 +20,7 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import ConvocationPeriodSheet from '@/components/domain/syllabus/ConvocationPeriodSheet.vue';
+import ConvocationDetailSheet from '@/components/domain/syllabus/ConvocationDetailSheet.vue';
 import ConvocationRowActions from '@/components/domain/syllabus/ConvocationRowActions.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,6 +29,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
+import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -36,6 +38,12 @@ const governance = ref<AcademicGovernance | null>(null);
 const processData = ref<Processes | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
+const selected = ref<ConvocationRow | null>(null);
+const sheetOpen = ref(false);
+const rowActions = useTemplateRef('rowActions');
+const select = (row: ConvocationRow): void => { selected.value = row; sheetOpen.value = true; };
+const runAction = async (key: string): Promise<void> => { await nextTick(); rowActions.value?.run(key); };
+const current = computed(() => rows.value.find((row) => row.id === selected.value?.id) ?? null);
 const loaded = computed(() => governance.value !== null && processData.value !== null);
 
 // Una fila por periodo; la convocatoria institucional (si existe) se cuelga del periodo.
@@ -71,12 +79,12 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Convocatorias" description="Periodos lectivos y sus fechas de clases y de elaboración de sílabos.">
+  <PageFrame title="Convocatorias" description="Periodos lectivos y sus fechas de clases y de elaboración de sílabos." size="wide">
     <template #actions>
       <ConvocationPeriodSheet v-if="loaded" :disabled="inProgress" @saved="changed" />
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :columns="5" :filters="1" />
+    <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :columns="4" :filters="1" />
     <ProcessLockAlert v-if="loaded && inProgress" title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra." hide-action />
     <Card v-if="loaded"><CardContent class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar período" placeholder="Buscar por período">
@@ -89,20 +97,23 @@ onMounted(load);
         </template>
       </ClientFilterBar>
       <Table label="Convocatorias" data-cards="true">
-        <TableHeader><TableRow><TableHead>Período</TableHead><TableHead>Clases</TableHead><TableHead>Elaboración de sílabos</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Período</TableHead><TableHead>Clases</TableHead><TableHead>Elaboración de sílabos</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
         <TableBody>
-          <TableEmpty v-if="page.length === 0" :colspan="5">{{ filter.active.value ? 'Ningún período coincide con los filtros.' : 'No hay periodos registrados. Cree el primero con «Nueva convocatoria».' }}</TableEmpty>
-          <TableRow v-for="row in page" v-else :key="row.id">
+          <TableEmpty v-if="page.length === 0" :colspan="4">{{ filter.active.value ? 'Ningún período coincide con los filtros.' : 'No hay periodos registrados. Cree el primero con «Nueva convocatoria».' }}</TableEmpty>
+          <TableRow v-for="row in page" v-else :key="row.id" class="cursor-pointer" tabindex="0" :aria-label="`Opciones de ${row.code}`" @click="activateRow($event, () => select(row))" @keydown.enter.self.prevent="select(row)" @keydown.space.self.prevent="select(row)">
             <TableCell>{{ row.code }}</TableCell>
             <TableCell><time :datetime="row.starts_on">{{ formatDate(row.starts_on) }}</time> → <time :datetime="row.ends_on">{{ formatDate(row.ends_on) }}</time></TableCell>
             <TableCell v-if="row.process"><time :datetime="row.process.starts_at">{{ formatDate(row.process.starts_at) }}</time> → <time :datetime="row.process.due_at">{{ formatDate(row.process.due_at) }}</time></TableCell>
             <TableCell v-else class="text-muted-foreground">Sin fechas</TableCell>
             <TableCell>{{ stateLabel(row) }}</TableCell>
-            <TableCell class="text-right"><ConvocationRowActions :row="row" @changed="changed" /></TableCell>
           </TableRow>
         </TableBody>
       </Table>
       <TablePagination :meta="meta" label="Paginación de convocatorias" @update:page="setPage" />
     </CardContent></Card>
+    <template v-if="current">
+      <ConvocationDetailSheet v-model:open="sheetOpen" :row="current" @action="runAction" />
+      <ConvocationRowActions ref="rowActions" :key="current.id" :row="current" :menu="false" @changed="changed" />
+    </template>
   </PageFrame>
 </template>

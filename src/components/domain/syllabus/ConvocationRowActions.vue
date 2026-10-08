@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CalendarPlus, LockKeyhole, Trash2 } from '@lucide/vue';
-import { ref } from 'vue';
+import { ref, useTemplateRef } from 'vue';
 import { deleteAcademicRecord } from '@/api/academic';
 import { ApiError } from '@/api/client';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
@@ -13,12 +13,20 @@ import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import type { ConvocationRow } from '@/pages/AdminProcessesPage.vue';
 
-const props = defineProps<{ row: ConvocationRow }>();
+const props = withDefaults(defineProps<{ row: ConvocationRow; menu?: boolean }>(), { menu: true });
 const emit = defineEmits<{ changed: [message: string] }>();
 const processOpen = ref(false);
 const deleteOpen = ref(false);
 const deleting = ref(false);
 const error = ref<string | null>(null);
+const processActions = useTemplateRef('processActions');
+
+const run = (key: string): void => {
+    if (key === 'abrir') processOpen.value = true;
+    else if (key === 'eliminar-periodo') { error.value = null; deleteOpen.value = true; }
+    else processActions.value?.run(key as 'pausar' | 'reanudar' | 'cerrar' | 'prorrogar' | 'eliminar');
+};
+defineExpose({ run });
 
 const remove = async (): Promise<void> => {
     deleting.value = true; error.value = null;
@@ -34,8 +42,8 @@ const remove = async (): Promise<void> => {
 <template>
     <div class="flex justify-end">
         <!-- El periodo no se edita nunca: con convocatoria mandan las acciones del proceso; sin ella, abrir o eliminar. -->
-        <SyllabusProcessActions v-if="row.process" :process="row.process" @completed="emit('changed', $event)" />
-        <TableActionsMenu v-else :label="`Acciones para ${row.code}`" :disabled="Boolean(row.lock_reason)">
+        <SyllabusProcessActions v-if="row.process" ref="processActions" :menu="menu" :process="row.process" @completed="emit('changed', $event)" />
+        <TableActionsMenu v-else-if="menu" :label="`Acciones para ${row.code}`" :disabled="Boolean(row.lock_reason)">
             <DropdownMenuItem v-if="!row.lock_reason" @select="processOpen = true"><CalendarPlus aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>
             <DropdownMenuItem v-if="row.lock_reason" disabled><LockKeyhole aria-hidden="true" />{{ row.lock_reason }}</DropdownMenuItem>
             <DropdownMenuItem v-if="!row.lock_reason" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />Eliminar periodo</DropdownMenuItem>
