@@ -93,7 +93,7 @@ onMounted(load);
             </Button>
         </template>
 
-        <Tabs :model-value="entity" class="mb-4" @update:model-value="selectTab">
+        <Tabs :model-value="entity" class="-mb-3" @update:model-value="selectTab">
             <TabsList class="h-11 justify-start">
                 <TabsTrigger
                     v-for="item in routeSections" :key="item.value" :value="item.value"
