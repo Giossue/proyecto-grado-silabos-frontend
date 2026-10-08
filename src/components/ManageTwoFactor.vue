@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { ShieldCheck, ShieldOff } from '@lucide/vue';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import {
     confirmTwoFactor,
@@ -11,6 +11,7 @@ import {
     regenerateRecoveryCodes,
 } from '@/api/session';
 import Heading from '@/components/Heading.vue';
+import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
 import TwoFactorRecoveryCodes from '@/components/TwoFactorRecoveryCodes.vue';
 import TwoFactorSetupModal from '@/components/TwoFactorSetupModal.vue';
 import { Button } from '@/components/ui/button';
@@ -46,11 +47,11 @@ const load = async (): Promise<void> => {
     }
 };
 
-const enable = async (): Promise<void> => {
+const enable = async (password: string): Promise<void> => {
     processing.value = true;
     error.value = null;
     try {
-        const status = await enableTwoFactor();
+        const status = await enableTwoFactor(password);
         confirmationRequired.value = status.confirmation_required;
         qrCodeSvg.value = status.qr_code_svg;
         showSetupModal.value = true;
@@ -77,11 +78,11 @@ const confirm = async (code: string): Promise<void> => {
     }
 };
 
-const disable = async (): Promise<void> => {
+const disable = async (password: string): Promise<void> => {
     processing.value = true;
     error.value = null;
     try {
-        const status = await disableTwoFactor();
+        const status = await disableTwoFactor(password);
         enabled.value = status.enabled;
         confirmationRequired.value = status.confirmation_required;
         recoveryCodes.value = [];
@@ -104,6 +105,18 @@ const regenerate = async (password: string): Promise<void> => {
     }
 };
 
+const pendingAction = ref<'enable' | 'disable' | null>(null);
+const confirmOpen = computed({
+    get: () => pendingAction.value !== null,
+    set: (value: boolean) => { if (!value) pendingAction.value = null; },
+});
+const confirmPassword = async (password: string): Promise<void> => {
+    const action = pendingAction.value;
+    pendingAction.value = null;
+    if (action === 'enable') await enable(password);
+    if (action === 'disable') await disable(password);
+};
+
 onMounted(() => void load());
 </script>
 
@@ -121,7 +134,7 @@ onMounted(() => void load());
             <p class="text-sm text-muted-foreground">
                 Al activarla, el inicio de sesión solicitará un código seguro generado por una aplicación TOTP en su dispositivo.
             </p>
-            <Button type="button" :disabled="processing" @click="enable">
+            <Button type="button" :disabled="processing" @click="pendingAction = 'enable'">
                 <Spinner v-if="processing" data-icon="inline-start" />
                 <ShieldCheck v-else data-icon="inline-start" aria-hidden="true" />
                 Activar 2FA
@@ -132,12 +145,20 @@ onMounted(() => void load());
             <p class="text-sm text-muted-foreground">
                 El inicio de sesión solicitará un código temporal generado por la aplicación TOTP de su dispositivo.
             </p>
-            <Button variant="destructive" type="button" :disabled="processing" @click="disable">
+            <Button variant="destructive" type="button" :disabled="processing" @click="pendingAction = 'disable'">
                 <Spinner v-if="processing" data-icon="inline-start" /><ShieldOff v-else data-icon="inline-start" aria-hidden="true" />Desactivar 2FA
             </Button>
             <TwoFactorRecoveryCodes :codes="recoveryCodes" :processing="processing" @regenerate="regenerate" />
         </div>
 
+        <PasswordConfirmDialog
+            v-model:open="confirmOpen"
+            :title="pendingAction === 'disable' ? 'Desactivar la verificación en dos pasos' : 'Activar la verificación en dos pasos'"
+            description="Por seguridad, confirme su contraseña actual para continuar."
+            :confirm-label="pendingAction === 'disable' ? 'Desactivar 2FA' : 'Continuar'"
+            :destructive="pendingAction === 'disable'"
+            @confirm="confirmPassword"
+        />
         <TwoFactorSetupModal
             v-model:is-open="showSetupModal"
             :qr-code-svg="qrCodeSvg"

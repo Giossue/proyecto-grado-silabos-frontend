@@ -52,8 +52,7 @@
     "vue-input-otp": "^0.3.2",
     "vue-router": "^4.5.0",
     "vue-sonner": "^2.0.0",
-    "vue-stick-to-bottom": "^1.0.1",
-    "vue-stream-markdown": "^2.0.0-beta.5"
+    "vue-stick-to-bottom": "^1.0.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

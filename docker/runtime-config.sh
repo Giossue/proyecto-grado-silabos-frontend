@@ -12,3 +12,8 @@ export PUBLIC_API_URL
 envsubst '${PUBLIC_API_URL}' \
     < /opt/silabos/config.js.template \
     > /usr/share/nginx/html/config.js
+
+mkdir -p /etc/nginx/snippets
+envsubst '${PUBLIC_API_URL}' \
+    < /opt/silabos/security-headers.conf.template \
+    > /etc/nginx/snippets/silabos-security-headers.conf

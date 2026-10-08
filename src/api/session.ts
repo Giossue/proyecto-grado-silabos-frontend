@@ -51,9 +51,11 @@ export const verifyEmail = (userId: string, hash: string, query: URLSearchParams
   api<{ message: string }>(`/authentication/email-verification/${userId}/${hash}?${query.toString()}`, { method: 'POST' });
 export const resendEmailVerification = () => api<{ message: string }>('/authentication/email-verification/resend', { method: 'POST' });
 export const getTwoFactorStatus = () => api<TwoFactorStatus>('/authentication/two-factor');
-export const enableTwoFactor = () => api<TwoFactorStatus & { qr_code_svg: string }>('/authentication/two-factor', { method: 'POST' });
+export const enableTwoFactor = (currentPassword: string) =>
+  api<TwoFactorStatus & { qr_code_svg: string }>('/authentication/two-factor', { method: 'POST', body: JSON.stringify({ current_password: currentPassword }) });
 export const confirmTwoFactor = (code: string) => api<TwoFactorStatus & { recovery_codes: string[] }>('/authentication/two-factor/confirm', { method: 'POST', body: JSON.stringify({ code }) });
-export const disableTwoFactor = () => api<TwoFactorStatus>('/authentication/two-factor', { method: 'DELETE' });
+export const disableTwoFactor = (currentPassword: string) =>
+  api<TwoFactorStatus>('/authentication/two-factor', { method: 'DELETE', body: JSON.stringify({ current_password: currentPassword }) });
 export const regenerateRecoveryCodes = (currentPassword: string) =>
   api<TwoFactorStatus & { recovery_codes: string[] }>('/authentication/two-factor/recovery-codes', {
     method: 'POST', body: JSON.stringify({ current_password: currentPassword }),

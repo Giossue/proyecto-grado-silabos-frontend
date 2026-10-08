@@ -7,3 +7,6 @@ tests/visual/current/
 .env
 .env.*
 !.env.example
+
+.tmp-*
+.pw-*

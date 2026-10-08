@@ -5,6 +5,8 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
+  build: { sourcemap: false },
+  esbuild: { drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [] },
   test: {
     environment: 'jsdom',
     include: ['src/**/*.test.ts'],

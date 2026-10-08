@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Check, ScanLine } from '@lucide/vue';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +39,7 @@ watch(isOpen, (open) => {
 const submit = (): void => {
     if (code.value.length === 6 && !props.processing) emit('confirm', code.value);
 };
+const qrImage = computed(() => `data:image/svg+xml;utf8,${encodeURIComponent(props.qrCodeSvg ?? '')}`);
 </script>
 
 <template>
@@ -61,7 +62,7 @@ const submit = (): void => {
                 <template v-if="!verification">
                     <div class="relative mx-auto aspect-square w-64 overflow-hidden rounded-lg border border-border bg-background p-5">
                         <div v-if="!qrCodeSvg" class="size-full" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando código QR"><span class="sr-only">Cargando código QR…</span><Skeleton aria-hidden="true" class="size-full" /></div>
-                        <div v-else class="flex size-full items-center justify-center" v-html="qrCodeSvg" />
+                        <img v-else :src="qrImage" alt="Código QR para su aplicación autenticadora" class="size-full object-contain">
                     </div>
                     <div class="flex w-full items-center gap-2">
                         <Button type="button" variant="outline" class="flex-1" @click="isOpen = false">Cancelar</Button>
