@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import logo from '@/assets/logo-ueb.png';
+import campusBanner from '@/assets/ueb-campus-login.webp';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import { Toaster } from '@/components/ui/sonner';
 
@@ -31,14 +31,18 @@ defineProps<{
             </div>
         </div>
         <div
-            class="relative hidden flex-col items-center justify-center gap-6 bg-brand-surface p-10 text-brand-foreground lg:flex"
+            class="relative hidden overflow-hidden bg-brand-surface text-brand-foreground lg:flex lg:items-center lg:justify-center"
         >
-            <div class="flex items-center justify-center">
-                <img :src="logo" alt="Universidad Estatal de Bolívar" class="size-56 object-contain" />
-            </div>
-            <div class="flex max-w-md flex-col gap-2 text-center">
+            <img
+                :src="campusBanner"
+                alt="Campus de la Universidad Estatal de Bolívar"
+                class="absolute inset-0 size-full object-cover"
+                decoding="async"
+            />
+            <div class="absolute inset-0 bg-brand-surface/70" aria-hidden="true" />
+            <div class="relative z-10 flex max-w-md flex-col gap-2 p-10 text-center drop-shadow-sm">
                 <p class="text-2xl font-semibold">Sílabos UEB</p>
-                <p class="text-sm text-brand-foreground/80">
+                <p class="text-sm text-brand-foreground/90">
                     Gestión de sílabos de la Carrera de Software
                 </p>
             </div>
