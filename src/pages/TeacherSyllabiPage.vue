@@ -33,7 +33,6 @@ const load = async (page = 1): Promise<void> => {
   }
 };
 const formatSavedAt = (value: string | null): string => value ? formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin guardados';
-const formatStartedAt = (value: string | null): string => value ? formatDateDisplay(value, { dateStyle: 'medium' }) : 'Sin iniciar';
 const clearFilters = (): void => {
   query.value = '';
   state.value = 'all';
@@ -45,7 +44,7 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Mis sílabos" description="Los sílabos de las materias que usted dicta.">
+  <PageFrame title="Mis sílabos" description="Los sílabos de las materias que usted dicta." size="wide">
     <template v-if="periods.length === 1" #meta><Badge variant="secondary">Período {{ periods[0] }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <Card>
@@ -56,12 +55,12 @@ onMounted(load);
             <template #filters><Field><FieldLabel for="syllabi-state" class="sr-only">Estado</FieldLabel><Select v-model="state" name="state"><SelectTrigger id="syllabi-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="option in SYLLABUS_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select></Field></template>
           </FilterToolbar>
         </form>
-        <LoadingSkeleton v-if="!result && !error" variant="table-body" :columns="5" :search="false" :filters="0" :actions="false" />
+        <LoadingSkeleton v-if="!result && !error" variant="table-body" :columns="4" :search="false" :filters="0" :actions="false" />
         <Table v-if="result" label="Mis sílabos">
-          <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos</TableHead><TableHead>Estado</TableHead><TableHead>Iniciado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos</TableHead><TableHead>Estado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
           <TableBody>
-            <TableEmpty v-if="result.syllabi.data.length === 0" :colspan="5">No tiene sílabos asignados con este rol.</TableEmpty>
-            <TableRow v-for="syllabus in result.syllabi.data" v-else :key="syllabus.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir sílabo de ${syllabus.subject}`" @click="openSyllabus(syllabus.id)" @keydown.enter.self.prevent="openSyllabus(syllabus.id)" @keydown.space.self.prevent="openSyllabus(syllabus.id)"><TableCell>{{ syllabus.subject }}</TableCell><TableCell><div class="flex flex-wrap gap-1.5"><Badge v-for="parallel in syllabus.parallels" :key="parallel" variant="outline">{{ parallel }}</Badge></div></TableCell><TableCell>{{ syllabusStateLabel(syllabus.state) ?? 'Estado no disponible' }}</TableCell><TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell><TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell></TableRow>
+            <TableEmpty v-if="result.syllabi.data.length === 0" :colspan="4">No tiene sílabos asignados con este rol.</TableEmpty>
+            <TableRow v-for="syllabus in result.syllabi.data" v-else :key="syllabus.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir sílabo de ${syllabus.subject}`" @click="openSyllabus(syllabus.id)" @keydown.enter.self.prevent="openSyllabus(syllabus.id)" @keydown.space.self.prevent="openSyllabus(syllabus.id)"><TableCell>{{ syllabus.subject }}</TableCell><TableCell><div class="flex flex-wrap gap-1.5"><Badge v-for="parallel in syllabus.parallels" :key="parallel" variant="outline">{{ parallel }}</Badge></div></TableCell><TableCell>{{ syllabusStateLabel(syllabus.state) ?? 'Estado no disponible' }}</TableCell><TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell></TableRow>
           </TableBody>
         </Table>
         <TablePagination v-if="result" :meta="result.syllabi" label="Paginación de sílabos asignados" @update:page="load" />
