@@ -76,6 +76,7 @@ describe('AppSidebarLayout', () => {
     expect(sidebar.get('a[href="/admin/panel"]').attributes('data-active')).toBe('true');
     expect(sidebar.get('a[href="/admin/panel"]').attributes('aria-current')).toBe('page');
     expect(sidebar.text()).not.toContain('Configuración');
+    expect(sidebar.find('[aria-label="Rol y carrera activos"]').exists()).toBe(false);
     expect(sidebar.find('[aria-label="Menú de usuario"]').exists()).toBe(false);
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).toContain('Ada Admin');
     expect(wrapper.text()).not.toContain('Mis sílabos');

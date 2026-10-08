@@ -4,7 +4,6 @@ import { useRoute } from 'vue-router';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
-import SidebarScope from '@/components/SidebarScope.vue';
 import {
     Sidebar,
     SidebarContent,
@@ -29,7 +28,6 @@ watch(() => route.fullPath, () => {
     <Sidebar collapsible="icon" variant="sidebar">
         <SidebarHeader>
             <div class="flex h-12 items-center p-2"><AppLogo /></div>
-            <SidebarScope />
         </SidebarHeader>
         <SidebarContent>
             <NavMain :items="mainNavItems" />
