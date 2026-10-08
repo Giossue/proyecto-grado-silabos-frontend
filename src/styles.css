@@ -34,6 +34,8 @@
     --color-primary: var(--primary);
     --color-primary-foreground: var(--primary-foreground);
     --color-primary-readable: var(--primary-readable);
+    --color-button-primary: var(--button-primary);
+    --color-button-primary-foreground: var(--button-primary-foreground);
 
     --color-secondary: var(--secondary);
     --color-secondary-foreground: var(--secondary-foreground);
@@ -164,6 +166,8 @@
     --primary: var(--brand-blue);
     --primary-foreground: hsl(0 0% 98%);
     --primary-readable: var(--brand-blue);
+    --button-primary: var(--brand-blue);
+    --button-primary-foreground: hsl(0 0% 98%);
     --selection-background: var(--brand-blue);
     --selection-foreground: hsl(0 0% 98%);
     --secondary: #e6edf5;
@@ -244,6 +248,8 @@
     --primary: #1a4beb;
     --primary-foreground: #ffffff;
     --primary-readable: #8ea3ff;
+    --button-primary: #1a4beb;
+    --button-primary-foreground: #ffffff;
     --selection-background: #1a4beb;
     --selection-foreground: #ffffff;
     --secondary: #2c3138;
