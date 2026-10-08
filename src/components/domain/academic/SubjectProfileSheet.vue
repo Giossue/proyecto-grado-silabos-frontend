@@ -62,7 +62,7 @@ const save = async (close: () => void) => {
 </script>
 
 <template>
-  <FormDialog v-model:open="open" :show-trigger="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha" description="Datos que heredarán los sílabos nuevos.">
+  <FormDialog v-model:open="open" fit :show-trigger="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha" description="Datos que heredarán los sílabos nuevos.">
     <template #default="{ close }">
       <form class="contents" @submit.prevent="save(close)">
         <FieldGroup>
@@ -72,7 +72,7 @@ const save = async (close: () => void) => {
           <template v-else>
             <Tabs v-if="sections.length > 1" v-model="activeSection" class="w-full shrink-0">
               <TabsList class="h-auto min-h-9 w-full shrink-0 flex-wrap justify-start gap-1" aria-label="Secciones de la ficha">
-                <TabsTrigger v-for="section in sections" :key="section" :value="section" class="h-8 max-w-56 flex-none" :title="section"><span class="truncate">{{ section }}</span></TabsTrigger>
+                <TabsTrigger v-for="section in sections" :key="section" :value="section" class="h-auto flex-none whitespace-normal py-1.5 text-left">{{ section }}</TabsTrigger>
               </TabsList>
             </Tabs>
             <fieldset class="contents" :disabled="disabled">
