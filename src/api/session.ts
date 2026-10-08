@@ -9,8 +9,10 @@ export type ActiveRole = {
   career_name: string | null;
 };
 
+export type AccessibilityPreferences = { high_contrast: boolean; text_size: string; no_motion: boolean; underline_links: boolean; wide_spacing: boolean };
+
 export type Session = {
-  user: { id: string; name: string; email: string; email_verified: boolean; can_edit_identity: boolean; formation?: string | null };
+  user: { id: string; name: string; email: string; email_verified: boolean; can_edit_identity: boolean; formation?: string | null; accessibility?: AccessibilityPreferences | null };
   active_role: ActiveRole | null;
   available_roles: ActiveRole[];
 };
@@ -71,6 +73,8 @@ export const updatePassword = (password: string, passwordConfirmation: string, c
     method: 'PUT',
     body: JSON.stringify({ password, password_confirmation: passwordConfirmation, current_password: currentPassword }),
   });
+export const updateAccessibility = (preferences: AccessibilityPreferences) =>
+  api<Session>('/authentication/accessibility', { method: 'PUT', body: JSON.stringify(preferences) });
 export const updateFormation = (formation: string) =>
   api<Session>('/authentication/formation', {
     method: 'PUT',

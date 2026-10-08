@@ -1,6 +1,10 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { updateAccessibility } from '@/api/session';
+import { sessionState } from '@/state/session';
 import { initializeAccessibility, useAccessibility } from '@/composables/useAccessibility';
 import { nextTick } from 'vue';
+
+vi.mock('@/api/session', () => ({ updateAccessibility: vi.fn().mockResolvedValue({}), getSession: vi.fn() }));
 
 describe('accesibilidad', () => {
   beforeEach(() => {
@@ -33,5 +37,26 @@ describe('accesibilidad', () => {
     reset();
     await nextTick();
     expect(document.documentElement.dataset.spacing).toBe('normal');
+  });
+});
+
+describe('accesibilidad en la cuenta', () => {
+  it('adopta las preferencias de la cuenta al iniciar sesión y guarda los cambios', async () => {
+    vi.useFakeTimers();
+    sessionState.replace({
+      user: { id: 'u1', name: 'Ana', email: 'a@x.test', email_verified: true, can_edit_identity: false, accessibility: { high_contrast: true, text_size: '150', no_motion: false, underline_links: true, wide_spacing: false } },
+      active_role: null,
+      available_roles: [],
+    });
+    await nextTick();
+    expect(useAccessibility().settings.value).toMatchObject({ highContrast: true, textSize: '150', underlineLinks: true });
+    expect(updateAccessibility).not.toHaveBeenCalled();
+
+    useAccessibility().settings.value.wideSpacing = true;
+    await nextTick();
+    vi.advanceTimersByTime(600);
+    expect(updateAccessibility).toHaveBeenCalledWith(expect.objectContaining({ wide_spacing: true, text_size: '150' }));
+    sessionState.clear();
+    vi.useRealTimers();
   });
 });

@@ -1,4 +1,6 @@
 import { ref, watch } from 'vue';
+import { updateAccessibility, type AccessibilityPreferences } from '@/api/session';
+import { sessionState } from '@/state/session';
 
 export type TextSize = '100' | '115' | '130' | '150';
 export type AccessibilitySettings = {
@@ -51,10 +53,55 @@ export const applyAccessibility = (settings: AccessibilitySettings): void => {
 
 const settings = ref<AccessibilitySettings>(defaultSettings());
 
+const toServer = (value: AccessibilitySettings): AccessibilityPreferences => ({
+    high_contrast: value.highContrast,
+    text_size: value.textSize,
+    no_motion: value.noMotion,
+    underline_links: value.underlineLinks,
+    wide_spacing: value.wideSpacing,
+});
+
+const fromServer = (value: AccessibilityPreferences): AccessibilitySettings => ({
+    highContrast: value.high_contrast,
+    textSize: TEXT_SIZES.includes(value.text_size as TextSize) ? (value.text_size as TextSize) : '100',
+    noMotion: value.no_motion,
+    underlineLinks: value.underline_links,
+    wideSpacing: value.wide_spacing,
+});
+
+let known = '';
+let timer: number | undefined;
+
+const saveToAccount = (): void => {
+    if (!sessionState.current.value) return;
+    const payload = toServer(settings.value);
+    const serialized = JSON.stringify(payload);
+    if (serialized === known) return;
+    known = serialized;
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => { void updateAccessibility(payload).catch(() => { known = ''; }); }, 500);
+};
+
 watch(settings, (value) => {
     applyAccessibility(value);
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(value)); } catch { return; }
+    saveToAccount();
 }, { deep: true });
+
+watch(() => sessionState.current.value, (session) => {
+    if (!session) {
+        known = '';
+        return;
+    }
+    const stored = session.user.accessibility;
+    if (stored) {
+        known = JSON.stringify(stored);
+        settings.value = fromServer(stored);
+        return;
+    }
+    known = '';
+    saveToAccount();
+});
 
 export function initializeAccessibility(): void {
     if (typeof window === 'undefined') return;
