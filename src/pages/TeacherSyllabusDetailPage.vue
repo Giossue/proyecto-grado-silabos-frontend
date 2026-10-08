@@ -412,8 +412,6 @@ const copyFromSource = async (): Promise<void> => {
   }
 };
 
-const sectionHeading = (title: string, index: number): string =>
-  /^\s*\d+[.)]/.test(title) ? title : `${index + 1}. ${title}`;
 
 const visibleSections = computed(() => syllabus.value?.sections ?? []);
 // Al editar, el formulario se reparte en pestañas (una por sección); en solo lectura se ve completo.
@@ -503,13 +501,13 @@ onBeforeUnmount(() => {
 
           <Tabs v-if="showEditor && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
             <TabsList class="h-auto min-h-9 w-full shrink-0 flex-wrap justify-start gap-1" aria-label="Secciones del sílabo">
-              <TabsTrigger v-for="(section, index) in visibleSections" :key="section.id" :value="section.id" class="h-8 max-w-56 flex-none" :title="sectionHeading(section.title, index)"><span class="truncate">{{ sectionHeading(section.title, index) }}</span></TabsTrigger>
+              <TabsTrigger v-for="section in visibleSections" :key="section.id" :value="section.id" class="h-8 max-w-56 flex-none" :title="section.title"><span class="truncate">{{ section.title }}</span></TabsTrigger>
             </TabsList>
           </Tabs>
           <template v-for="section in shownSections" :key="section.id">
           <Separator v-if="!showEditor && section.id !== visibleSections[0]?.id" />
           <section :id="`section-${section.id}`" class="flex scroll-mt-6 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
-            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionHeading(section.title, visibleSections.indexOf(section)) }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
+            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
             <FieldGroup>
               <template v-for="{ field, nested, hint } in sectionEntries(section.fields)" :key="field.id">
                 <template v-if="hint && showEditor">

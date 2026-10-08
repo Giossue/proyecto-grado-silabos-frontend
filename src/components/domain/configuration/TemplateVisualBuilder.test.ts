@@ -82,7 +82,7 @@ describe('TemplateVisualBuilder', () => {
     mount(TemplateVisualBuilder, { props: { template: official }, attachTo: document.body });
     expect(body().querySelector('[data-field="a"] table')?.textContent).toContain('FACULTAD: CIENCIAS ADMINISTRATIVAS');
     expect(body().textContent).not.toContain('Se completa con los datos del sílabo');
-    expect(body().textContent).toContain('1. Identificación Institucional');
+    expect(body().textContent).toContain('Identificación Institucional');
     expect(body().querySelector('[data-field="a"] h4')).toBeNull();
     expect(body().querySelector('[data-field="d"] h4')?.textContent?.trim()).toBe('Estudiantes con discapacidad: Tipo de discapacidad');
     expect(body().querySelector('[data-field="a"] [data-field-type]')?.textContent).toContain('Se completa solo');

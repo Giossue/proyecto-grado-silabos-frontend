@@ -60,11 +60,11 @@ describe("AdminTemplatePage", () => {
     vi.mocked(getTemplate).mockResolvedValue(payload);
   });
 
-  it("lista las secciones numeradas con sus campos, incluso el que no tiene nombre", async () => {
+  it("lista las secciones con sus campos, incluso el que no tiene nombre", async () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.get('[data-section="section-1"] [aria-label="Sección Descripción de la asignatura"]').text()).toBe('1. Descripción de la asignatura');
+    expect(wrapper.get('[data-section="section-1"] [aria-label="Sección Descripción de la asignatura"]').text()).toBe('Descripción de la asignatura');
     expect(wrapper.get('[data-field="field-1"]').text()).toContain('Descripción');
     const unnamed = wrapper.get('[data-field="field-2"]');
     expect(unnamed.text()).toContain('Campo sin nombre');
