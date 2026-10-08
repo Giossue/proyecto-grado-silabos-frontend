@@ -39,17 +39,14 @@ const clearFilters = (): void => {
   state.value = 'all';
   void load();
 };
-// El período se muestra en la descripción de la página en lugar de una columna.
-const description = computed(() => {
-  const periods = [...new Set((result.value?.syllabi.data ?? []).map((syllabus) => syllabus.period))];
-  return periods.length === 1 ? `Sílabos del período ${periods[0]}.` : 'Los sílabos de las materias que usted dicta.';
-});
+const periods = computed(() => [...new Set((result.value?.syllabi.data ?? []).map((syllabus) => syllabus.period))]);
 const openSyllabus = (id: string): void => { void router.push(paths.teacher.syllabus(id)); };
 onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Mis sílabos" :description="description">
+  <PageFrame title="Mis sílabos" description="Los sílabos de las materias que usted dicta.">
+    <template v-if="periods.length === 1" #meta><Badge variant="secondary">Período {{ periods[0] }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <Card>
       <CardContent class="flex flex-col gap-4">

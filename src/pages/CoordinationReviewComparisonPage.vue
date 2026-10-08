@@ -42,10 +42,10 @@ onMounted(() => { void load(); });
 <template>
   <PageFrame
     title="Comparar revisiones"
-    :description="data ? `${data.syllabus.subject} · ${data.syllabus.code} · ${data.syllabus.period}` : 'Contenido enviado en dos revisiones del expediente.'"
+    description="Contenido enviado en dos revisiones del expediente."
   >
     <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="reviewAreaPaths().review(String(route.params.after))"><ArrowLeft aria-hidden="true" />Volver al expediente</RouterLink></Button></template>
-    <template v-if="data" #meta><Badge variant="secondary">{{ data.comparison.changed_fields }} campo(s) con cambios</Badge></template>
+    <template v-if="data" #meta><span class="text-sm">{{ data.syllabus.subject }} · {{ data.syllabus.code }} · {{ data.syllabus.period }}</span><Badge variant="secondary">{{ data.comparison.changed_fields }} campo(s) con cambios</Badge></template>
 
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-if="loading && !data" variant="comparison" />

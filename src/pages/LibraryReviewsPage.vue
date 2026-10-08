@@ -30,10 +30,7 @@ const filters = reactive({
 });
 const initialPage = Number(queryText(route.query.page)) || 1;
 const stateOptions = Object.entries(LIBRARY_STATE_LABELS).map(([value, label]) => ({ value, label }));
-const pageTitle = computed(() => {
-  const periods = [...new Set((data.value?.reviews.data ?? []).map((item) => item.period))];
-  return periods.length > 0 ? `Revisiones de biblioteca - ${periods.join(', ')}` : 'Revisiones de biblioteca';
-});
+const periods = computed(() => [...new Set((data.value?.reviews.data ?? []).map((item) => item.period))]);
 
 const syncUrl = (page: number): void => {
   const query: Record<string, string> = {};
@@ -65,7 +62,8 @@ onMounted(() => { void load(initialPage); });
 </script>
 
 <template>
-  <PageFrame :title="pageTitle" description="Bibliografía de los sílabos enviados." size="wide">
+  <PageFrame title="Revisiones de biblioteca" description="Bibliografía de los sílabos enviados." size="wide">
+    <template v-if="periods.length > 0" #meta><Badge v-for="period in periods" :key="period" variant="secondary">Período {{ period }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :cell-lines="2" :actions="false" />
     <Card v-if="data">

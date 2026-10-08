@@ -40,14 +40,11 @@ const pageTitle = computed(() => ({
   schedule: 'Materias y asignaciones',
   teachers: 'Docentes',
 })[props.mode]);
-const pageDescription = computed(() => {
-  const career = curriculum.value?.career.name ?? 'la carrera activa';
-  return {
-    curriculum: `Malla curricular de ${career}.`,
-    schedule: `Materias y paralelos de ${career} del período en curso.`,
-    teachers: `Docentes de ${career}.`,
-  }[props.mode];
-});
+const pageDescription = computed(() => ({
+  curriculum: 'Malla curricular de su carrera.',
+  schedule: 'Materias y paralelos de su carrera del período en curso.',
+  teachers: 'Docentes de su carrera.',
+})[props.mode]);
 // Mientras falte programar materias de la malla, el botón principal es Preparar período.
 const pendingPreparation = computed(() => {
   if (!schedule.value || !assignments.value || !schedule.value.selectedPeriodId) return false;

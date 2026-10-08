@@ -62,7 +62,7 @@ describe('LibraryReviewsPage', () => {
     expect(row.text()).not.toContain('SW-601');
     expect(row.text()).toContain('Software');
     expect(row.text()).not.toContain('A, B');
-    expect(wrapper.text()).toContain('Revisiones de biblioteca - ');
+    expect(wrapper.text()).toContain('Período ');
     expect(row.text()).not.toContain('N.º');
     expect(row.text()).toContain('Con comentario');
     wrapper.unmount();
