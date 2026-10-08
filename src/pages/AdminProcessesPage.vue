@@ -21,7 +21,7 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import ConvocationPeriodSheet from '@/components/domain/syllabus/ConvocationPeriodSheet.vue';
-import ConvocationDetailSheet from '@/components/domain/syllabus/ConvocationDetailSheet.vue';
+import ConvocationOptionsDialog from '@/components/domain/syllabus/ConvocationOptionsDialog.vue';
 import ConvocationRowActions from '@/components/domain/syllabus/ConvocationRowActions.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Card, CardContent } from '@/components/ui/card';
@@ -116,7 +116,7 @@ onMounted(load);
       <TablePagination :meta="meta" label="Paginación de convocatorias" @update:page="setPage" />
     </CardContent></Card>
     <template v-if="current">
-      <ConvocationDetailSheet v-model:open="sheetOpen" :row="current" @action="runAction" />
+      <ConvocationOptionsDialog v-model:open="sheetOpen" :row="current" @action="runAction" />
       <ConvocationRowActions ref="rowActions" :key="current.id" :row="current" :menu="false" @changed="changed" />
     </template>
   </PageFrame>
