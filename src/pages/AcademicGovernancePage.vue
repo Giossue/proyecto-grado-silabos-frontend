@@ -44,7 +44,7 @@ const selectTab = (value: string | number): void => {
     void router.replace({ path: paths.admin.academic, query: { seccion: String(value) } });
 };
 const sectionContent = computed(() => ({
-    facultad: { title: 'Facultades', description: 'Las facultades de la universidad y cuántas carreras tiene cada una.' },
+    facultad: { title: 'Facultades', description: 'Las facultades de la universidad' },
     carrera: { title: 'Carreras', description: 'Las carreras y a qué facultad pertenece cada una.' },
 })[entity.value]);
 const createLabel = computed(() => entity.value === 'facultad' ? 'Crear facultad' : 'Crear carrera');
