@@ -29,7 +29,7 @@ const region = computed(
         <div
             ref="container"
             data-slot="table-container"
-            class="w-full overflow-x-auto overflow-y-hidden [scrollbar-color:var(--color-border)_transparent] [scrollbar-width:thin]"
+            class="w-full overflow-x-auto overflow-y-hidden border-x border-border [scrollbar-color:var(--color-border)_transparent] [scrollbar-width:thin]"
             :tabindex="overflows ? 0 : undefined"
             :role="overflows ? 'region' : undefined"
             :aria-label="overflows ? region : undefined"
