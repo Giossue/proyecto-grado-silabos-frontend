@@ -22,7 +22,7 @@ defineProps<Props>();
         :class="`group-data-[collapsible=icon]:p-0 ${$props.class || ''}`"
     >
         <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu class="group-data-[collapsible=icon]:items-center">
                 <SidebarMenuItem v-for="item in items" :key="item.title">
                     <SidebarMenuButton
                         class="text-muted-foreground hover:text-foreground"

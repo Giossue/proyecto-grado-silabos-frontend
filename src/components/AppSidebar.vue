@@ -27,7 +27,11 @@ watch(() => route.fullPath, () => {
 <template>
     <Sidebar collapsible="icon" variant="sidebar">
         <SidebarHeader>
-            <div class="flex h-12 items-center p-2"><AppLogo /></div>
+            <div
+                class="flex h-12 items-center p-2 group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
+            >
+                <AppLogo />
+            </div>
         </SidebarHeader>
         <SidebarContent>
             <NavMain :items="mainNavItems" />

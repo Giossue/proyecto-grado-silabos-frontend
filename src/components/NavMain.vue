@@ -43,7 +43,7 @@ const isItemActive = (item: NavItem): boolean =>
 
 <template>
     <SidebarGroup class="px-2 py-0">
-        <SidebarMenu>
+        <SidebarMenu class="group-data-[collapsible=icon]:items-center">
             <SidebarMenuItem v-for="item in items" :key="item.title">
                 <template v-if="!item.items?.length">
                     <SidebarMenuButton as-child :is-active="isItemActive(item)" :tooltip="item.title">
