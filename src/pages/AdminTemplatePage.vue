@@ -183,7 +183,7 @@ onBeforeUnmount(() => {
             <Alert v-if="payload?.templateChangedDuringPause">
                 <AlertDescription>Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.</AlertDescription>
             </Alert>
-            <ProcessLockAlert v-if="payload?.processLock" />
+            <ProcessLockAlert v-if="payload?.processLock" :lock="payload.processLockDetail" />
         </div>
 
         <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :designs="payload?.sectionDesigns" :can-format="template.sections.length === 0" :formatting="formatting" @changed="reloadFromMutation" @format="format" />

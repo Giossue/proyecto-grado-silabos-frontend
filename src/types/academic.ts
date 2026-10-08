@@ -1,3 +1,4 @@
+import type { LockDetail } from '@/api/locks';
 export type Option = {
   id: string;
   nombre?: string;
@@ -193,6 +194,7 @@ export type CurriculumBuilderProps = {
     cycle_count: number;
     editable: boolean;
     lock_reason: string | null;
+    lock?: LockDetail | null;
   };
   fixedFields: FixedSubjectField[];
   fixedFieldTotals: {

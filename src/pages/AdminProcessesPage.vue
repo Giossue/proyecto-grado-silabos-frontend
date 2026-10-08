@@ -18,8 +18,7 @@ import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
-import { Lock } from '@lucide/vue';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import ConvocationPeriodSheet from '@/components/domain/syllabus/ConvocationPeriodSheet.vue';
 import ConvocationRowActions from '@/components/domain/syllabus/ConvocationRowActions.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
@@ -78,7 +77,7 @@ onMounted(load);
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :columns="5" :filters="1" />
-    <Alert v-if="loaded && inProgress"><Lock aria-hidden="true" /><AlertTitle>Convocatoria en curso</AlertTitle><AlertDescription>Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra.</AlertDescription></Alert>
+    <ProcessLockAlert v-if="loaded && inProgress" title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra." hide-action />
     <Card v-if="loaded"><CardContent class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar período" placeholder="Buscar por período">
         <template #filters>

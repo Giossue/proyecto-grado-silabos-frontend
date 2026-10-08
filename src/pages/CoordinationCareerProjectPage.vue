@@ -70,7 +70,7 @@ onMounted(() => { void load(); });
 <template>
   <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos.">
     <template #actions><FichaImportDialog :disabled="!data || Boolean(data.career.lock_reason)" @applied="saved" /></template>
-    <ProcessLockAlert v-if="data?.career.lock_reason" />
+    <ProcessLockAlert v-if="data?.career.lock_reason" :lock="data.career.lock" />
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :actions="false" />
     <Card v-else-if="data"><CardContent class="flex flex-col gap-4">

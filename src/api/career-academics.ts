@@ -1,3 +1,4 @@
+import type { LockDetail } from '@/api/locks';
 import type { DocumentNode } from '@/lib/templateDocument';
 import { api, ApiError } from "@/api/client";
 import { requestPurgeConfirmation } from "@/composables/usePurgeConfirmation";
@@ -37,6 +38,7 @@ export type Curriculum = {
     cycle_count: number;
     editable: boolean;
     lock_reason: string | null;
+    lock?: LockDetail | null;
   };
   fixedFields: Array<{
     id: string;
@@ -81,7 +83,7 @@ export type Curriculum = {
 };
 
 export type ScheduledSubjects = {
-  career: { id: string; name: string; lock_reason: string | null };
+  career: { id: string; name: string; lock_reason: string | null; lock?: LockDetail | null };
   selectedPeriodId: string | null;
   scheduledSubjects: Array<{
     subject_id: string;
@@ -147,7 +149,7 @@ export const saveSubjectProfile = (subjectId: string, values: Record<string, Doc
 
 export type TeacherAssignments = {
   canCreateTeacher: boolean;
-  career: { id: string; name: string; lock_reason: string | null };
+  career: { id: string; name: string; lock_reason: string | null; lock?: LockDetail | null };
   pendingTeachers: Array<{ id: string; name: string; email: string }>;
   careerTeachers: Array<{ id: string; name: string; email: string; pending_activation: boolean }>;
   teacherAssignments: Array<{

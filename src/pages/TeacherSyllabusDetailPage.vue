@@ -21,6 +21,7 @@ import TeacherFormationDialog from '@/components/domain/identity/TeacherFormatio
 import { formationEditorKey } from '@/components/domain/identity/formationEditor';
 import SyllabusUnitAssistant from '@/components/domain/ai/SyllabusUnitAssistant.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -465,7 +466,7 @@ onBeforeUnmount(() => {
 
     <template v-if="syllabus">
       <h1 class="sr-only">Sílabo de {{ syllabus.subject }} · {{ syllabus.period }}</h1>
-      <Alert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked"><AlertTitle>Edición no disponible</AlertTitle><AlertDescription>{{ editBlockReason }}</AlertDescription></Alert>
+      <ProcessLockAlert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
       <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
