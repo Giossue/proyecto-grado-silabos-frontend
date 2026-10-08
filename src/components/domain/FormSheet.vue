@@ -22,7 +22,6 @@ withDefaults(
         showTrigger?: boolean;
         disabled?: boolean;
         fullScreen?: boolean;
-        hideClose?: boolean;
         wide?: boolean;
     }>(),
     {
@@ -30,7 +29,6 @@ withDefaults(
         showTrigger: true,
         disabled: false,
         fullScreen: false,
-        hideClose: false,
         wide: false,
     },
 );
@@ -65,7 +63,6 @@ const close = (): void => {
         </SheetTrigger>
         <SheetContent
             side="right"
-            :hide-close="hideClose"
             :class="
                 cn('w-full', {
                     'h-dvh max-w-none border-0 sm:max-w-none': fullScreen,

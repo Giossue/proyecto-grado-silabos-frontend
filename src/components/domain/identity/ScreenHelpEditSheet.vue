@@ -58,7 +58,7 @@ const remove = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" trigger-label="Editar ayuda" :title="`Ayuda de ${screen.label}`" :show-trigger="false" hide-close>
+    <FormSheet v-model:open="open" trigger-label="Editar ayuda" :title="`Ayuda de ${screen.label}`" :show-trigger="false">
         <template v-if="help" #header-actions>
             <TooltipProvider>
                 <Tooltip>

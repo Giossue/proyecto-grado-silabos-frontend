@@ -9,7 +9,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Field } from '@/components/ui/field';
+import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import { roleEntry } from '@/lib/routes';
 import { LIBRARY_SCOPE, roleLabel } from '@/lib/roles';
@@ -56,7 +57,7 @@ const select = async (roleAssignmentId: string): Promise<void> => {
         <SheetTitle>{{ title }}</SheetTitle>
         <SheetDescription>Elija una carrera o rol vigente. Todo el sistema cambiará al nuevo alcance.</SheetDescription>
       </SheetHeader>
-      <div class="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-6">
+      <div class="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-28">
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
         <Card v-for="role in roles" :key="role.id">
           <CardHeader>
@@ -68,6 +69,11 @@ const select = async (roleAssignmentId: string): Promise<void> => {
           <CardFooter><Button v-if="activeRole?.id === role.id" type="button" variant="secondary" class="w-full" disabled>Carrera o rol actual</Button><Button v-else type="button" class="w-full" :disabled="pendingRoleId !== null" @click="select(role.id)"><Spinner v-if="pendingRoleId === role.id" data-icon="inline-start" /><ArrowRight v-else data-icon="inline-start" aria-hidden="true" />Cambiar a {{ scopeName(role) }}</Button></CardFooter>
         </Card>
       </div>
+      <SheetFooter class="absolute inset-x-0 bottom-0 border-t bg-card pb-(--safe-footer-inset)">
+        <Field orientation="horizontal" class="justify-end">
+          <Button type="button" variant="outline" @click="open = false">Cerrar</Button>
+        </Field>
+      </SheetFooter>
     </SheetContent>
   </Sheet>
 </template>
