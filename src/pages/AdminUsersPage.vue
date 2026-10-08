@@ -11,7 +11,6 @@ import ManagedUserDetailSheet from '@/components/domain/identity/ManagedUserDeta
 import ManagedUserPendingActions from '@/components/domain/identity/ManagedUserPendingActions.vue';
 import ManagedUserSheet from '@/components/domain/identity/ManagedUserSheet.vue';
 import ImportSpreadsheetDialog from '@/components/domain/ImportSpreadsheetDialog.vue';
-import { Badge } from '@/components/ui/badge';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -85,8 +84,8 @@ onMounted(load);
                 <TableEmpty v-if="result.users.data.length === 0" :colspan="4">No se encontraron cuentas con estos filtros.</TableEmpty>
                 <TableRow v-for="user in result.users.data" v-else :key="user.id" class="cursor-pointer" tabindex="0" :aria-label="`Ver ${user.nombre}`" @click="activateRow($event, () => openUser(user))" @keydown.enter.self.prevent="openUser(user)" @keydown.space.self.prevent="openUser(user)">
                     <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span></div></TableCell>
-                    <TableCell><div class="flex items-center gap-2"><span v-if="user.roles[0]">{{ user.roles[0].name }}</span><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span><Badge v-if="user.roles.length > 1" variant="secondary">+{{ user.roles.length - 1 }}<span class="sr-only"> más</span></Badge></div></TableCell>
-                    <TableCell><div class="flex items-center gap-2 text-sm"><span v-if="user.roles[0]" :class="user.roles[0].career_name ? '' : 'text-muted-foreground'">{{ careerOf(user.roles[0]) }}</span><span v-else class="text-muted-foreground">—</span><Badge v-if="user.roles.length > 1" variant="secondary">+{{ user.roles.length - 1 }}<span class="sr-only"> más</span></Badge></div></TableCell>
+                    <TableCell><ul v-if="user.roles.length" class="-mx-2 flex flex-col"><li v-for="(item, index) in user.roles" :key="index" class="flex min-h-7 items-center border-border px-2 not-first:border-t">{{ item.name }}</li></ul><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span></TableCell>
+                    <TableCell><ul v-if="user.roles.length" class="-mx-2 flex flex-col text-sm"><li v-for="(item, index) in user.roles" :key="index" class="flex min-h-7 items-center border-border px-2 not-first:border-t" :class="item.career_name ? '' : 'text-muted-foreground'">{{ careerOf(item) }}</li></ul><span v-else class="text-sm text-muted-foreground">—</span></TableCell>
                     <TableCell class="text-center"><StatusBadge :label="statusOf(user)" :tone="statusTone(user)" /></TableCell>
                     
                 </TableRow>
