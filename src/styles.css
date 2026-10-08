@@ -569,6 +569,12 @@
         line-height: var(--document-line-height);
     }
 
+    /* El celeste de las celdas de etiqueta, un poco más oscuro en pantalla. */
+    .template-sheet .free-text-table [style*='219, 229, 241'],
+    .template-sheet .free-text-table [style*='dbe5f1' i] {
+        background-color: #c3d4ea !important;
+    }
+
     .document-table-header {
         background-color: var(--document-table-header-background);
         color: var(--document-table-header-color);
