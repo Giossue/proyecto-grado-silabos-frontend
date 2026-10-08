@@ -14,6 +14,7 @@ const BLOCKS = ':scope > header, :scope > section > h3, [data-section-heading], 
 export const paginateSheet = (sheet: HTMLElement, landscape: boolean): void => {
     const blocks = [...sheet.querySelectorAll<HTMLElement>(BLOCKS)];
     for (const block of blocks) block.style.marginTop = '';
+    sheet.style.height = '';
     const rect = sheet.getBoundingClientRect();
     if (rect.width === 0) return;
 
@@ -36,8 +37,9 @@ export const paginateSheet = (sheet: HTMLElement, landscape: boolean): void => {
         bottom = Math.max(bottom, top + shift + height);
     }
 
-    const pages = Math.max(1, Math.ceil((bottom + MARGIN) / stride));
-    sheet.style.minHeight = `${pages * stride - GAP}px`;
+    const pages = Math.max(1, Math.ceil(bottom / stride));
+    sheet.style.minHeight = '0';
+    sheet.style.height = `${pages * stride - GAP}px`;
     sheet.style.backgroundColor = 'transparent';
     sheet.style.boxShadow = 'none';
     sheet.style.backgroundImage = `repeating-linear-gradient(to bottom, var(--document-paper, var(--document-sheet-paper)) 0, var(--document-paper, var(--document-sheet-paper)) ${page}px, var(--background) ${page}px, var(--background) ${stride}px)`;
