@@ -95,6 +95,9 @@ const startDrag = (event: PointerEvent): void => {
   const origin = cornerPosition(corner.value);
   drag = { startX: event.clientX, startY: event.clientY, originX: origin.x, originY: origin.y, moved: false };
   (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+  window.addEventListener('pointerup', endDrag);
+  window.addEventListener('pointercancel', endDrag);
+  window.addEventListener('blur', endDrag);
 };
 let frame = 0;
 let pointer = { x: 0, y: 0 };
@@ -108,6 +111,7 @@ const applyDrag = (): void => {
 };
 const moveDrag = (event: PointerEvent): void => {
   if (!drag) return;
+  if (event.buttons === 0) { endDrag(); return; }
   pointer = { x: event.clientX, y: event.clientY };
   if (!drag.moved && Math.hypot(pointer.x - drag.startX, pointer.y - drag.startY) < DRAG_THRESHOLD) return;
   drag.moved = true;
@@ -115,6 +119,9 @@ const moveDrag = (event: PointerEvent): void => {
   if (!frame) frame = requestAnimationFrame(applyDrag);
 };
 const endDrag = (): void => {
+  window.removeEventListener('pointerup', endDrag);
+  window.removeEventListener('pointercancel', endDrag);
+  window.removeEventListener('blur', endDrag);
   if (frame) { cancelAnimationFrame(frame); applyDrag(); }
   if (drag?.moved && dragging.value) {
     animateNextMove();
@@ -167,6 +174,7 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
   window.removeEventListener('resize', refresh);
+  endDrag();
   observer?.disconnect();
   window.clearTimeout(animationTimer);
 });
@@ -192,6 +200,7 @@ onBeforeUnmount(() => {
         @pointermove="moveDrag"
         @pointerup="endDrag"
         @pointercancel="endDrag"
+        @lostpointercapture="endDrag"
         @click="toggle"
         @keydown="nudge"
       >

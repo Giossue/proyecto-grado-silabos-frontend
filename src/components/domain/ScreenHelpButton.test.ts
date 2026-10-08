@@ -71,7 +71,7 @@ describe('ScreenHelpButton', () => {
     const trigger = wrapper.get('[aria-label="Ayuda de esta pantalla"]');
     vi.spyOn(trigger.element.parentElement as HTMLElement, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, right: 1000, bottom: 700, width: 1000, height: 700, x: 0, y: 0, toJSON: () => ({}) });
 
-    const fire = (type: string, clientX: number, clientY: number) => trigger.element.dispatchEvent(new MouseEvent(type, { clientX, clientY, bubbles: true }));
+    const fire = (type: string, clientX: number, clientY: number) => trigger.element.dispatchEvent(new MouseEvent(type, { clientX, clientY, buttons: type === 'pointerup' ? 0 : 1, bubbles: true }));
     fire('pointerdown', 950, 650);
     fire('pointermove', 100, 80);
     await flushPromises();
@@ -81,6 +81,25 @@ describe('ScreenHelpButton', () => {
     await flushPromises();
 
     expect(JSON.parse(localStorage.getItem('silabos:ayuda-posicion') ?? '{}').corner).toBe('top-left');
+  });
+
+  it('si se pierde el pointerup, el botón se suelta solo al detectar que no hay botón presionado', async () => {
+    vi.mocked(listAvailableScreenHelp).mockResolvedValue({ help: [help] });
+    signIn();
+    const wrapper = mountButton();
+    await flushPromises();
+    const trigger = wrapper.get('[aria-label="Ayuda de esta pantalla"]');
+    vi.spyOn(trigger.element.parentElement as HTMLElement, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, right: 1000, bottom: 700, width: 1000, height: 700, x: 0, y: 0, toJSON: () => ({}) });
+
+    const fire = (type: string, clientX: number, clientY: number, buttons: number) => trigger.element.dispatchEvent(new MouseEvent(type, { clientX, clientY, buttons, bubbles: true }));
+    fire('pointerdown', 950, 650, 1);
+    fire('pointermove', 500, 300, 1);
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+    fire('pointermove', 520, 310, 0);
+    await flushPromises();
+
+    expect(trigger.classes()).not.toContain('cursor-grabbing');
+    expect(JSON.parse(localStorage.getItem('silabos:ayuda-posicion') ?? '{}').corner).toBeDefined();
   });
 
   it('no hereda la transición del botón al cargar: solo anima al cambiar de esquina', async () => {
