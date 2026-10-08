@@ -32,7 +32,7 @@ const error = ref<string | null>(null); const loading = ref(true);
 const q = ref(typeof route.query.q === 'string' ? route.query.q : ''); const status = ref('all'); const role = ref('all'); const career = ref('all');
 const statusOf = (user: ManagedUser): string => {
     if (!user.active) return 'Inactivo';
-    if (user.pending_activation) return 'Pendiente de activación';
+    if (user.pending_activation) return 'Pendiente';
     return 'Activo';
 };
 const careerOf = (role: ManagedUser['roles'][number]): string =>
@@ -72,7 +72,7 @@ onMounted(load);
                 <template #filters>
                     <Field><FieldLabel for="users-role" class="sr-only">Rol</FieldLabel><Select v-model="role" name="role"><SelectTrigger id="users-role"><SelectValue placeholder="Todos los roles" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los roles</SelectItem><SelectItem v-for="item in result.roles" :key="item.codigo" :value="item.codigo">{{ item.nombre }}</SelectItem></SelectGroup></SelectContent></Select></Field>
                     <Field><FieldLabel for="users-career" class="sr-only">Carrera</FieldLabel><Select v-model="career" name="career"><SelectTrigger id="users-career"><SelectValue placeholder="Todas las carreras" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todas las carreras</SelectItem><SelectItem v-for="item in result.careers" :key="item.id" :value="item.id">{{ item.nombre }}</SelectItem></SelectGroup></SelectContent></Select></Field>
-                    <Field><FieldLabel for="users-status" class="sr-only">Estado</FieldLabel><Select v-model="status" name="status"><SelectTrigger id="users-status"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activos</SelectItem><SelectItem value="pending">Pendiente de activación</SelectItem><SelectItem value="inactive">Inactivos</SelectItem></SelectGroup></SelectContent></Select></Field>
+                    <Field><FieldLabel for="users-status" class="sr-only">Estado</FieldLabel><Select v-model="status" name="status"><SelectTrigger id="users-status"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activos</SelectItem><SelectItem value="pending">Pendiente</SelectItem><SelectItem value="inactive">Inactivos</SelectItem></SelectGroup></SelectContent></Select></Field>
                 </template>
             </FilterToolbar></form>
 

@@ -73,7 +73,7 @@ const saved = (message: string): void => {
 
 const status = computed(() => {
     if (!props.user.active) return { label: 'Inactivo' };
-    if (props.user.pending_activation) return { label: 'Pendiente de activación' };
+    if (props.user.pending_activation) return { label: 'Pendiente' };
 
     return { label: 'Activo' };
 });
