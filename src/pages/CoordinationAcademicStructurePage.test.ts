@@ -38,6 +38,9 @@ const mountPage = () => mount(CoordinationAcademicStructurePage, {
   global: { stubs },
 });
 
+const editButton = (wrapper: { findAll: (selector: string) => Array<{ text: () => string }> }) =>
+  wrapper.findAll('button').find((button) => /Editar malla|Comprobando/.test(button.text())) as never as ReturnType<ReturnType<typeof mount>['get']>;
+
 describe('CoordinationAcademicStructurePage, edición de malla', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -59,7 +62,7 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(false);
     expect(wrapper.text()).not.toContain('Configurar ciclos');
 
-    await wrapper.get('button').trigger('click');
+    await editButton(wrapper).trigger('click');
     await flushPromises();
     expect(getCurriculum).toHaveBeenCalledTimes(2);
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(true);
@@ -82,7 +85,7 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     vi.mocked(getCurriculum).mockResolvedValue(curriculum(false));
     const wrapper = mountPage();
     await flushPromises();
-    expect(wrapper.get('button').attributes('disabled')).toBeDefined();
+    expect(editButton(wrapper).attributes('disabled')).toBeDefined();
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(false);
     expect(wrapper.text()).toContain('Pause la convocatoria para editar');
     wrapper.unmount();
@@ -92,10 +95,10 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     vi.mocked(getCurriculum).mockResolvedValueOnce(curriculum()).mockResolvedValueOnce(curriculum(false));
     const wrapper = mountPage();
     await flushPromises();
-    await wrapper.get('button').trigger('click');
+    await editButton(wrapper).trigger('click');
     await flushPromises();
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(false);
-    expect(wrapper.get('button').attributes('disabled')).toBeDefined();
+    expect(editButton(wrapper).attributes('disabled')).toBeDefined();
     expect(wrapper.text()).toContain('Pause la convocatoria para editar');
     wrapper.unmount();
   });
@@ -104,14 +107,14 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     vi.mocked(getCurriculum).mockResolvedValueOnce(curriculum()).mockResolvedValueOnce(curriculum()).mockResolvedValueOnce(curriculum(false));
     const wrapper = mountPage();
     await flushPromises();
-    await wrapper.get('button').trigger('click');
+    await editButton(wrapper).trigger('click');
     await flushPromises();
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(true);
 
     wrapper.findComponent({ name: 'CurriculumCanvas' }).vm.$emit('changed', 'Malla actualizada.');
     await flushPromises();
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(false);
-    expect(wrapper.get('button').attributes('disabled')).toBeDefined();
+    expect(editButton(wrapper).attributes('disabled')).toBeDefined();
     wrapper.unmount();
   });
 });
