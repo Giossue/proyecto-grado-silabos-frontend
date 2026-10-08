@@ -22,6 +22,7 @@ withDefaults(
         showTrigger?: boolean;
         disabled?: boolean;
         fullScreen?: boolean;
+        hideClose?: boolean;
         wide?: boolean;
     }>(),
     {
@@ -29,6 +30,7 @@ withDefaults(
         showTrigger: true,
         disabled: false,
         fullScreen: false,
+        hideClose: false,
         wide: false,
     },
 );
@@ -36,6 +38,7 @@ withDefaults(
 defineSlots<{
     trigger?(): VNode[];
     default(props: { close: () => void }): VNode[];
+    'header-actions'?(): VNode[];
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -62,6 +65,7 @@ const close = (): void => {
         </SheetTrigger>
         <SheetContent
             side="right"
+            :hide-close="hideClose"
             :class="
                 cn('w-full', {
                     'h-dvh max-w-none border-0 sm:max-w-none': fullScreen,
@@ -70,6 +74,9 @@ const close = (): void => {
                 })
             "
         >
+            <div v-if="$slots['header-actions']" class="absolute top-3 right-3 flex items-center gap-1">
+                <slot name="header-actions" />
+            </div>
             <SheetHeader>
                 <SheetTitle>{{ title }}</SheetTitle>
                 <SheetDescription v-if="description">{{ withoutEndPeriod(description) }}</SheetDescription>
