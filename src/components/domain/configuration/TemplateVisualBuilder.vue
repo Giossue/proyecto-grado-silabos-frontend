@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Settings2, Sparkles, Trash2 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import type { SectionDesign, TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { deleteField, deleteSection, reorderFields, reorderSections } from '@/api/template-structure';
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
@@ -32,6 +32,15 @@ const selectedField = ref<string | null>(null);
 const selectedSection = ref<string | null>(null);
 const selectField = (id: string): void => { selectedField.value = id; selectedSection.value = null; };
 const selectSection = (id: string): void => { selectedSection.value = id; selectedField.value = null; };
+const clearSelectionOutside = (event: PointerEvent): void => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    if (target.closest('[data-field], [data-section-heading], [data-insert-point], [role="dialog"], [role="alertdialog"], [role="menu"]')) return;
+    selectedField.value = null;
+    selectedSection.value = null;
+};
+onMounted(() => document.addEventListener('pointerdown', clearSelectionOutside));
+onBeforeUnmount(() => document.removeEventListener('pointerdown', clearSelectionOutside));
 const busy = ref(false);
 const error = ref<string | null>(null);
 
@@ -156,7 +165,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="flex min-w-0 flex-col gap-3">
         <p v-if="sheet.landscape && !preview" class="-mb-1 text-xs italic text-muted-foreground">Hoja horizontal</p>
         <h3 v-if="preview" class="font-bold">{{ sectionIndex + 1 }}. {{ section.title }}</h3>
-        <div v-else :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
+        <div v-else data-section-heading :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
           <span aria-hidden="true" :class="cn('pointer-events-none absolute top-0.5 right-full mr-2 rounded bg-primary px-1.5 py-0.5 font-sans text-xs font-medium text-primary-foreground group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">Sección</span>
           <Button type="button" variant="ghost" class="h-auto w-full min-w-0 justify-start whitespace-normal px-0 py-0 text-left font-bold [overflow-wrap:anywhere] hover:bg-transparent" :aria-pressed="selectedSection === section.id" :aria-label="`Sección ${section.title}`" @click="selectSection(section.id)">{{ sectionIndex + 1 }}. {{ section.title }}</Button>
           <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
