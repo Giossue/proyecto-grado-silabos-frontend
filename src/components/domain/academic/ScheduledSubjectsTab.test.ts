@@ -35,11 +35,11 @@ const data: ScheduledSubjects = {
     },
 };
 
-const mountTab = () => mount(ScheduledSubjectsTab, {
-    props: { data, assignments: [], teacherUsers: [] },
+const mountTab = (value: ScheduledSubjects = data) => mount(ScheduledSubjectsTab, {
+    props: { data: value, assignments: [], teacherUsers: [] },
     global: {
         stubs: {
-            Card: passthrough, CardContent: passthrough, CareerAcademicActions: passthrough, ClientFilterBar: passthrough,
+            Card: passthrough, CardContent: passthrough, ParallelCreationSheet: { props: ['open', 'subjectLabel'], template: '<div class="parallel-sheet">{{ subjectLabel }}</div>' }, ClientFilterBar: passthrough,
             Field: passthrough, FieldLabel: passthrough, Select: SelectStub, SelectContent: passthrough, SelectGroup: passthrough,
             SelectItem: passthrough, SelectTrigger: passthrough, SelectValue: passthrough, Badge: passthrough, Alert: passthrough,
             AlertDescription: passthrough, Table: passthrough, TableBody: passthrough, TableCell: passthrough, TableEmpty: passthrough,
@@ -79,5 +79,24 @@ describe('ScheduledSubjectsTab', () => {
 
         await selects[0].vm.$emit('update:modelValue', '3');
         expect(wrapper.text()).toContain('No hay materias que coincidan con los filtros.');
+    });
+
+    it('no tiene columna de acciones: un clic en la fila abre Paralelos y docentes', async () => {
+        const wrapper = mountTab();
+        expect(wrapper.text()).not.toContain('Acciones');
+        expect(wrapper.find('.parallel-sheet').exists()).toBe(false);
+
+        await wrapper.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
+        expect(wrapper.get('.parallel-sheet').text()).toBe('Bases de Datos');
+    });
+
+    it('no abre la hoja si la edición está bloqueada o el período es de solo lectura', async () => {
+        const locked = mountTab({ ...data, career: { ...data.career, lock_reason: 'Convocatoria activa' } });
+        await locked.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
+        expect(locked.find('.parallel-sheet').exists()).toBe(false);
+
+        const readonly = mountTab({ ...data, scheduledSubjects: data.scheduledSubjects.map((item) => ({ ...item, period_planning_enabled: false })) });
+        await readonly.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
+        expect(readonly.find('.parallel-sheet').exists()).toBe(false);
     });
 });
