@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { FileText, Inbox, LoaderCircle, Plus, Sparkles } from '@lucide/vue';
+import { FileText, Inbox, LoaderCircle, Plus, RotateCcw, Sparkles } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { createTemplate, formatTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
@@ -181,9 +181,7 @@ onBeforeUnmount(() => {
     >
         <div class="mx-auto flex flex-col gap-4 empty:hidden" :style="{ width: `${SHEET_WIDTH}px`, maxWidth: '100%' }">
             <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
-            <Alert v-if="payload?.templateChangedDuringPause">
-                <AlertDescription>Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.</AlertDescription>
-            </Alert>
+            <ProcessLockAlert v-if="payload?.templateChangedDuringPause" :icon="RotateCcw" title="Plantilla modificada durante la pausa" message="Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero." hide-action />
             <ProcessLockAlert v-if="payload?.processLock" :lock="payload.processLockDetail" />
         </div>
 

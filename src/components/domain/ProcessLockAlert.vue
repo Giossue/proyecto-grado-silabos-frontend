@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Lock } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, type Component } from 'vue';
 import type { LockDetail } from '@/api/locks';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { formatDateDisplay } from '@/lib/dateDisplay';
 import { paths } from '@/lib/routes';
 import { sessionState } from '@/state/session';
 
-const props = defineProps<{ lock?: LockDetail | null; title?: string; message?: string; hideAction?: boolean }>();
+const props = defineProps<{ lock?: LockDetail | null; title?: string; message?: string; hideAction?: boolean; icon?: Component }>();
 
 const isAdministrator = computed(() => sessionState.current.value?.active_role?.code === 'administrador');
 const href = computed(() => isAdministrator.value ? paths.admin.convocations : paths.coordination.panel);
@@ -43,7 +43,7 @@ const reason = computed(() => {
 
 <template>
     <Alert class="w-fit max-w-full border-primary/20 bg-accent text-accent-foreground">
-        <Lock class="text-primary" aria-hidden="true" />
+        <component :is="icon ?? Lock" class="text-primary" aria-hidden="true" />
         <AlertTitle>{{ headline }}</AlertTitle>
         <AlertDescription class="flex flex-col items-start gap-2 text-accent-foreground/80">
             <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
