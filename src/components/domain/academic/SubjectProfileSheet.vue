@@ -4,6 +4,7 @@ import { ApiError } from '@/api/client';
 import { getSubjectProfile, saveSubjectProfile, type SubjectProfileField } from '@/api/career-academics';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { fieldTypeRegistry } from '@/components/domain/fieldTypes/registry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -57,7 +58,7 @@ const save = async (close: () => void) => {
         <FieldGroup>
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
           <Alert v-if="disabled"><AlertDescription>La convocatoria activa bloquea los cambios de la ficha. Puede consultarla aquí.</AlertDescription></Alert>
-          <p v-if="loading" role="status">Cargando ficha…</p>
+          <LoadingSkeleton v-if="loading" variant="form" :rows="4" />
           <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos marcados «se llena desde la ficha». Pídale a Administración que los marque.</AlertDescription></Alert>
           <template v-else>
             <fieldset class="contents" :disabled="disabled">

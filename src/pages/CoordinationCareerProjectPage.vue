@@ -70,7 +70,7 @@ onMounted(() => { void load(); });
   <PageFrame title="Proyecto de carrera" description="Datos de cada materia de la malla que heredan los sílabos: descripción, objetivos, resultados, habilidades blandas, perfil de egreso y bibliografía.">
     <template #actions><FichaImportDialog :disabled="Boolean(data?.career.lock_reason)" @applied="saved" /></template>
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :actions="false" />
     <Card v-else-if="data"><CardContent class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="career-project-search" label="Buscar materia" placeholder="Buscar por materia o código">
         <template #filters>

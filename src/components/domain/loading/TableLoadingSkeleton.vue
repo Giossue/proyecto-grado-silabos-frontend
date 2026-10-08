@@ -70,12 +70,12 @@ const minimumWidth = computed(() =>
                     <Skeleton class="h-3.5 w-3/4" />
                     <Skeleton class="h-3.5 w-2/3" />
                 </div>
-                <div v-for="row in rows" :key="row" class="grid grid-cols-(--layout-table-skeleton-mobile-columns) items-center gap-2 border-b px-2 py-3 last:border-b-0 odd:bg-card even:bg-muted/50">
+                <div v-for="row in rows" :key="row" class="grid min-h-14 grid-cols-(--layout-table-skeleton-mobile-columns) items-center gap-2 border-b px-2 py-3 last:border-b-0 odd:bg-card even:bg-muted/50">
                     <div v-for="cell in 2" :key="cell" class="flex min-w-0 flex-col gap-1.5">
                         <Skeleton class="h-3.5 w-5/6" />
                         <Skeleton v-for="line in Math.max(1, cellLines - 1)" :key="line" class="h-3 w-2/3" />
                     </div>
-                    <Skeleton class="h-8 w-full" />
+                    <Skeleton v-if="columns > 2" class="h-8 w-full" />
                 </div>
             </div>
         </div>

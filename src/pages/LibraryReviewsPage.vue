@@ -67,7 +67,7 @@ onMounted(() => { void load(initialPage); });
 <template>
   <PageFrame :title="pageTitle" description="Biblioteca revisa primero la bibliografía de cada sílabo enviado; después sigue coordinación.">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="5" :filters="1" :cell-lines="2" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="5" :filters="1" :cell-lines="2" :actions="false" />
     <Card v-if="data">
       <CardContent class="flex flex-col gap-4">
         <form @submit.prevent="load()">

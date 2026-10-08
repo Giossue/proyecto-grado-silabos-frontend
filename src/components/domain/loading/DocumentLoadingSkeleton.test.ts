@@ -1,8 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import DocumentLoadingSkeleton from '@/components/domain/loading/DocumentLoadingSkeleton.vue';
-import { DOCUMENT_DEFAULTS } from '@/lib/documentDefaults';
-import { LETTER_PAGE } from '@/lib/documentPagination';
 
 describe('DocumentLoadingSkeleton', () => {
     it.each(['syllabus', 'review', 'template', 'comparison', 'documents'] as const)(
@@ -50,15 +48,15 @@ describe('DocumentLoadingSkeleton', () => {
         expect(coordination.find('[data-skeleton="review-observations"]').exists()).toBe(false);
     });
 
-    it('conserva las dimensiones y márgenes compartidos de la hoja carta dentro de su scroll', () => {
+    it('representa las hojas vertical y horizontal del constructor vigente', () => {
         const wrapper = mount(DocumentLoadingSkeleton, { props: { variant: 'template' } });
         const pages = wrapper.get('[data-skeleton="template-pages"]');
-        const paper = wrapper.get('[data-skeleton="template-page"]').element as HTMLElement;
+        const paper = wrapper.get('[data-orientation="portrait"]');
+        const landscape = wrapper.get('[data-orientation="landscape"]');
 
-        expect(pages.classes()).toContain('overflow-x-auto');
-        expect(paper.style.width).toBe(`${LETTER_PAGE.width}px`);
-        expect(paper.style.minHeight).toBe(`${LETTER_PAGE.height}px`);
-        expect(Number.parseFloat(paper.style.padding)).toBeCloseTo(DOCUMENT_DEFAULTS.marginCm * 96 / 2.54);
+        expect(pages.classes()).toContain('flex-col');
+        expect(paper.classes()).toContain('template-sheet');
+        expect(landscape.classes()).toContain('template-sheet--landscape');
         expect(wrapper.findAll('[data-skeleton="template-page"]')).toHaveLength(2);
         expect(wrapper.find('.sticky').exists()).toBe(false);
     });
