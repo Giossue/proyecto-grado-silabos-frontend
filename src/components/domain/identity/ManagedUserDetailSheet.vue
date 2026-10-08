@@ -7,7 +7,6 @@ import ManagedUserEditForm from '@/components/domain/identity/ManagedUserEditFor
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import {
     Sheet,
     SheetContent,
@@ -57,7 +56,6 @@ const status = computed(() => {
     if (!props.user.active) {
         return {
             label: 'Inactivo',
-            variant: 'outline' as const,
             hint: 'La cuenta está desactivada y no puede iniciar sesión.',
         };
     }
@@ -65,14 +63,12 @@ const status = computed(() => {
     if (props.user.pending_activation) {
         return {
             label: 'Pendiente de activación',
-            variant: 'default' as const,
             hint: 'La cuenta espera que su titular abra la invitación y defina su contraseña.',
         };
     }
 
     return {
         label: 'Activo',
-        variant: 'secondary' as const,
         hint: 'La cuenta está en uso y su titular ya definió su contraseña.',
     };
 });
@@ -100,23 +96,23 @@ const currentAssignments = computed(() =>
             <div v-else class="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pt-1 pb-28">
                 <dl class="grid gap-3 text-sm">
                     <div class="flex flex-col gap-1">
-                        <dt class="text-muted-foreground">Estado</dt>
+                        <dt class="font-semibold">Estado</dt>
                         <dd class="flex flex-col items-start gap-1">
-                            <Badge :variant="status.variant">{{ status.label }}</Badge>
+                            <span>{{ status.label }}</span>
                             <span class="text-muted-foreground">{{ withoutEndPeriod(status.hint) }}</span>
                         </dd>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <dt class="text-muted-foreground">Nombre completo</dt>
-                        <dd class="font-medium">{{ props.user.nombre }}</dd>
+                        <dt class="font-semibold">Nombre completo</dt>
+                        <dd>{{ props.user.nombre }}</dd>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <dt class="text-muted-foreground">Correo institucional</dt>
-                        <dd class="font-medium">{{ props.user.correo_electronico }}</dd>
+                        <dt class="font-semibold">Correo institucional</dt>
+                        <dd>{{ props.user.correo_electronico }}</dd>
                     </div>
                     <div class="flex flex-col gap-1">
-                        <dt class="text-muted-foreground">Acceso en dos pasos</dt>
-                        <dd class="font-medium">
+                        <dt class="font-semibold">Acceso en dos pasos</dt>
+                        <dd>
                             {{ props.user.two_factor_enabled ? 'Configurado por su titular' : 'Sin configurar' }}
                         </dd>
                     </div>

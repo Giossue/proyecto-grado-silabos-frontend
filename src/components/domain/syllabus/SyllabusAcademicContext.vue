@@ -91,10 +91,10 @@ const groups = computed<ContextGroup[]>(() => [
                         :key="item.label"
                         class="min-w-0"
                     >
-                        <dt class="text-xs text-muted-foreground">
+                        <dt class="text-xs font-semibold">
                             {{ item.label }}
                         </dt>
-                        <dd class="text-sm font-medium break-words">
+                        <dd class="text-sm break-words">
                             {{ item.value }}
                         </dd>
                     </div>

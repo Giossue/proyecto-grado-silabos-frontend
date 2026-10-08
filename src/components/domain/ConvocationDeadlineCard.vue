@@ -72,12 +72,12 @@ const summary = computed(() => {
       <div class="flex flex-col gap-2">
         <div class="flex items-end justify-between gap-4">
           <div class="flex flex-col gap-1">
-            <span class="text-xs text-muted-foreground">Inicio</span>
-            <time class="text-sm font-medium" :datetime="deadline.starts_at">{{ formatDate(deadline.starts_at) }}</time>
+            <span class="text-xs font-semibold">Inicio</span>
+            <time class="text-sm" :datetime="deadline.starts_at">{{ formatDate(deadline.starts_at) }}</time>
           </div>
           <div class="flex flex-col gap-1 text-right">
-            <span class="text-xs text-muted-foreground">Entrega</span>
-            <time class="text-sm font-medium" :datetime="deadline.due_at">{{ formatDate(deadline.due_at) }}</time>
+            <span class="text-xs font-semibold">Entrega</span>
+            <time class="text-sm" :datetime="deadline.due_at">{{ formatDate(deadline.due_at) }}</time>
           </div>
         </div>
         <Progress :model-value="elapsed" class="h-2" :aria-label="`Avance del plazo: ${elapsed} %`" />
