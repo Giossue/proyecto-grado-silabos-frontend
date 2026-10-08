@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ChevronDown } from '@lucide/vue';
-import { computed, ref } from 'vue';
-import WorkScopeSwitcherSheet from '@/components/domain/identity/WorkScopeSwitcherSheet.vue';
+import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -20,8 +19,6 @@ const user = computed<User>(() => ({
     avatar: undefined,
     correo_verificado_en: sessionState.current.value?.user.email_verified ? 'verificado' : null,
 }));
-const canSwitchScope = computed(() => (sessionState.current.value?.available_roles.length ?? 0) > 1);
-const switcherOpen = ref(false);
 </script>
 
 <template>
@@ -45,12 +42,7 @@ const switcherOpen = ref(false);
             align="end"
             :side-offset="4"
         >
-            <UserMenuContent
-                :user="user"
-                :can-switch-scope="canSwitchScope"
-                @switch-scope="switcherOpen = true"
-            />
+            <UserMenuContent :user="user" />
         </DropdownMenuContent>
     </DropdownMenu>
-    <WorkScopeSwitcherSheet v-model:open="switcherOpen" />
 </template>
