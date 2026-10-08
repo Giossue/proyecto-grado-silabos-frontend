@@ -44,7 +44,7 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame title="Ayuda de pantallas" description="Textos de ayuda que se ven en el botón flotante de cada pantalla.">
+  <PageFrame title="Ayuda de pantallas" description="Textos de ayuda que se ven en el botón flotante de cada pantalla." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && helps.length === 0" variant="table" :columns="3" :filters="0" :actions="false" />
     <Card v-else><CardContent>

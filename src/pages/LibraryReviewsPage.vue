@@ -65,9 +65,9 @@ onMounted(() => { void load(initialPage); });
 </script>
 
 <template>
-  <PageFrame :title="pageTitle" description="Bibliografía de los sílabos enviados.">
+  <PageFrame :title="pageTitle" description="Bibliografía de los sílabos enviados." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :cell-lines="2" :actions="false" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :cell-lines="2" :actions="false" />
     <Card v-if="data">
       <CardContent class="flex flex-col gap-4">
         <form @submit.prevent="load()">
@@ -97,7 +97,6 @@ onMounted(() => { void load(initialPage); });
         <Table label="Revisiones de biblioteca">
           <TableHeader>
             <TableRow>
-              <TableHead>Asignatura</TableHead>
               <TableHead>Carrera</TableHead>
               <TableHead>Docente</TableHead>
               <TableHead>Estado</TableHead>
@@ -105,12 +104,11 @@ onMounted(() => { void load(initialPage); });
           </TableHeader>
           <TableBody>
             <TableRow v-for="item in data.reviews.data" :key="item.revision_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(paths.library.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(paths.library.review(item.revision_id))" @keydown.space.self.prevent="router.push(paths.library.review(item.revision_id))">
-              <TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }}</div></TableCell>
               <TableCell>{{ item.career }}</TableCell>
               <TableCell>{{ item.teachers.join(', ') }}</TableCell>
               <TableCell><Badge :variant="libraryStateVariant(item.state)">{{ libraryStateLabel(item.state) }}</Badge></TableCell>
             </TableRow>
-            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="4">No hay sílabos para los filtros seleccionados.</TableEmpty>
+            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="3">No hay sílabos para los filtros seleccionados.</TableEmpty>
           </TableBody>
         </Table>
         <TablePagination :meta="data.reviews" label="Paginación de revisiones de biblioteca" @update:page="load" />
