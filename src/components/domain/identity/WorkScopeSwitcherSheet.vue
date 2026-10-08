@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight, Building2, CheckCircle2 } from '@lucide/vue';
+import { ArrowRight, CheckCircle2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -8,11 +8,11 @@ import { sessionState } from '@/state/session';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { roleEntry } from '@/lib/routes';
-import { LIBRARY_SCOPE, roleLabel } from '@/lib/roles';
+import { roleLabel, scopeTitle } from '@/lib/roles';
 
 const open = defineModel<boolean>('open', { default: false });
 const router = useRouter();
@@ -23,14 +23,19 @@ const activeRole = computed(() => sessionState.current.value?.active_role ?? nul
 const coordinatorCareerCount = computed(() => roles.value.filter((role) => role.code === 'coordinador').length);
 const title = computed(() => coordinatorCareerCount.value > 1 ? 'Cambiar carrera' : 'Cambiar ámbito de trabajo');
 type Role = (typeof roles.value)[number];
-const scopeName = (role: Role): string => role.code === 'bibliotecario' ? 'Biblioteca' : role.career_name ?? roleLabel(role.code);
 const scopeDescription = (role: Role): string => {
-  if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}`;
-  if (role.code === 'bibliotecario') return LIBRARY_SCOPE;
-  if (role.career_name) return `${roleLabel(role.code)} · ${role.career_name}`;
-  return role.code === 'administrador' ? 'Administración general del sistema' : roleLabel(role.code);
+  if (role.code === 'docente') return '';
+  if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}.`;
+  if (role.code === 'bibliotecario') return 'Verificación de la bibliografía de los sílabos de todas las carreras.';
+  if (role.code === 'administrador') return 'Administración general del sistema.';
+  return role.career_name ? `${roleLabel(role.code)} · ${role.career_name}` : roleLabel(role.code);
 };
-const scopeArea = (role: Role): string => role.career_name ?? (role.code === 'bibliotecario' ? 'Toda la universidad' : 'Ámbito institucional sin carrera específica');
+const actionLabel = (role: Role): string => {
+  if (role.code === 'coordinador') return 'Cambiar a esta carrera';
+  if (role.code === 'docente') return 'Cambiar';
+  if (role.code === 'bibliotecario') return 'Cambiar a Biblioteca';
+  return `Cambiar a ${roleLabel(role.code)}`;
+};
 
 const select = async (roleAssignmentId: string): Promise<void> => {
   if (roleAssignmentId === activeRole.value?.id || pendingRoleId.value) return;
@@ -61,12 +66,11 @@ const select = async (roleAssignmentId: string): Promise<void> => {
         <div class="grid gap-4 sm:grid-cols-2">
           <Card v-for="role in roles" :key="role.id" class="h-full">
             <CardHeader>
-              <CardTitle>{{ scopeName(role) }}</CardTitle>
-              <CardDescription>{{ scopeDescription(role) }}</CardDescription>
-              <CardAction><Badge v-if="activeRole?.id === role.id" variant="secondary"><CheckCircle2 aria-hidden="true" />Actual</Badge><Badge v-else variant="outline">{{ roleLabel(role.code) }}</Badge></CardAction>
+              <CardTitle>{{ scopeTitle(role) }}</CardTitle>
+              <CardDescription v-if="scopeDescription(role)">{{ scopeDescription(role) }}</CardDescription>
+              <CardAction v-if="activeRole?.id === role.id"><Badge variant="secondary"><CheckCircle2 aria-hidden="true" />Activo</Badge></CardAction>
             </CardHeader>
-            <CardContent><p class="flex items-center gap-2 text-sm text-muted-foreground"><Building2 aria-hidden="true" />{{ scopeArea(role) }}</p></CardContent>
-            <CardFooter class="mt-auto"><Button v-if="activeRole?.id === role.id" type="button" variant="secondary" class="w-full" disabled>Carrera o rol actual</Button><Button v-else type="button" class="w-full" :disabled="pendingRoleId !== null" @click="select(role.id)"><Spinner v-if="pendingRoleId === role.id" data-icon="inline-start" /><ArrowRight v-else data-icon="inline-start" aria-hidden="true" />Cambiar a {{ scopeName(role) }}</Button></CardFooter>
+            <CardFooter class="mt-auto"><Button v-if="activeRole?.id === role.id" type="button" variant="secondary" class="w-full" disabled>Carrera o rol actual</Button><Button v-else type="button" class="w-full" :disabled="pendingRoleId !== null" @click="select(role.id)"><Spinner v-if="pendingRoleId === role.id" data-icon="inline-start" /><ArrowRight v-else data-icon="inline-start" aria-hidden="true" />{{ actionLabel(role) }}</Button></CardFooter>
           </Card>
         </div>
       </div>
