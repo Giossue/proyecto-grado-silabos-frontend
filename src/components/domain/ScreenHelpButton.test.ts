@@ -75,7 +75,8 @@ describe('ScreenHelpButton', () => {
     fire('pointerdown', 950, 650);
     fire('pointermove', 100, 80);
     await flushPromises();
-    expect(trigger.attributes('style')).toContain('left:');
+    await new Promise((resolve) => requestAnimationFrame(() => resolve(undefined)));
+    expect(trigger.attributes('style')).toContain('translate3d');
     fire('pointerup', 100, 80);
     await flushPromises();
 

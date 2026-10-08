@@ -12,7 +12,7 @@ const STORAGE_KEY = 'silabos:ayuda-posicion';
 const CORNERS: readonly Corner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 const SIZE = 44;
 const MARGIN = 16;
-const DRAG_THRESHOLD = 4;
+const DRAG_THRESHOLD = 3;
 
 const route = useRoute();
 const open = ref(false);
@@ -20,6 +20,7 @@ const panelId = 'ayuda-pantalla';
 const button = ref<{ $el: HTMLElement } | null>(null);
 const corner = ref<Corner>('bottom-right');
 const bounds = ref({ left: 0, top: 0, right: 0, bottom: 0 });
+const area = ref({ left: 0, top: 0, right: 0, bottom: 0 });
 const dragging = ref<{ x: number; y: number } | null>(null);
 const screen = computed(() => route.matched.at(-1)?.path ?? '');
 const help = computed(() => screenHelpState.forScreen(screen.value));
@@ -36,6 +37,12 @@ const measure = (): void => {
   const header = container.querySelector('header')?.getBoundingClientRect().bottom ?? 0;
   if (!ready.value) requestAnimationFrame(() => { settled.value = true; });
   ready.value = true;
+  area.value = {
+    left: Math.max(rect.left, 0),
+    top: Math.max(rect.top, 0),
+    right: Math.min(rect.right, window.innerWidth),
+    bottom: Math.min(rect.bottom, window.innerHeight),
+  };
   bounds.value = {
     left: Math.max(rect.left, 0),
     top: Math.max(rect.top, header, 0),
@@ -52,7 +59,7 @@ const cornerPosition = (value: Corner): { x: number; y: number } => ({
 const style = computed(() => {
   const point = dragging.value ?? cornerPosition(corner.value);
 
-  return { left: `${point.x}px`, top: `${point.y}px`, visibility: ready.value ? 'visible' : 'hidden' } as const;
+  return { transform: `translate3d(${point.x}px, ${point.y}px, 0)`, visibility: ready.value ? 'visible' : 'hidden' } as const;
 });
 
 const nearestCorner = (point: { x: number; y: number }): Corner => {
@@ -81,19 +88,26 @@ const startDrag = (event: PointerEvent): void => {
   drag = { startX: event.clientX, startY: event.clientY, originX: origin.x, originY: origin.y, moved: false };
   (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
 };
-const moveDrag = (event: PointerEvent): void => {
-  if (!drag) return;
-  const dx = event.clientX - drag.startX;
-  const dy = event.clientY - drag.startY;
-  if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
-  drag.moved = true;
-  open.value = false;
+let frame = 0;
+let pointer = { x: 0, y: 0 };
+const applyDrag = (): void => {
+  frame = 0;
+  if (!drag?.moved) return;
   dragging.value = {
-    x: Math.min(Math.max(drag.originX + dx, bounds.value.left), bounds.value.right - SIZE),
-    y: Math.min(Math.max(drag.originY + dy, bounds.value.top), bounds.value.bottom - SIZE),
+    x: Math.min(Math.max(drag.originX + pointer.x - drag.startX, area.value.left), area.value.right - SIZE),
+    y: Math.min(Math.max(drag.originY + pointer.y - drag.startY, area.value.top), area.value.bottom - SIZE),
   };
 };
+const moveDrag = (event: PointerEvent): void => {
+  if (!drag) return;
+  pointer = { x: event.clientX, y: event.clientY };
+  if (!drag.moved && Math.hypot(pointer.x - drag.startX, pointer.y - drag.startY) < DRAG_THRESHOLD) return;
+  drag.moved = true;
+  open.value = false;
+  if (!frame) frame = requestAnimationFrame(applyDrag);
+};
 const endDrag = (): void => {
+  if (frame) { cancelAnimationFrame(frame); applyDrag(); }
   if (drag?.moved && dragging.value) {
     corner.value = nearestCorner(dragging.value);
     remember();
@@ -154,8 +168,8 @@ onBeforeUnmount(() => {
         ref="button"
         type="button"
         size="icon"
-        class="fixed z-40 size-11 touch-none rounded-full shadow-lg will-change-[left,top]"
-        :class="dragging ? 'cursor-grabbing' : ['cursor-grab', settled && 'transition-[left,top] duration-300 ease-out']"
+        class="fixed top-0 left-0 z-40 size-11 touch-none rounded-full shadow-lg will-change-transform"
+        :class="dragging ? 'cursor-grabbing' : ['cursor-grab', settled && 'transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]']"
         :style="style"
         aria-label="Ayuda de esta pantalla"
         aria-description="Arrástrelo a una esquina o use Alt y las flechas para moverlo"
