@@ -19,12 +19,14 @@ withDefaults(
         title: string;
         description: string;
         showTrigger?: boolean;
+        showCloseButton?: boolean;
         disabled?: boolean;
         compact?: boolean;
         fit?: boolean;
     }>(),
     {
         showTrigger: true,
+        showCloseButton: true,
         disabled: false,
         compact: false,
         fit: false,
@@ -54,7 +56,7 @@ const close = (): void => {
             </slot>
         </DialogTrigger>
         <DialogContent :class="['flex flex-col gap-0 overflow-hidden p-0', compact ? 'sm:max-w-3xl' : 'sm:max-w-5xl', compact || fit ? 'max-h-[calc(100dvh-2rem)]' : 'h-[calc(100dvh-2rem)]']">
-            <DialogClose as-child>
+            <DialogClose v-if="showCloseButton" as-child>
                 <Button type="button" variant="ghost" size="icon-sm" class="absolute top-3 right-3 z-10" aria-label="Cerrar"><X aria-hidden="true" /></Button>
             </DialogClose>
             <DialogHeader class="px-6 pt-6 pr-12 pb-4">
