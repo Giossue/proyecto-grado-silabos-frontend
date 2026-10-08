@@ -219,6 +219,16 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         @imported="handleAssignmentChanged"
       />
       <Button v-if="mode === 'teachers' && assignments?.canCreateTeacher" @click="teacherOpen = true"><UserPlus data-icon="inline-start" aria-hidden="true" />Crear docente</Button>
+      <ImportSpreadsheetDialog
+        v-if="mode === 'curriculum' && curriculum && curriculum.curriculum.editable && !curriculum.curriculum.lock_reason"
+        title="Importar malla"
+        description="Cree las materias de la malla, con sus horas y requisitos, desde un Excel."
+        endpoint="/coordination/academic/curriculum-import"
+        template-endpoint="/coordination/academic/curriculum-import/template"
+        template-name="plantilla-malla.xlsx"
+        :columns="[{ key: 'codigo', label: 'Código' }, { key: 'nombre', label: 'Materia' }, { key: 'ciclo', label: 'Ciclo' }, { key: 'unidad', label: 'Unidad' }]"
+        @imported="handleCurriculumChanged"
+      />
       <Button
         v-if="mode === 'curriculum' && curriculum"
         :disabled="openingEditor || !curriculum.curriculum.editable || Boolean(curriculum.curriculum.lock_reason)"
