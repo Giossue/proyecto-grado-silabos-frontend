@@ -198,6 +198,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
     v-else
     :title="pageTitle"
     :description="pageDescription"
+    :size="mode === 'teachers' ? 'wide' : 'full'"
   >
     <template #actions>
       <PeriodPreparationSheet
