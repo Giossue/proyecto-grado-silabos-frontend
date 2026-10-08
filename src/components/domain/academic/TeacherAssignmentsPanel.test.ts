@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { defineComponent } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 import TeacherAssignmentsPanel from '@/components/domain/academic/TeacherAssignmentsPanel.vue';
@@ -92,9 +92,9 @@ describe('TeacherAssignmentsPanel', () => {
 
         expect(wrapper.text()).toContain('Docente pendiente');
         expect(wrapper.text()).toContain('Pendiente de activación');
-        expect(wrapper.text()).toContain('Reenviar invitación');
         expect(wrapper.text()).toContain('activo@example.test');
-        expect(wrapper.text().match(/Quitar de la carrera/g)).toHaveLength(3);
+        expect(wrapper.text()).not.toContain('Acciones');
+        expect(wrapper.text()).not.toContain('Reenviar invitación');
         expect(wrapper.text()).not.toContain('Editar docente');
     });
 
@@ -181,5 +181,17 @@ describe('TeacherAssignmentsPanel', () => {
         expect(text).toContain('Activa');
         expect(text).not.toContain('Pendiente de activación');
         expect(text).not.toContain('Reenviar invitación');
+    });
+
+    it('abre la ficha del docente con su menú de acciones arriba a la derecha', async () => {
+        const wrapper = mount(TeacherAssignmentsPanel, { props: { data }, attachTo: document.body });
+        const row = wrapper.findAll('tbody tr').find((item) => item.text().includes('Docente pendiente'))!;
+        await row.trigger('click');
+        await flushPromises();
+
+        expect(document.body.textContent).toContain('Editar docente');
+        const menu = document.body.querySelector('button[aria-label="Acciones para Docente pendiente"]');
+        expect(menu).not.toBeNull();
+        wrapper.unmount();
     });
 });

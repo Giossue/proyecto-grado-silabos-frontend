@@ -7,7 +7,6 @@ import { ApiError } from "@/api/client";
 import CareerTeacherEditSheet from "@/components/domain/academic/CareerTeacherEditSheet.vue";
 import ClientFilterBar from "@/components/domain/ClientFilterBar.vue";
 import { activateRow } from "@/lib/rowActivation";
-import TableActionsMenu from "@/components/domain/TableActionsMenu.vue";
 import TablePagination from "@/components/domain/TablePagination.vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -49,6 +48,11 @@ const editing = ref<TeacherRow | null>(null);
 const removing = ref<TeacherRow | null>(null);
 const removeProcessing = ref(false);
 const removeError = ref<string | null>(null);
+const askRemoval = (item: TeacherRow): void => {
+  editing.value = null;
+  removing.value = item;
+  removeError.value = null;
+};
 const removeFromCareer = async (): Promise<void> => {
   if (!removing.value) return;
   removeProcessing.value = true;
@@ -68,6 +72,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
   resendError.value = null;
   try {
     const result = await resendCareerTeacherInvitation(userId);
+    editing.value = null;
     emit("changed", result.message);
   } catch (reason) {
     resendError.value = reason instanceof ApiError ? reason.message : "No se pudo reenviar la invitación.";
@@ -83,23 +88,22 @@ const resendInvitation = async (userId: string): Promise<void> => {
       <template #filters><Field><FieldLabel for="teacher-assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="teacher-assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="pending">Pendiente de activación</SelectItem></SelectGroup></SelectContent></Select></Field></template>
     </ClientFilterBar>
     <FeedbackAlert v-if="resendError" :message="resendError" />
-    <Table label="Docentes de la carrera"><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+    <Table label="Docentes de la carrera"><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
       <TableBody>
-        <TableEmpty v-if="!items.length" :colspan="4">{{ filter.active.value ? "Ningún docente coincide con la búsqueda." : "No existen docentes en esta carrera." }}</TableEmpty>
+        <TableEmpty v-if="!items.length" :colspan="3">{{ filter.active.value ? "Ningún docente coincide con la búsqueda." : "No existen docentes en esta carrera." }}</TableEmpty>
         <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="activateRow($event, () => editing = item)" @keydown.enter.self.prevent="editing = item" @keydown.space.self.prevent="editing = item">
           <TableCell>{{ item.name }}</TableCell>
           <TableCell>{{ item.email }}</TableCell>
           <TableCell>{{ statusOf(item) }}</TableCell>
-          <TableCell class="text-right">
-            <TableActionsMenu :label="`Acciones para ${item.name}`">
-              <DropdownMenuItem v-if="item.pending_activation" :disabled="resendingId !== null" @select="resendInvitation(item.id)"><Spinner v-if="resendingId === item.id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" :disabled="Boolean(data.career.lock_reason)" @select="removing = item; removeError = null"><UserMinus aria-hidden="true" />Quitar de la carrera</DropdownMenuItem>
-            </TableActionsMenu>
-          </TableCell>
         </TableRow>
       </TableBody>
     </Table>
-    <CareerTeacherEditSheet v-if="editing" :key="editing.id" :teacher="editing" :open="true" @update:open="(value: boolean) => { if (!value) editing = null; }" @saved="emit('changed', $event)" />
+    <CareerTeacherEditSheet v-if="editing" :key="editing.id" :teacher="editing" :open="true" @update:open="(value: boolean) => { if (!value) editing = null; }" @saved="emit('changed', $event)">
+      <template #actions>
+        <DropdownMenuItem v-if="editing.pending_activation" :disabled="resendingId !== null" @select="resendInvitation(editing.id)"><Spinner v-if="resendingId === editing.id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" :disabled="Boolean(data.career.lock_reason)" @select="askRemoval(editing)"><UserMinus aria-hidden="true" />Quitar de la carrera</DropdownMenuItem>
+      </template>
+    </CareerTeacherEditSheet>
     <TablePagination :meta="meta" mode="client" label="Paginación de docentes" @update:page="setPage" />
     <Dialog :open="removing !== null" @update:open="(value) => { if (!value) removing = null; }">
       <DialogContent>
