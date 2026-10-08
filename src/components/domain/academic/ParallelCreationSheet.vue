@@ -168,6 +168,7 @@ watch(open, (value) => value && reset());
           <Alert v-if="error && !fieldError" variant="destructive">
             <AlertDescription>{{ error }}</AlertDescription>
           </Alert>
+          <div class="grid items-start gap-4 sm:grid-cols-2">
           <Field :data-invalid="Boolean(fieldError)">
             <FieldLabel :for="`parallel-code-${subjectId}`" required>Código de paralelo</FieldLabel>
             <Input
@@ -195,6 +196,7 @@ watch(open, (value) => value && reset());
               </SelectContent>
             </Select>
           </Field>
+          </div>
           <section class="flex flex-col gap-2" aria-labelledby="parallel-summary-title">
             <h3 id="parallel-summary-title" class="text-sm font-medium">Paralelos registrados</h3>
             <Alert v-if="rowError" variant="destructive"><AlertDescription>{{ rowError }}</AlertDescription></Alert>
