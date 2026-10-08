@@ -218,9 +218,8 @@ watch(open, (value) => value && reset());
                       </TableCell>
                       <TableCell>
                         <Select v-if="teacherEditable(parallel.id)" v-model="editTeacher">
-                          <SelectTrigger class="min-w-40 max-w-60" :aria-label="`Docente del paralelo ${parallel.code}`"><SelectValue placeholder="Sin docente" /></SelectTrigger>
+                          <SelectTrigger class="min-w-40 max-w-60" :aria-label="`Docente del paralelo ${parallel.code}`"><SelectValue placeholder="Elija el docente" /></SelectTrigger>
                           <SelectContent><SelectGroup>
-                            <SelectItem :value="NO_TEACHER">Sin docente</SelectItem>
                             <SelectItem v-for="user in teacherChoices(parallel.id)" :key="user.id" :value="user.id">{{ user.name }}</SelectItem>
                           </SelectGroup></SelectContent>
                         </Select>
