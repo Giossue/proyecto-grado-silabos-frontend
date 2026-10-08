@@ -41,23 +41,22 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame title="Auditoría" description="Registro de las acciones realizadas en el sistema.">
+  <PageFrame title="Auditoría" description="Registro de las acciones realizadas en el sistema." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <Card v-else-if="loading && !data">
-      <CardContent><LoadingSkeleton variant="table-body" :columns="4" :search="false" :filters="0" :actions="false" :cell-lines="2" /></CardContent>
+      <CardContent><LoadingSkeleton variant="table-body" :columns="3" :search="false" :filters="0" :actions="false" :cell-lines="2" /></CardContent>
     </Card>
     <Card v-else-if="data">
       <CardContent class="flex flex-col gap-4">
         <Table label="Registro de auditoría">
-          <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Actividad</TableHead><TableHead>Responsable</TableHead><TableHead>Resultado</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Actividad</TableHead><TableHead>Responsable</TableHead></TableRow></TableHeader>
           <TableBody>
             <TableRow v-for="event in data.events.data" :key="event.id">
               <TableCell class="text-xs whitespace-nowrap">{{ formatDate(event.occurred_at) }}</TableCell>
               <TableCell><div>{{ event.action }}</div><div class="text-xs text-muted-foreground">{{ event.resource }}</div></TableCell>
               <TableCell><div>{{ event.actor }}</div><div v-if="event.role || event.career" class="text-xs text-muted-foreground">{{ [event.role, event.career].filter(Boolean).join(' · ') }}</div></TableCell>
-              <TableCell>{{ event.result === 'fallido' ? 'Fallido' : 'Correcto' }}</TableCell>
             </TableRow>
-            <TableEmpty v-if="data.events.data.length === 0" :colspan="4">Todavía no hay actividad registrada.</TableEmpty>
+            <TableEmpty v-if="data.events.data.length === 0" :colspan="3">Todavía no hay actividad registrada.</TableEmpty>
           </TableBody>
         </Table>
         <TablePagination :meta="data.events" label="Paginación del registro de auditoría" @update:page="load" />

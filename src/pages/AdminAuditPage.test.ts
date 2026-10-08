@@ -61,7 +61,6 @@ describe('AdminAuditPage', () => {
       'Fecha',
       'Actividad',
       'Responsable',
-      'Resultado',
     ]);
     expect(wrapper.text()).toContain('Cuenta desactivada');
     expect(wrapper.text()).toContain('Ada Administradora');
