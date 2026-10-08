@@ -130,6 +130,7 @@ export type AiChat = {
   } | null;
   suggested_questions: string[];
   available: boolean;
+  limits?: { messages_used: number; messages_max: number; sessions_used: number; sessions_max: number };
 };
 
 export type SyllabusBlock = {

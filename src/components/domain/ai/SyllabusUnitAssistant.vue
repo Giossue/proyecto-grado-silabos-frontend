@@ -2,10 +2,10 @@
 import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import EvidenceDisclosure from '@/components/domain/EvidenceDisclosure.vue';
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import { Send } from '@lucide/vue';
+import { MessageSquarePlus, Send } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
-import { getAiChat, sendAiChatMessage, type AiChat } from '@/api/syllabi';
+import { clearAiChat, getAiChat, sendAiChatMessage, type AiChat } from '@/api/syllabi';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
 import { Message, MessageContent } from '@/components/ai-elements/message';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -35,7 +35,16 @@ const waiting = computed(() => sending.value || pending.value);
 const received = computed(() => messages.value.filter((item) => item.role === 'asistente' && item.status === 'completado').length);
 const avatar = useAvatarController({ userEngaged: engaged, awaitingModel: waiting, receivedCount: received });
 watch(() => [...messages.value].reverse().find((item) => item.role === 'asistente' && item.status === 'completado')?.avatar, (hint) => avatar.applyAgentHint(hint));
-const canSend = computed(() => props.enabled && !props.saving && chat.value?.available && !loading.value && !waiting.value && message.value.trim().length > 0 && message.value.trim().length <= VALIDATION_LIMITS.longText);
+const limits = computed(() => chat.value?.limits ?? null);
+const outOfMessages = computed(() => limits.value !== null && limits.value.messages_used >= limits.value.messages_max);
+const canRestart = computed(() => props.enabled && !waiting.value && messages.value.length > 0 && limits.value !== null && limits.value.sessions_used < limits.value.sessions_max);
+const canSend = computed(() => props.enabled && !props.saving && chat.value?.available && !outOfMessages.value && !loading.value && !waiting.value && message.value.trim().length > 0 && message.value.trim().length <= VALIDATION_LIMITS.longText);
+const restart = async (): Promise<void> => {
+    if (!canRestart.value) return;
+    error.value = null;
+    try { await clearAiChat(props.syllabusId); await load(); }
+    catch (reason) { error.value = reason instanceof ApiError ? (Object.values(reason.errors).flat()[0] ?? reason.message) : 'No se pudo iniciar un nuevo chat.'; }
+};
 const stop = () => { if (timer) clearTimeout(timer); timer = null; };
 const load = async (): Promise<void> => {
     stop();
@@ -83,8 +92,13 @@ onBeforeUnmount(() => { generation += 1; stop(); });
 
 <template>
     <Card class="assistant-panel gap-0 overflow-hidden py-0">
-        <CardHeader class="shrink-0 py-4">
-            <CardTitle>Asistente de unidades</CardTitle>
+        <CardHeader class="flex shrink-0 flex-row items-center gap-3 py-3">
+            <RobotAvatar v-if="messages.length" v-bind="avatar.state.value" class="h-10 w-12 shrink-0" />
+            <div class="flex min-w-0 flex-1 flex-col">
+                <CardTitle>Asistente de unidades</CardTitle>
+                <p v-if="limits" class="text-xs text-muted-foreground">{{ limits.messages_used }} de {{ limits.messages_max }} preguntas · chat {{ Math.max(limits.sessions_used, 1) }} de {{ limits.sessions_max }}</p>
+            </div>
+            <Button type="button" variant="outline" size="sm" :disabled="!canRestart" @click="restart"><MessageSquarePlus data-icon="inline-start" aria-hidden="true" />Nuevo chat</Button>
         </CardHeader>
         <Separator />
         <Conversation aria-label="Conversación para generar contenido de las unidades" class="min-h-0 flex-1">
@@ -130,7 +144,8 @@ onBeforeUnmount(() => { generation += 1; stop(); });
                         <InputGroupTextarea :id="`unit-assistant-${syllabusId}`" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" class="w-full min-w-0" :disabled="!enabled || !chat?.available || waiting" placeholder="Escribe la unidad o el tema…" @focus="engaged = true" @blur="engaged = false" />
                         <InputGroupAddon align="block-end" class="justify-end"><Button type="submit" size="sm" :disabled="!canSend"><Spinner v-if="waiting" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar</Button></InputGroupAddon>
                     </InputGroup>
-                    <FieldDescription v-if="saving">Espera a que se guarden los cambios del sílabo antes de consultar.</FieldDescription>
+                    <FieldDescription v-if="outOfMessages">Llegó al límite de {{ limits?.messages_max }} preguntas al asistente para este sílabo.</FieldDescription>
+                    <FieldDescription v-else-if="saving">Espera a que se guarden los cambios del sílabo antes de consultar.</FieldDescription>
                     <FieldDescription v-else-if="!enabled">La generación está disponible mientras puedes editar este sílabo.</FieldDescription>
                 </Field>
             </form>
