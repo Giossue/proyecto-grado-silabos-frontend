@@ -85,6 +85,61 @@ test('la confirmación compartida queda sobre la hoja abierta y restaura el foco
     await expect(trigger).toBeFocused();
 });
 
+test('el Sheet izquierdo usa la misma transición al entrar y salir', async ({ page }) => {
+    await mountFixture(page, `
+        const { createApp, h, ref } = await import('/@id/vue');
+        const { Sheet, SheetContent, SheetTitle, SheetDescription } = await import('/src/components/ui/sheet/index.ts');
+        createApp({ setup() {
+            const open = ref(true);
+            return () => h(Sheet, { open: open.value, 'onUpdate:open': value => open.value = value }, () =>
+                h(SheetContent, { side: 'left' }, () => [
+                    h(SheetTitle, () => 'Navegación móvil'),
+                    h(SheetDescription, () => 'Panel izquierdo sintético.'),
+                ]),
+            );
+        }}).mount('#mount');
+    `);
+
+    const motion = (element: Element): Record<string, string> => {
+        const style = getComputedStyle(element);
+        return {
+            animationDuration: style.animationDuration,
+            transitionDuration: style.transitionDuration,
+            transitionTimingFunction: style.transitionTimingFunction,
+        };
+    };
+
+    const content = page.locator('[data-slot="sheet-content"]');
+    const overlay = page.locator('[data-slot="sheet-overlay"]');
+    const entering = {
+        content: await content.evaluate(motion),
+        overlay: await overlay.evaluate(motion),
+    };
+    const exiting = await page.evaluate(() => new Promise<Record<string, unknown>>((resolve) => {
+        document.querySelector<HTMLButtonElement>('[data-slot="sheet-content"] button')?.click();
+        requestAnimationFrame(() => {
+            const contentElement = document.querySelector('[data-slot="sheet-content"]');
+            const overlayElement = document.querySelector('[data-slot="sheet-overlay"]');
+            const read = (element: Element | null): Record<string, string | null> => {
+                if (element === null) return { state: null, animationDuration: '', transitionDuration: '', transitionTimingFunction: '' };
+                const style = getComputedStyle(element);
+                return {
+                    state: element.getAttribute('data-state'),
+                    animationDuration: style.animationDuration,
+                    transitionDuration: style.transitionDuration,
+                    transitionTimingFunction: style.transitionTimingFunction,
+                };
+            };
+            resolve({ content: read(contentElement), overlay: read(overlayElement) });
+        });
+    }));
+
+    expect(entering.content).toEqual({ animationDuration: '0.3s', transitionDuration: '0.3s', transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' });
+    expect(entering.overlay).toEqual(entering.content);
+    expect(exiting.content).toEqual({ state: 'closed', ...entering.content });
+    expect(exiting.overlay).toEqual({ state: 'closed', ...entering.overlay });
+});
+
 test('sílabo y skeleton comparten dimensiones sin desbordar en ambos temas', async ({ page }) => {
     await mountFixture(page, `
         const { createApp, h, ref } = await import('/@id/vue');
