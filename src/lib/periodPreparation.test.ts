@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ScheduledSubjects, TeacherAssignments } from '@/api/career-academics';
-import { incompleteProfileNames, nextParallelCode, preparationProblem, preparationRows } from './periodPreparation';
+import { groupByCycle, nextParallelCode, preparationProblem, preparationRows } from './periodPreparation';
 
 const options: ScheduledSubjects['options'] = {
   shiftOptions: [{ value: 'matutina', label: 'Matutina' }, { value: 'vespertina', label: 'Vespertina' }, { value: 'nocturna', label: 'Nocturna' }],
@@ -26,16 +26,11 @@ const assignment = (parallelId: string, userId: string): TeacherAssignments['tea
 });
 
 describe('preparationRows', () => {
-  it('identifies subjects whose missing profile needs a preparation warning', () => {
-    const configured = {
-      ...options,
-      activeSubjects: [
-        { ...options.activeSubjects[0], profile_complete: false },
-        { ...options.activeSubjects[1], profile_complete: true },
-      ],
-    };
-    const rows = preparationRows('target', configured, [], [], []).rows;
-    expect(incompleteProfileNames(rows)).toEqual(['Materia A']);
+  it('groups pending subjects by cycle in ascending order', () => {
+    const rows = preparationRows('target', options, [], [], []).rows;
+    const groups = groupByCycle([...rows].reverse());
+    expect(groups.map((group) => group.cycle)).toEqual([...new Set(rows.map((row) => row.cycle))].sort((a, b) => a - b));
+    expect(groups.flatMap((group) => group.rows)).toHaveLength(rows.length);
   });
   it('includes every pending subject and copies the latest prior parallels and eligible teachers', () => {
     const result = preparationRows('target', options, [
@@ -50,11 +45,11 @@ describe('preparationRows', () => {
 
     expect(result.sourcePeriodCode).toBe('2025-B');
     expect(result.rows).toEqual([
-      { id: 'subject-a', code: 'SW-1', name: 'Materia A', parallels: [
+      { id: 'subject-a', code: 'SW-1', name: 'Materia A', cycle: 1, parallels: [
         { code: 'A', shift: 'matutina', teacherId: 'teacher-1' },
         { code: 'B', shift: 'matutina', teacherId: '' },
       ] },
-      { id: 'subject-b', code: 'SW-2', name: 'Materia B', parallels: [{ code: 'A', shift: 'matutina', teacherId: '' }] },
+      { id: 'subject-b', code: 'SW-2', name: 'Materia B', cycle: 1, parallels: [{ code: 'A', shift: 'matutina', teacherId: '' }] },
     ]);
   });
 
@@ -74,7 +69,7 @@ describe('preparationRows', () => {
 });
 
 describe('preparationProblem', () => {
-  const row = (parallels: Array<{ code: string; shift: string }>) => ({ id: 'x', code: 'SW-1', name: 'Materia A', parallels: parallels.map((item) => ({ ...item, teacherId: '' })) });
+  const row = (parallels: Array<{ code: string; shift: string }>) => ({ id: 'x', code: 'SW-1', name: 'Materia A', cycle: 1, parallels: parallels.map((item) => ({ ...item, teacherId: '' })) });
 
   it('accepts rows where every parallel has code and shift', () => {
     expect(preparationProblem([row([{ code: 'A', shift: 'matutina' }, { code: 'B', shift: 'nocturna' }])])).toBeNull();

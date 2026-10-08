@@ -5,13 +5,9 @@ export type PreparationRow = {
   id: string;
   code: string;
   name: string;
-  profileComplete?: boolean;
+  cycle: number;
   parallels: ParallelDraft[];
 };
-
-export function incompleteProfileNames(rows: PreparationRow[]): string[] {
-  return rows.filter((row) => row.profileComplete === false).map((row) => row.name);
-}
 
 export function preparationProblem(rows: PreparationRow[]): string | null {
   for (const row of rows) {
@@ -57,13 +53,13 @@ export function preparationRows(
   const activeAssignments = new Map(assignments.filter((item) => item.active).map((item) => [item.parallel_id, item.user_id]));
 
   return {
-    rows: options.activeSubjects.filter((item) => !preparedIds.has(item.id)).map((item) => {
+    rows: options.activeSubjects.filter((item) => !preparedIds.has(item.id)).sort((a, b) => a.ciclo - b.ciclo).map((item) => {
       const previousParallels = previousSchedules.get(item.id)?.parallels ?? [];
       return {
         id: item.id,
         code: item.codigo_asignatura,
         name: item.nombre,
-        ...(typeof item.profile_complete === 'boolean' ? { profileComplete: item.profile_complete } : {}),
+        cycle: item.ciclo,
         parallels: previousParallels.length
           ? previousParallels.map((parallel) => {
             const teacherId = activeAssignments.get(parallel.id) ?? '';
@@ -78,4 +74,11 @@ export function preparationRows(
     }),
     sourcePeriodCode: previous && previousSchedules.size > 0 ? previous.code : null,
   };
+}
+
+export function groupByCycle(rows: PreparationRow[]): Array<{ cycle: number; rows: PreparationRow[] }> {
+  const groups = new Map<number, PreparationRow[]>();
+  for (const row of rows) groups.set(row.cycle, [...(groups.get(row.cycle) ?? []), row]);
+
+  return [...groups].sort(([left], [right]) => left - right).map(([cycle, items]) => ({ cycle, rows: items }));
 }
