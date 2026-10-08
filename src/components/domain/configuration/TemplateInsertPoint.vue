@@ -1,0 +1,24 @@
+<script setup lang="ts">
+import { Plus } from '@lucide/vue';
+import { Button } from '@/components/ui/button';
+
+defineProps<{ label: string; disabled?: boolean }>();
+const emit = defineEmits<{ insert: [] }>();
+</script>
+
+<template>
+    <div class="group/insert relative -my-1.5 flex h-6 items-center justify-center" data-insert-point>
+        <span class="pointer-events-none absolute inset-x-0 top-1/2 border-t border-dashed border-primary/60 opacity-0 transition-opacity group-hover/insert:opacity-100" aria-hidden="true" />
+        <Button
+            type="button"
+            size="sm"
+            tabindex="-1"
+            class="relative h-6 rounded-full px-2.5 font-sans text-xs opacity-0 shadow-menu transition-opacity group-hover/insert:opacity-100 focus-visible:opacity-100"
+            :disabled="disabled"
+            :aria-label="label"
+            @click="emit('insert')"
+        >
+            <Plus data-icon="inline-start" aria-hidden="true" />{{ label }}
+        </Button>
+    </div>
+</template>

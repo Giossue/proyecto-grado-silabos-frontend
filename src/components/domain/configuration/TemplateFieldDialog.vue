@@ -13,7 +13,7 @@ import { toast } from '@/lib/toast';
 
 /** «Agregar campo» (sin `field`) y «Propiedades del campo» (con `field`). */
 const props = defineProps<{ templateId: string; sectionId: string; field?: TemplateField | null; usedKeys: string[] }>();
-const emit = defineEmits<{ saved: [] }>();
+const emit = defineEmits<{ saved: [createdId?: string] }>();
 const open = defineModel<boolean>('open', { required: true });
 
 const form = ref<FieldForm>(newFieldForm());
@@ -30,15 +30,16 @@ const save = async (): Promise<void> => {
     error.value = fieldFormError(form.value);
     if (error.value || saving.value) return;
     saving.value = true;
+    let created: Awaited<ReturnType<typeof createField>> | undefined;
     try {
         if (props.field) {
             await updateField(props.templateId, props.field.id, fieldInput(form.value));
         } else {
-            await createField(props.templateId, props.sectionId, { ...fieldInput(form.value), type: form.value.type, key: uniqueKey(form.value.label, 'campo', props.usedKeys) });
+            created = await createField(props.templateId, props.sectionId, { ...fieldInput(form.value), type: form.value.type, key: uniqueKey(form.value.label, 'campo', props.usedKeys) });
         }
         toast.success(props.field ? 'Campo guardado.' : 'Campo agregado.');
         open.value = false;
-        emit('saved');
+        emit('saved', created?.field?.id);
     } catch (reason) {
         error.value = apiMessage(reason, 'No se pudo guardar el campo.');
     } finally {

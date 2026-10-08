@@ -17,7 +17,7 @@ import { toast } from '@/lib/toast';
 
 /** «Nueva sección»: elegir un diseño oficial o crearla en blanco (nombre y primer campo opcional), o «Renombrar sección» (con `section`). */
 const props = defineProps<{ templateId: string; section?: TemplateSectionPayload | null; usedSectionKeys: string[]; usedFieldKeys: string[]; designs?: SectionDesign[] }>();
-const emit = defineEmits<{ saved: [] }>();
+const emit = defineEmits<{ saved: [createdId?: string] }>();
 const open = defineModel<boolean>('open', { required: true });
 
 const BLANK = 'blank';
@@ -52,10 +52,10 @@ const choose = async (): Promise<void> => {
     saving.value = true;
     error.value = null;
     try {
-        await createSectionFromDesign(props.templateId, choice.value);
+        const created = await createSectionFromDesign(props.templateId, choice.value);
         toast.success('Sección agregada.');
         open.value = false;
-        emit('saved');
+        emit('saved', created.section_id);
     } catch (reason) {
         error.value = apiMessage(reason, 'No se pudo agregar la sección.');
     } finally {
@@ -75,22 +75,24 @@ const save = async (includeField: boolean): Promise<void> => {
     error.value = includeField ? fieldFormError(withField.value) : null;
     if (error.value) return;
     saving.value = true;
+    let createdId: string | undefined;
     try {
         if (props.section) {
             await renameSection(props.templateId, props.section.id, title.value.trim());
         } else {
             const { section_id } = await createSection(props.templateId, { key: uniqueKey(title.value, 'seccion', props.usedSectionKeys), title: title.value.trim() });
+            createdId = section_id;
             if (includeField) {
                 await createField(props.templateId, section_id, { ...fieldInput(withField.value), type: withField.value.type, key: uniqueKey(withField.value.label, 'campo', props.usedFieldKeys) });
             }
         }
         toast.success(props.section ? 'Sección actualizada.' : 'Sección agregada.');
         open.value = false;
-        emit('saved');
+        emit('saved', createdId);
     } catch (reason) {
         error.value = apiMessage(reason, 'No se pudo guardar la sección.');
         // Si la sección ya se creó y falló el campo, la lista debe reflejarlo.
-        emit('saved');
+        emit('saved', createdId);
     } finally {
         saving.value = false;
     }

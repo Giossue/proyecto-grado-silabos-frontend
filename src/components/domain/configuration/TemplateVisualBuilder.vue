@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Settings2, Sparkles, Tra
 import { computed, ref } from 'vue';
 import type { SectionDesign, TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { deleteField, deleteSection, reorderFields, reorderSections } from '@/api/template-structure';
+import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
 import TemplateLogoControl from '@/components/domain/configuration/TemplateLogoControl.vue';
 import TemplateFieldDialog from '@/components/domain/configuration/TemplateFieldDialog.vue';
 import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
@@ -49,8 +50,8 @@ const sheets = computed(() => {
 const usedSectionKeys = computed(() => props.template.sections.map((section) => section.key));
 const usedFieldKeys = computed(() => sections.value.flatMap((entry) => entry.fields.map((field) => field.key)));
 
-const sectionDialog = ref<{ open: boolean; section: TemplateSectionPayload | null }>({ open: false, section: null });
-const fieldDialog = ref<{ open: boolean; sectionId: string; field: TemplateField | null }>({ open: false, sectionId: '', field: null });
+const sectionDialog = ref<{ open: boolean; section: TemplateSectionPayload | null; index?: number }>({ open: false, section: null });
+const fieldDialog = ref<{ open: boolean; sectionId: string; field: TemplateField | null; index?: number }>({ open: false, sectionId: '', field: null });
 const removal = ref<{ kind: 'section' | 'field'; id: string; name: string; count: number } | null>(null);
 
 const run = async (action: () => Promise<unknown>, fallback: string): Promise<void> => {
@@ -77,6 +78,29 @@ const moveSection = (index: number, direction: -1 | 1): Promise<void> =>
     run(() => reorderSections(props.template.id, moved(props.template.sections, index, direction).map((section) => section.id)), 'No se pudo cambiar el orden.');
 const moveField = (sectionId: string, fields: TemplateField[], index: number, direction: -1 | 1): Promise<void> =>
     run(() => reorderFields(props.template.id, sectionId, moved(fields, index, direction).map((field) => field.id)), 'No se pudo cambiar el orden.');
+
+const inserted = (order: string[], id: string, index: number): string[] => {
+    const next = order.filter((item) => item !== id);
+    next.splice(Math.min(Math.max(index, 0), next.length), 0, id);
+    return next;
+};
+const placeSection = async (createdId?: string): Promise<void> => {
+    const index = sectionDialog.value.index;
+    if (createdId && index !== undefined && index < props.template.sections.length) {
+        try { await reorderSections(props.template.id, inserted(props.template.sections.map((section) => section.id), createdId, index)); }
+        catch (reason) { error.value = apiMessage(reason, 'La sección se agregó al final: no se pudo cambiar su posición.'); }
+    }
+    emit('changed');
+};
+const placeField = async (createdId?: string): Promise<void> => {
+    const { sectionId, index } = fieldDialog.value;
+    const current = sections.value.find((entry) => entry.section.id === sectionId)?.fields ?? [];
+    if (createdId && index !== undefined && index < current.length) {
+        try { await reorderFields(props.template.id, sectionId, inserted(current.map((field) => field.id), createdId, index)); }
+        catch (reason) { error.value = apiMessage(reason, 'El campo se agregó al final: no se pudo cambiar su posición.'); }
+    }
+    emit('changed');
+};
 
 const confirmRemoval = (): Promise<void> => {
     const target = removal.value;
@@ -127,7 +151,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         </div>
       </div>
 
-      <section v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id" :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="flex min-w-0 flex-col gap-3">
+      <template v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id">
+      <TemplateInsertPoint v-if="!preview && !locked" label="Nueva sección" @insert="sectionDialog = { open: true, section: null, index: sectionIndex }" />
+      <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="flex min-w-0 flex-col gap-3">
         <p v-if="sheet.landscape && !preview" class="-mb-1 text-xs italic text-muted-foreground">Hoja horizontal</p>
         <h3 v-if="preview" class="font-bold">{{ sectionIndex + 1 }}. {{ section.title }}</h3>
         <div v-else :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
@@ -142,7 +168,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         </div>
 
         <ol class="flex flex-col gap-3">
-          <li v-for="(field, fieldIndex) in fields" :key="field.id" :data-field="field.id" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
+          <template v-for="(field, fieldIndex) in fields" :key="field.id">
+          <li v-if="!preview && !locked" role="presentation"><TemplateInsertPoint label="Agregar campo" @insert="fieldDialog = { open: true, sectionId: section.id, field: null, index: fieldIndex }" /></li>
+          <li :data-field="field.id" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
             <span v-if="!preview" aria-hidden="true" :class="cn('pointer-events-none absolute top-1 right-full mr-2 rounded bg-primary px-1.5 py-0.5 font-sans text-xs font-medium text-primary-foreground group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">Campo</span>
             <TemplateFieldContent v-if="preview" :field="field" preview />
             <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -->
@@ -156,17 +184,19 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
               <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar el campo ${fieldName(field)}`" @click="removal = { kind: 'field', id: field.id, name: fieldName(field), count: 0 }"><Trash2 aria-hidden="true" /></Button>
             </div>
           </li>
+          </template>
         </ol>
         <p v-if="fields.length === 0 && !preview" class="text-sm text-muted-foreground">Sección sin campos.</p>
-        <Button v-if="!preview" type="button" variant="outline" size="sm" class="self-start border-dashed" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
+        <Button v-if="!preview" type="button" variant="outline" size="sm" class="self-start rounded-full border-dashed font-sans" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
       </section>
+      </template>
 
-      <Button v-if="sections.length > 0 && sheetIndex === sheets.length - 1 && !preview" type="button" variant="outline" class="self-start border-dashed" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
+      <Button v-if="sections.length > 0 && sheetIndex === sheets.length - 1 && !preview" type="button" variant="outline" class="self-start rounded-full border-dashed font-sans" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
     </article>
     </div>
 
-    <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" :designs="designs" @saved="emit('changed')" />
-    <TemplateFieldDialog v-model:open="fieldDialog.open" :template-id="template.id" :section-id="fieldDialog.sectionId" :field="fieldDialog.field" :used-keys="usedFieldKeys" @saved="emit('changed')" />
+    <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" :designs="designs" @saved="placeSection" />
+    <TemplateFieldDialog v-model:open="fieldDialog.open" :template-id="template.id" :section-id="fieldDialog.sectionId" :field="fieldDialog.field" :used-keys="usedFieldKeys" @saved="placeField" />
 
     <Dialog :open="removal !== null" @update:open="(value: boolean) => { if (!value) removal = null }">
       <DialogContent>

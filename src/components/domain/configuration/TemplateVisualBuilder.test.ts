@@ -44,6 +44,18 @@ describe('TemplateVisualBuilder', () => {
     for (const fn of Object.values(structure)) if (vi.isMockFunction(fn)) fn.mockResolvedValue({ message: 'ok', section_id: 'new-section' } as never);
   });
 
+  it('agrega el campo en la posición donde se pasó el cursor, no al final', async () => {
+    vi.mocked(structure.createField).mockResolvedValue({ message: 'ok', field: { id: 'nuevo' } } as never);
+    mountBuilder();
+    const points = [...body().querySelectorAll<HTMLElement>('[data-insert-point] button')].filter((el) => el.textContent?.trim() === 'Agregar campo');
+    await click(points[1]);
+    await type('template-field-label', 'Entre los dos');
+    await click([...body().querySelectorAll<HTMLElement>('[role="dialog"] button[type="submit"]')][0]);
+
+    expect(structure.createField).toHaveBeenCalled();
+    expect(structure.reorderFields).toHaveBeenCalledWith('t1', 's1', ['f1', 'nuevo', 'f2']);
+  });
+
   it('ofrece solo los tipos que se pueden elegir a mano, con lenguaje para Administración', async () => {
     mountBuilder();
     await click(byText('button', 'Agregar campo'));

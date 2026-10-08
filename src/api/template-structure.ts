@@ -27,7 +27,7 @@ export const reorderSections = (template: string, ids: string[]) =>
     api<{ message: string }>(`${base(template)}/sections/order`, json('PATCH', { section_ids: ids }));
 
 export const createField = (template: string, section: string, input: FieldInput) =>
-    api<{ message: string }>(`${base(template)}/sections/${section}/fields`, json('POST', input));
+    api<{ message: string; field?: { id?: string } }>(`${base(template)}/sections/${section}/fields`, json('POST', input));
 export const updateField = (template: string, field: string, input: Omit<FieldInput, 'key' | 'type'>) =>
     api<{ message: string }>(`${base(template)}/fields/${field}`, json('PATCH', input));
 export const deleteField = (template: string, field: string) =>
