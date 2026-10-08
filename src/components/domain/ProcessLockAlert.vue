@@ -42,8 +42,8 @@ const reason = computed(() => {
 </script>
 
 <template>
-    <Alert>
-        <Lock aria-hidden="true" />
+    <Alert class="w-fit max-w-full border-warning/30 bg-warning/10 text-foreground">
+        <Lock class="text-warning" aria-hidden="true" />
         <AlertTitle>{{ headline }}</AlertTitle>
         <AlertDescription class="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>{{ summary }}</span>
