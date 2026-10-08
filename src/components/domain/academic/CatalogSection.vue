@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useFocusReturn } from '@/lib/focusReturn';
-import { X } from '@lucide/vue';
+import { Eye, X } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import CatalogActions from '@/components/domain/academic/CatalogActions.vue';
@@ -159,7 +159,7 @@ const {
                     <TableRow>
                         <TableHead>Facultad</TableHead>
                         <TableHead>Campus</TableHead>
-                        <TableHead class="w-36">Logo</TableHead>
+                        <TableHead class="w-20">Logo</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -202,12 +202,12 @@ const {
                             <Button
                                 v-if="faculty.logo_url"
                                 type="button"
-                                variant="outline"
-                                class="h-12 w-28 p-1"
+                                variant="ghost"
+                                size="icon-sm"
                                 :aria-label="`Ver logo de ${faculty.nombre}`"
                                 @click="openLogoPreview(faculty.nombre, faculty.logo_url)"
                             >
-                                <img :src="faculty.logo_url" alt="" class="size-full object-contain" />
+                                <Eye aria-hidden="true" />
                             </Button>
                             <span v-else class="text-sm text-muted-foreground">Sin logo</span>
                         </TableCell>

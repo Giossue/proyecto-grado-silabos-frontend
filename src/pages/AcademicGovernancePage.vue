@@ -69,7 +69,7 @@ onMounted(load);
 </script>
 
 <template>
-    <PageFrame :title="sectionContent.title" :description="sectionContent.description" :icon="tabIcons[entity]">
+    <PageFrame :title="sectionContent.title" :description="sectionContent.description" :icon="tabIcons[entity]" size="wide">
         <template #actions>
             <ImportSpreadsheetDialog
                 v-if="data && entity === 'carrera'"
