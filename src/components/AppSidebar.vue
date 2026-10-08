@@ -28,7 +28,7 @@ watch(() => route.fullPath, () => {
     <Sidebar collapsible="icon" variant="sidebar">
         <SidebarHeader>
             <div
-                class="flex h-12 items-center p-2 group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
+                class="flex h-12 items-center p-2 transition-[padding] duration-200 ease-linear group-data-[collapsible=icon]:p-0"
             >
                 <AppLogo />
             </div>
