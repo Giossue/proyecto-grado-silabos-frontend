@@ -219,8 +219,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
           </li>
           </template>
         </ol>
-        <p v-if="fields.length === 0 && !preview" class="text-sm text-muted-foreground">Sección sin campos.</p>
-        <Button v-if="!preview && fields.length === 0" type="button" variant="outline" size="sm" class="self-start rounded-full border-dashed font-sans" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
+        <p v-if="fields.length === 0 && !preview" class="relative py-1 text-sm text-muted-foreground">Sección sin campos.<TemplateInsertPoint :disabled="locked" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="inline" gap="field" @insert="fieldDialog = { open: true, sectionId: section.id, field: null }" /></p>
       </section>
       </template>
 

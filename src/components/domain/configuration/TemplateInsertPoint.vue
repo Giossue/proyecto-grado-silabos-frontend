@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button';
 
 export type InsertAction = { key: string; label: string };
 
-defineProps<{ actions: InsertAction[]; position: 'top' | 'bottom'; gap: 'field' | 'section'; disabled?: boolean }>();
+defineProps<{ actions: InsertAction[]; position: 'top' | 'bottom' | 'inline'; gap: 'field' | 'section'; disabled?: boolean }>();
 const emit = defineEmits<{ insert: [key: string] }>();
 </script>
 
 <template>
     <div
-        class="group/insert absolute inset-x-0 z-0 flex h-6 items-center justify-center gap-2"
-        :class="[position === 'top' ? (gap === 'field' ? '-top-4.5' : '-top-6') : (gap === 'field' ? '-bottom-4.5' : '-bottom-6')]"
+        class="group/insert absolute inset-x-0 z-0 flex items-center justify-center gap-2"
+        :class="[position === 'inline' ? 'inset-y-0' : 'h-6', position === 'top' ? (gap === 'field' ? '-top-4.5' : '-top-6') : '', position === 'bottom' ? (gap === 'field' ? '-bottom-4.5' : '-bottom-6') : '']"
         data-insert-point
     >
         <span class="pointer-events-none absolute inset-x-0 top-1/2 border-t border-dashed border-primary/60 opacity-0 transition-opacity group-hover/insert:opacity-100" aria-hidden="true" />
