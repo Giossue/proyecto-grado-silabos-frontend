@@ -9,8 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Field } from '@/components/ui/field';
-import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { roleEntry } from '@/lib/routes';
 import { LIBRARY_SCOPE, roleLabel } from '@/lib/roles';
@@ -51,29 +50,29 @@ const select = async (roleAssignmentId: string): Promise<void> => {
 </script>
 
 <template>
-  <Sheet v-model:open="open">
-    <SheetContent class="flex w-full flex-col sm:max-w-lg">
-      <SheetHeader>
-        <SheetTitle>{{ title }}</SheetTitle>
-        <SheetDescription>Elija una carrera o rol vigente. Todo el sistema cambiará al nuevo alcance.</SheetDescription>
-      </SheetHeader>
-      <div class="flex flex-1 flex-col gap-4 overflow-y-auto px-4 pb-28">
+  <Dialog v-model:open="open">
+    <DialogContent class="flex max-h-(--overlay-max-height) flex-col overflow-hidden sm:max-w-3xl">
+      <DialogHeader>
+        <DialogTitle>{{ title }}</DialogTitle>
+        <DialogDescription>Elija una carrera o rol vigente. Todo el sistema cambiará al nuevo alcance.</DialogDescription>
+      </DialogHeader>
+      <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <Card v-for="role in roles" :key="role.id">
-          <CardHeader>
-            <CardTitle>{{ scopeName(role) }}</CardTitle>
-            <CardDescription>{{ scopeDescription(role) }}</CardDescription>
-            <CardAction><Badge v-if="activeRole?.id === role.id" variant="secondary"><CheckCircle2 aria-hidden="true" />Actual</Badge><Badge v-else variant="outline">{{ roleLabel(role.code) }}</Badge></CardAction>
-          </CardHeader>
-          <CardContent><p class="flex items-center gap-2 text-sm text-muted-foreground"><Building2 aria-hidden="true" />{{ scopeArea(role) }}</p></CardContent>
-          <CardFooter><Button v-if="activeRole?.id === role.id" type="button" variant="secondary" class="w-full" disabled>Carrera o rol actual</Button><Button v-else type="button" class="w-full" :disabled="pendingRoleId !== null" @click="select(role.id)"><Spinner v-if="pendingRoleId === role.id" data-icon="inline-start" /><ArrowRight v-else data-icon="inline-start" aria-hidden="true" />Cambiar a {{ scopeName(role) }}</Button></CardFooter>
-        </Card>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <Card v-for="role in roles" :key="role.id" class="h-full">
+            <CardHeader>
+              <CardTitle>{{ scopeName(role) }}</CardTitle>
+              <CardDescription>{{ scopeDescription(role) }}</CardDescription>
+              <CardAction><Badge v-if="activeRole?.id === role.id" variant="secondary"><CheckCircle2 aria-hidden="true" />Actual</Badge><Badge v-else variant="outline">{{ roleLabel(role.code) }}</Badge></CardAction>
+            </CardHeader>
+            <CardContent><p class="flex items-center gap-2 text-sm text-muted-foreground"><Building2 aria-hidden="true" />{{ scopeArea(role) }}</p></CardContent>
+            <CardFooter class="mt-auto"><Button v-if="activeRole?.id === role.id" type="button" variant="secondary" class="w-full" disabled>Carrera o rol actual</Button><Button v-else type="button" class="w-full" :disabled="pendingRoleId !== null" @click="select(role.id)"><Spinner v-if="pendingRoleId === role.id" data-icon="inline-start" /><ArrowRight v-else data-icon="inline-start" aria-hidden="true" />Cambiar a {{ scopeName(role) }}</Button></CardFooter>
+          </Card>
+        </div>
       </div>
-      <SheetFooter class="absolute inset-x-0 bottom-0 border-t bg-card pb-(--safe-footer-inset)">
-        <Field orientation="horizontal" class="justify-end">
-          <Button type="button" variant="outline" @click="open = false">Cerrar</Button>
-        </Field>
-      </SheetFooter>
-    </SheetContent>
-  </Sheet>
+      <DialogFooter>
+        <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
