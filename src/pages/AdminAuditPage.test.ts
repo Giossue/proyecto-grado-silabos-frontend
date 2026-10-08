@@ -33,7 +33,7 @@ const payload: AuditPayload = {
     }],
     current_page: 1,
     last_page: 1,
-    per_page: 30,
+    per_page: 20,
     from: 1,
     to: 1,
     total: 1,

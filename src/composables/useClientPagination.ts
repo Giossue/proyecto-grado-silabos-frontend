@@ -11,7 +11,7 @@ type ClientPagination<T> = {
 
 export function useClientPagination<T>(
     source: MaybeRefOrGetter<T[]>,
-    requestedPageSize = 10,
+    requestedPageSize = 20,
 ): ClientPagination<T> {
     const pageSize = Math.max(1, requestedPageSize);
     const currentPage = ref(1);
