@@ -67,7 +67,7 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame title="Proyecto de carrera" description="Datos de cada materia de la malla que heredan los sílabos: descripción, objetivos, resultados, habilidades blandas, perfil de egreso y bibliografía.">
+  <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos.">
     <template #actions><FichaImportDialog :disabled="Boolean(data?.career.lock_reason)" @applied="saved" /></template>
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :actions="false" />

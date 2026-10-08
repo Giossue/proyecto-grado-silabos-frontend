@@ -52,7 +52,7 @@ const save = async (close: () => void) => {
 </script>
 
 <template>
-  <FormSheet v-model:open="open" :show-trigger="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha" description="Datos de la materia que heredarán los sílabos nuevos. Los campos salen de la plantilla del sílabo." wide>
+  <FormSheet v-model:open="open" :show-trigger="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha" description="Datos que heredarán los sílabos nuevos." wide>
     <template #default="{ close }">
       <form class="contents" @submit.prevent="save(close)">
         <FieldGroup>

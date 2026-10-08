@@ -38,7 +38,7 @@ const submit = async (): Promise<void> => {
     trigger-label="Prorrogar plazo"
     :show-trigger="display !== 'menu'"
     title="Prorrogar el plazo de entrega"
-    description="La prórroga mueve únicamente la fecha límite de entrega hacia adelante, alcanza a todas las convocatorias del proceso y conserva la fecha anterior en auditoría."
+    description="Mueve la fecha límite de entrega hacia adelante para todas las convocatorias."
   >
     <template #trigger><Button variant="outline">Prorrogar plazo</Button></template>
     <template #default="{ close }">

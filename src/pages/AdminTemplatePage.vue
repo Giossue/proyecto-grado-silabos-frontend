@@ -122,7 +122,7 @@ onBeforeUnmount(() => {
     <PageFrame
         v-else-if="!template"
         title="Plantilla de sílabo"
-        description="El formato del sílabo: qué secciones y campos tiene, y en qué orden. Se edita en el sitio; cada sílabo entregado conserva su propia copia."
+        description="El formato del sílabo: secciones y campos."
     >
         <template #actions>
             <Button :disabled="creating || Boolean(payload?.processLock)" @click="chooserOpen = true">
@@ -166,7 +166,7 @@ onBeforeUnmount(() => {
     <PageFrame
         v-else-if="template"
         title="Plantilla de sílabo"
-        description="El formato del sílabo: qué secciones y campos tiene, quién escribe cada uno y en qué orden. Cada sílabo entregado conserva su propia copia."
+        description="El formato del sílabo: secciones y campos."
         size="wide"
         :header-width="SHEET_WIDTH"
     >

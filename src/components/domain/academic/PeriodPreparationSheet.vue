@@ -85,7 +85,7 @@ watch(periodId, () => { if (open.value) updateProposal(); });
     :disabled="props.disabled"
     trigger-label="Preparar período"
     title="Preparar período académico"
-    description="La malla activa se incluirá completa. Revise los paralelos y docentes propuestos antes de guardar."
+    description="Revise los paralelos y docentes propuestos."
   >
     <template #trigger>
       <Button :disabled="props.disabled"><CalendarCheck data-icon="inline-start" aria-hidden="true" />Preparar período</Button>

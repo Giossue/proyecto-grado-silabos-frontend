@@ -72,7 +72,7 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Convocatorias" description="Cada fila es un periodo lectivo y su convocatoria institucional: las fechas de clases y las fechas en que los docentes elaboran y entregan sus sílabos. Cada coordinación inicia después su convocatoria heredada.">
+  <PageFrame title="Convocatorias" description="Periodos lectivos y sus fechas de clases y de elaboración de sílabos.">
     <template #actions>
       <ConvocationPeriodSheet v-if="loaded" :disabled="inProgress" @saved="changed" />
     </template>

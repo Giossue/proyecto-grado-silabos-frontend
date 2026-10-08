@@ -64,7 +64,7 @@ const submit = async (): Promise<void> => {
     :disabled="props.disabled"
     :trigger-label="triggerLabel"
     title="Abrir convocatoria institucional"
-    :description="period ? `El período ${period.codigo} quedará vinculado a la convocatoria institucional abierta. Elija las fechas de elaboración que heredarán las coordinaciones junto con la plantilla.` : 'El calendario institucional obliga a todas las carreras: fija las fechas de inicio y entrega con las que se elaboran los sílabos. Cada coordinación inicia el alcance de su carrera dentro de esta convocatoria.'"
+    :description="period ? `Elija las fechas de elaboración del período ${period.codigo}.` : 'Fechas de inicio y entrega de los sílabos para todas las carreras.'"
     :show-trigger="display !== 'menu'"
   >
     <template #default="{ close }">

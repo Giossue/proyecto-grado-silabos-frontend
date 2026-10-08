@@ -145,7 +145,7 @@ watch(open, (value) => value && reset());
     :show-trigger="false"
     trigger-label="Agregar paralelo"
     title="Paralelos y docentes de la materia"
-    :description="`Agregue, corrija o elimine los paralelos de ${subjectLabel} y elija quién dicta cada uno.`"
+    :description="`Paralelos de ${subjectLabel} y su docente.`"
   >
     <template #default="{ close }">
       <form class="contents" @submit.prevent="submit(close)">

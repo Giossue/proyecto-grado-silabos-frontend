@@ -35,9 +35,9 @@ watch(() => form.value.starts_on, (startsOn) => {
 });
 
 const labels = computed(() => ({
-    facultad: { trigger: 'Nueva facultad', title: 'Nueva facultad', description: 'Registre una unidad académica que agrupará sus carreras.' },
-    carrera: { trigger: 'Nueva carrera', title: 'Nueva carrera', description: 'Registre una carrera dentro de una facultad activa.' },
-    periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico', description: 'Registre las fechas. La etiqueta se genera con el rango de meses y año.' },
+    facultad: { trigger: 'Nueva facultad', title: 'Nueva facultad', description: 'Registre una facultad.' },
+    carrera: { trigger: 'Nueva carrera', title: 'Nueva carrera', description: 'Registre una carrera.' },
+    periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico', description: 'Registre las fechas.' },
 })[props.entity]);
 const submitLabel = computed(() => ({ facultad: 'Crear facultad', carrera: 'Crear carrera', periodo: 'Crear periodo' })[props.entity]);
 

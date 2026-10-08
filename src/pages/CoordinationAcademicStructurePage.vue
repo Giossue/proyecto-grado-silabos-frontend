@@ -43,9 +43,9 @@ const pageTitle = computed(() => ({
 const pageDescription = computed(() => {
   const career = curriculum.value?.career.name ?? 'la carrera activa';
   return {
-    curriculum: `Malla curricular de ${career}. Consulte las materias y sus relaciones; pulse Editar malla para modificarlas.`,
-    schedule: `Materias y paralelos de ${career} en el período en curso; el docente se asigna desde los paralelos de cada materia.`,
-    teachers: `Cuentas docentes de ${career} y sus paralelos del período en curso.`,
+    curriculum: `Malla curricular de ${career}.`,
+    schedule: `Materias y paralelos de ${career} del período en curso.`,
+    teachers: `Docentes de ${career}.`,
   }[props.mode];
 });
 // Mientras falte programar materias de la malla, el botón principal es Preparar período.
@@ -213,7 +213,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
       <ImportSpreadsheetDialog
         v-if="mode === 'teachers' && assignments?.canCreateTeacher"
         title="Importar docentes"
-        description="Cree varios docentes de su carrera a la vez. Cada uno recibe su invitación de activación."
+        description="Cree varios docentes de su carrera a la vez."
         endpoint="/coordination/academic/teachers/import"
         template-endpoint="/coordination/academic/teachers/import-template"
         template-name="plantilla-docentes.xlsx"

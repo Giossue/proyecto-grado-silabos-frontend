@@ -56,8 +56,8 @@ onMounted(load);
 </script>
 
 <template>
-    <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca. Coordinación y docencia van con su carrera; biblioteca trabaja con toda la universidad. Al desactivar una, su sesión se cierra.">
-        <template #actions><div v-if="result" class="flex flex-wrap gap-2"><ImportSpreadsheetDialog title="Importar cuentas" description="Cree varias cuentas a la vez. Cada una recibe su invitación de activación." endpoint="/admin/users/import" template-endpoint="/admin/users/import-template" template-name="plantilla-usuarios.xlsx" :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }, { key: 'rol', label: 'Rol' }, { key: 'carrera', label: 'Carrera' }]" @imported="changed" /><ManagedUserSheet :roles="result.roles" :careers="result.careers" @saved="changed" /></div></template>
+    <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca.">
+        <template #actions><div v-if="result" class="flex flex-wrap gap-2"><ImportSpreadsheetDialog title="Importar cuentas" description="Cree varias cuentas a la vez." endpoint="/admin/users/import" template-endpoint="/admin/users/import-template" template-name="plantilla-usuarios.xlsx" :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }, { key: 'rol', label: 'Rol' }, { key: 'carrera', label: 'Carrera' }]" @imported="changed" /><ManagedUserSheet :roles="result.roles" :careers="result.careers" @saved="changed" /></div></template>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="5" :filters="3" :cell-lines="2" />
 

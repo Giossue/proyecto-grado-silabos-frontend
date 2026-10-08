@@ -33,8 +33,8 @@ const form = ref({ nombre: '', code: '', faculty_id: '', campus: '', modality: '
 
 const entityLabel = computed(() => ({ facultad: 'facultad', carrera: 'carrera', periodo: 'periodo académico' })[props.entity]);
 const formDescription = computed(() => props.entity === 'periodo'
-    ? 'Actualice las fechas. La etiqueta se genera con el rango de meses y año.'
-    : 'Actualice los datos institucionales. Los cambios quedarán registrados en auditoría.');
+    ? 'Actualice las fechas.'
+    : 'Actualice los datos.');
 const facultyOptions = computed(() => props.faculties.filter((faculty) => faculty.activo || faculty.id === props.facultyId));
 
 const reset = (): void => {

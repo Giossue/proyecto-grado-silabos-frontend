@@ -34,7 +34,7 @@ watch(open, (value) => value && reset());
 </script>
 
 <template>
-  <FormSheet v-model:open="open" :disabled="props.disabled" trigger-label="Asignar docente" title="Asignar docente" description="Seleccione una cuenta activa con rol Docente y un paralelo perteneciente a esta carrera. Si el paralelo ya tenía sílabo, se borra por completo y el docente empieza desde cero." :show-trigger="showTrigger">
+  <FormSheet v-model:open="open" :disabled="props.disabled" trigger-label="Asignar docente" title="Asignar docente" description="Elija un docente y un paralelo. Si el paralelo ya tenía sílabo, se borra y el docente empieza de cero." :show-trigger="showTrigger">
     <template #default="{ close }"><form class="contents" @submit.prevent="submit(close)"><FieldGroup>
       <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
       <Field><FieldLabel for="teacher-user" required>Docente</FieldLabel><Select v-model="userId" required><SelectTrigger id="teacher-user"><SelectValue placeholder="Seleccione un docente" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="teacher in props.options.teacherUsers" :key="teacher.id" :value="teacher.id">{{ teacher.name }} · {{ teacher.email }}</SelectItem></SelectGroup></SelectContent></Select></Field>

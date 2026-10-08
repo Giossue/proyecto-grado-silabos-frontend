@@ -96,7 +96,7 @@ const resendVerification = async (): Promise<void> => {
                         placeholder="Ej. MARÍA JOSÉ PÉREZ LÓPEZ"
                     />
                     <p class="text-sm text-muted-foreground">
-                        Primero los nombres y luego los apellidos. Se guarda en mayúsculas, con tildes.
+                        Primero los nombres y luego los apellidos.
                     </p>
                     <InputError class="mt-2" :message="errors.nombre" />
                 </div>
