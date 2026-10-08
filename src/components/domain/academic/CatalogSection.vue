@@ -106,6 +106,9 @@ const careerFilter = useClientFilter(
         estado: {
             matches: (item, value) => item.active === (value === 'active'),
         },
+        modalidad: {
+            matches: (item, value) => item.modality === value,
+        },
     },
 );
 
@@ -247,6 +250,29 @@ const {
                                     >
                                     <SelectItem value="inactive"
                                         >Inactivos</SelectItem
+                                    >
+                                </SelectGroup>
+                            </SelectContent>
+                        </Select>
+                    </Field>
+                    <Field>
+                        <FieldLabel for="careers-search-modality" class="sr-only"
+                            >Modalidad</FieldLabel
+                        >
+                        <Select v-model="careerFilter.values.modalidad.value">
+                            <SelectTrigger id="careers-search-modality">
+                                <SelectValue placeholder="Todas las modalidades" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectGroup>
+                                    <SelectItem value="all"
+                                        >Todas las modalidades</SelectItem
+                                    >
+                                    <SelectItem
+                                        v-for="modality in options.modalityOptions"
+                                        :key="modality.value"
+                                        :value="modality.value"
+                                        >{{ modality.label }}</SelectItem
                                     >
                                 </SelectGroup>
                             </SelectContent>
