@@ -42,12 +42,38 @@ describe('ScreenHelpButton', () => {
     expect(wrapper.find('[aria-label="Ayuda de esta pantalla"]').exists()).toBe(false);
   });
 
-  it('se mueve con las flechas y recuerda la posición', async () => {
+  it('salta entre las cuatro esquinas con Alt y las flechas y recuerda la esquina', async () => {
     vi.mocked(getScreenHelp).mockResolvedValue({ help });
     const wrapper = mountButton();
     await flushPromises();
 
-    await wrapper.get('[aria-label="Ayuda de esta pantalla"]').trigger('keydown', { key: 'ArrowLeft', altKey: true });
-    expect(JSON.parse(localStorage.getItem('silabos:ayuda-posicion') ?? '{}')).toMatchObject({ right: expect.any(Number), bottom: expect.any(Number) });
+    const trigger = wrapper.get('[aria-label="Ayuda de esta pantalla"]');
+    const stored = () => JSON.parse(localStorage.getItem('silabos:ayuda-posicion') ?? '{}').corner;
+    await trigger.trigger('keydown', { key: 'ArrowLeft', altKey: true });
+    expect(stored()).toBe('bottom-left');
+    await trigger.trigger('keydown', { key: 'ArrowUp', altKey: true });
+    expect(stored()).toBe('top-left');
+    await trigger.trigger('keydown', { key: 'ArrowRight', altKey: true });
+    expect(stored()).toBe('top-right');
+    await trigger.trigger('keydown', { key: 'ArrowRight' });
+    expect(stored()).toBe('top-right');
+  });
+
+  it('al soltar tras arrastrar se acomoda en la esquina más cercana', async () => {
+    vi.mocked(getScreenHelp).mockResolvedValue({ help });
+    const wrapper = mountButton();
+    await flushPromises();
+    const trigger = wrapper.get('[aria-label="Ayuda de esta pantalla"]');
+    vi.spyOn(trigger.element.parentElement as HTMLElement, 'getBoundingClientRect').mockReturnValue({ left: 0, top: 0, right: 1000, bottom: 700, width: 1000, height: 700, x: 0, y: 0, toJSON: () => ({}) });
+
+    const fire = (type: string, clientX: number, clientY: number) => trigger.element.dispatchEvent(new MouseEvent(type, { clientX, clientY, bubbles: true }));
+    fire('pointerdown', 950, 650);
+    fire('pointermove', 100, 80);
+    await flushPromises();
+    expect(trigger.attributes('style')).toContain('left:');
+    fire('pointerup', 100, 80);
+    await flushPromises();
+
+    expect(JSON.parse(localStorage.getItem('silabos:ayuda-posicion') ?? '{}').corner).toBe('top-left');
   });
 });

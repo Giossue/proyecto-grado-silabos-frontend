@@ -7,21 +7,27 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
 import { sessionState } from '@/state/session';
 
+type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+
 const STORAGE_KEY = 'silabos:ayuda-posicion';
+const CORNERS: readonly Corner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 const SIZE = 44;
-const MARGIN = 8;
-const STEP = 16;
+const MARGIN = 16;
+const DRAG_THRESHOLD = 4;
 
 const route = useRoute();
 const help = ref<ScreenHelp | null>(null);
 const open = ref(false);
 const panelId = 'ayuda-pantalla';
 const button = ref<{ $el: HTMLElement } | null>(null);
-const offset = ref({ right: 24, bottom: 24 });
+const corner = ref<Corner>('bottom-right');
 const bounds = ref({ left: 0, top: 0, right: 0, bottom: 0 });
+const dragging = ref<{ x: number; y: number } | null>(null);
 const screen = computed(() => route.matched.at(-1)?.path ?? '');
 const signedIn = computed(() => sessionState.current.value?.active_role != null);
 const paragraphs = computed(() => (help.value?.content ?? '').split(/\n{2,}/).map((text) => text.trim()).filter(Boolean));
+const isTop = computed(() => corner.value.startsWith('top'));
+const isLeft = computed(() => corner.value.endsWith('left'));
 
 let request = 0;
 const load = async (): Promise<void> => {
@@ -41,52 +47,70 @@ const measure = (): void => {
   const container = button.value?.$el.parentElement;
   if (!container) return;
   const rect = container.getBoundingClientRect();
+  const header = container.querySelector('header')?.getBoundingClientRect().bottom ?? 0;
   bounds.value = {
     left: Math.max(rect.left, 0),
-    top: Math.max(rect.top, 0),
+    top: Math.max(rect.top, header, 0),
     right: Math.min(rect.right, window.innerWidth),
     bottom: Math.min(rect.bottom, window.innerHeight),
   };
 };
-const clamp = (value: number, max: number): number => Math.min(Math.max(value, MARGIN), Math.max(max, MARGIN));
-const place = (right: number, bottom: number): void => {
-  offset.value = {
-    right: clamp(right, bounds.value.right - bounds.value.left - SIZE - MARGIN),
-    bottom: clamp(bottom, bounds.value.bottom - bounds.value.top - SIZE - MARGIN),
-  };
+
+const cornerPosition = (value: Corner): { x: number; y: number } => ({
+  x: value.endsWith('left') ? bounds.value.left + MARGIN : bounds.value.right - SIZE - MARGIN,
+  y: value.startsWith('top') ? bounds.value.top + MARGIN : bounds.value.bottom - SIZE - MARGIN,
+});
+
+const style = computed(() => {
+  const point = dragging.value ?? cornerPosition(corner.value);
+
+  return { left: `${point.x}px`, top: `${point.y}px` };
+});
+
+const nearestCorner = (point: { x: number; y: number }): Corner => {
+  const centerX = point.x + SIZE / 2;
+  const centerY = point.y + SIZE / 2;
+  const vertical = centerY < (bounds.value.top + bounds.value.bottom) / 2 ? 'top' : 'bottom';
+  const horizontal = centerX < (bounds.value.left + bounds.value.right) / 2 ? 'left' : 'right';
+
+  return `${vertical}-${horizontal}` as Corner;
 };
-const position = computed(() => ({
-  left: `${bounds.value.right - offset.value.right - SIZE}px`,
-  top: `${bounds.value.bottom - offset.value.bottom - SIZE}px`,
-}));
+
 const remember = (): void => {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(offset.value)); } catch { return; }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ corner: corner.value })); } catch { return; }
 };
 const restore = (): void => {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as { right?: unknown; bottom?: unknown } | null;
-    if (typeof saved?.right === 'number' && typeof saved.bottom === 'number') offset.value = { right: saved.right, bottom: saved.bottom };
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as { corner?: unknown } | null;
+    if (CORNERS.includes(saved?.corner as Corner)) corner.value = saved?.corner as Corner;
   } catch { return; }
 };
-const refresh = (): void => { measure(); place(offset.value.right, offset.value.bottom); };
 
-let drag: { x: number; y: number; right: number; bottom: number; moved: boolean } | null = null;
+let drag: { startX: number; startY: number; originX: number; originY: number; moved: boolean } | null = null;
 const startDrag = (event: PointerEvent): void => {
   measure();
-  drag = { x: event.clientX, y: event.clientY, right: offset.value.right, bottom: offset.value.bottom, moved: false };
+  const origin = cornerPosition(corner.value);
+  drag = { startX: event.clientX, startY: event.clientY, originX: origin.x, originY: origin.y, moved: false };
   (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
 };
 const moveDrag = (event: PointerEvent): void => {
   if (!drag) return;
-  const dx = event.clientX - drag.x;
-  const dy = event.clientY - drag.y;
-  if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+  const dx = event.clientX - drag.startX;
+  const dy = event.clientY - drag.startY;
+  if (!drag.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
   drag.moved = true;
   open.value = false;
-  place(drag.right - dx, drag.bottom - dy);
+  dragging.value = {
+    x: Math.min(Math.max(drag.originX + dx, bounds.value.left), bounds.value.right - SIZE),
+    y: Math.min(Math.max(drag.originY + dy, bounds.value.top), bounds.value.bottom - SIZE),
+  };
 };
 const endDrag = (): void => {
-  if (drag?.moved) remember();
+  if (drag?.moved && dragging.value) {
+    corner.value = nearestCorner(dragging.value);
+    remember();
+  }
+  dragging.value = null;
   window.setTimeout(() => { drag = null; }, 0);
 };
 const toggle = (): void => {
@@ -95,22 +119,45 @@ const toggle = (): void => {
 };
 const nudge = (event: KeyboardEvent): void => {
   if (!event.altKey) return;
-  const moves: Record<string, [number, number]> = { ArrowLeft: [-STEP, 0], ArrowRight: [STEP, 0], ArrowUp: [0, STEP], ArrowDown: [0, -STEP] };
-  const move = moves[event.key];
+  const keys: Record<string, (current: Corner) => Corner> = {
+    ArrowLeft: (current) => `${current.split('-')[0]}-left` as Corner,
+    ArrowRight: (current) => `${current.split('-')[0]}-right` as Corner,
+    ArrowUp: (current) => `top-${current.split('-')[1]}` as Corner,
+    ArrowDown: (current) => `bottom-${current.split('-')[1]}` as Corner,
+  };
+  const move = keys[event.key];
   if (!move) return;
   event.preventDefault();
   measure();
-  place(offset.value.right - move[0], offset.value.bottom + move[1]);
+  corner.value = move(corner.value);
+  open.value = false;
   remember();
 };
 
+let observer: ResizeObserver | null = null;
+const refresh = (): void => { measure(); };
+
 watch([screen, signedIn], () => { void load(); }, { immediate: true });
-watch(help, (value) => { if (value) requestAnimationFrame(refresh); });
+watch(help, async (value) => {
+  if (!value) return;
+  await Promise.resolve();
+  requestAnimationFrame(() => {
+    refresh();
+    const container = button.value?.$el.parentElement;
+    if (container && !observer && typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(refresh);
+      observer.observe(container);
+    }
+  });
+});
 onMounted(() => {
   restore();
   window.addEventListener('resize', refresh);
 });
-onBeforeUnmount(() => window.removeEventListener('resize', refresh));
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', refresh);
+  observer?.disconnect();
+});
 </script>
 
 <template>
@@ -120,10 +167,11 @@ onBeforeUnmount(() => window.removeEventListener('resize', refresh));
         ref="button"
         type="button"
         size="icon"
-        class="fixed z-40 size-11 touch-none rounded-full shadow-lg"
-        :style="position"
+        class="fixed z-40 size-11 touch-none rounded-full shadow-lg will-change-[left,top]"
+        :class="dragging ? 'cursor-grabbing' : 'cursor-grab transition-[left,top] duration-300 ease-out'"
+        :style="style"
         aria-label="Ayuda de esta pantalla"
-        aria-description="Use Alt y las flechas para mover el botón"
+        aria-description="Arrástrelo a una esquina o use Alt y las flechas para moverlo"
         aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight"
         aria-haspopup="dialog"
         :aria-expanded="open"
@@ -138,7 +186,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', refresh));
         <CircleHelp aria-hidden="true" />
       </Button>
     </PopoverAnchor>
-    <PopoverContent :id="panelId" class="flex max-h-96 w-80 flex-col gap-3 overflow-y-auto" side="top" align="end" @close-auto-focus.prevent="button?.$el.focus()">
+    <PopoverContent :id="panelId" class="flex max-h-96 w-80 flex-col gap-3 overflow-y-auto" :side="isTop ? 'bottom' : 'top'" :align="isLeft ? 'start' : 'end'" @close-auto-focus.prevent="button?.$el.focus()">
       <h2 class="text-sm font-semibold">{{ help.title }}</h2>
       <p v-for="(text, index) in paragraphs" :key="index" class="text-sm whitespace-pre-line text-muted-foreground">{{ text }}</p>
     </PopoverContent>
