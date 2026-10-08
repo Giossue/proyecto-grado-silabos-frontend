@@ -4,6 +4,7 @@ import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
+import ScreenHelpButton from '@/components/domain/ScreenHelpButton.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { breadcrumbsKey, pageTitleKey } from '@/composables/usePageBreadcrumbs';
 import { templateEditorState } from '@/state/templateEditor';
@@ -37,6 +38,7 @@ provide(pageTitleKey, pageTitle);
                 :page-title="pageTitle"
             />
             <slot />
+            <ScreenHelpButton v-if="!editorOpen" />
         </AppContent>
     </AppShell>
     <Toaster />

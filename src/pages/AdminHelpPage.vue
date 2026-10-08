@@ -1,0 +1,63 @@
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
+import { ApiError } from '@/api/client';
+import { listScreenHelp, type ScreenHelp } from '@/api/screen-help';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import ScreenHelpEditSheet from '@/components/domain/identity/ScreenHelpEditSheet.vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { helpScreens, type HelpScreen } from '@/lib/helpScreens';
+import { toast } from '@/lib/toast';
+
+const helps = ref<ScreenHelp[]>([]);
+const loading = ref(true);
+const error = ref<string | null>(null);
+const selected = ref<HelpScreen | null>(null);
+const editing = ref(false);
+const byScreen = computed(() => new Map(helps.value.map((help) => [help.screen, help])));
+const selectedHelp = computed(() => (selected.value ? byScreen.value.get(selected.value.key) ?? null : null));
+
+const statusOf = (screen: HelpScreen): string => {
+    const help = byScreen.value.get(screen.key);
+    if (!help) return 'Sin ayuda';
+    return help.active ? 'Con ayuda' : 'Oculta';
+};
+
+const load = async (): Promise<void> => {
+    loading.value = true;
+    error.value = null;
+    try {
+        helps.value = (await listScreenHelp()).help;
+    } catch (reason) {
+        error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la ayuda.';
+    } finally {
+        loading.value = false;
+    }
+};
+const edit = (screen: HelpScreen): void => { selected.value = screen; editing.value = true; };
+const saved = async (message: string): Promise<void> => { toast.success(message); await load(); };
+
+onMounted(() => { void load(); });
+</script>
+
+<template>
+  <PageFrame title="Ayuda de pantallas" description="Textos de ayuda que se ven en el botón flotante de cada pantalla.">
+    <LoadErrorState v-if="error" :message="error" @retry="load" />
+    <LoadingSkeleton v-else-if="loading && helps.length === 0" variant="table" :columns="3" :filters="0" :actions="false" />
+    <Card v-else><CardContent>
+      <Table label="Ayuda de pantallas">
+        <TableHeader><TableRow><TableHead>Pantalla</TableHead><TableHead>Rol</TableHead><TableHead>Ayuda</TableHead></TableRow></TableHeader>
+        <TableBody>
+          <TableRow v-for="screen in helpScreens" :key="screen.key" class="cursor-pointer" tabindex="0" :aria-label="`Editar la ayuda de ${screen.label}`" @click="edit(screen)" @keydown.enter.self.prevent="edit(screen)">
+            <TableCell>{{ screen.label }}</TableCell>
+            <TableCell>{{ screen.roleLabel }}</TableCell>
+            <TableCell :class="byScreen.get(screen.key)?.active ? '' : 'text-muted-foreground'">{{ statusOf(screen) }}</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+    </CardContent></Card>
+    <ScreenHelpEditSheet v-if="selected" v-model:open="editing" :screen="selected" :help="selectedHelp" @saved="saved" />
+  </PageFrame>
+</template>
