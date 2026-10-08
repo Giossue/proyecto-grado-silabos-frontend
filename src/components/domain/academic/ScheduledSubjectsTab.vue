@@ -38,7 +38,7 @@ const periodRows = computed(() => props.data.scheduledSubjects.filter((item) => 
 type ScheduledRow = ScheduledSubjects["scheduledSubjects"][number];
 const cycleKey = (item: ScheduledRow) => item.subject_cycle === null ? "none" : String(item.subject_cycle);
 const shiftKey = (shift: string | null | undefined) => shift ?? "none";
-const filter = useClientFilter(periodRows, (item) => [item.subject_name, item.subject_code], {
+const filter = useClientFilter(periodRows, (item) => [item.subject_name], {
   ciclo: { matches: (item, value) => cycleKey(item) === value },
   paralelo: { matches: (item, value) => item.parallels.some((parallel) => parallel.code === value) },
   jornada: { matches: (item, value) => item.parallels.some((parallel) => shiftKey(parallel.shift) === value) },
@@ -68,7 +68,7 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
 <template>
   <Card>
     <CardContent class="flex flex-col gap-4">
-      <ClientFilterBar :filter="filter" input-id="scheduled-subjects-search" label="Buscar materia programada" placeholder="Buscar por materia o código">
+      <ClientFilterBar :filter="filter" input-id="scheduled-subjects-search" label="Buscar materia programada" placeholder="Buscar por materia">
         <template #filters>
           <Field><FieldLabel for="scheduled-subject-cycle" class="sr-only">Ciclo</FieldLabel>
             <Select v-model="filter.values.ciclo.value" @update:model-value="setPage(1)">
