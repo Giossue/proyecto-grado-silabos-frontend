@@ -25,6 +25,7 @@ const action = computed<FreeTextAction | undefined>(() => openFormation?.value
 .automatic-card :deep(.free-text-table) { table-layout: fixed; }
 .automatic-card :deep(.free-text-table td) { overflow-wrap: anywhere; padding: 0.1rem 0.25rem; }
 :global(.syllabus-readonly-field) .automatic-card { font-size: 0.875rem; }
+:global(.syllabus-readonly-field) .automatic-card :deep(.free-text-table) { border: 1px solid var(--border); }
 :global(.syllabus-readonly-field) .automatic-card :deep(.free-text-table td),
 :global(.syllabus-readonly-field) .automatic-card :deep(.free-text-table th) { padding: 0.375rem 0.5rem; background-color: transparent !important; color: var(--foreground) !important; border-color: var(--border); }
 :global(.syllabus-readonly-field) .automatic-card :deep(.free-text-table [style]) { color: inherit !important; background-color: transparent !important; }
