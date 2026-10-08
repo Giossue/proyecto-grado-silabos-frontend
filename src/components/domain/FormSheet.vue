@@ -11,6 +11,7 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
+import { useFocusReturn } from '@/lib/focusReturn';
 import { cn } from '@/lib/utils';
 
 withDefaults(
@@ -38,6 +39,7 @@ defineSlots<{
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
+useFocusReturn(() => open.value);
 
 const close = (): void => {
     open.value = false;

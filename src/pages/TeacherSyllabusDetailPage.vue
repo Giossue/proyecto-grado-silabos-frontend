@@ -471,11 +471,11 @@ onBeforeUnmount(() => {
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
 
       <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar'" variant="syllabus">
-        <main class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
+        <div class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
           <Card v-if="!canEdit" class="syllabus-document-header">
             <CardContent class="flex flex-col items-center gap-5 py-8 text-center">
               <div class="flex w-full items-center justify-between gap-6"><img :src="syllabus.presentation.logos.institution" alt="Logo institucional" class="max-h-10 max-w-40 object-contain" /><img :src="syllabus.presentation.logos.faculty" alt="Logo de facultad" class="max-h-14 max-w-40 object-contain" /></div>
-              <h1 class="text-xl font-semibold" :style="{ color: syllabus.presentation.appearance.accent_color }">{{ syllabus.presentation.title }}</h1>
+              <h2 class="text-xl font-semibold" :style="{ color: syllabus.presentation.appearance.accent_color }">{{ syllabus.presentation.title }}</h2>
               <p class="text-sm text-muted-foreground">Esta versión es de solo lectura.</p>
             </CardContent>
           </Card>
@@ -527,7 +527,7 @@ onBeforeUnmount(() => {
           </section>
           </template>
 
-        </main>
+        </div>
 
         <aside class="min-w-0" aria-label="Asistente de unidades">
           <SyllabusUnitAssistant

@@ -36,11 +36,11 @@ const setSize = (value: string): void => { settings.value.textSize = value as Te
     <DialogContent class="max-w-md">
       <DialogHeader>
         <DialogTitle>Accesibilidad</DialogTitle>
-        <DialogDescription>Los cambios se aplican al instante y se guardan en este navegador.</DialogDescription>
+        <DialogDescription>Los cambios se aplican al instante y se guardan en este navegador y en su cuenta.</DialogDescription>
       </DialogHeader>
       <div class="flex flex-col gap-5">
         <div class="flex flex-col gap-2">
-          <p class="text-sm font-medium">Tamaño del texto</p>
+          <p class="text-sm font-medium" aria-hidden="true">Tamaño del texto</p>
           <ChoiceGroup :model-value="settings.textSize" :options="sizes" label="Tamaño del texto" @update:model-value="setSize" />
         </div>
         <div v-for="toggle in toggles" :key="toggle.key" class="flex items-center justify-between gap-4">

@@ -6,7 +6,7 @@ import { deleteScreenHelp, saveScreenHelp, type ScreenHelp } from '@/api/screen-
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
@@ -58,7 +58,7 @@ const remove = async (): Promise<void> => {
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
             <Field :data-invalid="Boolean(errors.title)"><FieldLabel for="screen-help-title" required>Título</FieldLabel><Input id="screen-help-title" v-model="form.title" required /><FieldError :errors="errors.title" /></Field>
             <Field :data-invalid="Boolean(errors.content)"><FieldLabel for="screen-help-content" required>Texto</FieldLabel><Textarea id="screen-help-content" v-model="form.content" rows="8" required /><FieldError :errors="errors.content" /></Field>
-            <Field orientation="horizontal"><Switch id="screen-help-active" v-model="form.active" /><FieldLabel for="screen-help-active">{{ form.active ? 'La ayuda se ve en esta pantalla' : 'La ayuda está oculta' }}</FieldLabel></Field>
+            <Field orientation="horizontal"><Switch id="screen-help-active" v-model="form.active" aria-describedby="screen-help-active-state" /><div class="flex flex-col"><FieldLabel for="screen-help-active">Mostrar ayuda en esta pantalla</FieldLabel><FieldDescription id="screen-help-active-state">{{ form.active ? 'La ayuda se ve en la pantalla.' : 'La ayuda está oculta.' }}</FieldDescription></div></Field>
             <FormSheetActions :close="close" :processing="processing" :icon="Check" label="Guardar ayuda" />
             <Button v-if="help" type="button" variant="outline" :disabled="processing" @click="remove">Eliminar ayuda</Button>
         </FieldGroup></form></template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useFocusReturn } from '@/lib/focusReturn';
 import { X } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
@@ -48,6 +49,7 @@ const props = defineProps<
 const emit = defineEmits<{ changed: [message: string] }>();
 const logoPreview = ref<{ name: string; url: string } | null>(null);
 const logoPreviewOpen = ref(false);
+useFocusReturn(() => logoPreviewOpen.value);
 
 const openLogoPreview = (name: string, url: string): void => {
     logoPreview.value = { name, url };

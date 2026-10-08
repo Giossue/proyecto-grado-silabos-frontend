@@ -6,12 +6,14 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Field, FieldLabel } from '@/components/ui/field';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
 import type { CurriculumBuilderSubject } from '@/types/academic';
+import { useFocusReturn } from '@/lib/focusReturn';
 import { toRoman } from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
 
 const props = defineProps<{ subjects: CurriculumBuilderSubject[] }>();
 const emit = defineEmits<{ pick: [connection: { sourceId: string; targetId: string }] }>();
 const picker = defineModel<{ subjectId: string; mode: RelationMode } | null>('picker', { required: true });
 const chosen = ref('');
+useFocusReturn(() => picker.value !== null);
 
 const current = computed(() => props.subjects.find((subject) => subject.id === picker.value?.subjectId) ?? null);
 const options = computed(() =>

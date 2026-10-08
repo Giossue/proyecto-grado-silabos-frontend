@@ -151,7 +151,7 @@ onMounted(load);
     <Alert v-else-if="review.state === 'anulado'"><CircleSlash aria-hidden="true" /><AlertTitle>Revisión reemplazada</AlertTitle><AlertDescription>Hay una revisión más reciente o el sílabo se reabrió. Esta queda solo para consulta.</AlertDescription></Alert>
 
     <WorkspaceLayout variant="review">
-      <main class="flex min-w-0 flex-col gap-6">
+      <div class="flex min-w-0 flex-col gap-6">
         <Card v-for="section in review.sections" :id="`section-${section.key}`" :key="section.key">
           <CardHeader><CardTitle>{{ section.title }}</CardTitle><CardDescription>Libros que propuso el docente en la revisión {{ review.revision_number }}. Solo lectura.</CardDescription></CardHeader>
           <CardContent class="flex flex-col gap-6">
@@ -161,7 +161,7 @@ onMounted(load);
         <Card v-if="review.sections.length === 0">
           <CardHeader><CardTitle>Bibliografía</CardTitle><CardDescription>Este sílabo no tiene una sección de Bibliografía en su plantilla.</CardDescription></CardHeader>
         </Card>
-      </main>
+      </div>
 
       <aside class="flex min-w-0 flex-col gap-6">
         <Card v-if="review.can_verify">

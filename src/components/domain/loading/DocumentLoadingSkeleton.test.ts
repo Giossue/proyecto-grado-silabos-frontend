@@ -17,7 +17,7 @@ describe('DocumentLoadingSkeleton', () => {
         const wrapper = mount(DocumentLoadingSkeleton, { props: { variant: 'syllabus' } });
         const layout = wrapper.get('.workspace-layout[data-layout="syllabus"]');
 
-        expect(layout.find(':scope > main').exists()).toBe(true);
+        expect(layout.find(':scope > div').exists()).toBe(true);
         expect(layout.get(':scope > aside').find('.assistant-panel').exists()).toBe(true);
         expect(wrapper.findAll('[data-skeleton="academic-context"]')).toHaveLength(1);
         expect(wrapper.find('[data-skeleton="syllabus-presentation"]').exists()).toBe(false);

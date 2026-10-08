@@ -20,6 +20,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumericDisplay } from "@/lib/numberDisplay";
+import { useFocusReturn } from "@/lib/focusReturn";
 import { cn } from "@/lib/utils";
 import type { RelationMode } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
 import type {
@@ -48,6 +49,7 @@ const props = defineProps<{
 }>();
 
 const deleteOpen = ref(false);
+useFocusReturn(() => deleteOpen.value);
 const deleting = ref(false);
 const deleteError = ref<string | null>(null);
 watch(() => props.data.editable, (editable) => {

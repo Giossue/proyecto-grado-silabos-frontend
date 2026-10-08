@@ -35,7 +35,7 @@ const reviewPanels = computed(() =>
 <template>
     <template v-if="variant === 'syllabus'">
         <WorkspaceLayout variant="syllabus">
-            <main class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
+            <div class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
                 <Card v-if="readonly" data-skeleton="syllabus-presentation">
                     <CardContent class="flex flex-col items-center gap-5 py-8">
                         <div class="flex w-full items-center justify-between gap-6">
@@ -77,7 +77,7 @@ const reviewPanels = computed(() =>
                         </div>
                     </section>
                 </template>
-            </main>
+            </div>
 
             <aside class="min-w-0" data-skeleton="unit-assistant">
                 <Card class="assistant-panel gap-0 overflow-hidden py-0">
@@ -123,7 +123,7 @@ const reviewPanels = computed(() =>
         </header>
 
         <WorkspaceLayout variant="review">
-            <main class="flex min-w-0 flex-col gap-6">
+            <div class="flex min-w-0 flex-col gap-6">
                 <Card v-for="section in reviewSections" :key="section" data-skeleton="review-section">
                     <CardHeader class="min-w-0 grid-cols-1">
                         <Skeleton class="h-5 w-52 max-w-full" />
@@ -138,7 +138,7 @@ const reviewPanels = computed(() =>
                         </div>
                     </CardContent>
                 </Card>
-            </main>
+            </div>
 
             <aside class="flex min-w-0 flex-col gap-6" :data-review-stage="reviewStage">
                 <Card v-for="panel in reviewPanels" :key="panel" :data-skeleton="`review-${panel}`">

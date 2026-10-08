@@ -15,6 +15,7 @@ const STEP = 16;
 const route = useRoute();
 const help = ref<ScreenHelp | null>(null);
 const open = ref(false);
+const panelId = 'ayuda-pantalla';
 const button = ref<{ $el: HTMLElement } | null>(null);
 const offset = ref({ right: 24, bottom: 24 });
 const bounds = ref({ left: 0, top: 0, right: 0, bottom: 0 });
@@ -124,7 +125,9 @@ onBeforeUnmount(() => window.removeEventListener('resize', refresh));
         aria-label="Ayuda de esta pantalla"
         aria-description="Use Alt y las flechas para mover el botón"
         aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight"
+        aria-haspopup="dialog"
         :aria-expanded="open"
+        :aria-controls="open ? panelId : undefined"
         @pointerdown="startDrag"
         @pointermove="moveDrag"
         @pointerup="endDrag"
@@ -135,7 +138,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', refresh));
         <CircleHelp aria-hidden="true" />
       </Button>
     </PopoverAnchor>
-    <PopoverContent class="flex max-h-96 w-80 flex-col gap-3 overflow-y-auto" side="top" align="end">
+    <PopoverContent :id="panelId" class="flex max-h-96 w-80 flex-col gap-3 overflow-y-auto" side="top" align="end" @close-auto-focus.prevent="button?.$el.focus()">
       <h2 class="text-sm font-semibold">{{ help.title }}</h2>
       <p v-for="(text, index) in paragraphs" :key="index" class="text-sm whitespace-pre-line text-muted-foreground">{{ text }}</p>
     </PopoverContent>

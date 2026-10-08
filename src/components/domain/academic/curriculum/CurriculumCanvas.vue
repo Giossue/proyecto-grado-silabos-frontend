@@ -54,6 +54,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { formatNumericDisplay } from "@/lib/numberDisplay";
+import { useFocusReturn } from "@/lib/focusReturn";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 import type {
@@ -151,6 +152,7 @@ const savingLayout = ref(false);
 const hasOpenEditor = computed(
   () => editingSubjectId.value !== null || draftCycle.value !== null,
 );
+useFocusReturn(() => hasOpenEditor.value);
 const editable = computed(
   () => props.editing && props.curriculum.editable && !props.curriculum.lock_reason,
 );

@@ -88,11 +88,20 @@ watch(settings, (value) => {
     saveToAccount();
 }, { deep: true });
 
+let hadSession = false;
+
 watch(() => sessionState.current.value, (session) => {
     if (!session) {
         known = '';
+        window.clearTimeout(timer);
+        if (hadSession) {
+            hadSession = false;
+            try { localStorage.removeItem(STORAGE_KEY); } catch { return; }
+            settings.value = defaultSettings();
+        }
         return;
     }
+    hadSession = true;
     const stored = session.user.accessibility;
     if (stored) {
         known = JSON.stringify(stored);

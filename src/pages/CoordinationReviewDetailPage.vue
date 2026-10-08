@@ -117,14 +117,14 @@ onMounted(load);
     <Alert v-if="data.correction_request"><Undo2 aria-hidden="true" /><AlertTitle>Corrección solicitada en esta revisión<template v-if="data.correction_request.stage"> ({{ reviewStageLabel(data.correction_request.stage).replace('En ', '') }})</template></AlertTitle><AlertDescription>{{ data.correction_request.justification }}<template v-if="data.correction_request.requested_by"> · {{ data.correction_request.requested_by }}</template></AlertDescription></Alert>
 
     <WorkspaceLayout variant="review">
-      <main class="flex min-w-0 flex-col gap-6">
+      <div class="flex min-w-0 flex-col gap-6">
         <Card v-for="section in data.revision.snapshot.sections" :id="`section-${section.key}`" :key="section.key">
           <CardHeader><CardTitle>{{ section.title }}</CardTitle><CardDescription>Contenido exacto enviado en la revisión {{ data.revision.number }}.</CardDescription></CardHeader>
           <CardContent class="flex flex-col gap-6">
             <FieldView v-for="field in sectionFields(section)" :key="field.key" :field="typed(field)" :badge="field.inherited ? 'Institucional' : undefined" />
           </CardContent>
         </Card>
-      </main>
+      </div>
 
       <aside class="flex min-w-0 flex-col gap-6">
         <Card v-if="canReviewCurrent">

@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import type { CurriculumRequirement } from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useFocusReturn } from '@/lib/focusReturn';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 defineProps<{
@@ -13,6 +14,7 @@ defineProps<{
 }>();
 const emit = defineEmits<{ select: [requirement: CurriculumRequirement] }>();
 const open = ref(false);
+useFocusReturn(() => open.value);
 
 const remove = (requirement: CurriculumRequirement): void => {
     open.value = false;
