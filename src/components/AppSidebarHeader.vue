@@ -21,8 +21,8 @@ withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTitle?: string }>
         </div>
         <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
             <NotificationsPopover />
-            <AccessibilityDialog />
             <AppearanceToggle />
+            <AccessibilityDialog />
             <NavUser />
         </div>
     </header>
