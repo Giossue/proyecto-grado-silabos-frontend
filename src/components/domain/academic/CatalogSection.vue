@@ -101,10 +101,10 @@ const {
 } = useClientPagination(() => facultyFilter.items.value);
 const careerFilter = useClientFilter(
     () => props.catalogs.careers,
-    (item) => [item.name, item.code],
+    (item) => [item.name],
     {
-        estado: {
-            matches: (item, value) => item.active === (value === 'active'),
+        campus: {
+            matches: (item, value) => item.campus_name === value,
         },
         modalidad: {
             matches: (item, value) => item.modality === value,
@@ -229,28 +229,17 @@ const {
                 :filter="careerFilter"
                 input-id="careers-search"
                 label="Buscar carrera"
-                placeholder="Buscar por nombre o código"
+                placeholder="Buscar por nombre"
             >
                 <template #filters>
                     <Field>
-                        <FieldLabel for="careers-search-state" class="sr-only"
-                            >Estado</FieldLabel
-                        >
-                        <Select v-model="careerFilter.values.estado.value">
-                            <SelectTrigger id="careers-search-state">
-                                <SelectValue placeholder="Todos los estados" />
-                            </SelectTrigger>
+                        <FieldLabel for="careers-search-campus" class="sr-only">Campus</FieldLabel>
+                        <Select v-model="careerFilter.values.campus.value">
+                            <SelectTrigger id="careers-search-campus"><SelectValue placeholder="Todos los campus" /></SelectTrigger>
                             <SelectContent>
                                 <SelectGroup>
-                                    <SelectItem value="all"
-                                        >Todos los estados</SelectItem
-                                    >
-                                    <SelectItem value="active"
-                                        >Activos</SelectItem
-                                    >
-                                    <SelectItem value="inactive"
-                                        >Inactivos</SelectItem
-                                    >
+                                    <SelectItem value="all">Todos los campus</SelectItem>
+                                    <SelectItem v-for="campus in options.campusOptions" :key="campus.value" :value="campus.value">{{ campus.label }}</SelectItem>
                                 </SelectGroup>
                             </SelectContent>
                         </Select>
