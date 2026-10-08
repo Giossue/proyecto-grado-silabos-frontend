@@ -1,5 +1,5 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getScreenHelp } from '@/api/screen-help';
 import ScreenHelpButton from '@/components/domain/ScreenHelpButton.vue';
 import { sessionState } from '@/state/session';
@@ -20,7 +20,7 @@ describe('ScreenHelpButton', () => {
     localStorage.clear();
     document.body.innerHTML = '';
     vi.mocked(getScreenHelp).mockReset();
-    sessionState.current.value = { active_role: { code: 'administrador' } } as never;
+    sessionState.replace({ active_role: { code: 'administrador' } } as never);
   });
 
   it('pide la ayuda de la pantalla y muestra su texto al pulsar el botón', async () => {

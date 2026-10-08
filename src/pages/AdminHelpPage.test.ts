@@ -1,5 +1,5 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listScreenHelp } from '@/api/screen-help';
 import AdminHelpPage from '@/pages/AdminHelpPage.vue';
 

@@ -132,7 +132,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', refresh));
         <CircleHelp aria-hidden="true" />
       </Button>
     </PopoverAnchor>
-    <PopoverContent class="flex max-h-[70vh] w-80 flex-col gap-3 overflow-y-auto" side="top" align="end">
+    <PopoverContent class="flex max-h-96 w-80 flex-col gap-3 overflow-y-auto" side="top" align="end">
       <h2 class="text-sm font-semibold">{{ help.title }}</h2>
       <p v-for="(text, index) in paragraphs" :key="index" class="text-sm whitespace-pre-line text-muted-foreground">{{ text }}</p>
     </PopoverContent>
