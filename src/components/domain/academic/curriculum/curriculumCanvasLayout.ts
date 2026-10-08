@@ -5,6 +5,8 @@ import type {
     CurriculumBuilderSubject,
 } from '@/types/academic';
 
+export type RelationMode = 'requires' | 'required-by';
+
 export type CurriculumRequirement = CurriculumBuilderProps['requirements'][number];
 
 export const UNIT_PALETTE = [
@@ -69,6 +71,8 @@ type CurriculumNodeOptions = Pick<
     savingLayout: boolean;
     draggingSubjectId: string | undefined;
     onEdit: (subjectId: string) => void;
+    onMove: (subjectId: string, delta: -1 | 1) => void;
+    onRelate: (subjectId: string, mode: RelationMode) => void;
     onSaved: (message?: string) => void;
 };
 
@@ -102,7 +106,7 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
         });
 
         let x = laneStart;
-        cycleSubjects.forEach((subject) => {
+        cycleSubjects.forEach((subject, subjectIndex) => {
             const cycleY = (cycle - 1) * laneHeight + subjectOffset;
             nodes.push({
                 id: subject.id,
@@ -119,6 +123,11 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
                     unitStyle: options.unitStyleFor(subject.organization_unit),
                     editable: options.editable,
                     onEdit: () => options.onEdit(subject.id),
+                    canMoveLeft: subjectIndex > 0 && !options.savingLayout,
+                    canMoveRight: subjectIndex < cycleSubjects.length - 1 && !options.savingLayout,
+                    onMoveLeft: () => options.onMove(subject.id, -1),
+                    onMoveRight: () => options.onMove(subject.id, 1),
+                    onRelate: (mode: RelationMode) => options.onRelate(subject.id, mode),
                     onSaved: options.onSaved,
                 },
                 draggable: options.editable && !options.hasOpenEditor && !options.savingLayout,

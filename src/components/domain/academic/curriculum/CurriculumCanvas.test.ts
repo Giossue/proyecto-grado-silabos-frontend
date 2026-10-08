@@ -135,4 +135,35 @@ describe('CurriculumCanvas', () => {
         expect(nodes().some((node) => node.id === 'add-subject-1')).toBe(false);
         expect(nodes().find((node) => node.id === 'a')?.data.editable).toBe(false);
     });
+
+    it('mueve una materia y abre la elección de relación desde el menú, sin arrastrar', async () => {
+        updateSubjectLayout.mockClear();
+        const wrapper = shallowMount(CurriculumCanvas, {
+            props: {
+                career: { id: 'career', name: 'Software', modality: null },
+                curriculum: { id: 'career', cycle_count: 1, editable: true, lock_reason: null },
+                editing: true,
+                fixedFields: [],
+                fixedFieldTotals: [],
+                subjects: [subject('a', 0), subject('b', 1)],
+                requirements: [],
+                organizationUnits: [],
+                modalityOptions: [],
+            },
+        });
+        const flow = wrapper.findComponent({ name: 'VueFlow' });
+        type NodeData = { canMoveLeft: boolean; canMoveRight: boolean; onMoveRight: () => void; onRelate: (mode: string) => void };
+        const dataOf = (id: string) => (flow.props('nodes') as Array<{ id: string; data: NodeData }>).find((node) => node.id === id)!.data;
+
+        expect(dataOf('a')).toMatchObject({ canMoveLeft: false, canMoveRight: true });
+        expect(dataOf('b')).toMatchObject({ canMoveLeft: true, canMoveRight: false });
+
+        dataOf('a').onMoveRight();
+        await flushPromises();
+        expect(updateSubjectLayout).toHaveBeenCalledWith('career', { subject_id: 'a', cycle: 1, position: 1 });
+
+        dataOf('b').onRelate('requires');
+        await nextTick();
+        expect(wrapper.findComponent({ name: 'CurriculumRelationPicker' }).props('picker')).toEqual({ subjectId: 'b', mode: 'requires' });
+    });
 });

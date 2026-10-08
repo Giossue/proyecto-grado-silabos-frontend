@@ -30,10 +30,12 @@ import {
   toRoman,
   UNIT_PALETTE,
 } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
-import type { CurriculumRequirement } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
+import type { CurriculumRequirement, RelationMode } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
 import CurriculumCycleNode from "@/components/domain/academic/curriculum/CurriculumCycleNode.vue";
 import CurriculumLegend from "@/components/domain/academic/curriculum/CurriculumLegend.vue";
 import CurriculumLegendPanel from "@/components/domain/academic/curriculum/CurriculumLegendPanel.vue";
+import CurriculumRelationPicker from "@/components/domain/academic/curriculum/CurriculumRelationPicker.vue";
+import CurriculumRequirementList from "@/components/domain/academic/curriculum/CurriculumRequirementList.vue";
 import CurriculumRequirementDialogs from "@/components/domain/academic/curriculum/CurriculumRequirementDialogs.vue";
 import CurriculumRequirementEdge from "@/components/domain/academic/curriculum/CurriculumRequirementEdge.vue";
 import CurriculumSubjectNode from "@/components/domain/academic/curriculum/CurriculumSubjectNode.vue";
@@ -259,6 +261,8 @@ const buildNodes = (): Node[] =>
     savingLayout: savingLayout.value,
     draggingSubjectId: dragPreview.value?.subjectId,
     onEdit: beginSubjectEdit,
+    onMove: (subjectId, delta) => { void moveSubject(subjectId, delta); },
+    onRelate: (subjectId, mode) => { relationPicker.value = { subjectId, mode }; },
     onSaved: (message) => {
       if (message) emit("changed", message);
     },
@@ -349,6 +353,24 @@ const onConnect = (connection: Connection): void => {
 };
 
 const selectedRequirement = ref<CurriculumRequirement | null>(null);
+const relationPicker = ref<{ subjectId: string; mode: RelationMode } | null>(null);
+
+const moveSubject = async (subjectId: string, delta: -1 | 1): Promise<void> => {
+  const subject = subjectById.value.get(subjectId);
+  if (!editable.value || savingLayout.value || !subject || typeof subject.cycle !== "number") return;
+  const cycleSubjects = subjectsForCycle(subject.cycle);
+  const index = cycleSubjects.findIndex((item) => item.id === subjectId) + delta;
+  if (index < 0 || index >= cycleSubjects.length) return;
+  savingLayout.value = true;
+  try {
+    const result = await updateSubjectLayout(props.curriculum.id, { subject_id: subjectId, cycle: subject.cycle, position: index });
+    emit("changed", result.message);
+  } catch (reason) {
+    toast.error(reason instanceof ApiError ? reason.message : "No se pudo mover la materia.");
+  } finally {
+    savingLayout.value = false;
+  }
+};
 
 watch(editable, (canEdit) => {
   if (canEdit) return;
@@ -473,6 +495,17 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     <div class="absolute top-3 right-3 z-10 max-sm:hidden">
       <CurriculumLegendPanel :units="legendUnits" :rows="summaryRows" />
     </div>
+    <CurriculumRequirementList
+      :requirements="requirements"
+      :editable="editable && !hasOpenEditor"
+      :subject-name="subjectName"
+      @select="(requirement) => (selectedRequirement = requirement)"
+    />
+    <CurriculumRelationPicker
+      v-model:picker="relationPicker"
+      :subjects="subjects"
+      @pick="(connection) => (pendingConnection = connection)"
+    />
     <Popover>
       <PopoverTrigger as-child>
         <Button

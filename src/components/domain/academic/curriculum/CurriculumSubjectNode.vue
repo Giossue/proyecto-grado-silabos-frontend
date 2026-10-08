@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { Pencil, Trash2 } from "@lucide/vue";
+import { ArrowLeft, ArrowRight, Link2, Pencil, Trash2, Unlink } from "@lucide/vue";
 import { Handle, Position } from "@vue-flow/core";
 import { computed, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
@@ -21,6 +21,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatNumericDisplay } from "@/lib/numberDisplay";
 import { cn } from "@/lib/utils";
+import type { RelationMode } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
 import type {
   CurriculumBuilderProps,
   CurriculumBuilderSubject,
@@ -36,6 +37,11 @@ const props = defineProps<{
     unitStyle: { backgroundColor: string; color: string };
     editable: boolean;
     onEdit: () => void;
+    canMoveLeft: boolean;
+    canMoveRight: boolean;
+    onMoveLeft: () => void;
+    onMoveRight: () => void;
+    onRelate: (mode: RelationMode) => void;
     onSaved: (message?: string) => void;
   };
   dragging?: boolean;
@@ -122,6 +128,22 @@ const totalFields = computed(
           <DropdownMenuItem @select="data.onEdit">
             <Pencil aria-hidden="true" />
             Editar
+          </DropdownMenuItem>
+          <DropdownMenuItem :disabled="!data.canMoveLeft" @select="data.onMoveLeft">
+            <ArrowLeft aria-hidden="true" />
+            Mover a la izquierda
+          </DropdownMenuItem>
+          <DropdownMenuItem :disabled="!data.canMoveRight" @select="data.onMoveRight">
+            <ArrowRight aria-hidden="true" />
+            Mover a la derecha
+          </DropdownMenuItem>
+          <DropdownMenuItem @select="data.onRelate('requires')">
+            <Link2 aria-hidden="true" />
+            Requiere otra materia…
+          </DropdownMenuItem>
+          <DropdownMenuItem @select="data.onRelate('required-by')">
+            <Unlink aria-hidden="true" />
+            Es requisito de otra materia…
           </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" @select="deleteOpen = true">
             <Trash2 aria-hidden="true" />
