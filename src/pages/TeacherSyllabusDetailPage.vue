@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
+import { withDisability } from '@/components/domain/syllabus/identificationCardLive';
+import type { DocumentNode } from '@/lib/templateDocument';
 import CommentEntry from '@/components/domain/CommentEntry.vue';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
@@ -89,7 +92,23 @@ const editableFieldIds = computed(() => new Set(allFields.value.map((field) => f
 /** El tipo del registro decide si el docente escribe el campo (la ficha, solo si es ajustable). */
 // El servidor manda `teacher_editable`: un dato heredado (p. ej. la formación del perfil) no se escribe en el sílabo.
 const isTeacherField = (field: SyllabusField): boolean => field.teacher_editable !== false && (fieldTypeEntry(field.type)?.teacherEditable(fieldConfig(field)) ?? false);
-const typed = (field: SyllabusField): TypedField => field;
+const fieldText = (field: SyllabusField | undefined): string =>
+  field && field.value && typeof field.value === 'object' && 'type' in field.value ? freeTextPlain(field.value as DocumentNode).trim() : '';
+const typed = (field: SyllabusField): TypedField => {
+  if (field.type !== 'automatico' || fieldConfig(field).source !== 'identification_card' || !field.document || !syllabus.value) return field;
+  const fields = syllabus.value.sections.flatMap((section) => section.fields);
+  const disability = fields.filter(isDisabilityField);
+  if (disability.length === 0) return field;
+
+  return {
+    ...field,
+    document: withDisability(field.document as DocumentNode, {
+      has: hasDisability(fields),
+      type: fieldText(fields.find((item) => item.key === 'discapacidad_tipo')),
+      description: fieldText(fields.find((item) => item.key === 'discapacidad_adaptacion')),
+    }),
+  };
+};
 /** Los datos que el docente escribe dentro de la tabla de identificación se piden justo bajo ella; en la revisión y el Word solo aparece la tabla. */
 // Discapacidad: un «Sí/No» decide si se piden el tipo y la descripción (campos opcionales dentro de la tabla de identificación).
 const isDisabilityField = (field: SyllabusField): boolean => isEmbeddedField(field) && fieldConfig(field).optional === true;
