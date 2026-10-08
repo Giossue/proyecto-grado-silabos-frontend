@@ -56,10 +56,13 @@ describe('LibraryReviewsPage', () => {
     expect(getLibraryReviews).toHaveBeenCalledWith({ q: '', state: 'pendiente', page: 1 });
     expect(replace).toHaveBeenCalledWith({ query: { state: 'pendiente' } });
     const row = wrapper.findAll('tbody tr')[0]!;
+    const headers = wrapper.findAll('thead th').map((header) => header.text());
+    expect(wrapper.get('#library-search').attributes('placeholder')).toBe('Buscar por asignatura o código');
+    expect(headers).toEqual(['Asignatura', 'Carrera', 'Docente', 'Estado']);
     expect(row.text()).toContain('Arquitectura de Software');
     expect(row.text()).toContain('SW-601');
     expect(row.text()).toContain('Software');
-    expect(row.text()).toContain('A, B');
+    expect(row.text()).not.toContain('A, B');
     expect(wrapper.text()).toContain('Revisiones de biblioteca - ');
     expect(row.text()).not.toContain('N.º');
     expect(row.text()).toContain('Con comentario');

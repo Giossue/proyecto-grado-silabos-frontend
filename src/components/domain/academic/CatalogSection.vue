@@ -110,7 +110,7 @@ const {
                 :filter="facultyFilter"
                 input-id="faculties-search"
                 label="Buscar facultad"
-                placeholder="Buscar por nombre"
+                placeholder="Buscar por nombre o campus"
             >
                 <template #filters>
                     <Field>

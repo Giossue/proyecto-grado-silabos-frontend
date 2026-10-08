@@ -72,7 +72,7 @@ onMounted(() => { void load(); });
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :actions="false" />
     <Card v-else-if="data"><CardContent class="flex flex-col gap-4">
-      <ClientFilterBar :filter="filter" input-id="career-project-search" label="Buscar materia" placeholder="Buscar por materia o código">
+      <ClientFilterBar :filter="filter" input-id="career-project-search" label="Buscar por materia, código o ciclo" placeholder="Buscar por materia, código o ciclo">
         <template #filters>
           <Field><FieldLabel for="career-project-state" class="sr-only">Estado de la ficha</FieldLabel>
             <Select v-model="filter.values.estado.value"><SelectTrigger id="career-project-state"><SelectValue placeholder="Todas las fichas" /></SelectTrigger>
