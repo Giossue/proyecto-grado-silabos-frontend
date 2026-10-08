@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { withoutEndPeriod } from '@/lib/text';
 import { Pencil } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import type { ManagedUser } from '@/api/admin-users';
@@ -53,24 +52,10 @@ const saved = (message: string): void => {
 };
 
 const status = computed(() => {
-    if (!props.user.active) {
-        return {
-            label: 'Inactivo',
-            hint: 'La cuenta está desactivada y no puede iniciar sesión.',
-        };
-    }
+    if (!props.user.active) return { label: 'Inactivo', dot: 'bg-muted-foreground' };
+    if (props.user.pending_activation) return { label: 'Pendiente de activación', dot: 'bg-warning' };
 
-    if (props.user.pending_activation) {
-        return {
-            label: 'Pendiente de activación',
-            hint: 'La cuenta espera que su titular abra la invitación y defina su contraseña.',
-        };
-    }
-
-    return {
-        label: 'Activo',
-        hint: 'La cuenta está en uso y su titular ya definió su contraseña.',
-    };
+    return { label: 'Activo', dot: 'bg-success' };
 });
 
 const scopeOf = (assignment: ManagedUserRoleAssignment): string =>
@@ -97,9 +82,9 @@ const currentAssignments = computed(() =>
                 <dl class="grid gap-3 text-sm">
                     <div class="flex flex-col gap-1">
                         <dt class="font-semibold">Estado</dt>
-                        <dd class="flex flex-col items-start gap-1">
+                        <dd class="flex items-center gap-2">
+                            <span :class="['size-2 rounded-full', status.dot]" aria-hidden="true" />
                             <span>{{ status.label }}</span>
-                            <span>{{ withoutEndPeriod(status.hint) }}</span>
                         </dd>
                     </div>
                     <div class="flex flex-col gap-1">
@@ -125,9 +110,9 @@ const currentAssignments = computed(() =>
                     <p v-if="currentAssignments.length === 0" class="text-sm">
                         Sin rol vigente: la cuenta no accede a ningún módulo.
                     </p>
-                    <ul v-else class="flex flex-col gap-3 text-sm">
-                        <li v-for="assignment in currentAssignments" :key="assignment.id" class="flex flex-col gap-1">
-                            <span>{{ assignment.role_name }}</span>
+                    <ul v-else class="flex flex-col gap-4 text-sm">
+                        <li v-for="assignment in currentAssignments" :key="assignment.id" class="flex flex-col gap-0.5 border-l-2 border-primary/40 pl-3">
+                            <span class="font-semibold">{{ assignment.role_name }}</span>
                             <span>{{ scopeOf(assignment) }}</span>
                         </li>
                     </ul>
