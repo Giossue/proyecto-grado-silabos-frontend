@@ -260,8 +260,8 @@ describe('TemplateVisualBuilder', () => {
   it('bloquea todo el constructor con un proceso abierto', async () => {
     mountBuilder({ processLock: 'proceso' });
     expect(body().textContent).not.toContain('Hay un proceso abierto');
-    expect(byText('button', 'Nueva sección')!.hasAttribute('disabled')).toBe(true);
+    expect(byText('button', 'Nueva sección')).toBeUndefined();
     expect(body().querySelector<HTMLButtonElement>('[aria-label="Bajar la sección Uno"]')!.disabled).toBe(true);
-    expect(byText('button', 'Agregar campo')!.hasAttribute('disabled')).toBe(true);
+    expect(byText('button', 'Agregar campo')).toBeUndefined();
   });
 });

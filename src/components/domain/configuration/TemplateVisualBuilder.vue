@@ -203,7 +203,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
       <template v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id">
       <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 flex-col gap-3">
-        <TemplateInsertPoint v-if="!preview && (sectionIndex === 0 || (sections[sectionIndex - 1]?.fields.length ?? 0) === 0)" :disabled="locked" :actions="[{ key: 'section', label: 'Nueva sección' }]" position="top" gap="section" @insert="sectionDialog = { open: true, section: null, index: sectionIndex }" />
+        <TemplateInsertPoint v-if="!preview && !locked && (sectionIndex === 0 || (sections[sectionIndex - 1]?.fields.length ?? 0) === 0)" :disabled="locked" :actions="[{ key: 'section', label: 'Nueva sección' }]" position="top" gap="section" @insert="sectionDialog = { open: true, section: null, index: sectionIndex }" />
         <h3 v-if="preview" class="font-bold">{{ section.title }}</h3>
         <div v-else data-section-heading :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
           <span aria-hidden="true" :class="cn('pointer-events-none absolute top-0.5 right-full mr-2 whitespace-nowrap rounded bg-primary px-1.5 py-0.5 font-sans text-xs font-medium text-primary-foreground group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">Sección</span>
@@ -219,8 +219,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         <ol class="flex flex-col gap-3">
           <template v-for="(field, fieldIndex) in fields" :key="field.id">
           <li :data-field="field.id" :data-field-kind="field.type" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
-            <TemplateInsertPoint v-if="!preview" :disabled="locked" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="top" gap="field" @insert="fieldDialog = { open: true, sectionId: section.id, field: null, index: fieldIndex }" />
-            <TemplateInsertPoint v-if="!preview && fieldIndex === fields.length - 1" :disabled="locked" :actions="[{ key: 'section', label: 'Nueva sección' }, { key: 'field', label: 'Agregar campo' }]" position="bottom" gap="field" @insert="insertAfterLastField($event, section.id, sectionIndex)" />
+            <TemplateInsertPoint v-if="!preview && !locked" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="top" gap="field" @insert="fieldDialog = { open: true, sectionId: section.id, field: null, index: fieldIndex }" />
+            <TemplateInsertPoint v-if="!preview && !locked && fieldIndex === fields.length - 1" :actions="[{ key: 'section', label: 'Nueva sección' }, { key: 'field', label: 'Agregar campo' }]" position="bottom" gap="field" @insert="insertAfterLastField($event, section.id, sectionIndex)" />
             <span v-if="!preview" aria-hidden="true" :class="cn('pointer-events-none absolute top-1 right-full mr-2 whitespace-nowrap rounded bg-primary px-1.5 py-0.5 font-sans text-xs font-medium text-primary-foreground group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">Campo</span>
             <TemplateFieldContent v-if="preview" :field="field" preview />
             <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -->
@@ -236,7 +236,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
           </li>
           </template>
         </ol>
-        <p v-if="fields.length === 0 && !preview" class="relative py-1 text-sm text-muted-foreground">Sección sin campos.<TemplateInsertPoint :disabled="locked" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="inline" gap="field" @insert="fieldDialog = { open: true, sectionId: section.id, field: null }" /></p>
+        <p v-if="fields.length === 0 && !preview" class="relative py-1 text-sm text-muted-foreground">Sección sin campos.<TemplateInsertPoint v-if="!locked" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="inline" gap="field" @insert="fieldDialog = { open: true, sectionId: section.id, field: null }" /></p>
       </section>
       </template>
 
