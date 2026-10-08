@@ -4,8 +4,10 @@ import { computed, ref } from "vue"
 import { useVModel } from "@vueuse/core"
 import { Search } from "@lucide/vue"
 import { cn } from "@/lib/utils"
+import { useFieldControl } from "@/components/ui/field/fieldContext"
 
 defineOptions({ inheritAttrs: false })
+const control = useFieldControl()
 
 const props = defineProps<{
   defaultValue?: string | number
@@ -42,7 +44,7 @@ defineExpose({ clear: () => { if (input.value) input.value.value = '' } })
     type="file"
     data-slot="input"
     :class="classes"
-    v-bind="$attrs"
+    v-bind="{ ...$attrs, ...control }"
   >
   <div v-else-if="type === 'search'" class="relative w-full min-w-0">
     <Search
@@ -54,7 +56,7 @@ defineExpose({ clear: () => { if (input.value) input.value.value = '' } })
       type="search"
       data-slot="input"
       :class="classes"
-      v-bind="$attrs"
+      v-bind="{ ...$attrs, ...control }"
     >
   </div>
   <input
@@ -63,6 +65,6 @@ defineExpose({ clear: () => { if (input.value) input.value.value = '' } })
     :type="type"
     data-slot="input"
     :class="classes"
-    v-bind="$attrs"
+    v-bind="{ ...$attrs, ...control }"
   >
 </template>

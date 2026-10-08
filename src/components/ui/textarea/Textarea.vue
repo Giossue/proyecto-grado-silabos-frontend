@@ -2,6 +2,10 @@
 import type { HTMLAttributes } from "vue"
 import { useVModel } from "@vueuse/core"
 import { cn } from "@/lib/utils"
+import { useFieldControl } from "@/components/ui/field/fieldContext"
+
+defineOptions({ inheritAttrs: false })
+const control = useFieldControl()
 
 const props = defineProps<{
   class?: HTMLAttributes["class"]
@@ -22,6 +26,7 @@ const modelValue = useVModel(props, "modelValue", emits, {
 <template>
   <textarea
     v-model="modelValue"
+    v-bind="{ ...$attrs, ...control }"
     data-slot="textarea"
     :class="cn('border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/30 aria-invalid:border-destructive flex field-sizing-content min-h-16 w-full rounded-md border bg-background px-3 py-2 text-base shadow-control transition-[color,box-shadow] outline-none focus-visible:ring-3 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm', props.class)"
   />

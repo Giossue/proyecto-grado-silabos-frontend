@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from "vue"
-import { computed } from "vue"
+import { computed, inject } from "vue"
 import { cn } from "@/lib/utils"
+import { fieldContextKey } from "./fieldContext"
 
 const props = defineProps<{
   class?: HTMLAttributes["class"]
   errors?: Array<string | { message: string | undefined } | undefined>
 }>()
+
+const field = inject(fieldContextKey, null)
 
 const content = computed(() => {
   if (!props.errors || props.errors.length === 0)
@@ -35,6 +38,7 @@ const content = computed(() => {
   <div
     v-if="$slots.default || content"
     role="alert"
+    :id="field?.errorId"
     data-slot="field-error"
     :class="cn('text-destructive text-sm font-normal', props.class)"
   >

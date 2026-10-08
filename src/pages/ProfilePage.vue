@@ -94,11 +94,13 @@ const resendVerification = async (): Promise<void> => {
                         required
                         autocomplete="name"
                         placeholder="Ej. MARÍA JOSÉ PÉREZ LÓPEZ"
+                        :aria-invalid="Boolean(errors.nombre)"
+                        :aria-describedby="errors.nombre ? 'name-error' : undefined"
                     />
                     <p class="text-sm text-muted-foreground">
                         Primero los nombres y luego los apellidos.
                     </p>
-                    <InputError class="mt-2" :message="errors.nombre" />
+                    <InputError id="name-error" class="mt-2" :message="errors.nombre" />
                 </div>
 
                 <div class="grid gap-2">
@@ -112,12 +114,14 @@ const resendVerification = async (): Promise<void> => {
                         required
                         autocomplete="username"
                         placeholder="Ej. maria.perez@ueb.edu.ec"
+                        :aria-invalid="Boolean(errors.correo_electronico)"
+                        :aria-describedby="errors.correo_electronico ? 'email-error' : undefined"
                         :disabled="user.email_verified"
                     />
                     <p v-if="user.email_verified" class="text-sm text-muted-foreground">
                         La cuenta ya fue activada: su correo no se puede cambiar.
                     </p>
-                    <InputError class="mt-2" :message="errors.correo_electronico" />
+                    <InputError id="email-error" class="mt-2" :message="errors.correo_electronico" />
                 </div>
 
                 <div v-if="!user.email_verified">
