@@ -45,19 +45,19 @@ const reason = computed(() => {
     <Alert class="w-fit max-w-full border-primary/20 bg-accent text-accent-foreground">
         <Lock class="text-primary" aria-hidden="true" />
         <AlertTitle>{{ headline }}</AlertTitle>
-        <AlertDescription class="flex flex-wrap items-center gap-x-3 gap-y-1 text-accent-foreground/80">
-            <span>{{ summary }}</span>
-            <span class="flex flex-wrap items-center gap-2">
+        <AlertDescription class="flex flex-col items-start gap-2 text-accent-foreground/80">
+            <span class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>{{ summary }}</span>
                 <Popover v-if="reason">
                     <PopoverTrigger as-child>
                         <Button type="button" variant="link" size="sm" class="h-auto p-0">¿Por qué?</Button>
                     </PopoverTrigger>
                     <PopoverContent align="start" class="w-80 text-sm">{{ reason }}</PopoverContent>
                 </Popover>
-                <Button v-if="!hideAction" as-child size="sm" variant="outline">
-                    <RouterLink :to="href">Ir a Convocatorias</RouterLink>
-                </Button>
             </span>
+            <Button v-if="!hideAction" as-child size="sm" variant="outline">
+                <RouterLink :to="href">Ir a Convocatorias</RouterLink>
+            </Button>
         </AlertDescription>
     </Alert>
 </template>
