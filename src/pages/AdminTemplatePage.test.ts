@@ -83,7 +83,7 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.get('[data-sheet]').text()).toContain('Cambiar logo');
     expect(wrapper.get('input[type="file"][accept="image/png"]').attributes('name')).toBe('logo');
     expect(wrapper.get('[data-sheet] h2').classes()).toContain('template-sheet-title');
-    expect(wrapper.get('[data-field="field-1"] .template-sheet-box').element).toBeTruthy();
+    expect(wrapper.find('[data-field="field-1"] .template-sheet-box').exists()).toBe(false);
   });
 
   it("pone la hoja directo sobre el fondo de la página, sin contenedor gris", async () => {

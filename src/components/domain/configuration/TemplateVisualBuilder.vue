@@ -89,7 +89,6 @@ const confirmRemoval = (): Promise<void> => {
 };
 
 const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo sin nombre';
-const boxed = (field: TemplateField): boolean => ['texto', 'fijo'].includes(field.type);
 const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.adminLabel ?? field.type;
 </script>
 
@@ -140,7 +139,7 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
                 <span v-else class="text-xs italic text-muted-foreground">Campo sin nombre</span>
                 <span class="ml-auto max-w-full shrink-0 rounded bg-muted px-1.5 py-0.5 text-left text-xs font-normal text-muted-foreground [overflow-wrap:anywhere]" data-field-type>{{ typeLabel(field) }}</span>
               </div>
-              <div :class="cn('pointer-events-none min-w-0 max-w-full', boxed(field) && 'template-sheet-box')">
+              <div class="pointer-events-none min-w-0 max-w-full">
                 <component :is="fieldTypeEntry(field.type)!.ViewComponent" v-if="fieldTypeEntry(field.type) && field.type !== 'ficha'" :field="typed(field)" />
                 <FreeTextContent v-else-if="field.type !== 'ficha'" :value="null" />
               </div>
