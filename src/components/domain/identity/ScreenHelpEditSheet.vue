@@ -58,7 +58,7 @@ const remove = async (): Promise<void> => {
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
             <Field :data-invalid="Boolean(errors.title)"><FieldLabel for="screen-help-title" required>Título</FieldLabel><Input id="screen-help-title" v-model="form.title" required /><FieldError :errors="errors.title" /></Field>
             <Field :data-invalid="Boolean(errors.content)"><FieldLabel for="screen-help-content" required>Texto</FieldLabel><Textarea id="screen-help-content" v-model="form.content" rows="8" required /><FieldError :errors="errors.content" /></Field>
-            <Field><BooleanChoice v-model="form.active" label="Mostrar la ayuda" /></Field>
+            <Field><FieldLabel as="span">¿Mostrar la ayuda en la pantalla?</FieldLabel><BooleanChoice v-model="form.active" label="Mostrar la ayuda en la pantalla" /></Field>
             <FormSheetActions :close="close" :processing="processing" :icon="Check" label="Guardar ayuda" />
             <Button v-if="help" type="button" variant="outline" :disabled="processing" @click="remove">Eliminar ayuda</Button>
         </FieldGroup></form></template>
