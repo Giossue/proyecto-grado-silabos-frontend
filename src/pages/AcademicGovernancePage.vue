@@ -7,9 +7,8 @@ import { getSession } from '@/api/session';
 import ImportSpreadsheetDialog from '@/components/domain/ImportSpreadsheetDialog.vue';
 import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
 import CatalogSection from '@/components/domain/academic/CatalogSection.vue';
-import { Building2, ChevronDown, GraduationCap, Plus } from '@lucide/vue';
+import { Building2, GraduationCap, Plus } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -48,6 +47,11 @@ const sectionContent = computed(() => ({
     facultad: { title: 'Facultades', description: 'Las facultades de la universidad y cuántas carreras tiene cada una.' },
     carrera: { title: 'Carreras', description: 'Las carreras y a qué facultad pertenece cada una.' },
 })[entity.value]);
+const createLabel = computed(() => entity.value === 'facultad' ? 'Crear facultad' : 'Crear carrera');
+const openCreationSheet = (): void => {
+    if (entity.value === 'facultad') facultyOpen.value = true;
+    else careerOpen.value = true;
+};
 
 const load = async (): Promise<void> => {
     loading.value = true; error.value = null;
@@ -77,27 +81,16 @@ onMounted(load);
                 :columns="[{ key: 'facultad', label: 'Facultad' }, { key: 'modalidad', label: 'Modalidad' }, { key: 'codigo', label: 'Código' }, { key: 'nombre', label: 'Nombre' }, { key: 'ciclos', label: 'Ciclos' }]"
                 @imported="changed"
             />
-            <DropdownMenu v-if="data">
-                <DropdownMenuTrigger as-child>
-                    <Button type="button" class="w-full max-sm:size-14 max-sm:rounded-full max-sm:p-0 sm:w-auto" aria-label="Crear">
-                        <Plus data-icon="inline-start" aria-hidden="true" />
-                        <span class="max-sm:hidden">Crear</span>
-                        <ChevronDown class="max-sm:hidden" data-icon="inline-end" aria-hidden="true" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" class="w-max min-w-0">
-                    <DropdownMenuGroup>
-                        <DropdownMenuItem @select="facultyOpen = true">
-                            <Building2 aria-hidden="true" />
-                            Facultad
-                        </DropdownMenuItem>
-                        <DropdownMenuItem @select="careerOpen = true">
-                            <GraduationCap aria-hidden="true" />
-                            Carrera
-                        </DropdownMenuItem>
-                    </DropdownMenuGroup>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+                v-if="data"
+                type="button"
+                class="w-full max-sm:size-14 max-sm:rounded-full max-sm:p-0 sm:w-auto"
+                :aria-label="createLabel"
+                @click="openCreationSheet"
+            >
+                <Plus data-icon="inline-start" aria-hidden="true" />
+                <span class="max-sm:hidden">{{ createLabel }}</span>
+            </Button>
         </template>
 
         <Tabs :model-value="entity" class="mb-4" @update:model-value="selectTab">

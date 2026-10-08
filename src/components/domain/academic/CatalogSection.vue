@@ -47,13 +47,15 @@ const props = defineProps<
 >();
 const emit = defineEmits<{ changed: [message: string] }>();
 const logoPreview = ref<{ name: string; url: string } | null>(null);
+const logoPreviewOpen = ref(false);
 
 const openLogoPreview = (name: string, url: string): void => {
     logoPreview.value = { name, url };
+    logoPreviewOpen.value = true;
 };
 
 const updateLogoPreviewOpen = (open: boolean): void => {
-    if (!open) logoPreview.value = null;
+    logoPreviewOpen.value = open;
 };
 
 const facultyNames = computed(
@@ -309,7 +311,7 @@ const {
         </CardContent>
     </Card>
 
-    <Dialog :open="Boolean(logoPreview)" @update:open="updateLogoPreviewOpen">
+    <Dialog :open="logoPreviewOpen" @update:open="updateLogoPreviewOpen">
         <DialogContent class="pr-14 sm:max-w-3xl">
             <DialogClose as-child>
                 <Button type="button" variant="ghost" size="icon-sm" class="absolute top-4 right-4" aria-label="Cerrar vista del logo">

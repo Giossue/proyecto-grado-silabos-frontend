@@ -14,7 +14,7 @@ const units = (): ReturnType<typeof unitsOf> => {
 <template>
   <div class="units-field-view flex flex-col gap-6">
     <section v-for="(unit, index) in units()" :key="index" class="overflow-x-auto rounded-md border" :aria-label="`Unidad ${index + 1}`">
-      <Table>
+      <Table class="border-collapse [&_td:not(:last-child)]:border-r [&_th:not(:last-child)]:border-r">
         <TableHeader>
           <TableRow><TableHead>Unidad No. {{ index + 1 }}</TableHead><TableHead colspan="8">{{ unit.nombre || 'Sin nombre' }}</TableHead></TableRow>
           <TableRow><TableHead>Resultados de aprendizaje</TableHead><TableHead colspan="8" class="font-normal whitespace-pre-wrap">{{ unit.resultado }}</TableHead></TableRow>
