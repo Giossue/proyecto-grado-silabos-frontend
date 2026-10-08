@@ -32,8 +32,8 @@ describe('contrato de rutas', () => {
     expect(roleDocuments(unknown, 'revision-1')).toBe(paths.roleSelection);
   });
 
-  it('envía a Docencia directamente a sus sílabos al entrar', () => {
-    expect(roleEntry('docente')).toBe(paths.teacher.syllabi);
+  it('envía cada rol a su panel al entrar', () => {
+    expect(roleEntry('docente')).toBe(paths.teacher.panel);
     expect(roleEntry('coordinador')).toBe(paths.coordination.panel);
     expect(roleEntry('bibliotecario')).toBe(paths.library.panel);
     expect(roleEntry(undefined)).toBe(paths.roleSelection);
@@ -56,6 +56,11 @@ describe('contrato de rutas', () => {
       component: 'TeacherSyllabusDetailPage',
       states: ['resumen', 'edicion', 'ia', 'envio'],
       layout: 'syllabus-editor',
+      roles: ['docente'],
+      requiresAuth: true,
+    });
+    expect(routeRegistry.find((route) => route.name === 'teacher-panel')).toMatchObject({
+      component: 'DashboardPage',
       roles: ['docente'],
       requiresAuth: true,
     });

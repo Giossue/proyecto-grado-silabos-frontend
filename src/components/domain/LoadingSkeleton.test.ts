@@ -79,9 +79,10 @@ describe('LoadingSkeleton', () => {
   });
 
   it('actualiza la superficie al cambiar el rol activo durante la carga', async () => {
-    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole: 'coordinador' } });
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole: 'docente' } });
 
     expect(wrapper.find('[data-skeleton="dashboard-deadline"]').exists()).toBe(true);
+    expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(true);
 
     await wrapper.setProps({ dashboardRole: 'bibliotecario' });
 

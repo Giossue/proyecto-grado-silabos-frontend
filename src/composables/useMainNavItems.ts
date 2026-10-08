@@ -52,7 +52,10 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
               ]
             : []),
         ...(activeRole.value?.code === 'docente'
-            ? [{ title: 'Mis sílabos', href: paths.teacher.syllabi, icon: BookOpenCheck }]
+            ? [
+                  { title: 'Panel', href: paths.teacher.panel, icon: LayoutGrid },
+                  { title: 'Mis sílabos', href: paths.teacher.syllabi, icon: BookOpenCheck },
+              ]
             : []),
         ...(activeRole.value?.code === 'bibliotecario'
             ? [

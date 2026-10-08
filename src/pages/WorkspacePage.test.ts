@@ -52,14 +52,14 @@ describe('WorkspacePage', () => {
     sessionState.clear();
   });
 
-  it('continúa en Mis sílabos cuando el docente ya eligió su ámbito', async () => {
+  it('continúa en el Panel cuando el docente ya eligió su ámbito', async () => {
     const role = teacherRole('role-1', 'Software');
     vi.mocked(getSession).mockResolvedValue(sessionFor([role]));
 
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(replace).toHaveBeenCalledWith('/docente/mis-silabos');
+    expect(replace).toHaveBeenCalledWith('/docente/panel');
     expect(selectActiveRole).not.toHaveBeenCalled();
     wrapper.unmount();
   });
@@ -78,7 +78,7 @@ describe('WorkspacePage', () => {
     wrapper.unmount();
   });
 
-  it('muestra una tarjeta por carrera docente y lleva a sus sílabos', async () => {
+  it('muestra una tarjeta por carrera docente y lleva a su Panel', async () => {
     const roles = [teacherRole('role-1', 'Software'), teacherRole('role-2', 'Turismo')];
     vi.mocked(getSession).mockResolvedValue(sessionFor(roles, null));
     vi.mocked(selectActiveRole).mockResolvedValue(sessionFor(roles, roles[1]));
@@ -95,7 +95,7 @@ describe('WorkspacePage', () => {
     await flushPromises();
 
     expect(selectActiveRole).toHaveBeenCalledWith('role-1');
-    expect(replace).toHaveBeenCalledWith('/docente/mis-silabos');
+    expect(replace).toHaveBeenCalledWith('/docente/panel');
     wrapper.unmount();
   });
 

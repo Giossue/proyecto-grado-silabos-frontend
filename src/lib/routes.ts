@@ -67,8 +67,7 @@ export const paths = {
   },
   teacher: {
     root: '/docente',
-    // Docencia no tiene panel: su inicio es Mis sílabos.
-    panel: '/docente/mis-silabos',
+    panel: '/docente/panel',
     notifications: '/docente/notificaciones',
     profile: '/docente/configuracion/perfil',
     security: '/docente/configuracion/seguridad',
@@ -145,7 +144,7 @@ export const roleHome = (role: RoleCode | undefined): string => {
 
 export const roleEntry = (role: RoleCode | undefined): string => {
   if (!role) return paths.roleSelection;
-  return role === 'docente' ? paths.teacher.syllabi : roleHome(role);
+  return roleHome(role);
 };
 
 export type RoleScopedSetting = 'profile' | 'security';
@@ -231,6 +230,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-teachers', path: paths.coordination.teachers, component: 'CoordinationAcademicStructurePage', states: ['teachers'], breadcrumb: 'Docentes', ...coordinator },
   { name: 'coordination-documents', path: '/coordinacion/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...coordinator },
 
+  { name: 'teacher-panel', path: paths.teacher.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...teacher },
   { name: 'teacher-notifications', path: paths.teacher.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...teacher },
   { name: 'teacher-profile', path: paths.teacher.profile, component: 'ProfilePage', shortcut: 'profile', ...teacher },
   { name: 'teacher-security', path: paths.teacher.security, component: 'SecurityPage', shortcut: 'security', ...teacher },

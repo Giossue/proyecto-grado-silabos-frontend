@@ -35,6 +35,8 @@ const mountShell = async () => {
     routes: [
       { path: '/panel', component: { template: '<div />' } },
       { path: '/admin/panel', component: { template: '<div />' } },
+      { path: '/docente/panel', component: { template: '<div />' } },
+      { path: '/docente/mis-silabos', component: { template: '<div />' } },
       { path: '/notificaciones', component: { template: '<div />' } },
       { path: '/configuracion/seguridad', component: { template: '<div />' } },
       { path: '/administracion/usuarios', component: { template: '<div />' } },
@@ -119,7 +121,7 @@ describe('AppSidebarLayout', () => {
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Bibliotecario');
   });
 
-  it('muestra la cuenta en el encabezado y retira el acceso al Panel para docente', async () => {
+  it('muestra el Panel y Mis sílabos para docente', async () => {
     sessionState.replace({
       ...administratorSession,
       active_role: { id: 'role-docente', code: 'docente', career_id: 'career-1', career_name: 'Software' },
@@ -128,9 +130,8 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
-    expect(sidebar.text()).not.toContain('Panel');
-    expect(sidebar.find('a[href="/dashboard"]').exists()).toBe(false);
-    expect(wrapper.find('a[href="/dashboard"]').exists()).toBe(false);
+    expect(sidebar.get('a[href="/docente/panel"]').text()).toContain('Panel');
+    expect(sidebar.get('a[href="/docente/mis-silabos"]').text()).toContain('Mis sílabos');
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Software');
     expect(wrapper.find('header [role="progressbar"]').exists()).toBe(false);
     expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
