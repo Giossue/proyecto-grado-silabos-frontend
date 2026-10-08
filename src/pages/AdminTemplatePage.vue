@@ -109,7 +109,15 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <LoadingSkeleton v-if="loading" variant="template" />
+    <PageFrame
+        v-if="loading"
+        title="Plantilla de sílabo"
+        description="El formato del sílabo: secciones y campos."
+        size="wide"
+        :header-width="SHEET_WIDTH"
+    >
+        <LoadingSkeleton variant="template" />
+    </PageFrame>
 
     <PageFrame
         v-else-if="loadError"

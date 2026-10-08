@@ -171,15 +171,7 @@ const reviewPanels = computed(() =>
         </WorkspaceLayout>
     </div>
 
-    <div v-else-if="variant === 'template'" class="mx-auto flex w-full min-w-0 flex-col gap-6 p-4 sm:p-6">
-        <header class="mx-auto flex w-full max-w-198 min-w-0 items-start gap-3" data-skeleton="template-heading">
-            <Skeleton class="size-11 shrink-0 rounded-lg" />
-            <div class="flex min-w-0 flex-col gap-2">
-                <Skeleton class="h-8 w-64 max-w-full" />
-                <Skeleton class="h-5 w-160 max-w-full" />
-                <Skeleton class="h-5 w-96 max-w-full sm:hidden" />
-            </div>
-        </header>
+    <div v-else-if="variant === 'template'" class="mx-auto flex w-full min-w-0 flex-col gap-6">
         <div class="flex min-w-0 flex-col gap-6" data-skeleton="template-pages">
             <div class="min-w-0 overflow-x-auto py-4">
             <article class="template-sheet" data-skeleton="template-page" data-orientation="portrait">

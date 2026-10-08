@@ -65,8 +65,8 @@ const minimumWidth = computed(() =>
                 </div>
             </div>
 
-            <div class="flex flex-col gap-4 sm:hidden" data-skeleton="table-mobile">
-                <div v-for="row in rows" :key="row" data-skeleton="table-card" class="flex min-w-0 flex-col gap-6 rounded-lg border p-4 odd:bg-card even:bg-muted/50">
+            <div class="flex flex-col gap-4 rounded-lg bg-background p-3 sm:hidden" data-skeleton="table-mobile">
+                <div v-for="row in rows" :key="row" data-skeleton="table-card" class="flex min-w-0 flex-col gap-6 rounded-lg border border-input p-4 shadow-surface odd:bg-card even:bg-secondary">
                     <div v-for="cell in columnCount - (actions ? 1 : 0)" :key="cell" class="flex min-w-0 flex-col gap-1.5">
                         <Skeleton class="h-3 w-20" />
                         <Skeleton class="h-4 w-5/6" />
