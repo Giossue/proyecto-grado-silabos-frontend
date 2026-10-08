@@ -220,17 +220,6 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }]"
         @imported="handleAssignmentChanged"
       />
-      <ImportSpreadsheetDialog
-        v-if="mode === 'schedule' && schedule?.selectedPeriodId"
-        title="Importar materias y asignaciones"
-        description="Cree paralelos del período seleccionado y asigne su docente. El docente es opcional."
-        endpoint="/coordination/academic/scheduled-import"
-        template-endpoint="/coordination/academic/scheduled-import-template"
-        template-name="plantilla-materias-y-asignaciones.xlsx"
-        :columns="[{ key: 'materia', label: 'Código de materia' }, { key: 'paralelo', label: 'Paralelo' }, { key: 'jornada', label: 'Jornada' }, { key: 'docente', label: 'Correo del docente' }]"
-        :extra="{ period_id: schedule.selectedPeriodId }"
-        @imported="handleAssignmentChanged"
-      />
       <Button v-if="mode === 'teachers' && assignments?.canCreateTeacher" @click="teacherOpen = true"><UserPlus data-icon="inline-start" aria-hidden="true" />Crear docente</Button>
       <Button
         v-if="mode === 'curriculum' && curriculum"
