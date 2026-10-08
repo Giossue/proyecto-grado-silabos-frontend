@@ -18,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import RobotAvatar from '@/components/domain/ai/avatar/RobotAvatar.vue';
 import { useAvatarController } from '@/components/domain/ai/avatar/useAvatarController';
-import { toast } from '@/lib/toast';
+import { renderChatMarkdown } from '@/components/domain/ai/chatMarkdown';
 
 const props = defineProps<{ syllabusId: string; enabled: boolean; saving: boolean }>();
 const chat = ref<AiChat | null>(null);
@@ -75,10 +75,7 @@ const send = async (): Promise<void> => {
         if (request === generation) error.value = reason instanceof ApiError ? reason.message : 'No se pudo enviar la consulta. Puedes volver a intentarlo.';
     } finally { if (request === generation) sending.value = false; }
 };
-const copy = async (content: string): Promise<void> => {
-    try { await navigator.clipboard.writeText(content); toast.success('Respuesta copiada.'); }
-    catch { toast.error('No se pudo copiar. Selecciona el texto de la respuesta para copiarlo.'); }
-};
+const ChatMarkdown = (props: { text: string }) => renderChatMarkdown(props.text);
 watch(() => props.syllabusId, () => {
     generation += 1;
     stop();
@@ -125,11 +122,11 @@ onBeforeUnmount(() => { generation += 1; stop(); });
                 <Message v-for="item in messages" :key="item.id" :from="item.role === 'usuario' ? 'user' : 'assistant'" class="min-w-0 max-w-full">
                     <MessageContent class="min-w-0 max-w-full">
                         <p class="text-xs font-medium text-muted-foreground">{{ item.role === 'usuario' ? 'Tú' : 'Asistente' }}</p>
-                        <p v-if="item.content" class="whitespace-pre-wrap break-words">{{ item.content }}</p>
+                        <div v-if="item.content && item.role === 'asistente'" class="flex flex-col gap-2 break-words"><ChatMarkdown :text="item.content" /></div>
+                        <p v-else-if="item.content" class="whitespace-pre-wrap break-words">{{ item.content }}</p>
                         <p v-if="['pendiente', 'en_ejecucion'].includes(item.status)" role="status" class="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />Preparando una propuesta…</p>
                         <Alert v-if="item.status === 'fallido'" variant="destructive"><AlertDescription>{{ item.error ?? 'No se pudo generar una respuesta. Envía la consulta otra vez.' }}</AlertDescription></Alert>
                         <EvidenceDisclosure v-for="citation in item.citations" :key="citation.id" :label="citation.label" :excerpt="citation.excerpt" />
-                        <Button v-if="item.role === 'asistente' && item.status === 'completado' && item.content" type="button" variant="outline" size="sm" class="self-start" @click="copy(item.content)">Copiar respuesta</Button>
                     </MessageContent>
                 </Message>
             </ConversationContent>

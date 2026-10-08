@@ -62,7 +62,7 @@ describe('SyllabusUnitAssistant', () => {
     expect(evidence.attributes('aria-expanded')).toBe('false');
     await evidence.trigger('click');
     expect(wrapper.get('blockquote').text()).toBe('Evalúa la calidad del software.');
-    expect(wrapper.text()).toContain('Copiar respuesta');
+    expect(wrapper.text()).not.toContain('Copiar respuesta');
     expect(wrapper.text()).not.toContain('Revisar con IA');
     expect(wrapper.text()).not.toContain('Aplicar recomendación');
   });
