@@ -52,10 +52,10 @@ const setSize = (value: string): void => { settings.value.textSize = value as Te
         </div>
       </div>
       <DialogFooter>
-        <Button type="button" variant="outline" @click="reset"><RotateCcw data-icon="inline-start" aria-hidden="true" />Restablecer</Button>
         <DialogClose as-child>
           <Button type="button" variant="outline">Cerrar</Button>
         </DialogClose>
+        <Button type="button" @click="reset"><RotateCcw data-icon="inline-start" aria-hidden="true" />Restablecer</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
