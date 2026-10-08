@@ -20,8 +20,10 @@ const action = computed<FreeTextAction | undefined>(() => openFormation?.value
 </template>
 
 <style scoped>
-.automatic-card { max-width: 100%; overflow-x: auto; font-size: 7.5pt; }
+.automatic-card { max-width: 100%; overflow-x: auto; font-size: 0.875rem; }
 .automatic-card :deep(.free-text-content) { font-size: inherit; }
 .automatic-card :deep(.free-text-table) { table-layout: fixed; }
-.automatic-card :deep(.free-text-table td) { overflow-wrap: anywhere; padding: 0.1rem 0.25rem; }
+.automatic-card :deep(.free-text-table td),
+.automatic-card :deep(.free-text-table th) { overflow-wrap: anywhere; padding: 0.375rem 0.5rem; background-color: transparent !important; color: var(--foreground) !important; border-color: var(--border); }
+.automatic-card :deep(.free-text-table [style]) { color: inherit !important; background-color: transparent !important; }
 </style>
