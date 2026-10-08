@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarClock, Pause, Play, Square, Trash2 } from '@lucide/vue';
+import { CalendarClock, Pause, Play, Trash2 } from '@lucide/vue';
 import { ref, type Component } from 'vue';
 import { ApiError } from '@/api/client';
 import { deleteProcess, transitionProcess, type SyllabusProcess, type SyllabusStateCounts } from '@/api/processes';
@@ -19,7 +19,7 @@ import {
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 
-type Transition = 'pausar' | 'reanudar' | 'cerrar';
+type Transition = 'pausar' | 'reanudar';
 
 const props = withDefaults(defineProps<{ process: SyllabusProcess; menu?: boolean }>(), { menu: true });
 const emit = defineEmits<{
@@ -47,13 +47,6 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
     description: 'Los envíos vuelven a admitirse y la plantilla vuelve a quedar protegida.',
     label: 'Reanudar',
     icon: Play,
-  },
-  cerrar: {
-    title: 'Finalizar la convocatoria',
-    description: 'Ningún sílabo de esta convocatoria podrá enviarse después. Esta acción no se deshace.',
-    label: 'Finalizar',
-    icon: Square,
-    destructive: true,
   },
 };
 
@@ -98,7 +91,7 @@ const openDelete = (event: Event): void => {
   deleteOpen.value = true;
 };
 
-const run = (key: 'pausar' | 'reanudar' | 'cerrar' | 'prorrogar' | 'eliminar'): void => {
+const run = (key: 'pausar' | 'reanudar' | 'prorrogar' | 'eliminar'): void => {
   if (key === 'prorrogar') deadlineOpen.value = true;
   else if (key === 'eliminar') { deleteError.value = null; deleteOpen.value = true; }
   else pending.value = key;
