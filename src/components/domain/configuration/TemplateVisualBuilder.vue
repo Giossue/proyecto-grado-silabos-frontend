@@ -96,7 +96,8 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
   <div class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
-    <article v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" data-sheet :class="cn('template-sheet', sheet.landscape && 'template-sheet--landscape')">
+    <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto py-4" tabindex="0" role="region" :aria-label="`Hoja ${sheetIndex + 1} de la plantilla con desplazamiento horizontal`">
+    <article data-sheet :class="cn('template-sheet', sheet.landscape && 'template-sheet--landscape')">
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
           <TemplateLogoControl :logo-url="logos.institution" :disabled="locked" />
@@ -158,6 +159,7 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
 
       <Button v-if="sections.length > 0 && sheetIndex === sheets.length - 1" type="button" variant="outline" class="self-start border-dashed" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
     </article>
+    </div>
 
     <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" :designs="designs" @saved="emit('changed')" />
     <TemplateFieldDialog v-model:open="fieldDialog.open" :template-id="template.id" :section-id="fieldDialog.sectionId" :field="fieldDialog.field" :used-keys="usedFieldKeys" @saved="emit('changed')" />

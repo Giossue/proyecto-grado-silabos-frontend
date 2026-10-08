@@ -2,6 +2,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import TableLoadingSkeleton from './TableLoadingSkeleton.vue';
 
 const props = withDefaults(
     defineProps<{
@@ -88,7 +89,8 @@ const props = withDefaults(
                     <Skeleton v-for="filter in mode === 'schedule' ? 3 : 1" :key="filter" class="h-9 w-full lg:w-44" />
                 </div>
             </div>
-            <div class="min-w-0 overflow-x-auto" :data-skeleton="mode === 'schedule' ? 'scheduled-subjects' : 'teachers'">
+            <TableLoadingSkeleton class="sm:hidden" :rows="rows" :columns="mode === 'schedule' ? 6 : 4" :pagination="false" />
+            <div class="hidden min-w-0 overflow-x-auto sm:block" :data-skeleton="mode === 'schedule' ? 'scheduled-subjects' : 'teachers'">
                 <div
                     :class="cn(
                         'grid grid-cols-(--layout-table-skeleton-mobile-columns) items-center gap-4 border-b bg-muted px-2 py-3',
@@ -138,7 +140,7 @@ const props = withDefaults(
                 <Skeleton class="h-4 w-28" />
                 <div class="flex items-center gap-2">
                     <Skeleton class="size-9 sm:w-24" />
-                    <Skeleton class="size-9" />
+                    <Skeleton class="h-5 w-32 sm:size-9" />
                     <Skeleton class="size-9 sm:w-24" />
                 </div>
             </div>

@@ -78,6 +78,25 @@ test('el desplazamiento de dos dedos mueve la malla sin cambiar el zoom', async 
     expect((await transform()).zoom).toBeCloseTo(before.zoom, 3);
 });
 
+test('la malla cargada conserva controles y desplazamiento sin desbordar en móvil y tablet', async ({ page }) => {
+    await mountCanvas(page);
+    for (const dark of [false, true]) {
+        await page.evaluate(enabled => document.documentElement.classList.toggle('dark', enabled), dark);
+        for (const width of [320, 360, 768, 1440, 720]) {
+            await page.setViewportSize({ width, height: 900 });
+            await expect(page.locator('.vue-flow')).toBeVisible();
+            expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+            for (const name of ['Acercar la malla', 'Alejar la malla']) {
+                const control = page.getByRole('button', { name, exact: true });
+                await expect(control).toBeVisible();
+                const bounds = await control.boundingBox();
+                expect(bounds!.x).toBeGreaterThanOrEqual(0);
+                expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
+            }
+        }
+    }
+});
+
 for (const responseStatus of [200, 500]) {
     test(`al arrastrar conserva el ciclo y ${responseStatus === 200 ? 'ajusta' : 'restaura'} la posición`, async ({ page, context }) => {
         await context.addCookies([{ name: 'XSRF-TOKEN', value: 'test', domain: '127.0.0.1', path: '/' }]);

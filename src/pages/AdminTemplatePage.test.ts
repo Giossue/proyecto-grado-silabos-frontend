@@ -93,7 +93,11 @@ describe("AdminTemplatePage", () => {
     const region = wrapper.get('[aria-label="Constructor visual de la plantilla del sílabo"]');
     expect(wrapper.find('.template-stage').exists()).toBe(false);
     expect(region.classes().some((name) => /^(bg-|rounded|p-|px-|py-)/.test(name))).toBe(false);
-    expect(wrapper.get('[data-sheet]').element.parentElement).toBe(region.element);
+    const scrollRegion = wrapper.get('[aria-label="Hoja 1 de la plantilla con desplazamiento horizontal"]');
+    expect(scrollRegion.classes()).toContain('overflow-x-auto');
+    expect(scrollRegion.attributes('tabindex')).toBe('0');
+    expect(scrollRegion.element.parentElement).toBe(region.element);
+    expect(wrapper.get('[data-sheet]').element.parentElement).toBe(scrollRegion.element);
   });
 
   it("avisa que reanudar rehace los sílabos si la plantilla cambió durante la pausa", async () => {

@@ -181,6 +181,7 @@ const reviewPanels = computed(() =>
             </div>
         </header>
         <div class="flex min-w-0 flex-col gap-6" data-skeleton="template-pages">
+            <div class="min-w-0 overflow-x-auto py-4">
             <article class="template-sheet" data-skeleton="template-page" data-orientation="portrait">
                 <div class="flex items-center justify-between gap-6">
                     <Skeleton class="h-10 w-32 max-w-2/5" />
@@ -202,7 +203,9 @@ const reviewPanels = computed(() =>
                 </div>
                 <Skeleton class="h-8 w-32" />
             </article>
+            </div>
 
+            <div class="min-w-0 overflow-x-auto py-4">
             <article class="template-sheet template-sheet--landscape" data-skeleton="template-page" data-orientation="landscape">
                 <Skeleton class="h-5 w-1/2 max-w-full" />
                 <div class="flex min-w-0 flex-col gap-2 rounded-sm px-2 py-1 outline outline-1 outline-dashed outline-muted-foreground">
@@ -221,6 +224,7 @@ const reviewPanels = computed(() =>
                 </div>
                 <Skeleton class="h-8 w-32" />
             </article>
+            </div>
         </div>
     </div>
 

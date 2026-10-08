@@ -30,6 +30,7 @@ defineSlots<{
             <Button
                 type="button"
                 data-slot="table-actions"
+                data-table-actions
                 variant="ghost"
                 size="icon-sm"
                 :aria-label="label"
@@ -45,4 +46,3 @@ defineSlots<{
         </DropdownMenuContent>
     </DropdownMenu>
 </template>
-

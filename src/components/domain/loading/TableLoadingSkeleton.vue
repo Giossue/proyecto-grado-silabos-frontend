@@ -45,8 +45,8 @@ const minimumWidth = computed(() =>
             </div>
         </div>
 
-        <div class="min-w-0 overflow-hidden rounded-md border" data-skeleton="table-content">
-            <div class="hidden overflow-x-auto sm:block" data-skeleton="table-desktop">
+        <div class="min-w-0" data-skeleton="table-content">
+            <div class="hidden overflow-x-auto rounded-md border sm:block" data-skeleton="table-desktop">
                 <div :style="{ minWidth: minimumWidth }">
                     <div class="grid h-10 items-center gap-4 border-b bg-muted px-2" :style="{ gridTemplateColumns: gridColumns }">
                         <div v-for="column in columnCount" :key="column" class="min-w-0">
@@ -65,17 +65,14 @@ const minimumWidth = computed(() =>
                 </div>
             </div>
 
-            <div class="sm:hidden" data-skeleton="table-mobile">
-                <div class="grid h-10 grid-cols-(--layout-table-skeleton-mobile-columns) items-center gap-2 border-b bg-muted px-2">
-                    <Skeleton class="h-3.5 w-3/4" />
-                    <Skeleton class="h-3.5 w-2/3" />
-                </div>
-                <div v-for="row in rows" :key="row" class="grid min-h-14 grid-cols-(--layout-table-skeleton-mobile-columns) items-center gap-2 border-b px-2 py-3 last:border-b-0 odd:bg-card even:bg-muted/50">
-                    <div v-for="cell in 2" :key="cell" class="flex min-w-0 flex-col gap-1.5">
-                        <Skeleton class="h-3.5 w-5/6" />
-                        <Skeleton v-for="line in Math.max(1, cellLines - 1)" :key="line" class="h-3 w-2/3" />
+            <div class="flex flex-col gap-4 sm:hidden" data-skeleton="table-mobile">
+                <div v-for="row in rows" :key="row" data-skeleton="table-card" class="flex min-w-0 flex-col gap-6 rounded-lg border p-4 odd:bg-card even:bg-muted/50">
+                    <div v-for="cell in columnCount - (actions ? 1 : 0)" :key="cell" class="flex min-w-0 flex-col gap-1.5">
+                        <Skeleton class="h-3 w-20" />
+                        <Skeleton class="h-4 w-5/6" />
+                        <Skeleton v-for="line in Math.max(0, cellLines - 1)" :key="line" class="h-3 w-2/3" />
                     </div>
-                    <Skeleton v-if="columns > 2" class="h-8 w-full" />
+                    <div v-if="actions" class="flex items-center justify-between border-t pt-3"><Skeleton class="h-3 w-20" /><Skeleton class="size-8" /></div>
                 </div>
             </div>
         </div>
@@ -84,7 +81,7 @@ const minimumWidth = computed(() =>
             <Skeleton class="h-4 w-28" />
             <div class="flex items-center gap-1">
                 <Skeleton class="size-9 sm:w-24" />
-                <Skeleton class="size-9" />
+                <Skeleton class="h-5 w-32 sm:size-9" />
                 <Skeleton class="size-9 sm:w-24" />
             </div>
         </div>

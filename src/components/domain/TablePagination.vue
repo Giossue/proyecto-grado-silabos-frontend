@@ -40,21 +40,23 @@ const changePage = (page: number): void => {
       class="mx-0 w-auto justify-start sm:justify-end"
       @update:page="changePage"
     >
-      <PaginationContent v-slot="{ items }">
+      <PaginationContent v-slot="{ items }" class="flex-wrap">
         <PaginationPrevious aria-label="Página anterior">
           <ChevronLeft aria-hidden="true" />
           <span class="hidden sm:inline">Anterior</span>
         </PaginationPrevious>
+        <span class="px-2 text-sm sm:hidden" aria-live="polite">Página {{ meta.current_page }} de {{ meta.last_page }}</span>
         <template v-for="(item, index) in items" :key="index">
           <PaginationItem
             v-if="item.type === 'page'"
             :value="item.value"
             :is-active="item.value === meta.current_page"
             :aria-label="`Ir a la página ${item.value}`"
+            class="hidden sm:inline-flex"
           >
             {{ item.value }}
           </PaginationItem>
-          <PaginationEllipsis v-else />
+          <PaginationEllipsis v-else class="hidden sm:flex" />
         </template>
         <PaginationNext aria-label="Página siguiente">
           <span class="hidden sm:inline">Siguiente</span>

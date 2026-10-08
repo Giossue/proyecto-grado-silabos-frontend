@@ -25,7 +25,7 @@ const region = computed(
 </script>
 
 <template>
-    <div class="relative w-full">
+    <div class="relative w-full min-w-0">
         <div
             ref="container"
             data-slot="table-container"
@@ -36,6 +36,7 @@ const region = computed(
         >
             <table
                 data-slot="table"
+                role="table"
                 :data-overflows="overflows ? 'true' : 'false'"
                 :data-cards="props.cards ? 'true' : 'false'"
                 :class="cn('w-full caption-bottom text-sm', props.class)"
@@ -58,4 +59,3 @@ const region = computed(
         />
     </div>
 </template>
-

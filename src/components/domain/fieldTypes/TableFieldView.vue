@@ -8,7 +8,7 @@ defineProps<{ field: TypedField }>();
 
 <template>
   <div class="table-field-view overflow-x-auto rounded-md border">
-    <Table>
+    <Table :cards="false">
       <TableHeader>
         <TableRow>
           <TableHead class="w-32"><span class="sr-only">Fila</span></TableHead>

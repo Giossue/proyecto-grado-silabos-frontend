@@ -14,9 +14,9 @@ provide(tableSectionKey, 'body')
 <template>
   <tbody
     data-slot="table-body"
+    role="rowgroup"
     :class="cn('[&_tr:last-child]:border-0', props.class)"
   >
     <slot />
   </tbody>
 </template>
-
