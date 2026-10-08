@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Pencil, Plus, Settings2, Sparkles, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Settings2, Sparkles, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import type { SectionDesign, TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { deleteField, deleteSection, reorderFields, reorderSections } from '@/api/template-structure';
 import TemplateLogoControl from '@/components/domain/configuration/TemplateLogoControl.vue';
 import TemplateFieldDialog from '@/components/domain/configuration/TemplateFieldDialog.vue';
+import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
 import TemplateSectionDialog from '@/components/domain/configuration/TemplateSectionDialog.vue';
 import { apiMessage } from '@/components/domain/configuration/templateStructure';
 import TemplateTitleActions from '@/components/domain/configuration/TemplateTitleActions.vue';
-import FreeTextContent from '@/components/domain/fieldTypes/FreeTextContent.vue';
-import { fieldTypeEntry, sectionFields } from '@/components/domain/fieldTypes/registry';
+import { sectionFields } from '@/components/domain/fieldTypes/registry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
-import type { TypedField } from '@/types/configuration';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 
@@ -25,11 +25,12 @@ const emit = defineEmits<{ changed: []; format: [] }>();
 type Editable = { openEdit: () => void };
 const titleActions = ref<Editable | null>(null);
 const locked = computed(() => Boolean(props.processLock));
+const preview = ref(false);
+const previewLabel = computed(() => preview.value ? 'Salir de la vista previa de toda la plantilla' : 'Vista previa de toda la plantilla');
 const selectedField = ref<string | null>(null);
 const selectedSection = ref<string | null>(null);
 const selectField = (id: string): void => { selectedField.value = id; selectedSection.value = null; };
 const selectSection = (id: string): void => { selectedSection.value = id; selectedField.value = null; };
-const typed = (field: TemplateField): TypedField => ({ id: field.id, key: field.key, label: field.label, help: field.help, type: field.type, config: field.config, value: null, document: field.document ?? null });
 const busy = ref(false);
 const error = ref<string | null>(null);
 
@@ -89,28 +90,35 @@ const confirmRemoval = (): Promise<void> => {
 };
 
 const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo sin nombre';
-const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.adminLabel ?? field.type;
 </script>
 
 <template>
+  <TooltipProvider>
   <div class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
     <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto py-4" tabindex="0" role="region" :aria-label="`Hoja ${sheetIndex + 1} de la plantilla con desplazamiento horizontal`">
-    <article data-sheet :class="cn('template-sheet', sheet.landscape && 'template-sheet--landscape')">
+    <article data-sheet :data-preview="preview" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button type="button" variant="ghost" size="icon" class="absolute top-2 right-2" :aria-label="previewLabel" :aria-pressed="preview" @click="preview = !preview"><EyeOff v-if="preview" aria-hidden="true" /><Eye v-else aria-hidden="true" /></Button>
+        </TooltipTrigger>
+        <TooltipContent>{{ previewLabel }}</TooltipContent>
+      </Tooltip>
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
-          <TemplateLogoControl :logo-url="logos.institution" :disabled="locked" />
+          <img v-if="preview" :src="logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain">
+          <TemplateLogoControl v-else :logo-url="logos.institution" :disabled="locked" />
           <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain">
         </div>
-        <div class="group relative flex items-center justify-center rounded-sm px-2 py-1 outline-offset-2 hover:outline hover:outline-1 hover:outline-primary/40">
+        <div :class="cn('relative flex items-center justify-center rounded-sm px-2 py-1', !preview && 'group outline-offset-2 hover:outline hover:outline-1 hover:outline-primary/40')">
           <h2 class="template-sheet-title">{{ template.titleBlock.text }}</h2>
-          <Button type="button" variant="outline" size="sm" class="absolute -top-3 right-0 bg-background opacity-0 group-hover:opacity-100 focus-visible:opacity-100" :disabled="locked" @click="titleActions?.openEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar título</Button>
+          <Button v-if="!preview" type="button" variant="outline" size="sm" class="absolute -top-3 right-0 bg-background opacity-0 group-hover:opacity-100 focus-visible:opacity-100" :disabled="locked" @click="titleActions?.openEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar título</Button>
         </div>
       </header>
-      <TemplateTitleActions v-if="sheetIndex === 0" ref="titleActions" :template-id="template.id" :title="template.titleBlock.text" />
+      <TemplateTitleActions v-if="sheetIndex === 0 && !preview" ref="titleActions" :template-id="template.id" :title="template.titleBlock.text" />
 
-      <div v-if="sections.length === 0 && sheetIndex === 0" class="flex flex-1 flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border p-8 text-center">
+      <div v-if="sections.length === 0 && sheetIndex === 0 && !preview" class="flex flex-1 flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border p-8 text-center">
         <p class="text-base font-medium">Esta hoja está en blanco</p>
         <p class="max-w-sm text-sm text-muted-foreground">La plantilla no tiene secciones. Cargue el formato oficial o agregue la primera sección.</p>
         <div class="flex flex-wrap justify-center gap-2">
@@ -120,8 +128,9 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
       </div>
 
       <section v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id" :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="flex min-w-0 flex-col gap-3">
-        <p v-if="sheet.landscape" class="-mb-1 text-xs italic text-muted-foreground">Hoja horizontal</p>
-        <div :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
+        <p v-if="sheet.landscape && !preview" class="-mb-1 text-xs italic text-muted-foreground">Hoja horizontal</p>
+        <h3 v-if="preview" class="font-bold">{{ sectionIndex + 1 }}. {{ section.title }}</h3>
+        <div v-else :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
           <Button type="button" variant="ghost" class="h-auto w-full min-w-0 justify-start whitespace-normal px-0 py-0 text-left font-bold [overflow-wrap:anywhere] hover:bg-transparent" :aria-pressed="selectedSection === section.id" :aria-label="`Sección ${section.title}`" @click="selectSection(section.id)">{{ sectionIndex + 1 }}. {{ section.title }}</Button>
           <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
             <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === 0" :aria-label="`Subir la sección ${section.title}`" @click="moveSection(sectionIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
@@ -132,20 +141,13 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
         </div>
 
         <ol class="flex flex-col gap-3">
-          <li v-for="(field, fieldIndex) in fields" :key="field.id" :data-field="field.id" :class="cn('group relative min-w-0 rounded-sm px-2 py-1 outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60')">
+          <li v-for="(field, fieldIndex) in fields" :key="field.id" :data-field="field.id" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
+            <TemplateFieldContent v-if="preview" :field="field" preview />
             <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -->
-            <Button as="div" variant="ghost" role="button" tabindex="0" class="h-auto w-full min-w-0 cursor-pointer flex-col items-stretch gap-1 whitespace-normal rounded-sm p-0 text-left font-normal hover:bg-transparent" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
-              <div class="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
-                <h4 v-if="field.label.trim()" class="min-w-0 break-words font-bold [overflow-wrap:anywhere]">{{ field.label }}</h4>
-                <span v-else class="text-xs italic text-muted-foreground">Campo sin nombre</span>
-                <span class="ml-auto max-w-full shrink-0 rounded bg-muted px-1.5 py-0.5 text-left text-xs font-normal text-muted-foreground [overflow-wrap:anywhere]" data-field-type>{{ typeLabel(field) }}</span>
-              </div>
-              <div class="pointer-events-none min-w-0 max-w-full">
-                <component :is="fieldTypeEntry(field.type)!.ViewComponent" v-if="fieldTypeEntry(field.type) && field.type !== 'ficha'" :field="typed(field)" />
-                <FreeTextContent v-else-if="field.type !== 'ficha'" :value="null" />
-              </div>
+            <Button v-else as="div" variant="ghost" role="button" tabindex="0" class="h-auto w-full min-w-0 cursor-pointer flex-col items-stretch gap-1 whitespace-normal rounded-sm p-0 text-left font-normal hover:bg-transparent" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
+              <TemplateFieldContent :field="field" class="pointer-events-none" />
             </Button>
-            <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">
+            <div v-if="!preview" :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">
               <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === 0" :aria-label="`Subir el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
               <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === fields.length - 1" :aria-label="`Bajar el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
               <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Propiedades del campo ${fieldName(field)}`" @click="selectedField = field.id; fieldDialog = { open: true, sectionId: section.id, field }"><Settings2 aria-hidden="true" /></Button>
@@ -153,11 +155,11 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
             </div>
           </li>
         </ol>
-        <p v-if="fields.length === 0" class="text-sm text-muted-foreground">Sección sin campos.</p>
-        <Button type="button" variant="outline" size="sm" class="self-start border-dashed" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
+        <p v-if="fields.length === 0 && !preview" class="text-sm text-muted-foreground">Sección sin campos.</p>
+        <Button v-if="!preview" type="button" variant="outline" size="sm" class="self-start border-dashed" :disabled="locked" @click="fieldDialog = { open: true, sectionId: section.id, field: null }"><Plus data-icon="inline-start" aria-hidden="true" />Agregar campo</Button>
       </section>
 
-      <Button v-if="sections.length > 0 && sheetIndex === sheets.length - 1" type="button" variant="outline" class="self-start border-dashed" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
+      <Button v-if="sections.length > 0 && sheetIndex === sheets.length - 1 && !preview" type="button" variant="outline" class="self-start border-dashed" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
     </article>
     </div>
 
@@ -181,4 +183,5 @@ const typeLabel = (field: TemplateField): string => fieldTypeEntry(field.type)?.
       </DialogContent>
     </Dialog>
   </div>
+  </TooltipProvider>
 </template>

@@ -22,46 +22,8 @@ const props = withDefaults(
         data-skeleton="curriculum-canvas"
         class="curriculum-canvas relative h-(--curriculum-canvas-height) min-h-136 overflow-hidden rounded-lg border bg-(--curriculum-canvas-background) shadow-surface"
     >
-        <div class="absolute inset-0 flex items-center p-4">
-            <div class="flex w-full min-w-184 flex-col gap-4">
-                <div
-                    v-for="cycle in 4"
-                    :key="cycle"
-                    data-skeleton="curriculum-level"
-                    class="grid h-28 grid-cols-(--layout-curriculum-skeleton-columns) gap-3 overflow-hidden rounded-md border bg-(--curriculum-lane)"
-                >
-                    <div class="flex flex-col items-center justify-center gap-2 border-r bg-(--curriculum-cycle-chrome)">
-                        <Skeleton class="h-2 w-6" />
-                        <Skeleton class="h-4 w-4" />
-                    </div>
-                    <div
-                        v-for="subject in 4"
-                        :key="subject"
-                        class="my-3 flex min-w-0 flex-col overflow-hidden rounded-md bg-card shadow-surface ring-1 ring-surface-ring"
-                    >
-                        <div class="flex min-h-0 flex-1">
-                            <div class="flex w-6 shrink-0 items-center justify-center border-r">
-                                <Skeleton class="h-7 w-2" />
-                            </div>
-                            <div class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 p-2">
-                                <Skeleton class="h-2 w-full" />
-                                <Skeleton class="h-2 w-3/4" />
-                            </div>
-                        </div>
-                        <div class="flex justify-center border-t py-1"><Skeleton class="h-1.5 w-1/2" /></div>
-                        <div class="grid grid-cols-4 divide-x border-t bg-muted/40">
-                            <div v-for="metric in 4" :key="metric" class="flex flex-col items-center gap-1 py-1">
-                                <Skeleton class="h-1.5 w-3" />
-                                <Skeleton class="h-1.5 w-2" />
-                            </div>
-                        </div>
-                    </div>
-                    <div v-for="total in 2" :key="total" class="flex flex-col items-center justify-center gap-2 border-l bg-(--curriculum-cycle-chrome)">
-                        <Skeleton class="h-2 w-7" />
-                        <Skeleton class="h-3 w-5" />
-                    </div>
-                </div>
-            </div>
+        <div class="absolute inset-0 flex items-start justify-center p-4">
+            <Skeleton data-skeleton="curriculum-level" class="h-full w-full max-w-3xl" />
         </div>
         <div class="absolute top-3 right-3 hidden w-64 flex-col gap-3 rounded-md bg-card/90 p-3 shadow-surface ring-1 ring-surface-ring sm:flex">
             <div class="flex items-center justify-between"><Skeleton class="h-3 w-28" /><Skeleton class="size-5" /></div>
