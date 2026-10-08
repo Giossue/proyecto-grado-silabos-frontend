@@ -13,6 +13,7 @@ export type SheetAction = {
     icon: Component;
     destructive?: boolean;
     disabled?: boolean;
+    disabledReason?: string;
     loading?: boolean;
 };
 
@@ -25,22 +26,26 @@ const emit = defineEmits<{ select: [key: string] }>();
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger as-child>
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        :class="cn(actions[0].destructive && 'text-destructive hover:bg-destructive/10 hover:text-destructive')"
-                        :aria-label="actions[0].label"
-                        :disabled="actions[0].disabled || actions[0].loading"
-                        @click="emit('select', actions[0].key)"
-                    >
-                        <Spinner v-if="actions[0].loading" />
-                        <component :is="actions[0].icon" v-else aria-hidden="true" />
-                    </Button>
+                    <span class="inline-flex" :tabindex="actions[0].disabled && actions[0].disabledReason ? 0 : undefined">
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            :class="cn(actions[0].destructive && 'text-destructive hover:bg-destructive/10 hover:text-destructive')"
+                            :aria-label="actions[0].label"
+                            :aria-describedby="actions[0].disabled && actions[0].disabledReason ? 'sheet-action-reason' : undefined"
+                            :disabled="actions[0].disabled || actions[0].loading"
+                            @click="emit('select', actions[0].key)"
+                        >
+                            <Spinner v-if="actions[0].loading" />
+                            <component :is="actions[0].icon" v-else aria-hidden="true" />
+                        </Button>
+                    </span>
                 </TooltipTrigger>
-                <TooltipContent>{{ actions[0].label }}</TooltipContent>
+                <TooltipContent>{{ actions[0].disabled && actions[0].disabledReason ? actions[0].disabledReason : actions[0].label }}</TooltipContent>
             </Tooltip>
         </TooltipProvider>
+        <span v-if="actions[0].disabled && actions[0].disabledReason" id="sheet-action-reason" class="sr-only">{{ actions[0].disabledReason }}</span>
     </template>
     <TableActionsMenu v-else-if="actions.length > 1" :label="menuLabel">
         <DropdownMenuItem
@@ -53,6 +58,7 @@ const emit = defineEmits<{ select: [key: string] }>();
             <Spinner v-if="action.loading" data-icon="inline-start" />
             <component :is="action.icon" v-else aria-hidden="true" />
             {{ action.label }}
+            <span v-if="action.disabled && action.disabledReason" class="sr-only"> — {{ action.disabledReason }}</span>
         </DropdownMenuItem>
     </TableActionsMenu>
 </template>

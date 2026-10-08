@@ -40,6 +40,17 @@ const setActions = (id: string, actions: Element | ComponentPublicInstance | nul
     if (actions === null) actionsById.delete(id);
     else actionsById.set(id, actions as unknown as { edit: () => void });
 };
+const careerCountByFaculty = computed(() => {
+    const counts = new Map<string, number>();
+    props.catalogs.careers.forEach((career) => counts.set(career.faculty_id, (counts.get(career.faculty_id) ?? 0) + 1));
+
+    return counts;
+});
+const facultyDeleteBlock = (facultyId: string): string | null => {
+    const count = careerCountByFaculty.value.get(facultyId) ?? 0;
+
+    return count === 0 ? null : `No se puede eliminar: tiene ${count} ${count === 1 ? 'carrera asociada' : 'carreras asociadas'}.`;
+};
 const editRecord = (id: string): void => actionsById.get(id)?.edit();
 const props = defineProps<
     Pick<AcademicStructureProps, 'catalogs' | 'options'> & {
@@ -170,6 +181,7 @@ const {
                             <CatalogActions
                                 :ref="(actions) => setActions(faculty.id, actions)"
                                 entity="facultad"
+                                :delete-blocked-reason="facultyDeleteBlock(faculty.id)"
                                 :record-id="faculty.id"
                                 :record-name="faculty.nombre"
                                 :active="faculty.activo"

@@ -35,4 +35,12 @@ describe('CatalogActions', () => {
 
     expect(document.body.querySelector('button[aria-label="Eliminar"]')).toBeNull();
   });
+
+  it('una facultad con carreras asociadas tiene Eliminar deshabilitado y dice por qué', async () => {
+    await open({ entity: 'facultad', recordName: 'Ingeniería', deleteBlockedReason: 'No se puede eliminar: tiene 2 carreras asociadas.' });
+
+    const remove = document.body.querySelector('button[aria-label="Eliminar"]') as HTMLButtonElement;
+    expect(remove.disabled).toBe(true);
+    expect(document.body.textContent).toContain('No se puede eliminar: tiene 2 carreras asociadas.');
+  });
 });

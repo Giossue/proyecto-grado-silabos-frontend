@@ -21,7 +21,7 @@ const props = defineProps<{
     startsOn?: string | null; endsOn?: string | null;
     institutionalProcess?: { id: string; state: 'abierto' | 'pausado' | 'cerrado' } | null;
     faculties: CatalogRecord[]; coordinator?: { id: string; name: string } | null;
-    coordinatorUsers?: Option[]; lockReason?: string | null;
+    coordinatorUsers?: Option[]; lockReason?: string | null; deleteBlockedReason?: string | null;
 }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const editOpen = ref(false);
@@ -33,7 +33,7 @@ const sheetActions = computed<SheetAction[]>(() => {
     const list: SheetAction[] = [];
     if (props.entity === 'periodo' && !props.institutionalProcess) list.push({ key: 'process', label: 'Abrir convocatoria', icon: CalendarPlus });
     if (props.entity === 'carrera' && props.active) list.push({ key: 'coordinator', label: props.coordinator ? 'Reemplazar coordinador' : 'Asignar coordinador', icon: UserRoundCog });
-    list.push({ key: 'delete', label: 'Eliminar', icon: Trash2, destructive: true });
+    list.push({ key: 'delete', label: 'Eliminar', icon: Trash2, destructive: true, disabled: Boolean(props.deleteBlockedReason), disabledReason: props.deleteBlockedReason ?? undefined });
 
     return list;
 });
