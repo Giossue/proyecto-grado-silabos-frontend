@@ -337,6 +337,8 @@ const pendingConnection = ref<{ sourceId: string; targetId: string } | null>(
 );
 const subjectName = (id: string | null | undefined): string =>
   (id && subjectById.value.get(id)?.name) || "materia";
+const subjectCycle = (id: string | null | undefined): number | null =>
+  (id && subjectById.value.get(id)?.cycle) || null;
 
 const onConnect = (connection: Connection): void => {
   if (
@@ -572,6 +574,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         :curriculum-id="curriculum.id"
         :editable="editable"
         :subject-name="subjectName"
+        :subject-cycle="subjectCycle"
         @changed="(message) => emit('changed', message)"
       />
     </VueFlow>

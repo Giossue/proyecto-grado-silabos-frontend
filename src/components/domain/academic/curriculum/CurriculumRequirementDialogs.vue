@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Link2, Trash2 } from '@lucide/vue';
-import { ref } from 'vue';
+import { Trash2 } from '@lucide/vue';
+import { ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import {
     createSubjectRequirement,
@@ -24,6 +24,7 @@ const props = defineProps<{
     curriculumId: string;
     editable: boolean;
     subjectName: (id: string | null | undefined) => string;
+    subjectCycle: (id: string | null | undefined) => number | null;
 }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 
@@ -52,7 +53,6 @@ const createRequirement = async (type: 'prerrequisito' | 'correquisito'): Promis
             subject_id: pending.targetId,
             type,
         });
-        toast.success(type === 'correquisito' ? 'Correquisito agregado.' : 'Prerrequisito agregado.');
         emit('changed', result.message);
     } catch (reason) {
         toast.error(reason instanceof ApiError ? reason.message : 'No se pudo crear la relación.');
@@ -61,6 +61,19 @@ const createRequirement = async (type: 'prerrequisito' | 'correquisito'): Promis
         pendingConnection.value = null;
     }
 };
+
+/** El tipo sale de los ciclos: un ciclo anterior es prerrequisito y el mismo ciclo, correquisito. */
+watch(pendingConnection, (pending) => {
+    if (!pending) return;
+    const requirementCycle = props.subjectCycle(pending.sourceId);
+    const subjectCycle = props.subjectCycle(pending.targetId);
+    if (requirementCycle === null || subjectCycle === null || requirementCycle > subjectCycle) {
+        toast.error('Una materia solo puede requerir otra de un ciclo anterior (prerrequisito) o del mismo ciclo (correquisito).');
+        pendingConnection.value = null;
+        return;
+    }
+    void createRequirement(requirementCycle < subjectCycle ? 'prerrequisito' : 'correquisito');
+});
 
 const deleteRequirement = async (): Promise<void> => {
     const requirement = selectedRequirement.value;
@@ -84,57 +97,6 @@ const deleteRequirement = async (): Promise<void> => {
 </script>
 
 <template>
-    <Dialog
-        :open="pendingConnection !== null"
-        @update:open="
-            (isOpen) => {
-                if (!isOpen) pendingConnection = null;
-            }
-        "
-    >
-        <DialogContent>
-            <DialogHeader>
-                <DialogTitle>Nueva relación académica</DialogTitle>
-                <DialogDescription>
-                    «{{ subjectName(pendingConnection?.sourceId) }}» →
-                    «{{ subjectName(pendingConnection?.targetId) }}».
-                    Prerrequisito: debe aprobarse antes. Correquisito:
-                    se cursan a la vez.
-                </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-                <DialogClose as-child>
-                    <Button
-                        type="button"
-                        variant="outline"
-                        :disabled="savingRequirement"
-                    >
-                        Cancelar
-                    </Button>
-                </DialogClose>
-                <Button
-                    type="button"
-                    variant="secondary"
-                    :disabled="savingRequirement"
-                    @click="createRequirement('correquisito')"
-                >
-                    Correquisito
-                </Button>
-                <Button
-                    type="button"
-                    :disabled="savingRequirement"
-                    @click="createRequirement('prerrequisito')"
-                >
-                    <Link2
-                        data-icon="inline-start"
-                        aria-hidden="true"
-                    />
-                    Prerrequisito
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
-
     <Dialog
         :open="selectedRequirement !== null"
         @update:open="

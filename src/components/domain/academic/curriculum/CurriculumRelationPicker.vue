@@ -19,6 +19,10 @@ const current = computed(() => props.subjects.find((subject) => subject.id === p
 const options = computed(() =>
     props.subjects
         .filter((subject) => subject.id !== picker.value?.subjectId)
+        .filter((subject) => {
+            const cycle = current.value?.cycle ?? 0;
+            return picker.value?.mode === 'requires' ? (subject.cycle ?? 0) <= cycle : (subject.cycle ?? 0) >= cycle;
+        })
         .sort((left, right) => (left.cycle ?? 0) - (right.cycle ?? 0) || left.position - right.position),
 );
 const question = computed(() => picker.value?.mode === 'requires' ? '¿Qué materia requiere?' : '¿De qué materia es requisito?');
@@ -38,7 +42,7 @@ const confirm = (): void => {
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Nueva relación académica</DialogTitle>
-                <DialogDescription>Materia: «{{ current?.name }}». Elija la otra materia y luego el tipo de relación.</DialogDescription>
+                <DialogDescription>Materia: «{{ current?.name }}». Elija la otra materia. Si está en un ciclo anterior será prerrequisito; si está en el mismo ciclo, correquisito.</DialogDescription>
             </DialogHeader>
             <Field>
                 <FieldLabel for="curriculum-relation-subject">{{ question }}</FieldLabel>
@@ -51,7 +55,7 @@ const confirm = (): void => {
             </Field>
             <DialogFooter>
                 <Button type="button" variant="outline" @click="picker = null">Cancelar</Button>
-                <Button type="button" :disabled="!chosen" @click="confirm">Continuar</Button>
+                <Button type="button" :disabled="!chosen" @click="confirm">Agregar relación</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>
