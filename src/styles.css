@@ -523,7 +523,7 @@
         padding: 1.5cm 1.3cm 1.5cm 2.5cm;
         overflow-wrap: anywhere;
         font-family: Arial, Helvetica, sans-serif;
-        font-size: 10pt;
+        font-size: 12pt;
         line-height: var(--document-line-height);
         text-align: justify;
         display: flex;
@@ -680,6 +680,6 @@
 
 /* La hoja del constructor imita el Word: el texto de los campos va a 10 pt, no al tamaño de la interfaz. */
 .template-sheet .text-sm {
-    font-size: 10pt;
+    font-size: 12pt;
     line-height: 1.3;
 }
