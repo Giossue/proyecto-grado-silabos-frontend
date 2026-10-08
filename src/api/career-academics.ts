@@ -142,10 +142,10 @@ export const getSubjectProfile = (subjectId: string) =>
   api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`);
 
 export const saveSubjectProfile = (subjectId: string, values: Record<string, DocumentNode | null>) =>
-  api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`, {
+  withPurgeConfirmation((confirmPurge) => api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`, {
     method: "PUT",
-    body: JSON.stringify({ values }),
-  });
+    body: jsonBody({ values }, confirmPurge),
+  }));
 
 export type TeacherAssignments = {
   canCreateTeacher: boolean;

@@ -1,3 +1,4 @@
+import { withPurgeConfirmation } from '@/api/career-academics';
 import { api } from '@/api/client';
 
 export type FichaImportSubject = {
@@ -32,7 +33,10 @@ export const startFichaImport = (files: File[]) => {
 };
 
 export const applyFichaImport = (id: string, subjects: string[]) =>
-  api<{ message: string }>(`/coordination/ficha-imports/${id}/apply`, { method: 'POST', body: JSON.stringify({ subjects }) });
+  withPurgeConfirmation((confirmPurge) => api<{ message: string }>(`/coordination/ficha-imports/${id}/apply`, {
+    method: 'POST',
+    body: JSON.stringify(confirmPurge ? { subjects, confirm_purge: true } : { subjects }),
+  }));
 
 export const discardFichaImport = (id: string) =>
   api<{ message: string }>(`/coordination/ficha-imports/${id}`, { method: 'DELETE' });
