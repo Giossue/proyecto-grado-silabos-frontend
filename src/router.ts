@@ -41,14 +41,6 @@ const LibraryReviewsPage = () => import("@/pages/LibraryReviewsPage.vue");
 const LibraryReviewDetailPage = () => import("@/pages/LibraryReviewDetailPage.vue");
 const NotFoundPage = () => import("@/pages/NotFoundPage.vue");
 
-const replaceParams = (target: string, route: RouteLocationNormalized): string =>
-  target.replace(/:([A-Za-z0-9_]+)/g, (_, key: string) => String(route.params[key] ?? ""));
-
-const canonicalFromAlias = (route: RouteLocationNormalized, target: string) => ({
-  path: replaceParams(target, route),
-  query: route.query,
-});
-
 const rememberProtectedDestination = (route: RouteLocationNormalized): void => {
   if (route.path === paths.roleSelection || route.path === paths.emailVerificationRequired) return;
   rememberIntendedRoute(
@@ -60,28 +52,20 @@ const rememberProtectedDestination = (route: RouteLocationNormalized): void => {
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/login", component: LoginPage, meta: { guest: true } },
-    { path: "/ingresar", component: LoginPage, meta: { guest: true, aliasTarget: "/login" } },
+    { path: "/ingresar", component: LoginPage, meta: { guest: true } },
     { path: "/recuperar-contrasena", component: PasswordRecoveryPage, meta: { guest: true } },
     { path: "/restablecer-contrasena", component: ResetPasswordPage, meta: { guest: true } },
     { path: "/activar-cuenta", component: ActivateAccountPage, meta: { shell: false } },
     { path: "/api/v1/authentication/email-verification/:user/:hash", component: VerifyEmailPage, meta: { shell: false } },
     { path: "/verificar-correo", component: VerifyEmailPage, meta: { requiresAuth: true, shell: false } },
     { path: "/verificar-dos-factores", component: TwoFactorChallengePage, meta: { guest: true } },
-    { path: "/", redirect: "/login" },
+    { path: "/", redirect: "/ingresar" },
     { path: "/rol", component: WorkspacePage, meta: { requiresAuth: true, layout: "workspace", title: "Seleccionar ámbito de trabajo" } },
 
-    { path: "/panel", component: DashboardPage, meta: { requiresAuth: true, aliasTarget: "/dashboard", title: "Panel" } },
-    { path: "/dashboard", component: DashboardPage, meta: { requiresAuth: true, shortcut: "panel", title: "Panel" } },
+    { path: "/panel", component: DashboardPage, meta: { requiresAuth: true, shortcut: "panel", title: "Panel" } },
     { path: "/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, shortcut: "notifications", title: "Notificaciones" } },
-    { path: "/fuentes", redirect: "/dashboard" },
-    { path: "/fuentes/:source", redirect: "/dashboard" },
-    { path: "/settings", redirect: "/settings/profile", meta: { requiresAuth: true } },
-    { path: "/settings/profile", component: ProfilePage, meta: { requiresAuth: true, shortcut: "profile", title: "Perfil" } },
-    { path: "/settings/security", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },
     { path: "/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, shortcut: "profile", title: "Perfil" } },
     { path: "/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },
-    { path: "/seguridad", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },
     { path: "/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, shortcut: "documents", title: "Documentos" } },
 
     { path: "/admin/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Panel" } },
@@ -104,15 +88,10 @@ export const router = createRouter({
     { path: "/coordinacion/revisiones", component: CoordinationReviewsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Revisión" } },
     { path: "/coordinacion/revisiones/:revision", component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión" } },
     { path: "/coordinacion/revisiones/:before/comparar/:after", component: CoordinationReviewComparisonPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Comparar revisiones" } },
-    { path: "/coordinacion/fuentes", redirect: "/dashboard" },
-    { path: "/coordinacion/fuentes/:source", redirect: "/dashboard" },
-    { path: "/coordinacion/estructura-academica", redirect: "/coordinacion/malla", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/proyecto-carrera", component: CoordinationCareerProjectPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Proyecto de carrera" } },
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },
     { path: "/coordinacion/materias-asignaciones", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y asignaciones" } },
     { path: "/coordinacion/docentes", component: CoordinationAcademicStructurePage, props: { mode: "teachers" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Docentes" } },
-    { path: "/coordinacion/asignaciones-docentes", redirect: "/coordinacion/docentes", meta: { requiresAuth: true, roles: ["coordinador"] } },
-    { path: "/coordinacion/materias-paralelos", redirect: "/coordinacion/materias-asignaciones", meta: { requiresAuth: true, roles: ["coordinador"] } },
     { path: "/coordinacion/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Documentos" } },
 
     { path: "/docente/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["docente"], title: "Panel" } },
@@ -130,13 +109,6 @@ export const router = createRouter({
     { path: "/biblioteca/revisiones", component: LibraryReviewsPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Revisiones de biblioteca" } },
     { path: "/biblioteca/revisiones/:revision", component: LibraryReviewDetailPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Revisión de bibliografía" } },
 
-    { path: "/administracion/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/usuarios" } },
-    { path: "/administracion/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/estructura-academica" } },
-    { path: "/administracion/procesos", component: AdminProcessesPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/convocatorias" } },
-    { path: "/administracion/plantilla", component: AdminTemplatePage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/plantilla" } },
-    { path: "/administracion/auditoria", component: AdminAuditPage, meta: { requiresAuth: true, roles: ["administrador"], aliasTarget: "/admin/auditoria" } },
-    { path: "/mis-silabos", component: TeacherSyllabiPage, meta: { requiresAuth: true, roles: ["docente"], aliasTarget: "/docente/mis-silabos" } },
-    { path: "/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], aliasTarget: "/docente/mis-silabos/:syllabus", layout: "syllabus-editor" } },
 
     { path: "/:pathMatch(.*)*", component: NotFoundPage, meta: { title: "Página no encontrada" } },
   ],
@@ -152,11 +124,6 @@ router.beforeEach(async (to) => {
       rememberIntendedRoute(to.query.redirect, intended.matched.some((record) => record.meta.requiresAuth === true));
     }
     if (!session) {
-      if (typeof to.meta.aliasTarget === "string") {
-        const query = { ...to.query };
-        delete query.redirect;
-        return { path: replaceParams(to.meta.aliasTarget, to), query };
-      }
       return true;
     }
     if (!session.user.email_verified) return paths.emailVerificationRequired;
@@ -182,8 +149,6 @@ router.beforeEach(async (to) => {
   }
 
   const code = session.active_role.code;
-  if (typeof to.meta.aliasTarget === "string") return canonicalFromAlias(to, to.meta.aliasTarget);
-
   if (typeof to.meta.shortcut === "string") {
     const shortcuts: Record<string, () => string> = {
       panel: () => resolveRoleHome(code),

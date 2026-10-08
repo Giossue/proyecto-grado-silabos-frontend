@@ -6,8 +6,7 @@ const segment = (value: string): string => encodeURIComponent(value);
 
 export const paths = {
   root: '/',
-  login: '/login',
-  loginLegacy: '/ingresar',
+  login: '/ingresar',
   passwordRecovery: '/recuperar-contrasena',
   passwordReset: '/restablecer-contrasena',
   accountActivation: '/activar-cuenta',
@@ -16,19 +15,12 @@ export const paths = {
   emailVerificationRequired: '/verificar-correo',
   twoFactorChallenge: '/verificar-dos-factores',
   roleSelection: '/rol',
-  panel: '/panel',
-  dashboard: '/dashboard',
+  dashboard: '/panel',
   notifications: '/notificaciones',
-  settings: {
-    root: '/settings',
-    profile: '/settings/profile',
-    security: '/settings/security',
-  },
   configuration: {
     profile: '/configuracion/perfil',
     security: '/configuracion/seguridad',
   },
-  security: '/seguridad',
   documents: (revision: string): string =>
     `/revisiones/${segment(revision)}/documentos`,
   admin: {
@@ -85,15 +77,6 @@ export const paths = {
     security: '/biblioteca/configuracion/seguridad',
     reviews: '/biblioteca/revisiones',
     review: (revision: string): string => `/biblioteca/revisiones/${segment(revision)}`,
-  },
-  legacy: {
-    adminUsers: '/administracion/usuarios',
-    adminAcademic: '/administracion/estructura-academica',
-    adminProcesses: '/administracion/procesos',
-    adminTemplate: '/administracion/plantilla',
-    adminAudit: '/administracion/auditoria',
-    teacherSyllabi: '/mis-silabos',
-    teacherSyllabus: (syllabus: string): string => `/mis-silabos/${segment(syllabus)}`,
   },
 } as const;
 
@@ -178,7 +161,6 @@ export type RouteDefinition = {
   guest?: boolean;
   requiresAuth?: boolean;
   layout?: 'syllabus-editor';
-  aliasOf?: string;
 };
 
 const authenticated = { requiresAuth: true } as const;
@@ -194,14 +176,9 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'email-verification-callback', path: '/api/v1/authentication/email-verification/:user/:hash', component: 'VerifyEmailPage' },
   { name: 'email-verification-required', path: paths.emailVerificationRequired, component: 'VerifyEmailPage', ...authenticated },
   { name: 'two-factor-challenge', path: paths.twoFactorChallenge, component: 'TwoFactorChallengePage', guest: true },
-  { name: 'legacy-root', path: paths.root, guest: true, aliasOf: paths.login },
   { name: 'role-selection', path: paths.roleSelection, component: 'WorkspacePage', ...authenticated },
-  { name: 'legacy-panel', path: paths.panel, component: 'DashboardPage', aliasOf: paths.dashboard, ...authenticated },
   { name: 'dashboard', path: paths.dashboard, component: 'DashboardPage', shortcut: 'panel', ...authenticated },
   { name: 'notifications', path: paths.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...authenticated },
-  { name: 'settings-profile', path: paths.settings.profile, component: 'ProfilePage', shortcut: 'profile', ...authenticated },
-  { name: 'settings-security', path: paths.settings.security, component: 'SecurityPage', shortcut: 'security', ...authenticated },
-  { name: 'settings-root', path: paths.settings.root, aliasOf: paths.settings.profile, ...authenticated },
   { name: 'profile', path: paths.configuration.profile, component: 'ProfilePage', shortcut: 'profile', ...authenticated },
   { name: 'security', path: paths.configuration.security, component: 'SecurityPage', shortcut: 'security', ...authenticated },
   { name: 'documents', path: '/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...authenticated },
@@ -248,14 +225,4 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'library-review', path: '/biblioteca/revisiones/:revision', component: 'LibraryReviewDetailPage', breadcrumb: 'Revisión de bibliografía', ...librarian },
 
 
-  { name: 'legacy-login', path: paths.loginLegacy, guest: true, aliasOf: paths.login },
-  { name: 'legacy-admin-users', path: paths.legacy.adminUsers, ...admin, aliasOf: paths.admin.users },
-  { name: 'legacy-admin-academic', path: paths.legacy.adminAcademic, ...admin, aliasOf: paths.admin.academic },
-  { name: 'legacy-admin-processes', path: paths.legacy.adminProcesses, ...admin, aliasOf: paths.admin.convocations },
-  { name: 'legacy-admin-template', path: paths.legacy.adminTemplate, ...admin, aliasOf: paths.admin.template },
-  { name: 'legacy-admin-audit', path: paths.legacy.adminAudit, ...admin, aliasOf: paths.admin.audit },
-  { name: 'legacy-teacher-syllabi', path: paths.legacy.teacherSyllabi, ...teacher, aliasOf: paths.teacher.syllabi },
-  { name: 'legacy-teacher-syllabus', path: '/mis-silabos/:syllabus', layout: 'syllabus-editor', ...teacher, aliasOf: '/docente/mis-silabos/:syllabus' },
-  { name: 'legacy-security', path: paths.security, ...authenticated, aliasOf: paths.configuration.security },
-  { name: 'legacy-coordination-academic', path: paths.coordination.academic, ...coordinator, aliasOf: paths.coordination.curriculum },
 ];

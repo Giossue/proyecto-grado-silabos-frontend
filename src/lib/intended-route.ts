@@ -3,7 +3,6 @@ import { paths, routeRegistry } from '@/lib/routes';
 const STORAGE_KEY = 'silabos.intended-route';
 
 const publicPaths: Set<string> = new Set([
-  paths.loginLegacy,
   paths.login,
   paths.passwordRecovery,
   paths.passwordReset,

@@ -14,7 +14,7 @@ const shortcutLabels: Record<NonNullable<RouteDefinition['shortcut']>, string> =
 const labelOf = (route: RouteDefinition): string => route.breadcrumb ?? (route.shortcut ? shortcutLabels[route.shortcut] : route.name);
 
 const screens = routeRegistry
-  .filter((route) => route.component !== undefined && route.requiresAuth === true && route.roles?.length === 1 && !route.aliasOf && route.layout === undefined)
+  .filter((route) => route.component !== undefined && route.requiresAuth === true && route.roles?.length === 1 && route.layout === undefined)
   .map((route) => {
     const role = route.roles?.[0] as RoleCode;
     return { key: route.path, label: labelOf(route), role, roleLabel: roleLabel(role) };

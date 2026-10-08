@@ -39,14 +39,18 @@ describe('contrato de rutas', () => {
     expect(roleEntry(undefined)).toBe(paths.roleSelection);
   });
 
-  it('identifica rutas canónicas y alias en el registro', () => {
-    expect(routeRegistry.find((route) => route.name === 'login')?.path).toBe(paths.login);
-    expect(routeRegistry.find((route) => route.name === 'legacy-login')?.aliasOf).toBe(paths.login);
+  it('usa rutas en español para el acceso y el panel', () => {
+    expect(routeRegistry.find((route) => route.name === 'login')?.path).toBe('/ingresar');
+    expect(routeRegistry.find((route) => route.name === 'dashboard')?.path).toBe('/panel');
+  });
+
+  it('no conserva rutas en inglés ni alias retirados', () => {
+    const retired = ['/login', '/dashboard', '/settings', '/fuentes', '/seguridad', '/administracion', '/mis-silabos'];
+    for (const route of routeRegistry) expect(retired.some((prefix) => route.path === prefix || route.path.startsWith(`${prefix}/`))).toBe(false);
   });
 
   it('mantiene destinos únicos y metadatos de autorización', () => {
-    const canonical = routeRegistry.filter((route) => !route.aliasOf);
-    expect(new Set(canonical.map((route) => route.path)).size).toBe(canonical.length);
+    expect(new Set(routeRegistry.map((route) => route.path)).size).toBe(routeRegistry.length);
     expect(routeRegistry.find((route) => route.name === 'admin-users')).toMatchObject({
       component: 'AdminUsersPage',
       roles: ['administrador'],

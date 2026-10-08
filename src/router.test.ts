@@ -24,7 +24,7 @@ describe('navegación por ámbito activo', () => {
   afterEach(async () => {
     sessionState.clear();
     clearIntendedRoute();
-    await router.replace('/login');
+    await router.replace('/ingresar');
   });
 
   it('reconoce la URL canónica de Administración', async () => {
@@ -33,12 +33,11 @@ describe('navegación por ámbito activo', () => {
     expect(router.currentRoute.value.fullPath).toBe('/admin/usuarios');
   });
 
-  it('normaliza el acceso histórico de la SPA al login canónico', async () => {
+  it('conserva el destino interno al pedir el acceso con redirect', async () => {
     sessionState.clear();
     await router.push('/ingresar?redirect=/admin/usuarios');
 
-    expect(router.currentRoute.value.path).toBe('/login');
-    expect(router.currentRoute.value.query.redirect).toBeUndefined();
+    expect(router.currentRoute.value.path).toBe('/ingresar');
     expect(consumeIntendedRoute()).toBe('/admin/usuarios');
   });
 
@@ -51,30 +50,23 @@ describe('navegación por ámbito activo', () => {
     expect(consumeIntendedRoute()).toBeNull();
   });
 
-  it('envía la raíz pública al login canónico', async () => {
+  it('envía la raíz pública al acceso', async () => {
     sessionState.clear();
     await router.push('/');
 
-    expect(router.currentRoute.value.path).toBe('/login');
+    expect(router.currentRoute.value.path).toBe('/ingresar');
   });
 
   it('resuelve la dirección corta del panel al área activa', async () => {
     sessionState.replace(session('coordinador'));
-    await router.push('/dashboard');
-
-    expect(router.currentRoute.value.fullPath).toBe('/coordinacion/panel');
-  });
-
-  it.each(['/fuentes', '/fuentes/documento-1', '/coordinacion/fuentes', '/coordinacion/fuentes/documento-1'])('redirige la ruta retirada %s al panel activo', async (target) => {
-    sessionState.replace(session('coordinador'));
-    await router.push(target);
+    await router.push('/panel');
 
     expect(router.currentRoute.value.fullPath).toBe('/coordinacion/panel');
   });
 
   it('resuelve la configuración genérica del monolito al área activa', async () => {
     sessionState.replace(session('docente'));
-    await router.push('/settings/profile');
+    await router.push('/configuracion/perfil');
 
     expect(router.currentRoute.value.fullPath).toBe('/docente/configuracion/perfil');
   });
@@ -94,12 +86,6 @@ describe('navegación por ámbito activo', () => {
     expect(router.currentRoute.value.fullPath).toBe('/docente/panel');
   });
 
-  it('normaliza la URL antigua de la SPA para el rol autorizado', async () => {
-    await router.push('/administracion/usuarios');
-
-    expect(router.currentRoute.value.fullPath).toBe('/admin/usuarios');
-  });
-
   it('no deja una ruta desconocida en blanco', async () => {
     await router.push('/esta-ruta-no-existe');
 
@@ -110,7 +96,7 @@ describe('navegación por ámbito activo', () => {
     sessionState.clear();
     await router.push('/admin/usuarios');
 
-    expect(router.currentRoute.value.path).toBe('/login');
+    expect(router.currentRoute.value.path).toBe('/ingresar');
     expect(router.currentRoute.value.query.redirect).toBeUndefined();
     expect(consumeIntendedRoute()).toBe('/admin/usuarios');
   });
@@ -144,7 +130,7 @@ describe('navegación por ámbito activo', () => {
   });
 
   it.each([
-    ['/dashboard', '/biblioteca/panel'],
+    ['/panel', '/biblioteca/panel'],
     ['/notificaciones', '/biblioteca/notificaciones'],
     ['/configuracion/seguridad', '/biblioteca/configuracion/seguridad'],
     ['/revisiones/revision-1/documentos', '/biblioteca/revisiones/revision-1'],
@@ -157,6 +143,7 @@ describe('navegación por ámbito activo', () => {
 
   it('lleva a Biblioteca directo a su panel al entrar', async () => {
     sessionState.replace(session('bibliotecario'));
+    await router.push('/rol');
     await router.push('/ingresar');
 
     expect(router.currentRoute.value.fullPath).toBe('/biblioteca/panel');

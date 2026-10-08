@@ -10,7 +10,7 @@ const makeRouter = async (start: string) => {
   const router = createRouter({
     history: createMemoryHistory(),
     routes: [
-      { path: '/login', component: Empty, meta: { guest: true } },
+      { path: '/ingresar', component: Empty, meta: { guest: true } },
       { path: '/activar-cuenta', component: Empty, meta: { guest: true } },
       { path: '/docente/panel', component: Empty, meta: { requiresAuth: true } },
       { path: '/rol', component: Empty, meta: { requiresAuth: true } },
@@ -39,7 +39,7 @@ describe('manejo de 401', () => {
     handleUnauthorized(router);
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(router.currentRoute.value.path).toBe('/login');
+    expect(router.currentRoute.value.path).toBe('/ingresar');
     expect(sessionState.current.value).toBeNull();
   });
 });
