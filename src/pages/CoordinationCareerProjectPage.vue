@@ -51,9 +51,11 @@ const load = async (): Promise<void> => {
 const subjects = computed<Subject[]>(() => data.value?.options.activeSubjects ?? []);
 const statusOf = (subject: Subject): string => (subject.profile_complete ? 'Completa' : 'Incompleta');
 const cycleLabel = (subject: Subject): string => (subject.ciclo ? String(subject.ciclo) : 'Sin ciclo');
-const filter = useClientFilter(() => subjects.value, (subject) => [subject.nombre, subject.codigo_asignatura, statusOf(subject), cycleLabel(subject)], {
+const filter = useClientFilter(() => subjects.value, (subject) => [subject.nombre], {
+    ciclo: { matches: (subject, value) => cycleLabel(subject) === value },
     estado: { matches: (subject, value) => (value === 'complete' ? Boolean(subject.profile_complete) : !subject.profile_complete) },
 });
+const cycleOptions = computed(() => [...new Set(subjects.value.map(cycleLabel))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })));
 const { items, meta, setPage } = useClientPagination(() => filter.items.value);
 const open = (subject: Subject): void => {
     selected.value = subject;
@@ -72,10 +74,15 @@ onMounted(() => { void load(); });
     <template #actions><FichaImportDialog :disabled="!data || Boolean(data.career.lock_reason)" @applied="saved" /></template>
     <ProcessLockAlert v-if="data?.career.lock_reason" :lock="data.career.lock" />
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :actions="false" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :actions="false" />
     <Card v-else-if="data"><CardContent class="flex flex-col gap-4">
-      <ClientFilterBar :filter="filter" input-id="career-project-search" label="Buscar por materia, código o ciclo" placeholder="Buscar por materia, código o ciclo">
+      <ClientFilterBar :filter="filter" input-id="career-project-search" label="Buscar por materia" placeholder="Buscar por materia">
         <template #filters>
+          <Field><FieldLabel for="career-project-cycle" class="sr-only">Ciclo</FieldLabel>
+            <Select v-model="filter.values.ciclo.value"><SelectTrigger id="career-project-cycle"><SelectValue placeholder="Todos los ciclos" /></SelectTrigger>
+              <SelectContent><SelectGroup><SelectItem value="all">Todos los ciclos</SelectItem><SelectItem v-for="option in cycleOptions" :key="option" :value="option">{{ option }}</SelectItem></SelectGroup></SelectContent>
+            </Select>
+          </Field>
           <Field><FieldLabel for="career-project-state" class="sr-only">Estado de la ficha</FieldLabel>
             <Select v-model="filter.values.estado.value"><SelectTrigger id="career-project-state"><SelectValue placeholder="Todas las fichas" /></SelectTrigger>
               <SelectContent><SelectGroup><SelectItem value="all">Todas las fichas</SelectItem><SelectItem value="complete">Completas</SelectItem><SelectItem value="incomplete">Incompletas</SelectItem></SelectGroup></SelectContent>
@@ -84,12 +91,11 @@ onMounted(() => { void load(); });
         </template>
       </ClientFilterBar>
       <Table label="Materias de la malla">
-        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Código</TableHead><TableHead>Ciclo</TableHead><TableHead>Ficha</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Ciclo</TableHead><TableHead>Ficha</TableHead></TableRow></TableHeader>
         <TableBody>
-          <TableEmpty v-if="!items.length" :colspan="4">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</TableEmpty>
+          <TableEmpty v-if="!items.length" :colspan="3">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</TableEmpty>
           <TableRow v-for="subject in items" v-else :key="subject.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="activateRow($event, () => open(subject))" @keydown.enter.self.prevent="open(subject)" @keydown.space.self.prevent="open(subject)">
             <TableCell>{{ subject.nombre }}</TableCell>
-            <TableCell>{{ subject.codigo_asignatura }}</TableCell>
             <TableCell>{{ cycleLabel(subject) }}</TableCell>
             <TableCell :class="subject.profile_complete ? '' : 'text-muted-foreground'">{{ statusOf(subject) }}</TableCell>
           </TableRow>
