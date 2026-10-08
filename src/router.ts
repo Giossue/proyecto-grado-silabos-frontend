@@ -16,6 +16,8 @@ const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
 const CoordinationCareerProjectPage = () => import("@/pages/CoordinationCareerProjectPage.vue");
 const DashboardPage = () => import("@/pages/DashboardPage.vue");
 const TeacherSyllabiPage = () => import("@/pages/TeacherSyllabiPage.vue");
+const TeacherHistoryPage = () => import("@/pages/TeacherHistoryPage.vue");
+const TeacherHistoryCareerPage = () => import("@/pages/TeacherHistoryCareerPage.vue");
 const TeacherSyllabusDetailPage = () => import("@/pages/TeacherSyllabusDetailPage.vue");
 const PasswordRecoveryPage = () => import("@/pages/PasswordRecoveryPage.vue");
 const ResetPasswordPage = () => import("@/pages/ResetPasswordPage.vue");
@@ -99,6 +101,8 @@ export const router = createRouter({
     { path: "/docente/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["docente"], title: "Perfil" } },
     { path: "/docente/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["docente"], title: "Seguridad" } },
     { path: "/docente/mis-silabos", component: TeacherSyllabiPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" } },
+    { path: "/docente/historial", component: TeacherHistoryPage, meta: { requiresAuth: true, roles: ["docente"], title: "Historial" } },
+    { path: "/docente/historial/:career", component: TeacherHistoryCareerPage, meta: { requiresAuth: true, roles: ["docente"], title: "Historial" } },
     { path: "/docente/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", layout: "syllabus-editor" } },
     { path: "/docente/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos" } },
 

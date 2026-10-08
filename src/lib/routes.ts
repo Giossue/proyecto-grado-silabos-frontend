@@ -66,6 +66,8 @@ export const paths = {
     security: '/docente/configuracion/seguridad',
     syllabi: '/docente/mis-silabos',
     syllabus: (syllabus: string): string => `/docente/mis-silabos/${segment(syllabus)}`,
+    history: '/docente/historial',
+    historyCareer: (career: string): string => `/docente/historial/${segment(career)}`,
     documents: (revision: string): string =>
       `/docente/revisiones/${segment(revision)}/documentos`,
   },
@@ -214,6 +216,8 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'teacher-profile', path: paths.teacher.profile, component: 'ProfilePage', shortcut: 'profile', ...teacher },
   { name: 'teacher-security', path: paths.teacher.security, component: 'SecurityPage', shortcut: 'security', ...teacher },
   { name: 'teacher-syllabi', path: paths.teacher.syllabi, component: 'TeacherSyllabiPage', breadcrumb: 'Mis sílabos', ...teacher },
+  { name: 'teacher-history', path: paths.teacher.history, component: 'TeacherHistoryPage', breadcrumb: 'Historial', ...teacher },
+  { name: 'teacher-history-career', path: '/docente/historial/:career', component: 'TeacherHistoryCareerPage', breadcrumb: 'Historial', ...teacher },
   { name: 'teacher-syllabus', path: '/docente/mis-silabos/:syllabus', component: 'TeacherSyllabusDetailPage', states: ['resumen', 'edicion', 'ia', 'envio'], breadcrumb: 'Mis sílabos', layout: 'syllabus-editor', ...teacher },
   { name: 'teacher-documents', path: '/docente/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...teacher },
 

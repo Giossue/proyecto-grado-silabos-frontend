@@ -51,7 +51,7 @@ onMounted(load);
       <CardContent class="flex flex-col gap-4">
         <form @submit.prevent="load()">
           <FilterToolbar @clear="clearFilters">
-            <template #search><Field><FieldLabel for="syllabi-search" class="sr-only">Buscar por asignatura o período</FieldLabel><Input id="syllabi-search" v-model="query" type="search" placeholder="Buscar por asignatura o período" /></Field></template>
+            <template #search><Field><FieldLabel for="syllabi-search" class="sr-only">Buscar por asignatura</FieldLabel><Input id="syllabi-search" v-model="query" type="search" placeholder="Buscar por asignatura" /></Field></template>
             <template #filters><Field><FieldLabel for="syllabi-state" class="sr-only">Estado</FieldLabel><Select v-model="state" name="state"><SelectTrigger id="syllabi-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="option in SYLLABUS_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select></Field></template>
           </FilterToolbar>
         </form>

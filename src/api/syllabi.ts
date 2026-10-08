@@ -224,3 +224,21 @@ export const clearAiChat = (syllabusId: string) =>
   api<{ message: string }>(`/teacher/syllabi/${syllabusId}/ai-chat`, {
     method: "DELETE",
   });
+
+export type HistoryCareer = { id: string; name: string; syllabi_count: number };
+
+export type HistorySyllabus = {
+  id: string;
+  subject: string;
+  period: string;
+  state: SyllabusRow["state"];
+  parallels: string[];
+  guardado_en: string | null;
+};
+
+export const getTeacherHistory = () => api<{ careers: HistoryCareer[] }>("/teacher/history");
+
+export const getTeacherHistoryCareer = (career: string) =>
+  api<{ career: { id: string; name: string }; syllabi: HistorySyllabus[] }>(
+    `/teacher/history/${encodeURIComponent(career)}`,
+  );

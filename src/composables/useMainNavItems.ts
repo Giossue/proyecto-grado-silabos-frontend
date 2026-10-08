@@ -6,6 +6,7 @@ import {
     ClipboardCheck,
     FileStack,
     FolderOpen,
+    History,
     LayoutGrid,
     Library,
     ScrollText,
@@ -57,6 +58,7 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
             ? [
                   { title: 'Panel', href: paths.teacher.panel, icon: LayoutGrid },
                   { title: 'Mis sílabos', href: paths.teacher.syllabi, icon: BookOpenCheck },
+                  { title: 'Historial', href: paths.teacher.history, icon: History },
               ]
             : []),
         ...(activeRole.value?.code === 'bibliotecario'
