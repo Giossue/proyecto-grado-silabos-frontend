@@ -479,7 +479,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.get(".edit-blocked").text()).toContain("en pausa");
   });
 
-  it("pasa a solo lectura si un guardado es rechazado por pausa", async () => {
+  it("queda sin poder editar, con el mismo aspecto, si un guardado es rechazado por pausa", async () => {
     vi.useFakeTimers();
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
     vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("This action is unauthorized.", 403));
@@ -490,7 +490,7 @@ describe("TeacherSyllabusDetailPage", () => {
     await vi.advanceTimersByTimeAsync(700);
     await flushPromises();
 
-    expect(wrapper.findComponent(FreeTextEditor).exists()).toBe(false);
+    expect(wrapper.findComponent(FreeTextEditor).vm.$attrs.disabled).toBe(true);
     expect(wrapper.get(".edit-blocked").text()).toContain("La convocatoria está en pausa. Podrá seguir editando cuando se reanude.");
     expect(buttonNamed(wrapper, "Enviar sílabo")).toBeUndefined();
   });

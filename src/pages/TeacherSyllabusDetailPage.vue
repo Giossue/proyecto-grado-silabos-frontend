@@ -78,6 +78,10 @@ const canEdit = computed(() =>
   ["borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? "") &&
   editBlockReason.value === null,
 );
+const pausedEdit = computed(() =>
+  editBlockReason.value !== null && ["borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? ""),
+);
+const showEditor = computed(() => canEdit.value || pausedEdit.value);
 const formationOpen = ref(false);
 provide(formationEditorKey, computed(() => (canEdit.value ? () => { formationOpen.value = true; } : null)));
 const allFields = computed(() => (syllabus.value?.sections ?? []).flatMap((section) => section.fields));
@@ -418,7 +422,7 @@ const activeSectionId = computed<string>({
   get: () => visibleSections.value.find((section) => section.id === chosenSectionId.value)?.id ?? visibleSections.value[0]?.id ?? "",
   set: (value) => { chosenSectionId.value = value; },
 });
-const shownSections = computed(() => canEdit.value
+const shownSections = computed(() => showEditor.value
   ? visibleSections.value.filter((section) => section.id === activeSectionId.value)
   : visibleSections.value);
 
@@ -466,14 +470,14 @@ onBeforeUnmount(() => {
 
     <template v-if="syllabus">
       <h1 class="sr-only">Sílabo de {{ syllabus.subject }} · {{ syllabus.period }}</h1>
-      <ProcessLockAlert v-if="editBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
+      <ProcessLockAlert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
       <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
 
       <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar'" variant="syllabus">
         <div class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
-          <Card v-if="!canEdit" class="syllabus-document-header">
+          <Card v-if="!showEditor" class="syllabus-document-header">
             <CardContent class="flex flex-col items-center gap-5 py-8 text-center">
               <div class="flex w-full items-center justify-between gap-6"><img :src="syllabus.presentation.logos.institution" alt="Logo institucional" class="max-h-10 max-w-40 object-contain" /><img :src="syllabus.presentation.logos.faculty" alt="Logo de facultad" class="max-h-14 max-w-40 object-contain" /></div>
               <h2 class="text-xl font-semibold" :style="{ color: syllabus.presentation.appearance.accent_color }">{{ syllabus.presentation.title }}</h2>
@@ -496,30 +500,30 @@ onBeforeUnmount(() => {
             </CardContent>
           </Card>
 
-          <Tabs v-if="canEdit && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
+          <Tabs v-if="showEditor && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
             <TabsList class="h-auto min-h-9 w-full shrink-0 flex-wrap justify-start gap-1" aria-label="Secciones del sílabo">
               <TabsTrigger v-for="(section, index) in visibleSections" :key="section.id" :value="section.id" class="h-8 max-w-56 flex-none" :title="sectionHeading(section.title, index)"><span class="truncate">{{ sectionHeading(section.title, index) }}</span></TabsTrigger>
             </TabsList>
           </Tabs>
           <template v-for="section in shownSections" :key="section.id">
-          <Separator v-if="!canEdit && section.id !== visibleSections[0]?.id" />
+          <Separator v-if="!showEditor && section.id !== visibleSections[0]?.id" />
           <section :id="`section-${section.id}`" class="flex scroll-mt-6 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
             <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ sectionHeading(section.title, visibleSections.indexOf(section)) }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
             <FieldGroup>
               <template v-for="{ field, nested, hint } in sectionEntries(section.fields)" :key="field.id">
-                <template v-if="hint && canEdit">
+                <template v-if="hint && showEditor">
                   <Field v-if="section.fields.some(isDisabilityField)">
                     <FieldLabel for="disability-choice">¿Tiene estudiantes con discapacidad?</FieldLabel>
-                    <Select :model-value="hasDisability(section.fields) ? 'si' : 'no'" :disabled="conflict" @update:model-value="chooseDisability(section.fields, String($event))">
+                    <Select :model-value="hasDisability(section.fields) ? 'si' : 'no'" :disabled="conflict || pausedEdit" @update:model-value="chooseDisability(section.fields, String($event))">
                       <SelectTrigger id="disability-choice" class="w-48"><SelectValue /></SelectTrigger>
                       <SelectContent><SelectGroup><SelectItem value="no">No</SelectItem><SelectItem value="si">Sí</SelectItem></SelectGroup></SelectContent>
                     </Select>
                   </Field>
                 </template>
-                <Field v-if="canEdit && isTeacherField(field) && (!isDisabilityField(field) || hasDisability(section.fields))" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0" :class="nested && 'border-l-2 border-border pl-4'">
+                <Field v-if="showEditor && isTeacherField(field) && (!isDisabilityField(field) || hasDisability(section.fields))" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0" :class="nested && 'border-l-2 border-border pl-4'">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel>
                   <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
-                  <component :is="fieldTypeEntry(field.type)!.EditorComponent" :field="typed(field)" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict" @update:model-value="updateValue(field, $event)" />
+                  <component :is="fieldTypeEntry(field.type)!.EditorComponent" :field="typed(field)" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
                 </Field>
                 <FieldView v-else-if="!nested" :id="`field-${field.id}`" :field="typed(field)" :badge="field.inherited ? 'Dato automático' : undefined" />
                 <FieldError :errors="visibleValidationMessages(field.id)" />
@@ -530,10 +534,7 @@ onBeforeUnmount(() => {
 
         </div>
 
-        <aside v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="min-w-0" aria-label="Aviso de edición">
-          <ProcessLockAlert class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
-        </aside>
-        <aside v-else class="min-w-0" aria-label="Asistente de unidades">
+        <aside v-if="!pausedEdit" class="min-w-0" aria-label="Asistente de unidades">
           <SyllabusUnitAssistant
             :syllabus-id="syllabus.id"
             :enabled="canEdit && !conflict"

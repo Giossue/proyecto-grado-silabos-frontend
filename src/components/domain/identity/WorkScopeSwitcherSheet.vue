@@ -56,7 +56,7 @@ const select = async (roleAssignmentId: string): Promise<void> => {
         <DialogTitle>{{ title }}</DialogTitle>
         <DialogDescription>Elija una carrera o rol vigente. Todo el sistema cambiará al nuevo alcance.</DialogDescription>
       </DialogHeader>
-      <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
+      <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-1">
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
         <div class="grid gap-4 sm:grid-cols-2">
           <Card v-for="role in roles" :key="role.id" class="h-full">
