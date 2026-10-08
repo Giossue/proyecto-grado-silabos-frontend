@@ -181,7 +181,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
         <ol class="flex flex-col gap-3">
           <template v-for="(field, fieldIndex) in fields" :key="field.id">
-          <li :data-field="field.id" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
+          <li :data-field="field.id" :data-field-kind="field.type" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
             <TemplateInsertPoint v-if="!preview" :disabled="locked" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="top" gap="field" @insert="fieldDialog = { open: true, sectionId: section.id, field: null, index: fieldIndex }" />
             <TemplateInsertPoint v-if="!preview && fieldIndex === fields.length - 1" :disabled="locked" :actions="[{ key: 'section', label: 'Nueva sección' }, { key: 'field', label: 'Agregar campo' }]" position="bottom" gap="field" @insert="insertAfterLastField($event, section.id, sectionIndex)" />
             <span v-if="!preview" aria-hidden="true" :class="cn('pointer-events-none absolute top-1 right-full mr-2 whitespace-nowrap rounded bg-primary px-1.5 py-0.5 font-sans text-xs font-medium text-primary-foreground group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">Campo</span>

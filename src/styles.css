@@ -552,7 +552,7 @@
     }
 
     /* Los campos de texto van en un recuadro con borde fino, como en el sílabo impreso. */
-    .template-sheet [data-field]:has(.free-text-content):not(:has(.automatic-card)) {
+    .template-sheet [data-field]:not([data-field-kind='fijo']):has(.free-text-content):not(:has(.automatic-card)) {
         padding: 0.25cm 0.35cm;
         border: 1px solid #3b9ac4;
     }
