@@ -3,7 +3,7 @@ import { ListTree, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
 import type { CurriculumRequirement } from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useFocusReturn } from '@/lib/focusReturn';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -56,6 +56,7 @@ const remove = (requirement: CurriculumRequirement): void => {
                     </TableRow>
                 </TableBody>
             </Table>
+            <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose></DialogFooter>
         </DialogContent>
     </Dialog>
 </template>

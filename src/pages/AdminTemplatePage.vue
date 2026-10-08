@@ -12,7 +12,7 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { paths } from '@/lib/routes';
 
@@ -167,6 +167,7 @@ onBeforeUnmount(() => {
                     </Button>
                 </div>
                 <p v-if="creating" class="flex items-center gap-2 text-sm text-muted-foreground"><LoaderCircle class="size-4 animate-spin" aria-hidden="true" />Creando plantilla…</p>
+                <DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="creating">Cancelar</Button></DialogClose></DialogFooter>
             </DialogContent>
         </Dialog>
     </PageFrame>
