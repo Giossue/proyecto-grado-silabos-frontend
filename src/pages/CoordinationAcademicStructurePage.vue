@@ -45,7 +45,7 @@ const pageDescription = computed(() => ({
   schedule: 'Materias y paralelos de su carrera del período en curso.',
   teachers: 'Docentes de su carrera.',
 })[props.mode]);
-// Mientras falte programar materias de la malla, el botón principal es Preparar período.
+// Mientras falte programar materias de la malla, el botón principal es Asignar materias.
 const pendingPreparation = computed(() => {
   if (!schedule.value || !assignments.value || !schedule.value.selectedPeriodId) return false;
   const period = schedule.value.options.periods.find((item) => item.id === schedule.value?.selectedPeriodId);

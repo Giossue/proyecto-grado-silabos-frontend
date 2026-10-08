@@ -83,12 +83,12 @@ watch(periodId, () => { if (open.value) updateProposal(); });
   <FormDialog
     v-model:open="open"
     :disabled="props.disabled"
-    trigger-label="Preparar período"
+    trigger-label="Asignar materias"
     title="Preparar período académico"
     description="Revise los paralelos y docentes propuestos."
   >
     <template #trigger>
-      <Button :disabled="props.disabled"><CalendarCheck data-icon="inline-start" aria-hidden="true" />Preparar período</Button>
+      <Button :disabled="props.disabled"><CalendarCheck data-icon="inline-start" aria-hidden="true" />Asignar materias</Button>
     </template>
     <template #default="{ close }">
       <form class="contents" @submit.prevent="submit(close)">
