@@ -10,7 +10,6 @@ import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { paths } from '@/lib/routes';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -73,7 +72,7 @@ onMounted(load);
         >
           <CardHeader>
             <CardTitle>{{ syllabus.subject }}</CardTitle>
-            <div class="flex flex-wrap gap-1.5"><Badge v-for="parallel in syllabus.parallels" :key="parallel" variant="outline">{{ parallel }}</Badge></div>
+            <p class="text-sm text-muted-foreground">{{ syllabus.parallels.length === 1 ? 'Paralelo' : 'Paralelos' }}: {{ syllabus.parallels.join(', ') }}</p>
           </CardHeader>
           <CardContent class="flex flex-col gap-1 text-sm">
             <SyllabusStateBadge :state="syllabus.state" />
