@@ -76,7 +76,7 @@ onMounted(load);
           </CardHeader>
           <CardContent class="flex flex-col gap-1 text-sm">
             <SyllabusStateBadge :state="syllabus.state" />
-            <span class="text-muted-foreground">{{ formatSavedAt(syllabus.guardado_en) }}</span>
+            <span class="text-muted-foreground">{{ syllabus.guardado_en ? `Último guardado: ${formatSavedAt(syllabus.guardado_en)}` : 'Sin guardados' }}</span>
           </CardContent>
         </Card>
       </li>
