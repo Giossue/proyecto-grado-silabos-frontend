@@ -470,13 +470,14 @@ onBeforeUnmount(() => {
 
     <template v-if="syllabus">
       <h1 class="sr-only">Sílabo de {{ syllabus.subject }} · {{ syllabus.period }}</h1>
-      <ProcessLockAlert v-if="editBlockReason && ['sin_iniciar', 'borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
+      <ProcessLockAlert v-if="editBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
       <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
 
       <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar'" variant="syllabus">
         <div class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
+          <ProcessLockAlert v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
           <Card v-if="!showEditor" class="syllabus-document-header">
             <CardContent class="flex flex-col items-center gap-5 py-8 text-center">
               <div class="flex w-full items-center justify-between gap-6"><img :src="syllabus.presentation.logos.institution" alt="Logo institucional" class="max-h-10 max-w-40 object-contain" /><img :src="syllabus.presentation.logos.faculty" alt="Logo de facultad" class="max-h-14 max-w-40 object-contain" /></div>
