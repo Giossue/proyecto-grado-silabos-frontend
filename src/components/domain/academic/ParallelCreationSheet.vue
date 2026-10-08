@@ -4,7 +4,7 @@ import { Check, Pencil, Plus, Trash2, X } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
 import { createCareerRecord, createParallels, deleteCareerRecord, deleteParallel, updateParallel } from "@/api/career-academics";
-import FormSheet from "@/components/domain/FormSheet.vue";
+import FormDialog from "@/components/domain/FormDialog.vue";
 import FormSheetActions from "@/components/domain/FormSheetActions.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -140,8 +140,9 @@ watch(open, (value) => value && reset());
 </script>
 
 <template>
-  <FormSheet
+  <FormDialog
     v-model:open="open"
+    compact
     :show-trigger="false"
     trigger-label="Agregar paralelo"
     title="Paralelos y docentes de la materia"
@@ -231,5 +232,5 @@ watch(open, (value) => value && reset());
         </FieldGroup>
       </form>
     </template>
-  </FormSheet>
+  </FormDialog>
 </template>
