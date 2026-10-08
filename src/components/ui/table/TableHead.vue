@@ -11,7 +11,7 @@ const props = defineProps<{
   <th
     data-slot="table-head"
     :role="$attrs.scope === 'row' ? 'rowheader' : 'columnheader'"
-    :class="cn('text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5', props.class)"
+    :class="cn('text-foreground h-10 border-l border-border px-2 text-left first:border-l-0 align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5', props.class)"
   >
     <slot />
   </th>
