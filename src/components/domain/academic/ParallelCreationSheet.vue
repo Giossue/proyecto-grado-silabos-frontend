@@ -102,6 +102,9 @@ const teacherChoices = (parallelId: string) => {
     ? [{ id: current.user_id, name: current.user_name, email: "" }, ...users]
     : users;
 };
+const hasRowActions = (parallel: { editable?: boolean; deletable?: boolean }): boolean =>
+  parallel.editable !== false || (parallel.deletable !== false && props.parallels.length > 1);
+const showActions = computed(() => editingId.value !== null || props.parallels.some(hasRowActions));
 const changeTeacher = (parallelId: string, value: unknown) => {
   if (typeof value !== "string") return;
   const current = assignmentOf(parallelId);
@@ -186,9 +189,9 @@ watch(open, (value) => value && reset());
             <Alert v-if="rowError" variant="destructive"><AlertDescription>{{ rowError }}</AlertDescription></Alert>
             <div class="overflow-hidden rounded-md border">
               <Table label="Paralelos de la materia">
-                <TableHeader><TableRow><TableHead>Paralelo</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Paralelo</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead v-if="showActions" class="text-right">Acciones</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  <TableEmpty v-if="parallels.length === 0" :colspan="4">Sin paralelos registrados</TableEmpty>
+                  <TableEmpty v-if="parallels.length === 0" :colspan="showActions ? 4 : 3">Sin paralelos registrados</TableEmpty>
                   <TableRow v-for="parallel in parallels" v-else :key="parallel.id">
                     <template v-if="editingId === parallel.id">
                       <TableCell><Input v-model="editCode" :maxlength="VALIDATION_LIMITS.parallelCode" class="w-20" :aria-label="`Código del paralelo ${parallel.code}`" :aria-invalid="!editCode.trim()" /></TableCell>
@@ -217,7 +220,7 @@ watch(open, (value) => value && reset());
                         </Select>
                         <span v-else>{{ assignmentOf(parallel.id)?.user_name ?? "Sin docente" }}</span>
                       </TableCell>
-                      <TableCell class="text-right">
+                      <TableCell v-if="showActions" class="text-right">
                         <Button v-if="parallel.editable !== false" type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Editar paralelo ${parallel.code}`" @click="startEdit(parallel)"><Pencil aria-hidden="true" /></Button>
                         <Button v-if="parallel.deletable !== false && parallels.length > 1" type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Eliminar paralelo ${parallel.code}`" @click="removeParallel(parallel.id)"><Trash2 aria-hidden="true" /></Button>
                       </TableCell>
@@ -226,7 +229,7 @@ watch(open, (value) => value && reset());
                 </TableBody>
               </Table>
             </div>
-            <p class="text-xs text-muted-foreground">Cambiar el docente conserva el sílabo del paralelo. Un paralelo con docente asignado o con sílabo no se elimina.</p>
+            <p class="text-xs text-muted-foreground">Cambiar el docente borra el sílabo del paralelo con todo lo que hizo el docente anterior: el nuevo empieza en limpio. Un paralelo con docente asignado o con sílabo no se elimina.</p>
           </section>
           <FormSheetActions :close="close" :processing="saving" :icon="Plus" label="Crear paralelo" />
         </FieldGroup>

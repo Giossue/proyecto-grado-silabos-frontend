@@ -51,7 +51,7 @@ const close = (): void => {
                 </Button>
             </slot>
         </DialogTrigger>
-        <DialogContent :class="compact ? 'flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl' : 'flex h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl'">
+        <DialogContent :class="compact ? 'flex max-h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl' : 'flex h-[calc(100dvh-2rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl'">
             <DialogClose as-child>
                 <Button type="button" variant="ghost" size="icon-sm" class="absolute top-3 right-3 z-10" aria-label="Cerrar"><X aria-hidden="true" /></Button>
             </DialogClose>
