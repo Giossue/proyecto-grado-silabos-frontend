@@ -200,7 +200,7 @@ onBeforeUnmount(() => {
     </PopoverAnchor>
     <PopoverContent :id="panelId" class="flex max-h-96 w-80 flex-col gap-3 overflow-y-auto" :side="isTop ? 'bottom' : 'top'" :align="isLeft ? 'start' : 'end'" @close-auto-focus.prevent="button?.$el.focus()">
       <h2 class="text-sm font-semibold">{{ title }}</h2>
-      <p v-for="(text, index) in paragraphs" :key="index" class="text-sm whitespace-pre-line text-muted-foreground">{{ text }}</p>
+      <p v-for="(text, index) in paragraphs" :key="index" class="text-sm whitespace-pre-line">{{ text }}</p>
     </PopoverContent>
   </Popover>
 </template>
