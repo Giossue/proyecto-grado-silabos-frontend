@@ -99,7 +99,7 @@ const currentAssignments = computed(() =>
                         <dt class="font-semibold">Estado</dt>
                         <dd class="flex flex-col items-start gap-1">
                             <span>{{ status.label }}</span>
-                            <span class="text-muted-foreground">{{ withoutEndPeriod(status.hint) }}</span>
+                            <span>{{ withoutEndPeriod(status.hint) }}</span>
                         </dd>
                     </div>
                     <div class="flex flex-col gap-1">
@@ -121,14 +121,14 @@ const currentAssignments = computed(() =>
                 <Separator />
 
                 <section class="flex flex-col gap-2">
-                    <h3 class="text-sm font-medium">Roles vigentes</h3>
-                    <p v-if="currentAssignments.length === 0" class="text-sm text-muted-foreground">
+                    <h3 class="text-sm font-semibold">Roles vigentes</h3>
+                    <p v-if="currentAssignments.length === 0" class="text-sm">
                         Sin rol vigente: la cuenta no accede a ningún módulo.
                     </p>
                     <ul v-else class="flex flex-col gap-3 text-sm">
                         <li v-for="assignment in currentAssignments" :key="assignment.id" class="flex flex-col gap-1">
-                            <span class="font-medium">{{ assignment.role_name }}</span>
-                            <span class="text-muted-foreground">{{ scopeOf(assignment) }}</span>
+                            <span>{{ assignment.role_name }}</span>
+                            <span>{{ scopeOf(assignment) }}</span>
                         </li>
                     </ul>
                 </section>
