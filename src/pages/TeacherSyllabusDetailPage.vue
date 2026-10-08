@@ -79,7 +79,7 @@ const canEdit = computed(() =>
   editBlockReason.value === null,
 );
 const pausedEdit = computed(() =>
-  editBlockReason.value !== null && ["borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? ""),
+  editBlockReason.value !== null && ["sin_iniciar", "borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? ""),
 );
 const showEditor = computed(() => canEdit.value || pausedEdit.value);
 const formationOpen = ref(false);
@@ -473,7 +473,7 @@ onBeforeUnmount(() => {
       <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
       <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
 
-      <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar'" variant="syllabus">
+      <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar' || pausedEdit" variant="syllabus">
         <div class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
           <ProcessLockAlert v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
           <Card v-if="!showEditor" class="syllabus-document-header">
