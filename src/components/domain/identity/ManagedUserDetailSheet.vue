@@ -83,9 +83,6 @@ const scopeOf = (assignment: ManagedUserRoleAssignment): string =>
 const currentAssignments = computed(() =>
     props.user.assignments.filter((assignment) => assignment.active),
 );
-const completedAssignments = computed(() =>
-    props.user.assignments.filter((assignment) => !assignment.active),
-);
 </script>
 
 <template>
@@ -140,15 +137,6 @@ const completedAssignments = computed(() =>
                     </ul>
                 </section>
 
-                <section v-if="completedAssignments.length > 0" class="flex flex-col gap-2">
-                    <h3 class="text-sm font-medium">Roles finalizados</h3>
-                    <ul class="flex flex-col gap-3 text-sm">
-                        <li v-for="assignment in completedAssignments" :key="assignment.id" class="flex flex-col gap-1">
-                            <span class="font-medium">{{ assignment.role_name }}</span>
-                            <span class="text-muted-foreground">{{ scopeOf(assignment) }}</span>
-                        </li>
-                    </ul>
-                </section>
             </div>
 
             <SheetFooter v-if="!editing" class="absolute inset-x-0 bottom-0 border-t bg-card pb-(--safe-footer-inset)">
