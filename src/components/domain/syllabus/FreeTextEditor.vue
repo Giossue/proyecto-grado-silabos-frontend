@@ -20,6 +20,11 @@ const editor = useEditor({
     content: props.modelValue ?? { type: 'doc', content: [{ type: 'paragraph' }] },
     editable: !props.disabled,
     editorProps: {
+        // En tablas solo se añaden datos: arrastrar y soltar descuadraba las celdas.
+        ...(props.bulletsOnly ? {} : {
+            handleDrop: () => true,
+            handleDOMEvents: { dragstart: (_view, event) => { event.preventDefault(); return true; } },
+        }),
         attributes: {
             id: props.id,
             'aria-label': props.label,
