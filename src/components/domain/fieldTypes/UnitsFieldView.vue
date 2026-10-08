@@ -41,3 +41,11 @@ const units = (): ReturnType<typeof unitsOf> => {
     </section>
   </div>
 </template>
+
+<style scoped>
+.units-field-view :deep(th),
+.units-field-view :deep(td) { border-color: var(--document-table-line); }
+.units-field-view :deep(th) { background-color: var(--document-table-fill); color: var(--document-table-heading); font-weight: 700; text-align: center; }
+.units-field-view :deep(tbody tr:nth-child(odd) td) { background-color: color-mix(in srgb, var(--document-table-fill) 28%, transparent); }
+.units-field-view :deep(tbody tr:last-child td) { background-color: var(--document-table-fill); color: var(--document-table-heading); font-weight: 700; }
+</style>

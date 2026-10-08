@@ -220,6 +220,9 @@
     --document-mark-signature-border: hsl(262 52% 50%);
     --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
     --document-official-blue: #2f5597;
+    --document-table-fill: #c3d4ea;
+    --document-table-line: #95b3d7;
+    --document-table-heading: #365f91;
     --curriculum-unit-1-background: hsl(213 55% 47%);
     --curriculum-unit-1-foreground: hsl(0 0% 100%);
     --curriculum-unit-2-background: hsl(210 52% 80%);
