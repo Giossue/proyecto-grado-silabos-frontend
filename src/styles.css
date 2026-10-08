@@ -624,51 +624,6 @@
         background-color: var(--curriculum-canvas-background);
     }
 
-    /* Fuera de edición los puntos de conexión no se ven: solo sirven de anclaje a las flechas. */
-    .curriculum-canvas .vue-flow__handle:not(.curriculum-handle) {
-        opacity: 0;
-    }
-
-    /* Puntos de conexión en edición: un círculo verde con «+» de 22px que se agarra en un área
-       mayor; crecen al pasar el cursor para confirmar que son el sitio donde arrastrar. */
-    .curriculum-canvas .vue-flow__handle.curriculum-handle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 22px;
-        height: 22px;
-        border: 2px solid var(--card);
-        background-color: var(--success);
-        cursor: crosshair;
-        transition: transform var(--duration-layout) ease-out;
-    }
-
-    .curriculum-canvas .vue-flow__handle.curriculum-handle::after {
-        content: '+';
-        color: var(--success-foreground);
-        font-size: 16px;
-        font-weight: 700;
-        line-height: 1;
-        pointer-events: none;
-    }
-
-    .curriculum-canvas .vue-flow__handle.curriculum-handle::before {
-        content: '';
-        position: absolute;
-        inset: -12px;
-        border-radius: 9999px;
-    }
-
-    .curriculum-canvas .vue-flow__handle-top.curriculum-handle:hover,
-    .curriculum-canvas .vue-flow__handle-top.curriculum-handle.connecting {
-        transform: translate(-50%, -50%) scale(1.4);
-    }
-
-    .curriculum-canvas .vue-flow__handle-bottom.curriculum-handle:hover,
-    .curriculum-canvas .vue-flow__handle-bottom.curriculum-handle.connecting {
-        transform: translate(-50%, 50%) scale(1.4);
-    }
-
     .curriculum-canvas .vue-flow__node-subject:not(.dragging) {
         transition: transform var(--duration-layout) ease-out;
     }
@@ -709,3 +664,50 @@
 .template-sheet .units-field-view .text-sm {
     font-size: 11pt;
 }
+
+/* Fuera de cualquier capa: deben ganarle a los estilos de Vue Flow, que no usan capas. */
+/* Fuera de edición los puntos de conexión no se ven: solo sirven de anclaje a las flechas. */
+.curriculum-canvas .vue-flow__handle:not(.curriculum-handle) {
+    opacity: 0;
+}
+
+/* Puntos de conexión en edición: un círculo verde con «+» de 22px que se agarra en un área
+   mayor; crecen al pasar el cursor para confirmar que son el sitio donde arrastrar. */
+.curriculum-canvas .vue-flow__handle.curriculum-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: 2px solid var(--card);
+    background-color: var(--success);
+    cursor: crosshair;
+    transition: transform var(--duration-layout) ease-out;
+}
+
+.curriculum-canvas .vue-flow__handle.curriculum-handle::after {
+    content: '+';
+    color: var(--success-foreground);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.curriculum-canvas .vue-flow__handle.curriculum-handle::before {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 9999px;
+}
+
+.curriculum-canvas .vue-flow__handle-top.curriculum-handle:hover,
+.curriculum-canvas .vue-flow__handle-top.curriculum-handle.connecting {
+    transform: translate(-50%, -50%) scale(1.4);
+}
+
+.curriculum-canvas .vue-flow__handle-bottom.curriculum-handle:hover,
+.curriculum-canvas .vue-flow__handle-bottom.curriculum-handle.connecting {
+    transform: translate(-50%, 50%) scale(1.4);
+}
+
