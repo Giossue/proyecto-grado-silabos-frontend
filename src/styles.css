@@ -146,6 +146,7 @@
     --layout-scheduled-skeleton-columns: minmax(12rem, 2fr) minmax(4rem, 0.5fr) minmax(5rem, 0.65fr) minmax(7rem, 1fr) minmax(10rem, 1.4fr) 3rem;
     --layout-teachers-skeleton-columns: minmax(12rem, 1.5fr) minmax(14rem, 2fr) minmax(11rem, 1.2fr) 3rem;
     --layout-table-skeleton-mobile-columns: minmax(0, 1.3fr) minmax(0, 1fr) 5rem;
+    --document-margin: 2.5cm;
     --document-cell-padding: 2px 4px;
     --document-line-height: 1.15;
     --document-page-number-size: 9pt;
@@ -523,7 +524,7 @@
         min-height: 297mm;
         flex-shrink: 0;
         margin-inline: auto;
-        padding: 1.5cm 1.3cm 1.5cm 2.5cm;
+        padding: var(--document-margin);
         overflow-wrap: anywhere;
         font-family: Arial, Helvetica, sans-serif;
         font-size: 12pt;
@@ -537,11 +538,10 @@
         box-shadow: var(--document-paper-shadow);
     }
 
-    /* Hoja horizontal (carta apaisada): una hoja aparte, más ancha, entre las verticales. */
+    /* Hoja horizontal (A4 apaisada): una hoja aparte, más ancha, entre las verticales. */
     .template-sheet--landscape {
-        width: 279mm;
-        min-height: 216mm;
-        padding: 1.2cm;
+        width: 297mm;
+        min-height: 210mm;
     }
 
     .template-sheet-title {
