@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Settings2, Sparkles, Trash2 } from '@lucide/vue';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { SectionDesign, TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { deleteField, deleteSection, reorderFields, reorderSections } from '@/api/template-structure';
+import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
 import TemplateLogoControl from '@/components/domain/configuration/TemplateLogoControl.vue';
 import TemplateFieldDialog from '@/components/domain/configuration/TemplateFieldDialog.vue';
@@ -42,6 +43,18 @@ const scaleFor = (landscape: boolean): number => {
 
     return available.value > 0 ? Math.min(1, available.value / width) : 1;
 };
+const sheetElements = new Map<number, HTMLElement>();
+const setSheet = (index: number, element: unknown): void => {
+    if (element instanceof HTMLElement) sheetElements.set(index, element);
+    else sheetElements.delete(index);
+};
+let paginationFrame = 0;
+const paginate = (): void => {
+    cancelAnimationFrame(paginationFrame);
+    paginationFrame = requestAnimationFrame(() => {
+        sheetElements.forEach((element, index) => paginateSheet(element, sheets.value[index]?.landscape ?? false));
+    });
+};
 const clearSelectionOutside = (event: PointerEvent): void => {
     const target = event.target;
     if (!(target instanceof Element)) return;
@@ -56,10 +69,13 @@ onMounted(() => {
         resizeObserver = new ResizeObserver(() => { available.value = root.value?.clientWidth ?? 0; });
         resizeObserver.observe(root.value);
     }
+    void nextTick(paginate);
+    void document.fonts?.ready.then(paginate);
 });
 onBeforeUnmount(() => {
     document.removeEventListener('pointerdown', clearSelectionOutside);
     resizeObserver?.disconnect();
+    cancelAnimationFrame(paginationFrame);
 });
 const busy = ref(false);
 const error = ref<string | null>(null);
@@ -76,6 +92,7 @@ const sheets = computed(() => {
     }
     return groups.length > 0 ? groups : [{ landscape: false, items: [] as typeof sections.value }];
 });
+watch([() => props.template, preview], () => { void nextTick(paginate); }, { deep: true });
 const usedSectionKeys = computed(() => props.template.sections.map((section) => section.key));
 const usedFieldKeys = computed(() => sections.value.flatMap((entry) => entry.fields.map((field) => field.key)));
 
@@ -155,7 +172,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
     <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto py-4" tabindex="0" role="region" :aria-label="`Hoja ${sheetIndex + 1} de la plantilla con desplazamiento horizontal`">
-    <article data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape) }" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
+    <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape) }" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
       <Tooltip>
         <TooltipTrigger as-child>
           <Button type="button" variant="ghost" size="icon" class="absolute top-2 right-2" :aria-label="previewLabel" :aria-pressed="preview" @click="preview = !preview"><EyeOff v-if="preview" aria-hidden="true" /><Eye v-else aria-hidden="true" /></Button>
@@ -164,9 +181,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       </Tooltip>
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
-          <img v-if="preview" :src="logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain">
+          <img v-if="preview" :src="logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain" @load="paginate">
           <TemplateLogoControl v-else :logo-url="logos.institution" :disabled="locked" />
-          <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain">
+          <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain" @load="paginate">
         </div>
         <div :class="cn('relative flex items-center justify-center rounded-sm px-2 py-1', !preview && 'group outline-offset-2 hover:outline hover:outline-1 hover:outline-primary/40')">
           <h2 class="template-sheet-title">{{ template.titleBlock.text }}</h2>
