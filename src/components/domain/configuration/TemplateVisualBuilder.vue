@@ -131,6 +131,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         <p v-if="sheet.landscape && !preview" class="-mb-1 text-xs italic text-muted-foreground">Hoja horizontal</p>
         <h3 v-if="preview" class="font-bold">{{ sectionIndex + 1 }}. {{ section.title }}</h3>
         <div v-else :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')">
+          <span aria-hidden="true" :class="cn('pointer-events-none absolute top-0.5 right-full mr-2 rounded bg-primary px-1.5 py-0.5 font-sans text-xs font-medium text-primary-foreground group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">Sección</span>
           <Button type="button" variant="ghost" class="h-auto w-full min-w-0 justify-start whitespace-normal px-0 py-0 text-left font-bold [overflow-wrap:anywhere] hover:bg-transparent" :aria-pressed="selectedSection === section.id" :aria-label="`Sección ${section.title}`" @click="selectSection(section.id)">{{ sectionIndex + 1 }}. {{ section.title }}</Button>
           <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
             <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === 0" :aria-label="`Subir la sección ${section.title}`" @click="moveSection(sectionIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
@@ -142,6 +143,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
         <ol class="flex flex-col gap-3">
           <li v-for="(field, fieldIndex) in fields" :key="field.id" :data-field="field.id" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
+            <span v-if="!preview" aria-hidden="true" :class="cn('pointer-events-none absolute top-1 right-full mr-2 rounded bg-primary px-1.5 py-0.5 font-sans text-xs font-medium text-primary-foreground group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">Campo</span>
             <TemplateFieldContent v-if="preview" :field="field" preview />
             <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -->
             <Button v-else as="div" variant="ghost" role="button" tabindex="0" class="h-auto w-full min-w-0 cursor-pointer flex-col items-stretch gap-1 whitespace-normal rounded-sm p-0 text-left font-normal hover:bg-transparent" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
