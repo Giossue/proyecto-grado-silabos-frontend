@@ -34,12 +34,12 @@ onMounted(load);
     <LoadingSkeleton v-else-if="loading" variant="table" :columns="2" :filters="0" />
     <Card v-else-if="careers"><CardContent>
       <Table label="Carreras con historial">
-        <TableHeader><TableRow><TableHead>Carrera</TableHead><TableHead>Sílabos</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Carrera</TableHead><TableHead class="text-center">Sílabos</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="careers.length === 0" :colspan="2">Todavía no tiene sílabos de períodos anteriores.</TableEmpty>
           <TableRow v-for="career in careers" v-else :key="career.id" class="cursor-pointer" tabindex="0" :aria-label="`Ver el historial de ${career.name}`" @click="activateRow($event, () => open(career))" @keydown.enter.self.prevent="open(career)" @keydown.space.self.prevent="open(career)">
             <TableCell>{{ career.name }}</TableCell>
-            <TableCell>{{ career.syllabi_count }}</TableCell>
+            <TableCell class="text-center">{{ career.syllabi_count }}</TableCell>
           </TableRow>
         </TableBody>
       </Table>

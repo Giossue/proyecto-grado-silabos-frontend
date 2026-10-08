@@ -91,12 +91,12 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
       </ClientFilterBar>
       <Alert v-if="selectedPeriodOption?.planning_enabled === false"><AlertDescription>Período finalizado · solo lectura</AlertDescription></Alert>
       <Table label="Materias programadas">
-        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Ciclo</TableHead><TableHead>Paralelos</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead class="text-center">Ciclo</TableHead><TableHead>Paralelos</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="!items.length" :colspan="5">{{ emptyMessage }}</TableEmpty>
           <TableRow v-for="item in items" v-else :key="item.subject_id" :class="canPlan(item) ? 'cursor-pointer' : ''" :tabindex="canPlan(item) ? 0 : undefined" :aria-label="canPlan(item) ? `Paralelos y docentes de ${item.label}` : undefined" @click="canPlan(item) && activateRow($event, () => openPlanning(item))" @keydown.enter.self.prevent="canPlan(item) && openPlanning(item)" @keydown.space.self.prevent="canPlan(item) && openPlanning(item)">
             <TableCell>{{ item.subject_name }}</TableCell>
-            <TableCell>{{ item.subject_cycle === null ? "Sin ciclo" : item.subject_cycle }}</TableCell>
+            <TableCell class="text-center">{{ item.subject_cycle === null ? "Sin ciclo" : item.subject_cycle }}</TableCell>
             <TableCell><ul v-if="item.parallels.length" class="flex flex-col gap-1"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-6 items-center">{{ parallel.code }}</li></ul><span v-else class="text-muted-foreground">Sin paralelos</span></TableCell>
             <TableCell><ul v-if="item.parallels.length" class="flex flex-col gap-1"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-6 items-center">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
             <TableCell><ul v-if="item.parallels.length" class="flex flex-col gap-1"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-6 items-center" :class="teacherByParallel.get(parallel.id) ? '' : 'text-muted-foreground'">{{ teacherByParallel.get(parallel.id) ?? 'Sin docente' }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>

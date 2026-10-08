@@ -92,12 +92,12 @@ onMounted(() => { void load(); });
         </template>
       </ClientFilterBar>
       <Table label="Materias de la malla">
-        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Ciclo</TableHead><TableHead class="text-center">Ficha</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead class="text-center">Ciclo</TableHead><TableHead class="text-center">Ficha</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="!items.length" :colspan="3">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</TableEmpty>
           <TableRow v-for="subject in items" v-else :key="subject.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="activateRow($event, () => open(subject))" @keydown.enter.self.prevent="open(subject)" @keydown.space.self.prevent="open(subject)">
             <TableCell>{{ subject.nombre }}</TableCell>
-            <TableCell>{{ cycleLabel(subject) }}</TableCell>
+            <TableCell class="text-center">{{ cycleLabel(subject) }}</TableCell>
             <TableCell class="text-center"><StatusBadge :label="statusOf(subject)" :tone="subject.profile_complete ? 'success' : 'warning'" /></TableCell>
           </TableRow>
         </TableBody>
