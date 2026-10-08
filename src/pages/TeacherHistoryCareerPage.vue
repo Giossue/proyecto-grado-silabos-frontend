@@ -52,12 +52,12 @@ onMounted(load);
       <Card v-for="group in groups" :key="group.period"><CardContent class="flex flex-col gap-3">
         <h2 class="text-sm font-semibold">Período {{ group.period }}</h2>
         <Table :label="`Sílabos del período ${group.period}`">
-          <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos</TableHead><TableHead>Estado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
+          <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos</TableHead><TableHead class="text-center">Estado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
           <TableBody>
             <TableRow v-for="syllabus in group.items" :key="syllabus.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir sílabo de ${syllabus.subject}`" @click="activateRow($event, () => open(syllabus.id))" @keydown.enter.self.prevent="open(syllabus.id)" @keydown.space.self.prevent="open(syllabus.id)">
               <TableCell>{{ syllabus.subject }}</TableCell>
               <TableCell>{{ syllabus.parallels.join(', ') }}</TableCell>
-              <TableCell><SyllabusStateBadge :state="syllabus.state" /></TableCell>
+              <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /></TableCell>
               <TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell>
             </TableRow>
           </TableBody>

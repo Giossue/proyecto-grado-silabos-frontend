@@ -103,7 +103,7 @@ watch(() => props.open, (open) => {
                   <TableHead>Asignatura</TableHead>
                   <TableHead>Paralelos y docentes</TableHead>
 
-                  <TableHead>Estado</TableHead>
+                  <TableHead class="text-center">Estado</TableHead>
                   <TableHead>Iniciado</TableHead>
                 </TableRow>
               </TableHeader>
@@ -120,7 +120,7 @@ watch(() => props.open, (open) => {
                     <div>Paralelos {{ syllabus.parallels.join(', ') }}</div>
                     <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
                   </TableCell>
-                  <TableCell><SyllabusStateBadge :state="syllabus.state" /></TableCell>
+                  <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /></TableCell>
                   <TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell>
                 </TableRow>
               </TableBody>

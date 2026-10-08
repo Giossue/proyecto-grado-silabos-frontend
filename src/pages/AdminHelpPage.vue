@@ -55,12 +55,12 @@ onMounted(() => { void load(); });
     <LoadingSkeleton v-else-if="loading && helps.length === 0" variant="table" :columns="3" :filters="0" :actions="false" />
     <Card v-else><CardContent>
       <Table label="Ayuda de pantallas">
-        <TableHeader><TableRow><TableHead>Pantalla</TableHead><TableHead>Rol</TableHead><TableHead>Ayuda</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Pantalla</TableHead><TableHead>Rol</TableHead><TableHead class="text-center">Ayuda</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableRow v-for="screen in helpScreens" :key="screen.key" class="cursor-pointer" tabindex="0" :aria-label="`Editar la ayuda de ${screen.label}`" @click="edit(screen)" @keydown.enter.self.prevent="edit(screen)" @keydown.space.self.prevent="edit(screen)">
             <TableCell>{{ screen.label }}</TableCell>
             <TableCell>{{ screen.roleLabel }}</TableCell>
-            <TableCell><StatusBadge :label="statusOf(screen)" :tone="toneOf(screen)" /></TableCell>
+            <TableCell class="text-center"><StatusBadge :label="statusOf(screen)" :tone="toneOf(screen)" /></TableCell>
           </TableRow>
         </TableBody>
       </Table>

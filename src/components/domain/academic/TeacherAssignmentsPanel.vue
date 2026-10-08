@@ -91,13 +91,13 @@ const resendInvitation = async (userId: string): Promise<void> => {
       <template #filters><Field><FieldLabel for="teacher-assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="teacher-assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="pending">Pendiente</SelectItem></SelectGroup></SelectContent></Select></Field></template>
     </ClientFilterBar>
     <FeedbackAlert v-if="resendError" :message="resendError" />
-    <Table label="Docentes de la carrera"><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
+    <Table label="Docentes de la carrera"><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader>
       <TableBody>
         <TableEmpty v-if="!items.length" :colspan="3">{{ filter.active.value ? "Ningún docente coincide con la búsqueda." : "No existen docentes en esta carrera." }}</TableEmpty>
         <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="activateRow($event, () => openEditor(item))" @keydown.enter.self.prevent="openEditor(item)" @keydown.space.self.prevent="openEditor(item)">
           <TableCell>{{ item.name }}</TableCell>
           <TableCell>{{ item.email }}</TableCell>
-          <TableCell><StatusBadge :label="statusOf(item)" :tone="item.pending_activation ? 'warning' : 'success'" /></TableCell>
+          <TableCell class="text-center"><StatusBadge :label="statusOf(item)" :tone="item.pending_activation ? 'warning' : 'success'" /></TableCell>
         </TableRow>
       </TableBody>
     </Table>

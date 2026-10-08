@@ -159,7 +159,7 @@ const {
                     <TableRow>
                         <TableHead>Facultad</TableHead>
                         <TableHead>Campus</TableHead>
-                        <TableHead class="w-20">Logo</TableHead>
+                        <TableHead class="w-20 text-center">Logo</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -198,7 +198,7 @@ const {
                         <TableCell>
                             {{ faculty.campus ?? 'Sin campus' }}
                         </TableCell>
-                        <TableCell>
+                        <TableCell class="text-center">
                             <Button
                                 v-if="faculty.logo_url"
                                 type="button"

@@ -98,14 +98,14 @@ onMounted(() => { void load(initialPage); });
             <TableRow>
               <TableHead>Carrera</TableHead>
               <TableHead>Docente</TableHead>
-              <TableHead>Estado</TableHead>
+              <TableHead class="text-center">Estado</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             <TableRow v-for="item in data.reviews.data" :key="item.revision_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(paths.library.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(paths.library.review(item.revision_id))" @keydown.space.self.prevent="router.push(paths.library.review(item.revision_id))">
               <TableCell>{{ item.career }}</TableCell>
               <TableCell>{{ item.teachers.join(', ') }}</TableCell>
-              <TableCell><StatusBadge :label="libraryStateLabel(item.state)" :tone="libraryStateTone(item.state)" /></TableCell>
+              <TableCell class="text-center"><StatusBadge :label="libraryStateLabel(item.state)" :tone="libraryStateTone(item.state)" /></TableCell>
             </TableRow>
             <TableEmpty v-if="data.reviews.data.length === 0" :colspan="3">No hay sílabos para los filtros seleccionados.</TableEmpty>
           </TableBody>

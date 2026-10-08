@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Accessibility, RotateCcw } from '@lucide/vue';
+import { PersonStanding, RotateCcw } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -28,7 +28,7 @@ const setSize = (value: string): void => { settings.value.textSize = value as Te
     <TooltipProvider><Tooltip>
       <TooltipTrigger as-child>
         <DialogTrigger as-child>
-          <Button type="button" variant="ghost" size="icon-sm" aria-label="Accesibilidad"><Accessibility data-icon="inline-start" aria-hidden="true" /></Button>
+          <Button type="button" variant="ghost" size="icon-sm" aria-label="Accesibilidad"><PersonStanding data-icon="inline-start" aria-hidden="true" /></Button>
         </DialogTrigger>
       </TooltipTrigger>
       <TooltipContent>Accesibilidad</TooltipContent>
