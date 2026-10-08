@@ -9,3 +9,4 @@ export const saveScreenHelp = (input: { screen: string; title: string; content: 
   api<{ help: ScreenHelp }>('/admin/help', { method: 'PUT', body: JSON.stringify(input) });
 export const deleteScreenHelp = (screen: string) =>
   api<void>('/admin/help', { method: 'DELETE', body: JSON.stringify({ screen }) });
+export const listAvailableScreenHelp = () => api<{ help: ScreenHelp[] }>('/help/available');

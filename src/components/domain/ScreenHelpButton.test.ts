@@ -1,6 +1,6 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getScreenHelp } from '@/api/screen-help';
+import { listAvailableScreenHelp } from '@/api/screen-help';
 import ScreenHelpButton from '@/components/domain/ScreenHelpButton.vue';
 import { sessionState } from '@/state/session';
 
@@ -8,34 +8,37 @@ vi.mock('vue-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
   useRoute: () => ({ matched: [{ path: '/admin/usuarios' }] }),
 }));
-vi.mock('@/api/screen-help', () => ({ getScreenHelp: vi.fn() }));
+vi.mock('@/api/screen-help', () => ({ listAvailableScreenHelp: vi.fn() }));
 
 enableAutoUnmount(afterEach);
 
 const help = { screen: '/admin/usuarios', title: 'Usuarios y roles', content: 'Primer párrafo.\n\nSegundo párrafo.', active: true, updated_at: '2026-10-10T00:00:00Z' };
+const signIn = () => sessionState.replace({ user: { id: 'u1' }, active_role: { code: 'administrador' } } as never);
 const mountButton = () => mount({ components: { ScreenHelpButton }, template: '<main><ScreenHelpButton /></main>' }, { attachTo: document.body });
 
 describe('ScreenHelpButton', () => {
   beforeEach(() => {
     localStorage.clear();
     document.body.innerHTML = '';
-    vi.mocked(getScreenHelp).mockReset();
-    sessionState.replace({ active_role: { code: 'administrador' } } as never);
+    vi.mocked(listAvailableScreenHelp).mockReset();
+    sessionState.clear();
   });
 
   it('pide la ayuda de la pantalla y muestra su texto al pulsar el botón', async () => {
-    vi.mocked(getScreenHelp).mockResolvedValue({ help });
+    vi.mocked(listAvailableScreenHelp).mockResolvedValue({ help: [help] });
+    signIn();
     const wrapper = mountButton();
     await flushPromises();
 
-    expect(getScreenHelp).toHaveBeenCalledWith('/admin/usuarios');
+    expect(listAvailableScreenHelp).toHaveBeenCalledTimes(1);
     await wrapper.get('[aria-label="Ayuda de esta pantalla"]').trigger('click');
     expect(document.body.textContent).toContain('Usuarios y roles');
     expect(document.body.textContent).toContain('Segundo párrafo.');
   });
 
   it('no muestra el botón si la pantalla no tiene ayuda', async () => {
-    vi.mocked(getScreenHelp).mockResolvedValue({ help: null });
+    vi.mocked(listAvailableScreenHelp).mockResolvedValue({ help: [] });
+    signIn();
     const wrapper = mountButton();
     await flushPromises();
 
@@ -43,7 +46,8 @@ describe('ScreenHelpButton', () => {
   });
 
   it('salta entre las cuatro esquinas con Alt y las flechas y recuerda la esquina', async () => {
-    vi.mocked(getScreenHelp).mockResolvedValue({ help });
+    vi.mocked(listAvailableScreenHelp).mockResolvedValue({ help: [help] });
+    signIn();
     const wrapper = mountButton();
     await flushPromises();
 
@@ -60,7 +64,8 @@ describe('ScreenHelpButton', () => {
   });
 
   it('al soltar tras arrastrar se acomoda en la esquina más cercana', async () => {
-    vi.mocked(getScreenHelp).mockResolvedValue({ help });
+    vi.mocked(listAvailableScreenHelp).mockResolvedValue({ help: [help] });
+    signIn();
     const wrapper = mountButton();
     await flushPromises();
     const trigger = wrapper.get('[aria-label="Ayuda de esta pantalla"]');

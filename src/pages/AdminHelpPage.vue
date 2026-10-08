@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { helpScreens, type HelpScreen } from '@/lib/helpScreens';
 import { toast } from '@/lib/toast';
+import { screenHelpState } from '@/state/screenHelp';
 
 const helps = ref<ScreenHelp[]>([]);
 const loading = ref(true);
@@ -37,7 +38,7 @@ const load = async (): Promise<void> => {
     }
 };
 const edit = (screen: HelpScreen): void => { selected.value = screen; editing.value = true; };
-const saved = async (message: string): Promise<void> => { toast.success(message); await load(); };
+const saved = async (message: string): Promise<void> => { toast.success(message); await Promise.all([load(), screenHelpState.load()]); };
 
 onMounted(() => { void load(); });
 </script>

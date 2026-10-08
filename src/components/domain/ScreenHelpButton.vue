@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { CircleHelp } from '@lucide/vue';
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { getScreenHelp, type ScreenHelp } from '@/api/screen-help';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover';
-import { sessionState } from '@/state/session';
+import { screenHelpState } from '@/state/screenHelp';
 
 type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
@@ -16,7 +15,6 @@ const MARGIN = 16;
 const DRAG_THRESHOLD = 4;
 
 const route = useRoute();
-const help = ref<ScreenHelp | null>(null);
 const open = ref(false);
 const panelId = 'ayuda-pantalla';
 const button = ref<{ $el: HTMLElement } | null>(null);
@@ -24,30 +22,20 @@ const corner = ref<Corner>('bottom-right');
 const bounds = ref({ left: 0, top: 0, right: 0, bottom: 0 });
 const dragging = ref<{ x: number; y: number } | null>(null);
 const screen = computed(() => route.matched.at(-1)?.path ?? '');
-const signedIn = computed(() => sessionState.current.value?.active_role != null);
+const help = computed(() => screenHelpState.forScreen(screen.value));
+const ready = ref(false);
+const settled = ref(false);
 const paragraphs = computed(() => (help.value?.content ?? '').split(/\n{2,}/).map((text) => text.trim()).filter(Boolean));
 const isTop = computed(() => corner.value.startsWith('top'));
 const isLeft = computed(() => corner.value.endsWith('left'));
-
-let request = 0;
-const load = async (): Promise<void> => {
-  const current = ++request;
-  help.value = null;
-  open.value = false;
-  if (!screen.value || !signedIn.value) return;
-  try {
-    const result = await getScreenHelp(screen.value);
-    if (current === request) help.value = result.help;
-  } catch {
-    if (current === request) help.value = null;
-  }
-};
 
 const measure = (): void => {
   const container = button.value?.$el.parentElement;
   if (!container) return;
   const rect = container.getBoundingClientRect();
   const header = container.querySelector('header')?.getBoundingClientRect().bottom ?? 0;
+  if (!ready.value) requestAnimationFrame(() => { settled.value = true; });
+  ready.value = true;
   bounds.value = {
     left: Math.max(rect.left, 0),
     top: Math.max(rect.top, header, 0),
@@ -64,7 +52,7 @@ const cornerPosition = (value: Corner): { x: number; y: number } => ({
 const style = computed(() => {
   const point = dragging.value ?? cornerPosition(corner.value);
 
-  return { left: `${point.x}px`, top: `${point.y}px` };
+  return { left: `${point.x}px`, top: `${point.y}px`, visibility: ready.value ? 'visible' : 'hidden' } as const;
 });
 
 const nearestCorner = (point: { x: number; y: number }): Corner => {
@@ -137,11 +125,10 @@ const nudge = (event: KeyboardEvent): void => {
 let observer: ResizeObserver | null = null;
 const refresh = (): void => { measure(); };
 
-watch([screen, signedIn], () => { void load(); }, { immediate: true });
-watch(help, async (value) => {
+watch(screen, () => { open.value = false; });
+watch(help, (value) => {
   if (!value) return;
-  await Promise.resolve();
-  requestAnimationFrame(() => {
+  void nextTick(() => {
     refresh();
     const container = button.value?.$el.parentElement;
     if (container && !observer && typeof ResizeObserver !== 'undefined') {
@@ -149,9 +136,9 @@ watch(help, async (value) => {
       observer.observe(container);
     }
   });
-});
+}, { immediate: true, flush: 'post' });
+restore();
 onMounted(() => {
-  restore();
   window.addEventListener('resize', refresh);
 });
 onBeforeUnmount(() => {
@@ -168,7 +155,7 @@ onBeforeUnmount(() => {
         type="button"
         size="icon"
         class="fixed z-40 size-11 touch-none rounded-full shadow-lg will-change-[left,top]"
-        :class="dragging ? 'cursor-grabbing' : 'cursor-grab transition-[left,top] duration-300 ease-out'"
+        :class="dragging ? 'cursor-grabbing' : ['cursor-grab', settled && 'transition-[left,top] duration-300 ease-out']"
         :style="style"
         aria-label="Ayuda de esta pantalla"
         aria-description="Arrástrelo a una esquina o use Alt y las flechas para moverlo"

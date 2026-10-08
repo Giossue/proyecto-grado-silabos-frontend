@@ -6,6 +6,7 @@ import { handleRoleRequired, handleUnauthorized } from '@/lib/unauthorized';
 import { initializeAccessibility } from '@/composables/useAccessibility';
 import { initializeTheme } from '@/composables/useAppearance';
 import { initializeDocumentPalette } from '@/lib/documentPalette';
+import '@/state/screenHelp';
 import '@/styles.css';
 import '@/accessibility.css';
 
