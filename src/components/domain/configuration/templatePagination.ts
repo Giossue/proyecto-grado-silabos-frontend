@@ -1,6 +1,6 @@
-/** Medidas de una hoja A4 a 96 ppp: alto de la página, margen de 2,5 cm y separación entre páginas. */
+/** Medidas de una hoja A4 a 96 ppp: alto de la página, margen de 1,5 cm y separación entre páginas. */
 const PX_PER_MM = 96 / 25.4;
-const MARGIN = 25 * PX_PER_MM;
+const MARGIN = 15 * PX_PER_MM;
 const GAP = 16;
 const PAGE = { portrait: 297 * PX_PER_MM, landscape: 210 * PX_PER_MM };
 const WIDTH = { portrait: 210 * PX_PER_MM, landscape: 297 * PX_PER_MM };

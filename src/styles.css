@@ -146,7 +146,7 @@
     --layout-scheduled-skeleton-columns: minmax(12rem, 2fr) minmax(4rem, 0.5fr) minmax(5rem, 0.65fr) minmax(7rem, 1fr) minmax(10rem, 1.4fr) 3rem;
     --layout-teachers-skeleton-columns: minmax(12rem, 1.5fr) minmax(14rem, 2fr) minmax(11rem, 1.2fr) 3rem;
     --layout-table-skeleton-mobile-columns: minmax(0, 1.3fr) minmax(0, 1fr) 5rem;
-    --document-margin: 2.5cm;
+    --document-margin: 1.5cm;
     --document-cell-padding: 2px 4px;
     --document-line-height: 1.15;
     --document-page-number-size: 9pt;
