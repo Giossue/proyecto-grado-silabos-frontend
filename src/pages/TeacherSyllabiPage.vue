@@ -44,8 +44,7 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Mis sílabos" description="Los sílabos de las materias que usted dicta." size="wide">
-    <template v-if="periods.length === 1" #meta><Badge variant="secondary">Período {{ periods[0] }}</Badge></template>
+  <PageFrame :title="periods.length === 1 ? `Período ${periods[0]}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <Card>
       <CardContent class="flex flex-col gap-4">
