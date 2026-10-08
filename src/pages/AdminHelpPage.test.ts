@@ -25,5 +25,7 @@ describe('AdminHelpPage', () => {
     expect(users?.text()).toContain('Con ayuda');
     expect(rows.find((row) => row.text().includes('Mis sílabos'))?.text()).toContain('Sin ayuda');
     expect(rows.some((row) => row.text().includes('Biblioteca'))).toBe(true);
+    expect(rows.some((row) => /-(profile|security|notifications|documents)/.test(row.text()))).toBe(false);
+    expect(rows.filter((row) => row.text().includes('Facultades y carreras'))).toHaveLength(1);
   });
 });
