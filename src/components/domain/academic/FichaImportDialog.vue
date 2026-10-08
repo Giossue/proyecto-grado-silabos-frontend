@@ -65,10 +65,25 @@ const run = async (action: () => Promise<unknown>, fallback: string): Promise<bo
 };
 const analyze = async (): Promise<void> => { if (await run(async () => { current.value = (await startFichaImport(files.value)).import; }, 'No se pudieron enviar los documentos.')) void load(); };
 const discard = async (): Promise<void> => { if (current.value && await run(() => discardFichaImport(current.value!.id), 'No se pudo descartar.')) { current.value = null; chosen.value = new Set(); files.value = []; } };
+const excluded = ref<Record<string, string[]>>({});
+const fieldChosen = (subjectId: string, key: string): boolean => !(excluded.value[subjectId] ?? []).includes(key);
+const toggleField = (subjectId: string, key: string, value: boolean): void => {
+  const rest = (excluded.value[subjectId] ?? []).filter((item) => item !== key);
+  excluded.value = { ...excluded.value, [subjectId]: value ? rest : [...rest, key] };
+};
+const chosenFields = (): Record<string, string[]> | undefined => {
+  const selection: Record<string, string[]> = {};
+  for (const subject of current.value?.subjects ?? []) {
+    if (!chosen.value.has(subject.subject_id) || !(excluded.value[subject.subject_id] ?? []).length) continue;
+    selection[subject.subject_id] = Object.keys(subject.values).filter((key) => fieldChosen(subject.subject_id, key));
+  }
+
+  return Object.keys(selection).length ? selection : undefined;
+};
 const apply = async (): Promise<void> => {
   if (!current.value) return;
   const id = current.value.id;
-  if (await run(() => applyFichaImport(id, [...chosen.value]), 'No se pudieron aplicar las fichas.')) { open.value = false; emit('applied', `Fichas aplicadas a ${chosen.value.size} materias.`); }
+  if (await run(() => applyFichaImport(id, [...chosen.value], chosenFields()), 'No se pudieron aplicar las fichas.')) { open.value = false; emit('applied', `Fichas aplicadas a ${chosen.value.size} materias.`); }
 };
 const expanded = ref<Set<string>>(new Set());
 const toggleExpanded = (id: string): void => { const next = new Set(expanded.value); if (!next.delete(id)) next.add(id); expanded.value = next; };
@@ -97,7 +112,7 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
         </template>
 
         <template v-else-if="ready">
-          <p class="text-sm">Propuesta para {{ proposed.length }} de {{ current?.subjects.length }} materias. Marque las que desea aplicar; lo que no marque no se toca.</p>
+          <p class="text-sm">Propuesta para {{ proposed.length }} de {{ current?.subjects.length }} materias. Marque las que desea aplicar; lo que no marque no se toca. En cada materia puede comparar con la ficha actual y elegir qué campos aplicar.</p>
           <ul class="flex max-h-96 flex-col gap-2 overflow-y-auto">
             <li v-for="subject in current?.subjects" :key="subject.subject_id" class="rounded-md border p-3">
               <div class="flex items-start gap-3">
@@ -106,10 +121,22 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                   <FieldLabel :for="`ficha-${subject.subject_id}`" class="font-medium">{{ subject.name }}<span class="font-normal text-muted-foreground"> · {{ subject.code }}</span></FieldLabel>
                   <p class="text-sm text-muted-foreground">{{ stateText(subject) }}<template v-if="subject.state === 'lista' && subject.replaces"> · reemplaza la ficha actual</template></p>
                   <div v-if="subject.state === 'lista'" class="text-sm">
-                    <Button type="button" variant="link" size="sm" class="h-auto px-0" :aria-expanded="expanded.has(subject.subject_id)" @click="toggleExpanded(subject.subject_id)">{{ expanded.has(subject.subject_id) ? 'Ocultar lo que propone' : 'Ver lo que propone' }}</Button>
-                    <div v-for="(value, key) in expanded.has(subject.subject_id) ? subject.values : {}" :key="key" class="mt-2">
-                      <p class="font-medium">{{ fieldLabel(String(key)) }}</p>
-                      <p v-for="(line, index) in asLines(value)" :key="index" class="whitespace-pre-wrap">{{ Array.isArray(value) ? '• ' : '' }}{{ line }}</p>
+                    <Button type="button" variant="link" size="sm" class="h-auto px-0" :aria-expanded="expanded.has(subject.subject_id)" @click="toggleExpanded(subject.subject_id)">{{ expanded.has(subject.subject_id) ? 'Ocultar la comparación' : (subject.replaces ? 'Comparar con la ficha actual' : 'Ver lo que propone') }}</Button>
+                    <div v-for="(value, key) in expanded.has(subject.subject_id) ? subject.values : {}" :key="key" class="mt-3 rounded-md border p-2">
+                      <div class="flex items-center gap-2">
+                        <Checkbox :id="`ficha-${subject.subject_id}-${key}`" :model-value="fieldChosen(subject.subject_id, String(key))" :disabled="!chosen.has(subject.subject_id) || busy" @update:model-value="toggleField(subject.subject_id, String(key), $event === true)" />
+                        <FieldLabel :for="`ficha-${subject.subject_id}-${key}`" class="font-medium">{{ fieldLabel(String(key)) }}</FieldLabel>
+                      </div>
+                      <div class="mt-2 grid gap-3" :class="subject.replaces ? 'sm:grid-cols-2' : ''">
+                        <div v-if="subject.replaces">
+                          <p class="text-xs font-medium text-muted-foreground">Actual</p>
+                          <p class="whitespace-pre-wrap" :class="subject.current[String(key)] ? '' : 'text-muted-foreground'">{{ subject.current[String(key)] ?? 'Vacío' }}</p>
+                        </div>
+                        <div>
+                          <p class="text-xs font-medium text-muted-foreground">Propuesta</p>
+                          <p v-for="(line, index) in asLines(value)" :key="index" class="whitespace-pre-wrap">{{ Array.isArray(value) ? '• ' : '' }}{{ line }}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

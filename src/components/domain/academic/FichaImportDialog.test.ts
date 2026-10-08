@@ -9,8 +9,8 @@ const ready: FichaImport = {
   id: 'imp-1', state: 'lista', error: null, documents: [{ name: 'proyecto.pdf', size: 10 }], progress: { done: 2, total: 2 },
   fields: [{ key: 'descripcion', label: 'Descripción' }],
   subjects: [
-    { subject_id: 's1', code: 'SW-1', name: 'Algoritmos', cycle: 1, state: 'lista', values: { descripcion: 'Texto propuesto' }, replaces: false },
-    { subject_id: 's2', code: 'SW-2', name: 'Álgebra', cycle: 1, state: 'sin_evidencia', values: {}, replaces: false },
+    { subject_id: 's1', code: 'SW-1', name: 'Algoritmos', cycle: 1, state: 'lista', values: { descripcion: 'Texto propuesto' }, replaces: false, current: {} },
+    { subject_id: 's2', code: 'SW-2', name: 'Álgebra', cycle: 1, state: 'sin_evidencia', values: {}, replaces: false, current: {} },
   ],
 };
 
@@ -42,7 +42,27 @@ describe('FichaImportDialog', () => {
     button('Aplicar a 1 materias')!.click();
     await flushPromises();
 
-    expect(applyFichaImport).toHaveBeenCalledWith('imp-1', ['s1']);
+    expect(applyFichaImport).toHaveBeenCalledWith('imp-1', ['s1'], undefined);
     expect(wrapper.emitted('applied')).toHaveLength(1);
+  });
+
+  it('compara con la ficha actual y aplica solo los campos marcados', async () => {
+    const replacing: FichaImport = { ...ready, fields: [{ key: 'descripcion', label: 'Descripción' }, { key: 'bibliografia', label: 'Bibliografía' }], subjects: [
+      { subject_id: 's1', code: 'SW-1', name: 'Algoritmos', cycle: 1, state: 'lista', values: { descripcion: 'Texto propuesto', bibliografia: ['Libro nuevo'] }, replaces: true, current: { descripcion: 'Texto actual' } },
+    ] };
+    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: replacing });
+    vi.mocked(applyFichaImport).mockResolvedValue({ message: 'ok' });
+    await openDialog();
+
+    button('Comparar con la ficha actual')!.click();
+    await flushPromises();
+    expect(document.body.textContent).toContain('Texto actual');
+    expect(document.body.textContent).toContain('Texto propuesto');
+    (document.body.querySelector('#ficha-s1-descripcion') as HTMLElement).click();
+    await flushPromises();
+    button('Aplicar a 1 materias')!.click();
+    await flushPromises();
+
+    expect(applyFichaImport).toHaveBeenCalledWith('imp-1', ['s1'], { s1: ['bibliografia'] });
   });
 });

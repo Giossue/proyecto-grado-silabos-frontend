@@ -9,6 +9,7 @@ export type FichaImportSubject = {
   state: 'pendiente' | 'lista' | 'sin_evidencia' | 'fallida';
   values: Record<string, string | string[]>;
   replaces: boolean;
+  current: Record<string, string>;
 };
 
 export type FichaImport = {
@@ -32,10 +33,10 @@ export const startFichaImport = (files: File[]) => {
   return api<{ import: FichaImport }>('/coordination/ficha-imports', { method: 'POST', body });
 };
 
-export const applyFichaImport = (id: string, subjects: string[]) =>
+export const applyFichaImport = (id: string, subjects: string[], fields?: Record<string, string[]>) =>
   withPurgeConfirmation((confirmPurge) => api<{ message: string }>(`/coordination/ficha-imports/${id}/apply`, {
     method: 'POST',
-    body: JSON.stringify(confirmPurge ? { subjects, confirm_purge: true } : { subjects }),
+    body: JSON.stringify({ subjects, ...(fields ? { fields } : {}), ...(confirmPurge ? { confirm_purge: true } : {}) }),
   }));
 
 export const discardFichaImport = (id: string) =>
