@@ -82,4 +82,18 @@ describe('ScreenHelpButton', () => {
 
     expect(JSON.parse(localStorage.getItem('silabos:ayuda-posicion') ?? '{}').corner).toBe('top-left');
   });
+
+  it('no hereda la transición del botón al cargar: solo anima al cambiar de esquina', async () => {
+    vi.mocked(listAvailableScreenHelp).mockResolvedValue({ help: [help] });
+    signIn();
+    const wrapper = mountButton();
+    await flushPromises();
+    const trigger = wrapper.get('[aria-label="Ayuda de esta pantalla"]');
+
+    expect(trigger.classes()).toContain('transition-none');
+    expect(trigger.classes()).not.toContain('transition-all');
+
+    await trigger.trigger('keydown', { key: 'ArrowLeft', altKey: true });
+    expect(trigger.classes()).toContain('transition-transform');
+  });
 });
