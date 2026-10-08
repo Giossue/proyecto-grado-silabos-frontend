@@ -7,9 +7,17 @@ import { paths } from '@/lib/routes';
 
 const isAdministrator = computed(() => sessionState.current.value?.active_role?.code === 'administrador');
 const href = computed(() => isAdministrator.value ? paths.admin.convocations : paths.coordination.panel);
-const instruction = computed(() => isAdministrator.value ? 'Pause el proceso para editar desde' : 'Pause la convocatoria para editar desde');
 </script>
 
 <template>
-  <Alert><Lock aria-hidden="true" /><AlertTitle>Edición bloqueada</AlertTitle><AlertDescription>{{ instruction }} <RouterLink :to="href" class="font-medium text-foreground underline underline-offset-4">Convocatorias</RouterLink></AlertDescription></Alert>
+  <Alert>
+    <Lock aria-hidden="true" />
+    <AlertTitle>Edición bloqueada</AlertTitle>
+    <AlertDescription v-if="isAdministrator">
+      Pause el proceso para editar desde <RouterLink :to="href" class="font-medium text-foreground underline underline-offset-4">Convocatorias</RouterLink>
+    </AlertDescription>
+    <AlertDescription v-else>
+      Pause la <RouterLink :to="href" class="font-medium text-foreground underline underline-offset-4">convocatoria</RouterLink> para editar
+    </AlertDescription>
+  </Alert>
 </template>
