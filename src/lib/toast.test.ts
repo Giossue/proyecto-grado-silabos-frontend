@@ -26,8 +26,14 @@ describe('toast', () => {
 
         expect(sonner.success).toHaveBeenCalledWith('Cambios guardados', undefined);
         expect(sonner.info).toHaveBeenCalledWith('Proceso en cola', undefined);
-        expect(sonner.warning).toHaveBeenCalledWith('Revisa el campo', undefined);
-        expect(sonner.error).toHaveBeenCalledWith('No se pudo guardar', undefined);
+        expect(sonner.warning).toHaveBeenCalledWith('Revisa el campo', { duration: 10000 });
+        expect(sonner.error).toHaveBeenCalledWith('No se pudo guardar', { duration: 10000 });
         expect(sonner.loading).toHaveBeenCalledWith('Cargando', undefined);
+    });
+
+    it('respeta la duración pedida en errores', () => {
+        toast.error('Falló', { duration: 3000 });
+
+        expect(sonner.error).toHaveBeenCalledWith('Falló', { duration: 3000 });
     });
 });

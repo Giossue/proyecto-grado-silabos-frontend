@@ -45,12 +45,13 @@ const changePage = (page: number): void => {
           <ChevronLeft aria-hidden="true" />
           <span class="hidden sm:inline">Anterior</span>
         </PaginationPrevious>
-        <span class="px-2 text-sm sm:hidden" aria-live="polite">Página {{ meta.current_page }} de {{ meta.last_page }}</span>
+        <span class="px-2 text-sm sm:hidden">Página {{ meta.current_page }} de {{ meta.last_page }}</span>
         <template v-for="(item, index) in items" :key="index">
           <PaginationItem
             v-if="item.type === 'page'"
             :value="item.value"
             :is-active="item.value === meta.current_page"
+            :aria-current="item.value === meta.current_page ? 'page' : undefined"
             :aria-label="`Ir a la página ${item.value}`"
             class="hidden sm:inline-flex"
           >

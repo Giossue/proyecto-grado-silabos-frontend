@@ -6,11 +6,14 @@ type ToastOptions = Parameters<typeof sonnerToast>[1];
 const normalizeMessage = (message: ToastMessage): ToastMessage =>
     typeof message === 'string' ? message.replace(/\.\s*$/, '') : message;
 
+const LONG_TOAST_MS = 10000;
+
 const show = (
     type: 'success' | 'info' | 'warning' | 'error' | 'loading',
     message: ToastMessage,
     options?: ToastOptions,
-): string | number => sonnerToast[type](normalizeMessage(message), options);
+): string | number =>
+    sonnerToast[type](normalizeMessage(message), type === 'error' || type === 'warning' ? { duration: LONG_TOAST_MS, ...options } : options);
 
 export const toast = {
     success: (message: ToastMessage, options?: ToastOptions) =>

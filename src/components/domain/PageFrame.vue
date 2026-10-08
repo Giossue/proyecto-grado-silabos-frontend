@@ -118,7 +118,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                         <component :is="headerIcon" class="size-5" />
                     </div>
                     <div class="flex min-w-0 flex-col gap-1">
-                        <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
+                        <h1 v-if="title" class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
                         <p v-if="description" class="max-w-3xl text-muted-foreground">
                             {{ withoutEndPeriod(description) }}
                         </p>
