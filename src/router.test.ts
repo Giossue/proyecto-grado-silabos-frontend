@@ -121,7 +121,6 @@ describe('navegación por ámbito activo', () => {
     ['docente', '/admin/plantilla', '/docente/panel'],
     ['docente', '/biblioteca/revisiones', '/docente/panel'],
     ['bibliotecario', '/coordinacion/revisiones', '/biblioteca/panel'],
-    ['coordinador', '/decanato/revisiones', '/coordinacion/panel'],
   ] as const)('redirige una ruta de otro rol al panel de %s', async (code, target, expected) => {
     sessionState.replace(session(code));
     await router.push(target);

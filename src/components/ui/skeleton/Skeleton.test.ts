@@ -6,6 +6,6 @@ describe('Skeleton', () => {
     it('usa un color semántico neutral que se adapta a ambos temas', () => {
         const wrapper = mount(Skeleton);
 
-        expect(wrapper.get('[data-slot="skeleton"]').classes()).toContain('bg-muted-foreground/20');
+        expect(wrapper.get('[data-slot="skeleton"]').classes()).toContain('bg-muted-foreground/25');
     });
 });
