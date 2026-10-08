@@ -44,7 +44,7 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Historial" description="Sílabos de períodos anteriores." size="wide">
+  <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera." size="wide">
     <template v-if="careerName" #meta><span class="text-sm font-semibold">{{ careerName }}</span></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading" variant="table" :columns="4" :filters="0" />
