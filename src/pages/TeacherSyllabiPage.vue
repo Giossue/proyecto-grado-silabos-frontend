@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { SYLLABUS_STATE_OPTIONS, syllabusStateLabel } from '@/lib/syllabusStates';
+import { SYLLABUS_STATE_OPTIONS } from '@/lib/syllabusStates';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { paths } from '@/lib/routes';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
@@ -75,7 +76,7 @@ onMounted(load);
             <div class="flex flex-wrap gap-1.5"><Badge v-for="parallel in syllabus.parallels" :key="parallel" variant="outline">{{ parallel }}</Badge></div>
           </CardHeader>
           <CardContent class="flex flex-col gap-1 text-sm">
-            <span class="font-semibold">{{ syllabusStateLabel(syllabus.state) ?? 'Estado no disponible' }}</span>
+            <SyllabusStateBadge :state="syllabus.state" />
             <span class="text-muted-foreground">{{ formatSavedAt(syllabus.guardado_en) }}</span>
           </CardContent>
         </Card>

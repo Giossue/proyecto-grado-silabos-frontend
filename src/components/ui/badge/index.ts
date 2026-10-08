@@ -15,6 +15,14 @@ export const badgeVariants = cva(
           "border-ring/40 bg-ring/15 text-foreground [a&]:hover:bg-ring/25",
         destructive:
          "border-transparent bg-destructive text-destructive-foreground [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/30",
+        neutral:
+          "border-border bg-muted text-muted-foreground",
+        success:
+          "border-success/30 bg-success/10 text-success",
+        warning:
+          "border-warning/30 bg-warning/10 text-warning",
+        danger:
+          "border-destructive/30 bg-destructive/10 text-destructive",
         outline:
           "border-input text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
       },
