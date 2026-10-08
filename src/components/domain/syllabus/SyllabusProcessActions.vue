@@ -128,10 +128,6 @@ const remove = async (): Promise<void> => {
     <DropdownMenuItem v-if="process.state === 'abierto'" @select="pending = 'pausar'"><Pause />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'pausado'" @select="pending = 'reanudar'"><Play />Reanudar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" @select="deadlineOpen = true"><CalendarClock />Prorrogar plazo</DropdownMenuItem>
-    <template v-if="process.state === 'abierto' || process.state === 'pausado'">
-      <DropdownMenuSeparator />
-      <DropdownMenuItem variant="destructive" @select="pending = 'cerrar'"><Square />Finalizar</DropdownMenuItem>
-    </template>
     <DropdownMenuSeparator v-if="process.state !== 'cerrado'" />
     <DropdownMenuItem variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
   </TableActionsMenu>

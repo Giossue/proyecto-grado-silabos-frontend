@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
-import { CalendarClock, CalendarPlus, Pause, Play, Square, Trash2 } from '@lucide/vue';
+import { CalendarClock, CalendarPlus, Pause, Play, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
 import type { SheetAction } from '@/components/domain/SheetActions.vue';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,6 @@ const actions = computed<SheetAction[]>(() => {
         ...(process.state === 'abierto' ? [{ key: 'pausar', label: 'Pausar', icon: Pause }] : []),
         ...(process.state === 'pausado' ? [{ key: 'reanudar', label: 'Reanudar', icon: Play }] : []),
         ...(active ? [{ key: 'prorrogar', label: 'Prorrogar plazo', icon: CalendarClock }] : []),
-        ...(active ? [{ key: 'cerrar', label: 'Finalizar', icon: Square, destructive: true }] : []),
         { key: 'eliminar', label: 'Eliminar', icon: Trash2, destructive: true },
     ];
 });
