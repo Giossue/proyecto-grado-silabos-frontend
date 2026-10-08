@@ -4,7 +4,7 @@ import { FileText, ImageIcon, Upload, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
 
-type FileKind = 'pdf' | 'png' | 'xlsx';
+type FileKind = 'pdf' | 'png' | 'xlsx' | 'document';
 
 const props = withDefaults(defineProps<{
   modelValue: File | null;
@@ -45,7 +45,19 @@ const formatLimit = (bytes: number): string => {
   return Number.isInteger(megabytes) ? `${megabytes} MB` : formatBytes(bytes);
 };
 
-const copy = computed(() => props.kind === 'xlsx' ? {
+const copy = computed(() => props.kind === 'document' ? {
+  accept: '.pdf,.xlsx,.xls,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel',
+  label: 'Documento',
+  invalid: 'Seleccione archivos PDF o Excel.',
+  maxError: `Cada archivo puede pesar hasta ${formatLimit(props.maxBytes)}.`,
+  emptyTitle: 'Arrastra tus PDF o Excel aquí',
+  selectedTitle: 'Documento seleccionado',
+  selectedDescription: 'Arrastra otro archivo o haz clic para reemplazarlo',
+  replaceLabel: 'Reemplazar documento seleccionado',
+  chooseLabel: 'Cargar documentos PDF o Excel',
+  removeLabel: 'Quitar documento',
+  dropAnnouncement: 'Suelta los documentos para adjuntarlos.',
+} : props.kind === 'xlsx' ? {
   accept: '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   label: 'Excel',
   invalid: 'Seleccione un archivo Excel (.xlsx).',
@@ -89,7 +101,9 @@ const chooseFile = (): void => {
 
 const isValidFile = (file: File): boolean => {
   const name = file.name.toLowerCase();
-  const isAccepted = props.kind === 'png'
+  const isAccepted = props.kind === 'document'
+    ? ['.pdf', '.xlsx', '.xls'].some((extension) => name.endsWith(extension))
+    : props.kind === 'png'
     ? name.endsWith('.png') || file.type === 'image/png'
     : props.kind === 'xlsx'
       ? name.endsWith('.xlsx')

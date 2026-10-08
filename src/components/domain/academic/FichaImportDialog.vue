@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { FileUp, Sparkles, Trash2 } from '@lucide/vue';
+import { FileText, FileUp, Sparkles, Trash2, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { applyFichaImport, discardFichaImport, getFichaImport, startFichaImport, type FichaImport, type FichaImportSubject } from '@/api/ficha-imports';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
+import FileDropzone from '@/components/domain/FileDropzone.vue';
+import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 
 const props = defineProps<{ disabled?: boolean }>();
@@ -48,7 +49,14 @@ const load = async (): Promise<void> => {
 watch(open, (value) => { if (value) { error.value = null; files.value = []; chosen.value = new Set(); void load(); } else stop(); });
 onBeforeUnmount(stop);
 
-const pick = (event: Event): void => { files.value = Array.from((event.target as HTMLInputElement).files ?? []); };
+const MAX_FILES = 6;
+const addFiles = (selected: File[]): void => {
+  const next = [...files.value, ...selected.filter((file) => !files.value.some((item) => item.name === file.name && item.size === file.size))];
+  if (next.length > MAX_FILES) error.value = `Puede subir hasta ${MAX_FILES} documentos.`;
+  files.value = next.slice(0, MAX_FILES);
+};
+const removeFile = (index: number): void => { files.value = files.value.filter((_, position) => position !== index); };
+const fileSize = (bytes: number): string => (bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`);
 const run = async (action: () => Promise<unknown>, fallback: string): Promise<boolean> => {
   busy.value = true; error.value = null;
   try { await action(); return true; }
@@ -113,12 +121,17 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
         <template v-else>
           <div class="flex flex-col gap-2">
             <FieldLabel for="ficha-import-files">Documentos (PDF o Excel, hasta 6)</FieldLabel>
-            <Input id="ficha-import-files" type="file" multiple accept=".pdf,.xlsx,.xls,application/pdf" :disabled="busy" @change="pick" />
-            <p v-if="files.length" class="text-sm text-muted-foreground">{{ files.map((file) => file.name).join(', ') }}</p>
+            <FileDropzone :model-value="null" input-id="ficha-import-files" kind="document" multiple :max-bytes="20 * 1024 * 1024" :disabled="busy || files.length >= MAX_FILES" @files-selected="addFiles" @validation-error="(message) => { if (message) error = message; }" />
+            <Attachment v-for="(file, index) in files" :key="`${file.name}-${file.size}`" class="w-full">
+              <AttachmentMedia><FileText aria-hidden="true" /></AttachmentMedia>
+              <AttachmentContent><AttachmentTitle>{{ file.name }}</AttachmentTitle><AttachmentDescription>{{ fileSize(file.size) }}</AttachmentDescription></AttachmentContent>
+              <AttachmentActions><AttachmentAction type="button" :aria-label="`Quitar ${file.name}`" :disabled="busy" @click="removeFile(index)"><X aria-hidden="true" /></AttachmentAction></AttachmentActions>
+            </Attachment>
           </div>
         </template>
       </div>
       <DialogFooter>
+        <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
         <template v-if="ready">
           <Button type="button" variant="outline" :disabled="busy" @click="discard"><Trash2 data-icon="inline-start" aria-hidden="true" />Descartar</Button>
           <Button type="button" :disabled="busy || chosen.size === 0" @click="apply"><Spinner v-if="busy" data-icon="inline-start" />Aplicar a {{ chosen.size }} materias</Button>
