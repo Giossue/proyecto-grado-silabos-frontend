@@ -16,7 +16,7 @@ defineProps<{
             <div class="flex items-center justify-end">
                 <AppearanceToggle />
             </div>
-            <div class="flex flex-1 items-center justify-center">
+            <main id="contenido" tabindex="-1" class="flex flex-1 items-center justify-center outline-none">
                 <div class="flex w-full max-w-sm flex-col gap-6">
                     <div class="flex flex-col gap-2 text-center">
                         <h1 v-if="title" class="text-2xl font-semibold tracking-tight">
@@ -28,7 +28,7 @@ defineProps<{
                     </div>
                     <slot />
                 </div>
-            </div>
+            </main>
         </div>
         <div
             class="relative hidden overflow-hidden bg-brand-surface text-brand-foreground lg:flex lg:items-center lg:justify-center"

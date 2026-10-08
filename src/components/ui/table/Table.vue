@@ -37,6 +37,7 @@ const region = computed(
             <table
                 data-slot="table"
                 role="table"
+                :aria-label="props.label"
                 :data-overflows="overflows ? 'true' : 'false'"
                 :data-cards="props.cards ? 'true' : 'false'"
                 :class="cn('w-full caption-bottom text-sm', props.class)"

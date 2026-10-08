@@ -93,6 +93,7 @@ const toggle = (): void => {
   open.value = !open.value;
 };
 const nudge = (event: KeyboardEvent): void => {
+  if (!event.altKey) return;
   const moves: Record<string, [number, number]> = { ArrowLeft: [-STEP, 0], ArrowRight: [STEP, 0], ArrowUp: [0, STEP], ArrowDown: [0, -STEP] };
   const move = moves[event.key];
   if (!move) return;
@@ -121,6 +122,8 @@ onBeforeUnmount(() => window.removeEventListener('resize', refresh));
         class="fixed z-40 size-11 touch-none rounded-full shadow-lg"
         :style="position"
         aria-label="Ayuda de esta pantalla"
+        aria-description="Use Alt y las flechas para mover el botón"
+        aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight"
         :aria-expanded="open"
         @pointerdown="startDrag"
         @pointermove="moveDrag"

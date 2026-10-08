@@ -184,7 +184,7 @@ watch(open, (value) => value && reset());
             <h3 id="parallel-summary-title" class="text-sm font-medium">Paralelos registrados</h3>
             <Alert v-if="rowError" variant="destructive"><AlertDescription>{{ rowError }}</AlertDescription></Alert>
             <div class="overflow-hidden rounded-md border">
-              <Table>
+              <Table label="Paralelos de la materia">
                 <TableHeader><TableRow><TableHead>Paralelo</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
                 <TableBody>
                   <TableEmpty v-if="parallels.length === 0" :colspan="4">Sin paralelos registrados</TableEmpty>

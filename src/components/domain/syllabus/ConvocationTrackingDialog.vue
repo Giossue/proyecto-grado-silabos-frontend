@@ -96,7 +96,7 @@ watch(() => props.open, (open) => {
           </ClientFilterBar>
 
           <div class="overflow-x-auto">
-            <Table>
+            <Table label="Seguimiento de la convocatoria">
               <TableHeader>
                 <TableRow>
                   <TableHead>Asignatura</TableHead>

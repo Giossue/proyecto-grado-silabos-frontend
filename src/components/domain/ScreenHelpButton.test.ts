@@ -47,7 +47,7 @@ describe('ScreenHelpButton', () => {
     const wrapper = mountButton();
     await flushPromises();
 
-    await wrapper.get('[aria-label="Ayuda de esta pantalla"]').trigger('keydown', { key: 'ArrowLeft' });
+    await wrapper.get('[aria-label="Ayuda de esta pantalla"]').trigger('keydown', { key: 'ArrowLeft', altKey: true });
     expect(JSON.parse(localStorage.getItem('silabos:ayuda-posicion') ?? '{}')).toMatchObject({ right: expect.any(Number), bottom: expect.any(Number) });
   });
 });

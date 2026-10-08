@@ -4,6 +4,7 @@ import { RouterView, useRoute } from 'vue-router';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SyllabusEditorLayout from '@/layouts/SyllabusEditorLayout.vue';
 import WorkspaceLayout from '@/layouts/WorkspaceLayout.vue';
+import { focusContent } from '@/lib/pageAnnouncement';
 import type { BreadcrumbItem } from '@/types';
 
 const route = useRoute();
@@ -26,6 +27,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
 </script>
 
 <template>
+    <a href="#contenido" class="sr-only z-50 rounded-md bg-background px-4 py-2 text-sm font-medium text-foreground shadow-lg focus:not-sr-only focus:fixed focus:top-2 focus:left-2" @click.prevent="focusContent">Saltar al contenido</a>
     <SyllabusEditorLayout v-if="usesSyllabusEditorLayout">
         <RouterView />
     </SyllabusEditorLayout>

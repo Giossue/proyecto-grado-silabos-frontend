@@ -71,9 +71,9 @@ onMounted(load);
                 </template>
             </FilterToolbar></form>
 
-            <Table><TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Rol vigente</TableHead><TableHead>Carrera</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
+            <Table label="Usuarios y roles"><TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Rol vigente</TableHead><TableHead>Carrera</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader><TableBody>
                 <TableEmpty v-if="result.users.data.length === 0" :colspan="5">No se encontraron cuentas con estos filtros.</TableEmpty>
-                <TableRow v-for="user in result.users.data" v-else :key="user.id" :class="user.id !== currentUserId ? 'cursor-pointer' : ''" :tabindex="user.id !== currentUserId ? 0 : undefined" :aria-label="user.id !== currentUserId ? `Editar ${user.nombre}` : undefined" @click="activateRow($event, () => openUser(user))" @keydown.enter.self.prevent="openUser(user)">
+                <TableRow v-for="user in result.users.data" v-else :key="user.id" :class="user.id !== currentUserId ? 'cursor-pointer' : ''" :tabindex="user.id !== currentUserId ? 0 : undefined" :aria-label="user.id !== currentUserId ? `Editar ${user.nombre}` : undefined" @click="activateRow($event, () => openUser(user))" @keydown.enter.self.prevent="openUser(user)" @keydown.space.self.prevent="openUser(user)">
                     <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span></div></TableCell>
                     <TableCell><div class="flex flex-col items-start gap-1"><span v-for="(item, index) in user.roles" :key="`rol-${index}`">{{ item.name }}</span><span v-if="user.roles.length === 0" class="text-sm text-muted-foreground">Sin rol vigente</span></div></TableCell>
                     <TableCell><div class="flex flex-col items-start gap-1 text-sm"><span v-for="(item, index) in user.roles" :key="`ambito-${index}`" :class="item.career_name ? '' : 'text-muted-foreground'">{{ careerOf(item) }}</span><span v-if="user.roles.length === 0" class="text-muted-foreground">—</span></div></TableCell>

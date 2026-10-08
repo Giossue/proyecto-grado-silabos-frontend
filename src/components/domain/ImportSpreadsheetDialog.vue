@@ -68,7 +68,7 @@ const download = async (): Promise<void> => {
                 <template v-if="result">
                     <p v-if="result.valid" class="text-sm">Todas las filas son válidas ({{ result.rows.length }}). Confirme para importarlas.</p>
                     <p v-else class="text-sm text-destructive">{{ failedRows }} fila(s) con errores. Corrija el archivo y vuelva a subirlo; no se importó nada.</p>
-                    <Table>
+                    <Table label="Vista previa de la importación">
                         <TableHeader><TableRow><TableHead>Fila</TableHead><TableHead v-for="column in columns" :key="column.key">{{ column.label }}</TableHead><TableHead>Resultado</TableHead></TableRow></TableHeader>
                         <TableBody>
                             <TableRow v-for="row in result.rows" :key="row.line">

@@ -83,10 +83,10 @@ const resendInvitation = async (userId: string): Promise<void> => {
       <template #filters><Field><FieldLabel for="teacher-assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="teacher-assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="pending">Pendiente de activación</SelectItem></SelectGroup></SelectContent></Select></Field></template>
     </ClientFilterBar>
     <FeedbackAlert v-if="resendError" :message="resendError" />
-    <Table><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
+    <Table label="Docentes de la carrera"><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
       <TableBody>
         <TableEmpty v-if="!items.length" :colspan="4">{{ filter.active.value ? "Ningún docente coincide con la búsqueda." : "No existen docentes en esta carrera." }}</TableEmpty>
-        <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="activateRow($event, () => editing = item)" @keydown.enter.self.prevent="editing = item">
+        <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="activateRow($event, () => editing = item)" @keydown.enter.self.prevent="editing = item" @keydown.space.self.prevent="editing = item">
           <TableCell>{{ item.name }}</TableCell>
           <TableCell>{{ item.email }}</TableCell>
           <TableCell>{{ statusOf(item) }}</TableCell>

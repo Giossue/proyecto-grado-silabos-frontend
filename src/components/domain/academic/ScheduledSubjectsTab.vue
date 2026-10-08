@@ -85,7 +85,7 @@ watch(() => props.data.selectedPeriodId, (value) => { selectedPeriod.value = val
         </template>
       </ClientFilterBar>
       <Alert v-if="selectedPeriodOption?.planning_enabled === false"><AlertDescription>Período finalizado · solo lectura</AlertDescription></Alert>
-      <Table>
+      <Table label="Materias programadas">
         <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Ciclo</TableHead><TableHead>Paralelos</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="!items.length" :colspan="6">{{ emptyMessage }}</TableEmpty>

@@ -83,11 +83,11 @@ onMounted(() => { void load(); });
           </Field>
         </template>
       </ClientFilterBar>
-      <Table>
+      <Table label="Materias de la malla">
         <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Código</TableHead><TableHead>Ciclo</TableHead><TableHead>Ficha</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="!items.length" :colspan="4">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</TableEmpty>
-          <TableRow v-for="subject in items" v-else :key="subject.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="activateRow($event, () => open(subject))" @keydown.enter.self.prevent="open(subject)">
+          <TableRow v-for="subject in items" v-else :key="subject.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="activateRow($event, () => open(subject))" @keydown.enter.self.prevent="open(subject)" @keydown.space.self.prevent="open(subject)">
             <TableCell>{{ subject.nombre }}</TableCell>
             <TableCell>{{ subject.codigo_asignatura }}</TableCell>
             <TableCell>{{ cycleLabel(subject) }}</TableCell>

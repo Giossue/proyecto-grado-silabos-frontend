@@ -5,7 +5,7 @@ import { Toaster } from '@/components/ui/sonner';
 
 <template>
     <div class="min-h-dvh min-w-0 bg-background text-foreground">
-        <main class="min-h-dvh w-full">
+        <main id="contenido" tabindex="-1" class="min-h-dvh w-full outline-none">
             <slot />
         </main>
 

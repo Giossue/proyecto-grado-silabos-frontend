@@ -89,7 +89,7 @@ onMounted(load);
           </Field>
         </template>
       </ClientFilterBar>
-      <Table data-cards="true">
+      <Table label="Convocatorias" data-cards="true">
         <TableHeader><TableRow><TableHead>Período</TableHead><TableHead>Clases</TableHead><TableHead>Elaboración de sílabos</TableHead><TableHead>Estado</TableHead><TableHead class="text-right">Acciones</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="page.length === 0" :colspan="5">{{ filter.active.value ? 'Ningún período coincide con los filtros.' : 'No hay periodos registrados. Cree el primero con «Nueva convocatoria».' }}</TableEmpty>

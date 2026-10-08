@@ -50,7 +50,7 @@ onMounted(() => { void load(); });
       <Table label="Ayuda de pantallas">
         <TableHeader><TableRow><TableHead>Pantalla</TableHead><TableHead>Rol</TableHead><TableHead>Ayuda</TableHead></TableRow></TableHeader>
         <TableBody>
-          <TableRow v-for="screen in helpScreens" :key="screen.key" class="cursor-pointer" tabindex="0" :aria-label="`Editar la ayuda de ${screen.label}`" @click="edit(screen)" @keydown.enter.self.prevent="edit(screen)">
+          <TableRow v-for="screen in helpScreens" :key="screen.key" class="cursor-pointer" tabindex="0" :aria-label="`Editar la ayuda de ${screen.label}`" @click="edit(screen)" @keydown.enter.self.prevent="edit(screen)" @keydown.space.self.prevent="edit(screen)">
             <TableCell>{{ screen.label }}</TableCell>
             <TableCell>{{ screen.roleLabel }}</TableCell>
             <TableCell :class="byScreen.get(screen.key)?.active ? '' : 'text-muted-foreground'">{{ statusOf(screen) }}</TableCell>

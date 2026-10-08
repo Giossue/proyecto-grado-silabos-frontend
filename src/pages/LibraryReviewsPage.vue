@@ -94,7 +94,7 @@ onMounted(() => { void load(initialPage); });
             </template>
           </FilterToolbar>
         </form>
-        <Table>
+        <Table label="Revisiones de biblioteca">
           <TableHeader>
             <TableRow>
               <TableHead>Asignatura</TableHead>
@@ -104,7 +104,7 @@ onMounted(() => { void load(initialPage); });
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow v-for="item in data.reviews.data" :key="item.revision_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(paths.library.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(paths.library.review(item.revision_id))">
+            <TableRow v-for="item in data.reviews.data" :key="item.revision_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(paths.library.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(paths.library.review(item.revision_id))" @keydown.space.self.prevent="router.push(paths.library.review(item.revision_id))">
               <TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }}</div></TableCell>
               <TableCell>{{ item.career }}</TableCell>
               <TableCell>{{ item.teachers.join(', ') }}</TableCell>

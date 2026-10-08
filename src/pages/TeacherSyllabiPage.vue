@@ -60,11 +60,11 @@ onMounted(load);
           </FilterToolbar>
         </form>
         <LoadingSkeleton v-if="!result && !error" variant="table-body" :columns="5" :search="false" :filters="0" :actions="false" />
-        <Table v-if="result">
+        <Table v-if="result" label="Mis sílabos">
           <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos</TableHead><TableHead>Estado</TableHead><TableHead>Iniciado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
           <TableBody>
             <TableEmpty v-if="result.syllabi.data.length === 0" :colspan="5">No tiene sílabos asignados con este rol.</TableEmpty>
-            <TableRow v-for="syllabus in result.syllabi.data" v-else :key="syllabus.id" class="cursor-pointer" role="link" tabindex="0" :aria-label="`Abrir sílabo de ${syllabus.subject}`" @click="openSyllabus(syllabus.id)" @keydown.enter.prevent="openSyllabus(syllabus.id)"><TableCell>{{ syllabus.subject }}</TableCell><TableCell><div class="flex flex-wrap gap-1.5"><Badge v-for="parallel in syllabus.parallels" :key="parallel" variant="outline">{{ parallel }}</Badge></div></TableCell><TableCell>{{ syllabusStateLabel(syllabus.state) ?? 'Estado no disponible' }}</TableCell><TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell><TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell></TableRow>
+            <TableRow v-for="syllabus in result.syllabi.data" v-else :key="syllabus.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir sílabo de ${syllabus.subject}`" @click="openSyllabus(syllabus.id)" @keydown.enter.self.prevent="openSyllabus(syllabus.id)" @keydown.space.self.prevent="openSyllabus(syllabus.id)"><TableCell>{{ syllabus.subject }}</TableCell><TableCell><div class="flex flex-wrap gap-1.5"><Badge v-for="parallel in syllabus.parallels" :key="parallel" variant="outline">{{ parallel }}</Badge></div></TableCell><TableCell>{{ syllabusStateLabel(syllabus.state) ?? 'Estado no disponible' }}</TableCell><TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell><TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell></TableRow>
           </TableBody>
         </Table>
         <TablePagination v-if="result" :meta="result.syllabi" label="Paginación de sílabos asignados" @update:page="load" />

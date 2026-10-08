@@ -138,7 +138,7 @@ const {
                     </Field>
                 </template>
             </ClientFilterBar>
-            <Table>
+            <Table label="Listado académico">
                 <TableHeader>
                     <TableRow>
                         <TableHead>Facultad</TableHead>
@@ -162,7 +162,7 @@ const {
                         tabindex="0"
                         :aria-label="`Editar ${faculty.nombre}`"
                         @click="activateRow($event, () => editRecord(faculty.id))"
-                        @keydown.enter.self.prevent="editRecord(faculty.id)"
+                        @keydown.enter.self.prevent="editRecord(faculty.id)" @keydown.space.self.prevent="editRecord(faculty.id)"
                     >
                         <TableCell>
                             {{ faculty.nombre }}
@@ -243,7 +243,7 @@ const {
                     </Field>
                 </template>
             </ClientFilterBar>
-            <Table>
+            <Table label="Listado académico">
                 <TableHeader>
                     <TableRow>
                         <TableHead>Carrera</TableHead>
@@ -268,7 +268,7 @@ const {
                         tabindex="0"
                         :aria-label="`Editar ${career.name}`"
                         @click="activateRow($event, () => editRecord(career.id))"
-                        @keydown.enter.self.prevent="editRecord(career.id)"
+                        @keydown.enter.self.prevent="editRecord(career.id)" @keydown.space.self.prevent="editRecord(career.id)"
                     >
                         <TableCell>
                             {{ career.name }}

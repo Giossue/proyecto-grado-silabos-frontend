@@ -96,7 +96,7 @@ watch(periodId, () => { if (open.value) updateProposal(); });
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
           <Alert v-if="!periodId"><AlertDescription>No hay un período disponible para preparar.</AlertDescription></Alert>
           <template v-else>
-            <Table>
+            <Table label="Paralelos y docentes propuestos">
               <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Paralelos, jornada y docente</TableHead></TableRow></TableHeader>
               <TableBody>
                 <TableEmpty v-if="!rows.length" :colspan="2">Todas las materias activas ya están programadas en este período. Agregue paralelos desde las acciones de cada materia.</TableEmpty>

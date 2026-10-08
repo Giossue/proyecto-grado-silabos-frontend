@@ -64,7 +64,7 @@ const user = computed<User>(() => ({
                 </DropdownMenu>
             </div>
         </header>
-        <main class="flex flex-1 flex-col p-4 md:p-6">
+        <main id="contenido" tabindex="-1" class="flex flex-1 flex-col p-4 outline-none md:p-6">
             <slot />
         </main>
     </div>

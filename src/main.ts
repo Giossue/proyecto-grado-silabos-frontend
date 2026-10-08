@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import App from '@/App.vue';
 import { router } from '@/router';
+import { installPageAnnouncements } from '@/lib/pageAnnouncement';
 import { handleRoleRequired, handleUnauthorized } from '@/lib/unauthorized';
 import { initializeAccessibility } from '@/composables/useAccessibility';
 import { initializeTheme } from '@/composables/useAppearance';
@@ -9,6 +10,7 @@ import '@/styles.css';
 import '@/accessibility.css';
 
 initializeTheme();
+installPageAnnouncements(router);
 initializeAccessibility();
 initializeDocumentPalette();
 
