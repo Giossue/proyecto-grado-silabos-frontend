@@ -10,7 +10,7 @@ import ManagedUserDetailSheet from '@/components/domain/identity/ManagedUserDeta
 import ManagedUserPendingActions from '@/components/domain/identity/ManagedUserPendingActions.vue';
 import ManagedUserSheet from '@/components/domain/identity/ManagedUserSheet.vue';
 import ImportSpreadsheetDialog from '@/components/domain/ImportSpreadsheetDialog.vue';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -77,8 +77,8 @@ onMounted(load);
                 <TableEmpty v-if="result.users.data.length === 0" :colspan="5">No se encontraron cuentas con estos filtros.</TableEmpty>
                 <TableRow v-for="user in result.users.data" v-else :key="user.id" class="cursor-pointer" tabindex="0" :aria-label="`Ver ${user.nombre}`" @click="activateRow($event, () => openUser(user))" @keydown.enter.self.prevent="openUser(user)" @keydown.space.self.prevent="openUser(user)">
                     <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span></div></TableCell>
-                    <TableCell><div class="flex items-center gap-2"><span v-if="user.roles[0]">{{ user.roles[0].name }}</span><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span><Tooltip v-if="user.roles.length > 1"><TooltipTrigger as-child><span class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground" tabindex="0" :aria-label="`${user.roles.length - 1} rol más`">+{{ user.roles.length - 1 }}</span></TooltipTrigger><TooltipContent><ul class="flex flex-col gap-1"><li v-for="item in user.roles.slice(1)" :key="item.id">{{ item.name }}</li></ul></TooltipContent></Tooltip></div></TableCell>
-                    <TableCell><div class="flex items-center gap-2 text-sm"><span v-if="user.roles[0]" :class="user.roles[0].career_name ? '' : 'text-muted-foreground'">{{ careerOf(user.roles[0]) }}</span><span v-else class="text-muted-foreground">—</span><Tooltip v-if="user.roles.length > 1"><TooltipTrigger as-child><span class="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground" tabindex="0" :aria-label="`${user.roles.length - 1} carrera más`">+{{ user.roles.length - 1 }}</span></TooltipTrigger><TooltipContent><ul class="flex flex-col gap-1"><li v-for="item in user.roles.slice(1)" :key="item.id">{{ careerOf(item) }}</li></ul></TooltipContent></Tooltip></div></TableCell>
+                    <TableCell><div class="flex items-center gap-2"><span v-if="user.roles[0]">{{ user.roles[0].name }}</span><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span><Badge v-if="user.roles.length > 1" variant="secondary">+{{ user.roles.length - 1 }}<span class="sr-only"> más</span></Badge></div></TableCell>
+                    <TableCell><div class="flex items-center gap-2 text-sm"><span v-if="user.roles[0]" :class="user.roles[0].career_name ? '' : 'text-muted-foreground'">{{ careerOf(user.roles[0]) }}</span><span v-else class="text-muted-foreground">—</span><Badge v-if="user.roles.length > 1" variant="secondary">+{{ user.roles.length - 1 }}<span class="sr-only"> más</span></Badge></div></TableCell>
                     <TableCell>{{ statusOf(user) }}</TableCell>
                     <TableCell class="text-right"><TableActionsMenu v-if="hasActions(user)" :label="`Acciones para ${user.nombre}`"><ManagedUserAccessAction v-if="user.id !== currentUserId && !user.pending_activation" :user="user" @changed="changed" /><ManagedUserPendingActions v-if="user.pending_activation && user.active" :user-id="user.id" :user-name="user.nombre" :user-email="user.correo_electronico" @changed="changed" /></TableActionsMenu></TableCell>
                 </TableRow>
