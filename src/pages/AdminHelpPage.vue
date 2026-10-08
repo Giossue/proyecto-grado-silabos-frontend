@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { computed, onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { listScreenHelp, type ScreenHelp } from '@/api/screen-help';
@@ -20,6 +21,11 @@ const editing = ref(false);
 const byScreen = computed(() => new Map(helps.value.map((help) => [help.screen, help])));
 const selectedHelp = computed(() => (selected.value ? byScreen.value.get(selected.value.key) ?? null : null));
 
+const toneOf = (screen: HelpScreen): StatusTone => {
+    const help = byScreen.value.get(screen.key);
+    if (!help) return 'neutral';
+    return help.active ? 'success' : 'warning';
+};
 const statusOf = (screen: HelpScreen): string => {
     const help = byScreen.value.get(screen.key);
     if (!help) return 'Sin ayuda';
@@ -54,7 +60,7 @@ onMounted(() => { void load(); });
           <TableRow v-for="screen in helpScreens" :key="screen.key" class="cursor-pointer" tabindex="0" :aria-label="`Editar la ayuda de ${screen.label}`" @click="edit(screen)" @keydown.enter.self.prevent="edit(screen)" @keydown.space.self.prevent="edit(screen)">
             <TableCell>{{ screen.label }}</TableCell>
             <TableCell>{{ screen.roleLabel }}</TableCell>
-            <TableCell :class="byScreen.get(screen.key)?.active ? '' : 'text-muted-foreground'">{{ statusOf(screen) }}</TableCell>
+            <TableCell><StatusBadge :label="statusOf(screen)" :tone="toneOf(screen)" /></TableCell>
           </TableRow>
         </TableBody>
       </Table>

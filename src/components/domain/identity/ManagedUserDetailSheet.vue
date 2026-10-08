@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { Ban, CircleCheck, MailCheck, Pencil, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import type { ManagedUser } from '@/api/admin-users';
@@ -72,10 +73,10 @@ const saved = (message: string): void => {
 };
 
 const status = computed(() => {
-    if (!props.user.active) return { label: 'Inactivo' };
-    if (props.user.pending_activation) return { label: 'Pendiente' };
+    if (!props.user.active) return { label: 'Inactivo', tone: 'neutral' as StatusTone };
+    if (props.user.pending_activation) return { label: 'Pendiente', tone: 'warning' as StatusTone };
 
-    return { label: 'Activo' };
+    return { label: 'Activo', tone: 'success' as StatusTone };
 });
 
 const scopeOf = (assignment: ManagedUserRoleAssignment): string =>
@@ -102,7 +103,7 @@ const currentAssignments = computed(() =>
                 <dl class="grid gap-3 text-sm">
                     <div class="flex flex-col gap-1">
                         <dt class="font-semibold">Estado</dt>
-                        <dd>{{ status.label }}</dd>
+                        <dd><StatusBadge :label="status.label" :tone="status.tone" /></dd>
                     </div>
                     <div class="flex flex-col gap-1">
                         <dt class="font-semibold">Nombre completo</dt>

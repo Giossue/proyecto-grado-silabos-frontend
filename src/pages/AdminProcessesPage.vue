@@ -7,6 +7,7 @@ export type ConvocationRow = PeriodRecord & { process: SyllabusProcess | null };
 </script>
 
 <script setup lang="ts">
+import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue';
 import { useRouter } from 'vue-router';
@@ -56,6 +57,9 @@ const rows = computed<ConvocationRow[]>(() => {
 const stateLabel = (row: ConvocationRow): string => row.process
   ? ({ abierto: 'Abierto', pausado: 'Pausado', cerrado: 'Finalizado' })[row.process.state]
   : 'Sin iniciar';
+const stateTone = (row: ConvocationRow): StatusTone => row.process
+  ? ({ abierto: 'success', pausado: 'warning', cerrado: 'info' } as const)[row.process.state]
+  : 'neutral';
 const filter = useClientFilter(rows, (row) => [row.code], {
   estado: { matches: (row, value) => (value === 'sin_iniciar' ? row.process === null : row.process?.state === value) },
 });
@@ -105,7 +109,7 @@ onMounted(load);
             <TableCell><time :datetime="row.starts_on">{{ formatDate(row.starts_on) }}</time> → <time :datetime="row.ends_on">{{ formatDate(row.ends_on) }}</time></TableCell>
             <TableCell v-if="row.process"><time :datetime="row.process.starts_at">{{ formatDate(row.process.starts_at) }}</time> → <time :datetime="row.process.due_at">{{ formatDate(row.process.due_at) }}</time></TableCell>
             <TableCell v-else class="text-muted-foreground">Sin fechas</TableCell>
-            <TableCell>{{ stateLabel(row) }}</TableCell>
+            <TableCell><StatusBadge :label="stateLabel(row)" :tone="stateTone(row)" /></TableCell>
           </TableRow>
         </TableBody>
       </Table>

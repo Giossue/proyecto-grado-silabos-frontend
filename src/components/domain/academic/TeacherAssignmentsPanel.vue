@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StatusBadge from '@/components/domain/StatusBadge.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Trash2 } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
@@ -96,7 +97,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
         <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="activateRow($event, () => openEditor(item))" @keydown.enter.self.prevent="openEditor(item)" @keydown.space.self.prevent="openEditor(item)">
           <TableCell>{{ item.name }}</TableCell>
           <TableCell>{{ item.email }}</TableCell>
-          <TableCell>{{ statusOf(item) }}</TableCell>
+          <TableCell><StatusBadge :label="statusOf(item)" :tone="item.pending_activation ? 'warning' : 'success'" /></TableCell>
         </TableRow>
       </TableBody>
     </Table>

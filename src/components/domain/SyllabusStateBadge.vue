@@ -1,20 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Badge, type BadgeVariants } from '@/components/ui/badge';
+import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { syllabusStateLabel } from '@/lib/syllabusStates';
 
-const props = defineProps<{ state: string }>();
+defineProps<{ state: string }>();
 
-const variants: Record<string, NonNullable<BadgeVariants['variant']>> = {
+const tones: Record<string, StatusTone> = {
     sin_iniciar: 'neutral',
-    borrador: 'secondary',
+    borrador: 'info',
     en_revision: 'warning',
     correccion_solicitada: 'danger',
     aprobado: 'success',
 };
-const variant = computed(() => variants[props.state] ?? 'outline');
 </script>
 
 <template>
-    <Badge :variant="variant">{{ syllabusStateLabel(state) }}</Badge>
+    <StatusBadge :label="syllabusStateLabel(state)" :tone="tones[state] ?? 'neutral'" />
 </template>

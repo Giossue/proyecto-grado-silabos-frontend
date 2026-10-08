@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
-import { syllabusStateLabel } from '@/lib/syllabusStates';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import { ArrowLeft, LockKeyhole, ShieldCheck, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
@@ -102,7 +102,7 @@ onMounted(load);
     <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="area.reviews"><ArrowLeft aria-hidden="true" />Volver a la cola</RouterLink></Button></template>
     <template #meta>
       <Badge variant="secondary">Revisión {{ data.revision.number }}</Badge>
-      <Badge variant="outline">{{ syllabusStateLabel(data.syllabus.state) }}</Badge>
+      <SyllabusStateBadge :state="data.syllabus.state" />
       <Badge v-if="stageLabel" variant="outline">{{ stageLabel }}</Badge>
       <span class="text-sm text-muted-foreground">Enviada por {{ data.revision.submitted_by }} · {{ formatDateDisplay(data.revision.submitted_at) }}</span>
     </template>

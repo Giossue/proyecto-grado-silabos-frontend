@@ -12,5 +12,5 @@ export const LIBRARY_STATE_LABELS: Record<LibraryReviewState, string> = {
 export const libraryStateLabel = (state: string): string =>
   Object.hasOwn(LIBRARY_STATE_LABELS, state) ? LIBRARY_STATE_LABELS[state as LibraryReviewState] : 'Estado no disponible';
 
-export const libraryStateVariant = (state: string): 'default' | 'secondary' | 'outline' | 'destructive' =>
-  ({ pendiente: 'default', aprobado: 'secondary', por_firmar: 'secondary', firmado: 'secondary', comentado: 'outline', anulado: 'destructive' } as const)[state as LibraryReviewState] ?? 'outline';
+export const libraryStateTone = (state: string): 'neutral' | 'info' | 'warning' | 'danger' | 'success' =>
+  ({ pendiente: 'warning', aprobado: 'success', por_firmar: 'info', firmado: 'success', comentado: 'danger', anulado: 'neutral' } as const)[state as LibraryReviewState] ?? 'neutral';

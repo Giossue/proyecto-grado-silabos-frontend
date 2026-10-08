@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { CalendarClock, CalendarPlus, Pause, Play, Square, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
 import SheetActions, { type SheetAction } from '@/components/domain/SheetActions.vue';
@@ -17,6 +18,9 @@ const state = computed(() => props.row.process
     ? ({ abierto: 'Abierto', pausado: 'Pausado', cerrado: 'Finalizado' })[props.row.process.state]
     : 'Sin iniciar');
 
+const tone = computed<StatusTone>(() => props.row.process
+    ? ({ abierto: 'success', pausado: 'warning', cerrado: 'info' } as const)[props.row.process.state]
+    : 'neutral');
 const actions = computed<SheetAction[]>(() => {
     const process = props.row.process;
     if (!process) {
@@ -57,7 +61,7 @@ const run = (key: string): void => {
                 <dl class="grid gap-3 text-sm">
                     <div class="flex flex-col gap-1">
                         <dt class="font-semibold">Estado</dt>
-                        <dd>{{ state }}</dd>
+                        <dd><StatusBadge :label="state" :tone="tone" /></dd>
                     </div>
                     <div class="flex flex-col gap-1">
                         <dt class="font-semibold">Clases</dt>

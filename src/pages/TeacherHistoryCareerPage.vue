@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -11,7 +12,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
-import { syllabusStateLabel } from '@/lib/syllabusStates';
 
 const route = useRoute();
 const router = useRouter();
@@ -57,7 +57,7 @@ onMounted(load);
             <TableRow v-for="syllabus in group.items" :key="syllabus.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir sílabo de ${syllabus.subject}`" @click="activateRow($event, () => open(syllabus.id))" @keydown.enter.self.prevent="open(syllabus.id)" @keydown.space.self.prevent="open(syllabus.id)">
               <TableCell>{{ syllabus.subject }}</TableCell>
               <TableCell>{{ syllabus.parallels.join(', ') }}</TableCell>
-              <TableCell>{{ syllabusStateLabel(syllabus.state) ?? 'Estado no disponible' }}</TableCell>
+              <TableCell><SyllabusStateBadge :state="syllabus.state" /></TableCell>
               <TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell>
             </TableRow>
           </TableBody>

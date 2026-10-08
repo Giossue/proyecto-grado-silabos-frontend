@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StatusBadge from '@/components/domain/StatusBadge.vue';
 import { withoutEndPeriod } from '@/lib/text';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,6 @@ import { ApiError } from '@/api/client';
 import { downloadSignaturePdf, getSignatureStatus, submitSignature, type SignatureRole, type SignatureStatus } from '@/api/signatures';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -153,7 +153,7 @@ onMounted(load);
     <CardHeader>
       <div class="flex items-start justify-between gap-3">
         <CardTitle>Firma electrónica</CardTitle>
-        <Badge v-if="status" :variant="status.state === 'firmado' ? 'default' : status.state === 'anulado' ? 'destructive' : 'secondary'">{{ stateLabel }}</Badge>
+        <StatusBadge v-if="status" :label="stateLabel" :tone="status.state === 'firmado' ? 'success' : status.state === 'anulado' ? 'neutral' : 'warning'" />
         <Skeleton v-else-if="loading" aria-hidden="true" class="h-5 w-32 shrink-0 rounded-full" />
       </div>
       <CardDescription v-if="loading && !status" aria-hidden="true"><Skeleton class="h-4 w-full" /></CardDescription>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
-import { SYLLABUS_STATE_OPTIONS, syllabusStateLabel } from '@/lib/syllabusStates';
+import { SYLLABUS_STATE_OPTIONS } from '@/lib/syllabusStates';
 import { X } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
@@ -119,7 +120,7 @@ watch(() => props.open, (open) => {
                     <div>Paralelos {{ syllabus.parallels.join(', ') }}</div>
                     <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
                   </TableCell>
-                  <TableCell>{{ syllabusStateLabel(syllabus.state) }}</TableCell>
+                  <TableCell><SyllabusStateBadge :state="syllabus.state" /></TableCell>
                   <TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell>
                 </TableRow>
               </TableBody>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StatusBadge from '@/components/domain/StatusBadge.vue';
 import CommentEntry from '@/components/domain/CommentEntry.vue';
 import EmptyState from '@/components/domain/EmptyState.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
@@ -24,7 +25,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Checkbox } from '@/components/ui/checkbox';
-import { libraryStateLabel, libraryStateVariant } from '@/lib/libraryStates';
+import { libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -139,7 +140,7 @@ onMounted(load);
     <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="paths.library.reviews"><ArrowLeft aria-hidden="true" />Volver a revisiones</RouterLink></Button></template>
     <template #meta>
       <Badge variant="secondary">Revisión {{ review.revision_number }}</Badge>
-      <Badge :variant="libraryStateVariant(review.state)">{{ libraryStateLabel(review.state) }}</Badge>
+      <StatusBadge :label="libraryStateLabel(review.state)" :tone="libraryStateTone(review.state)" />
       <span class="text-sm text-muted-foreground">Enviado por {{ review.sent_by }} · {{ formatDate(review.sent_at) }}</span>
     </template>
 

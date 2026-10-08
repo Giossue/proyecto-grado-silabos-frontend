@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getManagedUsers, type ManagedUser, type ManagedUsersResponse } from '@/api/admin-users';
@@ -30,6 +31,10 @@ const currentUserId = ref<string | null>(null);
 const result = ref<ManagedUsersResponse | null>(null);
 const error = ref<string | null>(null); const loading = ref(true);
 const q = ref(typeof route.query.q === 'string' ? route.query.q : ''); const status = ref('all'); const role = ref('all'); const career = ref('all');
+const statusTone = (user: ManagedUser): StatusTone => {
+    if (!user.active) return 'neutral';
+    return user.pending_activation ? 'warning' : 'success';
+};
 const statusOf = (user: ManagedUser): string => {
     if (!user.active) return 'Inactivo';
     if (user.pending_activation) return 'Pendiente';
@@ -82,7 +87,7 @@ onMounted(load);
                     <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span></div></TableCell>
                     <TableCell><div class="flex items-center gap-2"><span v-if="user.roles[0]">{{ user.roles[0].name }}</span><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span><Badge v-if="user.roles.length > 1" variant="secondary">+{{ user.roles.length - 1 }}<span class="sr-only"> más</span></Badge></div></TableCell>
                     <TableCell><div class="flex items-center gap-2 text-sm"><span v-if="user.roles[0]" :class="user.roles[0].career_name ? '' : 'text-muted-foreground'">{{ careerOf(user.roles[0]) }}</span><span v-else class="text-muted-foreground">—</span><Badge v-if="user.roles.length > 1" variant="secondary">+{{ user.roles.length - 1 }}<span class="sr-only"> más</span></Badge></div></TableCell>
-                    <TableCell>{{ statusOf(user) }}</TableCell>
+                    <TableCell><StatusBadge :label="statusOf(user)" :tone="statusTone(user)" /></TableCell>
                     
                 </TableRow>
             </TableBody></Table>

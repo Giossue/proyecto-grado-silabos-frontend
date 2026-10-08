@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StatusBadge from '@/components/domain/StatusBadge.vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -97,7 +98,7 @@ onMounted(() => { void load(); });
           <TableRow v-for="subject in items" v-else :key="subject.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="activateRow($event, () => open(subject))" @keydown.enter.self.prevent="open(subject)" @keydown.space.self.prevent="open(subject)">
             <TableCell>{{ subject.nombre }}</TableCell>
             <TableCell>{{ cycleLabel(subject) }}</TableCell>
-            <TableCell :class="subject.profile_complete ? '' : 'text-muted-foreground'">{{ statusOf(subject) }}</TableCell>
+            <TableCell><StatusBadge :label="statusOf(subject)" :tone="subject.profile_complete ? 'success' : 'warning'" /></TableCell>
           </TableRow>
         </TableBody>
       </Table>
