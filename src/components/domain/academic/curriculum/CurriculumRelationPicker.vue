@@ -4,7 +4,7 @@ import type { RelationMode } from '@/components/domain/academic/curriculum/curri
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldLabel } from '@/components/ui/field';
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { CurriculumBuilderSubject } from '@/types/academic';
 import { useFocusReturn } from '@/lib/focusReturn';
 import { toRoman } from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
@@ -25,6 +25,12 @@ const options = computed(() =>
         })
         .sort((left, right) => (left.cycle ?? 0) - (right.cycle ?? 0) || left.position - right.position),
 );
+const groups = computed(() => {
+    const byCycle = new Map<number, CurriculumBuilderSubject[]>();
+    for (const subject of options.value) byCycle.set(subject.cycle ?? 0, [...(byCycle.get(subject.cycle ?? 0) ?? []), subject]);
+
+    return [...byCycle.entries()].map(([cycle, subjects]) => ({ cycle, subjects }));
+});
 const question = computed(() => picker.value?.mode === 'requires' ? '¿Qué materia requiere?' : '¿De qué materia es requisito?');
 
 watch(picker, (value) => { if (value) chosen.value = ''; });
@@ -46,12 +52,15 @@ const confirm = (): void => {
             </DialogHeader>
             <Field>
                 <FieldLabel for="curriculum-relation-subject">{{ question }}</FieldLabel>
-                <NativeSelect id="curriculum-relation-subject" v-model="chosen">
-                    <NativeSelectOption value="" disabled>Seleccione una materia</NativeSelectOption>
-                    <NativeSelectOption v-for="subject in options" :key="subject.id" :value="subject.id">
-                        Ciclo {{ subject.cycle ? toRoman(subject.cycle) : '—' }} · {{ subject.code }} · {{ subject.name }}
-                    </NativeSelectOption>
-                </NativeSelect>
+                <Select v-model="chosen">
+                    <SelectTrigger id="curriculum-relation-subject" class="w-full"><SelectValue placeholder="Seleccione una materia" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup v-for="group in groups" :key="group.cycle">
+                            <SelectLabel>Ciclo {{ group.cycle ? toRoman(group.cycle) : '—' }}</SelectLabel>
+                            <SelectItem v-for="subject in group.subjects" :key="subject.id" :value="subject.id">{{ subject.code }} · {{ subject.name }}</SelectItem>
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
             </Field>
             <DialogFooter>
                 <Button type="button" variant="outline" @click="picker = null">Cancelar</Button>
