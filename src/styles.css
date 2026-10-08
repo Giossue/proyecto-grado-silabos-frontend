@@ -671,14 +671,14 @@
     opacity: 0;
 }
 
-/* Puntos de conexión en edición: un círculo verde con «+» de 22px que se agarra en un área
+/* Puntos de conexión en edición: un círculo verde con «+» de 18px que se agarra en un área
    mayor; crecen al pasar el cursor para confirmar que son el sitio donde arrastrar. */
 .curriculum-canvas .vue-flow__handle.curriculum-handle {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
     z-index: 2;
     border: 2px solid var(--card);
     background-color: var(--success);
@@ -686,7 +686,7 @@
     background-image: linear-gradient(var(--success-foreground), var(--success-foreground)), linear-gradient(var(--success-foreground), var(--success-foreground));
     background-position: center;
     background-repeat: no-repeat;
-    background-size: 10px 2px, 2px 10px;
+    background-size: 8px 2px, 2px 8px;
     cursor: crosshair;
     transition: transform var(--duration-layout) ease-out;
 }
