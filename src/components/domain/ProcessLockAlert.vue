@@ -55,7 +55,7 @@ const reason = computed(() => {
                     <PopoverContent align="start" class="w-80 text-sm">{{ reason }}</PopoverContent>
                 </Popover>
             </span>
-            <Button v-if="!hideAction" as-child size="sm" variant="outline">
+            <Button v-if="!hideAction" as-child size="sm" variant="link" class="h-auto p-0">
                 <RouterLink :to="href">Ir a Convocatorias</RouterLink>
             </Button>
         </AlertDescription>
