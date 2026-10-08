@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { MailCheck, Trash2, UserMinus } from "@lucide/vue";
+import { Trash2 } from "@lucide/vue";
 import { computed, ref } from "vue";
 import { removeCareerTeacher, resendCareerTeacherInvitation, type TeacherAssignments } from "@/api/career-academics";
 import { ApiError } from "@/api/client";
@@ -11,7 +11,6 @@ import TablePagination from "@/components/domain/TablePagination.vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -98,12 +97,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
         </TableRow>
       </TableBody>
     </Table>
-    <CareerTeacherEditSheet v-if="editing" :key="editing.id" :teacher="editing" :open="true" @update:open="(value: boolean) => { if (!value) editing = null; }" @saved="emit('changed', $event)">
-      <template #actions>
-        <DropdownMenuItem v-if="editing.pending_activation" :disabled="resendingId !== null" @select="resendInvitation(editing.id)"><Spinner v-if="resendingId === editing.id" data-icon="inline-start" /><MailCheck v-else data-icon="inline-start" aria-hidden="true" />Reenviar invitación</DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" :disabled="Boolean(data.career.lock_reason)" @select="askRemoval(editing)"><UserMinus aria-hidden="true" />Quitar de la carrera</DropdownMenuItem>
-      </template>
-    </CareerTeacherEditSheet>
+    <CareerTeacherEditSheet v-if="editing" :key="editing.id" :teacher="editing" :open="true" :remove-disabled="Boolean(data.career.lock_reason)" :resending="resendingId === editing.id" @update:open="(value: boolean) => { if (!value) editing = null; }" @saved="emit('changed', $event)" @remove="askRemoval(editing)" @resend="resendInvitation(editing.id)" />
     <TablePagination :meta="meta" mode="client" label="Paginación de docentes" @update:page="setPage" />
     <Dialog :open="removing !== null" @update:open="(value) => { if (!value) removing = null; }">
       <DialogContent>

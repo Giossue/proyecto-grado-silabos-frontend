@@ -194,4 +194,16 @@ describe('TeacherAssignmentsPanel', () => {
         expect(menu).not.toBeNull();
         wrapper.unmount();
     });
+
+    it('con una sola acción muestra el icono directo en lugar del menú', async () => {
+        const wrapper = mount(TeacherAssignmentsPanel, { props: { data }, attachTo: document.body });
+        const row = wrapper.findAll('tbody tr').find((item) => item.text().includes('Docente activo'))!;
+        await row.trigger('click');
+        await flushPromises();
+
+        expect(document.body.querySelector('button[aria-label="Quitar de la carrera"]')).not.toBeNull();
+        expect(document.body.querySelector('button[aria-label="Acciones para Docente activo"]')).toBeNull();
+        expect(document.body.querySelector('[data-slot="tooltip-content"]')).toBeNull();
+        wrapper.unmount();
+    });
 });
