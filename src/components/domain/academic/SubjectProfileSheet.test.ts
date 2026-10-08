@@ -25,7 +25,7 @@ const editor = defineComponent({
 const mountSheet = () => mount(SubjectProfileSheet, {
   props: { subjectId: 'subject-1', subjectName: 'Arquitectura', open: false },
   global: { stubs: {
-    FormSheet: formSheet, FormSheetActions: actions, FreeTextEditor: editor,
+    FormDialog: formSheet, FormSheetActions: actions, FreeTextEditor: editor,
     FieldGroup: passthrough, Field: passthrough, FieldLabel: passthrough, FieldDescription: passthrough,
   } },
 });

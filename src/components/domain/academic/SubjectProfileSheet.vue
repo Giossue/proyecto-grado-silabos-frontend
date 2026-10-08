@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { getSubjectProfile, saveSubjectProfile, type SubjectProfileField } from '@/api/career-academics';
-import FormSheet from '@/components/domain/FormSheet.vue';
+import FormDialog from '@/components/domain/FormDialog.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { fieldTypeRegistry } from '@/components/domain/fieldTypes/registry';
@@ -52,7 +52,7 @@ const save = async (close: () => void) => {
 </script>
 
 <template>
-  <FormSheet v-model:open="open" :show-trigger="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha" description="Datos que heredarán los sílabos nuevos." wide>
+  <FormDialog v-model:open="open" :show-trigger="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha" description="Datos que heredarán los sílabos nuevos.">
     <template #default="{ close }">
       <form class="contents" @submit.prevent="save(close)">
         <FieldGroup>
@@ -79,5 +79,5 @@ const save = async (close: () => void) => {
         </FieldGroup>
       </form>
     </template>
-  </FormSheet>
+  </FormDialog>
 </template>
