@@ -321,6 +321,7 @@ const {
                                 :campus-options="options.campusOptions" :modality-options="options.modalityOptions"
                                 :coordinator="career.coordinator"
                                 :coordinator-users="options.coordinatorUsers"
+                                :delete-blocked-reason="career.delete_blocked_reason ?? null"
                                 @changed="emit('changed', $event)"
                             />
                         </TableCell>

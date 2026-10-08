@@ -17,35 +17,37 @@ export type SheetAction = {
     loading?: boolean;
 };
 
-defineProps<{ actions: SheetAction[]; menuLabel: string }>();
+withDefaults(defineProps<{ actions: SheetAction[]; menuLabel: string; inline?: boolean }>(), { inline: false });
 const emit = defineEmits<{ select: [key: string] }>();
 </script>
 
 <template>
-    <template v-if="actions.length === 1">
+    <template v-if="actions.length === 1 || inline">
+      <template v-for="action in actions" :key="action.key">
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger as-child>
-                    <span class="inline-flex" :tabindex="actions[0].disabled && actions[0].disabledReason ? 0 : undefined">
+                    <span class="inline-flex" :tabindex="action.disabled && action.disabledReason ? 0 : undefined">
                         <Button
                             type="button"
                             variant="ghost"
                             size="icon-sm"
-                            :class="cn(actions[0].destructive && 'text-destructive hover:bg-destructive/10 hover:text-destructive')"
-                            :aria-label="actions[0].label"
-                            :aria-describedby="actions[0].disabled && actions[0].disabledReason ? 'sheet-action-reason' : undefined"
-                            :disabled="actions[0].disabled || actions[0].loading"
-                            @click="emit('select', actions[0].key)"
+                            :class="cn(action.destructive && 'text-destructive hover:bg-destructive/10 hover:text-destructive')"
+                            :aria-label="action.label"
+                            :aria-describedby="action.disabled && action.disabledReason ? `sheet-action-reason-${action.key}` : undefined"
+                            :disabled="action.disabled || action.loading"
+                            @click="emit('select', action.key)"
                         >
-                            <Spinner v-if="actions[0].loading" />
-                            <component :is="actions[0].icon" v-else aria-hidden="true" />
+                            <Spinner v-if="action.loading" />
+                            <component :is="action.icon" v-else aria-hidden="true" />
                         </Button>
                     </span>
                 </TooltipTrigger>
-                <TooltipContent>{{ actions[0].disabled && actions[0].disabledReason ? actions[0].disabledReason : actions[0].label }}</TooltipContent>
+                <TooltipContent>{{ action.disabled && action.disabledReason ? action.disabledReason : action.label }}</TooltipContent>
             </Tooltip>
         </TooltipProvider>
-        <span v-if="actions[0].disabled && actions[0].disabledReason" id="sheet-action-reason" class="sr-only">{{ actions[0].disabledReason }}</span>
+        <span v-if="action.disabled && action.disabledReason" :id="`sheet-action-reason-${action.key}`" class="sr-only">{{ action.disabledReason }}</span>
+      </template>
     </template>
     <TableActionsMenu v-else-if="actions.length > 1" :label="menuLabel">
         <DropdownMenuItem

@@ -90,7 +90,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
 
 <template>
     <FormSheet v-model:open="open" trigger-label="Editar" :title="`Editar ${entityLabel}`" :description="formDescription" :show-trigger="showTrigger">
-        <template v-if="actions.length > 0" #header-actions><SheetActions :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
+        <template v-if="actions.length > 0" #header-actions><SheetActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
         <template #default="{ close }">
             <form @submit.prevent="submit()"><FieldGroup>
                 <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>

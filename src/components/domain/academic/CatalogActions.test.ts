@@ -24,10 +24,13 @@ describe('CatalogActions', () => {
     expect(document.body.querySelector('button[aria-label^="Acciones para"]')).toBeNull();
   });
 
-  it('una carrera activa tiene coordinador y eliminar: menú en la hoja de edición', async () => {
-    await open({ entity: 'carrera', coordinator: null, coordinatorUsers: [] });
+  it('una carrera activa muestra coordinador y eliminar como botones a la vista, sin menú', async () => {
+    await open({ entity: 'carrera', coordinator: null, coordinatorUsers: [], deleteBlockedReason: 'No se puede eliminar: tiene 3 materias.' });
 
-    expect(document.body.querySelector('button[aria-label="Acciones para Software"]')).not.toBeNull();
+    expect(document.body.querySelector('button[aria-label="Acciones para Software"]')).toBeNull();
+    expect(document.body.querySelector('button[aria-label="Asignar coordinador"]')).not.toBeNull();
+    expect((document.body.querySelector('button[aria-label="Eliminar"]') as HTMLButtonElement).disabled).toBe(true);
+    expect(document.body.textContent).toContain('No se puede eliminar: tiene 3 materias.');
   });
 
   it('con una convocatoria bloqueando no se abre la hoja ni hay acciones', async () => {

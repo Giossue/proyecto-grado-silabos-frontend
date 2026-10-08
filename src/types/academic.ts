@@ -53,6 +53,7 @@ export type AcademicStructureProps = {
       code: string;
       name: string;
       active: boolean;
+      delete_blocked_reason?: string | null;
     }[];
     periods: {
       id: string;
