@@ -240,9 +240,9 @@
 .dark {
     --background: #151719;
     --foreground: #f1f2f3;
-    --card: #1d1f22;
+    --card: #272a2f;
     --card-foreground: #f1f2f3;
-    --popover: #1d1f22;
+    --popover: #2b2e33;
     --popover-foreground: #f1f2f3;
     --primary: #5274a8;
     --primary-foreground: #ffffff;
@@ -251,10 +251,10 @@
     --button-primary-foreground: #ffffff;
     --selection-background: #5274a8;
     --selection-foreground: #ffffff;
-    --secondary: #292c30;
+    --secondary: #31353b;
     --secondary-foreground: #f1f2f3;
-    --muted: #25282b;
-    --muted-foreground: #b9bec4;
+    --muted: #2e3136;
+    --muted-foreground: #c0c5cb;
     --accent: #2d3239;
     --accent-foreground: #e8ebef;
     --destructive: #f87171;
@@ -266,8 +266,8 @@
     --success-foreground: #052e16;
     --warning: #fbbf24;
     --warning-foreground: #422006;
-    --border: #393c40;
-    --input: #6e7379;
+    --border: #464a50;
+    --input: #7a8087;
     --ring: #a8b2c0;
     --surface-ring: rgb(255 255 255 / 0.1);
     --shadow-control-value: 0 0 #0000;
