@@ -25,7 +25,7 @@ const dragging = ref<{ x: number; y: number } | null>(null);
 const screen = computed(() => route.matched.at(-1)?.path ?? '');
 const help = computed(() => screenHelpState.forScreen(screen.value));
 const ready = ref(false);
-const settled = ref(false);
+const animating = ref(false);
 const paragraphs = computed(() => (help.value?.content ?? '').split(/\n{2,}/).map((text) => text.trim()).filter(Boolean));
 const isTop = computed(() => corner.value.startsWith('top'));
 const isLeft = computed(() => corner.value.endsWith('left'));
@@ -35,7 +35,6 @@ const measure = (): void => {
   if (!container) return;
   const rect = container.getBoundingClientRect();
   const header = container.querySelector('header')?.getBoundingClientRect().bottom ?? 0;
-  if (!ready.value) requestAnimationFrame(() => { settled.value = true; });
   ready.value = true;
   area.value = {
     left: Math.max(rect.left, 0),
@@ -69,6 +68,13 @@ const nearestCorner = (point: { x: number; y: number }): Corner => {
   const horizontal = centerX < (bounds.value.left + bounds.value.right) / 2 ? 'left' : 'right';
 
   return `${vertical}-${horizontal}` as Corner;
+};
+
+let animationTimer = 0;
+const animateNextMove = (): void => {
+  animating.value = true;
+  window.clearTimeout(animationTimer);
+  animationTimer = window.setTimeout(() => { animating.value = false; }, 260);
 };
 
 const remember = (): void => {
@@ -109,6 +115,7 @@ const moveDrag = (event: PointerEvent): void => {
 const endDrag = (): void => {
   if (frame) { cancelAnimationFrame(frame); applyDrag(); }
   if (drag?.moved && dragging.value) {
+    animateNextMove();
     corner.value = nearestCorner(dragging.value);
     remember();
   }
@@ -131,6 +138,7 @@ const nudge = (event: KeyboardEvent): void => {
   if (!move) return;
   event.preventDefault();
   measure();
+  animateNextMove();
   corner.value = move(corner.value);
   open.value = false;
   remember();
@@ -158,6 +166,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', refresh);
   observer?.disconnect();
+  window.clearTimeout(animationTimer);
 });
 </script>
 
@@ -169,7 +178,7 @@ onBeforeUnmount(() => {
         type="button"
         size="icon"
         class="fixed top-0 left-0 z-40 size-11 touch-none rounded-full shadow-lg will-change-transform"
-        :class="dragging ? 'cursor-grabbing' : ['cursor-grab', settled && 'transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]']"
+        :class="dragging ? 'cursor-grabbing' : ['cursor-grab', animating && 'transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]']"
         :style="style"
         aria-label="Ayuda de esta pantalla"
         aria-description="Arrástrelo a una esquina o use Alt y las flechas para moverlo"
