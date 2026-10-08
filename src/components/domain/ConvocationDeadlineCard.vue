@@ -52,7 +52,7 @@ const summary = computed(() => {
   }
   if (props.deadline.days_until_due === 0) return 'La entrega vence hoy.';
   if (props.deadline.days_until_due === 1) return 'Queda 1 día para la entrega.';
-  return `Quedan ${props.deadline.days_until_due} días para la entrega.`;
+  return `Quedan ${props.deadline.days_until_due} días para la entrega`;
 });
 </script>
 

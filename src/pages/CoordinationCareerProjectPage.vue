@@ -20,6 +20,7 @@ import { useClientPagination } from '@/composables/useClientPagination';
 import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
+import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 
 type Subject = ScheduledSubjects['options']['activeSubjects'][number];
 
@@ -69,6 +70,7 @@ onMounted(() => { void load(); });
 <template>
   <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos.">
     <template #actions><FichaImportDialog :disabled="Boolean(data?.career.lock_reason)" @applied="saved" /></template>
+    <ProcessLockAlert v-if="data?.career.lock_reason" />
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :actions="false" />
     <Card v-else-if="data"><CardContent class="flex flex-col gap-4">

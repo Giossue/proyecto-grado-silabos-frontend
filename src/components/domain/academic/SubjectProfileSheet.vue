@@ -57,7 +57,6 @@ const save = async (close: () => void) => {
       <form class="contents" @submit.prevent="save(close)">
         <FieldGroup>
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-          <Alert v-if="disabled"><AlertDescription>La convocatoria activa bloquea los cambios de la ficha. Puede consultarla aquí.</AlertDescription></Alert>
           <LoadingSkeleton v-if="loading" variant="form" :rows="4" />
           <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos marcados «se llena desde la ficha». Pídale a Administración que los marque.</AlertDescription></Alert>
           <template v-else>
