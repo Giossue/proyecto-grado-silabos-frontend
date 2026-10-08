@@ -92,6 +92,13 @@ onBeforeUnmount(() => editor.value?.destroy());
     background: var(--muted);
     font-weight: 600;
 }
+.free-text-editor .ProseMirror-hideselection *::selection {
+    background: transparent;
+    color: inherit;
+}
+.free-text-editor .free-text-editor__content .selectedCell {
+    background-color: var(--accent);
+}
 .free-text-editor .free-text-editor__content td p,
 .free-text-editor .free-text-editor__content th p {
     margin: 0;
