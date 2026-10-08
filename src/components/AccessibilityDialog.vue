@@ -36,7 +36,7 @@ const setSize = (value: string): void => { settings.value.textSize = value as Te
     <DialogContent class="max-w-md">
       <DialogHeader>
         <DialogTitle>Accesibilidad</DialogTitle>
-        <DialogDescription>Los cambios se aplican al instante y se guardan en este navegador y en su cuenta.</DialogDescription>
+        <DialogDescription>Los cambios se aplican al instante y se guardan en su cuenta.</DialogDescription>
       </DialogHeader>
       <div class="flex flex-col gap-5">
         <div class="flex flex-col gap-2">
