@@ -5,6 +5,7 @@ import { computed, ref, watch } from 'vue';
 import type { ManagedUser } from '@/api/admin-users';
 import ManagedUserEditForm from '@/components/domain/identity/ManagedUserEditForm.vue';
 import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/field';
 import { Badge } from '@/components/ui/badge';
 import {
     Card,
@@ -17,6 +18,7 @@ import {
     Sheet,
     SheetContent,
     SheetDescription,
+    SheetFooter,
     SheetHeader,
     SheetTitle,
 } from '@/components/ui/sheet';
@@ -97,15 +99,14 @@ const completedAssignments = computed(() =>
         <SheetContent side="right" class="w-full sm:max-w-lg">
             <SheetHeader>
                 <SheetTitle>{{ editing ? 'Editar usuario' : 'Datos de la cuenta' }}</SheetTitle>
-                <SheetDescription>{{ editing ? 'Corrija su identidad, quite un rol o agregue una nueva asignación' : props.user.nombre }}</SheetDescription>
+                <SheetDescription :class="editing ? '' : 'sr-only'">{{ editing ? 'Corrija su identidad, quite un rol o agregue una nueva asignación' : 'Ficha de solo lectura de la cuenta' }}</SheetDescription>
             </SheetHeader>
 
             <div v-if="editing" class="flex-1 overflow-y-auto px-4 pt-1 pb-28">
                 <ManagedUserEditForm :user="props.user" :roles="roles" :careers="careers" @saved="saved" @cancel="editing = false" />
             </div>
 
-            <div v-else class="flex flex-col gap-4 overflow-y-auto px-4 pt-1 pb-6">
-                <Button v-if="canEdit" type="button" variant="outline" class="w-fit" @click="editing = true"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
+            <div v-else class="flex-1 overflow-y-auto px-4 pt-1 pb-28 flex flex-col gap-4">
                 <Card>
                     <CardHeader>
                         <CardTitle>Datos de la cuenta</CardTitle>
@@ -211,6 +212,16 @@ const completedAssignments = computed(() =>
                     </CardContent>
                 </Card>
             </div>
+
+            <SheetFooter v-if="!editing" class="absolute inset-x-0 bottom-0 border-t bg-card pb-(--safe-footer-inset)">
+                <Field orientation="horizontal" class="justify-end">
+                    <Button type="button" variant="outline" @click="open = false">Cerrar</Button>
+                    <Button v-if="canEdit" type="button" @click="editing = true">
+                        <Pencil data-icon="inline-start" aria-hidden="true" />
+                        Editar
+                    </Button>
+                </Field>
+            </SheetFooter>
         </SheetContent>
     </Sheet>
 </template>
