@@ -29,7 +29,7 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Historial" description="Sílabos de períodos anteriores, por carrera." size="wide">
+  <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading" variant="table" :columns="2" :filters="0" />
     <Card v-else-if="careers"><CardContent>
