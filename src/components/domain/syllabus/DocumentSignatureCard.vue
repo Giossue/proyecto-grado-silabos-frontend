@@ -174,12 +174,12 @@ onMounted(load);
       <template v-if="status">
         <ol v-if="orderedSignatures.length" class="flex flex-col gap-2">
           <li v-for="item in orderedSignatures" :key="item.role" class="flex items-start gap-2 rounded-md border p-3 text-sm">
-            <ShieldCheck class="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+            <ShieldCheck class="mt-0.5 size-4 shrink-0 text-primary-readable" aria-hidden="true" />
             <div class="min-w-0"><p class="font-medium">{{ roleLabel(item.role) }}: {{ item.certificate_holder }}</p><p class="text-muted-foreground">{{ item.signer }} · {{ formatDate(item.signed_at) }}</p></div>
           </li>
         </ol>
         <p v-if="status.library" class="flex items-start gap-2 rounded-md border p-3 text-sm" data-testid="library-submission">
-          <Library class="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+          <Library class="mt-0.5 size-4 shrink-0 text-primary-readable" aria-hidden="true" />
           <span>Enviado a revisión el {{ formatDate(status.library.sent_at) }} por {{ status.library.sent_by }}.<template v-if="status.library.verified_at"> Bibliografía aprobada el {{ formatDate(status.library.verified_at) }} por {{ status.library.verified_by }}.</template></span>
         </p>
         <div class="flex flex-wrap gap-2">

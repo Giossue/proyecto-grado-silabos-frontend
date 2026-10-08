@@ -24,7 +24,7 @@ const forwardedProps = useForwardProps(delegatedProps)
       cn('peer border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/30 aria-invalid:border-destructive shrink-0 border shadow-control transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
          variant === 'choice'
            ? 'inline-flex h-8 items-center justify-center rounded-md bg-background px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground'
-           : 'aspect-square size-4 rounded-full text-primary data-[state=checked]:border-primary',
+           : 'aspect-square size-4 rounded-full text-primary-readable data-[state=checked]:border-primary',
          props.class)"
   >
     <slot v-if="variant === 'choice'" />

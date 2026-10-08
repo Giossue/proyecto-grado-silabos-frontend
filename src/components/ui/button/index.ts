@@ -18,7 +18,7 @@ export const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
           "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+        link: "text-primary-readable underline-offset-4 hover:underline",
         document: "bg-transparent text-inherit hover:bg-accent/50",
         dropzone: "border-2 border-dashed border-border bg-muted/20 hover:border-primary/60 hover:bg-muted/40 data-[dragging=true]:border-primary data-[dragging=true]:bg-primary/5 aria-invalid:border-destructive/60 aria-invalid:bg-destructive/5",
       },

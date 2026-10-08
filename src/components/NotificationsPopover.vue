@@ -192,7 +192,7 @@ const ignoreBell = (event: Event): void => {
                                 </span>
                                 <span
                                     class="mt-0.5 block text-xs"
-                                    :class="notification.leido_en === null ? 'font-medium text-primary' : 'text-muted-foreground'"
+                                    :class="notification.leido_en === null ? 'font-medium text-primary-readable' : 'text-muted-foreground'"
                                 >
                                     {{ relativeTime(notification.notificado_en) }}
                                 </span>

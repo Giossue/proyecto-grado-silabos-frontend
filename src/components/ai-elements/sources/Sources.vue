@@ -10,7 +10,7 @@ const props = defineProps<{
 
 <template>
     <Collapsible
-        :class="cn('not-prose mb-4 text-xs text-primary', props.class)"
+        :class="cn('not-prose mb-4 text-xs text-primary-readable', props.class)"
     >
         <slot />
     </Collapsible>
