@@ -108,14 +108,14 @@ describe('TemplateVisualBuilder', () => {
     expect(wrapper.emitted('changed')).toHaveLength(1);
   });
 
-  it('agrega una ficha ajustable por el docente', async () => {
+  it('agrega una ficha que el docente solo ve', async () => {
     mountBuilder();
     await click(byText('button', 'Agregar campo'));
     await type('template-field-label', 'Perfil');
     await choose('ficha');
-    await click(body().querySelector('#field-config-adjustable'));
+    expect(body().querySelector('#field-config-adjustable')).toBeNull();
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ type: 'ficha', label: 'Perfil', key: 'perfil', config: { adjustable: true } }));
+    expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ type: 'ficha', label: 'Perfil', key: 'perfil', config: { adjustable: false } }));
   });
 
   it('agrega una tabla con columnas y filas y valida que no quede vacía', async () => {
