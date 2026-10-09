@@ -90,7 +90,7 @@ watch(periodId, () => { if (open.value) updateProposal(); });
     :disabled="props.disabled"
     trigger-label="Asignar materias"
     title="Preparar período académico"
-    description="Revise los paralelos y docentes propuestos."
+    description="Revise los paralelos y docentes propuestos. Los paralelos sin docente se guardarán pendientes de asignación."
   >
     <template #trigger>
       <Button :disabled="props.disabled"><CalendarCheck data-icon="inline-start" aria-hidden="true" />Asignar materias</Button>
@@ -136,7 +136,6 @@ watch(periodId, () => { if (open.value) updateProposal(); });
               </Collapsible>
             </div>
             <Alert v-if="problem" variant="destructive"><AlertDescription>{{ problem }}</AlertDescription></Alert>
-            <p v-if="rows.length && assignedCount < parallelCount" class="text-sm text-muted-foreground">Los paralelos sin docente se guardarán pendientes de asignación.</p>
           </template>
           <FormSheetActions :close="close" :processing="saving" :disabled="!periodId || !rows.length || invalidRows" :icon="ListChecks" label="Confirmar preparación" />
         </FieldGroup>
