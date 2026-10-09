@@ -40,7 +40,7 @@ const pageTitle = computed(() => ({
 })[props.mode]);
 const pageDescription = computed(() => ({
   curriculum: 'Malla curricular de su carrera.',
-  schedule: 'Materias y paralelos de su carrera del período en curso.',
+  schedule: 'Materias, paralelos y docentes de su carrera.',
   teachers: 'Docentes de su carrera.',
 })[props.mode]);
 const curriculum = ref<Curriculum | null>(null);
@@ -101,17 +101,17 @@ const load = async () => {
     loading.value = false;
   }
 };
-const reloadSchedule = async (periodId?: string) => {
+const reloadSchedule = async () => {
   try {
     actionError.value = null;
-    schedule.value = await getScheduledSubjects(periodId);
+    schedule.value = await getScheduledSubjects();
   } catch (reason) {
     actionError.value = reason instanceof ApiError ? reason.message : "No se pudo actualizar la programación académica.";
   }
 };
 const handleScheduleChanged = async (notice: string) => {
   toast.success(notice);
-  await Promise.all([reloadSchedule(schedule.value?.selectedPeriodId ?? undefined), reloadAssignments()]);
+  await Promise.all([reloadSchedule(), reloadAssignments()]);
 };
 const reloadAssignments = async () => {
   try {
@@ -123,7 +123,7 @@ const reloadAssignments = async () => {
 };
 const handleAssignmentChanged = async (notice: string) => {
   toast.success(notice);
-  await Promise.all([reloadAssignments(), reloadSchedule(schedule.value?.selectedPeriodId ?? undefined)]);
+  await Promise.all([reloadAssignments(), reloadSchedule()]);
 };
 const reloadCurriculum = async () => {
   try {
@@ -225,7 +225,6 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         :data="schedule"
         :assignments="assignments.teacherAssignments"
         :teacher-users="assignments.options.teacherUsers"
-        @period="reloadSchedule"
         @changed="handleScheduleChanged"
         @failed="actionError = $event"
       />

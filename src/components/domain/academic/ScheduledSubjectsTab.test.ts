@@ -13,15 +13,13 @@ const SelectStub = defineComponent({
 });
 
 const row = (id: string, name: string, code: string, cycle: number | null, parallels: Array<{ code: string; shift: string | null }>): ScheduledSubjects['scheduledSubjects'][number] => ({
-    subject_id: `s-${id}`, period_id: 'p1', label: name, subject_code: code, subject_name: name, subject_cycle: cycle,
-    period_starts_on: '2026-09-23', period_ends_on: '2026-09-25', period_status: 'en_curso', period_status_label: 'En curso',
-    period_planning_enabled: true, campus_name: 'Matriz', modality_name: 'Presencial',
+    subject_id: `s-${id}`, label: name, subject_code: code, subject_name: name, subject_cycle: cycle,
+    campus_name: 'Matriz', modality_name: 'Presencial',
     parallels: parallels.map((parallel, index) => ({ id: `${id}-${index}`, ...parallel })), editable: true,
 });
 
 const data: ScheduledSubjects = {
     career: { id: 'c1', name: 'Software', lock_reason: null },
-    selectedPeriodId: 'p1',
     scheduledSubjects: [
         row('1', 'Arquitectura de Software', 'SW-601', 6, [{ code: 'A', shift: 'matutina' }]),
         row('2', 'Bases de Datos', 'SW-301', 3, [{ code: 'B', shift: 'nocturna' }]),
@@ -29,9 +27,7 @@ const data: ScheduledSubjects = {
     ],
     options: {
         shiftOptions: [{ value: 'matutina', label: 'Matutina' }, { value: 'nocturna', label: 'Nocturna' }],
-        periods: [{ id: 'p1', code: 'Septiembre-Septiembre 2026', starts_on: '2026-09-23', ends_on: '2026-09-25', status: 'en_curso', status_label: 'En curso', planning_enabled: true }],
         activeSubjects: [],
-        scheduledSubjects: [],
     },
 };
 
@@ -39,7 +35,7 @@ const mountTab = (value: ScheduledSubjects = data) => mount(ScheduledSubjectsTab
     props: { data: value, assignments: [], teacherUsers: [] },
     global: {
         stubs: {
-            Card: passthrough, CardContent: passthrough, SubjectParallelsEditor: { props: ['subjectName', 'editable', 'parallels'], template: '<div class="editor" :data-editable="String(editable)">{{ subjectName }}:{{ parallels.length }}</div>' }, ClientFilterBar: passthrough,
+            Card: passthrough, CardContent: passthrough, ParallelCreationSheet: { props: ['open', 'subjectLabel'], template: '<div class="parallel-sheet">{{ subjectLabel }}</div>' }, ClientFilterBar: passthrough,
             Field: passthrough, FieldLabel: passthrough, Select: SelectStub, SelectContent: passthrough, SelectGroup: passthrough,
             SelectItem: passthrough, SelectTrigger: passthrough, SelectValue: passthrough, Badge: passthrough, Alert: passthrough,
             AlertDescription: passthrough, Table: passthrough, TableBody: passthrough, TableCell: passthrough, TableEmpty: passthrough,
@@ -81,25 +77,22 @@ describe('ScheduledSubjectsTab', () => {
         expect(wrapper.text()).toContain('No hay materias que coincidan con los filtros.');
     });
 
-    it('lista toda la malla del período, también las materias sin paralelos, y se edita ahí mismo', () => {
-        const wrapper = mountTab({
-            ...data,
-            options: { ...data.options, activeSubjects: [
-                { id: 's-1', codigo_asignatura: 'SW-601', nombre: 'Arquitectura de Software', ciclo: 6 },
-                { id: 's-9', codigo_asignatura: 'SW-901', nombre: 'Materia nueva de la malla', ciclo: 2 },
-            ] },
-        });
-        const editors = wrapper.findAll('.editor');
-        expect(editors.map((item) => item.text())).toEqual(expect.arrayContaining(['Materia nueva de la malla:0', 'Arquitectura de Software:1']));
-        expect(editors.every((item) => item.attributes('data-editable') === 'true')).toBe(true);
+    it('no tiene columna de acciones: un clic en la fila abre Paralelos y docentes', async () => {
+        const wrapper = mountTab();
         expect(wrapper.text()).not.toContain('Acciones');
+        expect(wrapper.find('.parallel-sheet').exists()).toBe(false);
+
+        await wrapper.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
+        expect(wrapper.get('.parallel-sheet').text()).toBe('Bases de Datos');
     });
 
-    it('no permite editar si la edición está bloqueada o el período es de solo lectura', () => {
+    it('no abre la hoja si la edición está bloqueada o el período es de solo lectura', async () => {
         const locked = mountTab({ ...data, career: { ...data.career, lock_reason: 'Convocatoria activa' } });
-        expect(locked.findAll('.editor').every((item) => item.attributes('data-editable') === 'false')).toBe(true);
+        await locked.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
+        expect(locked.find('.parallel-sheet').exists()).toBe(false);
 
-        const readonly = mountTab({ ...data, scheduledSubjects: data.scheduledSubjects.map((item) => ({ ...item, period_planning_enabled: false })) });
-        expect(readonly.findAll('.editor').every((item) => item.attributes('data-editable') === 'false')).toBe(true);
+        const readonly = mountTab({ ...data, scheduledSubjects: data.scheduledSubjects.map((item) => ({ ...item, editable: false })) });
+        await readonly.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
+        expect(readonly.find('.parallel-sheet').exists()).toBe(false);
     });
 });

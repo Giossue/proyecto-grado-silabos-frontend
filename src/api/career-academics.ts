@@ -84,20 +84,13 @@ export type Curriculum = {
 
 export type ScheduledSubjects = {
   career: { id: string; name: string; lock_reason: string | null; lock?: LockDetail | null };
-  selectedPeriodId: string | null;
   scheduledSubjects: Array<{
     subject_id: string;
-    period_id: string;
     label: string;
     subject_code: string;
     subject_name: string;
     subject_cycle: number | null;
     profile_complete?: boolean;
-    period_starts_on: string;
-    period_ends_on: string;
-    period_status: "proximo" | "en_curso" | "finalizado";
-    period_status_label: string;
-    period_planning_enabled: boolean;
     campus_name: string | null;
     modality_name: string | null;
     parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }>;
@@ -105,15 +98,6 @@ export type ScheduledSubjects = {
   }>;
   options: {
     shiftOptions: Array<{ value: string; label: string }>;
-    periods: Array<{
-      id: string;
-      code: string;
-      starts_on: string;
-      ends_on: string;
-      status: "proximo" | "en_curso" | "finalizado";
-      status_label: string;
-      planning_enabled: boolean;
-    }>;
     activeSubjects: Array<{
       id: string;
       codigo_asignatura: string;
@@ -122,11 +106,6 @@ export type ScheduledSubjects = {
       profile_complete?: boolean;
       profile_filled?: number;
       profile_total?: number;
-    }>;
-    scheduledSubjects: Array<{
-      label: string;
-      subject_id: string;
-      period_id: string;
     }>;
   };
 };
@@ -162,9 +141,6 @@ export type TeacherAssignments = {
     user_email: string;
     parallel_code: string;
     subject_name: string;
-    period_name: string;
-    period_status: "proximo" | "en_curso" | "finalizado";
-    period_planning_enabled: boolean;
     active: boolean;
     editable: boolean;
   }>;
@@ -177,13 +153,8 @@ export type TeacherAssignments = {
 export const getCurriculum = (careerId: string) =>
   api<Curriculum>(`/coordination/academic/curriculum/${careerId}`);
 
-export const getScheduledSubjects = (periodId?: string) => {
-  const query = periodId ? `?period=${encodeURIComponent(periodId)}` : "";
-
-  return api<ScheduledSubjects>(
-    `/coordination/academic/scheduled-subjects${query}`,
-  );
-};
+export const getScheduledSubjects = () =>
+  api<ScheduledSubjects>("/coordination/academic/scheduled-subjects");
 export const getTeacherAssignments = () =>
   api<TeacherAssignments>("/coordination/academic/teacher-assignments");
 export const createCareerRecord = (
@@ -265,7 +236,6 @@ export const deleteCurriculumSubject = (
   );
 export const createParallels = (payload: {
   subject_id: string;
-  period_id: string;
   codes: string[];
   shift: string;
 }) =>
