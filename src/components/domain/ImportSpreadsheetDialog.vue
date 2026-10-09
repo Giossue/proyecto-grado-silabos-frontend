@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { withoutEndPeriod } from '@/lib/text';
 import { Download, FileSpreadsheet, Upload } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
@@ -55,36 +56,40 @@ const download = async (): Promise<void> => {
 <template>
     <Dialog v-model:open="open">
         <DialogTrigger as-child><Button type="button" variant="success"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></DialogTrigger>
-        <DialogContent class="max-h-screen overflow-y-auto sm:max-w-3xl">
-            <DialogHeader><DialogTitle>{{ title }}</DialogTitle><DialogDescription>{{ withoutEndPeriod(description) }}</DialogDescription></DialogHeader>
-            <div class="flex flex-col gap-4">
-                <div class="flex flex-col gap-2 text-sm">
-                    <p>1. Descargue la plantilla y complete una fila por registro.</p>
-                    <Button type="button" variant="outline" class="w-fit" @click="download"><Download data-icon="inline-start" aria-hidden="true" />Descargar plantilla</Button>
-                    <p>2. Suba el archivo .xlsx y revise el resultado antes de importar.</p>
-                    <FileDropzone v-model="file" input-id="import-spreadsheet-file" kind="xlsx" :max-bytes="2 * 1024 * 1024" :disabled="processing" :invalid="Boolean(error)" @update:model-value="reset" @validation-error="invalidFile" />
+        <DialogContent class="max-h-screen flex flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+            <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
+                <div class="grid gap-4 p-6">
+                    <DialogHeader><DialogTitle>{{ title }}</DialogTitle><DialogDescription>{{ withoutEndPeriod(description) }}</DialogDescription></DialogHeader>
+                    <div class="flex flex-col gap-4">
+                        <div class="flex flex-col gap-2 text-sm">
+                            <p>1. Descargue la plantilla y complete una fila por registro.</p>
+                            <Button type="button" variant="outline" class="w-fit" @click="download"><Download data-icon="inline-start" aria-hidden="true" />Descargar plantilla</Button>
+                            <p>2. Suba el archivo .xlsx y revise el resultado antes de importar.</p>
+                            <FileDropzone v-model="file" input-id="import-spreadsheet-file" kind="xlsx" :max-bytes="2 * 1024 * 1024" :disabled="processing" :invalid="Boolean(error)" @update:model-value="reset" @validation-error="invalidFile" />
+                        </div>
+                        <FeedbackAlert v-if="error" :message="error" />
+                        <template v-if="result">
+                            <p v-if="result.valid" class="text-sm">Todas las filas son válidas ({{ result.rows.length }}). Confirme para importarlas.</p>
+                            <p v-else class="text-sm text-destructive">{{ failedRows }} fila(s) con errores. Corrija el archivo y vuelva a subirlo; no se importó nada.</p>
+                            <Table label="Vista previa de la importación">
+                                <TableHeader><TableRow><TableHead>Fila</TableHead><TableHead v-for="column in columns" :key="column.key">{{ column.label }}</TableHead><TableHead>Resultado</TableHead></TableRow></TableHeader>
+                                <TableBody>
+                                    <TableRow v-for="row in result.rows" :key="row.line">
+                                        <TableCell>{{ row.line }}</TableCell>
+                                        <TableCell v-for="column in columns" :key="column.key">{{ row.values[column.key] }}</TableCell>
+                                        <TableCell :class="row.errors.length ? 'text-destructive' : 'text-muted-foreground'">{{ row.errors.length ? row.errors.join(' ') : 'Válida' }}</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        </template>
+                        <div class="flex flex-wrap justify-end gap-2">
+                            <Button type="button" variant="outline" :disabled="processing" @click="open = false">Cancelar</Button>
+                            <Button v-if="result?.valid" type="button" variant="success" :disabled="processing" @click="run(true)"><Spinner v-if="processing" data-icon="inline-start" /><Upload v-else data-icon="inline-start" aria-hidden="true" />Importar</Button>
+                            <Button v-else type="button" :disabled="!file || processing" @click="run(false)"><Spinner v-if="processing" data-icon="inline-start" />Revisar</Button>
+                        </div>
+                    </div>
                 </div>
-                <FeedbackAlert v-if="error" :message="error" />
-                <template v-if="result">
-                    <p v-if="result.valid" class="text-sm">Todas las filas son válidas ({{ result.rows.length }}). Confirme para importarlas.</p>
-                    <p v-else class="text-sm text-destructive">{{ failedRows }} fila(s) con errores. Corrija el archivo y vuelva a subirlo; no se importó nada.</p>
-                    <Table label="Vista previa de la importación">
-                        <TableHeader><TableRow><TableHead>Fila</TableHead><TableHead v-for="column in columns" :key="column.key">{{ column.label }}</TableHead><TableHead>Resultado</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            <TableRow v-for="row in result.rows" :key="row.line">
-                                <TableCell>{{ row.line }}</TableCell>
-                                <TableCell v-for="column in columns" :key="column.key">{{ row.values[column.key] }}</TableCell>
-                                <TableCell :class="row.errors.length ? 'text-destructive' : 'text-muted-foreground'">{{ row.errors.length ? row.errors.join(' ') : 'Válida' }}</TableCell>
-                            </TableRow>
-                        </TableBody>
-                    </Table>
-                </template>
-                <div class="flex flex-wrap justify-end gap-2">
-                    <Button type="button" variant="outline" :disabled="processing" @click="open = false">Cancelar</Button>
-                    <Button v-if="result?.valid" type="button" variant="success" :disabled="processing" @click="run(true)"><Spinner v-if="processing" data-icon="inline-start" /><Upload v-else data-icon="inline-start" aria-hidden="true" />Importar</Button>
-                    <Button v-else type="button" :disabled="!file || processing" @click="run(false)"><Spinner v-if="processing" data-icon="inline-start" />Revisar</Button>
-                </div>
-            </div>
+            </ScrollArea>
         </DialogContent>
     </Dialog>
 </template>

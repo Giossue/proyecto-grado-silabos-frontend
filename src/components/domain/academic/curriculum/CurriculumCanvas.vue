@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Info } from "@lucide/vue";
 import CurriculumNavigationControls from '@/components/domain/academic/curriculum/CurriculumNavigationControls.vue';
 import { ConnectionMode, useVueFlow, VueFlow } from "@vue-flow/core";
@@ -587,35 +588,39 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
       "
     >
       <DialogContent
-        class="max-h-(--overlay-max-height) overflow-y-auto sm:max-w-2xl"
+        class="max-h-(--overlay-max-height) flex flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl"
       >
-        <DialogHeader>
-          <DialogTitle>{{
-            editorSubject ? "Editar materia" : "Agregar materia"
-          }}</DialogTitle>
-          <DialogDescription>
-            Ciclo {{ toRoman(editorCycle) }}. Complete los datos académicos de
-            la materia.
-          </DialogDescription>
-        </DialogHeader>
-        <CurriculumVisualSubjectForm
-          :key="editorSubject?.id ?? `new-${editorCycle}`"
-          :career="career"
-          :modality-options="modalityOptions"
-          :curriculum="curriculum"
-          :fixed-fields="fixedFields"
-          :organization-units="organizationUnits"
-          :subject="editorSubject"
-          :cycle="editorCycle"
-          :position="editorPosition"
-          @cancel="closeEditor"
-          @saved="
-            (message) => {
-              closeEditor();
-              if (message) emit('changed', message);
-            }
-          "
-        />
+          <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
+              <div class="grid gap-4 p-6">
+                <DialogHeader>
+                  <DialogTitle>{{
+                    editorSubject ? "Editar materia" : "Agregar materia"
+                  }}</DialogTitle>
+                  <DialogDescription>
+                    Ciclo {{ toRoman(editorCycle) }}. Complete los datos académicos de
+                    la materia.
+                  </DialogDescription>
+                </DialogHeader>
+                <CurriculumVisualSubjectForm
+                  :key="editorSubject?.id ?? `new-${editorCycle}`"
+                  :career="career"
+                  :modality-options="modalityOptions"
+                  :curriculum="curriculum"
+                  :fixed-fields="fixedFields"
+                  :organization-units="organizationUnits"
+                  :subject="editorSubject"
+                  :cycle="editorCycle"
+                  :position="editorPosition"
+                  @cancel="closeEditor"
+                  @saved="
+                    (message) => {
+                      closeEditor();
+                      if (message) emit('changed', message);
+                    }
+                  "
+                />
+              </div>
+          </ScrollArea>
       </DialogContent>
     </Dialog>
   </div>

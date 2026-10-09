@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Save } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import { createField, updateField } from '@/api/template-structure';
@@ -50,22 +51,26 @@ const save = async (): Promise<void> => {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="max-h-dvh overflow-y-auto sm:max-w-2xl">
-      <DialogHeader>
-        <DialogTitle>{{ field ? 'Propiedades del campo' : 'Agregar campo' }}</DialogTitle>
-        <DialogDescription>{{ field ? 'Cambie el nombre y las opciones de este campo.' : 'Elija quién lo escribe y complete sus opciones.' }}</DialogDescription>
-      </DialogHeader>
-      <form class="flex flex-col gap-4" @submit.prevent="save">
-        <TemplateFieldForm v-model="form" id-prefix="template-field" :lock-type="Boolean(field)" />
-        <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter>
-          <Button type="button" variant="outline" :disabled="saving" @click="open = false">Cancelar</Button>
-          <Button type="submit" :disabled="saving">
-            <Spinner v-if="saving" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />
-            {{ field ? 'Guardar campo' : 'Agregar campo' }}
-          </Button>
-        </DialogFooter>
-      </form>
+    <DialogContent class="max-h-dvh flex flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
+            <div class="grid gap-4 p-6">
+              <DialogHeader>
+                <DialogTitle>{{ field ? 'Propiedades del campo' : 'Agregar campo' }}</DialogTitle>
+                <DialogDescription>{{ field ? 'Cambie el nombre y las opciones de este campo.' : 'Elija quién lo escribe y complete sus opciones.' }}</DialogDescription>
+              </DialogHeader>
+              <form class="flex flex-col gap-4" @submit.prevent="save">
+                <TemplateFieldForm v-model="form" id-prefix="template-field" :lock-type="Boolean(field)" />
+                <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
+                <DialogFooter>
+                  <Button type="button" variant="outline" :disabled="saving" @click="open = false">Cancelar</Button>
+                  <Button type="submit" :disabled="saving">
+                    <Spinner v-if="saving" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />
+                    {{ field ? 'Guardar campo' : 'Agregar campo' }}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </div>
+        </ScrollArea>
     </DialogContent>
   </Dialog>
 </template>

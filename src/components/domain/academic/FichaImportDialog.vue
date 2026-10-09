@@ -94,80 +94,84 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
 <template>
   <Dialog v-model:open="open">
     <DialogTrigger as-child><Button type="button" :disabled="props.disabled"><Sparkles data-icon="inline-start" aria-hidden="true" />Importar documentos</Button></DialogTrigger>
-    <DialogContent class="max-h-screen overflow-y-auto sm:max-w-3xl">
-      <DialogHeader>
-        <DialogTitle>Importar el proyecto de carrera</DialogTitle>
-        <DialogDescription>Suba los documentos de la carrera (PDF o Excel). El asistente propone la ficha de cada materia y usted decide cuáles aplicar.</DialogDescription>
-      </DialogHeader>
-      <div class="flex flex-col gap-4">
-        <FeedbackAlert v-if="error" :message="error" />
-        <Alert v-if="!available"><AlertDescription>El asistente de IA no está configurado en este entorno. Pídale a Administración que lo active.</AlertDescription></Alert>
+    <DialogContent class="max-h-screen flex flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+        <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
+            <div class="grid gap-4 p-6">
+              <DialogHeader>
+                <DialogTitle>Importar el proyecto de carrera</DialogTitle>
+                <DialogDescription>Suba los documentos de la carrera (PDF o Excel). El asistente propone la ficha de cada materia y usted decide cuáles aplicar.</DialogDescription>
+              </DialogHeader>
+              <div class="flex flex-col gap-4">
+                <FeedbackAlert v-if="error" :message="error" />
+                <Alert v-if="!available"><AlertDescription>El asistente de IA no está configurado en este entorno. Pídale a Administración que lo active.</AlertDescription></Alert>
 
-        <template v-else-if="working">
-          <p class="flex items-center gap-2 text-sm" role="status"><Spinner /> Analizando los documentos… {{ current?.progress.done ?? 0 }} de {{ current?.progress.total ?? 0 }} materias.</p>
-        </template>
+                <template v-else-if="working">
+                  <p class="flex items-center gap-2 text-sm" role="status"><Spinner /> Analizando los documentos… {{ current?.progress.done ?? 0 }} de {{ current?.progress.total ?? 0 }} materias.</p>
+                </template>
 
-        <template v-else-if="current?.state === 'fallida'">
-          <Alert variant="destructive"><AlertDescription>{{ current.error ?? 'El análisis falló.' }}</AlertDescription></Alert>
-          <div><Button type="button" variant="outline" :disabled="busy" @click="discard"><Trash2 data-icon="inline-start" aria-hidden="true" />Descartar y empezar de nuevo</Button></div>
-        </template>
+                <template v-else-if="current?.state === 'fallida'">
+                  <Alert variant="destructive"><AlertDescription>{{ current.error ?? 'El análisis falló.' }}</AlertDescription></Alert>
+                  <div><Button type="button" variant="outline" :disabled="busy" @click="discard"><Trash2 data-icon="inline-start" aria-hidden="true" />Descartar y empezar de nuevo</Button></div>
+                </template>
 
-        <template v-else-if="ready">
-          <p class="text-sm">Propuesta para {{ proposed.length }} de {{ current?.subjects.length }} materias. Marque las que desea aplicar; lo que no marque no se toca. En cada materia puede comparar con la ficha actual y elegir qué campos aplicar.</p>
-          <ScrollArea class="[&>[data-slot=scroll-area-viewport]]:max-h-96">
-              <ul class="flex flex-col gap-2">
-                <li v-for="subject in current?.subjects" :key="subject.subject_id" class="rounded-md border p-3">
-                  <div class="flex items-start gap-3">
-                    <Checkbox :id="`ficha-${subject.subject_id}`" :model-value="chosen.has(subject.subject_id)" :disabled="subject.state !== 'lista' || busy" :aria-label="`Aplicar la ficha de ${subject.name}`" @update:model-value="toggle(subject.subject_id, $event === true)" />
-                    <div class="flex min-w-0 flex-1 flex-col gap-1">
-                      <FieldLabel :for="`ficha-${subject.subject_id}`" class="font-medium">{{ subject.name }}<span class="font-normal text-muted-foreground"> · {{ subject.code }}</span></FieldLabel>
-                      <p class="text-sm text-muted-foreground">{{ stateText(subject) }}<template v-if="subject.state === 'lista' && subject.replaces"> · reemplaza la ficha actual</template></p>
-                      <div v-if="subject.state === 'lista'" class="text-sm">
-                        <Button type="button" variant="link" size="sm" class="h-auto px-0" :aria-expanded="expanded.has(subject.subject_id)" @click="toggleExpanded(subject.subject_id)">{{ expanded.has(subject.subject_id) ? 'Ocultar la comparación' : (subject.replaces ? 'Comparar con la ficha actual' : 'Ver lo que propone') }}</Button>
-                        <div v-for="(value, key) in expanded.has(subject.subject_id) ? subject.values : {}" :key="key" class="mt-3 rounded-md border p-2">
-                          <div class="flex items-center gap-2">
-                            <Checkbox :id="`ficha-${subject.subject_id}-${key}`" :model-value="fieldChosen(subject.subject_id, String(key))" :disabled="!chosen.has(subject.subject_id) || busy" @update:model-value="toggleField(subject.subject_id, String(key), $event === true)" />
-                            <FieldLabel :for="`ficha-${subject.subject_id}-${key}`" class="font-medium">{{ fieldLabel(String(key)) }}</FieldLabel>
-                          </div>
-                          <div class="mt-2 grid gap-3" :class="subject.replaces ? 'sm:grid-cols-2' : ''">
-                            <div v-if="subject.replaces">
-                              <p class="text-xs font-medium text-muted-foreground">Actual</p>
-                              <p class="whitespace-pre-wrap" :class="subject.current[String(key)] ? '' : 'text-muted-foreground'">{{ subject.current[String(key)] ?? 'Vacío' }}</p>
+                <template v-else-if="ready">
+                  <p class="text-sm">Propuesta para {{ proposed.length }} de {{ current?.subjects.length }} materias. Marque las que desea aplicar; lo que no marque no se toca. En cada materia puede comparar con la ficha actual y elegir qué campos aplicar.</p>
+                  <ScrollArea class="[&>[data-slot=scroll-area-viewport]]:max-h-96">
+                      <ul class="flex flex-col gap-2">
+                        <li v-for="subject in current?.subjects" :key="subject.subject_id" class="rounded-md border p-3">
+                          <div class="flex items-start gap-3">
+                            <Checkbox :id="`ficha-${subject.subject_id}`" :model-value="chosen.has(subject.subject_id)" :disabled="subject.state !== 'lista' || busy" :aria-label="`Aplicar la ficha de ${subject.name}`" @update:model-value="toggle(subject.subject_id, $event === true)" />
+                            <div class="flex min-w-0 flex-1 flex-col gap-1">
+                              <FieldLabel :for="`ficha-${subject.subject_id}`" class="font-medium">{{ subject.name }}<span class="font-normal text-muted-foreground"> · {{ subject.code }}</span></FieldLabel>
+                              <p class="text-sm text-muted-foreground">{{ stateText(subject) }}<template v-if="subject.state === 'lista' && subject.replaces"> · reemplaza la ficha actual</template></p>
+                              <div v-if="subject.state === 'lista'" class="text-sm">
+                                <Button type="button" variant="link" size="sm" class="h-auto px-0" :aria-expanded="expanded.has(subject.subject_id)" @click="toggleExpanded(subject.subject_id)">{{ expanded.has(subject.subject_id) ? 'Ocultar la comparación' : (subject.replaces ? 'Comparar con la ficha actual' : 'Ver lo que propone') }}</Button>
+                                <div v-for="(value, key) in expanded.has(subject.subject_id) ? subject.values : {}" :key="key" class="mt-3 rounded-md border p-2">
+                                  <div class="flex items-center gap-2">
+                                    <Checkbox :id="`ficha-${subject.subject_id}-${key}`" :model-value="fieldChosen(subject.subject_id, String(key))" :disabled="!chosen.has(subject.subject_id) || busy" @update:model-value="toggleField(subject.subject_id, String(key), $event === true)" />
+                                    <FieldLabel :for="`ficha-${subject.subject_id}-${key}`" class="font-medium">{{ fieldLabel(String(key)) }}</FieldLabel>
+                                  </div>
+                                  <div class="mt-2 grid gap-3" :class="subject.replaces ? 'sm:grid-cols-2' : ''">
+                                    <div v-if="subject.replaces">
+                                      <p class="text-xs font-medium text-muted-foreground">Actual</p>
+                                      <p class="whitespace-pre-wrap" :class="subject.current[String(key)] ? '' : 'text-muted-foreground'">{{ subject.current[String(key)] ?? 'Vacío' }}</p>
+                                    </div>
+                                    <div>
+                                      <p class="text-xs font-medium text-muted-foreground">Propuesta</p>
+                                      <p v-for="(line, index) in asLines(value)" :key="index" class="whitespace-pre-wrap">{{ Array.isArray(value) ? '• ' : '' }}{{ line }}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                            <div>
-                              <p class="text-xs font-medium text-muted-foreground">Propuesta</p>
-                              <p v-for="(line, index) in asLines(value)" :key="index" class="whitespace-pre-wrap">{{ Array.isArray(value) ? '• ' : '' }}{{ line }}</p>
-                            </div>
                           </div>
-                        </div>
-                      </div>
-                    </div>
+                        </li>
+                      </ul>
+                  </ScrollArea>
+                </template>
+
+                <template v-else>
+                  <div class="flex flex-col gap-2">
+                    <FieldLabel for="ficha-import-files">Documentos (PDF o Excel, hasta 6)</FieldLabel>
+                    <FileDropzone :model-value="null" input-id="ficha-import-files" kind="document" multiple :max-bytes="20 * 1024 * 1024" :disabled="busy || files.length >= MAX_FILES" @files-selected="addFiles" @validation-error="(message) => { if (message) error = message; }" />
+                    <Attachment v-for="(file, index) in files" :key="`${file.name}-${file.size}`" class="w-full">
+                      <AttachmentMedia><FileText aria-hidden="true" /></AttachmentMedia>
+                      <AttachmentContent><AttachmentTitle>{{ file.name }}</AttachmentTitle><AttachmentDescription>{{ fileSize(file.size) }}</AttachmentDescription></AttachmentContent>
+                      <AttachmentActions><AttachmentAction type="button" :aria-label="`Quitar ${file.name}`" :disabled="busy" @click="removeFile(index)"><X aria-hidden="true" /></AttachmentAction></AttachmentActions>
+                    </Attachment>
                   </div>
-                </li>
-              </ul>
-          </ScrollArea>
-        </template>
-
-        <template v-else>
-          <div class="flex flex-col gap-2">
-            <FieldLabel for="ficha-import-files">Documentos (PDF o Excel, hasta 6)</FieldLabel>
-            <FileDropzone :model-value="null" input-id="ficha-import-files" kind="document" multiple :max-bytes="20 * 1024 * 1024" :disabled="busy || files.length >= MAX_FILES" @files-selected="addFiles" @validation-error="(message) => { if (message) error = message; }" />
-            <Attachment v-for="(file, index) in files" :key="`${file.name}-${file.size}`" class="w-full">
-              <AttachmentMedia><FileText aria-hidden="true" /></AttachmentMedia>
-              <AttachmentContent><AttachmentTitle>{{ file.name }}</AttachmentTitle><AttachmentDescription>{{ fileSize(file.size) }}</AttachmentDescription></AttachmentContent>
-              <AttachmentActions><AttachmentAction type="button" :aria-label="`Quitar ${file.name}`" :disabled="busy" @click="removeFile(index)"><X aria-hidden="true" /></AttachmentAction></AttachmentActions>
-            </Attachment>
-          </div>
-        </template>
-      </div>
-      <DialogFooter>
-        <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
-        <template v-if="ready">
-          <Button type="button" variant="outline" :disabled="busy" @click="discard"><Trash2 data-icon="inline-start" aria-hidden="true" />Descartar</Button>
-          <Button type="button" :disabled="busy || chosen.size === 0" @click="apply"><Spinner v-if="busy" data-icon="inline-start" />Aplicar a {{ chosen.size }} materias</Button>
-        </template>
-        <Button v-else-if="available && !working && current?.state !== 'fallida'" type="button" :disabled="busy || files.length === 0" @click="analyze"><Spinner v-if="busy" data-icon="inline-start" /><FileUp v-else data-icon="inline-start" aria-hidden="true" />Analizar documentos</Button>
-      </DialogFooter>
+                </template>
+              </div>
+              <DialogFooter>
+                <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
+                <template v-if="ready">
+                  <Button type="button" variant="outline" :disabled="busy" @click="discard"><Trash2 data-icon="inline-start" aria-hidden="true" />Descartar</Button>
+                  <Button type="button" :disabled="busy || chosen.size === 0" @click="apply"><Spinner v-if="busy" data-icon="inline-start" />Aplicar a {{ chosen.size }} materias</Button>
+                </template>
+                <Button v-else-if="available && !working && current?.state !== 'fallida'" type="button" :disabled="busy || files.length === 0" @click="analyze"><Spinner v-if="busy" data-icon="inline-start" /><FileUp v-else data-icon="inline-start" aria-hidden="true" />Analizar documentos</Button>
+              </DialogFooter>
+            </div>
+        </ScrollArea>
     </DialogContent>
   </Dialog>
 </template>

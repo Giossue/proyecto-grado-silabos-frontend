@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { CircleHelp } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -207,9 +208,13 @@ onBeforeUnmount(() => {
         <CircleHelp aria-hidden="true" />
       </Button>
     </PopoverAnchor>
-    <PopoverContent :id="panelId" class="flex max-h-96 w-80 flex-col gap-3 overflow-y-auto" :side="isTop ? 'bottom' : 'top'" :align="isLeft ? 'start' : 'end'" @close-auto-focus.prevent="button?.$el.focus()">
-      <h2 class="text-sm font-semibold">{{ title }}</h2>
-      <p v-for="(text, index) in paragraphs" :key="index" class="text-sm whitespace-pre-line">{{ text }}</p>
+    <PopoverContent :id="panelId" class="w-80 p-0" :side="isTop ? 'bottom' : 'top'" :align="isLeft ? 'start' : 'end'" @close-auto-focus.prevent="button?.$el.focus()">
+      <ScrollArea class="[&>[data-slot=scroll-area-viewport]]:max-h-96">
+        <div class="flex flex-col gap-3 p-4">
+          <h2 class="text-sm font-semibold">{{ title }}</h2>
+          <p v-for="(text, index) in paragraphs" :key="index" class="text-sm whitespace-pre-line">{{ text }}</p>
+        </div>
+      </ScrollArea>
     </PopoverContent>
   </Popover>
 </template>

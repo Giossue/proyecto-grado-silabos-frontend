@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowLeft, Save } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import { createField, createSection, createSectionFromDesign, renameSection } from '@/api/template-structure';
@@ -101,77 +102,81 @@ const save = async (includeField: boolean): Promise<void> => {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="max-h-dvh overflow-y-auto sm:max-w-2xl">
-      <DialogHeader>
-        <DialogTitle>{{ section ? 'Renombrar sección' : 'Nueva sección' }}</DialogTitle>
-        <DialogDescription>{{ section ? 'Cambie el nombre de esta sección.' : step === 'choose' ? 'Elija un diseño oficial ya armado o empiece con una sección en blanco.' : step === 1 ? 'Paso 1 de 2: ¿cómo se llama la sección?' : 'Paso 2 de 2: agregue su primer campo o créela vacía.' }}</DialogDescription>
-      </DialogHeader>
+    <DialogContent class="max-h-dvh flex flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
+            <div class="grid gap-4 p-6">
+              <DialogHeader>
+                <DialogTitle>{{ section ? 'Renombrar sección' : 'Nueva sección' }}</DialogTitle>
+                <DialogDescription>{{ section ? 'Cambie el nombre de esta sección.' : step === 'choose' ? 'Elija un diseño oficial ya armado o empiece con una sección en blanco.' : step === 1 ? 'Paso 1 de 2: ¿cómo se llama la sección?' : 'Paso 2 de 2: agregue su primer campo o créela vacía.' }}</DialogDescription>
+              </DialogHeader>
 
-      <form v-if="step === 'choose'" class="flex flex-col gap-4" @submit.prevent="choose">
-        <RadioGroup v-model="choice" class="flex flex-col gap-4">
-          <FieldSet>
-            <FieldLegend variant="label">Usar un diseño oficial</FieldLegend>
-            <FieldDescription>Secciones ya armadas con el formato de la UEB: cada una trae sus campos listos.</FieldDescription>
-            <div class="flex flex-col gap-2" data-section-designs>
-              <label v-for="design in designs ?? []" :key="design.key" :for="`section-design-${design.key}`" :data-design="design.key" :class="['flex items-start gap-3 rounded-md border p-3 has-[[data-state=checked]]:border-primary', available(design) ? 'cursor-pointer' : 'cursor-not-allowed opacity-60']">
-                <RadioGroupItem :id="`section-design-${design.key}`" :value="design.key" :disabled="!available(design) || saving" class="mt-0.5" />
-                <span class="flex min-w-0 flex-col gap-0.5 text-sm">
-                  <span class="font-medium [overflow-wrap:anywhere]">{{ design.title }}<span v-if="!available(design)" class="ml-2 font-normal text-muted-foreground">Ya está en la plantilla</span></span>
-                  <span class="text-muted-foreground">{{ design.summary }}</span>
-                  <span class="text-xs text-muted-foreground [overflow-wrap:anywhere]">Incluye: {{ fieldSummary(design) }}</span>
-                </span>
-              </label>
+              <form v-if="step === 'choose'" class="flex flex-col gap-4" @submit.prevent="choose">
+                <RadioGroup v-model="choice" class="flex flex-col gap-4">
+                  <FieldSet>
+                    <FieldLegend variant="label">Usar un diseño oficial</FieldLegend>
+                    <FieldDescription>Secciones ya armadas con el formato de la UEB: cada una trae sus campos listos.</FieldDescription>
+                    <div class="flex flex-col gap-2" data-section-designs>
+                      <label v-for="design in designs ?? []" :key="design.key" :for="`section-design-${design.key}`" :data-design="design.key" :class="['flex items-start gap-3 rounded-md border p-3 has-[[data-state=checked]]:border-primary', available(design) ? 'cursor-pointer' : 'cursor-not-allowed opacity-60']">
+                        <RadioGroupItem :id="`section-design-${design.key}`" :value="design.key" :disabled="!available(design) || saving" class="mt-0.5" />
+                        <span class="flex min-w-0 flex-col gap-0.5 text-sm">
+                          <span class="font-medium [overflow-wrap:anywhere]">{{ design.title }}<span v-if="!available(design)" class="ml-2 font-normal text-muted-foreground">Ya está en la plantilla</span></span>
+                          <span class="text-muted-foreground">{{ design.summary }}</span>
+                          <span class="text-xs text-muted-foreground [overflow-wrap:anywhere]">Incluye: {{ fieldSummary(design) }}</span>
+                        </span>
+                      </label>
+                    </div>
+                  </FieldSet>
+                  <FieldSet>
+                    <FieldLegend variant="label">O empezar desde cero</FieldLegend>
+                    <label for="section-design-blank" class="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[[data-state=checked]]:border-primary">
+                      <RadioGroupItem id="section-design-blank" :value="BLANK" :disabled="saving" class="mt-0.5" />
+                      <span class="flex flex-col gap-0.5 text-sm">
+                        <span class="font-medium">En blanco</span>
+                        <span class="text-muted-foreground">Cree una sección vacía con su propio nombre y sus propios campos.</span>
+                      </span>
+                    </label>
+                  </FieldSet>
+                </RadioGroup>
+                <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
+                <DialogFooter>
+                  <Button type="button" variant="outline" :disabled="saving" @click="open = false">Cancelar</Button>
+                  <Button type="submit" :disabled="saving">
+                    <Spinner v-if="saving" data-icon="inline-start" />
+                    {{ choice === BLANK ? 'Continuar' : 'Agregar sección' }}
+                  </Button>
+                </DialogFooter>
+              </form>
+
+              <form v-else-if="step === 1" class="flex flex-col gap-4" @submit.prevent="next">
+                <Field :data-invalid="Boolean(titleError)">
+                  <FieldLabel for="template-section-title" required>Nombre de la sección</FieldLabel>
+                  <Input id="template-section-title" v-model="title" maxlength="180" placeholder="Ej. Objetivos de la asignatura" :aria-invalid="Boolean(titleError)" :disabled="saving" />
+                  <FieldError v-if="titleError" :errors="[titleError]" />
+                </Field>
+                <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
+                <DialogFooter>
+                  <Button v-if="!section" type="button" variant="ghost" :disabled="saving" @click="step = 'choose'"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
+                  <Button type="button" variant="outline" :disabled="saving" @click="open = false">Cancelar</Button>
+                  <Button type="submit" :disabled="saving">
+                    <Spinner v-if="saving" data-icon="inline-start" /><Save v-else-if="section" data-icon="inline-start" aria-hidden="true" />
+                    {{ section ? 'Guardar nombre' : 'Continuar' }}
+                  </Button>
+                </DialogFooter>
+              </form>
+
+              <form v-else class="flex flex-col gap-4" @submit.prevent="save(true)">
+                <TemplateFieldForm v-model="withField" id-prefix="new-section-field" />
+                <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
+                <DialogFooter class="sm:justify-between">
+                  <Button type="button" variant="ghost" :disabled="saving" @click="step = 1"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
+                  <div class="flex flex-col-reverse gap-2 sm:flex-row">
+                    <Button type="button" variant="outline" :disabled="saving" @click="save(false)">Crear sin campos</Button>
+                    <Button type="submit" :disabled="saving"><Spinner v-if="saving" data-icon="inline-start" />Crear sección con este campo</Button>
+                  </div>
+                </DialogFooter>
+              </form>
             </div>
-          </FieldSet>
-          <FieldSet>
-            <FieldLegend variant="label">O empezar desde cero</FieldLegend>
-            <label for="section-design-blank" class="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[[data-state=checked]]:border-primary">
-              <RadioGroupItem id="section-design-blank" :value="BLANK" :disabled="saving" class="mt-0.5" />
-              <span class="flex flex-col gap-0.5 text-sm">
-                <span class="font-medium">En blanco</span>
-                <span class="text-muted-foreground">Cree una sección vacía con su propio nombre y sus propios campos.</span>
-              </span>
-            </label>
-          </FieldSet>
-        </RadioGroup>
-        <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter>
-          <Button type="button" variant="outline" :disabled="saving" @click="open = false">Cancelar</Button>
-          <Button type="submit" :disabled="saving">
-            <Spinner v-if="saving" data-icon="inline-start" />
-            {{ choice === BLANK ? 'Continuar' : 'Agregar sección' }}
-          </Button>
-        </DialogFooter>
-      </form>
-
-      <form v-else-if="step === 1" class="flex flex-col gap-4" @submit.prevent="next">
-        <Field :data-invalid="Boolean(titleError)">
-          <FieldLabel for="template-section-title" required>Nombre de la sección</FieldLabel>
-          <Input id="template-section-title" v-model="title" maxlength="180" placeholder="Ej. Objetivos de la asignatura" :aria-invalid="Boolean(titleError)" :disabled="saving" />
-          <FieldError v-if="titleError" :errors="[titleError]" />
-        </Field>
-        <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter>
-          <Button v-if="!section" type="button" variant="ghost" :disabled="saving" @click="step = 'choose'"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
-          <Button type="button" variant="outline" :disabled="saving" @click="open = false">Cancelar</Button>
-          <Button type="submit" :disabled="saving">
-            <Spinner v-if="saving" data-icon="inline-start" /><Save v-else-if="section" data-icon="inline-start" aria-hidden="true" />
-            {{ section ? 'Guardar nombre' : 'Continuar' }}
-          </Button>
-        </DialogFooter>
-      </form>
-
-      <form v-else class="flex flex-col gap-4" @submit.prevent="save(true)">
-        <TemplateFieldForm v-model="withField" id-prefix="new-section-field" />
-        <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter class="sm:justify-between">
-          <Button type="button" variant="ghost" :disabled="saving" @click="step = 1"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
-          <div class="flex flex-col-reverse gap-2 sm:flex-row">
-            <Button type="button" variant="outline" :disabled="saving" @click="save(false)">Crear sin campos</Button>
-            <Button type="submit" :disabled="saving"><Spinner v-if="saving" data-icon="inline-start" />Crear sección con este campo</Button>
-          </div>
-        </DialogFooter>
-      </form>
+        </ScrollArea>
     </DialogContent>
   </Dialog>
 </template>
