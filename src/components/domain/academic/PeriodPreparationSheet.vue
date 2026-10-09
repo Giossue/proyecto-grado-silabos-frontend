@@ -30,8 +30,6 @@ const saving = ref(false);
 const error = ref<string | null>(null);
 
 const planningPeriods = computed(() => props.options.periods.filter((period) => period.planning_enabled));
-const parallelCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.length, 0));
-const assignedCount = computed(() => rows.value.reduce((total, row) => total + row.parallels.filter((parallel) => parallel.teacherId).length, 0));
 const problem = computed(() => preparationProblem(rows.value));
 const cycles = computed(() => groupByCycle(rows.value));
 const openCycles = ref<number[]>([]);

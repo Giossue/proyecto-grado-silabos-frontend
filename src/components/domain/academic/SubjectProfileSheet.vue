@@ -69,7 +69,7 @@ const save = async (close: () => void) => {
 </script>
 
 <template>
-  <FormDialog v-model:open="open" fit :show-trigger="false" :show-close-button="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha" description="Datos que heredarán los sílabos nuevos.">
+  <FormDialog v-model:open="open" fit :show-trigger="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha" description="Datos que heredarán los sílabos nuevos.">
     <template #default="{ close }">
       <form class="contents" @submit.prevent="save(close)">
         <FieldGroup>

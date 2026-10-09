@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useFocusReturn } from '@/lib/focusReturn';
-import { Eye, X } from '@lucide/vue';
+import { Eye } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import CatalogActions from '@/components/domain/academic/CatalogActions.vue';
@@ -9,7 +9,7 @@ import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
     Select,
@@ -336,12 +336,7 @@ const {
     </Card>
 
     <Dialog :open="logoPreviewOpen" @update:open="updateLogoPreviewOpen">
-        <DialogContent class="pr-14 sm:max-w-3xl">
-            <DialogClose as-child>
-                <Button type="button" variant="ghost" size="icon-sm" class="absolute top-4 right-4" aria-label="Cerrar vista del logo">
-                    <X aria-hidden="true" />
-                </Button>
-            </DialogClose>
+        <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Logo de {{ logoPreview?.name }}</DialogTitle>
             </DialogHeader>
@@ -351,6 +346,9 @@ const {
                 :alt="`Logo de ${logoPreview.name}`"
                 class="max-h-160 w-full object-contain"
             />
+            <DialogFooter>
+                <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
+            </DialogFooter>
         </DialogContent>
     </Dialog>
 
