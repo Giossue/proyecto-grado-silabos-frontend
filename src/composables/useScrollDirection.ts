@@ -18,9 +18,12 @@ export function useScrollDirection(
 
     let lastY = 0;
     let ticking = false;
+    let scroller: HTMLElement | null = null;
+
+    const currentY = (): number => Math.max(0, scroller?.scrollTop ?? 0);
 
     const evaluate = (): void => {
-        const y = Math.max(0, window.scrollY);
+        const y = currentY();
 
         if (y <= topOffset) {
             hidden.value = false;
@@ -50,12 +53,15 @@ export function useScrollDirection(
     };
 
     onMounted(() => {
-        lastY = Math.max(0, window.scrollY);
-        window.addEventListener('scroll', onScroll, { passive: true });
+        scroller = document.querySelector<HTMLElement>(
+            '[data-app-scroll] > [data-slot="scroll-area-viewport"]',
+        );
+        lastY = currentY();
+        scroller?.addEventListener('scroll', onScroll, { passive: true });
     });
 
     onUnmounted(() => {
-        window.removeEventListener('scroll', onScroll);
+        scroller?.removeEventListener('scroll', onScroll);
     });
 
     return { hidden };

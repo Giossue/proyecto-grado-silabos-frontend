@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SyllabusEditorLayout from '@/layouts/SyllabusEditorLayout.vue';
 import WorkspaceLayout from '@/layouts/WorkspaceLayout.vue';
@@ -28,14 +29,16 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
 
 <template>
     <a href="#contenido" class="sr-only z-50 rounded-md bg-background px-4 py-2 text-sm font-medium text-foreground shadow-lg focus:not-sr-only focus:fixed focus:top-2 focus:left-2" @click.prevent="focusContent">Saltar al contenido</a>
-    <SyllabusEditorLayout v-if="usesSyllabusEditorLayout">
-        <RouterView />
-    </SyllabusEditorLayout>
-    <WorkspaceLayout v-else-if="usesWorkspaceLayout">
-        <RouterView />
-    </WorkspaceLayout>
-    <AppLayout v-else-if="usesShell" :breadcrumbs="breadcrumbs">
-        <RouterView />
-    </AppLayout>
-    <RouterView v-else />
+    <ScrollArea data-app-scroll class="h-dvh">
+        <SyllabusEditorLayout v-if="usesSyllabusEditorLayout">
+            <RouterView />
+        </SyllabusEditorLayout>
+        <WorkspaceLayout v-else-if="usesWorkspaceLayout">
+            <RouterView />
+        </WorkspaceLayout>
+        <AppLayout v-else-if="usesShell" :breadcrumbs="breadcrumbs">
+            <RouterView />
+        </AppLayout>
+        <RouterView v-else />
+    </ScrollArea>
 </template>
