@@ -122,15 +122,13 @@ watch(periodId, () => { if (open.value) updateProposal(); });
                     <span>Ciclo {{ group.cycle }} <span class="font-normal text-muted-foreground">· {{ group.rows.length }} {{ group.rows.length === 1 ? 'materia' : 'materias' }}</span></span>
                     <ChevronDown class="size-4 transition-transform" aria-hidden="true" />
                   </CollapsibleTrigger>
-                  <DropdownMenu>
-                    <Tooltip>
-                      <TooltipTrigger as-child>
-                        <DropdownMenuTrigger as-child>
-                          <Button type="button" size="icon-sm" variant="ghost" :aria-label="`Acciones del ciclo ${group.cycle}`"><EllipsisVertical aria-hidden="true" /></Button>
-                        </DropdownMenuTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>Acciones del ciclo</TooltipContent>
-                    </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <span class="inline-flex">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger as-child>
+                            <Button type="button" size="icon-sm" variant="ghost" :aria-label="`Acciones del ciclo ${group.cycle}`"><EllipsisVertical aria-hidden="true" /></Button>
+                          </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Todo el ciclo {{ group.cycle }}</DropdownMenuLabel>
                       <DropdownMenuItem @select="addParallelToCycle(group.rows)">Agregar un paralelo a cada materia</DropdownMenuItem>
@@ -149,7 +147,11 @@ watch(periodId, () => { if (open.value) updateProposal(); });
                         </DropdownMenuSubContent>
                       </DropdownMenuSub>
                     </DropdownMenuContent>
-                  </DropdownMenu>
+                        </DropdownMenu>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent>Acciones del ciclo</TooltipContent>
+                  </Tooltip>
                 </div>
                 <CollapsibleContent class="divide-y border-t">
                   <div v-for="row in group.rows" :key="row.id" class="grid gap-2 px-3 py-3 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
