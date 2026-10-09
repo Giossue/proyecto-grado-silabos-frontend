@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { withoutEndPeriod } from '@/lib/text';
 import { Plus } from '@lucide/vue';
 import type { VNode } from 'vue';
@@ -74,9 +75,11 @@ const close = (): void => {
                 <SheetTitle>{{ title }}</SheetTitle>
                 <SheetDescription v-if="description">{{ withoutEndPeriod(description) }}</SheetDescription>
             </SheetHeader>
-            <div class="flex-1 overflow-y-auto px-4 pt-1 pb-28">
-                <slot :close="close" />
-            </div>
+            <ScrollArea class="min-h-0 flex-1">
+                <div class="px-4 pt-1 pb-28">
+                    <slot :close="close" />
+                </div>
+            </ScrollArea>
             <div v-if="$slots['header-actions']" class="absolute top-3 right-3 flex items-center gap-1">
                 <slot name="header-actions" />
             </div>

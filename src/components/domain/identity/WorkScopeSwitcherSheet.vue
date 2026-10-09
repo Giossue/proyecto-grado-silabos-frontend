@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { ArrowRight, CheckCircle2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -61,19 +62,21 @@ const select = async (roleAssignmentId: string): Promise<void> => {
         <DialogTitle>{{ title }}</DialogTitle>
         <DialogDescription>Elija una carrera o rol vigente. Todo el sistema cambiará al nuevo alcance.</DialogDescription>
       </DialogHeader>
-      <div class="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-1">
-        <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <div class="grid gap-4 sm:grid-cols-2">
-          <Card v-for="role in roles" :key="role.id" class="h-full">
-            <CardHeader>
-              <CardTitle>{{ scopeTitle(role) }}</CardTitle>
-              <CardDescription v-if="scopeDescription(role)">{{ scopeDescription(role) }}</CardDescription>
-              <CardAction v-if="activeRole?.id === role.id"><Badge variant="secondary"><CheckCircle2 aria-hidden="true" />Activo</Badge></CardAction>
-            </CardHeader>
-            <CardFooter class="mt-auto"><Button v-if="activeRole?.id === role.id" type="button" variant="secondary" class="w-full" disabled>Carrera o rol actual</Button><Button v-else type="button" class="w-full" :disabled="pendingRoleId !== null" @click="select(role.id)"><Spinner v-if="pendingRoleId === role.id" data-icon="inline-start" /><ArrowRight v-else data-icon="inline-start" aria-hidden="true" />{{ actionLabel(role) }}</Button></CardFooter>
-          </Card>
-        </div>
-      </div>
+      <ScrollArea class="min-h-0 flex-1">
+          <div class="flex flex-col gap-4 p-1">
+            <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+            <div class="grid gap-4 sm:grid-cols-2">
+              <Card v-for="role in roles" :key="role.id" class="h-full">
+                <CardHeader>
+                  <CardTitle>{{ scopeTitle(role) }}</CardTitle>
+                  <CardDescription v-if="scopeDescription(role)">{{ scopeDescription(role) }}</CardDescription>
+                  <CardAction v-if="activeRole?.id === role.id"><Badge variant="secondary"><CheckCircle2 aria-hidden="true" />Activo</Badge></CardAction>
+                </CardHeader>
+                <CardFooter class="mt-auto"><Button v-if="activeRole?.id === role.id" type="button" variant="secondary" class="w-full" disabled>Carrera o rol actual</Button><Button v-else type="button" class="w-full" :disabled="pendingRoleId !== null" @click="select(role.id)"><Spinner v-if="pendingRoleId === role.id" data-icon="inline-start" /><ArrowRight v-else data-icon="inline-start" aria-hidden="true" />{{ actionLabel(role) }}</Button></CardFooter>
+              </Card>
+            </div>
+          </div>
+      </ScrollArea>
       <DialogFooter>
         <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
       </DialogFooter>

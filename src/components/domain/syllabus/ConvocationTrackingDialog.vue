@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { SYLLABUS_STATE_OPTIONS } from '@/lib/syllabusStates';
@@ -64,67 +65,69 @@ watch(() => props.open, (open) => {
         </DialogDescription>
       </DialogHeader>
 
-      <div class="min-h-0 flex-1 overflow-y-auto px-6 pt-1 pb-6">
-        <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-else-if="loading && !data" variant="table-body" :columns="4" :search="true" :filters="1" :actions="false" :cell-lines="2" />
-        <div v-else-if="data" class="flex flex-col gap-4">
-          <ClientFilterBar
-            :filter="syllabusFilter"
-            :input-id="`convocation-syllabi-search-${convocationId}`"
-            label="Buscar expediente"
-            placeholder="Buscar por asignatura o código"
-          >
-            <template #filters>
-              <Field>
-                <FieldLabel :for="`convocation-syllabi-search-state-${convocationId}`" class="sr-only">Estado</FieldLabel>
-                <Select v-model="syllabusFilter.values.estado.value">
-                  <SelectTrigger :id="`convocation-syllabi-search-state-${convocationId}`">
-                    <SelectValue placeholder="Todos los estados" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectItem value="all">Todos los estados</SelectItem>
-<SelectItem v-for="option in SYLLABUS_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
-              </Field>
-            </template>
-          </ClientFilterBar>
+      <ScrollArea class="min-h-0 flex-1">
+          <div class="px-6 pt-1 pb-6">
+            <LoadErrorState v-if="error" :message="error" @retry="load" />
+            <LoadingSkeleton v-else-if="loading && !data" variant="table-body" :columns="4" :search="true" :filters="1" :actions="false" :cell-lines="2" />
+            <div v-else-if="data" class="flex flex-col gap-4">
+              <ClientFilterBar
+                :filter="syllabusFilter"
+                :input-id="`convocation-syllabi-search-${convocationId}`"
+                label="Buscar expediente"
+                placeholder="Buscar por asignatura o código"
+              >
+                <template #filters>
+                  <Field>
+                    <FieldLabel :for="`convocation-syllabi-search-state-${convocationId}`" class="sr-only">Estado</FieldLabel>
+                    <Select v-model="syllabusFilter.values.estado.value">
+                      <SelectTrigger :id="`convocation-syllabi-search-state-${convocationId}`">
+                        <SelectValue placeholder="Todos los estados" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectItem value="all">Todos los estados</SelectItem>
+    <SelectItem v-for="option in SYLLABUS_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </template>
+              </ClientFilterBar>
 
-          <div class="overflow-x-auto">
-            <Table label="Seguimiento de la convocatoria">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Asignatura</TableHead>
-                  <TableHead>Paralelos y docentes</TableHead>
+              <div class="overflow-x-auto">
+                <Table label="Seguimiento de la convocatoria">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Asignatura</TableHead>
+                      <TableHead>Paralelos y docentes</TableHead>
 
-                  <TableHead class="text-center">Estado</TableHead>
-                  <TableHead>Iniciado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableEmpty v-if="syllabusPage.length === 0" :colspan="4">
-                  {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros.' : 'Los expedientes aparecerán después de abrir la convocatoria.' }}
-                </TableEmpty>
-                <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id">
-                  <TableCell>
-                    <div>{{ syllabus.subject }}</div>
-                    <div class="text-sm text-muted-foreground">{{ syllabus.code }}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div>Paralelos {{ syllabus.parallels.join(', ') }}</div>
-                    <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
-                  </TableCell>
-                  <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /></TableCell>
-                  <TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
+                      <TableHead class="text-center">Estado</TableHead>
+                      <TableHead>Iniciado</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableEmpty v-if="syllabusPage.length === 0" :colspan="4">
+                      {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros.' : 'Los expedientes aparecerán después de abrir la convocatoria.' }}
+                    </TableEmpty>
+                    <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id">
+                      <TableCell>
+                        <div>{{ syllabus.subject }}</div>
+                        <div class="text-sm text-muted-foreground">{{ syllabus.code }}</div>
+                      </TableCell>
+                      <TableCell>
+                        <div>Paralelos {{ syllabus.parallels.join(', ') }}</div>
+                        <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
+                      </TableCell>
+                      <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /></TableCell>
+                      <TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              <TablePagination :meta="syllabusMeta" label="Paginación del seguimiento de convocatoria" @update:page="setSyllabusPage" />
+            </div>
           </div>
-          <TablePagination :meta="syllabusMeta" label="Paginación del seguimiento de convocatoria" @update:page="setSyllabusPage" />
-        </div>
-      </div>
+      </ScrollArea>
       <DialogFooter class="px-6 pb-6">
         <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
       </DialogFooter>

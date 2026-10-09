@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
 import EmptyState from '@/components/domain/EmptyState.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
@@ -158,54 +159,56 @@ const ignoreBell = (event: Event): void => {
 
             <ChoiceGroup :model-value="status" :options="statusOptions" label="Filtrar notificaciones" class="px-4" @update:model-value="updateStatus" />
 
-            <div class="max-h-(--notifications-max-height) overflow-y-auto px-2" :class="{ 'pb-3': !hasActiveRole }" aria-live="polite">
-                <div v-if="loading && items.length === 0" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando notificaciones">
-                    <span class="sr-only">Cargando notificaciones…</span>
-                    <div aria-hidden="true" class="flex flex-col">
-                        <div v-for="item in 3" :key="item" class="flex items-start gap-3 px-3 py-4">
-                            <Skeleton class="size-10 shrink-0 rounded-full" />
-                            <div class="flex min-w-0 flex-1 flex-col gap-2">
-                                <Skeleton class="h-4 w-3/4" />
-                                <Skeleton class="h-4 w-full" />
-                                <Skeleton class="h-4 w-5/6" />
-                                <Skeleton class="h-3 w-24" />
+            <ScrollArea class="[&>[data-slot=scroll-area-viewport]]:max-h-(--notifications-max-height)">
+                <div class="px-2" :class="{ 'pb-3': !hasActiveRole }" aria-live="polite">
+                    <div v-if="loading && items.length === 0" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando notificaciones">
+                        <span class="sr-only">Cargando notificaciones…</span>
+                        <div aria-hidden="true" class="flex flex-col">
+                            <div v-for="item in 3" :key="item" class="flex items-start gap-3 px-3 py-4">
+                                <Skeleton class="size-10 shrink-0 rounded-full" />
+                                <div class="flex min-w-0 flex-1 flex-col gap-2">
+                                    <Skeleton class="h-4 w-3/4" />
+                                    <Skeleton class="h-4 w-full" />
+                                    <Skeleton class="h-4 w-5/6" />
+                                    <Skeleton class="h-3 w-24" />
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <FeedbackAlert v-else-if="error" :message="error" />
-                <EmptyState v-else-if="items.length === 0" :title="status === 'unread' ? 'No tiene notificaciones sin leer.' : 'No tiene notificaciones.'" />
-                <ul v-else class="flex flex-col">
-                    <li v-for="notification in items" :key="notification.id">
-                        <Button
-                            type="button" variant="ghost" size="row"
-                            @click="select(notification)"
-                        >
-                            <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                                <component :is="iconFor(notification.tipo)" class="size-5" aria-hidden="true" />
-                            </span>
-                            <span class="min-w-0 flex-1" :class="notification.leido_en === null ? '' : 'text-muted-foreground'">
-                                <span class="block text-sm font-medium">{{ notification.titulo }}</span>
-                                <span class="line-clamp-2 text-sm">{{ notification.mensaje }}</span>
-                                <span v-if="notification.context" class="mt-0.5 block text-xs text-muted-foreground">
-                                    {{ notification.context }}
+                    <FeedbackAlert v-else-if="error" :message="error" />
+                    <EmptyState v-else-if="items.length === 0" :title="status === 'unread' ? 'No tiene notificaciones sin leer.' : 'No tiene notificaciones.'" />
+                    <ul v-else class="flex flex-col">
+                        <li v-for="notification in items" :key="notification.id">
+                            <Button
+                                type="button" variant="ghost" size="row"
+                                @click="select(notification)"
+                            >
+                                <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                                    <component :is="iconFor(notification.tipo)" class="size-5" aria-hidden="true" />
+                                </span>
+                                <span class="min-w-0 flex-1" :class="notification.leido_en === null ? '' : 'text-muted-foreground'">
+                                    <span class="block text-sm font-medium">{{ notification.titulo }}</span>
+                                    <span class="line-clamp-2 text-sm">{{ notification.mensaje }}</span>
+                                    <span v-if="notification.context" class="mt-0.5 block text-xs text-muted-foreground">
+                                        {{ notification.context }}
+                                    </span>
+                                    <span
+                                        class="mt-0.5 block text-xs"
+                                        :class="notification.leido_en === null ? 'font-medium text-primary-readable' : 'text-muted-foreground'"
+                                    >
+                                        {{ relativeTime(notification.notificado_en) }}
+                                    </span>
                                 </span>
                                 <span
-                                    class="mt-0.5 block text-xs"
-                                    :class="notification.leido_en === null ? 'font-medium text-primary-readable' : 'text-muted-foreground'"
-                                >
-                                    {{ relativeTime(notification.notificado_en) }}
-                                </span>
-                            </span>
-                            <span
-                                v-if="notification.leido_en === null"
-                                class="mt-4 size-2.5 shrink-0 rounded-full bg-brand-accent"
-                                aria-label="Sin leer"
-                            />
-                        </Button>
-                    </li>
-                </ul>
-            </div>
+                                    v-if="notification.leido_en === null"
+                                    class="mt-4 size-2.5 shrink-0 rounded-full bg-brand-accent"
+                                    aria-label="Sin leer"
+                                />
+                            </Button>
+                        </li>
+                    </ul>
+                </div>
+            </ScrollArea>
 
             <div v-if="hasActiveRole" class="px-4 pb-4">
                 <Button as-child variant="secondary" class="w-full">

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { Ban, CircleCheck, MailCheck, Pencil, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
@@ -95,48 +96,52 @@ const currentAssignments = computed(() =>
                 <SheetDescription :class="editing ? '' : 'sr-only'">{{ editing ? 'Corrija su identidad, quite un rol o agregue una nueva asignación' : 'Ficha de solo lectura de la cuenta' }}</SheetDescription>
             </SheetHeader>
 
-            <div v-if="editing" class="flex-1 overflow-y-auto px-4 pt-1 pb-28">
-                <ManagedUserEditForm :user="props.user" :roles="roles" :careers="careers" @saved="saved" @cancel="editing = false" />
-            </div>
+            <ScrollArea v-if="editing" class="min-h-0 flex-1">
+                <div class="px-4 pt-1 pb-28">
+                    <ManagedUserEditForm :user="props.user" :roles="roles" :careers="careers" @saved="saved" @cancel="editing = false" />
+                </div>
+            </ScrollArea>
 
-            <div v-else class="flex flex-1 flex-col gap-6 overflow-y-auto px-4 pt-1 pb-28">
-                <dl class="grid gap-3 text-sm">
-                    <div class="flex flex-col gap-1">
-                        <dt class="font-semibold">Estado</dt>
-                        <dd><StatusBadge :label="status.label" :tone="status.tone" /></dd>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <dt class="font-semibold">Nombre completo</dt>
-                        <dd>{{ props.user.nombre }}</dd>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <dt class="font-semibold">Correo institucional</dt>
-                        <dd>{{ props.user.correo_electronico }}</dd>
-                    </div>
-                    <div class="flex flex-col gap-1">
-                        <dt class="font-semibold">Acceso en dos pasos</dt>
-                        <dd>
-                            {{ props.user.two_factor_enabled ? 'Configurado por su titular' : 'Sin configurar' }}
-                        </dd>
-                    </div>
-                </dl>
+            <ScrollArea v-else class="min-h-0 flex-1">
+                <div class="flex flex-col gap-6 px-4 pt-1 pb-28">
+                    <dl class="grid gap-3 text-sm">
+                        <div class="flex flex-col gap-1">
+                            <dt class="font-semibold">Estado</dt>
+                            <dd><StatusBadge :label="status.label" :tone="status.tone" /></dd>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <dt class="font-semibold">Nombre completo</dt>
+                            <dd>{{ props.user.nombre }}</dd>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <dt class="font-semibold">Correo institucional</dt>
+                            <dd>{{ props.user.correo_electronico }}</dd>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <dt class="font-semibold">Acceso en dos pasos</dt>
+                            <dd>
+                                {{ props.user.two_factor_enabled ? 'Configurado por su titular' : 'Sin configurar' }}
+                            </dd>
+                        </div>
+                    </dl>
 
-                <Separator />
+                    <Separator />
 
-                <section class="flex flex-col gap-2">
-                    <h3 class="text-sm font-semibold">Roles vigentes</h3>
-                    <p v-if="currentAssignments.length === 0" class="text-sm">
-                        Sin rol vigente: la cuenta no accede a ningún módulo.
-                    </p>
-                    <ul v-else class="flex flex-col gap-4 text-sm">
-                        <li v-for="assignment in currentAssignments" :key="assignment.id" class="flex flex-col gap-0.5 border-l-2 border-primary/40 pl-3">
-                            <span class="font-semibold">{{ assignment.role_name }}</span>
-                            <span>{{ scopeOf(assignment) }}</span>
-                        </li>
-                    </ul>
-                </section>
+                    <section class="flex flex-col gap-2">
+                        <h3 class="text-sm font-semibold">Roles vigentes</h3>
+                        <p v-if="currentAssignments.length === 0" class="text-sm">
+                            Sin rol vigente: la cuenta no accede a ningún módulo.
+                        </p>
+                        <ul v-else class="flex flex-col gap-4 text-sm">
+                            <li v-for="assignment in currentAssignments" :key="assignment.id" class="flex flex-col gap-0.5 border-l-2 border-primary/40 pl-3">
+                                <span class="font-semibold">{{ assignment.role_name }}</span>
+                                <span>{{ scopeOf(assignment) }}</span>
+                            </li>
+                        </ul>
+                    </section>
 
-            </div>
+                </div>
+            </ScrollArea>
 
             <div v-if="!editing && actions.length > 0" class="absolute top-3 right-3 flex items-center gap-1">
                 <SheetActions :actions="actions" :menu-label="`Acciones para ${props.user.nombre}`" @select="runAction" />

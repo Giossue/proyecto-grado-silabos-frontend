@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { withoutEndPeriod } from '@/lib/text';
 import { Plus } from '@lucide/vue';
 import type { VNode } from 'vue';
@@ -58,9 +59,11 @@ const close = (): void => {
                 <DialogDescription>{{ withoutEndPeriod(description) }}</DialogDescription>
             </DialogHeader>
             <div class="relative flex min-h-0 flex-1 flex-col">
-                <div class="flex-1 overflow-y-auto px-6 pt-1 pb-28">
-                    <slot :close="close" />
-                </div>
+                <ScrollArea class="min-h-0 flex-1">
+                    <div class="px-6 pt-1 pb-28">
+                        <slot :close="close" />
+                    </div>
+                </ScrollArea>
             </div>
         </DialogContent>
     </Dialog>
