@@ -20,7 +20,6 @@ import ManagedUserSheet from "@/components/domain/identity/ManagedUserSheet.vue"
 import CurriculumActions from "@/components/domain/academic/CurriculumActions.vue";
 import CurriculumCanvas from "@/components/domain/academic/curriculum/CurriculumCanvas.vue";
 import CurriculumConfigurationSheet from "@/components/domain/academic/curriculum/CurriculumConfigurationSheet.vue";
-import PeriodPreparationSheet from "@/components/domain/academic/PeriodPreparationSheet.vue";
 import ScheduledSubjectsTab from "@/components/domain/academic/ScheduledSubjectsTab.vue";
 import ImportSpreadsheetDialog from "@/components/domain/ImportSpreadsheetDialog.vue";
 import TeacherAssignmentsPanel from "@/components/domain/academic/TeacherAssignmentsPanel.vue";
@@ -28,7 +27,6 @@ import ProcessLockAlert from "@/components/domain/ProcessLockAlert.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
-import { preparationRows } from "@/lib/periodPreparation";
 import { paths } from "@/lib/routes";
 import { toast } from "@/lib/toast";
 import { curriculumEditorState } from "@/state/curriculumEditor";
@@ -45,13 +43,6 @@ const pageDescription = computed(() => ({
   schedule: 'Materias y paralelos de su carrera del período en curso.',
   teachers: 'Docentes de su carrera.',
 })[props.mode]);
-// Mientras falte programar materias de la malla, el botón principal es Asignar materias.
-const pendingPreparation = computed(() => {
-  if (!schedule.value || !assignments.value || !schedule.value.selectedPeriodId) return false;
-  const period = schedule.value.options.periods.find((item) => item.id === schedule.value?.selectedPeriodId);
-  if (!period?.planning_enabled) return false;
-  return preparationRows(period.id, schedule.value.options, schedule.value.scheduledSubjects, assignments.value.teacherAssignments, assignments.value.options.teacherUsers).rows.length > 0;
-});
 const curriculum = ref<Curriculum | null>(null);
 const schedule = ref<ScheduledSubjects | null>(null);
 const assignments = ref<TeacherAssignments | null>(null);
@@ -121,10 +112,6 @@ const reloadSchedule = async (periodId?: string) => {
 const handleScheduleChanged = async (notice: string) => {
   toast.success(notice);
   await Promise.all([reloadSchedule(schedule.value?.selectedPeriodId ?? undefined), reloadAssignments()]);
-};
-const handlePeriodPrepared = async (notice: string, periodId: string) => {
-  toast.success(notice);
-  await Promise.all([reloadSchedule(periodId), reloadAssignments()]);
 };
 const reloadAssignments = async () => {
   try {
@@ -198,16 +185,6 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
     :size="mode === 'curriculum' ? 'full' : 'wide'"
   >
     <template #actions>
-      <PeriodPreparationSheet
-        v-if="mode === 'schedule' && schedule && assignments && pendingPreparation"
-        :scheduled-subjects="schedule.scheduledSubjects"
-        :options="schedule.options"
-        :assignments="assignments.teacherAssignments"
-        :teacher-users="assignments.options.teacherUsers"
-        :initial-period-id="schedule.selectedPeriodId"
-        :disabled="Boolean(schedule.career.lock_reason)"
-        @saved="handlePeriodPrepared"
-      />
       <ImportSpreadsheetDialog
         v-if="mode === 'teachers' && assignments?.canCreateTeacher"
         title="Importar docentes"

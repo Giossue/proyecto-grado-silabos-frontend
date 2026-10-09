@@ -196,17 +196,6 @@ export const createCareerRecord = (
       body: jsonBody(payload, confirm),
     }),
   );
-export const preparePeriod = (payload: {
-  period_id: string;
-  subjects: Array<{
-    id: string;
-    parallels: Array<{ code: string; shift: string; teacher_user_id: string | null }>;
-  }>;
-}) =>
-  api<{ message: string }>("/coordination/academic/prepare-period", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
 export const deleteCareerRecord = (entity: string, id: string) =>
   api<{ message: string }>(`/coordination/academic/${entity}/${id}`, {
     method: "DELETE",
