@@ -65,7 +65,7 @@ onMounted(load);
       <Empty class="gap-3 border-0 p-6 md:p-10">
         <EmptyHeader class="gap-3">
           <EmptyMedia class="text-muted-foreground [&_svg]:size-6"><Inbox aria-hidden="true" /></EmptyMedia>
-          <EmptyTitle class="text-sm text-muted-foreground">{{ query || state !== 'all' ? 'Ningún sílabo coincide con la búsqueda.' : 'No tiene sílabos asignados con este rol.' }}</EmptyTitle>
+          <EmptyTitle class="text-sm text-muted-foreground">{{ query || state !== 'all' ? 'Ningún sílabo coincide con la búsqueda.' : 'No tiene sílabos asignados' }}</EmptyTitle>
         </EmptyHeader>
       </Empty>
     </Card>
