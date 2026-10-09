@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarCheck, ChevronDown, ListChecks, Trash2 } from '@lucide/vue';
+import { CalendarCheck, ChevronDown, ListChecks, Plus, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { preparePeriod, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
@@ -7,6 +7,7 @@ import FormDialog from '@/components/domain/FormDialog.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -127,7 +128,7 @@ watch(periodId, () => { if (open.value) updateProposal(); });
                       </Select>
                       <Button v-if="row.parallels.length > 1" type="button" size="icon-sm" variant="ghost" :aria-label="`Quitar paralelo ${parallel.code || index + 1}`" @click="removeParallel(row, index)"><Trash2 data-icon="inline-start" aria-hidden="true" /></Button>
                     </div>
-                    <Button type="button" size="sm" variant="outline" class="w-fit" @click="addParallel(row)">Agregar paralelo</Button>
+                    <Tooltip><TooltipTrigger as-child><Button type="button" size="icon-sm" variant="outline" aria-label="Agregar paralelo" @click="addParallel(row)"><Plus aria-hidden="true" /></Button></TooltipTrigger><TooltipContent>Agregar paralelo</TooltipContent></Tooltip>
                     </div>
                   </div>
                 </CollapsibleContent>
