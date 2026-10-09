@@ -108,14 +108,14 @@ const submit = async (): Promise<void> => {
                         <FieldError :errors="errors.modality" />
                     </Field>
                     <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.nombre)"><FieldLabel for="catalog-name" required>Nombre</FieldLabel><Input id="catalog-name" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
-                    <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.code)"><FieldLabel for="catalog-code" required>Código de carrera</FieldLabel><Input id="catalog-code" v-model="form.code" required /><FieldError :errors="errors.code" /></Field>
-                    <template v-if="entity === 'carrera'">
+                    <div v-if="entity === 'carrera'" class="grid grid-cols-2 items-start gap-4">
+                        <Field :data-invalid="Boolean(errors.code)"><FieldLabel for="catalog-code" required>Código de carrera</FieldLabel><Input id="catalog-code" v-model="form.code" required /><FieldError :errors="errors.code" /></Field>
                         <Field :data-invalid="Boolean(errors.cycle_count)"><FieldLabel for="catalog-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="catalog-cycle-count" v-model="form.cycle_count" type="number" min="1" :max="VALIDATION_LIMITS.cycleCount" step="1" required /><FieldError :errors="errors.cycle_count" /></Field>
-                    </template>
-                    <template v-if="entity === 'periodo'">
+                    </div>
+                    <div v-if="entity === 'periodo'" class="grid grid-cols-2 items-start gap-4">
                         <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" :min-value="minimumPeriodDate" :aria-invalid="Boolean(errors.starts_on)" required /><FieldDescription>Debe ser hoy o una fecha posterior.</FieldDescription><FieldError :errors="errors.starts_on" /></Field>
                         <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel for="catalog-ends-on" required>Fecha de fin</FieldLabel><DatePicker id="catalog-ends-on" v-model="form.ends_on" :min-value="minimumPeriodEndDate" :aria-invalid="Boolean(errors.ends_on)" required /><FieldError :errors="errors.ends_on" /></Field>
-                    </template>
+                    </div>
                     <FormSheetActions :close="close" :processing="processing" :icon="Plus" :label="submitLabel" />
                 </FieldGroup>
             </form>

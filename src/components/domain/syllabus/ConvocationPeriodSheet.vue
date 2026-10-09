@@ -88,30 +88,34 @@ const submit = async (): Promise<void> => {
                     <FieldSet>
                         <FieldLegend>Periodo lectivo</FieldLegend>
                         <FieldDescription>{{ periodCreated ? 'El periodo ya quedó creado; solo falta abrir la convocatoria.' : 'Fechas de inicio y fin de clases; la etiqueta se genera con el rango de meses y año.' }}</FieldDescription>
-                        <Field :data-invalid="Boolean(errors.starts_on)">
-                            <FieldLabel for="convocation-period-starts" required>Inicio de clases</FieldLabel>
-                            <DatePicker id="convocation-period-starts" v-model="form.starts_on" :min-value="todayIso" :disabled="periodCreated" required :aria-invalid="Boolean(errors.starts_on)" />
-                            <FieldError :errors="errors.starts_on" />
-                        </Field>
-                        <Field :data-invalid="Boolean(errors.ends_on)">
-                            <FieldLabel for="convocation-period-ends" required>Fin de clases</FieldLabel>
-                            <DatePicker id="convocation-period-ends" v-model="form.ends_on" :min-value="periodEndMinimum" :disabled="periodCreated" required :aria-invalid="Boolean(errors.ends_on)" />
-                            <FieldError :errors="errors.ends_on" />
-                        </Field>
+                        <div class="grid grid-cols-2 items-start gap-4">
+                            <Field :data-invalid="Boolean(errors.starts_on)">
+                                <FieldLabel for="convocation-period-starts" required>Inicio de clases</FieldLabel>
+                                <DatePicker id="convocation-period-starts" v-model="form.starts_on" :min-value="todayIso" :disabled="periodCreated" required :aria-invalid="Boolean(errors.starts_on)" />
+                                <FieldError :errors="errors.starts_on" />
+                            </Field>
+                            <Field :data-invalid="Boolean(errors.ends_on)">
+                                <FieldLabel for="convocation-period-ends" required>Fin de clases</FieldLabel>
+                                <DatePicker id="convocation-period-ends" v-model="form.ends_on" :min-value="periodEndMinimum" :disabled="periodCreated" required :aria-invalid="Boolean(errors.ends_on)" />
+                                <FieldError :errors="errors.ends_on" />
+                            </Field>
+                        </div>
                     </FieldSet>
                     <FieldSet>
                         <FieldLegend>Elaboración de sílabos</FieldLegend>
                         <FieldDescription>Elija cuándo empieza la elaboración y hasta cuándo se entrega.</FieldDescription>
-                        <Field :data-invalid="Boolean(errors.starts_at)">
-                            <FieldLabel for="convocation-starts" required>Inicio de la elaboración</FieldLabel>
-                            <DatePicker id="convocation-starts" v-model="form.starts_at" :min-value="todayIso" :max-value="periodEnd" required :aria-invalid="Boolean(errors.starts_at)" />
-                            <FieldError :errors="errors.starts_at" />
-                        </Field>
-                        <Field :data-invalid="Boolean(errors.due_at)">
-                            <FieldLabel for="convocation-due" required>Fecha límite de entrega</FieldLabel>
-                            <DatePicker id="convocation-due" v-model="form.due_at" :min-value="dueMinimum" :max-value="periodEnd" required :aria-invalid="Boolean(errors.due_at)" />
-                            <FieldError :errors="errors.due_at" />
-                        </Field>
+                        <div class="grid grid-cols-2 items-start gap-4">
+                            <Field :data-invalid="Boolean(errors.starts_at)">
+                                <FieldLabel for="convocation-starts" required>Inicio de la elaboración</FieldLabel>
+                                <DatePicker id="convocation-starts" v-model="form.starts_at" :min-value="todayIso" :max-value="periodEnd" required :aria-invalid="Boolean(errors.starts_at)" />
+                                <FieldError :errors="errors.starts_at" />
+                            </Field>
+                            <Field :data-invalid="Boolean(errors.due_at)">
+                                <FieldLabel for="convocation-due" required>Fecha límite de entrega</FieldLabel>
+                                <DatePicker id="convocation-due" v-model="form.due_at" :min-value="dueMinimum" :max-value="periodEnd" required :aria-invalid="Boolean(errors.due_at)" />
+                                <FieldError :errors="errors.due_at" />
+                            </Field>
+                        </div>
                     </FieldSet>
                     <FormSheetActions :close="close" :processing="processing" :icon="CalendarPlus" label="Abrir convocatoria" />
                 </FieldGroup>

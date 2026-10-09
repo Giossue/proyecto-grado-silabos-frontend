@@ -100,10 +100,10 @@ const submit = async (confirmPurge = false): Promise<void> => {
                 <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.modality)"><FieldLabel :for="`edit-modality-${recordId}`" required>Modalidad</FieldLabel><Select v-model="form.modality" required><SelectTrigger :id="`edit-modality-${recordId}`"><SelectValue placeholder="Seleccione la modalidad aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in modalityOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.modality" /></Field>
                 <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
                 <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.code)"><FieldLabel :for="`edit-code-${recordId}`" required>Código de carrera</FieldLabel><Input :id="`edit-code-${recordId}`" v-model="form.code" required /><FieldError :errors="errors.code" /></Field>
-                <template v-if="entity === 'periodo'">
+                <div v-if="entity === 'periodo'" class="grid grid-cols-2 items-start gap-4">
                     <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel :for="`edit-starts-on-${recordId}`" required>Fecha de inicio</FieldLabel><DatePicker :id="`edit-starts-on-${recordId}`" v-model="form.starts_on" required /><FieldError :errors="errors.starts_on" /></Field>
                     <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required /><FieldError :errors="errors.ends_on" /></Field>
-                </template>
+                </div>
                 <FormSheetActions :close="close" :processing="processing" :icon="Check" label="Guardar cambios" />
             </FieldGroup></form>
         </template>
