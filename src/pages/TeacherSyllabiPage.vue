@@ -10,6 +10,8 @@ import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { paths } from '@/lib/routes';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
+import { Inbox } from '@lucide/vue';
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -59,7 +61,14 @@ onMounted(load);
     <div v-if="!result && !error" class="grid gap-4 sm:grid-cols-2" aria-hidden="true">
       <Skeleton v-for="index in 2" :key="index" class="h-32 rounded-xl" />
     </div>
-    <p v-else-if="result && result.syllabi.data.length === 0" class="text-sm text-muted-foreground">{{ query || state !== 'all' ? 'Ningún sílabo coincide con la búsqueda.' : 'No tiene sílabos asignados con este rol.' }}</p>
+    <Card v-else-if="result && result.syllabi.data.length === 0">
+      <Empty class="gap-3 border-0 p-6 md:p-10">
+        <EmptyHeader class="gap-3">
+          <EmptyMedia class="text-muted-foreground [&_svg]:size-6"><Inbox aria-hidden="true" /></EmptyMedia>
+          <EmptyTitle class="text-sm text-muted-foreground">{{ query || state !== 'all' ? 'Ningún sílabo coincide con la búsqueda.' : 'No tiene sílabos asignados con este rol.' }}</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    </Card>
     <ul v-else-if="result" class="grid gap-4 sm:grid-cols-2" aria-label="Mis sílabos">
       <li v-for="syllabus in result.syllabi.data" :key="syllabus.id">
         <Card
