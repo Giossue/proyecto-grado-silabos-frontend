@@ -110,9 +110,9 @@ export type ScheduledSubjects = {
   };
 };
 
-export type SubjectProfileField = { id: string; key: string; label: string; help: string | null; section: string | null };
+export type SubjectProfileField = { id: string; key: string; label: string; help: string | null; section: string | null; quien_llena: 'coordinacion'; content: DocumentNode };
 
-/** Ficha de una asignatura: un valor de texto libre por cada campo de la plantilla marcado «desde la ficha». */
+
 export type SubjectProfile = {
   fields: SubjectProfileField[];
   values: Record<string, DocumentNode | null>;

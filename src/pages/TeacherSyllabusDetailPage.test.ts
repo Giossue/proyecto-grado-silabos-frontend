@@ -5,10 +5,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import FreeTextEditor from "@/components/domain/syllabus/FreeTextEditor.vue";
 import { copyTeacherSyllabus, getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField, startTeacherSyllabus } from "@/api/syllabi";
+import type { FieldResponsible } from "@/types/configuration";
 import { ApiError } from "@/api/client";
 import { handleUnauthorized } from "@/lib/unauthorized";
-import { updateFormation } from "@/api/session";
-import { sessionState } from "@/state/session";
 
 const routeLeaveGuards: Array<() => Promise<boolean> | boolean> = [];
 
@@ -54,27 +53,12 @@ const appearance = {
 };
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
-const tableConfig = {
-  columns: [{ key: "horas", label: "Horas" }, { key: "actividad", label: "Actividad" }],
-  rows: [{ key: "semana_1", label: "Semana 1" }, { key: "semana_2", label: "Semana 2" }],
-};
-const field = (id: string, type: string, overrides: Partial<SyllabusField> = {}): SyllabusField => ({
-  id,
-  key: `campo_${id}`,
-  label: "Contenido",
-  help: null,
-  type,
-  options: [],
-  required: true,
-  inherited: false,
-  teacher_editable: type === "texto" || type === "tabla",
-  legacy: false,
-  config: type === "tabla" ? tableConfig : type === "ficha" ? { adjustable: false } : type === "automatico" ? { source: "identification_card" } : {},
-  value: type === "tabla" ? { semana_1: { horas: "", actividad: "" }, semana_2: { horas: "", actividad: "" } } : doc("Texto enviado"),
-  ...overrides,
+const field = (id: string, quien_llena: FieldResponsible = 'docente', overrides: Partial<SyllabusField> = {}): SyllabusField => ({
+  id, key: `campo_${id}`, label: 'Contenido', help: null, quien_llena,
+  required: true, teacher_editable: quien_llena === 'docente', value: doc('Texto enviado'), ...overrides,
 });
 
-const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", type = "texto"): SyllabusDetail => ({
+const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", quien_llena: FieldResponsible = "docente"): SyllabusDetail => ({
   id: "syllabus-1",
   subject: "Inteligencia Artificial",
   code: "SW-01",
@@ -95,11 +79,12 @@ const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", t
     key: "descripcion",
     title: "Descripción",
     description: null,
-    fields: [field("field-1", type, { key: "contenido" })],
+    orientation: "portrait",
+    fields: [field("field-1", quien_llena, { key: "contenido" })],
   }],
 });
 
-// El editor de texto va simulado: se escribe emitiendo el documento.
+
 const typeText = async (wrapper: ReturnType<typeof mountPage>, text: string, index = 0) => {
   wrapper.findAllComponents(FreeTextEditor)[index]!.vm.$emit("update:modelValue", doc(text));
   await flushPromises();
@@ -119,43 +104,6 @@ const mountPage = () => mount(PageWithTooltips, {
   },
 });
 
-const passthrough = defineComponent({ template: "<div><slot /></div>" });
-const inlineDialog = defineComponent({ props: { open: Boolean }, emits: ["update:open"], template: '<div v-if="open" data-dialog><slot /></div>' });
-const mountWithDialogs = () => mount(PageWithTooltips, {
-  global: {
-    stubs: {
-      RouterLink: { template: "<a><slot /></a>" },
-      SyllabusUnitAssistant: { template: "<div />" },
-      FreeTextEditor: { props: ["modelValue"], emits: ["update:modelValue"], template: "<div />" },
-      Dialog: inlineDialog,
-      DialogContent: passthrough,
-      DialogHeader: passthrough,
-      DialogFooter: passthrough,
-      DialogTitle: passthrough,
-      DialogDescription: passthrough,
-    },
-  },
-});
-
-const FORMATION_LABEL = "FORMACIÓN Y EXPERIENCIA ACADÉMICA – INVESTIGATIVA:";
-const cardDocument = (formation: string) => ({
-  type: "doc",
-  content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [
-    { type: "paragraph", content: [{ type: "text", text: FORMATION_LABEL }] },
-    { type: "paragraph", content: [{ type: "text", text: formation }] },
-  ] }] }] }],
-});
-const cardSyllabus = (state: "borrador" | "en_revision", formation: string): SyllabusDetail => {
-  const detail = syllabus(state, "automatico");
-  detail.sections[0]!.fields[0]!.document = cardDocument(formation);
-  return detail;
-};
-const sessionWith = (formation: string) => ({
-  user: { id: "u-1", name: "DOCENTE UNO", email: "docente@ueb.edu.ec", email_verified: true, can_edit_identity: false, formation },
-  active_role: { id: "r-1", code: "docente" as const, career_id: null, career_name: null },
-  available_roles: [],
-});
-
 const openTab = async (wrapper: ReturnType<typeof mountPage>, title: string): Promise<void> => {
   const tab = wrapper.findAll('[role="tab"]').find((candidate) => candidate.text().includes(title));
   await tab!.trigger("mousedown", { button: 0 });
@@ -172,8 +120,6 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.mocked(submitTeacherSyllabus).mockReset();
     vi.mocked(validateTeacherSyllabus).mockReset();
     vi.mocked(handleUnauthorized).mockReset();
-    vi.mocked(updateFormation).mockReset();
-    sessionState.clear();
     routeLeaveGuards.length = 0;
   });
 
@@ -189,7 +135,7 @@ describe("TeacherSyllabusDetailPage", () => {
 
   it("el campo de texto se escribe con su editor y se guarda como documento", async () => {
     vi.useFakeTimers();
-    const detail = syllabus("borrador", "texto");
+    const detail = syllabus("borrador", "docente");
     detail.sections[0]!.fields[0]!.value = null;
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
@@ -206,45 +152,37 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, document);
   });
 
-  it("la tabla tiene filas y columnas fijas y guarda solo la celda cambiada", async () => {
+  it('guarda tablas libres y totales escritos sin calcularlos', async () => {
     vi.useFakeTimers();
-    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador", "tabla") });
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus('borrador') });
     vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
     const wrapper = mountPage();
     await flushPromises();
-
-    const cells = wrapper.findAll(".table-field-editor input");
-    expect(cells).toHaveLength(4);
-    expect(wrapper.find(".table-field-editor").text()).not.toContain("Agregar fila");
-    await cells[1]!.setValue("Introducción");
+    const document = { type: 'doc', content: [{ type: 'table', content: ['Semana adicional', '999'].map((text) => ({ type: 'tableRow', content: [{ type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] }] })) }] };
+    wrapper.findComponent(FreeTextEditor).vm.$emit('update:modelValue', document);
     await vi.advanceTimersByTimeAsync(700);
-    await flushPromises();
-
-    expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, {
-      semana_1: { horas: "", actividad: "Introducción" },
-      semana_2: { horas: "", actividad: "" },
-    });
+    expect(saveTeacherField).toHaveBeenCalledWith('syllabus-1', 'field-1', 2, document);
+    wrapper.unmount();
   });
 
-  it("la ficha se edita solo si es ajustable y si no se muestra heredada en solo lectura", async () => {
-    const detail = syllabus("borrador", "ficha");
-    detail.sections[0]!.fields.push(field("field-2", "ficha", { key: "ajustable", label: "Resultados", teacher_editable: true, config: { adjustable: true }, required: false }));
+  it('Coordinación es de solo lectura incluso si otro indicador permite editar', async () => {
+    const detail = syllabus('borrador', 'coordinacion');
+    detail.sections[0]!.fields[0]!.teacher_editable = true;
+    detail.sections[0]!.fields.push(field('field-2', 'docente', { label: 'Bibliografía' }));
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     const wrapper = mountPage();
     await flushPromises();
-
-    expect(wrapper.find("#field-field-1 .syllabus-readonly-field, #field-field-1.syllabus-readonly-field").exists()).toBe(true);
-    expect(wrapper.get("#field-field-1").text()).toContain("Texto enviado");
+    expect(wrapper.get('#field-field-1').text()).toContain('Coordinación');
     expect(wrapper.findAllComponents(FreeTextEditor)).toHaveLength(1);
-    expect(wrapper.find("#input-field-2").exists()).toBe(true);
-    expect(wrapper.get("#field-field-2").text()).not.toContain("Heredado");
+    expect(wrapper.findComponent(FreeTextEditor).attributes('id')).toBe('input-field-2');
+    wrapper.unmount();
   });
 
   it("el dato automático y el texto fijo son de solo lectura y no cuentan como faltantes", async () => {
-    const detail = syllabus("borrador", "automatico");
-    detail.sections[0]!.fields[0]!.value = { career: "Software" };
+    const detail = syllabus("borrador", "institucional");
+    detail.sections[0]!.fields[0]!.value = doc("Software");
     detail.sections[0]!.fields[0]!.document = { type: "doc", content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph", content: [{ type: "text", text: "FACULTAD: Ciencias" }] }] }] }] }] };
-    detail.sections[0]!.fields.push(field("field-2", "fijo", { key: "conducta", label: "Conducta ética", value: doc("Texto institucional") }));
+    detail.sections[0]!.fields.push(field("field-2", "institucional", { key: "conducta", label: "Conducta ética", value: doc("Texto institucional") }));
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     const wrapper = mountPage();
     await flushPromises();
@@ -255,34 +193,26 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(buttonNamed(wrapper, "Enviar sílabo")!.attributes("disabled")).toBeUndefined();
   });
 
-  it("pide los datos de la tabla de identificación justo debajo de ella, sin repetirlos como campos aparte", async () => {
-    const detail = syllabus("borrador", "automatico");
+  it('formación y discapacidad son documentos docentes sin controles por sección', async () => {
+    const detail = syllabus('borrador', 'institucional');
     detail.sections[0]!.fields.push(
-      field("field-2", "texto", { key: "formacion_experiencia", label: "Formación y experiencia académica – investigativa", config: { inside: "identification_card" }, value: doc("") }),
-      field("field-3", "texto", { key: "otro", label: "Otro dato", value: doc("") }),
+      field('field-2', 'docente', { key: 'formacion_experiencia', label: 'Formación y experiencia' }),
+      field('field-3', 'docente', { key: 'discapacidad', label: 'Estudiantes con discapacidad' }),
     );
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     const wrapper = mountPage();
     await flushPromises();
-
-    const ids = wrapper.findAll("[id^='field-field-']").map((node) => node.attributes("id"));
-    expect(ids).toEqual(["field-field-1", "field-field-2", "field-field-3"]);
-    expect(wrapper.text()).not.toContain("Complete estos datos");
-    expect(wrapper.get("#field-field-2").classes()).toContain("border-l-2");
-    expect(wrapper.get("#field-field-3").classes()).not.toContain("border-l-2");
     expect(wrapper.findAllComponents(FreeTextEditor)).toHaveLength(2);
-  });
-
-  it("en un sílabo de solo lectura no repite los datos que viven dentro de la tabla de identificación", async () => {
-    const detail = syllabus("en_revision", "automatico");
-    detail.sections[0]!.fields.push(field("field-2", "texto", { key: "formacion_experiencia", label: "Formación y experiencia", config: { inside: "identification_card" }, value: doc("Texto") }));
-    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
-    const wrapper = mountPage();
+    expect(wrapper.find('#disability-choice').exists()).toBe(false);
+    expect(wrapper.get('#field-field-2').classes()).not.toContain('border-l-2');
+    wrapper.unmount();
+    detail.state = 'en_revision';
+    const readonly = mountPage();
     await flushPromises();
-
-    expect(wrapper.find("#field-field-1").exists()).toBe(true);
-    expect(wrapper.find("#field-field-2").exists()).toBe(false);
-    expect(wrapper.text()).not.toContain("Complete estos datos");
+    expect(readonly.findAllComponents(FreeTextEditor)).toHaveLength(0);
+    expect(readonly.get('#field-field-2').text()).toContain('Texto enviado');
+    expect(readonly.get('#field-field-3').text()).toContain('Texto enviado');
+    readonly.unmount();
   });
 
   it("muestra el comentario general de coordinación, sin observaciones por campo", async () => {
@@ -327,7 +257,8 @@ describe("TeacherSyllabusDetailPage", () => {
       key: "revision",
       title: "Revisión y aprobación",
       description: "Complete los campos aplicables.",
-      fields: [field("review-field", "fijo", { key: "firmas", label: "Firmas", value: doc("Firma del coordinador") })],
+      orientation: "portrait",
+      fields: [field("review-field", "institucional", { key: "firmas", label: "Firmas", value: doc("Firma del coordinador") })],
     });
     draft.validation = {
       version_bloqueo: draft.version_bloqueo,
@@ -363,7 +294,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const send = buttonNamed(wrapper, "Enviar sílabo");
     expect(send).toBeDefined();
     expect(send!.attributes("disabled")).toBeDefined();
-    // El aviso de campos faltantes ya no se muestra como texto; solo en el tooltip de Enviar.
+
     expect(wrapper.find(".submit-hint").exists()).toBe(false);
 
     await typeText(wrapper, "Contenido");
@@ -459,7 +390,7 @@ describe("TeacherSyllabusDetailPage", () => {
 
     expect(startTeacherSyllabus).toHaveBeenCalledWith(pending.id);
     expect(wrapper.get("header").text()).toContain("Volver a mis sílabos");
-    // La cabecera ya no repite el nombre de la asignatura.
+
     expect(wrapper.get("header").text()).not.toContain("Inteligencia Artificial");
     expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();
     expect(wrapper.text()).not.toContain("Listo para iniciar");
@@ -579,7 +510,8 @@ describe("TeacherSyllabusDetailPage", () => {
       key: "bibliografia",
       title: "Bibliografía",
       description: null,
-      fields: [field("field-2", "texto", { key: "bibliografia_basica", label: "Bibliografía básica" })],
+      orientation: "portrait",
+      fields: [field("field-2", "docente", { key: "bibliografia_basica", label: "Bibliografía básica" })],
     });
     detail.review_comments = [
       { stage: "biblioteca", comment: "Comentario anterior.", commented_at: "2026-09-20T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 1 },
@@ -589,7 +521,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    // I-173: no hay corrección parcial; se edita todo y el reenvío vuelve a empezar por biblioteca.
+
     expect(wrapper.find("#input-field-1").exists()).toBe(true);
     await openTab(wrapper, "Bibliografía");
     expect(wrapper.find("#input-field-2").exists()).toBe(true);
@@ -603,62 +535,4 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("la etiqueta de formación y experiencia es un enlace solo cuando el sílabo se puede editar", async () => {
-    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: cardSyllabus("borrador", "Texto viejo") });
-    const editable = mountWithDialogs();
-    await flushPromises();
-    const link = editable.get('button[aria-label="Editar formación y experiencia"]');
-    expect(link.text()).toBe(FORMATION_LABEL);
-    expect(editable.findAll("button").filter((button) => button.text().includes("Texto viejo"))).toHaveLength(0);
-    editable.unmount();
-
-    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: cardSyllabus("en_revision", "Texto viejo") });
-    const readonly = mountWithDialogs();
-    await flushPromises();
-    expect(readonly.text()).toContain(FORMATION_LABEL);
-    expect(readonly.find('button[aria-label="Editar formación y experiencia"]').exists()).toBe(false);
-  });
-
-  it("el enlace abre el modal, guarda la formación y recarga el sílabo con el texto nuevo", async () => {
-    sessionState.replace(sessionWith("Texto viejo"));
-    vi.mocked(updateFormation).mockResolvedValue(sessionWith("Texto nuevo"));
-    vi.mocked(getTeacherSyllabus)
-      .mockResolvedValueOnce({ syllabus: cardSyllabus("borrador", "Texto viejo") })
-      .mockResolvedValueOnce({ syllabus: cardSyllabus("borrador", "Texto nuevo") });
-    const wrapper = mountWithDialogs();
-    await flushPromises();
-    expect(wrapper.find("[data-dialog]").exists()).toBe(false);
-
-    await wrapper.get('button[aria-label="Editar formación y experiencia"]').trigger("click");
-    const textarea = wrapper.get("#dialog-formation");
-    expect((textarea.element as HTMLTextAreaElement).value).toBe("Texto viejo");
-    expect(wrapper.get('[data-test="save-formation-button"]').attributes("disabled")).toBeDefined();
-
-    await textarea.setValue("Texto nuevo");
-    await wrapper.get("[data-dialog] form").trigger("submit");
-    await flushPromises();
-
-    expect(updateFormation).toHaveBeenCalledWith("Texto nuevo");
-    expect(getTeacherSyllabus).toHaveBeenCalledTimes(2);
-    expect(wrapper.find("[data-dialog]").exists()).toBe(false);
-    expect(wrapper.text()).toContain("Texto nuevo");
-    expect(wrapper.text()).not.toContain("Texto viejo");
-  });
-
-  it("si guardar falla, el modal sigue abierto con el error y no recarga el sílabo", async () => {
-    sessionState.replace(sessionWith("Texto viejo"));
-    vi.mocked(updateFormation).mockRejectedValue(new ApiError("La formación es obligatoria.", 422, { formacion_experiencia: ["La formación es obligatoria."] }));
-    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: cardSyllabus("borrador", "Texto viejo") });
-    const wrapper = mountWithDialogs();
-    await flushPromises();
-
-    await wrapper.get('button[aria-label="Editar formación y experiencia"]').trigger("click");
-    await wrapper.get("#dialog-formation").setValue("Otro texto");
-    await wrapper.get("[data-dialog] form").trigger("submit");
-    await flushPromises();
-
-    expect(wrapper.find("[data-dialog]").exists()).toBe(true);
-    expect(wrapper.get("[data-dialog]").text()).toContain("La formación es obligatoria.");
-    expect(getTeacherSyllabus).toHaveBeenCalledTimes(1);
-  });
 });

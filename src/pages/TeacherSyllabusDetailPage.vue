@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
-import { withDisability } from '@/components/domain/syllabus/identificationCardLive';
 import type { DocumentNode } from '@/lib/templateDocument';
 import CommentEntry from '@/components/domain/CommentEntry.vue';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
 import {
@@ -20,8 +19,6 @@ import {
   type SyllabusDetail,
   type SyllabusField,
 } from "@/api/syllabi";
-import TeacherFormationDialog from '@/components/domain/identity/TeacherFormationDialog.vue';
-import { formationEditorKey } from '@/components/domain/identity/formationEditor';
 import SyllabusUnitAssistant from '@/components/domain/ai/SyllabusUnitAssistant.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
@@ -31,15 +28,12 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
-import { fieldConfig } from '@/components/domain/fieldTypes/fieldConfig';
-import { fieldTypeEntry, isEmbeddedField } from '@/components/domain/fieldTypes/registry';
-import FieldView from '@/components/domain/fieldTypes/FieldView.vue';
-import type { TypedField } from '@/types/configuration';
+import FieldView from '@/components/domain/syllabus/FieldView.vue';
+import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { ArrowLeft, Copy, Library, Send } from '@lucide/vue';
@@ -85,52 +79,9 @@ const pausedEdit = computed(() =>
   editBlockReason.value !== null && ["sin_iniciar", "borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? ""),
 );
 const showEditor = computed(() => canEdit.value || pausedEdit.value);
-const formationOpen = ref(false);
-provide(formationEditorKey, computed(() => (canEdit.value ? () => { formationOpen.value = true; } : null)));
 const allFields = computed(() => (syllabus.value?.sections ?? []).flatMap((section) => section.fields));
 const editableFieldIds = computed(() => new Set(allFields.value.map((field) => field.id)));
-/** El tipo del registro decide si el docente escribe el campo (la ficha, solo si es ajustable). */
-// El servidor manda `teacher_editable`: un dato heredado (p. ej. la formación del perfil) no se escribe en el sílabo.
-const isTeacherField = (field: SyllabusField): boolean => field.teacher_editable !== false && (fieldTypeEntry(field.type)?.teacherEditable(fieldConfig(field)) ?? false);
-const fieldText = (field: SyllabusField | undefined): string =>
-  field && field.value && typeof field.value === 'object' && 'type' in field.value ? freeTextPlain(field.value as DocumentNode).trim() : '';
-const typed = (field: SyllabusField): TypedField => {
-  if (field.type !== 'automatico' || fieldConfig(field).source !== 'identification_card' || !field.document || !syllabus.value) return field;
-  const fields = syllabus.value.sections.flatMap((section) => section.fields);
-  const disability = fields.filter(isDisabilityField);
-  if (disability.length === 0) return field;
-
-  return {
-    ...field,
-    document: withDisability(field.document as DocumentNode, {
-      has: hasDisability(fields),
-      type: fieldText(fields.find((item) => item.key === 'discapacidad_tipo')),
-      description: fieldText(fields.find((item) => item.key === 'discapacidad_adaptacion')),
-    }),
-  };
-};
-/** Los datos que el docente escribe dentro de la tabla de identificación se piden justo bajo ella; en la revisión y el Word solo aparece la tabla. */
-// Discapacidad: un «Sí/No» decide si se piden el tipo y la descripción (campos opcionales dentro de la tabla de identificación).
-const isDisabilityField = (field: SyllabusField): boolean => isEmbeddedField(field) && fieldConfig(field).optional === true;
-const hasDisabilityChoice = ref<boolean | null>(null);
-const hasDisability = (fields: SyllabusField[]): boolean =>
-  hasDisabilityChoice.value ?? fields.filter(isDisabilityField).some((field) => !isFieldEmpty(field));
-const chooseDisability = (fields: SyllabusField[], value: string): void => {
-  hasDisabilityChoice.value = value === 'si';
-  if (value === 'si') return;
-  for (const field of fields.filter(isDisabilityField).filter((item) => !isFieldEmpty(item))) {
-    updateValue(field, { type: 'doc', content: [{ type: 'paragraph' }] });
-  }
-};
-const sectionEntries = (fields: SyllabusField[]): Array<{ field: SyllabusField; nested: boolean; hint: boolean }> => {
-  const embedded = fields.filter(isEmbeddedField);
-  const host = fields.find((field) => field.type === 'automatico' && fieldConfig(field).source === 'identification_card');
-  if (embedded.length === 0 || !host) return fields.map((field) => ({ field, nested: false, hint: false }));
-  return fields.filter((field) => !isEmbeddedField(field)).flatMap((field) => [
-    { field, nested: false, hint: false },
-    ...(field === host ? embedded.map((item, index) => ({ field: item, nested: true, hint: index === 0 })) : []),
-  ]);
-};
+const isTeacherField = (field: SyllabusField): boolean => field.quien_llena === 'docente' && field.teacher_editable !== false;
 const REVIEW_STAGE_TEXT: Record<string, string> = { biblioteca: 'Biblioteca revisa la bibliografía.', coordinacion: 'Biblioteca aprobó; coordinación revisa y decide.' };
 const reviewStageLabel = computed(() => REVIEW_STAGE_TEXT[syllabus.value?.review_stage ?? ''] ?? '');
 const STAGE_NAME: Record<string, string> = { biblioteca: 'Biblioteca', coordinacion: 'Coordinación' };
@@ -167,7 +118,7 @@ const partsWithErrors = computed(() => {
 const orphanResults = computed(() =>
   blockingResults.value.filter((result) => !result.field_id || !partTargets.value.has(result.field_id)),
 );
-const isFieldEmpty = (field: SyllabusField): boolean => fieldTypeEntry(field.type)?.isEmpty(field.value, fieldConfig(field)) ?? false;
+const isFieldEmpty = (field: SyllabusField): boolean => !field.value || freeTextPlain(field.value).trim() === '';
 const emptyParts = computed(() =>
   allFields.value.filter((field) => field.required && isTeacherField(field)).filter(isFieldEmpty).length,
 );
@@ -218,25 +169,6 @@ const load = async (): Promise<void> => {
       return;
     }
     error.value = reason instanceof ApiError ? reason.message : "No se pudo cargar el sílabo.";
-  }
-};
-
-const refreshAfterFormation = async (): Promise<void> => {
-  if (await flushAutosave()) {
-    await load();
-    return;
-  }
-  try {
-    const fresh = (await getTeacherSyllabus(syllabusId())).syllabus;
-    const byId = new Map(fresh.sections.flatMap((section) => section.fields).map((item) => [item.id, item]));
-    for (const item of allFields.value) {
-      const updated = byId.get(item.id);
-      if (!updated) continue;
-      item.document = updated.document;
-      if (item.inherited) item.value = updated.value;
-    }
-  } catch {
-    error.value = "No se pudo actualizar la tabla de identificación. Recargue la página.";
   }
 };
 
@@ -338,8 +270,9 @@ const scheduleSave = (field: SyllabusField): void => {
   );
 };
 
-const updateValue = (field: SyllabusField, value: unknown): void => {
-  field.value = value as SyllabusField['value'];
+const updateValue = (field: SyllabusField, value: DocumentNode): void => {
+  if (!isTeacherField(field) || !canEdit.value || conflict.value) return;
+  field.value = value;
   clearFieldValidation(field.id);
   scheduleSave(field);
 };
@@ -433,7 +366,7 @@ const copyFromSource = async (): Promise<void> => {
 
 
 const visibleSections = computed(() => syllabus.value?.sections ?? []);
-// Al editar, el formulario se reparte en pestañas (una por sección); en solo lectura se ve completo.
+
 const chosenSectionId = ref<string | null>(null);
 const activeSectionId = computed<string>({
   get: () => visibleSections.value.find((section) => section.id === chosenSectionId.value)?.id ?? visibleSections.value[0]?.id ?? "",
@@ -528,22 +461,13 @@ onBeforeUnmount(() => {
           <section :id="`section-${section.id}`" class="flex scroll-mt-6 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
             <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
             <FieldGroup>
-              <template v-for="{ field, nested, hint } in sectionEntries(section.fields)" :key="field.id">
-                <template v-if="hint && showEditor">
-                  <Field v-if="section.fields.some(isDisabilityField)">
-                    <FieldLabel for="disability-choice">¿Tiene estudiantes con discapacidad?</FieldLabel>
-                    <Select :model-value="hasDisability(section.fields) ? 'si' : 'no'" :disabled="conflict || pausedEdit" @update:model-value="chooseDisability(section.fields, String($event))">
-                      <SelectTrigger id="disability-choice" class="w-48"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectGroup><SelectItem value="no">No</SelectItem><SelectItem value="si">Sí</SelectItem></SelectGroup></SelectContent>
-                    </Select>
-                  </Field>
-                </template>
-                <Field v-if="showEditor && isTeacherField(field) && (!isDisabilityField(field) || hasDisability(section.fields))" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0" :class="nested && 'border-l-2 border-border pl-4'">
+              <template v-for="field in section.fields" :key="field.id">
+                <Field v-if="showEditor && isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel>
                   <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
-                  <component :is="fieldTypeEntry(field.type)!.EditorComponent" :field="typed(field)" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
+                  <FreeTextEditor :label="field.label.trim() || section.title" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
                 </Field>
-                <FieldView v-else-if="!nested" :id="`field-${field.id}`" :field="typed(field)" :badge="field.inherited ? 'Dato automático' : undefined" />
+                <FieldView v-else :id="`field-${field.id}`" :field="field" />
                 <FieldError :errors="visibleValidationMessages(field.id)" />
               </template>
             </FieldGroup>
@@ -562,7 +486,6 @@ onBeforeUnmount(() => {
       </WorkspaceLayout>
     </template>
 
-    <TeacherFormationDialog v-model:open="formationOpen" @saved="refreshAfterFormation" />
     <Dialog v-model:open="confirmSubmitOpen">
       <DialogContent>
         <DialogHeader>

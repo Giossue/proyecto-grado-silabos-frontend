@@ -18,7 +18,7 @@ vi.mock("@/api/template", async (importOriginal) => ({
   getTemplate: vi.fn(),
   createTemplate: vi.fn(),
   formatTemplate: vi.fn(),
-  uploadInstitutionLogo: vi.fn(),
+
 }));
 
 const payload: TemplatePayload = {
@@ -34,9 +34,9 @@ const payload: TemplatePayload = {
     titleBlock: { text: "PROGRAMA DE ASIGNATURA (SÍLABO)" },
     sections: [{
       id: "section-1", key: "descripcion", title: "Descripción de la asignatura", description: null,
-      blocks: [
-        { id: "block-1", key: "descripcion", title: "Descripción", fields: [{ id: "field-1", block_id: "block-1", key: "descripcion", label: "Descripción", help: null, type: "texto", config: [] }] },
-        { id: "block-2", key: "sin_nombre", title: "", fields: [{ id: "field-2", block_id: "block-2", key: "sin_nombre", label: "", help: null, type: "texto", config: [] }] },
+      orientation: 'portrait', fields: [
+        { id: 'field-1', key: 'descripcion', label: 'Descripción', help: null, quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
+        { id: 'field-2', key: 'sin_nombre', label: '', help: null, quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
       ],
     }],
   },
@@ -73,15 +73,15 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.find('[data-sheet], .template-sheet').exists()).toBe(true);
   });
 
-  it("no tiene pestañas ni «Personalizar plantilla» y el logo se cambia sobre la hoja", async () => {
+  it("no tiene pestañas ni «Personalizar plantilla» y conserva los logos fijos", async () => {
     const wrapper = mountPage();
     await flushPromises();
 
     expect(wrapper.find('[role="tab"]').exists()).toBe(false);
     expect(wrapper.text()).not.toContain('Personalizar plantilla');
     expect(wrapper.text()).not.toContain('Vista previa');
-    expect(wrapper.get('[data-sheet]').text()).toContain('Cambiar logo');
-    expect(wrapper.get('input[type="file"][accept="image/png"]').attributes('name')).toBe('logo');
+    expect(wrapper.get('[data-sheet]').text()).not.toContain('Cambiar logo');
+    expect(wrapper.find('input[type="file"]').exists()).toBe(false);
     expect(wrapper.get('[data-sheet] h2').classes()).toContain('template-sheet-title');
     expect(wrapper.find('[data-field="field-1"] .template-sheet-box').exists()).toBe(false);
   });
@@ -166,7 +166,7 @@ describe("AdminTemplatePage", () => {
     await flushPromises();
 
     const formatButtons = wrapper.findAll('button').filter((button) => button.text().trim() === 'Cargar formato oficial UEB');
-    // Solo queda el de la hoja vacía; la cabecera de la página ya no lo repite.
+
     expect(formatButtons).toHaveLength(1);
     expect(wrapper.get('header').text()).not.toContain('Cargar formato oficial UEB');
     const formatButton = formatButtons[0];

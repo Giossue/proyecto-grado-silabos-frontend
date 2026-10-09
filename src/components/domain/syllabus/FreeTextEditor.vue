@@ -1,63 +1,97 @@
 <script setup lang="ts">
-import { Table, TableCell, TableHeader, TableRow } from '@tiptap/extension-table';
+import { Table, TableRow } from '@tiptap/extension-table';
+import { Color, FontFamily, TextStyle } from '@tiptap/extension-text-style';
+import TextAlign from '@tiptap/extension-text-align';
 import StarterKit from '@tiptap/starter-kit';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
+import { Bold, Italic, Underline, List, ListOrdered, Table2, Undo2, Redo2 } from '@lucide/vue';
 import { onBeforeUnmount, watch } from 'vue';
-import type { DocumentNode } from '@/lib/templateDocument';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
+import { DOCUMENT_FONTS, type DocumentNode, type TemplateVariable } from '@/lib/templateDocument';
+import { emptyDocument } from '@/types/configuration';
+import { DOCUMENT_TEXT_COLORS, DOCUMENT_CELL_COLORS } from '@/lib/documentPalette';
 
 const props = withDefaults(defineProps<{
     id: string;
     label: string;
     modelValue?: DocumentNode | null;
     disabled?: boolean;
-    /** Solo lista con viñetas (se escribe «- » o «* »): sin negrita, cursiva, lista numerada ni tablas. Sin barra de herramientas. */
-    bulletsOnly?: boolean;
-}>(), { modelValue: null, disabled: false, bulletsOnly: true });
-
+    variables?: TemplateVariable[];
+}>(), { modelValue: null, disabled: false, variables: () => [] });
 const emit = defineEmits<{ 'update:modelValue': [value: DocumentNode] }>();
-
 const editor = useEditor({
-    content: props.modelValue ?? { type: 'doc', content: [{ type: 'paragraph' }] },
+    content: props.modelValue ?? emptyDocument(),
     editable: !props.disabled,
-    editorProps: {
-        // En tablas solo se añaden datos: arrastrar y soltar descuadraba las celdas.
-        ...(props.bulletsOnly ? {} : {
-            handleDrop: () => true,
-            handleDOMEvents: { dragstart: (_view, event) => { event.preventDefault(); return true; } },
-        }),
-        attributes: {
-            id: props.id,
-            'aria-label': props.label,
-            role: 'textbox',
-            'aria-multiline': 'true',
-            class: 'free-text-editor__content',
-        },
-    },
+    editorProps: { attributes: { id: props.id, 'aria-label': props.label, role: 'textbox', 'aria-multiline': 'true', class: 'free-text-editor__content' } },
     extensions: [
-        StarterKit.configure({
-            heading: false,
-            blockquote: false,
-            code: false,
-            codeBlock: false,
-            horizontalRule: false,
-            link: false,
-            strike: false,
-            underline: false,
-            ...(props.bulletsOnly ? { bold: false, italic: false, orderedList: false } : {}),
-        }),
-        ...(props.bulletsOnly ? [] : [Table.configure({ resizable: false }), TableRow, TableHeader, TableCell]),
+        StarterKit.configure({ heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false }),
+        TextStyle, Color, FontFamily, TextAlign.configure({ types: ['paragraph'] }),
+        Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
+        DocumentVariable.configure({ labels: Object.fromEntries(props.variables.map((item) => [item.key, item.label])) }),
     ],
     onUpdate: ({ editor: current }) => emit('update:modelValue', current.getJSON() as DocumentNode),
 });
-
+const insertVariable = (key: unknown): void => {
+    const variable = props.variables.find((item) => item.key === key);
+    if (!variable || props.disabled) return;
+    editor.value?.chain().focus().insertContent({ type: 'variable', attrs: { id: variable.key, label: variable.label } }).run();
+};
 watch(() => props.disabled, (disabled) => editor.value?.setEditable(!disabled));
+watch(() => props.modelValue, (value) => {
+    if (editor.value && JSON.stringify(value ?? emptyDocument()) !== JSON.stringify(editor.value.getJSON())) {
+        editor.value.commands.setContent(value ?? emptyDocument(), { emitUpdate: false });
+    }
+}, { deep: true });
 onBeforeUnmount(() => editor.value?.destroy());
+defineExpose({ editor });
 </script>
 
 <template>
-    <div class="free-text-editor flex min-w-0 flex-col rounded-md border bg-background" :data-disabled="disabled || undefined">
-        <EditorContent :editor="editor" class="min-h-32 px-3 py-2 text-sm" />
+  <div class="free-text-editor flex min-w-0 flex-col rounded-md border bg-background" :data-disabled="disabled || undefined">
+    <div v-if="editor" role="toolbar" :aria-label="`Formato de ${label}`" class="flex flex-wrap items-center gap-1 border-b p-1.5">
+      <Button type="button" variant="ghost" size="icon-sm" aria-label="Negrita" :aria-pressed="editor.isActive('bold')" :disabled="disabled" @click="editor.chain().focus().toggleBold().run()"><Bold aria-hidden="true" /></Button>
+      <Button type="button" variant="ghost" size="icon-sm" aria-label="Cursiva" :aria-pressed="editor.isActive('italic')" :disabled="disabled" @click="editor.chain().focus().toggleItalic().run()"><Italic aria-hidden="true" /></Button>
+      <Button type="button" variant="ghost" size="icon-sm" aria-label="Subrayado" :aria-pressed="editor.isActive('underline')" :disabled="disabled" @click="editor.chain().focus().toggleUnderline().run()"><Underline aria-hidden="true" /></Button>
+      <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista con viñetas" :aria-pressed="editor.isActive('bulletList')" :disabled="disabled" @click="editor.chain().focus().toggleBulletList().run()"><List aria-hidden="true" /></Button>
+      <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista numerada" :aria-pressed="editor.isActive('orderedList')" :disabled="disabled" @click="editor.chain().focus().toggleOrderedList().run()"><ListOrdered aria-hidden="true" /></Button>
+      <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" :disabled="disabled" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"><Table2 aria-hidden="true" /></Button>
+      <Button type="button" variant="ghost" size="icon-sm" aria-label="Deshacer" :disabled="disabled || !editor.can().undo()" @click="editor.chain().focus().undo().run()"><Undo2 aria-hidden="true" /></Button>
+      <Button type="button" variant="ghost" size="icon-sm" aria-label="Rehacer" :disabled="disabled || !editor.can().redo()" @click="editor.chain().focus().redo().run()"><Redo2 aria-hidden="true" /></Button>
+      <Select :disabled="disabled || editor.isActive('table')" @update:model-value="editor?.chain().focus().setFontFamily(String($event)).run()">
+        <SelectTrigger class="h-8 w-36" aria-label="Fuente del texto"><SelectValue placeholder="Fuente del texto" /></SelectTrigger>
+        <SelectContent><SelectItem v-for="font in DOCUMENT_FONTS" :key="font" :value="font">{{ font }}</SelectItem></SelectContent>
+      </Select>
+      <Select :disabled="disabled" @update:model-value="editor?.chain().focus().setColor(String($event)).run()">
+        <SelectTrigger class="h-8 w-36" aria-label="Color del texto"><SelectValue placeholder="Color del texto" /></SelectTrigger>
+        <SelectContent><SelectItem v-for="color in DOCUMENT_TEXT_COLORS" :key="color.value" :value="color.value">{{ color.label }}</SelectItem></SelectContent>
+      </Select>
+      <Select :disabled="disabled" @update:model-value="editor?.chain().focus().setTextAlign(String($event)).run()">
+        <SelectTrigger class="h-8 w-36" aria-label="Alineación"><SelectValue placeholder="Alineación" /></SelectTrigger>
+        <SelectContent><SelectItem value="left">Izquierda</SelectItem><SelectItem value="center">Centro</SelectItem><SelectItem value="right">Derecha</SelectItem><SelectItem value="justify">Justificado</SelectItem></SelectContent>
+      </Select>
+      <Select v-if="variables.length" :disabled="disabled" @update:model-value="insertVariable">
+        <SelectTrigger class="h-8 w-44" aria-label="Insertar dato del sistema"><SelectValue placeholder="Dato del sistema" /></SelectTrigger>
+        <SelectContent><SelectItem v-for="variable in variables" :key="variable.key" :value="variable.key">{{ variable.label }}</SelectItem></SelectContent>
+      </Select>
     </div>
+    <div v-if="editor?.isActive('table')" class="flex flex-wrap items-center gap-1 border-b p-1.5" aria-label="Opciones de tabla">
+      <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor?.chain().focus().addRowAfter().run()">Agregar fila</Button>
+      <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor?.chain().focus().deleteRow().run()">Quitar fila</Button>
+      <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor?.chain().focus().addColumnAfter().run()">Agregar columna</Button>
+      <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor?.chain().focus().deleteColumn().run()">Quitar columna</Button>
+      <Button type="button" variant="ghost" size="sm" :disabled="disabled || !editor.can().mergeCells()" @click="editor?.chain().focus().mergeCells().run()">Combinar celdas</Button>
+      <Button type="button" variant="ghost" size="sm" :disabled="disabled || !editor.can().splitCell()" @click="editor?.chain().focus().splitCell().run()">Separar celdas</Button>
+      <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor?.chain().focus().toggleHeaderCell().run()">Encabezado</Button>
+      <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor?.chain().focus().deleteTable().run()">Quitar tabla</Button>
+      <Select :disabled="disabled" @update:model-value="editor?.chain().focus().setCellAttribute('backgroundColor', $event === 'none' ? null : $event).run()">
+        <SelectTrigger class="h-8 w-36" aria-label="Fondo de celda"><SelectValue placeholder="Fondo de celda" /></SelectTrigger>
+        <SelectContent><SelectItem v-for="color in DOCUMENT_CELL_COLORS" :key="color.value ?? 'none'" :value="color.value ?? 'none'">{{ color.label }}</SelectItem></SelectContent>
+      </Select>
+    </div>
+    <EditorContent :editor="editor" class="min-h-32 overflow-x-auto px-3 py-2 text-sm" />
+  </div>
 </template>
 
 <style>
@@ -103,4 +137,5 @@ onBeforeUnmount(() => editor.value?.destroy());
 .free-text-editor .free-text-editor__content th p {
     margin: 0;
 }
+.free-text-editor .document-variable { border-radius: 0.25rem; background: var(--muted); color: var(--foreground); padding: 0.1rem 0.25rem; }
 </style>

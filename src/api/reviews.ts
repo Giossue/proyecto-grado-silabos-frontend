@@ -1,6 +1,6 @@
 import { api } from "@/api/client";
 import type { DocumentPresentation } from "@/api/syllabi";
-import type { DocumentNode } from "@/lib/templateDocument";
+import type { DocumentField, FieldResponsible } from "@/types/configuration";
 
 export type ReviewStage = "biblioteca" | "coordinacion";
 export const REVIEW_STAGE_LABELS: Record<ReviewStage, string> = { biblioteca: "En biblioteca", coordinacion: "En coordinación" };
@@ -30,27 +30,12 @@ export type ReviewsPage = {
     total: number;
   };
 };
-export type SnapshotField = {
-  key: string;
-  label: string;
-  type: string;
-  inherited: boolean;
-  value: unknown;
-  config?: Record<string, unknown> | unknown[] | null;
-  document?: DocumentNode | null;
-};
+export type SnapshotField = DocumentField;
 export type SnapshotSection = {
   key: string;
   title: string;
-  /** Snapshot v7: campos planos con su tipo y configuración. Las versiones anteriores solo traen `blocks`. */
-  fields?: SnapshotField[];
-  blocks?: Array<{
-    key: string;
-    title: string;
-    content_type: string;
-    document?: DocumentNode | null;
-    fields: SnapshotField[];
-  }>;
+  orientation?: 'portrait' | 'landscape';
+  fields: SnapshotField[];
 };
 export type ReviewDetail = {
   syllabus: {
@@ -105,7 +90,7 @@ export type ReviewComparison = {
       section_title: string;
       field_key: string;
       label: string;
-      type: string;
+      quien_llena: FieldResponsible;
       change: "added" | "removed" | "modified";
       before: { value: unknown } | null;
       after: { value: unknown } | null;

@@ -1,6 +1,6 @@
 import { api } from "@/api/client";
 import type { TemplateAppearance } from "@/api/template";
-import type { DocumentNode } from "@/lib/templateDocument";
+import type { DocumentField } from "@/types/configuration";
 import type { AgentAvatarHint } from "@/components/domain/ai/avatar/types";
 
 export type DocumentPresentation = {
@@ -70,8 +70,7 @@ export type SyllabusDetail = {
     title: string;
     description: string | null;
     fields: SyllabusField[];
-    /** Estructura anterior por bloques; la pantalla usa `fields`. */
-    blocks?: SyllabusBlock[];
+    orientation: 'portrait' | 'landscape';
   }>;
   review_stage?: "biblioteca" | "coordinacion" | null;
   review_comments?: Array<{
@@ -83,22 +82,11 @@ export type SyllabusDetail = {
   }>;
 };
 
-export type SyllabusField = {
+export type SyllabusField = DocumentField & {
   id: string;
-  key: string;
-  label: string;
   help: string | null;
-  type: string;
-  options: Array<{ value: string; label: string }>;
-  show_when?: { key: string; value: string } | null;
   required: boolean;
-  inherited: boolean;
   teacher_editable: boolean;
-  value: string | number | boolean | string[] | DocumentNode | Record<string, unknown> | null;
-  /** I-195: configuración propia del tipo (`adjustable`, `columns`/`rows`, `source`, `content`). */
-  config?: Record<string, unknown> | unknown[] | null;
-  legacy?: boolean;
-  document?: DocumentNode | null;
 };
 
 export type AiChatCitation = {
@@ -133,15 +121,6 @@ export type AiChat = {
   limits?: { messages_used: number; messages_max: number; sessions_used: number; sessions_max: number };
 };
 
-export type SyllabusBlock = {
-  id: string;
-  title: string | null;
-  content_type: string;
-  page_orientation?: string;
-  compact?: boolean;
-  document?: DocumentNode | null;
-  fields: SyllabusField[];
-};
 
 export const getTeacherSyllabi = (
   filters: { q?: string; state?: string; page?: number } = {},

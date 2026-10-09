@@ -12,11 +12,8 @@ import {
   requestCorrection,
   reviewStageLabel,
   type ReviewDetail,
-  type SnapshotField,
 } from '@/api/reviews';
-import FieldView from '@/components/domain/fieldTypes/FieldView.vue';
-import { sectionFields } from '@/components/domain/fieldTypes/registry';
-import type { TypedField } from '@/types/configuration';
+import FieldView from '@/components/domain/syllabus/FieldView.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -89,7 +86,6 @@ const deleted = async (message: string): Promise<void> => {
   await router.replace(area.value.reviews);
 };
 
-const typed = (field: SnapshotField): TypedField => field;
 const submitCorrection = (): Promise<void> => run(() => requestCorrection(data.value!.revision.id, {
   justification: correctionJustification.value,
 }));
@@ -121,7 +117,7 @@ onMounted(load);
         <Card v-for="section in data.revision.snapshot.sections" :id="`section-${section.key}`" :key="section.key">
           <CardHeader><CardTitle>{{ section.title }}</CardTitle><CardDescription>Contenido exacto enviado en la revisión {{ data.revision.number }}.</CardDescription></CardHeader>
           <CardContent class="flex flex-col gap-6">
-            <FieldView v-for="field in sectionFields(section)" :key="field.key" :field="typed(field)" :badge="field.inherited ? 'Institucional' : undefined" />
+            <FieldView v-for="field in section.fields" :key="field.key" :field="field" />
           </CardContent>
         </Card>
       </div>

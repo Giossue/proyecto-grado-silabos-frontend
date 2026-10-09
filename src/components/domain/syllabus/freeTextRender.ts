@@ -1,6 +1,5 @@
 import { h } from 'vue';
 import type { VNodeChild } from 'vue';
-import { Button } from '@/components/ui/button';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const TAGS: Record<string, string> = {
@@ -8,13 +7,12 @@ const TAGS: Record<string, string> = {
     table: 'table', tableRow: 'tr', tableCell: 'td', tableHeader: 'th',
 };
 
-export type FreeTextAction = { text: string; label: string; run: () => void };
 
 export const isFreeTextDocument = (value: unknown): value is DocumentNode =>
     typeof value === 'object' && value !== null && (value as DocumentNode).type === 'doc';
 
 export const freeTextPlain = (node: DocumentNode): string =>
-    node.type === 'text' ? (node.text ?? '') : (node.content ?? []).map(freeTextPlain).join(' ');
+    node.type === 'text' ? (node.text ?? '') : node.type === 'variable' ? String(node.attrs?.label || 'Dato del sistema') : (node.content ?? []).map(freeTextPlain).join(' ');
 
 export const freeTextLines = (node: DocumentNode): string => {
     if (node.type === 'text') return node.text ?? '';
@@ -27,7 +25,7 @@ export const freeTextLines = (node: DocumentNode): string => {
     return children.join('\n');
 };
 
-/** Anchos de columna guardados en la primera celda que los trae completos (uno por columna de la tabla). */
+
 const tableColumnWidths = (table: DocumentNode): number[] | null => {
     for (const row of table.content ?? []) {
         for (const cell of row.content ?? []) {
@@ -42,21 +40,23 @@ const tableColumnWidths = (table: DocumentNode): number[] | null => {
     return null;
 };
 
-export const renderFreeText = (node: DocumentNode, action?: FreeTextAction): VNodeChild => {
+export const renderFreeText = (node: DocumentNode): VNodeChild => {
     if (node.type === 'text') {
         const marks = new Set((node.marks ?? []).map((mark) => mark.type));
         let content: VNodeChild = node.text ?? '';
         if (marks.has('italic')) content = h('em', {}, content);
+        if (marks.has('underline')) content = h('u', {}, content);
         if (marks.has('bold')) content = h('strong', {}, content);
-        const color = (node.marks ?? []).find((mark) => mark.type === 'textStyle')?.attrs?.color;
-        if (typeof color === 'string') content = h('span', { style: { color } }, content);
+        const style = (node.marks ?? []).find((mark) => mark.type === 'textStyle')?.attrs;
+        if (style) content = h('span', { style: { color: style.color, fontFamily: style.fontFamily } }, content);
 
         return content;
     }
+    if (node.type === 'variable') return h('span', { class: 'document-variable' }, String(node.attrs?.label || 'Dato del sistema'));
     if (node.type === 'hardBreak') {
         return h('br');
     }
-    const children = (node.content ?? []).map((child) => renderFreeText(child, action));
+    const children = (node.content ?? []).map((child) => renderFreeText(child));
     if (node.type === 'doc') {
         return h('div', { class: 'free-text-view' }, children);
     }
@@ -75,20 +75,9 @@ export const renderFreeText = (node: DocumentNode, action?: FreeTextAction): VNo
         ? {
             colspan: Number(node.attrs?.colspan ?? 1),
             rowspan: Number(node.attrs?.rowspan ?? 1),
-            ...(typeof node.attrs?.backgroundColor === 'string' ? { style: { backgroundColor: node.attrs.backgroundColor } } : {}),
+            style: { backgroundColor: node.attrs?.backgroundColor, color: node.attrs?.textColor, textAlign: node.attrs?.textAlign, fontWeight: node.attrs?.bold === true ? 'bold' : node.attrs?.bold === false ? 'normal' : undefined, fontStyle: node.attrs?.italic === true ? 'italic' : undefined, borderStyle: node.attrs?.borderStyle === 'none' ? 'none' : undefined, borderWidth: node.attrs?.borderStyle === 'thick' ? '2px' : undefined },
         }
-        : {};
-
-    if (action && node.type === 'paragraph' && freeTextPlain(node).trim() === action.text) {
-        return h(tag, span, [h(Button, {
-            type: 'button',
-            variant: 'link',
-            size: 'inline',
-            class: 'h-auto p-0 text-left text-[length:inherit] leading-[inherit] font-semibold whitespace-normal underline',
-            'aria-label': action.label,
-            onClick: action.run,
-        }, () => children)]);
-    }
+        : node.type === 'paragraph' ? { style: { textAlign: node.attrs?.textAlign } } : {};
 
     return h(tag, span, children);
 };

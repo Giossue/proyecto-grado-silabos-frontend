@@ -80,18 +80,11 @@ const detail = (decisionsAllowed = true): ReviewDetail => ({
         key: "descripcion",
         title: "Descripción",
         fields: [
-          { key: "objetivo", label: "Objetivo general", type: "texto", inherited: false, config: [], value: doc("Contenido enviado") },
-          { key: "perfil", label: "Descripción", type: "ficha", inherited: true, config: { adjustable: false }, value: doc("Contenido heredado") },
-          {
-            key: "unidades", label: "Planificación", type: "tabla", inherited: false,
-            config: { columns: [{ key: "tema", label: "Tema" }], rows: [{ key: "semana_1", label: "Semana 1" }] },
-            value: { semana_1: { tema: "Fundamentos" } },
-          },
-          {
-            key: "identificacion", label: "", type: "automatico", inherited: false, config: { source: "identification_card" },
-            value: { career: "Software" }, document: { type: "doc", content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph", content: [{ type: "text", text: "FACULTAD: Ciencias" }] }] }] }] }] },
-          },
-          { key: "conducta", label: "Conducta ética", type: "fijo", inherited: false, config: {}, value: doc("Texto institucional") },
+          { key: "objetivo", label: "Objetivo general", quien_llena: "docente", value: doc("Contenido enviado") },
+          { key: "perfil", label: "Descripción", quien_llena: "coordinacion", value: doc("Contenido heredado") },
+          { key: 'unidades', label: 'Planificación', quien_llena: 'docente', value: { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Semana 1: Introducción' }] }] }] }] }] } },
+          { key: 'identificacion', label: '', quien_llena: 'institucional', value: doc('FACULTAD: Ciencias') },
+          { key: "conducta", label: "Conducta ética", quien_llena: "institucional", value: doc("Texto institucional") },
         ],
       }],
     },
@@ -233,7 +226,7 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("pinta cada campo de la fotografía con la vista de su tipo", async () => {
+  it("pinta los documentos congelados y su responsable", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
     const wrapper = mountPage();
     await flushPromises();
@@ -241,8 +234,8 @@ describe("CoordinationReviewDetailPage", () => {
     const text = wrapper.text();
     expect(text).toContain("Contenido enviado");
     expect(text).toContain("Contenido heredado");
-    expect(wrapper.get(".table-field-view").text()).toContain("Fundamentos");
-    expect(wrapper.get(".table-field-view").text()).toContain("Semana 1");
+    expect(text).toContain("Coordinación");
+    expect(wrapper.get(".free-text-table").text()).toContain("Semana 1");
     expect(text).toContain("FACULTAD: Ciencias");
     expect(text).toContain("Texto institucional");
     wrapper.unmount();

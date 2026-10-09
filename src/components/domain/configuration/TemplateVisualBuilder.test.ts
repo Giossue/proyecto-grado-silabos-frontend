@@ -4,24 +4,25 @@ import * as structure from '@/api/template-structure';
 import { ApiError } from '@/api/client';
 import type { SectionDesign, TemplatePayload } from '@/api/template';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
-import { fieldTypeKeys, fieldTypeRegistry, manualFieldTypeKeys } from '@/components/domain/fieldTypes/registry';
+import { emptyDocument, type FieldResponsible } from '@/types/configuration';
+import type { DocumentNode } from '@/lib/templateDocument';
 
 vi.mock('@/api/template-structure');
 
 type Template = NonNullable<TemplatePayload['template']>;
-const field = (id: string, label: string, type = 'texto') => ({ id, block_id: `b-${id}`, key: id, label, help: null, type, config: [] });
+const field = (id: string, label: string, quien_llena: FieldResponsible = 'docente') => ({ id, key: id, label, help: null, quien_llena, content: emptyDocument() });
 const template: Template = {
   id: 't1', name: 'Plantilla', description: null, titleBlock: { text: 'SÍLABO' },
   sections: [
-    { id: 's1', key: 'uno', title: 'Uno', description: null, blocks: [{ id: 'b-f1', key: 'f1', title: '', fields: [field('f1', 'Primero')] }, { id: 'b-f2', key: 'f2', title: '', fields: [field('f2', 'Segundo', 'ficha')] }] },
-    { id: 's2', key: 'dos', title: 'Dos', description: null, blocks: [] },
+    { id: 's1', key: 'uno', title: 'Uno', description: null, orientation: 'portrait', fields: [field('f1', 'Primero'), field('f2', 'Segundo', 'coordinacion')] },
+    { id: 's2', key: 'dos', title: 'Dos', description: null, orientation: 'portrait', fields: [] },
   ],
 };
 
 const designs: SectionDesign[] = [
-  { key: 'identificacion', title: 'Identificación Institucional', summary: 'Tabla oficial con los datos de la asignatura.', in_use: false, fields: [{ label: '', type: 'automatico' }, { label: 'Formación y experiencia', type: 'texto' }] },
-  { key: 'etica', title: 'Conducta y comportamiento ético', summary: 'Compromisos y estándares de la UEB.', in_use: false, fields: [{ label: '', type: 'fijo' }] },
-  { key: 'descripcion', title: 'Descripción de la asignatura', summary: 'Texto de la ficha.', in_use: true, fields: [{ label: '', type: 'ficha' }] },
+  { key: 'identificacion', title: 'Identificación Institucional', summary: 'Tabla oficial con los datos de la asignatura.', in_use: false, fields: [{ label: '', quien_llena: 'institucional' }, { label: 'Formación y experiencia', quien_llena: 'docente' }] },
+  { key: 'etica', title: 'Conducta y comportamiento ético', summary: 'Compromisos y estándares de la UEB.', in_use: false, fields: [{ label: '', quien_llena: 'institucional' }] },
+  { key: 'descripcion', title: 'Descripción de la asignatura', summary: 'Texto de la ficha.', in_use: true, fields: [{ label: '', quien_llena: 'coordinacion' }] },
 ];
 const mountBuilder = (props: { processLock?: string | null } = {}) => mount(TemplateVisualBuilder, { props: { template, designs, ...props }, attachTo: document.body });
 
@@ -34,7 +35,7 @@ const type = async (id: string, value: string) => {
   input.dispatchEvent(new Event('input', { bubbles: true }));
   await flushPromises();
 };
-const choose = async (key: string) => click(body().querySelector(`#new-section-field-type-${key}, #template-field-type-${key}`));
+const choose = async (key: string) => click(body().querySelector(`#new-section-field-responsible-${key}, #template-field-responsible-${key}`));
 
 describe('TemplateVisualBuilder', () => {
   enableAutoUnmount(afterEach);
@@ -56,27 +57,22 @@ describe('TemplateVisualBuilder', () => {
     expect(structure.reorderFields).toHaveBeenCalledWith('t1', 's1', ['f1', 'nuevo', 'f2']);
   });
 
-  it('ofrece solo los tipos que se pueden elegir a mano, con lenguaje para Administración', async () => {
+  it('permite elegir cualquiera de los tres responsables y editar un documento', async () => {
     mountBuilder();
     await click(byText('button', 'Agregar campo'));
-    expect(manualFieldTypeKeys).toEqual(['texto', 'ficha', 'tabla']);
-    for (const key of manualFieldTypeKeys) expect(body().querySelector(`#template-field-type-${key}`), key).toBeTruthy();
-    for (const key of fieldTypeKeys.filter((candidate) => !manualFieldTypeKeys.includes(candidate))) expect(body().querySelector(`#template-field-type-${key}`), key).toBeNull();
-    expect(body().textContent).toContain('Lo escribe el docente');
-    expect(body().textContent).toContain('Lo escribe Coordinación en la ficha de la asignatura');
-    expect(body().textContent).toContain('Tabla de filas fijas');
-    expect(body().textContent).not.toContain('Dato que se completa solo');
-    expect(body().textContent).not.toContain('Nadie lo escribe: se toma de los datos de la asignatura al enviar el sílabo.');
-    expect(body().textContent).not.toContain('Texto fijo igual para todos');
+    for (const key of ['docente', 'coordinacion', 'institucional']) expect(body().querySelector(`#template-field-responsible-${key}`)).toBeTruthy();
+    expect(body().querySelector('[aria-label="Contenido inicial"]')).toBeTruthy();
+    expect(body().textContent).not.toContain('Tabla de filas fijas');
+    expect(body().textContent).toContain('El docente lo consulta.');
   });
 
   it('dibuja la tabla oficial de identificación y no subtitula los campos sin nombre', () => {
-    const table = { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'FACULTAD: CIENCIAS ADMINISTRATIVAS' }] }] }] }] }] };
+    const table: DocumentNode = { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'FACULTAD: CIENCIAS ADMINISTRATIVAS' }] }] }] }] }] };
     const official: Template = {
       ...template,
-      sections: [{ id: 's1', key: 'identificacion', title: 'Identificación Institucional', description: null, blocks: [
-        { id: 'b-a', key: 'a', title: '', fields: [{ ...field('a', '', 'automatico'), config: { source: 'identification_card' }, document: table }] },
-        { id: 'b-d', key: 'd', title: '', fields: [field('d', 'Estudiantes con discapacidad: Tipo de discapacidad')] },
+      sections: [{ id: 's1', key: 'identificacion', title: 'Identificación Institucional', description: null, orientation: 'portrait', fields: [
+        { ...field('a', '', 'institucional'), content: table },
+        field('d', 'Estudiantes con discapacidad: Tipo de discapacidad'),
       ] }],
     };
     mount(TemplateVisualBuilder, { props: { template: official }, attachTo: document.body });
@@ -85,14 +81,14 @@ describe('TemplateVisualBuilder', () => {
     expect(body().textContent).toContain('Identificación Institucional');
     expect(body().querySelector('[data-field="a"] h4')).toBeNull();
     expect(body().querySelector('[data-field="d"] h4')?.textContent?.trim()).toBe('Estudiantes con discapacidad: Tipo de discapacidad');
-    expect(body().querySelector('[data-field="a"] [data-field-type]')?.textContent).toContain('Se completa solo');
+    expect(body().querySelector('[data-field="a"] [data-field-responsible]')?.textContent).toContain('Institucional');
     expect(body().textContent).not.toMatch(/\b1\.[1-9]\b/);
   });
 
   it('deja que la etiqueta del tipo y el nombre largo bajen de línea sin desbordar', () => {
     const long = 'Lo escribe Coordinación en la ficha de la asignatura';
     mountBuilder();
-    const row = body().querySelector('[data-field="f2"] [data-field-type]')!;
+    const row = body().querySelector('[data-field="f2"] [data-field-responsible]')!;
     expect(row.parentElement?.className).toContain('flex-wrap');
     expect(row.className).toContain('max-w-full');
     expect(row.textContent!.length).toBeGreaterThan(0);
@@ -104,7 +100,7 @@ describe('TemplateVisualBuilder', () => {
     const wrapper = mountBuilder();
     await click(byText('button', 'Agregar campo'));
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ type: 'texto', label: '', key: 'campo', config: {} }));
+    expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ quien_llena: 'docente', label: '', key: 'campo', content: emptyDocument() }));
     expect(wrapper.emitted('changed')).toHaveLength(1);
   });
 
@@ -112,36 +108,18 @@ describe('TemplateVisualBuilder', () => {
     mountBuilder();
     await click(byText('button', 'Agregar campo'));
     await type('template-field-label', 'Perfil');
-    await choose('ficha');
+    await choose('coordinacion');
     expect(body().querySelector('#field-config-adjustable')).toBeNull();
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ type: 'ficha', label: 'Perfil', key: 'perfil', config: { adjustable: false } }));
+    expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ quien_llena: 'coordinacion', label: 'Perfil', key: 'perfil', content: emptyDocument() }));
   });
 
-  it('agrega una tabla con columnas y filas y valida que no quede vacía', async () => {
+  it('agrega un campo institucional con el mismo editor', async () => {
     mountBuilder();
     await click(byText('button', 'Agregar campo'));
-    await choose('tabla');
-    expect(body().querySelector<HTMLButtonElement>('[aria-label="Quitar columna 1"]')!.disabled).toBe(true);
-    await click(byText('button', 'Agregar columna'));
-    await click(byText('button', 'Agregar fila'));
-    await type('table-columns-columna_1', '');
+    await choose('institucional');
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(body().textContent).toContain('Escriba el nombre de cada columna.');
-    expect(structure.createField).not.toHaveBeenCalled();
-    await type('table-columns-columna_1', 'Tema');
-    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    const config = vi.mocked(structure.createField).mock.calls[0]![2].config as { columns: unknown[]; rows: unknown[] };
-    expect(config.columns).toHaveLength(2);
-    expect(config.rows).toHaveLength(2);
-  });
-
-  it('cada tipo del registro aporta su pieza de configuración y su validación', () => {
-    for (const key of fieldTypeKeys) {
-      expect(fieldTypeRegistry[key].BuilderComponent, key).toBeTruthy();
-      expect(fieldTypeRegistry[key].adminLabel, key).not.toBe('');
-      expect(fieldTypeRegistry[key].validateConfig(structuredClone(fieldTypeRegistry[key].defaultConfig) as Record<string, unknown>)).toSatisfy((m: unknown) => m === null || typeof m === 'string');
-    }
+    expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ quien_llena: 'institucional', content: emptyDocument() }));
   });
 
   it('la nueva sección ofrece el catálogo de diseños oficiales y «En blanco»', async () => {
@@ -150,8 +128,8 @@ describe('TemplateVisualBuilder', () => {
     expect(body().textContent).toContain('Usar un diseño oficial');
     const titles = [...body().querySelectorAll('[data-design]')].map((el) => el.getAttribute('data-design'));
     expect(titles).toEqual(['identificacion', 'etica', 'descripcion']);
-    expect(body().querySelector('[data-design="identificacion"]')?.textContent).toContain('Incluye: Texto de la sección (Dato automático), Formación y experiencia (Texto)');
-    expect(body().querySelector('[data-design="etica"]')?.textContent).toContain('(Texto fijo)');
+    expect(body().querySelector('[data-design="identificacion"]')?.textContent).toContain('Incluye: Texto de la sección (Institucional), Formación y experiencia (Docente)');
+    expect(body().querySelector('[data-design="etica"]')?.textContent).toContain('(Institucional)');
     expect(body().querySelector('[data-design="descripcion"]')?.textContent).toContain('Ya está en la plantilla');
     expect(body().querySelector('#section-design-descripcion')?.hasAttribute('disabled')).toBe(true);
     expect(body().textContent).toContain('En blanco');
@@ -187,7 +165,7 @@ describe('TemplateVisualBuilder', () => {
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
     expect(body().textContent).toContain('Paso 2 de 2');
     await click(byText('button', 'Crear sin campos'));
-    expect(structure.createSection).toHaveBeenCalledWith('t1', { key: 'objetivos_de_la_asignatura', title: 'Objetivos de la asignatura' });
+    expect(structure.createSection).toHaveBeenCalledWith('t1', { key: 'objetivos_de_la_asignatura', title: 'Objetivos de la asignatura', orientation: 'portrait' });
     expect(structure.createField).not.toHaveBeenCalled();
     expect(structure.createSectionFromDesign).not.toHaveBeenCalled();
   });
@@ -200,19 +178,15 @@ describe('TemplateVisualBuilder', () => {
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
     await type('new-section-field-label', 'Cuerpo');
     await click(byText('button', 'Crear sección con este campo'));
-    expect(structure.createField).toHaveBeenCalledWith('t1', 'new-section', expect.objectContaining({ type: 'texto', label: 'Cuerpo' }));
+    expect(structure.createField).toHaveBeenCalledWith('t1', 'new-section', expect.objectContaining({ quien_llena: 'docente', label: 'Cuerpo' }));
   });
 
-  it('la hoja no repite los textos que el docente escribe dentro de la tabla de identificación', () => {
-    const inside = { ...field('f', 'Formación y experiencia académica – investigativa'), config: { inside: 'identification_card' } };
-    const official: Template = { ...template, sections: [{ id: 's1', key: 'identificacion', title: 'Identificación Institucional', description: null, blocks: [
-      { id: 'b-a', key: 'a', title: '', fields: [{ ...field('a', '', 'automatico'), config: { source: 'identification_card' } }] },
-      { id: 'b-f', key: 'f', title: '', fields: [inside] },
-    ] }] };
-    mount(TemplateVisualBuilder, { props: { template: official }, attachTo: document.body });
-    expect(body().querySelector('[data-field="a"]')).toBeTruthy();
-    expect(body().querySelector('[data-field="f"]')).toBeNull();
-    expect(body().textContent).not.toContain('Formación y experiencia académica');
+  it('el título y los logos son fijos y no aparecen como campos editables', () => {
+    mount(TemplateVisualBuilder, { props: { template, logos: { institution: '/institution.png', faculty: '/faculty.png', institution_size: { width: 120, height: 40 }, faculty_size: { width: 120, height: 40 } } }, attachTo: document.body });
+    expect(body().querySelector('h2')?.textContent).toBe('SÍLABO');
+    expect(body().querySelectorAll('header img')).toHaveLength(2);
+    expect(body().textContent).not.toContain('Editar título');
+    expect(body().textContent).not.toContain('Cambiar logo');
   });
 
   it('renombra una sección y cambia las propiedades de un campo', async () => {
@@ -220,12 +194,13 @@ describe('TemplateVisualBuilder', () => {
     await click(body().querySelector('[aria-label="Renombrar la sección Uno"]'));
     await type('template-section-title', 'Uno bis');
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(structure.renameSection).toHaveBeenCalledWith('t1', 's1', 'Uno bis');
+    expect(structure.renameSection).toHaveBeenCalledWith('t1', 's1', 'Uno bis', 'portrait');
 
     await click(body().querySelector('[aria-label="Propiedades del campo Primero"]'));
     await type('template-field-label', '');
+    await choose('coordinacion');
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(structure.updateField).toHaveBeenCalledWith('t1', 'f1', expect.objectContaining({ label: '' }));
+    expect(structure.updateField).toHaveBeenCalledWith('t1', 'f1', expect.objectContaining({ label: '', quien_llena: 'coordinacion' }));
   });
 
   it('reordena secciones y campos subiendo y bajando', async () => {

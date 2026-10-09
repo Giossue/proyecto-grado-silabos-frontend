@@ -5,19 +5,21 @@ import { ref, watch } from 'vue';
 import { createField, createSection, createSectionFromDesign, renameSection } from '@/api/template-structure';
 import type { SectionDesign, TemplateSectionPayload } from '@/api/template';
 import TemplateFieldForm from '@/components/domain/configuration/TemplateFieldForm.vue';
-import { apiMessage, fieldFormError, fieldInput, newFieldForm, uniqueKey, type FieldForm } from '@/components/domain/configuration/templateStructure';
+import { apiMessage, fieldInput, newFieldForm, uniqueKey, type FieldForm } from '@/components/domain/configuration/templateStructure';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { fieldTypeEntry } from '@/components/domain/fieldTypes/registry';
+import { responsibleLabel } from '@/types/configuration';
+import type { TemplateVariable } from '@/lib/templateDocument';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Field, FieldDescription, FieldError, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Spinner } from '@/components/ui/spinner';
 import { toast } from '@/lib/toast';
 
-/** «Nueva sección»: elegir un diseño oficial o crearla en blanco (nombre y primer campo opcional), o «Renombrar sección» (con `section`). */
-const props = defineProps<{ templateId: string; section?: TemplateSectionPayload | null; usedSectionKeys: string[]; usedFieldKeys: string[]; designs?: SectionDesign[] }>();
+
+const props = defineProps<{ templateId: string; section?: TemplateSectionPayload | null; usedSectionKeys: string[]; usedFieldKeys: string[]; designs?: SectionDesign[]; variables?: TemplateVariable[] }>();
 const emit = defineEmits<{ saved: [createdId?: string] }>();
 const open = defineModel<boolean>('open', { required: true });
 
@@ -25,6 +27,7 @@ const BLANK = 'blank';
 const step = ref<'choose' | 1 | 2>('choose');
 const choice = ref<string>(BLANK);
 const title = ref('');
+const orientation = ref<'portrait' | 'landscape'>('portrait');
 const titleError = ref<string | null>(null);
 const withField = ref<FieldForm>(newFieldForm());
 const error = ref<string | null>(null);
@@ -35,6 +38,7 @@ watch(open, (value) => {
     step.value = props.section ? 1 : 'choose';
     choice.value = BLANK;
     title.value = props.section?.title ?? '';
+    orientation.value = props.section?.orientation ?? 'portrait';
     titleError.value = null;
     error.value = null;
     withField.value = newFieldForm();
@@ -42,7 +46,7 @@ watch(open, (value) => {
 
 const available = (design: SectionDesign): boolean => !design.in_use;
 const fieldSummary = (design: SectionDesign): string =>
-    design.fields.map((field) => `${field.label.trim() || 'Texto de la sección'} (${fieldTypeEntry(field.type)?.label ?? field.type})`).join(', ');
+    design.fields.map((field) => `${field.label.trim() || 'Texto de la sección'} (${responsibleLabel(field.quien_llena)})`).join(', ');
 
 const choose = async (): Promise<void> => {
     if (choice.value === BLANK) {
@@ -73,18 +77,18 @@ const next = (): void => {
 
 const save = async (includeField: boolean): Promise<void> => {
     if (saving.value) return;
-    error.value = includeField ? fieldFormError(withField.value) : null;
+    error.value = null;
     if (error.value) return;
     saving.value = true;
     let createdId: string | undefined;
     try {
         if (props.section) {
-            await renameSection(props.templateId, props.section.id, title.value.trim());
+            await renameSection(props.templateId, props.section.id, title.value.trim(), orientation.value);
         } else {
-            const { section_id } = await createSection(props.templateId, { key: uniqueKey(title.value, 'seccion', props.usedSectionKeys), title: title.value.trim() });
+            const { section_id } = await createSection(props.templateId, { key: uniqueKey(title.value, 'seccion', props.usedSectionKeys), title: title.value.trim(), orientation: orientation.value });
             createdId = section_id;
             if (includeField) {
-                await createField(props.templateId, section_id, { ...fieldInput(withField.value), type: withField.value.type, key: uniqueKey(withField.value.label, 'campo', props.usedFieldKeys) });
+                await createField(props.templateId, section_id, { ...fieldInput(withField.value), key: uniqueKey(withField.value.label, 'campo', props.usedFieldKeys) });
             }
         }
         toast.success(props.section ? 'Sección actualizada.' : 'Sección agregada.');
@@ -92,7 +96,7 @@ const save = async (includeField: boolean): Promise<void> => {
         emit('saved', createdId);
     } catch (reason) {
         error.value = apiMessage(reason, 'No se pudo guardar la sección.');
-        // Si la sección ya se creó y falló el campo, la lista debe reflejarlo.
+
         emit('saved', createdId);
     } finally {
         saving.value = false;
@@ -106,8 +110,8 @@ const save = async (includeField: boolean): Promise<void> => {
         <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
             <div class="grid gap-4 p-6">
               <DialogHeader>
-                <DialogTitle>{{ section ? 'Renombrar sección' : 'Nueva sección' }}</DialogTitle>
-                <DialogDescription>{{ section ? 'Cambie el nombre de esta sección.' : step === 'choose' ? 'Elija un diseño oficial ya armado o empiece con una sección en blanco.' : step === 1 ? 'Paso 1 de 2: ¿cómo se llama la sección?' : 'Paso 2 de 2: agregue su primer campo o créela vacía.' }}</DialogDescription>
+                <DialogTitle>{{ section ? 'Propiedades de la sección' : 'Nueva sección' }}</DialogTitle>
+                <DialogDescription>{{ section ? 'Cambie el nombre y la orientación de esta sección.' : step === 'choose' ? 'Elija un diseño oficial ya armado o empiece con una sección en blanco.' : step === 1 ? 'Paso 1 de 2: ¿cómo se llama la sección?' : 'Paso 2 de 2: agregue su primer campo o créela vacía.' }}</DialogDescription>
               </DialogHeader>
 
               <form v-if="step === 'choose'" class="flex flex-col gap-4" @submit.prevent="choose">
@@ -153,19 +157,23 @@ const save = async (includeField: boolean): Promise<void> => {
                   <Input id="template-section-title" v-model="title" maxlength="180" placeholder="Ej. Objetivos de la asignatura" :aria-invalid="Boolean(titleError)" :disabled="saving" />
                   <FieldError v-if="titleError" :errors="[titleError]" />
                 </Field>
+                <Field>
+                  <FieldLabel for="section-orientation">Orientación de la hoja</FieldLabel>
+                  <Select v-model="orientation" :disabled="saving"><SelectTrigger id="section-orientation"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="portrait">Vertical</SelectItem><SelectItem value="landscape">Horizontal</SelectItem></SelectContent></Select>
+                </Field>
                 <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
                 <DialogFooter>
                   <Button v-if="!section" type="button" variant="ghost" :disabled="saving" @click="step = 'choose'"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
                   <Button type="button" variant="outline" :disabled="saving" @click="open = false">Cancelar</Button>
                   <Button type="submit" :disabled="saving">
                     <Spinner v-if="saving" data-icon="inline-start" /><Save v-else-if="section" data-icon="inline-start" aria-hidden="true" />
-                    {{ section ? 'Guardar nombre' : 'Continuar' }}
+                    {{ section ? 'Guardar sección' : 'Continuar' }}
                   </Button>
                 </DialogFooter>
               </form>
 
               <form v-else class="flex flex-col gap-4" @submit.prevent="save(true)">
-                <TemplateFieldForm v-model="withField" id-prefix="new-section-field" />
+                <TemplateFieldForm v-model="withField" id-prefix="new-section-field" :variables="variables" />
                 <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
                 <DialogFooter class="sm:justify-between">
                   <Button type="button" variant="ghost" :disabled="saving" @click="step = 1"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>

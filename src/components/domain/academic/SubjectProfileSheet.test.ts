@@ -39,8 +39,8 @@ describe('SubjectProfileSheet', () => {
   it('builds one editor per profile field from the template and saves the edited values', async () => {
     vi.mocked(getSubjectProfile).mockResolvedValue({
       fields: [
-        { id: 'f1', key: 'descripcion', label: 'Descripción de la asignatura', help: null, section: 'Descripción' },
-        { id: 'f2', key: 'vinculacion', label: 'Vinculación con la sociedad', help: null, section: 'Descripción' },
+        { id: 'f1', key: 'descripcion', label: 'Descripción de la asignatura', help: null, section: 'Descripción', quien_llena: 'coordinacion', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
+        { id: 'f2', key: 'vinculacion', label: 'Vinculación con la sociedad', help: null, section: 'Descripción', quien_llena: 'coordinacion', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
       ],
       values: { f1: { type: 'doc', content: [] } },
       complete: false,
@@ -64,8 +64,8 @@ describe('SubjectProfileSheet', () => {
   it('divide la ficha en pestañas por sección y usa el nombre de la sección si el campo no tiene nombre', async () => {
     vi.mocked(getSubjectProfile).mockResolvedValue({
       fields: [
-        { id: 'f1', key: 'descripcion', label: '', help: null, section: 'Descripción de la asignatura' },
-        { id: 'f2', key: 'objetivo', label: 'Objetivo General', help: null, section: 'Objetivos' },
+        { id: 'f1', key: 'descripcion', label: '', help: null, section: 'Descripción de la asignatura', quien_llena: 'coordinacion', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
+        { id: 'f2', key: 'objetivo', label: 'Objetivo General', help: null, section: 'Objetivos', quien_llena: 'coordinacion', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
       ],
       values: {},
       complete: false,
@@ -92,6 +92,6 @@ describe('SubjectProfileSheet', () => {
     const wrapper = mountSheet();
     await wrapper.setProps({ open: true });
     await flushPromises();
-    expect(wrapper.text()).toContain('marcados «se llena desde la ficha»');
+    expect(wrapper.text()).toContain('campos de Coordinación');
   });
 });

@@ -10,6 +10,7 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
 import { freeTextLines, isFreeTextDocument } from '@/components/domain/syllabus/freeTextRender';
 import { reviewAreaPaths } from '@/lib/routes';
 
@@ -55,8 +56,8 @@ onMounted(() => { void load(); });
       <Card v-for="change in data.comparison.changes" :key="`${change.section_key}.${change.field_key}`">
         <CardHeader><div class="flex flex-wrap items-center justify-between gap-3"><div><CardDescription>{{ change.section_title }}</CardDescription><CardTitle>{{ change.label }}</CardTitle></div><Badge variant="outline">{{ changeLabel(change.change) }}</Badge></div></CardHeader>
         <CardContent class="grid gap-4 lg:grid-cols-2">
-          <section class="min-w-0 rounded-md border border-destructive/30 p-4"><h2 class="font-medium text-destructive">Revisión {{ data.comparison.before_revision }}</h2><pre class="mt-3 overflow-x-auto font-sans text-sm whitespace-pre-wrap">{{ formatSide(change.before) }}</pre></section>
-          <section class="min-w-0 rounded-md border border-success/40 p-4"><h2 class="font-medium text-success">Revisión {{ data.comparison.after_revision }}</h2><pre class="mt-3 overflow-x-auto font-sans text-sm whitespace-pre-wrap">{{ formatSide(change.after) }}</pre></section>
+          <section class="min-w-0 rounded-md border border-destructive/30 p-4"><h2 class="font-medium text-destructive">Revisión {{ data.comparison.before_revision }}</h2><FreeTextContent v-if="change.before && isFreeTextDocument(change.before.value)" :value="change.before.value" class="mt-3 overflow-x-auto" /><p v-else class="mt-3 whitespace-pre-wrap text-sm">{{ formatSide(change.before) }}</p></section>
+          <section class="min-w-0 rounded-md border border-success/40 p-4"><h2 class="font-medium text-success">Revisión {{ data.comparison.after_revision }}</h2><FreeTextContent v-if="change.after && isFreeTextDocument(change.after.value)" :value="change.after.value" class="mt-3 overflow-x-auto" /><p v-else class="mt-3 whitespace-pre-wrap text-sm">{{ formatSide(change.after) }}</p></section>
         </CardContent>
       </Card>
       <Card v-if="data.comparison.changes.length === 0"><CardContent class="py-10 text-center text-muted-foreground">No hay diferencias de contenido entre estas revisiones.</CardContent></Card>

@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import FreeTextContent from '@/components/domain/fieldTypes/FreeTextContent.vue';
+import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
 
 const cell = (text: string, attrs: Record<string, unknown> = {}) => ({
   type: 'tableCell',

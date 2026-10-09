@@ -5,7 +5,7 @@ import { getSubjectProfile, saveSubjectProfile, type SubjectProfileField } from 
 import FormDialog from '@/components/domain/FormDialog.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
-import { fieldTypeRegistry } from '@/components/domain/fieldTypes/registry';
+import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -44,7 +44,7 @@ watch(open, async (value) => {
   try {
     const profile = await getSubjectProfile(props.subjectId);
     fields.value = profile.fields;
-    values.value = Object.fromEntries(profile.fields.map((field) => [field.id, profile.values[field.id] ?? null]));
+    values.value = Object.fromEntries(profile.fields.map((field) => [field.id, profile.values[field.id] ?? field.content ?? null]));
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo abrir la ficha.';
   } finally {
@@ -75,7 +75,7 @@ const save = async (close: () => void) => {
         <FieldGroup>
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
           <LoadingSkeleton v-if="loading" variant="form" :rows="4" />
-          <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos marcados «se llena desde la ficha». Pídale a Administración que los marque.</AlertDescription></Alert>
+          <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos de Coordinación. Pídale a Administración que los agregue.</AlertDescription></Alert>
           <template v-else>
             <Tabs v-if="sections.length > 1" v-model="activeSection" class="w-full shrink-0">
               <TabsList class="h-auto min-h-9 w-full shrink-0 flex-wrap justify-start gap-1" aria-label="Secciones de la ficha">
@@ -89,10 +89,9 @@ const save = async (close: () => void) => {
                   <StatusBadge v-if="isEmpty(field.id)" label="Sin llenar" tone="warning" />
                 </div>
                 <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
-                <component
-                  :is="fieldTypeRegistry.texto.EditorComponent"
+                <FreeTextEditor
                   :id="`ficha-${field.id}`"
-                  :field="{ id: field.id, key: field.key, label: field.label, type: 'texto', value: values[field.id] }"
+                  :label="field.label.trim() || sectionOf(field)"
                   :disabled="disabled"
                   :model-value="values[field.id]"
                   @update:model-value="values[field.id] = $event"

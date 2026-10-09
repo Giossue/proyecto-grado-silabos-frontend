@@ -5,13 +5,10 @@ import type { SectionDesign, TemplateField, TemplatePayload, TemplateSectionPayl
 import { deleteField, deleteSection, reorderFields, reorderSections } from '@/api/template-structure';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
-import TemplateLogoControl from '@/components/domain/configuration/TemplateLogoControl.vue';
 import TemplateFieldDialog from '@/components/domain/configuration/TemplateFieldDialog.vue';
 import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
 import TemplateSectionDialog from '@/components/domain/configuration/TemplateSectionDialog.vue';
 import { apiMessage } from '@/components/domain/configuration/templateStructure';
-import TemplateTitleActions from '@/components/domain/configuration/TemplateTitleActions.vue';
-import { sectionFields } from '@/components/domain/fieldTypes/registry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -20,12 +17,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 
-/** Constructor de la plantilla dibujado como hoja A4 con controles sobre lo seleccionado (I-195, etapa 7). */
-const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; designs?: SectionDesign[]; canFormat?: boolean; formatting?: boolean }>();
+
+const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; designs?: SectionDesign[]; canFormat?: boolean; formatting?: boolean; variables?: TemplatePayload['variables'] }>();
 const emit = defineEmits<{ changed: []; format: [] }>();
 
-type Editable = { openEdit: () => void };
-const titleActions = ref<Editable | null>(null);
 const locked = computed(() => Boolean(props.processLock));
 const preview = ref(false);
 const previewLabel = computed(() => preview.value ? 'Salir de la vista previa de toda la plantilla' : 'Vista previa de toda la plantilla');
@@ -36,7 +31,7 @@ const selectSection = (id: string): void => { selectedSection.value = id; select
 const root = ref<HTMLElement | null>(null);
 const available = ref(0);
 let resizeObserver: ResizeObserver | null = null;
-/** Las hojas A4 se achican para caber en pantalla en vez de mostrar una barra de desplazamiento. */
+
 const SHEET_PX = { portrait: 794, landscape: 1123 };
 const scaleFor = (landscape: boolean): number => {
     const width = landscape ? SHEET_PX.landscape : SHEET_PX.portrait;
@@ -80,9 +75,9 @@ onBeforeUnmount(() => {
 const busy = ref(false);
 const error = ref<string | null>(null);
 
-const isLandscape = (section: TemplateSectionPayload): boolean => section.blocks.some((block) => block.page_orientation === 'landscape');
-const sections = computed(() => props.template.sections.map((section, index) => ({ section, fields: sectionFields(section), landscape: isLandscape(section), index })));
-/** Hojas consecutivas con la misma orientación: una sección horizontal va en su propia hoja, aparte de las verticales. */
+const isLandscape = (section: TemplateSectionPayload): boolean => section.orientation === 'landscape';
+const sections = computed(() => props.template.sections.map((section, index) => ({ section, fields: section.fields, landscape: isLandscape(section), index })));
+
 const sheets = computed(() => {
     const groups: Array<{ landscape: boolean; items: typeof sections.value }> = [];
     for (const item of sections.value) {
@@ -181,16 +176,13 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       </Tooltip>
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
-          <img v-if="preview" :src="logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain" @load="paginate">
-          <TemplateLogoControl v-else :logo-url="logos.institution" :disabled="locked" />
+          <img :src="logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain" @load="paginate">
           <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain" @load="paginate">
         </div>
-        <div :class="cn('relative flex items-center justify-center rounded-sm px-2 py-1', !preview && 'group outline-offset-2 hover:outline hover:outline-1 hover:outline-primary/40')">
+        <div class="flex items-center justify-center px-2 py-1">
           <h2 class="template-sheet-title">{{ template.titleBlock.text }}</h2>
-          <Button v-if="!preview" type="button" variant="outline" size="sm" class="absolute -top-3 right-0 bg-background opacity-0 group-hover:opacity-100 focus-visible:opacity-100" :disabled="locked" @click="titleActions?.openEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar título</Button>
         </div>
       </header>
-      <TemplateTitleActions v-if="sheetIndex === 0 && !preview" ref="titleActions" :template-id="template.id" :title="template.titleBlock.text" />
 
       <div v-if="sections.length === 0 && sheetIndex === 0 && !preview" class="flex flex-1 flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border p-8 text-center">
         <p class="text-base font-medium">Esta hoja está en blanco</p>
@@ -218,14 +210,14 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
         <ol class="flex flex-col gap-3">
           <template v-for="(field, fieldIndex) in fields" :key="field.id">
-          <li :data-field="field.id" :data-field-kind="field.type" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
+          <li :data-field="field.id" :data-field-responsible="field.quien_llena" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
             <TemplateInsertPoint v-if="!preview && !locked" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="top" gap="field" @insert="fieldDialog = { open: true, sectionId: section.id, field: null, index: fieldIndex }" />
             <TemplateInsertPoint v-if="!preview && !locked && fieldIndex === fields.length - 1" :actions="[{ key: 'section', label: 'Nueva sección' }, { key: 'field', label: 'Agregar campo' }]" position="bottom" gap="field" @insert="insertAfterLastField($event, section.id, sectionIndex)" />
             <span v-if="!preview" aria-hidden="true" :class="cn('pointer-events-none absolute top-1 right-full mr-2 whitespace-nowrap rounded bg-primary px-1.5 py-0.5 font-sans text-xs font-medium text-primary-foreground group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">Campo</span>
-            <TemplateFieldContent v-if="preview" :field="field" preview />
+            <TemplateFieldContent v-if="preview" :field="field" :variables="variables" preview />
             <!-- eslint-disable-next-line vuejs-accessibility/no-redundant-roles -->
             <Button v-else as="div" variant="ghost" role="button" tabindex="0" class="h-auto w-full min-w-0 cursor-pointer flex-col items-stretch gap-1 whitespace-normal rounded-sm p-0 text-left font-normal hover:bg-transparent" :aria-pressed="selectedField === field.id" :aria-label="`Campo ${fieldName(field)}`" @click="selectField(field.id)" @keydown.enter.self.prevent="selectField(field.id)" @keydown.space.self.prevent="selectField(field.id)">
-              <TemplateFieldContent :field="field" class="pointer-events-none" />
+              <TemplateFieldContent :field="field" :variables="variables" class="pointer-events-none" />
             </Button>
             <div v-if="!preview" :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedField === field.id ? 'opacity-100' : 'opacity-0')">
               <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || fieldIndex === 0" :aria-label="`Subir el campo ${fieldName(field)}`" @click="moveField(section.id, fields, fieldIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
@@ -243,8 +235,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     </article>
     </div>
 
-    <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" :designs="designs" @saved="placeSection" />
-    <TemplateFieldDialog v-model:open="fieldDialog.open" :template-id="template.id" :section-id="fieldDialog.sectionId" :field="fieldDialog.field" :used-keys="usedFieldKeys" @saved="placeField" />
+    <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" :variables="variables" :designs="designs" @saved="placeSection" />
+    <TemplateFieldDialog v-model:open="fieldDialog.open" :template-id="template.id" :section-id="fieldDialog.sectionId" :field="fieldDialog.field" :used-keys="usedFieldKeys" :variables="variables" @saved="placeField" />
 
     <Dialog :open="removal !== null" @update:open="(value: boolean) => { if (!value) removal = null }">
       <DialogContent>

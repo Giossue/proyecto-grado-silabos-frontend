@@ -1,13 +1,12 @@
-import { fieldTypeEntry, fieldTypeRegistry } from '@/components/domain/fieldTypes/registry';
-import { fieldConfig } from '@/components/domain/fieldTypes/fieldConfig';
 import { ApiError } from '@/api/client';
 import type { FieldInput } from '@/api/template-structure';
 import type { TemplateField } from '@/api/template';
-import type { FieldTypeKey } from '@/types/configuration';
+import { emptyDocument, type FieldResponsible } from '@/types/configuration';
+import type { DocumentNode } from '@/lib/templateDocument';
 
-export type FieldForm = { type: FieldTypeKey; label: string; help: string; config: Record<string, unknown> };
+export type FieldForm = { quien_llena: FieldResponsible; label: string; help: string; content: DocumentNode };
 
-/** Clave técnica (`a-z0-9_`) a partir de un nombre; distinta de las ya usadas. */
+
 export const uniqueKey = (name: string, fallback: string, used: Iterable<string>): string => {
     const taken = new Set(used);
     const base = (name.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').replace(/^[0-9]+/, '').slice(0, 80) || fallback);
@@ -16,32 +15,21 @@ export const uniqueKey = (name: string, fallback: string, used: Iterable<string>
     return key;
 };
 
-export const newFieldForm = (type: FieldTypeKey = 'texto'): FieldForm => ({
-    type,
-    label: '',
-    help: '',
-    config: structuredClone(fieldTypeRegistry[type].defaultConfig) as Record<string, unknown>,
+export const newFieldForm = (): FieldForm => ({ quien_llena: 'docente', label: '', help: '', content: emptyDocument() });
+export const formFromField = (field: TemplateField): FieldForm => ({
+    quien_llena: field.quien_llena,
+    label: field.label,
+    help: field.help ?? '',
+    content: JSON.parse(JSON.stringify(field.content)) as DocumentNode,
 });
-
-export const formFromField = (field: TemplateField): FieldForm => {
-    const entry = fieldTypeEntry(field.type);
-    return {
-        type: (entry ? field.type : 'texto') as FieldTypeKey,
-        label: field.label,
-        help: field.help ?? '',
-        config: structuredClone({ ...(entry?.defaultConfig ?? {}), ...fieldConfig(field) }) as Record<string, unknown>,
-    };
-};
-
-export const fieldFormError = (form: FieldForm): string | null => fieldTypeRegistry[form.type].validateConfig(form.config);
-
 export const fieldInput = (form: FieldForm): FieldInput => ({
     label: form.label.trim(),
     help: form.help.trim() === '' ? null : form.help.trim(),
-    config: form.config,
+    quien_llena: form.quien_llena,
+    content: form.content,
 });
 
-/** Primer mensaje legible de un error de la API (incluye `config.*` de la configuración del tipo). */
+
 export const apiMessage = (reason: unknown, fallback: string): string => {
     if (reason instanceof ApiError) return Object.values(reason.errors)[0]?.[0] ?? reason.message;
     return fallback;

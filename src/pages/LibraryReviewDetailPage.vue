@@ -9,10 +9,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { commentLibraryReview, getLibraryReview, verifyLibraryReview, type LibraryReviewDetail } from '@/api/library';
-import type { SnapshotField } from '@/api/reviews';
-import FieldView from '@/components/domain/fieldTypes/FieldView.vue';
-import { sectionFields } from '@/components/domain/fieldTypes/registry';
-import type { TypedField } from '@/types/configuration';
+import FieldView from '@/components/domain/syllabus/FieldView.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -45,7 +42,6 @@ const verifyKey = ref('');
 
 const formatDate = (value: string): string =>
   formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' });
-const typed = (field: SnapshotField): TypedField => field;
 const toggleReason = (code: string, checked: boolean | 'indeterminate'): void => {
   selectedReasons.value = checked === true
     ? [...selectedReasons.value, code]
@@ -156,7 +152,7 @@ onMounted(load);
         <Card v-for="section in review.sections" :id="`section-${section.key}`" :key="section.key">
           <CardHeader><CardTitle>{{ section.title }}</CardTitle><CardDescription>Libros que propuso el docente en la revisión {{ review.revision_number }}. Solo lectura.</CardDescription></CardHeader>
           <CardContent class="flex flex-col gap-6">
-            <FieldView v-for="field in sectionFields(section)" :key="field.key" :field="typed(field)" />
+            <FieldView v-for="field in section.fields" :key="field.key" :field="field" />
           </CardContent>
         </Card>
         <Card v-if="review.sections.length === 0">

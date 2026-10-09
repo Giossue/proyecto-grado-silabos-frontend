@@ -1,37 +1,27 @@
 <script setup lang="ts">
-import { fieldTypeRegistry, manualFieldTypeKeys } from '@/components/domain/fieldTypes/registry';
-import { newFieldForm, type FieldForm } from '@/components/domain/configuration/templateStructure';
-import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
+import type { FieldForm } from '@/components/domain/configuration/templateStructure';
+import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
+import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { FieldTypeKey } from '@/types/configuration';
+import { FIELD_RESPONSIBLES, type FieldResponsible } from '@/types/configuration';
+import type { TemplateVariable } from '@/lib/templateDocument';
 
-/** Formulario de un campo: tipo (del registro), nombre opcional y la configuración que aporta cada tipo. */
-const props = defineProps<{ idPrefix: string; lockType?: boolean }>();
+const props = defineProps<{ idPrefix: string; variables?: TemplateVariable[] }>();
 const form = defineModel<FieldForm>({ required: true });
-
-const chooseType = (type: FieldTypeKey): void => {
-    if (type === form.value.type) return;
-    form.value = { ...newFieldForm(type), label: form.value.label, help: form.value.help };
-};
 </script>
 
 <template>
   <FieldGroup>
-    <FieldSet v-if="!lockType">
-      <FieldLegend variant="label">¿Quién escribe este campo?</FieldLegend>
-      <RadioGroup :model-value="form.type" class="gap-2" @update:model-value="chooseType($event as FieldTypeKey)">
-        <label v-for="key in manualFieldTypeKeys" :key="key" :for="`${props.idPrefix}-type-${key}`" class="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[[data-state=checked]]:border-primary">
-          <RadioGroupItem :id="`${props.idPrefix}-type-${key}`" :value="key" class="mt-0.5" />
-          <span class="flex flex-col gap-0.5 text-sm">
-            <span class="font-medium">{{ fieldTypeRegistry[key].adminLabel }}</span>
-            <span class="text-muted-foreground">{{ fieldTypeRegistry[key].adminHint }}</span>
-          </span>
+    <FieldSet>
+      <FieldLegend variant="label">¿Quién llena este campo?</FieldLegend>
+      <RadioGroup :model-value="form.quien_llena" class="gap-2" @update:model-value="form.quien_llena = $event as FieldResponsible">
+        <label v-for="item in FIELD_RESPONSIBLES" :key="item.value" :for="`${props.idPrefix}-responsible-${item.value}`" class="flex cursor-pointer items-start gap-3 rounded-md border p-3 has-[[data-state=checked]]:border-primary">
+          <RadioGroupItem :id="`${props.idPrefix}-responsible-${item.value}`" :value="item.value" class="mt-0.5" />
+          <span class="flex flex-col gap-0.5 text-sm"><span class="font-medium">{{ item.label }}</span><span class="text-muted-foreground">{{ item.hint }}</span></span>
         </label>
       </RadioGroup>
     </FieldSet>
-    <p v-else class="text-sm"><span class="font-medium">{{ fieldTypeRegistry[form.type].adminLabel }}</span>. {{ fieldTypeRegistry[form.type].manual ? 'El tipo no se puede cambiar; para otro tipo, cree un campo nuevo.' : 'Este campo viene de un diseño oficial: puede cambiar su nombre y su contenido, pero no su tipo.' }}</p>
-
     <Field>
       <FieldLabel :for="`${props.idPrefix}-label`">Nombre del campo (opcional)</FieldLabel>
       <Input :id="`${props.idPrefix}-label`" v-model="form.label" maxlength="180" placeholder="Ej. Descripción de la asignatura" />
@@ -41,9 +31,9 @@ const chooseType = (type: FieldTypeKey): void => {
       <FieldLabel :for="`${props.idPrefix}-help`">Ayuda para quien lo llena (opcional)</FieldLabel>
       <Input :id="`${props.idPrefix}-help`" v-model="form.help" maxlength="2000" />
     </Field>
-
-    <FieldContent>
-      <component :is="fieldTypeRegistry[form.type].BuilderComponent" :key="form.type" v-model="form.config" />
-    </FieldContent>
+    <Field>
+      <FieldLabel :for="`${props.idPrefix}-content`">Contenido inicial</FieldLabel>
+      <FreeTextEditor :id="`${props.idPrefix}-content`" v-model="form.content" label="Contenido inicial" :variables="variables" />
+    </Field>
   </FieldGroup>
 </template>
