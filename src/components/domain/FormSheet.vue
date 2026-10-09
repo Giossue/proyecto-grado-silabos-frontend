@@ -62,10 +62,9 @@ const close = (): void => {
             </slot>
         </SheetTrigger>
         <SheetContent
-            side="right"
             :class="
-                cn('w-full', {
-                    'h-dvh max-w-none border-0 sm:max-w-none': fullScreen,
+                cn({
+                    'top-0 left-0 h-dvh max-h-none w-full max-w-none translate-x-0 translate-y-0 rounded-none border-0 sm:max-w-none': fullScreen,
                     'sm:max-w-4xl': wide && !fullScreen,
                     'sm:max-w-lg': !wide && !fullScreen,
                 })

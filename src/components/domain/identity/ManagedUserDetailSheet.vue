@@ -89,7 +89,7 @@ const currentAssignments = computed(() =>
 
 <template>
     <Sheet v-model:open="open">
-        <SheetContent side="right" class="w-full sm:max-w-lg">
+        <SheetContent class="sm:max-w-lg">
             <SheetHeader>
                 <SheetTitle>{{ editing ? 'Editar usuario' : 'Datos de la cuenta' }}</SheetTitle>
                 <SheetDescription :class="editing ? '' : 'sr-only'">{{ editing ? 'Corrija su identidad, quite un rol o agregue una nueva asignación' : 'Ficha de solo lectura de la cuenta' }}</SheetDescription>
