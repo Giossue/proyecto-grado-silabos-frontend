@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarCheck, ChevronDown, ListChecks, Plus, Trash2 } from '@lucide/vue';
+import { CalendarCheck, ChevronDown, EllipsisVertical, ListChecks, Plus, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { preparePeriod, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
@@ -9,6 +9,17 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { FieldGroup } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -53,6 +64,9 @@ const reset = () => {
   updateProposal();
 };
 const addParallel = (row: PreparationRow) => row.parallels.push({ code: nextParallelCode(row.parallels), shift: props.options.shiftOptions[0]?.value ?? '', teacherId: '' });
+const addParallelToCycle = (rowsOfCycle: PreparationRow[]) => rowsOfCycle.forEach(addParallel);
+const setCycleShift = (rowsOfCycle: PreparationRow[], shift: string) => rowsOfCycle.forEach((row) => row.parallels.forEach((parallel) => { parallel.shift = shift; }));
+const setCycleTeacher = (rowsOfCycle: PreparationRow[], teacherId: string) => rowsOfCycle.forEach((row) => row.parallels.forEach((parallel) => { parallel.teacherId = teacherId; }));
 const removeParallel = (row: PreparationRow, index: number) => row.parallels.length > 1 && row.parallels.splice(index, 1);
 const submit = async (close: () => void) => {
   if (props.disabled || !periodId.value || !rows.value.length || invalidRows.value) return;
@@ -103,10 +117,40 @@ watch(periodId, () => { if (open.value) updateProposal(); });
             <p v-if="!rows.length" class="text-sm text-muted-foreground">Todas las materias activas ya están programadas en este período. Agregue paralelos desde las acciones de cada materia.</p>
             <div v-else class="flex flex-col gap-2">
               <Collapsible v-for="group in cycles" :key="group.cycle" class="rounded-md border" :open="openCycles.includes(group.cycle)" @update:open="toggleCycle(group.cycle, $event)">
-                <CollapsibleTrigger class="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm font-medium [&[data-state=open]>svg]:rotate-180">
-                  <span>Ciclo {{ group.cycle }} <span class="font-normal text-muted-foreground">· {{ group.rows.length }} {{ group.rows.length === 1 ? 'materia' : 'materias' }}</span></span>
-                  <ChevronDown class="size-4 transition-transform" aria-hidden="true" />
-                </CollapsibleTrigger>
+                <div class="flex items-center gap-1 pr-2">
+                  <CollapsibleTrigger class="flex min-w-0 flex-1 items-center justify-between gap-2 px-3 py-2 text-left text-sm font-medium [&[data-state=open]>svg]:rotate-180">
+                    <span>Ciclo {{ group.cycle }} <span class="font-normal text-muted-foreground">· {{ group.rows.length }} {{ group.rows.length === 1 ? 'materia' : 'materias' }}</span></span>
+                    <ChevronDown class="size-4 transition-transform" aria-hidden="true" />
+                  </CollapsibleTrigger>
+                  <DropdownMenu>
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <DropdownMenuTrigger as-child>
+                          <Button type="button" size="icon-sm" variant="ghost" :aria-label="`Acciones del ciclo ${group.cycle}`"><EllipsisVertical aria-hidden="true" /></Button>
+                        </DropdownMenuTrigger>
+                      </TooltipTrigger>
+                      <TooltipContent>Acciones del ciclo</TooltipContent>
+                    </Tooltip>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Todo el ciclo {{ group.cycle }}</DropdownMenuLabel>
+                      <DropdownMenuItem @select="addParallelToCycle(group.rows)">Agregar un paralelo a cada materia</DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>Asignar jornada</DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent>
+                          <DropdownMenuItem v-for="option in options.shiftOptions" :key="option.value" @select="setCycleShift(group.rows, option.value)">{{ option.label }}</DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger>Asignar docente</DropdownMenuSubTrigger>
+                        <DropdownMenuSubContent class="max-h-72 overflow-y-auto">
+                          <DropdownMenuItem @select="setCycleTeacher(group.rows, '')">Sin docente</DropdownMenuItem>
+                          <DropdownMenuItem v-for="teacher in teacherUsers" :key="teacher.id" @select="setCycleTeacher(group.rows, teacher.id)">{{ teacher.name }}</DropdownMenuItem>
+                        </DropdownMenuSubContent>
+                      </DropdownMenuSub>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 <CollapsibleContent class="divide-y border-t">
                   <div v-for="row in group.rows" :key="row.id" class="grid gap-2 px-3 py-3 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
                     <span class="text-sm">{{ row.name }}</span>
