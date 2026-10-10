@@ -234,7 +234,7 @@ describe("CoordinationReviewDetailPage", () => {
     const text = wrapper.text();
     expect(text).toContain("Contenido enviado");
     expect(text).toContain("Contenido heredado");
-    expect(text).toContain("Coordinación");
+    expect(text).toContain("Carrera");
     expect(wrapper.get(".free-text-table").text()).toContain("Semana 1");
     expect(text).toContain("FACULTAD: Ciencias");
     expect(text).toContain("Texto institucional");

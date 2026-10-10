@@ -14,7 +14,7 @@ export type DocumentField = {
 };
 export const FIELD_RESPONSIBLES: Array<{ value: FieldResponsible; label: string; hint: string }> = [
     { value: 'docente', label: 'Docente', hint: 'Escribe sobre el contenido inicial de la plantilla.' },
-    { value: 'coordinacion', label: 'Coordinación', hint: 'Lo llena en la ficha de la asignatura. El docente lo consulta.' },
+    { value: 'coordinacion', label: 'Carrera', hint: 'Lo llena la carrera en la ficha de la asignatura. El docente lo consulta.' },
     { value: 'institucional', label: 'Fijo', hint: 'Contenido de la plantilla, igual para todos y de solo lectura.' },
 ];
 export const responsibleLabel = (value: FieldResponsible): string => FIELD_RESPONSIBLES.find((item) => item.value === value)?.label ?? value;
