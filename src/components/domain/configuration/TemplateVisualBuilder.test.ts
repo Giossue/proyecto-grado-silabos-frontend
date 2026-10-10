@@ -20,7 +20,12 @@ const template: Template = {
   ],
 };
 
-const mountBuilder = (props: { processLock?: string | null } = {}) => mount(TemplateVisualBuilder, { props: { template, ...props }, attachTo: document.body });
+const presets = [
+  { key: 'identificacion' as const, label: 'Datos de identificación', quien_llena: 'institucional' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [] }] } as DocumentNode },
+  { key: 'planificacion' as const, label: 'Unidades', quien_llena: 'docente' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [] }] } as DocumentNode },
+  { key: 'firmas' as const, label: 'Revisión y aprobación', quien_llena: 'institucional' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [] }] } as DocumentNode },
+];
+const mountBuilder = (props: { processLock?: string | null } = {}) => mount(TemplateVisualBuilder, { props: { template, presets, ...props }, attachTo: document.body });
 
 const body = () => document.body;
 const byText = (selector: string, text: string) => [...body().querySelectorAll<HTMLElement>(selector)].find((el) => el.textContent?.trim() === text);
@@ -71,6 +76,14 @@ describe('TemplateVisualBuilder', () => {
     (field.vm as unknown as { $: { setupState: { draft: { quien_llena: string } } } }).$.setupState.draft.quien_llena = 'institucional';
     await vi.advanceTimersByTimeAsync(10);
     expect(structure.updateField).toHaveBeenCalledWith('t1', 'f1', expect.objectContaining({ quien_llena: 'institucional' }));
+  });
+
+  it('aplica una plantilla lista: pone su nombre, su contenido y quién lo llena, y lo guarda', async () => {
+    const wrapper = mountBuilder();
+    const field = wrapper.findAllComponents({ name: 'TemplateSheetField' })[0]!;
+    (field.vm as unknown as { $: { setupState: { applyPreset: (preset: unknown) => void } } }).$.setupState.applyPreset(presets[0]);
+    await vi.advanceTimersByTimeAsync(900);
+    expect(structure.updateField).toHaveBeenCalledWith('t1', 'f1', expect.objectContaining({ label: 'Datos de identificación', quien_llena: 'institucional', content: presets[0]!.content }));
   });
 
   it('agrega el campo vacío de inmediato, en la posición donde se pasó el cursor', async () => {

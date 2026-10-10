@@ -166,7 +166,7 @@ onBeforeUnmount(() => {
             </div>
         </div>
 
-        <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" @changed="reloadFromMutation" />
+        <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" />
         <Dialog v-model:open="resetOpen">
             <DialogContent class="sm:max-w-md">
                 <DialogHeader>

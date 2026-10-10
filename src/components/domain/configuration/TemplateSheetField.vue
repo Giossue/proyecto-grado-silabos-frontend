@@ -2,22 +2,22 @@
 import { ArrowDown, ArrowUp, ChevronDown, CircleHelp, Trash2 } from '@lucide/vue';
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { updateField } from '@/api/template-structure';
-import type { TemplateField } from '@/api/template';
+import type { TemplateField, TemplatePreset } from '@/api/template';
 import { apiMessage } from '@/components/domain/configuration/templateStructure';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
+import type { DocumentNode } from '@/lib/templateDocument';
 import { cn } from '@/lib/utils';
 import { FIELD_RESPONSIBLES, responsibleLabel, type FieldResponsible } from '@/types/configuration';
 
 const props = defineProps<{
     templateId: string;
     field: TemplateField;
-    variables?: TemplateVariable[];
+    presets?: TemplatePreset[];
     locked: boolean;
     selected: boolean;
     focusOnCreate?: boolean;
@@ -92,6 +92,11 @@ onBeforeUnmount(() => {
     if (timer) void persist();
 });
 
+const applyPreset = (preset: TemplatePreset): void => {
+    draft.label = preset.label;
+    draft.quien_llena = preset.quien_llena;
+    draft.content = JSON.parse(JSON.stringify(preset.content)) as DocumentNode;
+};
 const name = (): string => draft.label.trim() || 'Campo sin nombre';
 const statusText = (): string => status.value === 'saving' ? 'Guardando…' : status.value === 'dirty' ? 'Sin guardar' : '';
 </script>
@@ -109,7 +114,7 @@ const statusText = (): string => status.value === 'saving' ? 'Guardando…' : st
       />
       <span class="text-xs text-muted-foreground" aria-live="polite">{{ statusText() }}</span>
     </div>
-    <FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="draft.content" :label="`Contenido de ${name()}`" :variables="variables" :disabled="locked" :toolbar="selected && !locked" bare />
+    <FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="draft.content" :label="`Contenido de ${name()}`" :disabled="locked" :toolbar="selected && !locked" bare />
     <div :class="cn('absolute -top-7 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selected ? 'opacity-100' : 'opacity-0')">
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
@@ -119,6 +124,15 @@ const statusText = (): string => status.value === 'saving' ? 'Guardando…' : st
           <DropdownMenuRadioGroup :model-value="draft.quien_llena" @update:model-value="draft.quien_llena = $event as FieldResponsible">
             <DropdownMenuRadioItem v-for="item in FIELD_RESPONSIBLES" :key="item.value" :value="item.value">{{ item.label }}</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
+          <template v-if="presets?.length">
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>Plantilla</DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem v-for="preset in presets" :key="preset.key" @select="applyPreset(preset)">{{ preset.label }}</DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </template>
         </DropdownMenuContent>
       </DropdownMenu>
       <Popover>

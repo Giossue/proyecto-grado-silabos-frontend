@@ -19,7 +19,7 @@ import { cn } from '@/lib/utils';
 import { emptyDocument } from '@/types/configuration';
 
 
-const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; variables?: TemplatePayload['variables'] }>();
+const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; variables?: TemplatePayload['variables']; presets?: TemplatePayload['presets'] }>();
 const emit = defineEmits<{ changed: [] }>();
 
 const locked = computed(() => Boolean(props.processLock));
@@ -249,7 +249,7 @@ const failed = (message: string): void => { error.value = message; };
               v-else
               :template-id="template.id"
               :field="field"
-              :variables="variables"
+              :presets="presets"
               :locked="locked"
               :selected="selectedField === field.id"
               :focus-on-create="focusId === field.id"
