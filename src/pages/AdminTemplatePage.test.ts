@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { getSession } from "@/api/session";
-import { clearTemplate, createTemplate, formatTemplate, getTemplate, type TemplatePayload } from "@/api/template";
+import { clearTemplate, createTemplate, formatTemplate, getTemplate, getTemplateJson, type TemplatePayload } from "@/api/template";
 
 vi.mock("vue-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
@@ -19,6 +19,7 @@ vi.mock("@/api/template", async (importOriginal) => ({
   createTemplate: vi.fn(),
   formatTemplate: vi.fn(),
   clearTemplate: vi.fn(),
+  getTemplateJson: vi.fn(),
 
 }));
 
@@ -169,6 +170,18 @@ describe("AdminTemplatePage", () => {
     await flushPromises();
 
     expect(formatTemplate).toHaveBeenCalledWith('template-1');
+  });
+
+  it("ofrece exportar y editar la plantilla como JSON", async () => {
+    vi.mocked(getTemplateJson).mockReset().mockResolvedValue({ version: 1, sections: [] });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find('button[aria-label="Exportar JSON"]').exists()).toBe(true);
+    await wrapper.get('button[aria-label="Editar JSON"]').trigger('click');
+    await flushPromises();
+    expect(document.body.textContent).toContain('Plantilla como JSON');
+    expect(getTemplateJson).toHaveBeenCalledWith('template-1');
   });
 
   it("deshabilita el restablecer con un proceso abierto", async () => {

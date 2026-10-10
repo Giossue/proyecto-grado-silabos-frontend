@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { RotateCcw, Trash2 } from '@lucide/vue';
+import { Braces, Download, RotateCcw, Trash2 } from '@lucide/vue';
 import { ApiError } from '@/api/client';
-import { clearTemplate, createTemplate, formatTemplate, getTemplate, type TemplatePayload } from '@/api/template';
+import { clearTemplate, createTemplate, formatTemplate, getTemplate, getTemplateJson, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
+import TemplateJsonDialog from '@/components/domain/configuration/TemplateJsonDialog.vue';
+import { downloadJson } from '@/lib/downloadJson';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -22,6 +24,7 @@ const payload = ref<TemplatePayload | null>(null);
 const loading = ref(true);
 const resetOpen = ref(false);
 const clearOpen = ref(false);
+const jsonOpen = ref(false);
 const formatting = ref(false);
 const loadError = ref<string | null>(null);
 const SHEET_WIDTH = 794;
@@ -103,6 +106,17 @@ const clear = async (): Promise<void> => {
     }
 };
 
+const exportJson = async (): Promise<void> => {
+    const templateId = payload.value?.template?.id;
+    if (!templateId) return;
+    actionError.value = null;
+    try {
+        downloadJson(JSON.stringify(await getTemplateJson(templateId), null, 2), 'plantilla-silabo.json');
+    } catch (reason) {
+        actionError.value = reason instanceof ApiError ? reason.message : 'No se pudo exportar la plantilla.';
+    }
+};
+
 const reloadFromMutation = (): void => {
     void load({ silent: true });
 };
@@ -149,6 +163,22 @@ onBeforeUnmount(() => {
             <div class="flex justify-end gap-2">
                 <Tooltip>
                     <TooltipTrigger as-child>
+                        <Button type="button" variant="outline" size="icon" aria-label="Exportar JSON" @click="exportJson">
+                            <Download aria-hidden="true" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Exportar JSON</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <Button type="button" variant="outline" size="icon" aria-label="Editar JSON" @click="jsonOpen = true">
+                            <Braces aria-hidden="true" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Editar JSON</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
                         <Button type="button" variant="outline" size="icon" aria-label="Restablecer a plantilla oficial" :disabled="Boolean(payload?.processLock) || formatting" @click="resetOpen = true">
                             <RotateCcw aria-hidden="true" />
                         </Button>
@@ -167,6 +197,7 @@ onBeforeUnmount(() => {
         </div>
 
         <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" />
+        <TemplateJsonDialog v-model:open="jsonOpen" :template-id="template.id" :locked="Boolean(payload?.processLock)" @imported="reloadFromMutation" />
         <Dialog v-model:open="resetOpen">
             <DialogContent class="sm:max-w-md">
                 <DialogHeader>
