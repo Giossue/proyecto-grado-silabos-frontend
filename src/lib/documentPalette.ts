@@ -33,15 +33,6 @@ export const initializeDocumentPalette = (): void => {
     Object.entries(properties).forEach(([property, value]) => document.documentElement.style.setProperty(property, value));
 };
 
-export const DOCUMENT_TEXT_COLORS = [
-    { label: 'Negro', value: DOCUMENT_COLORS.text },
-    { label: 'Azul institucional', value: DOCUMENT_COLORS.institutionalBlue },
-    { label: 'Azul oscuro', value: DOCUMENT_COLORS.darkBlue },
-    { label: 'Rojo', value: DOCUMENT_COLORS.red },
-    { label: 'Verde', value: DOCUMENT_COLORS.green },
-    { label: 'Gris', value: DOCUMENT_COLORS.mutedText },
-] as const;
-
 export const DOCUMENT_CELL_COLORS = [
     { label: 'Sin fondo', value: null },
     { label: 'Blanco', value: DOCUMENT_COLORS.paper },

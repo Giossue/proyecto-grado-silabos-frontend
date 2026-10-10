@@ -9,13 +9,6 @@ export type DocumentNode = {
     content?: DocumentNode[];
 };
 export type TemplateVariable = { key: string; label: string; sample: string; type?: 'texto' | 'lista' | 'tabla' };
-export const DOCUMENT_FONTS = [
-    'Arial',
-    'Calibri',
-    'Times New Roman',
-    'Verdana',
-    'Georgia',
-];
 export const paragraph = (content: DocumentNode[] = []): DocumentNode => ({
     type: 'paragraph',
     content,

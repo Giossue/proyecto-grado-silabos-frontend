@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { Table, TableRow } from '@tiptap/extension-table';
-import { Color, FontFamily, TextStyle } from '@tiptap/extension-text-style';
-import TextAlign from '@tiptap/extension-text-align';
 import StarterKit from '@tiptap/starter-kit';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { Bold, Italic, Underline, List, ListOrdered, Table2, Undo2, Redo2 } from '@lucide/vue';
@@ -9,9 +7,9 @@ import { onBeforeUnmount, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
-import { DOCUMENT_FONTS, type DocumentNode, type TemplateVariable } from '@/lib/templateDocument';
+import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 import { emptyDocument } from '@/types/configuration';
-import { DOCUMENT_TEXT_COLORS, DOCUMENT_CELL_COLORS } from '@/lib/documentPalette';
+import { DOCUMENT_CELL_COLORS } from '@/lib/documentPalette';
 
 const props = withDefaults(defineProps<{
     id: string;
@@ -27,7 +25,6 @@ const editor = useEditor({
     editorProps: { attributes: { id: props.id, 'aria-label': props.label, role: 'textbox', 'aria-multiline': 'true', class: 'free-text-editor__content' } },
     extensions: [
         StarterKit.configure({ heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false }),
-        TextStyle, Color, FontFamily, TextAlign.configure({ types: ['paragraph'] }),
         Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
         DocumentVariable.configure({ labels: Object.fromEntries(props.variables.map((item) => [item.key, item.label])) }),
     ],
@@ -59,18 +56,6 @@ defineExpose({ editor });
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" :disabled="disabled" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"><Table2 aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Deshacer" :disabled="disabled || !editor.can().undo()" @click="editor.chain().focus().undo().run()"><Undo2 aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Rehacer" :disabled="disabled || !editor.can().redo()" @click="editor.chain().focus().redo().run()"><Redo2 aria-hidden="true" /></Button>
-      <Select :disabled="disabled || editor.isActive('table')" @update:model-value="editor?.chain().focus().setFontFamily(String($event)).run()">
-        <SelectTrigger class="h-8 w-36" aria-label="Fuente del texto"><SelectValue placeholder="Fuente del texto" /></SelectTrigger>
-        <SelectContent><SelectItem v-for="font in DOCUMENT_FONTS" :key="font" :value="font">{{ font }}</SelectItem></SelectContent>
-      </Select>
-      <Select :disabled="disabled" @update:model-value="editor?.chain().focus().setColor(String($event)).run()">
-        <SelectTrigger class="h-8 w-36" aria-label="Color del texto"><SelectValue placeholder="Color del texto" /></SelectTrigger>
-        <SelectContent><SelectItem v-for="color in DOCUMENT_TEXT_COLORS" :key="color.value" :value="color.value">{{ color.label }}</SelectItem></SelectContent>
-      </Select>
-      <Select :disabled="disabled" @update:model-value="editor?.chain().focus().setTextAlign(String($event)).run()">
-        <SelectTrigger class="h-8 w-36" aria-label="Alineación"><SelectValue placeholder="Alineación" /></SelectTrigger>
-        <SelectContent><SelectItem value="left">Izquierda</SelectItem><SelectItem value="center">Centro</SelectItem><SelectItem value="right">Derecha</SelectItem><SelectItem value="justify">Justificado</SelectItem></SelectContent>
-      </Select>
       <Select v-if="variables.length" :disabled="disabled" @update:model-value="insertVariable">
         <SelectTrigger class="h-8 w-44" aria-label="Insertar dato del sistema"><SelectValue placeholder="Dato del sistema" /></SelectTrigger>
         <SelectContent><SelectItem v-for="variable in variables" :key="variable.key" :value="variable.key">{{ variable.label }}</SelectItem></SelectContent>
