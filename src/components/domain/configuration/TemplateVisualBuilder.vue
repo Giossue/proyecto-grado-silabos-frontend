@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { createField, createSection, deleteField, deleteSection, renameSection, reorderFields, reorderSections } from '@/api/template-structure';
@@ -11,7 +11,6 @@ import { apiMessage, uniqueKey } from '@/components/domain/configuration/templat
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -228,10 +227,12 @@ const failed = (message: string): void => { error.value = message; };
             @keydown.enter.prevent="blurTarget($event)"
           />
           <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
-            <Select :model-value="section.orientation" :disabled="locked || busy" @update:model-value="setOrientation(section, $event as 'portrait' | 'landscape')">
-              <SelectTrigger class="h-7 w-28 border-0 text-xs shadow-none" :aria-label="`Orientación de la sección ${section.title}`"><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="portrait">Vertical</SelectItem><SelectItem value="landscape">Horizontal</SelectItem></SelectContent>
-            </Select>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy" :aria-label="`Orientación de la sección ${section.title}`" :aria-pressed="section.orientation === 'landscape'" @click="setOrientation(section, section.orientation === 'landscape' ? 'portrait' : 'landscape')"><RectangleHorizontal v-if="section.orientation === 'landscape'" aria-hidden="true" /><RectangleVertical v-else aria-hidden="true" /></Button>
+              </TooltipTrigger>
+              <TooltipContent>{{ section.orientation === 'landscape' ? 'Hoja horizontal: pasar a vertical' : 'Hoja vertical: pasar a horizontal' }}</TooltipContent>
+            </Tooltip>
             <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === 0" :aria-label="`Subir la sección ${section.title}`" @click="moveSection(sectionIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
             <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === sections.length - 1" :aria-label="`Bajar la sección ${section.title}`" @click="moveSection(sectionIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
             <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar la sección ${section.title}`" @click="removal = { kind: 'section', id: section.id, name: section.title, count: fields.length }"><Trash2 aria-hidden="true" /></Button>
@@ -240,7 +241,7 @@ const failed = (message: string): void => { error.value = message; };
 
         <ol class="flex flex-col gap-3">
           <template v-for="(field, fieldIndex) in fields" :key="field.id">
-          <li :data-field="field.id" :data-field-responsible="field.quien_llena" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-dashed outline-muted-foreground hover:outline-primary/60'])">
+          <li :data-field="field.id" :data-field-responsible="field.quien_llena" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-transparent hover:outline-border'])">
             <TemplateInsertPoint v-if="!preview && !locked" :disabled="busy" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="top" gap="field" @insert="addField(section.id, fieldIndex)" />
             <TemplateInsertPoint v-if="!preview && !locked && fieldIndex === fields.length - 1" :disabled="busy" :actions="[{ key: 'section', label: 'Nueva sección' }, { key: 'field', label: 'Agregar campo' }]" position="bottom" gap="field" @insert="insertAfterLastField($event, section.id, sectionIndex)" />
             <TemplateFieldContent v-if="preview" :field="field" :variables="variables" preview />

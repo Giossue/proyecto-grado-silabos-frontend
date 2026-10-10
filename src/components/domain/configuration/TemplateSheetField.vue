@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, CircleHelp, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, ChevronDown, CircleHelp, Trash2 } from '@lucide/vue';
 import { nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { updateField } from '@/api/template-structure';
 import type { TemplateField } from '@/api/template';
@@ -8,11 +8,11 @@ import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 import { cn } from '@/lib/utils';
-import { FIELD_RESPONSIBLES, type FieldResponsible } from '@/types/configuration';
+import { FIELD_RESPONSIBLES, responsibleLabel, type FieldResponsible } from '@/types/configuration';
 
 const props = defineProps<{
     templateId: string;
@@ -93,28 +93,34 @@ onBeforeUnmount(() => {
 });
 
 const name = (): string => draft.label.trim() || 'Campo sin nombre';
-const statusText = (): string => status.value === 'saving' ? 'Guardando…' : status.value === 'dirty' ? 'Sin guardar' : status.value === 'saved' ? 'Guardado' : '';
+const statusText = (): string => status.value === 'saving' ? 'Guardando…' : status.value === 'dirty' ? 'Sin guardar' : '';
 </script>
 
 <template>
   <div :data-field-editor="field.id" class="flex min-w-0 flex-col gap-1" @focusin="emit('select')" @pointerdown="emit('select')">
-    <div class="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1">
+    <div class="flex min-w-0 items-center gap-2">
       <Input
         v-model="draft.label"
         maxlength="180"
         placeholder="Nombre del campo (opcional)"
         :aria-label="`Nombre del campo ${name()}`"
         :disabled="locked"
-        class="h-7 min-w-0 flex-1 border-transparent bg-transparent px-1 font-bold shadow-none hover:border-input focus-visible:border-input"
+        class="h-7 min-w-0 flex-1 border-transparent bg-transparent px-0 font-bold shadow-none hover:border-transparent focus-visible:border-input focus-visible:px-2"
       />
       <span class="text-xs text-muted-foreground" aria-live="polite">{{ statusText() }}</span>
-      <Select :model-value="draft.quien_llena" :disabled="locked" @update:model-value="draft.quien_llena = $event as FieldResponsible">
-        <SelectTrigger class="h-7 w-36 text-xs" :aria-label="`Quién llena el campo ${name()}`" data-field-responsible><SelectValue /></SelectTrigger>
-        <SelectContent><SelectItem v-for="item in FIELD_RESPONSIBLES" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectContent>
-      </Select>
     </div>
     <FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="draft.content" :label="`Contenido de ${name()}`" :variables="variables" :disabled="locked" :toolbar="selected && !locked" bare />
     <div :class="cn('absolute -top-7 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selected ? 'opacity-100' : 'opacity-0')">
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button type="button" variant="ghost" size="sm" :disabled="locked" :aria-label="`Quién llena el campo ${name()}`" data-field-responsible>{{ responsibleLabel(draft.quien_llena) }}<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuRadioGroup :model-value="draft.quien_llena" @update:model-value="draft.quien_llena = $event as FieldResponsible">
+            <DropdownMenuRadioItem v-for="item in FIELD_RESPONSIBLES" :key="item.value" :value="item.value">{{ item.label }}</DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <Popover>
         <Tooltip>
           <TooltipTrigger as-child>

@@ -4,7 +4,7 @@ import * as structure from '@/api/template-structure';
 import { ApiError } from '@/api/client';
 import type { TemplatePayload } from '@/api/template';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
-import { Select } from '@/components/ui/select';
+import { DropdownMenuRadioGroup } from '@/components/ui/dropdown-menu';
 import { emptyDocument, type FieldResponsible } from '@/types/configuration';
 import type { DocumentNode } from '@/lib/templateDocument';
 
@@ -62,15 +62,15 @@ describe('TemplateVisualBuilder', () => {
     expect(structure.updateField).toHaveBeenCalledWith('t1', 'f1', expect.objectContaining({ label: 'Primer campo', quien_llena: 'docente', content: emptyDocument() }));
   });
 
-  it('cambia quién llena el campo y lo guarda enseguida', async () => {
-    mountBuilder();
-    const selects = body().querySelectorAll('[data-field-responsible]');
-    expect(selects.length).toBeGreaterThan(0);
+  it('cambia quién llena el campo desde su menú y lo guarda enseguida', async () => {
     const wrapper = mountBuilder();
-    const select = wrapper.findAllComponents(Select)[1]!;
-    select.vm.$emit('update:modelValue', 'institucional');
+    expect(body().querySelector('[aria-label="Quién llena el campo Primero"]')!.textContent).toContain('Docente');
+    const group = wrapper.findAllComponents(DropdownMenuRadioGroup)[0];
+    expect(group).toBeUndefined();
+    const field = wrapper.findAllComponents({ name: 'TemplateSheetField' })[0]!;
+    (field.vm as unknown as { $: { setupState: { draft: { quien_llena: string } } } }).$.setupState.draft.quien_llena = 'institucional';
     await vi.advanceTimersByTimeAsync(10);
-    expect(structure.updateField).toHaveBeenCalledWith('t1', expect.any(String), expect.objectContaining({ quien_llena: 'institucional' }));
+    expect(structure.updateField).toHaveBeenCalledWith('t1', 'f1', expect.objectContaining({ quien_llena: 'institucional' }));
   });
 
   it('agrega el campo vacío de inmediato, en la posición donde se pasó el cursor', async () => {
@@ -97,9 +97,9 @@ describe('TemplateVisualBuilder', () => {
     await flushPromises();
     expect(structure.renameSection).toHaveBeenCalledWith('t1', 's1', 'Uno bis', 'portrait');
 
-    wrapper.findAllComponents(Select)[0]!.vm.$emit('update:modelValue', 'landscape');
-    await flushPromises();
+    await click(body().querySelector('[aria-label="Orientación de la sección Uno"]'));
     expect(structure.renameSection).toHaveBeenLastCalledWith('t1', 's1', 'Uno', 'landscape');
+    expect(wrapper.emitted('changed')).toBeTruthy();
   });
 
   it('no renombra la sección si el nombre queda vacío', async () => {
