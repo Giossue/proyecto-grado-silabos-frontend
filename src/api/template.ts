@@ -10,4 +10,5 @@ export type TemplateSectionPayload = { id: string; key: string; title: string; d
 export type TemplatePayload = { processLock: string | null; processLockDetail?: LockDetail | null; templateChangedDuringPause?: boolean; variables?: TemplateVariable[]; template: null | { id: string; name: string; description: string | null; titleBlock: { text: string }; sections: TemplateSectionPayload[] }; logos?: { institution: string; faculty: string; institution_size: { width: number; height: number }; faculty_size: { width: number; height: number } } };
 export const getTemplate = () => api<TemplatePayload>('/admin/template');
 export const createTemplate = () => api<{ message: string; template_id: string }>('/admin/template', { method: 'POST', body: JSON.stringify({}) });
+export const clearTemplate = (id: string) => api<{ message: string }>(`/admin/template/${id}/structure`, { method: 'DELETE' });
 export const formatTemplate = (id: string) => api<{ message: string }>(`/admin/template/${id}/format`, { method: 'POST', body: JSON.stringify({}) });

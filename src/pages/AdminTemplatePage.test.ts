@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { getSession } from "@/api/session";
-import { createTemplate, formatTemplate, getTemplate, type TemplatePayload } from "@/api/template";
+import { clearTemplate, createTemplate, formatTemplate, getTemplate, type TemplatePayload } from "@/api/template";
 
 vi.mock("vue-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
@@ -18,6 +18,7 @@ vi.mock("@/api/template", async (importOriginal) => ({
   getTemplate: vi.fn(),
   createTemplate: vi.fn(),
   formatTemplate: vi.fn(),
+  clearTemplate: vi.fn(),
 
 }));
 
@@ -150,7 +151,8 @@ describe("AdminTemplatePage", () => {
     expect(document.body.textContent).not.toContain('Crear la plantilla del sílabo');
     expect(wrapper.text()).not.toContain('Crear plantilla');
     expect(wrapper.text()).toContain('Esta hoja está en blanco');
-    expect(wrapper.findAll('button').some((button) => button.text().trim() === 'Restablecer a plantilla oficial')).toBe(true);
+    expect(wrapper.find('button[aria-label="Restablecer a plantilla oficial"]').exists()).toBe(true);
+    expect(wrapper.find('button[aria-label="Borrar la plantilla"]').exists()).toBe(true);
     expect(wrapper.text()).not.toContain('Cargar formato oficial UEB');
   });
 
@@ -160,8 +162,7 @@ describe("AdminTemplatePage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const trigger = wrapper.findAll('button').find((button) => button.text().trim() === 'Restablecer a plantilla oficial')!;
-    await trigger.trigger('click');
+    await wrapper.get('button[aria-label="Restablecer a plantilla oficial"]').trigger('click');
     await flushPromises();
     expect(formatTemplate).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain('Se reemplazarán todas las secciones y campos actuales');
@@ -178,6 +179,24 @@ describe("AdminTemplatePage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.findAll('button').find((button) => button.text().trim() === 'Restablecer a plantilla oficial')!.attributes('disabled')).toBeDefined();
+    expect(wrapper.get('button[aria-label="Restablecer a plantilla oficial"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.get('button[aria-label="Borrar la plantilla"]').attributes('disabled')).toBeDefined();
+  });
+
+  it("borra la plantilla solo tras confirmar y la hoja queda en blanco", async () => {
+    vi.mocked(clearTemplate).mockReset().mockResolvedValue({ message: 'Plantilla vaciada.' });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get('button[aria-label="Borrar la plantilla"]').trigger('click');
+    await flushPromises();
+    expect(clearTemplate).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain('Se eliminarán todas las secciones y campos');
+
+    [...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Borrar')!.click();
+    await flushPromises();
+
+    expect(clearTemplate).toHaveBeenCalledWith('template-1');
   });
 });

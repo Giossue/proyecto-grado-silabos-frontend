@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { RotateCcw } from '@lucide/vue';
+import { RotateCcw, Trash2 } from '@lucide/vue';
 import { ApiError } from '@/api/client';
-import { createTemplate, formatTemplate, getTemplate, type TemplatePayload } from '@/api/template';
+import { clearTemplate, createTemplate, formatTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -14,12 +14,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths } from '@/lib/routes';
 
 const router = useRouter();
 const payload = ref<TemplatePayload | null>(null);
 const loading = ref(true);
 const resetOpen = ref(false);
+const clearOpen = ref(false);
 const formatting = ref(false);
 const loadError = ref<string | null>(null);
 const SHEET_WIDTH = 794;
@@ -82,6 +84,25 @@ const format = async (): Promise<void> => {
     }
 };
 
+const clear = async (): Promise<void> => {
+    const templateId = payload.value?.template?.id;
+    if (!templateId || formatting.value) return;
+
+    formatting.value = true;
+    actionError.value = null;
+    try {
+        await clearTemplate(templateId);
+        clearOpen.value = false;
+        await load();
+    } catch (reason) {
+        actionError.value = reason instanceof ApiError
+            ? reason.message
+            : 'No se pudo borrar la plantilla.';
+    } finally {
+        formatting.value = false;
+    }
+};
+
 const reloadFromMutation = (): void => {
     void load({ silent: true });
 };
@@ -125,11 +146,23 @@ onBeforeUnmount(() => {
             <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
             <ProcessLockAlert v-if="payload?.templateChangedDuringPause" :icon="RotateCcw" title="Plantilla modificada durante la pausa" message="Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero." hide-action />
             <ProcessLockAlert v-if="payload?.processLock" :lock="payload.processLockDetail" />
-            <div class="flex justify-end">
-                <Button type="button" variant="outline" :disabled="Boolean(payload?.processLock) || formatting" @click="resetOpen = true">
-                    <RotateCcw data-icon="inline-start" aria-hidden="true" />
-                    Restablecer a plantilla oficial
-                </Button>
+            <div class="flex justify-end gap-2">
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <Button type="button" variant="outline" size="icon" aria-label="Restablecer a plantilla oficial" :disabled="Boolean(payload?.processLock) || formatting" @click="resetOpen = true">
+                            <RotateCcw aria-hidden="true" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Restablecer a plantilla oficial</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <Button type="button" variant="outline" size="icon" aria-label="Borrar la plantilla" :disabled="Boolean(payload?.processLock) || formatting" @click="clearOpen = true">
+                            <Trash2 aria-hidden="true" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Borrar la plantilla</TooltipContent>
+                </Tooltip>
             </div>
         </div>
 
@@ -145,6 +178,21 @@ onBeforeUnmount(() => {
                     <Button type="button" :disabled="formatting" @click="format">
                         <Spinner v-if="formatting" data-icon="inline-start" /><RotateCcw v-else data-icon="inline-start" aria-hidden="true" />
                         Restablecer
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+        <Dialog v-model:open="clearOpen">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Borrar la plantilla</DialogTitle>
+                    <DialogDescription>Se eliminarán todas las secciones y campos, y la hoja quedará en blanco. Puede volver a cargar la plantilla oficial después.</DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                    <DialogClose as-child><Button type="button" variant="outline" :disabled="formatting">Cancelar</Button></DialogClose>
+                    <Button type="button" variant="destructive" :disabled="formatting" @click="clear">
+                        <Spinner v-if="formatting" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />
+                        Borrar
                     </Button>
                 </DialogFooter>
             </DialogContent>
