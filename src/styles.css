@@ -126,6 +126,7 @@
     --notifications-max-height: min(26rem, 60vh);
     --curriculum-canvas-height: 76vh;
     --curriculum-canvas-full-height: calc(100dvh - 5.5rem);
+    --document-table-border: #333333;
     --overlay-max-height: calc(100dvh - 2rem);
     --filter-sheet-max-height: 85vh;
     --app-header-height: calc(4rem + env(safe-area-inset-top));
@@ -563,7 +564,6 @@
     /* Los campos de texto van en un recuadro con borde fino, como en el sílabo impreso. */
     .template-sheet [data-field]:not([data-field-kind='fijo']):has(.free-text-content):not(:has(.automatic-card)) {
         padding: 0.25cm 0.35cm;
-        border: 1px solid #3b9ac4;
     }
 
     /* La tabla de identificación y las demás tablas del documento: bordes finos y celdas compactas. */
@@ -576,7 +576,7 @@
     .template-sheet.template-sheet .free-text-content .free-text-table td,
     .template-sheet.template-sheet .free-text-content .free-text-table th {
         padding: var(--document-cell-padding);
-        border: 1px solid #7f8c9d;
+        border: 1px solid var(--document-table-border);
         line-height: var(--document-line-height);
     }
 

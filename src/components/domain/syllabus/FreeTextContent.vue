@@ -20,5 +20,5 @@ const Rendered = (rendered: { node: NonNullable<typeof document.value> }) => ren
 .free-text-content :deep(ol) { list-style: decimal; padding-left: 1.25rem; }
 .free-text-content :deep(.free-text-table) { border-collapse: collapse; margin: 0.35em 0; width: 100%; }
 .free-text-content :deep(.free-text-table td),
-.free-text-content :deep(.free-text-table th) { border: 1px solid var(--border); padding: 0.25rem 0.5rem; vertical-align: top; }
+.free-text-content :deep(.free-text-table th) { border: 1px solid var(--document-table-border); padding: 0.25rem 0.5rem; vertical-align: top; }
 </style>

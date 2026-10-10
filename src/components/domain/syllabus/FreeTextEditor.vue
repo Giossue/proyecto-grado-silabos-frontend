@@ -103,7 +103,7 @@ defineExpose({ editor });
 }
 .free-text-editor .free-text-editor__content td,
 .free-text-editor .free-text-editor__content th {
-    border: 1px solid var(--border);
+    border: 1px solid var(--document-table-border);
     padding: 0.25rem 0.5rem;
     vertical-align: top;
 }
