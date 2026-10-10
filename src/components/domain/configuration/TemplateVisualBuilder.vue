@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Eye, EyeOff, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { createField, createSection, deleteField, deleteSection, renameSection, reorderFields, reorderSections } from '@/api/template-structure';
@@ -201,14 +201,6 @@ const failed = (message: string): void => { error.value = message; };
           <h2 class="template-sheet-title">{{ template.titleBlock.text }}</h2>
         </div>
       </header>
-
-      <div v-if="sections.length === 0 && sheetIndex === 0 && !preview" class="flex flex-1 flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border p-8 text-center">
-        <p class="text-base font-medium">Esta hoja está en blanco</p>
-        <p class="max-w-sm text-sm text-muted-foreground">La plantilla no tiene secciones. Agregue la primera sección o restablezca la plantilla oficial.</p>
-        <div class="flex flex-wrap justify-center gap-2">
-          <Button type="button" :disabled="locked || busy" @click="addSection()"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
-        </div>
-      </div>
 
       <template v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id">
       <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 flex-col gap-3">

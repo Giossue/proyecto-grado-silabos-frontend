@@ -1,31 +1,21 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Braces, Download, RotateCcw, Trash2 } from '@lucide/vue';
+import { RotateCcw } from '@lucide/vue';
 import { ApiError } from '@/api/client';
-import { clearTemplate, createTemplate, formatTemplate, getTemplate, getTemplateJson, type TemplatePayload } from '@/api/template';
+import { createTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
-import TemplateJsonDialog from '@/components/domain/configuration/TemplateJsonDialog.vue';
-import { downloadJson } from '@/lib/downloadJson';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths } from '@/lib/routes';
 
 const router = useRouter();
 const payload = ref<TemplatePayload | null>(null);
 const loading = ref(true);
-const resetOpen = ref(false);
-const clearOpen = ref(false);
-const jsonOpen = ref(false);
-const formatting = ref(false);
 const loadError = ref<string | null>(null);
 const SHEET_WIDTH = 794;
 const actionError = ref<string | null>(null);
@@ -65,55 +55,6 @@ const load = async ({ silent = false }: { silent?: boolean } = {}): Promise<void
         if (!silent) {
             loading.value = false;
         }
-    }
-};
-
-const format = async (): Promise<void> => {
-    const templateId = payload.value?.template?.id;
-    if (!templateId || formatting.value) return;
-
-    formatting.value = true;
-    actionError.value = null;
-    try {
-        await formatTemplate(templateId);
-        resetOpen.value = false;
-        await load();
-    } catch (reason) {
-        actionError.value = reason instanceof ApiError
-            ? reason.message
-            : 'No se pudo restablecer la plantilla.';
-    } finally {
-        formatting.value = false;
-    }
-};
-
-const clear = async (): Promise<void> => {
-    const templateId = payload.value?.template?.id;
-    if (!templateId || formatting.value) return;
-
-    formatting.value = true;
-    actionError.value = null;
-    try {
-        await clearTemplate(templateId);
-        clearOpen.value = false;
-        await load();
-    } catch (reason) {
-        actionError.value = reason instanceof ApiError
-            ? reason.message
-            : 'No se pudo borrar la plantilla.';
-    } finally {
-        formatting.value = false;
-    }
-};
-
-const exportJson = async (): Promise<void> => {
-    const templateId = payload.value?.template?.id;
-    if (!templateId) return;
-    actionError.value = null;
-    try {
-        downloadJson(JSON.stringify(await getTemplateJson(templateId), null, 2), 'plantilla-silabo.json');
-    } catch (reason) {
-        actionError.value = reason instanceof ApiError ? reason.message : 'No se pudo exportar la plantilla.';
     }
 };
 
@@ -160,73 +101,8 @@ onBeforeUnmount(() => {
             <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
             <ProcessLockAlert v-if="payload?.templateChangedDuringPause" :icon="RotateCcw" title="Plantilla modificada durante la pausa" message="Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero." hide-action />
             <ProcessLockAlert v-if="payload?.processLock" :lock="payload.processLockDetail" />
-            <div class="flex justify-end gap-2">
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <Button type="button" variant="outline" size="icon" aria-label="Exportar JSON" @click="exportJson">
-                            <Download aria-hidden="true" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Exportar JSON</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <Button type="button" variant="outline" size="icon" aria-label="Editar JSON" @click="jsonOpen = true">
-                            <Braces aria-hidden="true" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Editar JSON</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <Button type="button" variant="outline" size="icon" aria-label="Restablecer a plantilla oficial" :disabled="Boolean(payload?.processLock) || formatting" @click="resetOpen = true">
-                            <RotateCcw aria-hidden="true" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Restablecer a plantilla oficial</TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                    <TooltipTrigger as-child>
-                        <Button type="button" variant="outline" size="icon" aria-label="Borrar la plantilla" :disabled="Boolean(payload?.processLock) || formatting" @click="clearOpen = true">
-                            <Trash2 aria-hidden="true" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Borrar la plantilla</TooltipContent>
-                </Tooltip>
-            </div>
         </div>
 
         <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" />
-        <TemplateJsonDialog v-model:open="jsonOpen" :template-id="template.id" :locked="Boolean(payload?.processLock)" @imported="reloadFromMutation" />
-        <Dialog v-model:open="resetOpen">
-            <DialogContent class="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Restablecer a plantilla oficial</DialogTitle>
-                    <DialogDescription>Se reemplazarán todas las secciones y campos actuales por el formato oficial de la UEB. Los cambios que hizo se perderán.</DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <DialogClose as-child><Button type="button" variant="outline" :disabled="formatting">Cancelar</Button></DialogClose>
-                    <Button type="button" :disabled="formatting" @click="format">
-                        <Spinner v-if="formatting" data-icon="inline-start" /><RotateCcw v-else data-icon="inline-start" aria-hidden="true" />
-                        Restablecer
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-        <Dialog v-model:open="clearOpen">
-            <DialogContent class="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Borrar la plantilla</DialogTitle>
-                    <DialogDescription>Se eliminarán todas las secciones y campos, y la hoja quedará en blanco. Puede volver a cargar la plantilla oficial después.</DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <DialogClose as-child><Button type="button" variant="outline" :disabled="formatting">Cancelar</Button></DialogClose>
-                    <Button type="button" variant="destructive" :disabled="formatting" @click="clear">
-                        <Spinner v-if="formatting" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />
-                        Borrar
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     </PageFrame>
 </template>
