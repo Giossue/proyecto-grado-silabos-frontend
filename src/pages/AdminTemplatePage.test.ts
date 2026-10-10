@@ -136,43 +136,48 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.get('[aria-label="Eliminar el campo Descripción"]').attributes('disabled')).toBeDefined();
   });
 
-  it("ofrece crear la plantilla en blanco o con el formato oficial desde un modal", async () => {
+  it("crea sola la plantilla vacía si no existe y muestra la hoja, sin modal de creación", async () => {
     vi.mocked(getTemplate)
       .mockReset()
-      .mockResolvedValue({ processLock: null, template: null });
+      .mockResolvedValueOnce({ processLock: null, template: null })
+      .mockResolvedValueOnce({ ...payload, template: { ...payload.template!, sections: [] } });
     vi.mocked(createTemplate).mockReset().mockResolvedValue({ message: 'Plantilla vacía creada.', template_id: 'template-1' });
-
-    mountPage();
-    await flushPromises();
-
-    const choose = (label: string) => [...document.body.querySelectorAll('button')].find((button) => button.textContent?.includes(label));
-    expect(document.body.textContent).toContain('Crear la plantilla del sílabo');
-    choose('En blanco')!.click();
-    await flushPromises();
-    expect(createTemplate).toHaveBeenLastCalledWith(false);
-
-    [...document.body.querySelectorAll('button')].find((button) => button.textContent?.includes('Crear plantilla'))!.click();
-    await flushPromises();
-    choose('Plantilla oficial UEB')!.click();
-    await flushPromises();
-    expect(createTemplate).toHaveBeenLastCalledWith(true);
-  });
-
-  it("aplica el formato oficial únicamente desde una plantilla vacía", async () => {
-    vi.mocked(getTemplate).mockResolvedValue({ ...payload, template: { ...payload.template!, sections: [] } });
-    vi.mocked(formatTemplate).mockResolvedValue({ message: 'Formato oficial aplicado.' });
 
     const wrapper = mountPage();
     await flushPromises();
 
-    const formatButtons = wrapper.findAll('button').filter((button) => button.text().trim() === 'Cargar formato oficial UEB');
+    expect(createTemplate).toHaveBeenCalledTimes(1);
+    expect(document.body.textContent).not.toContain('Crear la plantilla del sílabo');
+    expect(wrapper.text()).not.toContain('Crear plantilla');
+    expect(wrapper.text()).toContain('Esta hoja está en blanco');
+    expect(wrapper.findAll('button').some((button) => button.text().trim() === 'Restablecer a plantilla oficial')).toBe(true);
+    expect(wrapper.text()).not.toContain('Cargar formato oficial UEB');
+  });
 
-    expect(formatButtons).toHaveLength(1);
-    expect(wrapper.get('header').text()).not.toContain('Cargar formato oficial UEB');
-    const formatButton = formatButtons[0];
-    await formatButton!.trigger('click');
+  it("restablece a la plantilla oficial solo tras confirmar, también con la plantilla ya editada", async () => {
+    vi.mocked(formatTemplate).mockReset().mockResolvedValue({ message: 'Plantilla restablecida al formato oficial.' });
+
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const trigger = wrapper.findAll('button').find((button) => button.text().trim() === 'Restablecer a plantilla oficial')!;
+    await trigger.trigger('click');
+    await flushPromises();
+    expect(formatTemplate).not.toHaveBeenCalled();
+    expect(document.body.textContent).toContain('Se reemplazarán todas las secciones y campos actuales');
+
+    const confirm = [...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Restablecer')!;
+    confirm.click();
     await flushPromises();
 
     expect(formatTemplate).toHaveBeenCalledWith('template-1');
+  });
+
+  it("deshabilita el restablecer con un proceso abierto", async () => {
+    vi.mocked(getTemplate).mockResolvedValue({ ...payload, processLock: 'Hay un proceso abierto' });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.findAll('button').find((button) => button.text().trim() === 'Restablecer a plantilla oficial')!.attributes('disabled')).toBeDefined();
   });
 });

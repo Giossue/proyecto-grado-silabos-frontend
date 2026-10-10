@@ -12,8 +12,6 @@ export type FieldInput = {
 
 export const createSection = (template: string, input: { key: string; title: string; orientation?: 'portrait' | 'landscape' }) =>
     api<{ message: string; section_id: string }>(`/admin/template/${template}/structure/sections`, { method: 'POST', body: JSON.stringify(input) });
-export const createSectionFromDesign = (template: string, design: string) =>
-    api<{ message: string; section_id: string }>(`/admin/template/${template}/structure/sections`, { method: 'POST', body: JSON.stringify({ design }) });
 export const renameSection = (template: string, section: string, title: string, orientation?: 'portrait' | 'landscape') =>
     api<{ message: string }>(`/admin/template/${template}/structure/sections/${section}`, { method: 'PATCH', body: JSON.stringify({ title, orientation }) });
 export const deleteSection = (template: string, section: string) =>

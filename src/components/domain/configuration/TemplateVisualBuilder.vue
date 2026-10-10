@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Settings2, Sparkles, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Eye, EyeOff, Pencil, Plus, Settings2, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import type { SectionDesign, TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
+import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { deleteField, deleteSection, reorderFields, reorderSections } from '@/api/template-structure';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
@@ -18,8 +18,8 @@ import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 
 
-const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; designs?: SectionDesign[]; canFormat?: boolean; formatting?: boolean; variables?: TemplatePayload['variables'] }>();
-const emit = defineEmits<{ changed: []; format: [] }>();
+const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; variables?: TemplatePayload['variables'] }>();
+const emit = defineEmits<{ changed: [] }>();
 
 const locked = computed(() => Boolean(props.processLock));
 const preview = ref(false);
@@ -186,10 +186,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
       <div v-if="sections.length === 0 && sheetIndex === 0 && !preview" class="flex flex-1 flex-col items-center justify-center gap-3 rounded-md border-2 border-dashed border-border p-8 text-center">
         <p class="text-base font-medium">Esta hoja está en blanco</p>
-        <p class="max-w-sm text-sm text-muted-foreground">La plantilla no tiene secciones. Cargue el formato oficial o agregue la primera sección.</p>
+        <p class="max-w-sm text-sm text-muted-foreground">La plantilla no tiene secciones. Agregue la primera sección o restablezca la plantilla oficial.</p>
         <div class="flex flex-wrap justify-center gap-2">
-          <Button v-if="canFormat" type="button" :disabled="locked || formatting" @click="emit('format')"><Sparkles data-icon="inline-start" aria-hidden="true" />Cargar formato oficial UEB</Button>
-          <Button type="button" :variant="canFormat ? 'outline' : 'default'" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
+          <Button type="button" :disabled="locked" @click="sectionDialog = { open: true, section: null }"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
         </div>
       </div>
 
@@ -235,7 +234,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     </article>
     </div>
 
-    <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" :used-field-keys="usedFieldKeys" :variables="variables" :designs="designs" @saved="placeSection" />
+    <TemplateSectionDialog v-model:open="sectionDialog.open" :template-id="template.id" :section="sectionDialog.section" :used-section-keys="usedSectionKeys" @saved="placeSection" />
     <TemplateFieldDialog v-model:open="fieldDialog.open" :template-id="template.id" :section-id="fieldDialog.sectionId" :field="fieldDialog.field" :used-keys="usedFieldKeys" :variables="variables" @saved="placeField" />
 
     <Dialog :open="removal !== null" @update:open="(value: boolean) => { if (!value) removal = null }">

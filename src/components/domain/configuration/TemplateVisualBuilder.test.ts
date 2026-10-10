@@ -2,7 +2,7 @@ import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as structure from '@/api/template-structure';
 import { ApiError } from '@/api/client';
-import type { SectionDesign, TemplatePayload } from '@/api/template';
+import type { TemplatePayload } from '@/api/template';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
 import { emptyDocument, type FieldResponsible } from '@/types/configuration';
 import type { DocumentNode } from '@/lib/templateDocument';
@@ -19,12 +19,7 @@ const template: Template = {
   ],
 };
 
-const designs: SectionDesign[] = [
-  { key: 'identificacion', title: 'Identificación Institucional', summary: 'Tabla oficial con los datos de la asignatura.', in_use: false, fields: [{ label: '', quien_llena: 'institucional' }, { label: 'Formación y experiencia', quien_llena: 'docente' }] },
-  { key: 'etica', title: 'Conducta y comportamiento ético', summary: 'Compromisos y estándares de la UEB.', in_use: false, fields: [{ label: '', quien_llena: 'institucional' }] },
-  { key: 'descripcion', title: 'Descripción de la asignatura', summary: 'Texto de la ficha.', in_use: true, fields: [{ label: '', quien_llena: 'coordinacion' }] },
-];
-const mountBuilder = (props: { processLock?: string | null } = {}) => mount(TemplateVisualBuilder, { props: { template, designs, ...props }, attachTo: document.body });
+const mountBuilder = (props: { processLock?: string | null } = {}) => mount(TemplateVisualBuilder, { props: { template, ...props }, attachTo: document.body });
 
 const body = () => document.body;
 const byText = (selector: string, text: string) => [...body().querySelectorAll<HTMLElement>(selector)].find((el) => el.textContent?.trim() === text);
@@ -122,63 +117,26 @@ describe('TemplateVisualBuilder', () => {
     expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ quien_llena: 'institucional', content: emptyDocument() }));
   });
 
-  it('la nueva sección ofrece el catálogo de diseños oficiales y «En blanco»', async () => {
+  it('la nueva sección pide solo el nombre y la orientación, sin diseños oficiales', async () => {
     mountBuilder();
     await click(byText('button', 'Nueva sección'));
-    expect(body().textContent).toContain('Usar un diseño oficial');
-    const titles = [...body().querySelectorAll('[data-design]')].map((el) => el.getAttribute('data-design'));
-    expect(titles).toEqual(['identificacion', 'etica', 'descripcion']);
-    expect(body().querySelector('[data-design="identificacion"]')?.textContent).toContain('Incluye: Texto de la sección (Institucional), Formación y experiencia (Docente)');
-    expect(body().querySelector('[data-design="etica"]')?.textContent).toContain('(Institucional)');
-    expect(body().querySelector('[data-design="descripcion"]')?.textContent).toContain('Ya está en la plantilla');
-    expect(body().querySelector('#section-design-descripcion')?.hasAttribute('disabled')).toBe(true);
-    expect(body().textContent).toContain('En blanco');
+    expect(body().querySelector('#template-section-title')).toBeTruthy();
+    expect(body().querySelector('#section-orientation')).toBeTruthy();
+    expect(body().textContent).not.toContain('diseño oficial');
+    expect(body().querySelector('[data-design]')).toBeNull();
   });
 
-  it('agrega una sección desde un diseño oficial con un solo paso', async () => {
+  it('crea una sección con un solo paso y valida el nombre', async () => {
     const wrapper = mountBuilder();
     await click(byText('button', 'Nueva sección'));
-    await click(body().querySelector('#section-design-etica'));
-    expect(byText('[role="dialog"] button[type="submit"]', 'Agregar sección')).toBeTruthy();
-    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(structure.createSectionFromDesign).toHaveBeenCalledWith('t1', 'etica');
-    expect(structure.createSection).not.toHaveBeenCalled();
-    expect(wrapper.emitted('changed')).toHaveLength(1);
-  });
-
-  it('muestra el error del servidor si el diseño ya no se puede agregar', async () => {
-    vi.mocked(structure.createSectionFromDesign).mockRejectedValue(new ApiError('La plantilla ya tiene «Conducta y comportamiento ético».', 422, { design: ['La plantilla ya tiene «Conducta y comportamiento ético».'] }));
-    mountBuilder();
-    await click(byText('button', 'Nueva sección'));
-    await click(body().querySelector('#section-design-etica'));
-    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(body().textContent).toContain('La plantilla ya tiene «Conducta y comportamiento ético».');
-  });
-
-  it('crea una sección en blanco en dos pasos', async () => {
-    mountBuilder();
-    await click(byText('button', 'Nueva sección'));
-    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
     expect(body().textContent).toContain('Escriba el nombre de la sección.');
+    expect(structure.createSection).not.toHaveBeenCalled();
     await type('template-section-title', 'Objetivos de la asignatura');
     await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    expect(body().textContent).toContain('Paso 2 de 2');
-    await click(byText('button', 'Crear sin campos'));
     expect(structure.createSection).toHaveBeenCalledWith('t1', { key: 'objetivos_de_la_asignatura', title: 'Objetivos de la asignatura', orientation: 'portrait' });
     expect(structure.createField).not.toHaveBeenCalled();
-    expect(structure.createSectionFromDesign).not.toHaveBeenCalled();
-  });
-
-  it('crea una sección en blanco con su primer campo', async () => {
-    mountBuilder();
-    await click(byText('button', 'Nueva sección'));
-    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    await type('template-section-title', 'Firmas');
-    await click(body().querySelector('[role="dialog"] button[type="submit"]'));
-    await type('new-section-field-label', 'Cuerpo');
-    await click(byText('button', 'Crear sección con este campo'));
-    expect(structure.createField).toHaveBeenCalledWith('t1', 'new-section', expect.objectContaining({ quien_llena: 'docente', label: 'Cuerpo' }));
+    expect(wrapper.emitted('changed')).toHaveLength(1);
   });
 
   it('el título y los logos son fijos y no aparecen como campos editables', () => {
