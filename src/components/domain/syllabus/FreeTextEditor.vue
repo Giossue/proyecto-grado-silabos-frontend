@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Table, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
+import type { Editor } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { Bold, Italic, Underline, List, ListOrdered, Table2, Undo2, Redo2 } from '@lucide/vue';
-import { onBeforeUnmount, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
@@ -17,18 +18,66 @@ const props = withDefaults(defineProps<{
     modelValue?: DocumentNode | null;
     disabled?: boolean;
     variables?: TemplateVariable[];
-}>(), { modelValue: null, disabled: false, variables: () => [] });
+    bare?: boolean;
+    toolbar?: boolean;
+}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true });
 const emit = defineEmits<{ 'update:modelValue': [value: DocumentNode] }>();
+const slash = ref({ open: false, left: 0, top: 0, query: '', index: 0 });
+const slashItems = computed(() => props.variables.filter((item) => item.label.toLowerCase().includes(slash.value.query.toLowerCase())).slice(0, 8));
+const closeSlash = (): void => { slash.value.open = false; };
+const refreshSlash = (current: Editor): void => {
+    const { state, view } = current;
+    const { $from, empty } = state.selection;
+    const before = $from.parent.textBetween(0, $from.parentOffset, undefined, '\ufffc');
+    const match = /(?:^|\s)\/([\p{L}\p{N}_ ]{0,24})$/u.exec(before);
+    if (!empty || !match || props.disabled || props.variables.length === 0) {
+        closeSlash();
+        return;
+    }
+    const coords = view.coordsAtPos($from.pos);
+    const query = match[1] ?? '';
+    slash.value = { open: true, left: coords.left, top: coords.bottom + 4, query, index: query === slash.value.query ? slash.value.index : 0 };
+};
+const chooseSlash = (key: string): void => {
+    const variable = props.variables.find((item) => item.key === key);
+    const current = editor.value;
+    if (!variable || !current) return;
+    const to = current.state.selection.from;
+    current.chain().focus().deleteRange({ from: to - slash.value.query.length - 1, to }).insertContent({ type: 'variable', attrs: { id: variable.key, label: variable.label } }).run();
+    closeSlash();
+};
+const onSlashKey = (event: KeyboardEvent): boolean => {
+    if (!slash.value.open || slashItems.value.length === 0) return false;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        const step = event.key === 'ArrowDown' ? 1 : -1;
+        slash.value.index = (slash.value.index + step + slashItems.value.length) % slashItems.value.length;
+        return true;
+    }
+    if (event.key === 'Enter' || event.key === 'Tab') {
+        chooseSlash(slashItems.value[slash.value.index]!.key);
+        return true;
+    }
+    if (event.key === 'Escape') {
+        closeSlash();
+        return true;
+    }
+    return false;
+};
 const editor = useEditor({
     content: props.modelValue ?? emptyDocument(),
     editable: !props.disabled,
-    editorProps: { attributes: { id: props.id, 'aria-label': props.label, role: 'textbox', 'aria-multiline': 'true', class: 'free-text-editor__content' } },
+    editorProps: { handleKeyDown: (_view, event) => onSlashKey(event), attributes: { id: props.id, 'aria-label': props.label, role: 'textbox', 'aria-multiline': 'true', class: 'free-text-editor__content' } },
     extensions: [
         StarterKit.configure({ heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false }),
         Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
         DocumentVariable.configure({ labels: Object.fromEntries(props.variables.map((item) => [item.key, item.label])) }),
     ],
-    onUpdate: ({ editor: current }) => emit('update:modelValue', current.getJSON() as DocumentNode),
+    onUpdate: ({ editor: current }) => {
+        emit('update:modelValue', current.getJSON() as DocumentNode);
+        refreshSlash(current);
+    },
+    onSelectionUpdate: ({ editor: current }) => refreshSlash(current),
+    onBlur: () => closeSlash(),
 });
 const insertVariable = (key: unknown): void => {
     const variable = props.variables.find((item) => item.key === key);
@@ -46,8 +95,8 @@ defineExpose({ editor });
 </script>
 
 <template>
-  <div class="free-text-editor flex min-w-0 flex-col rounded-md border bg-background" :data-disabled="disabled || undefined">
-    <div v-if="editor" role="toolbar" :aria-label="`Formato de ${label}`" class="flex flex-wrap items-center gap-1 border-b p-1.5">
+  <div :class="['free-text-editor flex min-w-0 flex-col', bare ? 'bg-transparent' : 'rounded-md border bg-background']" :data-disabled="disabled || undefined">
+    <div v-if="editor && toolbar" role="toolbar" :aria-label="`Formato de ${label}`" class="flex flex-wrap items-center gap-1 border-b p-1.5">
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Negrita" :aria-pressed="editor.isActive('bold')" :disabled="disabled" @click="editor.chain().focus().toggleBold().run()"><Bold aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Cursiva" :aria-pressed="editor.isActive('italic')" :disabled="disabled" @click="editor.chain().focus().toggleItalic().run()"><Italic aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Subrayado" :aria-pressed="editor.isActive('underline')" :disabled="disabled" @click="editor.chain().focus().toggleUnderline().run()"><Underline aria-hidden="true" /></Button>
@@ -61,7 +110,7 @@ defineExpose({ editor });
         <SelectContent><SelectItem v-for="variable in variables" :key="variable.key" :value="variable.key">{{ variable.label }}</SelectItem></SelectContent>
       </Select>
     </div>
-    <div v-if="editor?.isActive('table')" class="flex flex-wrap items-center gap-1 border-b p-1.5" aria-label="Opciones de tabla">
+    <div v-if="editor && toolbar && editor.isActive('table')" class="flex flex-wrap items-center gap-1 border-b p-1.5" aria-label="Opciones de tabla">
       <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor?.chain().focus().addRowAfter().run()">Agregar fila</Button>
       <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor?.chain().focus().deleteRow().run()">Quitar fila</Button>
       <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor?.chain().focus().addColumnAfter().run()">Agregar columna</Button>
@@ -75,13 +124,16 @@ defineExpose({ editor });
         <SelectContent><SelectItem v-for="color in DOCUMENT_CELL_COLORS" :key="color.value ?? 'none'" :value="color.value ?? 'none'">{{ color.label }}</SelectItem></SelectContent>
       </Select>
     </div>
-    <EditorContent :editor="editor" class="min-h-32 overflow-x-auto px-3 py-2 text-sm" />
+    <EditorContent :editor="editor" :class="['overflow-x-auto text-sm', bare ? 'min-h-8 px-1 py-1' : 'min-h-32 px-3 py-2']" />
+    <div v-if="slash.open && slashItems.length" role="listbox" aria-label="Datos del sistema" class="fixed z-50 flex min-w-48 flex-col rounded-md border bg-popover p-1 text-sm shadow-menu" :style="{ left: `${slash.left}px`, top: `${slash.top}px` }">
+      <Button v-for="(item, position) in slashItems" :key="item.key" type="button" variant="ghost" size="sm" role="option" :aria-selected="position === slash.index" :class="['justify-start', position === slash.index ? 'bg-accent text-accent-foreground' : '']" @mousedown.prevent="chooseSlash(item.key)">{{ item.label }}</Button>
+    </div>
   </div>
 </template>
 
 <style>
 .free-text-editor .free-text-editor__content {
-    min-height: 7rem;
+    min-height: 2rem;
     outline: none;
 }
 .free-text-editor .free-text-editor__content p {

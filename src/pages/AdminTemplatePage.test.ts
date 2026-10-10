@@ -65,12 +65,9 @@ describe("AdminTemplatePage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.get('[data-section="section-1"] [aria-label="Sección Descripción de la asignatura"]').text()).toBe('Descripción de la asignatura');
-    expect(wrapper.get('[data-field="field-1"]').text()).toContain('Descripción');
-    const unnamed = wrapper.get('[data-field="field-2"]');
-    expect(unnamed.text()).toContain('Campo sin nombre');
-    await unnamed.get('[role="button"]').trigger('click');
-    expect(unnamed.get('[role="button"]').attributes('aria-pressed')).toBe('true');
+    expect(wrapper.get<HTMLInputElement>('[data-section="section-1"] [aria-label="Sección Descripción de la asignatura"]').element.value).toBe('Descripción de la asignatura');
+    expect(wrapper.get<HTMLInputElement>('[data-field="field-1"] input').element.value).toBe('Descripción');
+    expect(wrapper.get<HTMLInputElement>('[aria-label="Nombre del campo Campo sin nombre"]').element.value).toBe('');
     expect(wrapper.find('[data-sheet], .template-sheet').exists()).toBe(true);
   });
 
