@@ -69,7 +69,7 @@ const onSlashKey = (event: KeyboardEvent): boolean => {
 const editor = useEditor({
     content: props.modelValue ?? emptyDocument(),
     editable: !props.disabled,
-    editorProps: { handleKeyDown: (_view, event) => onSlashKey(event), attributes: { id: props.id, 'aria-label': props.label, role: 'textbox', 'aria-multiline': 'true', class: 'free-text-editor__content' } },
+    editorProps: { handleKeyDown: (_view, event) => onSlashKey(event), handleDrop: () => true, handleDOMEvents: { dragstart: (_view, event) => { event.preventDefault(); return true; } }, attributes: { id: props.id, 'aria-label': props.label, role: 'textbox', 'aria-multiline': 'true', class: 'free-text-editor__content' } },
     extensions: [
         StarterKit.configure({ heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false }),
         Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
