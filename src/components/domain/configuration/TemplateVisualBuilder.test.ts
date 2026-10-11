@@ -25,7 +25,11 @@ const presets = [
   { key: 'planificacion' as const, label: 'Unidades', quien_llena: 'docente' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [] }] } as DocumentNode },
   { key: 'firmas' as const, label: 'Revisión y aprobación', quien_llena: 'institucional' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [] }] } as DocumentNode },
 ];
-const mountBuilder = (props: { processLock?: string | null } = {}) => mount(TemplateVisualBuilder, { props: { template, presets, ...props }, attachTo: document.body });
+const mountBuilder = async (props: { processLock?: string | null } = {}) => {
+  const wrapper = mount(TemplateVisualBuilder, { props: { template, presets, ...props }, attachTo: document.body });
+  if (!props.processLock) await click(byText('button', 'Editar'));
+  return wrapper;
+};
 
 const body = () => document.body;
 const byText = (selector: string, text: string) => [...body().querySelectorAll<HTMLElement>(selector)].find((el) => el.textContent?.trim() === text);
@@ -49,7 +53,7 @@ describe('TemplateVisualBuilder', () => {
   afterEach(() => vi.useRealTimers());
 
   it('muestra cada sección y cada campo editables sobre la hoja, sin modales', async () => {
-    mountBuilder();
+    await mountBuilder();
     await vi.advanceTimersByTimeAsync(50);
     expect(body().querySelector<HTMLInputElement>('[aria-label="Sección Uno"]')!.value).toBe('Uno');
     expect(body().querySelector<HTMLInputElement>('[aria-label="Nombre del campo Primero"]')!.value).toBe('Primero');
@@ -59,7 +63,7 @@ describe('TemplateVisualBuilder', () => {
   });
 
   it('guarda solo el nombre del campo al dejar de escribir', async () => {
-    mountBuilder();
+    await mountBuilder();
     await typeInto('Nombre del campo Primero', 'Primer campo');
     expect(structure.updateField).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(900);
@@ -68,7 +72,7 @@ describe('TemplateVisualBuilder', () => {
   });
 
   it('cambia quién llena el campo desde su menú y lo guarda enseguida', async () => {
-    const wrapper = mountBuilder();
+    const wrapper = await mountBuilder();
     expect(body().querySelector('[aria-label="Quién llena el campo Primero"]')!.textContent).toContain('Docente');
     const group = wrapper.findAllComponents(DropdownMenuRadioGroup)[0];
     expect(group).toBeUndefined();
@@ -79,7 +83,7 @@ describe('TemplateVisualBuilder', () => {
   });
 
   it('aplica una plantilla lista: pone su nombre, su contenido y quién lo llena, y lo guarda', async () => {
-    const wrapper = mountBuilder();
+    const wrapper = await mountBuilder();
     const field = wrapper.findAllComponents({ name: 'TemplateSheetField' })[0]!;
     (field.vm as unknown as { $: { setupState: { applyPreset: (preset: unknown) => void } } }).$.setupState.applyPreset(presets[0]);
     await vi.advanceTimersByTimeAsync(900);
@@ -87,7 +91,7 @@ describe('TemplateVisualBuilder', () => {
   });
 
   it('agrega el campo vacío de inmediato, en la posición donde se pasó el cursor', async () => {
-    mountBuilder();
+    await mountBuilder();
     const points = [...body().querySelectorAll<HTMLElement>('[data-insert-point] button')].filter((el) => el.textContent?.trim() === 'Agregar campo');
     await click(points[1]);
     expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ quien_llena: 'docente', label: '', content: emptyDocument() }));
@@ -96,7 +100,7 @@ describe('TemplateVisualBuilder', () => {
   });
 
   it('agrega una sección «Nueva sección» de inmediato y avisa del cambio', async () => {
-    const wrapper = mountBuilder();
+    const wrapper = await mountBuilder();
     await click(body().querySelector('[aria-label="Nueva sección"]'));
     expect(structure.createSection).toHaveBeenCalledWith('t1', expect.objectContaining({ title: 'Nueva sección', orientation: 'portrait' }));
     expect(wrapper.emitted('changed')).toHaveLength(1);
@@ -104,7 +108,7 @@ describe('TemplateVisualBuilder', () => {
   });
 
   it('renombra la sección al salir del campo y cambia su orientación', async () => {
-    const wrapper = mountBuilder();
+    const wrapper = await mountBuilder();
     const input = await typeInto('Sección Uno', 'Uno bis');
     input.dispatchEvent(new Event('blur'));
     await flushPromises();
@@ -116,7 +120,7 @@ describe('TemplateVisualBuilder', () => {
   });
 
   it('no renombra la sección si el nombre queda vacío', async () => {
-    mountBuilder();
+    await mountBuilder();
     const input = await typeInto('Sección Uno', '   ');
     input.dispatchEvent(new Event('blur'));
     await flushPromises();
@@ -124,7 +128,7 @@ describe('TemplateVisualBuilder', () => {
   });
 
   it('reordena secciones y campos subiendo y bajando', async () => {
-    mountBuilder();
+    await mountBuilder();
     await click(body().querySelector('[aria-label="Bajar la sección Uno"]'));
     expect(structure.reorderSections).toHaveBeenCalledWith('t1', ['s2', 's1']);
     await click(body().querySelector('[aria-label="Subir el campo Segundo"]'));
@@ -134,7 +138,7 @@ describe('TemplateVisualBuilder', () => {
   });
 
   it('elimina campos y secciones solo tras confirmar', async () => {
-    mountBuilder();
+    await mountBuilder();
     await click(body().querySelector('[aria-label="Eliminar el campo Primero"]'));
     expect(structure.deleteField).not.toHaveBeenCalled();
     await click(byText('button', 'Eliminar'));
@@ -147,47 +151,46 @@ describe('TemplateVisualBuilder', () => {
 
   it('muestra el mensaje del servidor cuando un proceso abierto rechaza el cambio', async () => {
     vi.mocked(structure.reorderSections).mockRejectedValue(new ApiError('Hay un proceso abierto: pause la convocatoria.', 409));
-    mountBuilder();
+    await mountBuilder();
     await click(body().querySelector('[aria-label="Bajar la sección Uno"]'));
     expect(body().textContent).toContain('Hay un proceso abierto: pause la convocatoria.');
   });
 
   it('avisa si no se pudo guardar un campo', async () => {
     vi.mocked(structure.updateField).mockRejectedValue(new ApiError('No se pudo guardar.', 422));
-    mountBuilder();
+    await mountBuilder();
     await typeInto('Nombre del campo Primero', 'X');
     await vi.advanceTimersByTimeAsync(900);
     await flushPromises();
     expect(body().textContent).toContain('No se pudo guardar.');
   });
 
-  it('bloquea todo el constructor con un proceso abierto', async () => {
-    mountBuilder({ processLock: 'proceso' });
-    expect(body().querySelector('[aria-label="Nueva sección"]')).toBeNull();
-    expect(body().querySelector<HTMLInputElement>('[aria-label="Sección Uno"]')!.disabled).toBe(true);
-    expect(body().querySelector<HTMLInputElement>('[aria-label="Nombre del campo Primero"]')!.disabled).toBe(true);
-    expect(body().querySelector<HTMLButtonElement>('[aria-label="Bajar la sección Uno"]')!.disabled).toBe(true);
-    expect(byText('button', 'Agregar campo')).toBeUndefined();
+  it('con un proceso abierto no deja entrar a editar', async () => {
+    await mountBuilder({ processLock: 'proceso' });
+    expect(byText('button', 'Editar')!.hasAttribute('disabled')).toBe(true);
+    expect(body().querySelector('[aria-label="Sección Uno"]')).toBeNull();
   });
 
-  it('en vista previa no muestra controles de edición', async () => {
-    mountBuilder();
-    await click(body().querySelector('[aria-label="Vista previa de toda la plantilla"]'));
-    expect(body().querySelector('[data-field-editor]')).toBeNull();
+  it('empieza en vista y solo muestra los controles de edición tras pulsar Editar', async () => {
+    mount(TemplateVisualBuilder, { props: { template, presets }, attachTo: document.body });
     expect(body().querySelector('[aria-label="Sección Uno"]')).toBeNull();
     expect(body().textContent).toContain('Uno');
+    await click(byText('button', 'Editar'));
+    expect(body().querySelector('[aria-label="Sección Uno"]')).not.toBeNull();
+    expect(byText('button', 'Terminar edición')).toBeTruthy();
   });
 
   it('dibuja la tabla de identificación sin subtitular los campos sin nombre', async () => {
     const table: DocumentNode = { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'FACULTAD: CIENCIAS' }] }] }] }] }] };
     const official: Template = { ...template, sections: [{ id: 's1', key: 'identificacion', title: 'Identificación Institucional', description: null, orientation: 'portrait', fields: [{ ...field('a', '', 'institucional'), content: table }] }] };
     mount(TemplateVisualBuilder, { props: { template: official }, attachTo: document.body });
+    await click(byText('button', 'Editar'));
     await vi.advanceTimersByTimeAsync(50);
     expect(body().querySelector('[data-field="a"] table')?.textContent).toContain('FACULTAD: CIENCIAS');
     expect(body().querySelector<HTMLInputElement>('[aria-label="Nombre del campo Campo sin nombre"]')!.value).toBe('');
   });
 
-  it('el título y los logos son fijos y no aparecen como campos editables', () => {
+  it('el título y los logos son fijos y no aparecen como campos editables', async () => {
     mount(TemplateVisualBuilder, { props: { template, logos: { institution: '/institution.png', faculty: '/faculty.png', institution_size: { width: 120, height: 40 }, faculty_size: { width: 120, height: 40 } } }, attachTo: document.body });
     expect(body().querySelector('h2')?.textContent).toBe('SÍLABO');
     expect(body().querySelectorAll('header img')).toHaveLength(2);

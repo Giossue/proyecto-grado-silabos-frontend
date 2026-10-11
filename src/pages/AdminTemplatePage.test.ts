@@ -62,6 +62,7 @@ describe("AdminTemplatePage", () => {
   it("lista las secciones con sus campos, incluso el que no tiene nombre", async () => {
     const wrapper = mountPage();
     await flushPromises();
+    await wrapper.findAll('button').find((button) => button.text() === 'Editar')!.trigger('click');
 
     expect(wrapper.get<HTMLInputElement>('[data-section="section-1"] [aria-label="Sección Descripción de la asignatura"]').element.value).toBe('Descripción de la asignatura');
     expect(wrapper.get<HTMLInputElement>('[data-field="field-1"] input').element.value).toBe('Descripción');
@@ -129,7 +130,7 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.text()).toContain('Edición bloqueada');
     expect(wrapper.text()).not.toContain('la plantilla no se puede cambiar');
     expect(wrapper.findAll('button').find((button) => button.text() === 'Nueva sección')).toBeUndefined();
-    expect(wrapper.get('[aria-label="Eliminar el campo Descripción"]').attributes('disabled')).toBeDefined();
+    expect(wrapper.findAll('button').find((button) => button.text() === 'Editar')!.attributes('disabled')).toBeDefined();
   });
 
   it("crea sola la plantilla vacía si no existe y muestra solo el título y los logos", async () => {

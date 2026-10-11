@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Eye, EyeOff, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Check, Pencil, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { createField, createSection, deleteField, deleteSection, renameSection, reorderFields, reorderSections } from '@/api/template-structure';
@@ -23,8 +23,7 @@ const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; 
 const emit = defineEmits<{ changed: [] }>();
 
 const locked = computed(() => Boolean(props.processLock));
-const preview = ref(false);
-const previewLabel = computed(() => preview.value ? 'Salir de la vista previa de toda la plantilla' : 'Vista previa de toda la plantilla');
+const preview = ref(true);
 const selectedField = ref<string | null>(null);
 const selectedSection = ref<string | null>(null);
 const selectField = (id: string): void => { selectedField.value = id; selectedSection.value = null; };
@@ -184,14 +183,12 @@ const failed = (message: string): void => { error.value = message; };
   <div ref="root" class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
+    <div class="mx-auto flex w-full max-w-3xl justify-end">
+      <Button type="button" :variant="preview ? 'default' : 'outline'" :disabled="locked" @click="preview = !preview"><Check v-if="!preview" data-icon="inline-start" aria-hidden="true" /><Pencil v-else data-icon="inline-start" aria-hidden="true" />{{ preview ? 'Editar' : 'Terminar edición' }}</Button>
+    </div>
+
     <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto py-4" tabindex="0" role="region" :aria-label="`Hoja ${sheetIndex + 1} de la plantilla con desplazamiento horizontal`">
     <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape) }" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
-      <Tooltip>
-        <TooltipTrigger as-child>
-          <Button type="button" variant="ghost" size="icon" class="absolute top-2 right-2" :aria-label="previewLabel" :aria-pressed="preview" @click="preview = !preview"><EyeOff v-if="preview" aria-hidden="true" /><Eye v-else aria-hidden="true" /></Button>
-        </TooltipTrigger>
-        <TooltipContent>{{ previewLabel }}</TooltipContent>
-      </Tooltip>
       <div data-sheet-content class="flex flex-col gap-6">
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
