@@ -1,4 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { VueNodeViewRenderer } from '@tiptap/vue-3';
+import DocumentBlockView from '@/components/domain/syllabus/DocumentBlockView.vue';
+import Document from '@tiptap/extension-document';
 import { TableCell, TableHeader } from '@tiptap/extension-table';
 
 export const DocumentVariable = Node.create<{ labels: Record<string, string> }>({
@@ -39,3 +42,21 @@ export const DocumentTableHeader = TableHeader.extend({
     addAttributes() { return { ...this.parent?.(), ...cellAttributes() }; },
     renderHTML({ node, HTMLAttributes }) { return ['th', mergeAttributes(HTMLAttributes, { style: cellStyle(node.attrs) }), 0]; },
 });
+
+export const DocumentBlock = Node.create<{ mode: 'configure' | 'fill' }>({
+    name: 'documentBlock',
+    atom: true,
+    selectable: true,
+    draggable: false,
+    addOptions: () => ({ mode: 'fill' }),
+    addAttributes: () => ({
+        kind: { default: 'si_no' },
+        props: { default: () => ({}) },
+        value: { default: () => ({}) },
+    }),
+    parseHTML: () => [{ tag: 'div[data-block]' }],
+    renderHTML: ({ HTMLAttributes }) => ['div', mergeAttributes(HTMLAttributes, { 'data-block': '' })],
+    addNodeView: () => VueNodeViewRenderer(DocumentBlockView),
+});
+
+export const DocumentWithBlocks = Document.extend({ content: '(block | documentBlock)+' });

@@ -1,6 +1,6 @@
 import { h } from 'vue';
 import type { VNodeChild } from 'vue';
-import type { DocumentNode } from '@/lib/templateDocument';
+import { blockOf, blockPlain, type DocumentNode } from '@/lib/templateDocument';
 
 const TAGS: Record<string, string> = {
     paragraph: 'p', bulletList: 'ul', orderedList: 'ol', listItem: 'li',
@@ -12,9 +12,10 @@ export const isFreeTextDocument = (value: unknown): value is DocumentNode =>
     typeof value === 'object' && value !== null && (value as DocumentNode).type === 'doc';
 
 export const freeTextPlain = (node: DocumentNode): string =>
-    node.type === 'text' ? (node.text ?? '') : node.type === 'variable' ? String(node.attrs?.label || 'Dato del sistema') : (node.content ?? []).map(freeTextPlain).join(' ');
+    node.type === 'documentBlock' ? blockPlain(node) : node.type === 'text' ? (node.text ?? '') : node.type === 'variable' ? String(node.attrs?.label || 'Dato del sistema') : (node.content ?? []).map(freeTextPlain).join(' ');
 
 export const freeTextLines = (node: DocumentNode): string => {
+    if (node.type === 'documentBlock') return blockPlain(node);
     if (node.type === 'text') return node.text ?? '';
     if (node.type === 'hardBreak') return '\n';
     const children = (node.content ?? []).map(freeTextLines);
@@ -40,7 +41,25 @@ const tableColumnWidths = (table: DocumentNode): number[] | null => {
     return null;
 };
 
+const renderBlock = (node: DocumentNode): VNodeChild => {
+    const { kind, props, value } = blockOf(node);
+    const showRows = kind === 'repetible' || (value.answer === 'si' && props.columns.length > 0);
+    const table = showRows && props.columns.length > 0
+        ? h('table', { class: 'free-text-table' }, [h('tbody', {}, [
+            h('tr', {}, props.columns.map((column) => h('th', {}, column.label))),
+            ...(value.rows.length > 0 ? value.rows : [{}]).map((row) => h('tr', {}, props.columns.map((column) => h('td', {}, row[column.key] ?? '')))),
+        ])])
+        : null;
+    if (kind === 'repetible') return h('div', { class: 'document-block' }, [props.label ? h('p', {}, [h('strong', {}, props.label)]) : null, table]);
+
+    return h('div', { class: 'document-block' }, [
+        h('p', {}, [h('strong', {}, props.question ?? ''), ' ', value.answer === 'si' ? 'Sí' : value.answer === 'no' ? 'No' : h('em', {}, 'Sin responder')]),
+        table,
+    ]);
+};
+
 export const renderFreeText = (node: DocumentNode): VNodeChild => {
+    if (node.type === 'documentBlock') return renderBlock(node);
     if (node.type === 'text') {
         const marks = new Set((node.marks ?? []).map((mark) => mark.type));
         let content: VNodeChild = node.text ?? '';

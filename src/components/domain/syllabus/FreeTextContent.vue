@@ -4,7 +4,7 @@ import { freeTextPlain, isFreeTextDocument, renderFreeText } from '@/components/
 
 const props = withDefaults(defineProps<{ value: unknown; emptyText?: string }>(), { emptyText: 'Sin contenido' });
 const document = computed(() => (isFreeTextDocument(props.value) ? props.value : null));
-const empty = computed(() => document.value === null || freeTextPlain(document.value).trim() === '' && !JSON.stringify(document.value).includes('"table"'));
+const empty = computed(() => document.value === null || freeTextPlain(document.value).trim() === '' && !JSON.stringify(document.value).includes('"table"') && !JSON.stringify(document.value).includes('"documentBlock"'));
 const Rendered = (rendered: { node: NonNullable<typeof document.value> }) => renderFreeText(rendered.node);
 </script>
 

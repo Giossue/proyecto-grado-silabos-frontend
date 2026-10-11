@@ -7,8 +7,8 @@ import { Bold, Braces, ChevronDown, Italic, Underline, List, ListOrdered, Table2
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
-import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
+import { DocumentBlock, DocumentWithBlocks, DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
+import { BLOCK_KINDS, newBlock, type DocumentNode, type TemplateVariable } from '@/lib/templateDocument';
 import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import { emptyDocument } from '@/types/configuration';
 
@@ -23,7 +23,8 @@ const props = withDefaults(defineProps<{
     variables?: TemplateVariable[];
     bare?: boolean;
     toolbar?: boolean;
-}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true });
+    blocks?: 'configure' | 'fill';
+}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true, blocks: 'fill' });
 const emit = defineEmits<{ 'update:modelValue': [value: DocumentNode] }>();
 const slash = ref({ open: false, left: 0, top: 0, query: '', index: 0 });
 const slashItems = computed(() => props.variables.filter((item) => item.label.toLowerCase().includes(slash.value.query.toLowerCase())).slice(0, 8));
@@ -71,9 +72,11 @@ const editor = useEditor({
     editable: !props.disabled,
     editorProps: { handleKeyDown: (_view, event) => onSlashKey(event), handleDrop: () => true, handleDOMEvents: { dragstart: (_view, event) => { event.preventDefault(); return true; } }, attributes: { id: props.id, 'aria-label': props.label, role: 'textbox', 'aria-multiline': 'true', class: 'free-text-editor__content' } },
     extensions: [
-        StarterKit.configure({ heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false }),
+        StarterKit.configure({ document: false, heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false }),
         Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
+        DocumentWithBlocks,
         PageSpacers,
+        DocumentBlock.configure({ mode: props.blocks }),
         DocumentVariable.configure({ labels: Object.fromEntries(props.variables.map((item) => [item.key, item.label])) }),
     ],
     onUpdate: ({ editor: current }) => {
@@ -127,6 +130,14 @@ defineExpose({ editor });
         <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().deleteTable().run()">Quitar tabla</Button>
         <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
       </template>
+      <DropdownMenu v-if="blocks === 'configure'">
+        <DropdownMenuTrigger as-child>
+          <Button type="button" variant="ghost" size="sm" aria-label="Insertar bloque" :disabled="disabled">Bloque<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem v-for="item in BLOCK_KINDS" :key="item.kind" @select="editor?.chain().focus().insertContent([newBlock(item.kind), { type: 'paragraph' }]).run()">{{ item.label }}</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <DropdownMenu v-if="variables.length">
         <DropdownMenuTrigger as-child>
           <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar dato del sistema" :disabled="disabled"><Braces aria-hidden="true" /></Button>
