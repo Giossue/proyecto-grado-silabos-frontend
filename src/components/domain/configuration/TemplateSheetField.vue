@@ -81,7 +81,7 @@ const name = (): string => field.value.label.trim() || 'Campo sin nombre';
               <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Ayuda del campo ${name()}`"><CircleHelp aria-hidden="true" /></Button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <TooltipContent>Ayuda para quien lo llena</TooltipContent>
+          <TooltipContent>{{ help.trim() || 'Sin ayuda: clic para escribir una' }}</TooltipContent>
         </Tooltip>
         <PopoverContent class="w-80">
           <label class="flex flex-col gap-2 text-sm">
