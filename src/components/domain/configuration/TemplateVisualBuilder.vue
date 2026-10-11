@@ -192,6 +192,7 @@ const failed = (message: string): void => { error.value = message; };
         </TooltipTrigger>
         <TooltipContent>{{ previewLabel }}</TooltipContent>
       </Tooltip>
+      <div data-sheet-content class="flex flex-col gap-6">
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
           <img :src="logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain" @load="paginate">
@@ -259,6 +260,7 @@ const failed = (message: string): void => { error.value = message; };
         <p v-if="fields.length === 0 && !preview" class="relative py-1 text-sm text-muted-foreground">Sección sin campos.<TemplateInsertPoint v-if="!locked" :disabled="busy" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="inline" gap="field" @insert="addField(section.id)" /></p>
       </section>
       </template>
+      </div>
 
     </article>
     </div>

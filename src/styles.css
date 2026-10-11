@@ -554,6 +554,15 @@
         min-height: 210mm;
     }
 
+    .template-sheet [data-sheet-content] > [data-page-spacer] {
+        margin-bottom: -1.5rem !important;
+    }
+
+    .template-sheet section > [data-page-spacer],
+    .template-sheet ol > [data-page-spacer] {
+        margin-bottom: -0.75rem !important;
+    }
+
     .template-sheet-title {
         color: var(--document-official-blue);
         text-align: center;

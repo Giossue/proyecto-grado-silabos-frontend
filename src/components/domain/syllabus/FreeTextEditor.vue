@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Table, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
-import type { Editor } from '@tiptap/core';
+import { Extension, type Editor } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { Bold, Braces, Italic, Underline, List, ListOrdered, Table2 } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
+import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import { emptyDocument } from '@/types/configuration';
+
+const PageSpacers = Extension.create({ name: 'pageSpacers', addProseMirrorPlugins: () => [pageSpacersPlugin()] });
 import { DOCUMENT_CELL_COLORS } from '@/lib/documentPalette';
 
 const props = withDefaults(defineProps<{
@@ -70,6 +73,7 @@ const editor = useEditor({
     extensions: [
         StarterKit.configure({ heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false }),
         Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
+        PageSpacers,
         DocumentVariable.configure({ labels: Object.fromEntries(props.variables.map((item) => [item.key, item.label])) }),
     ],
     onUpdate: ({ editor: current }) => {
