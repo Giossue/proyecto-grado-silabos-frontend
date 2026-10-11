@@ -188,7 +188,6 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
       <ImportSpreadsheetDialog
         v-if="mode === 'teachers' && assignments?.canCreateTeacher"
         title="Importar docentes"
-        description="Cree varios docentes de su carrera a la vez."
         endpoint="/coordination/academic/teachers/import"
         template-endpoint="/coordination/academic/teachers/import-template"
         template-name="plantilla-docentes.xlsx"
@@ -199,7 +198,6 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
       <ImportSpreadsheetDialog
         v-if="mode === 'curriculum' && curriculum && curriculum.curriculum.editable && !curriculum.curriculum.lock_reason"
         title="Importar malla"
-        description="Cree las materias de la malla, con sus horas y requisitos, desde un Excel."
         endpoint="/coordination/academic/curriculum-import"
         template-endpoint="/coordination/academic/curriculum-import/template"
         template-name="plantilla-malla.xlsx"

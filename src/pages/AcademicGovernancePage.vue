@@ -74,7 +74,6 @@ onMounted(load);
             <ImportSpreadsheetDialog
                 v-if="data && entity === 'carrera'"
                 title="Importar carreras"
-                description="Cree varias carreras a la vez."
                 endpoint="/admin/academic/careers/import"
                 template-endpoint="/admin/academic/careers/import-template"
                 template-name="plantilla-carreras.xlsx"

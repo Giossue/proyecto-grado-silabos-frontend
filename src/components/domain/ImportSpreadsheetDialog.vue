@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { withoutEndPeriod } from '@/lib/text';
 import { Download, FileSpreadsheet, Upload } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
@@ -8,13 +7,12 @@ import { downloadImportTemplate, sendImport, type ImportResult } from '@/api/spr
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const props = defineProps<{
     title: string;
-    description: string;
     endpoint: string;
     templateEndpoint: string;
     templateName: string;
@@ -56,10 +54,10 @@ const download = async (): Promise<void> => {
 <template>
     <Dialog v-model:open="open">
         <DialogTrigger as-child><Button type="button" variant="success"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></DialogTrigger>
-        <DialogContent class="max-h-screen flex flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+        <DialogContent :aria-describedby="undefined" class="max-h-screen flex flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
             <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
                 <div class="grid gap-4 p-6">
-                    <DialogHeader><DialogTitle>{{ title }}</DialogTitle><DialogDescription>{{ withoutEndPeriod(description) }}</DialogDescription></DialogHeader>
+                    <DialogHeader><DialogTitle>{{ title }}</DialogTitle></DialogHeader>
                     <div class="flex flex-col gap-4">
                         <div class="flex flex-col gap-2 text-sm">
                             <p>1. Descargue la plantilla y complete una fila por registro.</p>
