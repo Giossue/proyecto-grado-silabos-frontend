@@ -1,14 +1,13 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as structure from '@/api/template-structure';
+import * as templateApi from '@/api/template';
 import { ApiError } from '@/api/client';
 import type { TemplatePayload } from '@/api/template';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
-import { DropdownMenuRadioGroup } from '@/components/ui/dropdown-menu';
 import { emptyDocument, type FieldResponsible } from '@/types/configuration';
 import type { DocumentNode } from '@/lib/templateDocument';
 
-vi.mock('@/api/template-structure');
+vi.mock('@/api/template');
 
 type Template = NonNullable<TemplatePayload['template']>;
 const field = (id: string, label: string, quien_llena: FieldResponsible = 'docente') => ({ id, key: id, label, help: null, quien_llena, content: emptyDocument() });
@@ -48,7 +47,7 @@ describe('TemplateVisualBuilder', () => {
     vi.resetAllMocks();
     vi.useFakeTimers();
     document.body.innerHTML = '';
-    for (const fn of Object.values(structure)) if (vi.isMockFunction(fn)) fn.mockResolvedValue({ message: 'ok', section_id: 'new-section', field: { id: 'nuevo' } } as never);
+    vi.mocked(templateApi.importTemplateJson).mockResolvedValue({ message: 'ok' });
   });
   afterEach(() => vi.useRealTimers());
 
@@ -62,107 +61,111 @@ describe('TemplateVisualBuilder', () => {
     expect(body().querySelector('[aria-label="Contenido de Primero"]')).toBeTruthy();
   });
 
-  it('guarda solo el nombre del campo al dejar de escribir', async () => {
+  const save = async () => { await click(byText('button', 'Guardar')); };
+  const saved = () => vi.mocked(templateApi.importTemplateJson).mock.calls[0]![1] as { version: number; sections: Array<{ key: string; title: string; orientation: string; fields: Array<{ key: string; label: string; quien_llena: string; content: unknown }> }> };
+  const sheetField = (wrapper: Awaited<ReturnType<typeof mountBuilder>>, index = 0) => (wrapper.findAllComponents({ name: 'TemplateSheetField' })[index]!.vm as unknown as { $: { setupState: { patch: (changes: unknown) => void; applyPreset: (preset: unknown) => void } } }).$.setupState;
+
+  it('no guarda nada mientras se edita: solo al pulsar Guardar', async () => {
     await mountBuilder();
     await typeInto('Nombre del campo Primero', 'Primer campo');
-    expect(structure.updateField).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(900);
-    expect(structure.updateField).toHaveBeenCalledTimes(1);
-    expect(structure.updateField).toHaveBeenCalledWith('t1', 'f1', expect.objectContaining({ label: 'Primer campo', quien_llena: 'docente', content: emptyDocument() }));
+    await vi.advanceTimersByTimeAsync(2000);
+    expect(templateApi.importTemplateJson).not.toHaveBeenCalled();
+    await save();
+    expect(templateApi.importTemplateJson).toHaveBeenCalledTimes(1);
+    expect(templateApi.importTemplateJson).toHaveBeenCalledWith('t1', expect.objectContaining({ version: 1 }));
+    expect(saved().sections[0]!.fields[0]).toMatchObject({ key: 'f1', label: 'Primer campo', quien_llena: 'docente' });
   });
 
-  it('cambia quién llena el campo desde su menú y lo guarda enseguida', async () => {
+  it('Guardar queda deshabilitado mientras no haya cambios', async () => {
+    await mountBuilder();
+    expect(byText('button', 'Guardar')!.hasAttribute('disabled')).toBe(true);
+    await typeInto('Nombre del campo Primero', 'X');
+    expect(byText('button', 'Guardar')!.hasAttribute('disabled')).toBe(false);
+  });
+
+  it('cancelar descarta los cambios y vuelve a la vista', async () => {
+    await mountBuilder();
+    await typeInto('Nombre del campo Primero', 'Cambiado');
+    await click(byText('button', 'Cancelar'));
+    expect(templateApi.importTemplateJson).not.toHaveBeenCalled();
+    expect(byText('button', 'Editar')).toBeTruthy();
+    expect(body().textContent).not.toContain('Cambiado');
+  });
+
+  it('cambia quién llena el campo desde su menú y lo guarda con el botón', async () => {
     const wrapper = await mountBuilder();
     expect(body().querySelector('[aria-label="Quién llena el campo Primero"]')!.textContent).toContain('Docente');
-    const group = wrapper.findAllComponents(DropdownMenuRadioGroup)[0];
-    expect(group).toBeUndefined();
-    const field = wrapper.findAllComponents({ name: 'TemplateSheetField' })[0]!;
-    (field.vm as unknown as { $: { setupState: { draft: { quien_llena: string } } } }).$.setupState.draft.quien_llena = 'institucional';
-    await vi.advanceTimersByTimeAsync(10);
-    expect(structure.updateField).toHaveBeenCalledWith('t1', 'f1', expect.objectContaining({ quien_llena: 'institucional' }));
+    sheetField(wrapper).patch({ quien_llena: 'institucional' });
+    await flushPromises();
+    await save();
+    expect(saved().sections[0]!.fields[0]!.quien_llena).toBe('institucional');
   });
 
-  it('aplica una plantilla lista: pone su nombre, su contenido y quién lo llena, y lo guarda', async () => {
+  it('aplica una plantilla lista: pone su nombre, su contenido y quién lo llena', async () => {
     const wrapper = await mountBuilder();
-    const field = wrapper.findAllComponents({ name: 'TemplateSheetField' })[0]!;
-    (field.vm as unknown as { $: { setupState: { applyPreset: (preset: unknown) => void } } }).$.setupState.applyPreset(presets[0]);
-    await vi.advanceTimersByTimeAsync(900);
-    expect(structure.updateField).toHaveBeenCalledWith('t1', 'f1', expect.objectContaining({ label: 'Datos de identificación', quien_llena: 'institucional', content: presets[0]!.content }));
+    sheetField(wrapper).applyPreset(presets[0]);
+    await flushPromises();
+    await save();
+    expect(saved().sections[0]!.fields[0]).toMatchObject({ label: 'Datos de identificación', quien_llena: 'institucional', content: presets[0]!.content });
   });
 
-  it('agrega el campo vacío de inmediato, en la posición donde se pasó el cursor', async () => {
+  it('agrega el campo vacío donde se pasó el cursor, sin llamar al servidor hasta guardar', async () => {
     await mountBuilder();
     const points = [...body().querySelectorAll<HTMLElement>('[data-insert-point] button')].filter((el) => el.textContent?.trim() === 'Agregar campo');
     await click(points[1]);
-    expect(structure.createField).toHaveBeenCalledWith('t1', 's1', expect.objectContaining({ quien_llena: 'docente', label: '', content: emptyDocument() }));
-    expect(structure.reorderFields).toHaveBeenCalledWith('t1', 's1', ['f1', 'nuevo', 'f2']);
-    expect(body().querySelector('[role="dialog"]')).toBeNull();
+    expect(templateApi.importTemplateJson).not.toHaveBeenCalled();
+    await save();
+    expect(saved().sections[0]!.fields.map((item) => item.key)).toEqual(['f1', 'campo', 'f2']);
+    expect(saved().sections[0]!.fields[1]).toMatchObject({ quien_llena: 'docente', label: '', content: emptyDocument() });
   });
 
-  it('agrega una sección «Nueva sección» de inmediato y avisa del cambio', async () => {
+  it('agrega una sección «Nueva sección» y avisa del cambio al guardar', async () => {
     const wrapper = await mountBuilder();
     await click(body().querySelector('[aria-label="Nueva sección"]'));
-    expect(structure.createSection).toHaveBeenCalledWith('t1', expect.objectContaining({ title: 'Nueva sección', orientation: 'portrait' }));
+    await save();
+    expect(saved().sections.map((item) => item.title)).toContain('Nueva sección');
     expect(wrapper.emitted('changed')).toHaveLength(1);
-    expect(body().querySelector('[role="dialog"]')).toBeNull();
   });
 
-  it('renombra la sección al salir del campo y cambia su orientación', async () => {
-    const wrapper = await mountBuilder();
-    const input = await typeInto('Sección Uno', 'Uno bis');
-    input.dispatchEvent(new Event('blur'));
-    await flushPromises();
-    expect(structure.renameSection).toHaveBeenCalledWith('t1', 's1', 'Uno bis', 'portrait');
-
-    await click(body().querySelector('[aria-label="Orientación de la sección Uno"]'));
-    expect(structure.renameSection).toHaveBeenLastCalledWith('t1', 's1', 'Uno', 'landscape');
-    expect(wrapper.emitted('changed')).toBeTruthy();
-  });
-
-  it('no renombra la sección si el nombre queda vacío', async () => {
+  it('renombra la sección y cambia su orientación', async () => {
     await mountBuilder();
-    const input = await typeInto('Sección Uno', '   ');
-    input.dispatchEvent(new Event('blur'));
-    await flushPromises();
-    expect(structure.renameSection).not.toHaveBeenCalled();
+    await typeInto('Sección Uno', 'Uno bis');
+    await click(body().querySelector('[aria-label="Orientación de la sección Uno bis"]'));
+    await save();
+    expect(saved().sections[0]).toMatchObject({ title: 'Uno bis', orientation: 'landscape' });
   });
 
   it('reordena secciones y campos subiendo y bajando', async () => {
     await mountBuilder();
-    await click(body().querySelector('[aria-label="Bajar la sección Uno"]'));
-    expect(structure.reorderSections).toHaveBeenCalledWith('t1', ['s2', 's1']);
     await click(body().querySelector('[aria-label="Subir el campo Segundo"]'));
-    expect(structure.reorderFields).toHaveBeenCalledWith('t1', 's1', ['f2', 'f1']);
-    expect(body().querySelector<HTMLButtonElement>('[aria-label="Subir la sección Uno"]')!.disabled).toBe(true);
-    expect(body().querySelector<HTMLButtonElement>('[aria-label="Bajar el campo Segundo"]')!.disabled).toBe(true);
+    expect(body().querySelector<HTMLButtonElement>('[aria-label="Subir el campo Segundo"]')!.disabled).toBe(true);
+    await click(body().querySelector('[aria-label="Bajar la sección Uno"]'));
+    expect(body().querySelector<HTMLButtonElement>('[aria-label="Subir la sección Uno"]')!.disabled).toBe(false);
+    await save();
+    expect(saved().sections.map((item) => item.key)).toEqual(['dos', 'uno']);
+    expect(saved().sections[1]!.fields.map((item) => item.key)).toEqual(['f2', 'f1']);
   });
 
   it('elimina campos y secciones solo tras confirmar', async () => {
     await mountBuilder();
     await click(body().querySelector('[aria-label="Eliminar el campo Primero"]'));
-    expect(structure.deleteField).not.toHaveBeenCalled();
+    expect(body().querySelector('[aria-label="Nombre del campo Primero"]')).not.toBeNull();
     await click(byText('button', 'Eliminar'));
-    expect(structure.deleteField).toHaveBeenCalledWith('t1', 'f1');
+    expect(body().querySelector('[aria-label="Nombre del campo Primero"]')).toBeNull();
     await click(body().querySelector('[aria-label="Eliminar la sección Uno"]'));
-    expect(body().textContent).toContain('con sus 2 campos');
+    expect(body().textContent).toContain('con sus 1 campos');
     await click(byText('button', 'Eliminar'));
-    expect(structure.deleteSection).toHaveBeenCalledWith('t1', 's1');
+    await save();
+    expect(saved().sections.map((item) => item.key)).toEqual(['dos']);
   });
 
-  it('muestra el mensaje del servidor cuando un proceso abierto rechaza el cambio', async () => {
-    vi.mocked(structure.reorderSections).mockRejectedValue(new ApiError('Hay un proceso abierto: pause la convocatoria.', 409));
-    await mountBuilder();
-    await click(body().querySelector('[aria-label="Bajar la sección Uno"]'));
-    expect(body().textContent).toContain('Hay un proceso abierto: pause la convocatoria.');
-  });
-
-  it('avisa si no se pudo guardar un campo', async () => {
-    vi.mocked(structure.updateField).mockRejectedValue(new ApiError('No se pudo guardar.', 422));
+  it('muestra el mensaje del servidor cuando no se pudo guardar y sigue en edición', async () => {
+    vi.mocked(templateApi.importTemplateJson).mockRejectedValue(new ApiError('Hay un proceso abierto: pause la convocatoria.', 409));
     await mountBuilder();
     await typeInto('Nombre del campo Primero', 'X');
-    await vi.advanceTimersByTimeAsync(900);
-    await flushPromises();
-    expect(body().textContent).toContain('No se pudo guardar.');
+    await save();
+    expect(body().textContent).toContain('Hay un proceso abierto: pause la convocatoria.');
+    expect(byText('button', 'Guardar')).toBeTruthy();
   });
 
   it('con un proceso abierto no deja entrar a editar', async () => {
@@ -177,7 +180,8 @@ describe('TemplateVisualBuilder', () => {
     expect(body().textContent).toContain('Uno');
     await click(byText('button', 'Editar'));
     expect(body().querySelector('[aria-label="Sección Uno"]')).not.toBeNull();
-    expect(byText('button', 'Terminar edición')).toBeTruthy();
+    expect(byText('button', 'Guardar')).toBeTruthy();
+    expect(byText('button', 'Cancelar')).toBeTruthy();
   });
 
   it('dibuja la tabla de identificación sin subtitular los campos sin nombre', async () => {

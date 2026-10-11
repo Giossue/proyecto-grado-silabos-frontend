@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Check, Pencil, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Pencil, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
-import { createField, createSection, deleteField, deleteSection, renameSection, reorderFields, reorderSections } from '@/api/template-structure';
+import { importTemplateJson } from '@/api/template';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
 import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
@@ -80,9 +80,55 @@ onBeforeUnmount(() => {
 });
 const busy = ref(false);
 const error = ref<string | null>(null);
+const draft = ref<TemplateSectionPayload[]>([]);
+const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+let temporary = 0;
+const temporaryId = (): string => `nuevo-${temporary += 1}`;
+
+const awaitingReload = ref(false);
+const source = computed<TemplateSectionPayload[]>(() => preview.value && !awaitingReload.value ? props.template.sections : draft.value);
+const changed = computed(() => !preview.value && JSON.stringify(draft.value) !== JSON.stringify(props.template.sections));
+const startEditing = (): void => {
+    if (!awaitingReload.value) draft.value = clone(props.template.sections);
+    error.value = null;
+    preview.value = false;
+};
+const cancelEditing = (): void => {
+    preview.value = true;
+    draft.value = [];
+    error.value = null;
+    selectedField.value = null;
+    selectedSection.value = null;
+};
+const save = async (): Promise<void> => {
+    if (busy.value) return;
+    busy.value = true;
+    error.value = null;
+    try {
+        await importTemplateJson(props.template.id, {
+            version: 1,
+            sections: draft.value.map((section) => ({
+                key: section.key,
+                title: section.title.trim(),
+                orientation: section.orientation,
+                fields: section.fields.map((field) => ({ key: field.key, label: field.label.trim(), help: field.help?.trim() ? field.help.trim() : null, quien_llena: field.quien_llena, content: field.content })),
+            })),
+        });
+        toast.success('Plantilla guardada');
+        awaitingReload.value = true;
+        preview.value = true;
+        selectedField.value = null;
+        selectedSection.value = null;
+        emit('changed');
+    } catch (reason) {
+        error.value = apiMessage(reason, 'No se pudo guardar la plantilla');
+    } finally {
+        busy.value = false;
+    }
+};
 
 const isLandscape = (section: TemplateSectionPayload): boolean => section.orientation === 'landscape';
-const sections = computed(() => props.template.sections.map((section, index) => ({ section, fields: section.fields, landscape: isLandscape(section), index })));
+const sections = computed(() => source.value.map((section, index) => ({ section, fields: section.fields, landscape: isLandscape(section), index })));
 
 const sheets = computed(() => {
     const groups: Array<{ landscape: boolean; items: typeof sections.value }> = [];
@@ -93,25 +139,16 @@ const sheets = computed(() => {
     }
     return groups.length > 0 ? groups : [{ landscape: false, items: [] as typeof sections.value }];
 });
-watch([() => props.template, preview], () => { void nextTick(paginate); }, { deep: true });
-const usedSectionKeys = computed(() => props.template.sections.map((section) => section.key));
+watch(() => props.template, () => {
+    if (!awaitingReload.value) return;
+    awaitingReload.value = false;
+    draft.value = [];
+});
+watch([() => props.template, preview, draft], () => { void nextTick(paginate); }, { deep: true });
+const usedSectionKeys = computed(() => source.value.map((section) => section.key));
 const usedFieldKeys = computed(() => sections.value.flatMap((entry) => entry.fields.map((field) => field.key)));
 
 const removal = ref<{ kind: 'section' | 'field'; id: string; name: string; count: number } | null>(null);
-
-const run = async (action: () => Promise<unknown>, fallback: string): Promise<void> => {
-    if (busy.value) return;
-    busy.value = true;
-    error.value = null;
-    try {
-        await action();
-        emit('changed');
-    } catch (reason) {
-        error.value = apiMessage(reason, fallback);
-    } finally {
-        busy.value = false;
-    }
-};
 
 const moved = <T,>(items: T[], index: number, direction: -1 | 1): T[] => {
     const next = [...items];
@@ -119,47 +156,34 @@ const moved = <T,>(items: T[], index: number, direction: -1 | 1): T[] => {
     next.splice(index + direction, 0, item!);
     return next;
 };
-const moveSection = (index: number, direction: -1 | 1): Promise<void> =>
-    run(() => reorderSections(props.template.id, moved(props.template.sections, index, direction).map((section) => section.id)), 'No se pudo cambiar el orden.');
-const moveField = (sectionId: string, fields: TemplateField[], index: number, direction: -1 | 1): Promise<void> =>
-    run(() => reorderFields(props.template.id, sectionId, moved(fields, index, direction).map((field) => field.id)), 'No se pudo cambiar el orden.');
-
-const inserted = (order: string[], id: string, index: number): string[] => {
-    const next = order.filter((item) => item !== id);
-    next.splice(Math.min(Math.max(index, 0), next.length), 0, id);
-    return next;
+const moveSection = (index: number, direction: -1 | 1): void => { draft.value = moved(draft.value, index, direction); };
+const moveField = (sectionId: string, index: number, direction: -1 | 1): void => {
+    const section = draft.value.find((item) => item.id === sectionId);
+    if (section) section.fields = moved(section.fields, index, direction);
 };
-const addSection = (index?: number): Promise<void> => run(async () => {
-    const created = await createSection(props.template.id, { key: uniqueKey('nueva seccion', 'seccion', usedSectionKeys.value), title: 'Nueva sección', orientation: 'portrait' });
-    if (index !== undefined && index < props.template.sections.length) {
-        await reorderSections(props.template.id, inserted(props.template.sections.map((section) => section.id), created.section_id, index));
-    }
-    focusId.value = created.section_id;
-}, 'No se pudo agregar la sección.');
-const addField = (sectionId: string, index?: number): Promise<void> => run(async () => {
-    const current = sections.value.find((entry) => entry.section.id === sectionId)?.fields ?? [];
-    const created = await createField(props.template.id, sectionId, { key: uniqueKey('', 'campo', usedFieldKeys.value), label: '', quien_llena: 'docente', content: emptyDocument() });
-    const id = created.field?.id;
-    if (id && index !== undefined && index < current.length) {
-        await reorderFields(props.template.id, sectionId, inserted(current.map((field) => field.id), id, index));
-    }
-    focusId.value = id ?? null;
-}, 'No se pudo agregar el campo.');
+
+const addSection = (index?: number): void => {
+    const created: TemplateSectionPayload = { id: temporaryId(), key: uniqueKey('nueva seccion', 'seccion', usedSectionKeys.value), title: 'Nueva sección', description: null, orientation: 'portrait', fields: [] };
+    draft.value.splice(index ?? draft.value.length, 0, created);
+    focusId.value = created.id;
+};
+const addField = (sectionId: string, index?: number): void => {
+    const section = draft.value.find((item) => item.id === sectionId);
+    if (!section) return;
+    const created: TemplateField = { id: temporaryId(), key: uniqueKey('', 'campo', usedFieldKeys.value), label: '', help: null, quien_llena: 'docente', content: emptyDocument() };
+    section.fields.splice(index ?? section.fields.length, 0, created);
+    focusId.value = created.id;
+};
 const insertAfterLastField = (key: string, sectionId: string, sectionIndex: number): void => {
-    if (key === 'section') void addSection(sectionIndex + 1);
-    else void addField(sectionId);
+    if (key === 'section') addSection(sectionIndex + 1);
+    else addField(sectionId);
 };
-
-const titleDraft = ref<Record<string, string>>({});
-const titleOf = (section: TemplateSectionPayload): string => titleDraft.value[section.id] ?? section.title;
-const commitTitle = (section: TemplateSectionPayload): void => {
-    const value = (titleDraft.value[section.id] ?? section.title).trim();
-    delete titleDraft.value[section.id];
-    if (value === '' || value === section.title) return;
-    void run(() => renameSection(props.template.id, section.id, value, section.orientation), 'No se pudo renombrar la sección.');
+const setField = (sectionId: string, fieldId: string, value: TemplateField): void => {
+    const section = draft.value.find((item) => item.id === sectionId);
+    const position = section?.fields.findIndex((item) => item.id === fieldId) ?? -1;
+    if (section && position >= 0) section.fields[position] = value;
 };
-const setOrientation = (section: TemplateSectionPayload, orientation: 'portrait' | 'landscape'): Promise<void> =>
-    orientation === section.orientation ? Promise.resolve() : run(() => renameSection(props.template.id, section.id, titleOf(section).trim() || section.title, orientation), 'No se pudo cambiar la orientación.');
+const setOrientation = (section: TemplateSectionPayload, orientation: 'portrait' | 'landscape'): void => { section.orientation = orientation; };
 const blurTarget = (event: Event): void => { if (event.target instanceof HTMLElement) event.target.blur(); };
 const setTitleRef = (component: unknown, sectionId: string): void => {
     const element = (component as { $el?: unknown } | null)?.$el;
@@ -168,19 +192,15 @@ const setTitleRef = (component: unknown, sectionId: string): void => {
     void nextTick(() => { element.focus(); element.select(); });
 };
 
-const confirmRemoval = (): Promise<void> => {
+const confirmRemoval = (): void => {
     const target = removal.value;
-    if (!target) return Promise.resolve();
-    return run(async () => {
-        if (target.kind === 'section') await deleteSection(props.template.id, target.id);
-        else await deleteField(props.template.id, target.id);
-        toast.success(target.kind === 'section' ? 'Sección eliminada.' : 'Campo eliminado.');
-        removal.value = null;
-    }, 'No se pudo eliminar.');
+    if (!target) return;
+    if (target.kind === 'section') draft.value = draft.value.filter((section) => section.id !== target.id);
+    else for (const section of draft.value) section.fields = section.fields.filter((field) => field.id !== target.id);
+    removal.value = null;
 };
 
 const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo sin nombre';
-const failed = (message: string): void => { error.value = message; };
 </script>
 
 <template>
@@ -189,7 +209,11 @@ const failed = (message: string): void => { error.value = message; };
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
     <div class="mx-auto flex w-full max-w-3xl justify-end">
-      <Button type="button" :variant="preview ? 'default' : 'outline'" :disabled="locked" @click="preview = !preview"><Check v-if="!preview" data-icon="inline-start" aria-hidden="true" /><Pencil v-else data-icon="inline-start" aria-hidden="true" />{{ preview ? 'Editar' : 'Terminar edición' }}</Button>
+      <Button v-if="preview" type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
+      <div v-else class="flex items-center gap-2">
+        <Button type="button" variant="outline" :disabled="busy" @click="cancelEditing">Cancelar</Button>
+        <Button type="button" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar</Button>
+      </div>
     </div>
 
     <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto py-4" tabindex="0" role="region" :aria-label="`Hoja ${sheetIndex + 1} de la plantilla con desplazamiento horizontal`">
@@ -212,13 +236,12 @@ const failed = (message: string): void => { error.value = message; };
         <div v-else data-section-heading :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')" @focusin="selectSection(section.id)">
           <Input
             :ref="(element) => setTitleRef(element, section.id)"
-            :model-value="titleOf(section)"
+            :model-value="section.title"
             maxlength="180"
             :disabled="locked"
             :aria-label="`Sección ${section.title}`"
             class="h-auto min-w-0 border-transparent bg-transparent px-0 py-0 font-bold shadow-none hover:border-input focus-visible:border-input"
-            @update:model-value="titleDraft[section.id] = String($event)"
-            @blur="commitTitle(section)"
+            @update:model-value="section.title = String($event)"
             @keydown.enter.prevent="blurTarget($event)"
           />
           <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
@@ -242,7 +265,6 @@ const failed = (message: string): void => { error.value = message; };
             <TemplateFieldContent v-if="preview" :field="field" :variables="variables" preview />
             <TemplateSheetField
               v-else
-              :template-id="template.id"
               :field="field"
               :presets="presets"
               :locked="locked"
@@ -252,9 +274,9 @@ const failed = (message: string): void => { error.value = message; };
               :can-move-down="fieldIndex < fields.length - 1"
               :busy="busy"
               @select="selectField(field.id)"
-              @move="moveField(section.id, fields, fieldIndex, $event)"
+              @update:field="setField(section.id, field.id, $event)"
+              @move="moveField(section.id, fieldIndex, $event)"
               @remove="removal = { kind: 'field', id: field.id, name: fieldName(field), count: 0 }"
-              @failed="failed"
             />
           </li>
           </template>
@@ -273,13 +295,12 @@ const failed = (message: string): void => { error.value = message; };
           <DialogTitle>{{ removal?.kind === 'section' ? 'Eliminar sección' : 'Eliminar campo' }}</DialogTitle>
           <DialogDescription>
             {{ removal?.kind === 'section' ? `Se quitará «${removal?.name}» con sus ${removal?.count} campos de la plantilla.` : `Se quitará «${removal?.name}» de la plantilla.` }}
-            Los sílabos ya entregados conservan su propia copia.
+            Se aplica al guardar la plantilla.
           </DialogDescription>
         </DialogHeader>
-        <Alert v-if="error" variant="destructive" role="alert"><AlertDescription>{{ error }}</AlertDescription></Alert>
         <DialogFooter>
-          <Button type="button" variant="outline" :disabled="busy" @click="removal = null">Cancelar</Button>
-          <Button type="button" variant="destructive" :disabled="busy" @click="confirmRemoval"><Spinner v-if="busy" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Eliminar</Button>
+          <Button type="button" variant="outline" @click="removal = null">Cancelar</Button>
+          <Button type="button" variant="destructive" @click="confirmRemoval"><Trash2 data-icon="inline-start" aria-hidden="true" />Eliminar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
