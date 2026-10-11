@@ -8,7 +8,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DocumentBlock, DocumentWithBlocks, DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
-import { BLOCK_KINDS, newBlock, type DocumentNode, type TemplateVariable } from '@/lib/templateDocument';
+import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import { emptyDocument } from '@/types/configuration';
 
@@ -130,14 +130,6 @@ defineExpose({ editor });
         <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().deleteTable().run()">Quitar tabla</Button>
         <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
       </template>
-      <DropdownMenu v-if="blocks === 'configure'">
-        <DropdownMenuTrigger as-child>
-          <Button type="button" variant="ghost" size="sm" aria-label="Insertar bloque" :disabled="disabled">Bloque<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem v-for="item in BLOCK_KINDS" :key="item.kind" @select="editor?.chain().focus().insertContent([newBlock(item.kind), { type: 'paragraph' }]).run()">{{ item.label }}</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
       <DropdownMenu v-if="variables.length">
         <DropdownMenuTrigger as-child>
           <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar dato del sistema" :disabled="disabled"><Braces aria-hidden="true" /></Button>
