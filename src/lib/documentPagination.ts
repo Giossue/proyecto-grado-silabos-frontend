@@ -1,14 +1,14 @@
 export const LETTER_PAGE = {
     width: (21.59 * 96) / 2.54,
     height: (27.94 * 96) / 2.54,
-    margin: (2.5 * 96) / 2.54,
+    margin: (1.5 * 96) / 2.54,
     gap: 24,
 };
 
 export const A4_PAGE = {
     width: (21 * 96) / 2.54,
     height: (29.7 * 96) / 2.54,
-    margin: (2.5 * 96) / 2.54,
+    margin: (1.5 * 96) / 2.54,
     gap: 24,
 };
 
