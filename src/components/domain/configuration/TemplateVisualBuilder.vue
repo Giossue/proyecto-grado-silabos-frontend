@@ -40,9 +40,13 @@ const scaleFor = (landscape: boolean): number => {
     return available.value > 0 ? Math.min(1, available.value / width) : 1;
 };
 const sheetElements = new Map<number, HTMLElement>();
+const contentObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => paginate()) : null;
 const setSheet = (index: number, element: unknown): void => {
-    if (element instanceof HTMLElement) sheetElements.set(index, element);
-    else sheetElements.delete(index);
+    if (element instanceof HTMLElement) {
+        sheetElements.set(index, element);
+        const content = element.querySelector(':scope > [data-sheet-content]');
+        if (content) contentObserver?.observe(content);
+    } else sheetElements.delete(index);
 };
 let paginationFrame = 0;
 const paginate = (): void => {
@@ -71,6 +75,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
     document.removeEventListener('pointerdown', clearSelectionOutside);
     resizeObserver?.disconnect();
+    contentObserver?.disconnect();
     cancelAnimationFrame(paginationFrame);
 });
 const busy = ref(false);
