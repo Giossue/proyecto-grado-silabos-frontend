@@ -20,8 +20,8 @@ const template: Template = {
 };
 
 const presets = [
-  { key: 'identificacion' as const, label: 'Datos de identificación', quien_llena: 'institucional' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [] }] } as DocumentNode },
-  { key: 'planificacion' as const, label: 'Unidades', quien_llena: 'docente' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [] }] } as DocumentNode },
+  { key: 'identificacion' as const, field_key: 'asignatura', label: 'Datos de identificación', quien_llena: 'institucional' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Dato' }] }] }] }] }] } as DocumentNode },
+  { key: 'planificacion' as const, field_key: 'unidades', label: 'Unidades', quien_llena: 'docente' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Dato' }] }] }] }] }] } as DocumentNode },
 ];
 const mountBuilder = async (props: { processLock?: string | null } = {}) => {
   const wrapper = mount(TemplateVisualBuilder, { props: { template, presets, ...props }, attachTo: document.body });
@@ -105,7 +105,29 @@ describe('TemplateVisualBuilder', () => {
     sheetField(wrapper).applyPreset(presets[0]);
     await flushPromises();
     await save();
-    expect(saved().sections[0]!.fields[0]).toMatchObject({ label: 'Datos de identificación', quien_llena: 'institucional', content: presets[0]!.content });
+    expect(saved().sections[0]!.fields[0]).toMatchObject({ key: 'asignatura', label: 'Datos de identificación', quien_llena: 'institucional' });
+    expect(JSON.stringify(saved().sections[0]!.fields[0]!.content)).toContain('Dato');
+  });
+
+  it('un campo que es plantilla no se edita: solo se mueve o se elimina', async () => {
+    const wrapper = await mountBuilder();
+    sheetField(wrapper).applyPreset(presets[0]);
+    await flushPromises();
+    expect(body().querySelector<HTMLInputElement>('[aria-label="Nombre del campo Datos de identificación"]')!.disabled).toBe(true);
+    expect(body().querySelector('[aria-label="Quién llena el campo Datos de identificación"]')).toBeNull();
+    expect(body().querySelector('[aria-label="Ayuda del campo Datos de identificación"]')).toBeNull();
+    expect(body().querySelector<HTMLButtonElement>('[aria-label="Eliminar el campo Datos de identificación"]')!.disabled).toBe(false);
+    expect(body().querySelector('[role="toolbar"]')).toBeNull();
+  });
+
+  it('no deja poner dos veces la misma plantilla', async () => {
+    const wrapper = await mountBuilder();
+    sheetField(wrapper, 0).applyPreset(presets[0]);
+    await flushPromises();
+    sheetField(wrapper, 1).applyPreset(presets[0]);
+    await flushPromises();
+    expect(body().textContent).toContain('Esa plantilla ya está en el sílabo');
+    expect(body().querySelector('[aria-label="Quién llena el campo Segundo"]')).not.toBeNull();
   });
 
   it('agrega el campo vacío donde se pasó el cursor, sin llamar al servidor hasta guardar', async () => {

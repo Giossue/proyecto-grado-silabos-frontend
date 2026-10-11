@@ -14,6 +14,7 @@ import { FIELD_RESPONSIBLES, responsibleLabel, type FieldResponsible } from '@/t
 
 const props = defineProps<{
     presets?: TemplatePreset[];
+    block?: boolean;
     locked: boolean;
     selected: boolean;
     focusOnCreate?: boolean;
@@ -35,7 +36,7 @@ onMounted(() => {
 });
 
 const applyPreset = (preset: TemplatePreset): void => {
-    patch({ label: preset.label, quien_llena: preset.quien_llena, content: JSON.parse(JSON.stringify(preset.content)) as DocumentNode });
+    patch({ key: preset.field_key, label: preset.label, quien_llena: preset.quien_llena, content: JSON.parse(JSON.stringify(preset.content)) as DocumentNode });
 };
 const name = (): string => field.value.label.trim() || 'Campo sin nombre';
 </script>
@@ -48,13 +49,13 @@ const name = (): string => field.value.label.trim() || 'Campo sin nombre';
         maxlength="180"
         placeholder="Nombre del campo (opcional)"
         :aria-label="`Nombre del campo ${name()}`"
-        :disabled="locked"
+        :disabled="locked || block"
         class="h-7 min-w-0 flex-1 border-transparent bg-transparent px-0 font-bold shadow-none hover:border-transparent focus-visible:border-input focus-visible:px-2"
       />
     </div>
-    <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :disabled="locked" :toolbar="selected && !locked" bare /></div>
+    <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :disabled="locked || block" :toolbar="selected && !locked && !block" bare /></div>
     <div :class="cn('absolute -top-7 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selected ? 'opacity-100' : 'opacity-0')">
-      <DropdownMenu>
+      <DropdownMenu v-if="!block">
         <DropdownMenuTrigger as-child>
           <Button type="button" variant="ghost" size="sm" :disabled="locked" :aria-label="`Quién llena el campo ${name()}`" data-field-responsible>{{ responsibleLabel(field.quien_llena) }}<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
         </DropdownMenuTrigger>
@@ -73,7 +74,7 @@ const name = (): string => field.value.label.trim() || 'Campo sin nombre';
           </template>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Popover>
+      <Popover v-if="!block">
         <Tooltip>
           <TooltipTrigger as-child>
             <PopoverTrigger as-child>

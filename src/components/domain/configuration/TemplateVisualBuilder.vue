@@ -178,10 +178,17 @@ const insertAfterLastField = (key: string, sectionId: string, sectionIndex: numb
     if (key === 'section') addSection(sectionIndex + 1);
     else addField(sectionId);
 };
+const isBlock = (field: TemplateField): boolean => props.presets?.some((preset) => preset.field_key === field.key) ?? false;
 const setField = (sectionId: string, fieldId: string, value: TemplateField): void => {
     const section = draft.value.find((item) => item.id === sectionId);
     const position = section?.fields.findIndex((item) => item.id === fieldId) ?? -1;
-    if (section && position >= 0) section.fields[position] = value;
+    if (!section || position < 0) return;
+    const duplicated = value.key !== section.fields[position]!.key && sections.value.some((entry) => entry.fields.some((field) => field.id !== fieldId && field.key === value.key));
+    if (duplicated) {
+        error.value = 'Esa plantilla ya está en el sílabo';
+        return;
+    }
+    section.fields[position] = value;
 };
 const setOrientation = (section: TemplateSectionPayload, orientation: 'portrait' | 'landscape'): void => { section.orientation = orientation; };
 const blurTarget = (event: Event): void => { if (event.target instanceof HTMLElement) event.target.blur(); };
@@ -267,6 +274,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
               v-else
               :field="field"
               :presets="presets"
+              :block="isBlock(field)"
               :locked="locked"
               :selected="selectedField === field.id"
               :focus-on-create="focusId === field.id"
