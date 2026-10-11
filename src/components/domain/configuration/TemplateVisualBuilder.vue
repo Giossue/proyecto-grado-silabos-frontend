@@ -280,21 +280,21 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 scroll-mt-36 flex-col gap-3">
         <TemplateInsertPoint v-if="!preview && !locked && (sectionIndex === 0 || (sections[sectionIndex - 1]?.fields.length ?? 0) === 0)" :disabled="locked || busy" :actions="[{ key: 'section', label: 'Nueva sección' }]" position="top" gap="section" @insert="addSection(sectionIndex)" />
         <h3 v-if="preview" class="font-bold">{{ section.title }}</h3>
-        <div v-else data-section-heading :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')" @focusin="selectSection(section.id)">
+        <div v-else data-section-heading :class="cn('group relative flex items-center gap-2 rounded-sm px-1 py-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')" @focusin="selectSection(section.id)">
           <Input
             :ref="(element) => setTitleRef(element, section.id)"
             :model-value="section.title"
             maxlength="180"
             :disabled="locked"
             :aria-label="`Sección ${section.title}`"
-            class="h-auto min-w-0 border-transparent bg-transparent px-0 py-0 font-bold shadow-none hover:border-input focus-visible:border-input"
+            class="h-auto min-w-0 flex-1 border-transparent bg-transparent px-0 py-0 font-bold shadow-none focus-visible:border-transparent focus-visible:ring-0"
             @update:model-value="setTitle(section, String($event))"
             @keydown.enter.prevent="blurTarget($event)"
           />
-          <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
+          <div :class="cn('flex shrink-0 items-center gap-0.5 focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy" :aria-label="`Orientación de la sección ${section.title}`" :aria-pressed="section.orientation === 'landscape'" @click="setOrientation(section, section.orientation === 'landscape' ? 'portrait' : 'landscape')"><RectangleHorizontal v-if="section.orientation === 'landscape'" aria-hidden="true" /><RectangleVertical v-else aria-hidden="true" /></Button>
+                <Button type="button" variant="ghost" size="sm" :disabled="locked || busy" :aria-label="`Orientación de la sección ${section.title}`" :aria-pressed="section.orientation === 'landscape'" @click="setOrientation(section, section.orientation === 'landscape' ? 'portrait' : 'landscape')"><RectangleHorizontal v-if="section.orientation === 'landscape'" data-icon="inline-start" aria-hidden="true" /><RectangleVertical v-else data-icon="inline-start" aria-hidden="true" />{{ section.orientation === 'landscape' ? 'Horizontal' : 'Vertical' }}</Button>
               </TooltipTrigger>
               <TooltipContent>{{ section.orientation === 'landscape' ? 'Hoja horizontal: pasar a vertical' : 'Hoja vertical: pasar a horizontal' }}</TooltipContent>
             </Tooltip>
