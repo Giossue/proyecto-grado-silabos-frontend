@@ -3,10 +3,10 @@ import { Table, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
 import { Extension, type Editor } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
-import { Bold, Braces, Italic, Underline, List, ListOrdered, Table2 } from '@lucide/vue';
+import { Bold, Braces, ChevronDown, Italic, Underline, List, ListOrdered, Table2 } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
@@ -107,26 +107,26 @@ defineExpose({ editor });
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista con viñetas" :aria-pressed="editor.isActive('bulletList')" :disabled="disabled" @click="editor.chain().focus().toggleBulletList().run()"><List aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista numerada" :aria-pressed="editor.isActive('orderedList')" :disabled="disabled" @click="editor.chain().focus().toggleOrderedList().run()"><ListOrdered aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" :disabled="disabled" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"><Table2 aria-hidden="true" /></Button>
-      <DropdownMenu v-if="editor.isActive('table')">
-        <DropdownMenuTrigger as-child>
-          <Button type="button" variant="ghost" size="sm" aria-label="Opciones de tabla" :disabled="disabled">Tabla</Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuItem @select="editor?.chain().focus().addRowAfter().run()">Agregar fila</DropdownMenuItem>
-          <DropdownMenuItem @select="editor?.chain().focus().deleteRow().run()">Quitar fila</DropdownMenuItem>
-          <DropdownMenuItem @select="editor?.chain().focus().addColumnAfter().run()">Agregar columna</DropdownMenuItem>
-          <DropdownMenuItem @select="editor?.chain().focus().deleteColumn().run()">Quitar columna</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem :disabled="!editor.can().mergeCells()" @select="editor?.chain().focus().mergeCells().run()">Combinar celdas</DropdownMenuItem>
-          <DropdownMenuItem :disabled="!editor.can().splitCell()" @select="editor?.chain().focus().splitCell().run()">Separar celdas</DropdownMenuItem>
-          <DropdownMenuItem @select="editor?.chain().focus().toggleHeaderCell().run()">Encabezado</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuLabel>Fondo de celda</DropdownMenuLabel>
-          <DropdownMenuItem v-for="color in DOCUMENT_CELL_COLORS" :key="color.value ?? 'none'" @select="editor?.chain().focus().setCellAttribute('backgroundColor', color.value ?? null).run()">{{ color.label }}</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem @select="editor?.chain().focus().deleteTable().run()">Quitar tabla</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <template v-if="editor.isActive('table')">
+        <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
+        <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().addRowAfter().run()">+ Fila</Button>
+        <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().deleteRow().run()">− Fila</Button>
+        <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().addColumnAfter().run()">+ Columna</Button>
+        <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().deleteColumn().run()">− Columna</Button>
+        <Button type="button" variant="ghost" size="sm" :disabled="disabled || !editor.can().mergeCells()" @click="editor.chain().focus().mergeCells().run()">Combinar</Button>
+        <Button type="button" variant="ghost" size="sm" :disabled="disabled || !editor.can().splitCell()" @click="editor.chain().focus().splitCell().run()">Separar</Button>
+        <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().toggleHeaderCell().run()">Encabezado</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button type="button" variant="ghost" size="sm" aria-label="Fondo de celda" :disabled="disabled">Fondo<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem v-for="color in DOCUMENT_CELL_COLORS" :key="color.value ?? 'none'" @select="editor?.chain().focus().setCellAttribute('backgroundColor', color.value ?? null).run()">{{ color.label }}</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().deleteTable().run()">Quitar tabla</Button>
+        <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
+      </template>
       <DropdownMenu v-if="variables.length">
         <DropdownMenuTrigger as-child>
           <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar dato del sistema" :disabled="disabled"><Braces aria-hidden="true" /></Button>

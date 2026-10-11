@@ -41,7 +41,10 @@ describe('Editor de documentos compartido', () => {
         expect(nodesOfType(value, 'tableRow')).toHaveLength(3);
         expect(nodesOfType(value, 'tableRow')[0]!.content).toHaveLength(3);
         expect(nodesOfType(value, 'text').map((node) => node.text)).toContain('999');
-        await vi.waitFor(() => expect(wrapper.find('[aria-label="Opciones de tabla"]').exists()).toBe(true));
+        await vi.waitFor(() => {
+            const labels = wrapper.findAll('[role="toolbar"] button').map((button) => button.text());
+            expect(labels).toEqual(expect.arrayContaining(['+ Fila', '− Fila', '+ Columna', '− Columna', 'Combinar', 'Separar', 'Encabezado', 'Quitar tabla']));
+        });
     });
 
     it('conserva celdas combinadas, estilos y variables al escribir', async () => {
