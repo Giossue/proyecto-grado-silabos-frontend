@@ -8,7 +8,7 @@ export type TemplateAppearance = { font_family: string; body_font_size: number; 
 
 export type TemplateSectionPayload = { id: string; key: string; title: string; description: string | null; orientation: 'portrait' | 'landscape'; fields: TemplateField[] };
 export type TemplatePayload = { processLock: string | null; processLockDetail?: LockDetail | null; templateChangedDuringPause?: boolean; variables?: TemplateVariable[]; presets?: TemplatePreset[]; template: null | { id: string; name: string; description: string | null; titleBlock: { text: string }; sections: TemplateSectionPayload[] }; logos?: { institution: string; faculty: string; institution_size: { width: number; height: number }; faculty_size: { width: number; height: number } } };
-export type TemplatePreset = { key: 'identificacion' | 'planificacion' | 'firmas'; label: string; quien_llena: FieldResponsible; content: DocumentNode };
+export type TemplatePreset = { key: 'identificacion' | 'planificacion'; label: string; quien_llena: FieldResponsible; content: DocumentNode };
 export const getTemplate = () => api<TemplatePayload>('/admin/template');
 export const createTemplate = () => api<{ message: string; template_id: string }>('/admin/template', { method: 'POST', body: JSON.stringify({}) });
 export const getTemplateJson = (id: string) => api<unknown>(`/admin/template/${id}/json`);

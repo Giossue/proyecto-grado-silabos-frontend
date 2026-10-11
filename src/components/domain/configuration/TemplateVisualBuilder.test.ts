@@ -22,7 +22,6 @@ const template: Template = {
 const presets = [
   { key: 'identificacion' as const, label: 'Datos de identificación', quien_llena: 'institucional' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [] }] } as DocumentNode },
   { key: 'planificacion' as const, label: 'Unidades', quien_llena: 'docente' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [] }] } as DocumentNode },
-  { key: 'firmas' as const, label: 'Revisión y aprobación', quien_llena: 'institucional' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [] }] } as DocumentNode },
 ];
 const mountBuilder = async (props: { processLock?: string | null } = {}) => {
   const wrapper = mount(TemplateVisualBuilder, { props: { template, presets, ...props }, attachTo: document.body });
