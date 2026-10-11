@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Pencil, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Pencil, Plus, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson } from '@/api/template';
@@ -332,6 +332,10 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         <p v-if="fields.length === 0 && !preview" class="relative py-1 text-sm text-muted-foreground">Sección sin campos.<TemplateInsertPoint v-if="!locked" :disabled="busy" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="inline" gap="field" @insert="addField(section.id)" /></p>
       </section>
       </template>
+      <div v-if="sheetIndex === 0 && !preview && sections.length === 0" class="flex flex-col items-center gap-3 py-10 text-sm text-muted-foreground">
+        <p>La plantilla no tiene secciones</p>
+        <Button type="button" variant="outline" :disabled="locked || busy" @click="addSection()"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
+      </div>
       </div>
 
     </article>
