@@ -1,6 +1,7 @@
 import { h } from 'vue';
 import type { VNodeChild } from 'vue';
-import { blockOf, blockPlain, type DocumentNode } from '@/lib/templateDocument';
+import { identificationTable } from '@/lib/blockLayouts';
+import { blockOf, blockPlain, identificationSlotText, type DocumentNode } from '@/lib/templateDocument';
 
 const TAGS: Record<string, string> = {
     paragraph: 'p', bulletList: 'ul', orderedList: 'ol', listItem: 'li',
@@ -41,8 +42,17 @@ const tableColumnWidths = (table: DocumentNode): number[] | null => {
     return null;
 };
 
+export type RenderOptions = { variable?: (id: string) => VNodeChild | undefined };
+
 const renderBlock = (node: DocumentNode): VNodeChild => {
     const { kind, props, value } = blockOf(node);
+    if (kind === 'identificacion') {
+        const table = identificationTable();
+
+        return table === null
+            ? h('p', {}, 'Identificación institucional')
+            : renderFreeText(table, { variable: (id) => identificationSlotText(id, value.disability!) });
+    }
     const showRows = kind === 'repetible' || (value.answer === 'si' && props.columns.length > 0);
     const table = showRows && props.columns.length > 0
         ? h('table', { class: 'free-text-table' }, [h('tbody', {}, [
@@ -58,7 +68,7 @@ const renderBlock = (node: DocumentNode): VNodeChild => {
     ]);
 };
 
-export const renderFreeText = (node: DocumentNode): VNodeChild => {
+export const renderFreeText = (node: DocumentNode, options?: RenderOptions): VNodeChild => {
     if (node.type === 'documentBlock') return renderBlock(node);
     if (node.type === 'text') {
         const marks = new Set((node.marks ?? []).map((mark) => mark.type));
@@ -71,11 +81,16 @@ export const renderFreeText = (node: DocumentNode): VNodeChild => {
 
         return content;
     }
-    if (node.type === 'variable') return h('span', { class: 'document-variable' }, String(node.attrs?.label || 'Dato del sistema'));
+    if (node.type === 'variable') {
+        const custom = options?.variable?.(String(node.attrs?.id ?? ''));
+        if (custom !== undefined) return custom;
+
+        return h('span', { class: 'document-variable' }, String(node.attrs?.label || 'Dato del sistema'));
+    }
     if (node.type === 'hardBreak') {
         return h('br');
     }
-    const children = (node.content ?? []).map((child) => renderFreeText(child));
+    const children = (node.content ?? []).map((child) => renderFreeText(child, options));
     if (node.type === 'doc') {
         return h('div', { class: 'free-text-view' }, children);
     }

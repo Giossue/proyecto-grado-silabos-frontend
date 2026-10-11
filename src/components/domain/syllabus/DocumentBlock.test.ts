@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
+import { setBlockLayouts } from '@/lib/blockLayouts';
 import { newBlock, nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 
 const disability = (value: Record<string, unknown> = { answer: null, rows: [] }): DocumentNode => ({
@@ -88,5 +89,62 @@ describe('bloques dentro del documento', () => {
         const wrapper = mount(FreeTextContent, { props: { value: disability() } });
         expect(wrapper.text()).toContain('Sin responder');
         expect(wrapper.text()).not.toContain('Sin contenido');
+    });
+
+    describe('identificación como una sola tabla', () => {
+        const cell = (type: string, text: string, attrs: Record<string, unknown> = {}): DocumentNode => ({ type, attrs: { colspan: 1, rowspan: 1, ...attrs }, content: [{ type: 'paragraph', content: text === '' ? [] : [{ type: 'text', text }] }] });
+        const slot = (id: string): DocumentNode => ({ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'variable', attrs: { id, label: id } }] }] });
+        const layout: DocumentNode = { type: 'table', content: [
+            { type: 'tableRow', content: [cell('tableHeader', 'FACULTAD: Ciencias')] },
+            { type: 'tableRow', content: [cell('tableHeader', 'ESTUDIANTES CON DISCAPACIDAD'), cell('tableCell', 'Sí'), slot('discapacidad_si'), cell('tableCell', 'No'), slot('discapacidad_no'), slot('discapacidad_tipo'), slot('discapacidad_descripcion')] },
+            { type: 'tableRow', content: [cell('tableCell', 'Formación escrita en el perfil')] },
+        ] };
+        const identification = (disability: Record<string, unknown> = { answer: null, type: '', description: '' }): DocumentNode => ({ type: 'doc', content: [{ type: 'documentBlock', attrs: { kind: 'identificacion', props: {}, value: { disability } } }] });
+        const disabilityOf = (document: DocumentNode) => (nodesOfType(document, 'documentBlock')[0]!.attrs as { value: { disability: { answer: string | null; type: string; description: string } } }).value.disability;
+
+        it('se dibuja como una sola tabla con la respuesta marcada', () => {
+            setBlockLayouts({ identificacion: { table: layout } });
+            const wrapper = mount(FreeTextContent, { props: { value: identification({ answer: 'si', type: 'Visual', description: 'Baja visión' }) } });
+            expect(wrapper.findAll('table')).toHaveLength(1);
+            expect(wrapper.text()).toContain('FACULTAD: Ciencias');
+            expect(wrapper.text()).toContain('Formación escrita en el perfil');
+            const cells = wrapper.findAll('td').map((item) => item.text());
+            expect(cells).toEqual(expect.arrayContaining(['X', 'Visual', 'Baja visión']));
+        });
+
+        it('el docente marca Sí y escribe el tipo dentro de la misma tabla', async () => {
+            setBlockLayouts({ identificacion: { table: layout } });
+            const wrapper = mountEditor(identification());
+            await flushPromises();
+            expect(document.body.querySelectorAll('table')).toHaveLength(1);
+            expect(document.body.querySelector<HTMLInputElement>('[aria-label="Tipo de discapacidad"]')!.disabled).toBe(true);
+
+            document.body.querySelector<HTMLElement>('[aria-label="Hay estudiantes con discapacidad"]')!.click();
+            await flushPromises();
+            expect(disabilityOf(last(wrapper)).answer).toBe('si');
+
+            const input = document.body.querySelector<HTMLInputElement>('[aria-label="Tipo de discapacidad"]')!;
+            input.value = 'Auditiva';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            await flushPromises();
+            expect(disabilityOf(last(wrapper)).type).toBe('Auditiva');
+        });
+
+        it('marcar No borra el detalle', async () => {
+            setBlockLayouts({ identificacion: { table: layout } });
+            const wrapper = mountEditor(identification({ answer: 'si', type: 'Visual', description: 'x' }));
+            await flushPromises();
+            document.body.querySelector<HTMLElement>('[aria-label="No hay estudiantes con discapacidad"]')!.click();
+            await flushPromises();
+            expect(disabilityOf(last(wrapper))).toEqual({ answer: 'no', type: '', description: '' });
+        });
+
+        it('el administrador la ve sin controles de respuesta', async () => {
+            setBlockLayouts({ identificacion: { table: layout } });
+            mountEditor(identification(), 'configure');
+            await flushPromises();
+            expect(document.body.querySelector('[aria-label="Tipo de discapacidad"]')).toBeNull();
+            expect(document.body.querySelector('[aria-label="Quitar el bloque"]')).not.toBeNull();
+        });
     });
 });

@@ -1,3 +1,4 @@
+import { setBlockLayouts, type BlockLayouts } from "@/lib/blockLayouts";
 import { api } from "@/api/client";
 import type { TemplateAppearance } from "@/api/template";
 import type { DocumentField } from "@/types/configuration";
@@ -57,6 +58,7 @@ export type SyllabusDetail = {
   copy_sources?: Array<{ id: string; parallel: string; state: SyllabusRow["state"] }>;
   teachers: string[];
   template_variables?: Record<string, string>;
+  blocks?: BlockLayouts;
   validation?: {
     version_bloqueo: number;
     blocking_errors: number;
@@ -135,13 +137,17 @@ export const getTeacherSyllabi = (
   return api<SyllabiResponse>(`/teacher/syllabi${suffix}`);
 };
 
+const rememberBlocks = <T extends { syllabus: SyllabusDetail }>(response: T): T => {
+  setBlockLayouts(response.syllabus.blocks);
+  return response;
+};
 export const getTeacherSyllabus = (syllabusId: string) =>
-  api<{ syllabus: SyllabusDetail }>(`/teacher/syllabi/${syllabusId}`);
+  api<{ syllabus: SyllabusDetail }>(`/teacher/syllabi/${syllabusId}`).then(rememberBlocks);
 export const startTeacherSyllabus = (syllabusId: string) =>
   api<{ message: string; syllabus: SyllabusDetail }>(
     `/teacher/syllabi/${syllabusId}/start`,
     { method: "POST" },
-  );
+  ).then(rememberBlocks);
 export const saveTeacherField = (
   syllabusId: string,
   fieldId: string,
