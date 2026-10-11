@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Pencil, Plus, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, ImageUp, Pencil, Plus, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
-import { importTemplateJson } from '@/api/template';
+import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
 import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
@@ -96,6 +96,31 @@ const temporaryId = (): string => `nuevo-${temporary += 1}`;
 const awaitingReload = ref(false);
 const source = computed<TemplateSectionPayload[]>(() => preview.value && !awaitingReload.value ? props.template.sections : draft.value);
 const dirty = ref(false);
+const titleDraft = ref('');
+const logoInput = ref<HTMLInputElement | null>(null);
+const logoOverride = ref<string | null>(null);
+const uploadingLogo = ref(false);
+const shownTitle = computed(() => preview.value && !awaitingReload.value ? props.template.titleBlock.text : titleDraft.value);
+const setDocumentTitle = (value: string): void => {
+    titleDraft.value = value;
+    touched();
+};
+const changeLogo = async (event: Event): Promise<void> => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || uploadingLogo.value) return;
+    uploadingLogo.value = true;
+    error.value = null;
+    try {
+        logoOverride.value = (await uploadTemplateLogo(props.template.id, file)).logo;
+        toast.success('Logo actualizado');
+    } catch (reason) {
+        error.value = apiMessage(reason, 'No se pudo cambiar el logo');
+    } finally {
+        uploadingLogo.value = false;
+    }
+};
 const changed = computed(() => !preview.value && dirty.value);
 const saveWithKeyboard = (event: KeyboardEvent): void => {
     if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's' || preview.value) return;
@@ -109,6 +134,7 @@ const touched = (): void => {
 const startEditing = (): void => {
     if (!awaitingReload.value) {
         draft.value = clone(props.template.sections);
+        titleDraft.value = props.template.titleBlock.text;
         dirty.value = false;
     }
     error.value = null;
@@ -128,6 +154,7 @@ const save = async (): Promise<void> => {
     try {
         await importTemplateJson(props.template.id, {
             version: 1,
+            title: titleDraft.value.trim() || props.template.titleBlock.text,
             sections: draft.value.map((section) => ({
                 key: section.key,
                 title: section.title.trim(),
@@ -267,11 +294,18 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <div data-sheet-content class="flex flex-col gap-6">
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
-          <img :src="logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain" @load="paginate">
+          <div class="flex items-center gap-2">
+            <img :src="logoOverride ?? logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain" @load="paginate">
+            <template v-if="!preview && !locked">
+              <Button type="button" variant="outline" size="sm" :disabled="uploadingLogo" aria-label="Cambiar el logo de la universidad" @click="logoInput?.click()"><Spinner v-if="uploadingLogo" data-icon="inline-start" /><ImageUp v-else data-icon="inline-start" aria-hidden="true" />Cambiar</Button>
+              <input ref="logoInput" type="file" accept="image/png" class="sr-only" tabindex="-1" aria-hidden="true" @change="changeLogo">
+            </template>
+          </div>
           <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain" @load="paginate">
         </div>
         <div class="flex items-center justify-center px-2 py-1">
-          <h2 class="template-sheet-title">{{ template.titleBlock.text }}</h2>
+          <Input v-if="!preview && !locked" :model-value="titleDraft" maxlength="180" aria-label="Título del documento" class="template-sheet-title h-auto border-transparent bg-transparent text-center shadow-none hover:border-input focus-visible:border-input" @update:model-value="setDocumentTitle(String($event))" />
+          <h2 v-else class="template-sheet-title">{{ shownTitle }}</h2>
         </div>
       </header>
 

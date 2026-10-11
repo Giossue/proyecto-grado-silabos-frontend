@@ -103,6 +103,13 @@ describe('TemplateVisualBuilder', () => {
     expect(templateApi.importTemplateJson).toHaveBeenCalledTimes(1);
   });
 
+  it('permite cambiar el título del documento y lo envía al guardar', async () => {
+    await mountBuilder();
+    await typeInto('Título del documento', 'SÍLABO UEB');
+    await save();
+    expect(templateApi.importTemplateJson).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ title: 'SÍLABO UEB' }));
+  });
+
   it('cancelar descarta los cambios y vuelve a la vista', async () => {
     await mountBuilder();
     await typeInto('Nombre del campo Primero', 'Cambiado');
@@ -223,7 +230,7 @@ describe('TemplateVisualBuilder', () => {
     expect(body().querySelector<HTMLInputElement>('[aria-label="Nombre del campo Campo sin nombre"]')!.value).toBe('');
   });
 
-  it('el título y los logos son fijos y no aparecen como campos editables', async () => {
+  it('en la vista muestra el título y los logos sin controles de edición', async () => {
     mount(TemplateVisualBuilder, { props: { template, logos: { institution: '/institution.png', faculty: '/faculty.png', institution_size: { width: 120, height: 40 }, faculty_size: { width: 120, height: 40 } } }, attachTo: document.body });
     expect(body().querySelector('h2')?.textContent).toBe('SÍLABO');
     expect(body().querySelectorAll('header img')).toHaveLength(2);

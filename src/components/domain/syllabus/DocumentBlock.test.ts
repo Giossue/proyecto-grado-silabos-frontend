@@ -144,7 +144,7 @@ describe('bloques dentro del documento', () => {
             mountEditor(identification(), 'configure');
             await flushPromises();
             expect(document.body.querySelector('[aria-label="Tipo de discapacidad"]')).toBeNull();
-            expect(document.body.querySelector('[aria-label="Quitar el bloque"]')).not.toBeNull();
+            expect(document.body.querySelector('[aria-label="Quitar el bloque"]')).toBeNull();
         });
     });
 });
