@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import { RotateCcw } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { createTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
+import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
+import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -58,16 +60,27 @@ const load = async ({ silent = false }: { silent?: boolean } = {}): Promise<void
     }
 };
 
+const unsaved = ref(false);
+const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
+const warnBeforeUnload = (event: BeforeUnloadEvent): void => {
+    if (!unsaved.value) return;
+    event.preventDefault();
+    event.returnValue = '';
+};
+onBeforeRouteLeave(() => !unsaved.value || askToDiscard());
+
 const reloadFromMutation = (): void => {
     void load({ silent: true });
 };
 
 onMounted(() => {
     window.addEventListener('silabos:template-changed', reloadFromMutation);
+    window.addEventListener('beforeunload', warnBeforeUnload);
     void load();
 });
 onBeforeUnmount(() => {
     window.removeEventListener('silabos:template-changed', reloadFromMutation);
+    window.removeEventListener('beforeunload', warnBeforeUnload);
 });
 </script>
 
@@ -103,6 +116,7 @@ onBeforeUnmount(() => {
             <ProcessLockAlert v-if="payload?.processLock" :lock="payload.processLockDetail" />
         </div>
 
-        <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" />
+        <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" @dirty="unsaved = $event" />
+        <UnsavedChangesDialog :open="discardOpen" title="Hay cambios sin guardar" description="Los cambios de la plantilla no se guardaron. Si sale, los perderá" discard-label="Salir y descartar cambios" @continue="decideDiscard(false)" @discard="decideDiscard(true)" @update:open="(value) => { if (!value) decideDiscard(false); }" />
     </PageFrame>
 </template>

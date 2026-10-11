@@ -82,6 +82,32 @@ describe('TemplateVisualBuilder', () => {
     expect(byText('button', 'Guardar')!.hasAttribute('disabled')).toBe(false);
   });
 
+  it('avisa que hay cambios sin guardar y deja de avisar al cancelar', async () => {
+    const wrapper = await mountBuilder();
+    expect(body().textContent).not.toContain('Sin guardar');
+    await typeInto('Nombre del campo Primero', 'Cambiado');
+    expect(body().textContent).toContain('Sin guardar');
+    expect(wrapper.emitted('dirty')!.at(-1)).toEqual([true]);
+    await click(byText('button', 'Cancelar'));
+    expect(wrapper.emitted('dirty')!.at(-1)).toEqual([false]);
+  });
+
+  it('Ctrl+S guarda mientras se edita, pero solo si hay cambios', async () => {
+    await mountBuilder();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }));
+    await flushPromises();
+    expect(templateApi.importTemplateJson).not.toHaveBeenCalled();
+    await typeInto('Nombre del campo Primero', 'Cambiado');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }));
+    await flushPromises();
+    expect(templateApi.importTemplateJson).toHaveBeenCalledTimes(1);
+  });
+
+  it('ofrece ir directo a cada sección', async () => {
+    await mountBuilder();
+    expect(body().querySelector('[aria-label="Ir a una sección"]')).not.toBeNull();
+  });
+
   it('cancelar descarta los cambios y vuelve a la vista', async () => {
     await mountBuilder();
     await typeInto('Nombre del campo Primero', 'Cambiado');

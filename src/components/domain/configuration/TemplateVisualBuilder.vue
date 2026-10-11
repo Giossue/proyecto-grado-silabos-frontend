@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, Pencil, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, ChevronDown, ListTree, Pencil, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson } from '@/api/template';
@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/lib/toast';
@@ -20,7 +21,7 @@ import { emptyDocument } from '@/types/configuration';
 
 
 const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; variables?: TemplatePayload['variables']; presets?: TemplatePayload['presets'] }>();
-const emit = defineEmits<{ changed: [] }>();
+const emit = defineEmits<{ changed: []; dirty: [value: boolean] }>();
 
 const locked = computed(() => Boolean(props.processLock));
 const preview = ref(true);
@@ -40,7 +41,7 @@ const scaleFor = (landscape: boolean): number => {
     return available.value > 0 ? Math.min(1, available.value / width) : 1;
 };
 const sheetElements = new Map<number, HTMLElement>();
-const contentObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => paginate()) : null;
+const contentObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => paginateSoon()) : null;
 const setSheet = (index: number, element: unknown): void => {
     if (element instanceof HTMLElement) {
         sheetElements.set(index, element);
@@ -49,6 +50,11 @@ const setSheet = (index: number, element: unknown): void => {
     } else sheetElements.delete(index);
 };
 let paginationFrame = 0;
+let paginationTimer: ReturnType<typeof setTimeout> | undefined;
+const paginateSoon = (): void => {
+    clearTimeout(paginationTimer);
+    paginationTimer = setTimeout(() => paginate(), 250);
+};
 const paginate = (): void => {
     cancelAnimationFrame(paginationFrame);
     paginationFrame = requestAnimationFrame(() => {
@@ -64,6 +70,7 @@ const clearSelectionOutside = (event: PointerEvent): void => {
 };
 onMounted(() => {
     document.addEventListener('pointerdown', clearSelectionOutside);
+    document.addEventListener('keydown', saveWithKeyboard);
     if (root.value && typeof ResizeObserver !== 'undefined') {
         available.value = root.value.clientWidth;
         resizeObserver = new ResizeObserver(() => { available.value = root.value?.clientWidth ?? 0; });
@@ -74,9 +81,11 @@ onMounted(() => {
 });
 onBeforeUnmount(() => {
     document.removeEventListener('pointerdown', clearSelectionOutside);
+    document.removeEventListener('keydown', saveWithKeyboard);
     resizeObserver?.disconnect();
     contentObserver?.disconnect();
     cancelAnimationFrame(paginationFrame);
+    clearTimeout(paginationTimer);
 });
 const busy = ref(false);
 const error = ref<string | null>(null);
@@ -87,9 +96,25 @@ const temporaryId = (): string => `nuevo-${temporary += 1}`;
 
 const awaitingReload = ref(false);
 const source = computed<TemplateSectionPayload[]>(() => preview.value && !awaitingReload.value ? props.template.sections : draft.value);
-const changed = computed(() => !preview.value && JSON.stringify(draft.value) !== JSON.stringify(props.template.sections));
+const dirty = ref(false);
+const changed = computed(() => !preview.value && dirty.value);
+const goToSection = (id: string): void => {
+    root.value?.querySelector(`[data-section="${id}"]`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+};
+const saveWithKeyboard = (event: KeyboardEvent): void => {
+    if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's' || preview.value) return;
+    event.preventDefault();
+    if (changed.value) void save();
+};
+const touched = (): void => {
+    dirty.value = true;
+    paginateSoon();
+};
 const startEditing = (): void => {
-    if (!awaitingReload.value) draft.value = clone(props.template.sections);
+    if (!awaitingReload.value) {
+        draft.value = clone(props.template.sections);
+        dirty.value = false;
+    }
     error.value = null;
     preview.value = false;
 };
@@ -139,12 +164,13 @@ const sheets = computed(() => {
     }
     return groups.length > 0 ? groups : [{ landscape: false, items: [] as typeof sections.value }];
 });
+watch(changed, (value) => emit('dirty', value));
 watch(() => props.template, () => {
     if (!awaitingReload.value) return;
     awaitingReload.value = false;
     draft.value = [];
 });
-watch([() => props.template, preview, draft], () => { void nextTick(paginate); }, { deep: true });
+watch([() => props.template, preview], () => { void nextTick(paginate); }, { deep: true });
 const usedSectionKeys = computed(() => source.value.map((section) => section.key));
 const usedFieldKeys = computed(() => sections.value.flatMap((entry) => entry.fields.map((field) => field.key)));
 
@@ -156,16 +182,21 @@ const moved = <T,>(items: T[], index: number, direction: -1 | 1): T[] => {
     next.splice(index + direction, 0, item!);
     return next;
 };
-const moveSection = (index: number, direction: -1 | 1): void => { draft.value = moved(draft.value, index, direction); };
+const moveSection = (index: number, direction: -1 | 1): void => {
+    draft.value = moved(draft.value, index, direction);
+    touched();
+};
 const moveField = (sectionId: string, index: number, direction: -1 | 1): void => {
     const section = draft.value.find((item) => item.id === sectionId);
     if (section) section.fields = moved(section.fields, index, direction);
+    touched();
 };
 
 const addSection = (index?: number): void => {
     const created: TemplateSectionPayload = { id: temporaryId(), key: uniqueKey('nueva seccion', 'seccion', usedSectionKeys.value), title: 'Nueva sección', description: null, orientation: 'portrait', fields: [] };
     draft.value.splice(index ?? draft.value.length, 0, created);
     focusId.value = created.id;
+    touched();
 };
 const addField = (sectionId: string, index?: number): void => {
     const section = draft.value.find((item) => item.id === sectionId);
@@ -173,6 +204,7 @@ const addField = (sectionId: string, index?: number): void => {
     const created: TemplateField = { id: temporaryId(), key: uniqueKey('', 'campo', usedFieldKeys.value), label: '', help: null, quien_llena: 'docente', content: emptyDocument() };
     section.fields.splice(index ?? section.fields.length, 0, created);
     focusId.value = created.id;
+    touched();
 };
 const insertAfterLastField = (key: string, sectionId: string, sectionIndex: number): void => {
     if (key === 'section') addSection(sectionIndex + 1);
@@ -189,8 +221,16 @@ const setField = (sectionId: string, fieldId: string, value: TemplateField): voi
         return;
     }
     section.fields[position] = value;
+    touched();
 };
-const setOrientation = (section: TemplateSectionPayload, orientation: 'portrait' | 'landscape'): void => { section.orientation = orientation; };
+const setOrientation = (section: TemplateSectionPayload, orientation: 'portrait' | 'landscape'): void => {
+    section.orientation = orientation;
+    touched();
+};
+const setTitle = (section: TemplateSectionPayload, title: string): void => {
+    section.title = title;
+    touched();
+};
 const blurTarget = (event: Event): void => { if (event.target instanceof HTMLElement) event.target.blur(); };
 const setTitleRef = (component: unknown, sectionId: string): void => {
     const element = (component as { $el?: unknown } | null)?.$el;
@@ -205,6 +245,7 @@ const confirmRemoval = (): void => {
     if (target.kind === 'section') draft.value = draft.value.filter((section) => section.id !== target.id);
     else for (const section of draft.value) section.fields = section.fields.filter((field) => field.id !== target.id);
     removal.value = null;
+    touched();
 };
 
 const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo sin nombre';
@@ -215,11 +256,22 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
   <div ref="root" class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
-    <div class="mx-auto flex w-full max-w-3xl justify-end">
-      <Button v-if="preview" type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
-      <div v-else class="flex items-center gap-2">
-        <Button type="button" variant="outline" :disabled="busy" @click="cancelEditing">Cancelar</Button>
-        <Button type="button" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar</Button>
+    <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full max-w-3xl justify-end">
+      <div class="pointer-events-auto flex items-center gap-2 rounded-lg border bg-background/95 p-1.5 shadow-sm">
+        <DropdownMenu v-if="sections.length > 1">
+          <DropdownMenuTrigger as-child>
+            <Button type="button" variant="ghost" aria-label="Ir a una sección"><ListTree data-icon="inline-start" aria-hidden="true" />Secciones<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" class="max-h-80 w-80 overflow-y-auto">
+            <DropdownMenuItem v-for="entry in sections" :key="entry.section.id" @select="goToSection(entry.section.id)">{{ entry.section.title }}</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button v-if="preview" type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
+        <template v-else>
+          <span v-if="changed" class="px-1 text-sm text-muted-foreground" aria-live="polite">Sin guardar</span>
+          <Button type="button" variant="outline" :disabled="busy" @click="cancelEditing">Cancelar</Button>
+          <Button type="button" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar</Button>
+        </template>
       </div>
     </div>
 
@@ -237,7 +289,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       </header>
 
       <template v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id">
-      <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 flex-col gap-3">
+      <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 scroll-mt-36 flex-col gap-3">
         <TemplateInsertPoint v-if="!preview && !locked && (sectionIndex === 0 || (sections[sectionIndex - 1]?.fields.length ?? 0) === 0)" :disabled="locked || busy" :actions="[{ key: 'section', label: 'Nueva sección' }]" position="top" gap="section" @insert="addSection(sectionIndex)" />
         <h3 v-if="preview" class="font-bold">{{ section.title }}</h3>
         <div v-else data-section-heading :class="cn('group relative rounded-sm px-1 pb-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')" @focusin="selectSection(section.id)">
@@ -248,7 +300,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
             :disabled="locked"
             :aria-label="`Sección ${section.title}`"
             class="h-auto min-w-0 border-transparent bg-transparent px-0 py-0 font-bold shadow-none hover:border-input focus-visible:border-input"
-            @update:model-value="section.title = String($event)"
+            @update:model-value="setTitle(section, String($event))"
             @keydown.enter.prevent="blurTarget($event)"
           />
           <div :class="cn('absolute -top-4 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
