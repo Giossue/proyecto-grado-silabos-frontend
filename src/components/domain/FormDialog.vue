@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { withoutEndPeriod } from '@/lib/text';
 import { Plus } from '@lucide/vue';
 import type { VNode } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -17,7 +15,6 @@ withDefaults(
     defineProps<{
         triggerLabel: string;
         title: string;
-        description: string;
         showTrigger?: boolean;
         disabled?: boolean;
         compact?: boolean;
@@ -53,10 +50,9 @@ const close = (): void => {
                 </Button>
             </slot>
         </DialogTrigger>
-        <DialogContent :class="['flex flex-col gap-0 overflow-hidden p-0', compact ? 'sm:max-w-3xl' : 'sm:max-w-5xl', compact || fit ? 'max-h-[calc(100dvh-2rem)]' : 'h-[calc(100dvh-2rem)]']">
+        <DialogContent :aria-describedby="undefined" :class="['flex flex-col gap-0 overflow-hidden p-0', compact ? 'sm:max-w-3xl' : 'sm:max-w-5xl', compact || fit ? 'max-h-[calc(100dvh-2rem)]' : 'h-[calc(100dvh-2rem)]']">
             <DialogHeader class="px-6 pt-6 pb-4">
                 <DialogTitle>{{ title }}</DialogTitle>
-                <DialogDescription>{{ withoutEndPeriod(description) }}</DialogDescription>
             </DialogHeader>
             <div class="relative flex min-h-0 flex-1 flex-col">
                 <ScrollArea class="min-h-0 flex-1">

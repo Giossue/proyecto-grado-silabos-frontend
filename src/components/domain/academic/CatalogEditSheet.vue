@@ -33,9 +33,6 @@ const currentLogo = computed(() => Boolean(props.logoUrl) && !removeLogo.value);
 const form = ref({ nombre: '', code: '', faculty_id: '', campus: '', modality: '', starts_on: '', ends_on: '' });
 
 const entityLabel = computed(() => ({ facultad: 'facultad', carrera: 'carrera', periodo: 'periodo académico' })[props.entity]);
-const formDescription = computed(() => props.entity === 'periodo'
-    ? 'Actualice las fechas.'
-    : 'Actualice los datos.');
 const facultyOptions = computed(() => props.faculties.filter((faculty) => faculty.activo || faculty.id === props.facultyId));
 
 const reset = (): void => {
@@ -89,7 +86,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" trigger-label="Editar" :title="`Editar ${entityLabel}`" :description="formDescription" :show-trigger="showTrigger">
+    <FormSheet v-model:open="open" trigger-label="Editar" :title="`Editar ${entityLabel}`" :show-trigger="showTrigger">
         <template v-if="actions.length > 0" #header-actions><SheetActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
         <template #default="{ close }">
             <form @submit.prevent="submit()"><FieldGroup>

@@ -6,7 +6,7 @@ import { createCareerRecord, type TeacherAssignments } from "@/api/career-academ
 import FormSheet from "@/components/domain/FormSheet.vue";
 import FormSheetActions from "@/components/domain/FormSheetActions.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const props = withDefaults(defineProps<{ options: TeacherAssignments["options"]; showTrigger?: boolean; disabled?: boolean }>(), { showTrigger: true, disabled: false });
@@ -34,11 +34,11 @@ watch(open, (value) => value && reset());
 </script>
 
 <template>
-  <FormSheet v-model:open="open" :disabled="props.disabled" trigger-label="Asignar docente" title="Asignar docente" description="Elija un docente y un paralelo. Si el paralelo ya tenía sílabo, se borra y el docente empieza de cero." :show-trigger="showTrigger">
+  <FormSheet v-model:open="open" :disabled="props.disabled" trigger-label="Asignar docente" title="Asignar docente" :show-trigger="showTrigger">
     <template #default="{ close }"><form class="contents" @submit.prevent="submit(close)"><FieldGroup>
       <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
       <Field><FieldLabel for="teacher-user" required>Docente</FieldLabel><Select v-model="userId" required><SelectTrigger id="teacher-user"><SelectValue placeholder="Seleccione un docente" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="teacher in props.options.teacherUsers" :key="teacher.id" :value="teacher.id">{{ teacher.name }} · {{ teacher.email }}</SelectItem></SelectGroup></SelectContent></Select></Field>
-      <Field><FieldLabel for="teacher-parallel" required>Materia y paralelo</FieldLabel><Select v-model="parallelId" required><SelectTrigger id="teacher-parallel"><SelectValue placeholder="Seleccione un paralelo" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="parallel in props.options.parallels" :key="parallel.id" :value="parallel.id">{{ parallel.label }}</SelectItem></SelectGroup></SelectContent></Select></Field>
+      <Field><FieldLabel for="teacher-parallel" required>Materia y paralelo</FieldLabel><Select v-model="parallelId" required><SelectTrigger id="teacher-parallel"><SelectValue placeholder="Seleccione un paralelo" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="parallel in props.options.parallels" :key="parallel.id" :value="parallel.id">{{ parallel.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldDescription>Si el paralelo ya tenía sílabo, se borra y el docente empieza de cero</FieldDescription></Field>
       <FormSheetActions :close="close" :processing="saving" :disabled="!userId || !parallelId" :icon="UserPlus" label="Asignar docencia" />
     </FieldGroup></form></template>
   </FormSheet>

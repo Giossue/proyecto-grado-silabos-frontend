@@ -41,7 +41,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? 'Crear docente para su carrera' : 'Crear cuenta institucional'" :description="teacherCareer ? `Registre un docente para ${teacherCareer.name}.` : 'Registre una cuenta con su rol y, si aplica, su carrera.'" :show-trigger="showTrigger">
+    <FormSheet v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? 'Crear docente para su carrera' : 'Crear cuenta institucional'" :show-trigger="showTrigger">
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
             <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel for="managed-user-name" required>Nombre completo</FieldLabel><Input id="managed-user-name" v-model="visibleName" lang="es" autocomplete="name" autocapitalize="characters" placeholder="Ej. ANA PÉREZ" required /><FieldError :errors="errors.nombre" /></Field>
             <Field :data-invalid="Boolean(errors.correo_electronico)"><FieldLabel for="managed-user-email" required>Correo institucional</FieldLabel><Input id="managed-user-email" v-model="form.correo_electronico" type="email" placeholder="Ej. ana.perez@ueb.edu.ec" required /><FieldError :errors="errors.correo_electronico" /></Field>

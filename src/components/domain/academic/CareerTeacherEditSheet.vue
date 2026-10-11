@@ -42,7 +42,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" trigger-label="Editar docente" title="Editar docente" description="Corrija el nombre o el correo del docente." :show-trigger="false">
+    <FormSheet v-model:open="open" trigger-label="Editar docente" title="Editar docente" :show-trigger="false">
         <template #header-actions>
             <SheetActions :actions="actions" :menu-label="`Acciones para ${teacher.name}`" @select="select" />
         </template>

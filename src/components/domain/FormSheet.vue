@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { withoutEndPeriod } from '@/lib/text';
 import { Plus } from '@lucide/vue';
 import type { VNode } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
     SheetContent,
-    SheetDescription,
     SheetHeader,
     SheetTitle,
     SheetTrigger,
@@ -19,14 +17,12 @@ withDefaults(
     defineProps<{
         triggerLabel: string;
         title: string;
-        description?: string;
         showTrigger?: boolean;
         disabled?: boolean;
         fullScreen?: boolean;
         wide?: boolean;
     }>(),
     {
-        description: '',
         showTrigger: true,
         disabled: false,
         fullScreen: false,
@@ -63,6 +59,7 @@ const close = (): void => {
             </slot>
         </SheetTrigger>
         <SheetContent
+            :aria-describedby="undefined"
             :class="
                 cn({
                     'top-0 left-0 h-dvh max-h-none w-full max-w-none translate-x-0 translate-y-0 rounded-none border-0 sm:max-w-none': fullScreen,
@@ -71,9 +68,8 @@ const close = (): void => {
                 })
             "
         >
-            <SheetHeader>
+            <SheetHeader class="pb-0">
                 <SheetTitle>{{ title }}</SheetTitle>
-                <SheetDescription v-if="description">{{ withoutEndPeriod(description) }}</SheetDescription>
             </SheetHeader>
             <ScrollArea class="min-h-0 flex-1">
                 <div class="px-4 pt-1 pb-28">

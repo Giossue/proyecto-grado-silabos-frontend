@@ -158,7 +158,6 @@ watch(open, (value) => value && reset());
     :show-trigger="false"
     trigger-label="Agregar paralelo"
     title="Paralelos y docentes de la materia"
-    :description="`Paralelos de ${subjectLabel} y su docente.`"
   >
     <template #default="{ close }">
       <form class="contents" @submit.prevent="submit(close)">

@@ -27,7 +27,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" :trigger-label="coordinator ? 'Reemplazar coordinador' : 'Asignar coordinador'" :title="coordinator ? `Reemplazar la coordinación de ${careerName}` : `Asignar la coordinación de ${careerName}`" :description="coordinator ? `${coordinator.name} deja de coordinar y la persona entrante recibe el rol.` : 'La persona entrante recibe el rol de coordinación.'" :show-trigger="false">
+    <FormSheet v-model:open="open" :trigger-label="coordinator ? 'Reemplazar coordinador' : 'Asignar coordinador'" :title="coordinator ? `Reemplazar la coordinación de ${careerName}` : `Asignar la coordinación de ${careerName}`" :show-trigger="false">
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
             <Field :data-invalid="Boolean(errors.incoming_user_id)"><FieldLabel :for="`coordinator-incoming-${careerId}`" required>Persona entrante</FieldLabel><Select v-model="incomingUserId" required><SelectTrigger :id="`coordinator-incoming-${careerId}`"><SelectValue placeholder="Seleccione" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="user in candidates" :key="user.id" :value="user.id">{{ user.nombre }} <span class="text-muted-foreground">· {{ user.correo_electronico }}</span></SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.incoming_user_id" /></Field>
             <FormSheetActions :close="close" :processing="processing" :icon="UserRoundCog" :label="coordinator ? 'Reemplazar coordinación' : 'Asignar coordinación'" />

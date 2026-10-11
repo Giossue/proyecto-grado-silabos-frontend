@@ -35,9 +35,9 @@ watch(() => form.value.starts_on, (startsOn) => {
 });
 
 const labels = computed(() => ({
-    facultad: { trigger: 'Nueva facultad', title: 'Nueva facultad', description: 'Registre una facultad.' },
-    carrera: { trigger: 'Nueva carrera', title: 'Nueva carrera', description: 'Registre una carrera.' },
-    periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico', description: 'Registre las fechas.' },
+    facultad: { trigger: 'Nueva facultad', title: 'Nueva facultad' },
+    carrera: { trigger: 'Nueva carrera', title: 'Nueva carrera' },
+    periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico' },
 })[props.entity]);
 const submitLabel = computed(() => ({ facultad: 'Crear facultad', carrera: 'Crear carrera', periodo: 'Crear periodo' })[props.entity]);
 
@@ -81,7 +81,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" :disabled="props.disabled" :show-trigger="props.showTrigger" :trigger-label="labels.trigger" :title="labels.title" :description="labels.description">
+    <FormSheet v-model:open="open" :disabled="props.disabled" :show-trigger="props.showTrigger" :trigger-label="labels.trigger" :title="labels.title">
         <template #default="{ close }">
             <form @submit.prevent="submit">
                 <FieldGroup>
