@@ -1,3 +1,5 @@
+import type { DocumentNode } from '@/lib/templateDocument';
+import { setBlockLayouts } from '@/lib/blockLayouts';
 import { defineComponent, h } from 'vue';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { flushPromises, mount } from "@vue/test-utils";
@@ -191,6 +193,29 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.get("#field-field-1").text()).toContain("FACULTAD: Ciencias");
     expect(wrapper.get("#field-field-2").text()).toContain("Texto institucional");
     expect(buttonNamed(wrapper, "Enviar sílabo")!.attributes("disabled")).toBeUndefined();
+  });
+
+  it("no deja enviar mientras las horas de las unidades no sumen las de la asignatura", async () => {
+    const week = (acd: string) => ({ contenidos: "", acd_h: acd, ape_h: "", aa_h: "", acd: "", ape: "", aa: "", evaluacion: "" });
+    const units = (acd: string) => Array.from({ length: 4 }, (_, index) => ({ nombre: "U", resultado: "R", semanas: Array.from({ length: 4 }, (__, number) => week(index === 0 && number === 0 ? acd : "")) }));
+    const planning = (acd: string): DocumentNode => ({ type: "doc", content: [{ type: "documentBlock", attrs: { kind: "unidades", props: {}, value: { units: units(acd) } } }] });
+    setBlockLayouts({ unidades: { weeks: 16, hours: { acd: 64, ape: 0, aa: 0 } } });
+
+    const wrong = syllabus("borrador");
+    wrong.sections[0]!.fields[0]!.value = planning("60");
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: wrong });
+    const first = mountPage();
+    await flushPromises();
+    expect(buttonNamed(first, "Enviar sílabo")!.attributes("disabled")).toBeDefined();
+    first.unmount();
+
+    const right = syllabus("borrador");
+    right.sections[0]!.fields[0]!.value = planning("64");
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: right });
+    const second = mountPage();
+    await flushPromises();
+    expect(buttonNamed(second, "Enviar sílabo")!.attributes("disabled")).toBeUndefined();
+    second.unmount();
   });
 
   it('formación y discapacidad son documentos docentes sin controles por sección', async () => {
