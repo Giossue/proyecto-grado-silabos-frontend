@@ -13,7 +13,7 @@ import TablePagination from '@/components/domain/TablePagination.vue';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
@@ -24,9 +24,6 @@ const data = ref<ConvocationDetail | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
-const formatDate = (value: string | null): string => value
-  ? formatDateDisplay(value, { dateStyle: 'long' })
-  : 'Sin fecha';
 const formatStartedAt = (value: string | null): string => value
   ? formatDateDisplay(value, { dateStyle: 'medium' })
   : 'Sin iniciar';
@@ -57,12 +54,9 @@ watch(() => props.open, (open) => {
 
 <template>
   <Dialog :open="open" @update:open="emit('update:open', $event)">
-    <DialogContent class="flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-hidden p-0 sm:max-w-5xl">
+    <DialogContent :aria-describedby="undefined" class="flex max-h-[calc(100dvh-2rem)] flex-col gap-4 overflow-hidden p-0 sm:max-w-5xl">
       <DialogHeader class="px-6 pt-6">
         <DialogTitle>Seguimiento por expediente</DialogTitle>
-        <DialogDescription>
-          {{ data ? `Elaboración desde ${formatDate(data.convocation.start_date)} hasta ${formatDate(data.convocation.draft_deadline)}. Vencido el plazo, el envío se bloquea hasta que conceda una prórroga.` : 'Consulte el avance de los expedientes de esta convocatoria.' }}
-        </DialogDescription>
       </DialogHeader>
 
       <ScrollArea class="min-h-0 flex-1">

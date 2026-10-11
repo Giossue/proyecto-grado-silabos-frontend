@@ -3,7 +3,7 @@ import { Save } from '@lucide/vue';
 import { watch } from 'vue';
 import TeacherFormationField from '@/components/domain/identity/TeacherFormationField.vue';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { useTeacherFormation } from '@/composables/useTeacherFormation';
 
@@ -24,10 +24,9 @@ const submit = async (): Promise<void> => {
 
 <template>
     <Dialog v-model:open="open">
-        <DialogContent class="sm:max-w-2xl">
+        <DialogContent :aria-describedby="undefined" class="sm:max-w-2xl">
             <DialogHeader>
                 <DialogTitle>Formación y experiencia</DialogTitle>
-                <DialogDescription>La escribe una sola vez: todos sus sílabos la copian. Si la cambia, se actualizan los sílabos que aún no ha enviado.</DialogDescription>
             </DialogHeader>
             <form class="flex flex-col gap-4" @submit.prevent="submit">
                 <TeacherFormationField id="dialog-formation" v-model="formation" :error="error" hide-hint />

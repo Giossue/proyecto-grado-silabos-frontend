@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { roleEntry } from '@/lib/routes';
 import { roleLabel, scopeTitle } from '@/lib/roles';
@@ -57,10 +57,9 @@ const select = async (roleAssignmentId: string): Promise<void> => {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent class="flex max-h-(--overlay-max-height) flex-col overflow-hidden sm:max-w-3xl">
+    <DialogContent :aria-describedby="undefined" class="flex max-h-(--overlay-max-height) flex-col overflow-hidden sm:max-w-3xl">
       <DialogHeader>
         <DialogTitle>{{ title }}</DialogTitle>
-        <DialogDescription>Elija una carrera o rol vigente. Todo el sistema cambiará al nuevo alcance.</DialogDescription>
       </DialogHeader>
       <ScrollArea class="min-h-0 flex-1">
           <div class="flex flex-col gap-4 p-1">

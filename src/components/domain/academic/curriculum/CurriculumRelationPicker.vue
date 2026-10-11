@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { RelationMode } from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { CurriculumBuilderSubject } from '@/types/academic';
@@ -45,10 +45,9 @@ const confirm = (): void => {
 
 <template>
     <Dialog :open="picker !== null" @update:open="(open) => { if (!open) picker = null; }">
-        <DialogContent>
+        <DialogContent :aria-describedby="undefined">
             <DialogHeader>
                 <DialogTitle>Nueva relación académica</DialogTitle>
-                <DialogDescription>Materia: «{{ current?.name }}». Elija la otra materia. Si está en un ciclo anterior será prerrequisito; si está en el mismo ciclo, correquisito.</DialogDescription>
             </DialogHeader>
             <Field>
                 <FieldLabel for="curriculum-relation-subject">{{ question }}</FieldLabel>

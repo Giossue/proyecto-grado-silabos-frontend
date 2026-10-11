@@ -2,7 +2,7 @@
 import { PersonStanding, RotateCcw } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAccessibility, type TextSize } from '@/composables/useAccessibility';
@@ -33,10 +33,9 @@ const setSize = (value: string): void => { settings.value.textSize = value as Te
       </TooltipTrigger>
       <TooltipContent>Accesibilidad</TooltipContent>
     </Tooltip></TooltipProvider>
-    <DialogContent class="max-w-md">
+    <DialogContent :aria-describedby="undefined" class="max-w-md">
       <DialogHeader>
         <DialogTitle>Accesibilidad</DialogTitle>
-        <DialogDescription>Los cambios se aplican al instante y se guardan en su cuenta.</DialogDescription>
       </DialogHeader>
       <div class="flex flex-col gap-5">
         <div class="flex flex-col gap-2">

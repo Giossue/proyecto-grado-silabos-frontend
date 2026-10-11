@@ -12,7 +12,6 @@ import { Separator } from '@/components/ui/separator';
 import {
     Sheet,
     SheetContent,
-    SheetDescription,
     SheetFooter,
     SheetHeader,
     SheetTitle,
@@ -90,10 +89,9 @@ const currentAssignments = computed(() =>
 
 <template>
     <Sheet v-model:open="open">
-        <SheetContent class="sm:max-w-lg">
+        <SheetContent :aria-describedby="undefined" class="sm:max-w-lg">
             <SheetHeader>
                 <SheetTitle>{{ editing ? 'Editar usuario' : 'Datos de la cuenta' }}</SheetTitle>
-                <SheetDescription :class="editing ? '' : 'sr-only'">{{ editing ? 'Corrija su identidad, quite un rol o agregue una nueva asignación' : 'Ficha de solo lectura de la cuenta' }}</SheetDescription>
             </SheetHeader>
 
             <ScrollArea v-if="editing" class="min-h-0 flex-1">

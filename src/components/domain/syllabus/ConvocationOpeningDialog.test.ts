@@ -30,7 +30,6 @@ describe('ConvocationOpeningDialog', () => {
     const submit = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button'))
       .find((button) => button.textContent?.includes('Abrir convocatoria'));
     expect(document.body.querySelector('[role="dialog"] [role="checkbox"]')).toBeNull();
-    expect(document.body.textContent).toContain('datos académicos confirmados');
     expect(document.body.textContent).not.toContain('fuentes académicas');
     expect(submit?.disabled).toBe(false);
     submit?.click();

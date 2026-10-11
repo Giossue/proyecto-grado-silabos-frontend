@@ -1,23 +1,15 @@
 <script setup lang="ts">
-import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { CalendarClock, CalendarPlus, Pause, Play, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
 import type { SheetAction } from '@/components/domain/SheetActions.vue';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { ConvocationRow } from '@/pages/AdminProcessesPage.vue';
 
 const props = defineProps<{ row: ConvocationRow }>();
 const emit = defineEmits<{ action: [key: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 
-const state = computed(() => props.row.process
-    ? ({ abierto: 'Abierto', pausado: 'Pausado', cerrado: 'Finalizado' })[props.row.process.state]
-    : 'Sin iniciar');
-
-const tone = computed<StatusTone>(() => props.row.process
-    ? ({ abierto: 'success', pausado: 'warning', cerrado: 'info' } as const)[props.row.process.state]
-    : 'neutral');
 const actions = computed<SheetAction[]>(() => {
     const process = props.row.process;
     if (!process) {
@@ -47,10 +39,9 @@ const run = (key: string): void => {
 
 <template>
     <Dialog v-model:open="open">
-        <DialogContent class="sm:max-w-md">
+        <DialogContent :aria-describedby="undefined" class="sm:max-w-md">
             <DialogHeader>
                 <DialogTitle>Convocatoria {{ row.code }}</DialogTitle>
-                <DialogDescription class="flex items-center gap-2">Estado: <StatusBadge :label="state" :tone="tone" /></DialogDescription>
             </DialogHeader>
             <ul class="flex flex-col gap-2" aria-label="Opciones de la convocatoria">
                 <li v-for="action in actions" :key="action.key" class="flex flex-col gap-1">

@@ -28,7 +28,6 @@ import {
   navigationPadding,
   subjectOffset,
   subjectStep,
-  toRoman,
   UNIT_PALETTE,
 } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
 import type { CurriculumRequirement, RelationMode } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
@@ -45,7 +44,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -587,7 +585,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         }
       "
     >
-      <DialogContent
+      <DialogContent :aria-describedby="undefined"
         class="max-h-(--overlay-max-height) flex flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl"
       >
           <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
@@ -596,10 +594,6 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
                   <DialogTitle>{{
                     editorSubject ? "Editar materia" : "Agregar materia"
                   }}</DialogTitle>
-                  <DialogDescription>
-                    Ciclo {{ toRoman(editorCycle) }}. Complete los datos académicos de
-                    la materia.
-                  </DialogDescription>
                 </DialogHeader>
                 <CurriculumVisualSubjectForm
                   :key="editorSubject?.id ?? `new-${editorCycle}`"

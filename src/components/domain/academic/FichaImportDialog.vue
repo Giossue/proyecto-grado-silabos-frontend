@@ -10,7 +10,7 @@ import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, Att
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -94,12 +94,11 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
 <template>
   <Dialog v-model:open="open">
     <DialogTrigger as-child><Button type="button" :disabled="props.disabled"><Sparkles data-icon="inline-start" aria-hidden="true" />Importar documentos</Button></DialogTrigger>
-    <DialogContent class="max-h-screen flex flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+    <DialogContent :aria-describedby="undefined" class="max-h-screen flex flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
         <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
             <div class="grid gap-4 p-6">
               <DialogHeader>
                 <DialogTitle>Importar el proyecto de carrera</DialogTitle>
-                <DialogDescription>Suba los documentos de la carrera (PDF o Excel). El asistente propone la ficha de cada materia y usted decide cuáles aplicar.</DialogDescription>
               </DialogHeader>
               <div class="flex flex-col gap-4">
                 <FeedbackAlert v-if="error" :message="error" />

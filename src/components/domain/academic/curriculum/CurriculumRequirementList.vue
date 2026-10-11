@@ -4,7 +4,7 @@ import { ListTree, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
 import type { CurriculumRequirement } from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useFocusReturn } from '@/lib/focusReturn';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -29,12 +29,11 @@ const remove = (requirement: CurriculumRequirement): void => {
         Relaciones
     </Button>
     <Dialog v-model:open="open">
-        <DialogContent class="max-h-(--overlay-max-height) flex flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <DialogContent :aria-describedby="undefined" class="max-h-(--overlay-max-height) flex flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl">
             <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
                 <div class="grid gap-4 p-6">
                     <DialogHeader>
                         <DialogTitle>Relaciones académicas</DialogTitle>
-                        <DialogDescription>Prerrequisitos y correquisitos de la malla, en formato de lista.</DialogDescription>
                     </DialogHeader>
                     <Table label="Relaciones académicas de la malla">
                         <TableHeader>
