@@ -56,13 +56,13 @@ const activityLabels = ['Aprendizaje en contacto con el docente (ACD)', 'Aprendi
 
 <template>
   <div data-units class="flex flex-col gap-3">
-    <div v-if="interactive" data-units-summary class="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 p-2 text-sm" aria-live="polite">
+    <div v-if="interactive" data-units-summary class="sticky top-16 z-10 flex flex-wrap items-center gap-2 rounded-md border bg-background p-2 text-sm shadow-sm" aria-live="polite">
       <span :class="weekCount === PLANNING_WEEKS ? 'text-success' : 'text-destructive'">Semanas {{ weekCount }} de {{ PLANNING_WEEKS }}</span>
       <span v-for="item in targets" :key="item.key" :class="ok(item.planned, item.target) ? 'text-success' : 'text-destructive'">{{ item.label }} {{ fmt(item.planned) }} de {{ fmt(item.target) }}</span>
       <span class="text-muted-foreground">Las horas deben coincidir con las de la asignatura para poder enviar</span>
     </div>
 
-    <table v-for="(unit, unitIndex) in units" :key="unitIndex" class="free-text-table w-full" :data-unit="unitIndex + 1">
+    <div v-for="(unit, unitIndex) in units" :key="unitIndex" :class="interactive ? 'overflow-x-auto' : ''"><table :class="['free-text-table w-full text-xs [&_th]:break-normal [&_th]:hyphens-none', interactive ? 'min-w-208' : '']" :data-unit="unitIndex + 1">
       <tbody>
         <tr><th colspan="2">Unidad No. {{ unitIndex + 1 }}</th><th colspan="7"><Input v-if="interactive" :model-value="unit.nombre" maxlength="1000" :aria-label="`Nombre de la unidad ${unitIndex + 1}`" placeholder="Nombre de la unidad" @update:model-value="setUnit(unitIndex, { nombre: String($event) })" /><span v-else>{{ unit.nombre }}</span></th><th v-if="interactive" class="w-10"><span class="sr-only">Acciones</span></th></tr>
         <tr><th colspan="2">Resultados de aprendizaje</th><th colspan="7"><Input v-if="interactive" :model-value="unit.resultado" maxlength="1000" :aria-label="`Resultados de aprendizaje de la unidad ${unitIndex + 1}`" placeholder="Resultados de aprendizaje" @update:model-value="setUnit(unitIndex, { resultado: String($event) })" /><span v-else>{{ unit.resultado }}</span></th><th v-if="interactive" /></tr>
@@ -83,6 +83,6 @@ const activityLabels = ['Aprendizaje en contacto con el docente (ACD)', 'Aprendi
       <tfoot v-if="interactive">
         <tr><td :colspan="10"><Button type="button" variant="outline" size="sm" :disabled="weekCount >= PLANNING_WEEKS" :aria-label="`Agregar una semana a la unidad ${unitIndex + 1}`" @click="addWeek(unitIndex)"><Plus data-icon="inline-start" aria-hidden="true" />Agregar semana</Button></td></tr>
       </tfoot>
-    </table>
+    </table></div>
   </div>
 </template>
