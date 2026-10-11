@@ -36,7 +36,7 @@ onMounted(() => {
 });
 
 const applyPreset = (preset: TemplatePreset): void => {
-    patch({ key: preset.field_key, label: preset.label, quien_llena: preset.quien_llena, content: JSON.parse(JSON.stringify(preset.content)) as DocumentNode });
+    patch({ quien_llena: preset.quien_llena, content: JSON.parse(JSON.stringify(preset.content)) as DocumentNode });
 };
 const name = (): string => field.value.label.trim() || 'Campo sin nombre';
 </script>

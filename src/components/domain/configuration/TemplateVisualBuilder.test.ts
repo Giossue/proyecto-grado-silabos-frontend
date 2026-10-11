@@ -121,34 +121,21 @@ describe('TemplateVisualBuilder', () => {
     expect(saved().sections[0]!.fields[0]!.quien_llena).toBe('institucional');
   });
 
-  it('aplica una plantilla lista: pone su nombre, su contenido y quién lo llena', async () => {
+  it('aplica una plantilla lista: solo copia su contenido y quién lo llena al campo', async () => {
     const wrapper = await mountBuilder();
     sheetField(wrapper).applyPreset(presets[0]);
     await flushPromises();
     await save();
-    expect(saved().sections[0]!.fields[0]).toMatchObject({ key: 'asignatura', label: 'Datos de identificación', quien_llena: 'institucional' });
+    expect(saved().sections[0]!.fields[0]).toMatchObject({ key: 'f1', label: 'Primero', quien_llena: 'institucional' });
     expect(JSON.stringify(saved().sections[0]!.fields[0]!.content)).toContain('Dato');
   });
 
-  it('un campo que es plantilla no se edita: solo se mueve o se elimina', async () => {
+  it('el campo con contenido de plantilla se sigue editando como cualquier otro', async () => {
     const wrapper = await mountBuilder();
     sheetField(wrapper).applyPreset(presets[0]);
     await flushPromises();
-    expect(body().querySelector<HTMLInputElement>('[aria-label="Nombre del campo Datos de identificación"]')!.disabled).toBe(true);
-    expect(body().querySelector('[aria-label="Quién llena el campo Datos de identificación"]')).toBeNull();
-    expect(body().querySelector('[aria-label="Ayuda del campo Datos de identificación"]')).toBeNull();
-    expect(body().querySelector<HTMLButtonElement>('[aria-label="Eliminar el campo Datos de identificación"]')!.disabled).toBe(false);
-    expect(body().querySelector('[role="toolbar"]')).toBeNull();
-  });
-
-  it('no deja poner dos veces la misma plantilla', async () => {
-    const wrapper = await mountBuilder();
-    sheetField(wrapper, 0).applyPreset(presets[0]);
-    await flushPromises();
-    sheetField(wrapper, 1).applyPreset(presets[0]);
-    await flushPromises();
-    expect(body().textContent).toContain('Esa plantilla ya está en el sílabo');
-    expect(body().querySelector('[aria-label="Quién llena el campo Segundo"]')).not.toBeNull();
+    expect(body().querySelector<HTMLInputElement>('[aria-label="Nombre del campo Primero"]')!.disabled).toBe(false);
+    expect(body().querySelector('[aria-label="Ayuda del campo Primero"]')).not.toBeNull();
   });
 
   it('agrega el campo vacío donde se pasó el cursor, sin llamar al servidor hasta guardar', async () => {
