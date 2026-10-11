@@ -2,14 +2,17 @@
 import type { NodeViewProps } from '@tiptap/core';
 import { NodeViewWrapper } from '@tiptap/vue-3';
 import { Plus, Trash2, X } from '@lucide/vue';
+import DocumentEvaluation from '@/components/domain/syllabus/DocumentEvaluation.vue';
 import DocumentIdentification from '@/components/domain/syllabus/DocumentIdentification';
+import DocumentUnits from '@/components/domain/syllabus/DocumentUnits.vue';
+import { unitsContext } from '@/lib/blockLayouts';
 import { computed, useId } from 'vue';
 import BooleanChoice from '@/components/domain/BooleanChoice.vue';
 import { uniqueKey } from '@/components/domain/configuration/templateStructure';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
-import { blockOf, MAX_BLOCK_COLUMNS, type BlockColumn, type BlockProps, type BlockValue, type Disability, type DocumentNode } from '@/lib/templateDocument';
+import { blockOf, MAX_BLOCK_COLUMNS, type BlockColumn, type BlockProps, type BlockValue, type Disability, type DocumentNode, type PlanningUnit } from '@/lib/templateDocument';
 
 const props = defineProps<NodeViewProps>();
 const followUpId = useId();
@@ -42,12 +45,19 @@ const setCell = (index: number, key: string, text: string): void =>
     setValue({ rows: block.value.value.rows.map((row, position) => position === index ? { ...row, [key]: text } : row) });
 const disability = computed<Disability>(() => block.value.value.disability ?? { answer: null, type: '', description: '' });
 const setDisability = (next: Disability): void => setValue({ disability: next });
+const setUnits = (units: PlanningUnit[]): void => setValue({ units });
 const followUp = computed(() => block.value.props.columns.length > 0);
 const toggleFollowUp = (): void => setProps({ columns: followUp.value ? [] : [{ key: 'columna', label: 'Columna 1' }] });
 </script>
 
 <template>
-  <NodeViewWrapper v-if="kind === 'identificacion'" as="div" data-block data-kind="identificacion" contenteditable="false" :class="['document-block my-2 flex flex-col gap-1', selected ? 'outline outline-2 outline-primary' : '']">
+  <NodeViewWrapper v-if="kind === 'evaluacion'" as="div" data-block data-kind="evaluacion" contenteditable="false" :class="['document-block my-2', selected ? 'outline outline-2 outline-primary' : '']">
+    <DocumentEvaluation />
+  </NodeViewWrapper>
+  <NodeViewWrapper v-else-if="kind === 'unidades'" as="div" data-block data-kind="unidades" contenteditable="false" :class="['document-block my-2', selected ? 'outline outline-2 outline-primary' : '']">
+    <DocumentUnits :units="block.value.units ?? []" :hours="unitsContext()?.hours ?? null" :interactive="filling && !configuring" @update="setUnits" />
+  </NodeViewWrapper>
+  <NodeViewWrapper v-else-if="kind === 'identificacion'" as="div" data-block data-kind="identificacion" contenteditable="false" :class="['document-block my-2 flex flex-col gap-1', selected ? 'outline outline-2 outline-primary' : '']">
     <DocumentIdentification :disability="disability" :interactive="filling && !configuring" @update="setDisability" />
   </NodeViewWrapper>
   <NodeViewWrapper v-else as="div" data-block :data-kind="kind" contenteditable="false" :class="['document-block my-2 flex flex-col gap-2 rounded-md border p-2', selected ? 'border-primary' : 'border-border']">

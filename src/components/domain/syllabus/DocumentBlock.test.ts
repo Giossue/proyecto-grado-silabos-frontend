@@ -147,4 +147,72 @@ describe('bloques dentro del documento', () => {
             expect(document.body.querySelector('[aria-label="Quitar el bloque"]')).toBeNull();
         });
     });
+
+    describe('unidades', () => {
+        const units = (): DocumentNode => ({ type: 'doc', content: [{ type: 'documentBlock', attrs: { kind: 'unidades', props: {}, value: {} } }] });
+        const unitsOf = (document: DocumentNode) => (nodesOfType(document, 'documentBlock')[0]!.attrs as { value: { units: Array<{ semanas: Array<Record<string, string>> }> } }).value.units;
+        const type = async (label: string, text: string) => {
+            const input = document.body.querySelector<HTMLInputElement>(`[aria-label="${label}"]`)!;
+            input.value = text;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            await flushPromises();
+        };
+
+        it('arranca con cuatro unidades de cuatro semanas, numeradas del 1 al 16', async () => {
+            setBlockLayouts({ unidades: { weeks: 16, hours: { acd: 32, ape: 32, aa: 32 } } });
+            mountEditor(units());
+            await flushPromises();
+            expect(document.body.querySelectorAll('[data-unit]')).toHaveLength(4);
+            expect(document.body.querySelector('[aria-label="Contenidos temáticos, semana 16"]')).not.toBeNull();
+            expect(document.body.querySelector('[aria-label="Contenidos temáticos, semana 17"]')).toBeNull();
+        });
+
+        it('compara las horas repartidas con las de la asignatura y avisa cuáles no cuadran', async () => {
+            setBlockLayouts({ unidades: { weeks: 16, hours: { acd: 32, ape: 0, aa: 32 } } });
+            const wrapper = mountEditor(units());
+            await flushPromises();
+            await type('ACD, semana 1', '32');
+            expect(unitsOf(last(wrapper))[0]!.semanas[0]!.acd_h).toBe('32');
+            const summary = document.body.querySelector('[data-units-summary]')!.textContent!;
+            expect(summary).toContain('Semanas 16 de 16');
+            expect(summary).toContain('ACD 32 de 32');
+            expect(summary).toContain('APE 0 de 0');
+            expect(summary).toContain('AA 0 de 32');
+        });
+
+        it('no deja pasar de 16 semanas y quita las que sobran', async () => {
+            setBlockLayouts({ unidades: { weeks: 16, hours: { acd: 0, ape: 0, aa: 0 } } });
+            const wrapper = mountEditor(units());
+            await flushPromises();
+            const add = document.body.querySelector<HTMLButtonElement>('[aria-label="Agregar una semana a la unidad 1"]')!;
+            expect(add.disabled).toBe(true);
+            document.body.querySelector<HTMLButtonElement>('[aria-label="Quitar la semana 16"]')!.click();
+            await flushPromises();
+            expect(unitsOf(last(wrapper))[3]!.semanas).toHaveLength(3);
+            document.body.querySelector<HTMLButtonElement>('[aria-label="Agregar una semana a la unidad 1"]')!.click();
+            await flushPromises();
+            expect(unitsOf(last(wrapper))[0]!.semanas).toHaveLength(5);
+        });
+    });
+
+    describe('evaluacion', () => {
+        const evaluation = (): DocumentNode => ({ type: 'doc', content: [{ type: 'documentBlock', attrs: { kind: 'evaluacion', props: {}, value: {} } }] });
+
+        it('con horas de práctico-experimental reparte 2,5, 2, 2 y 3,5 puntos', async () => {
+            setBlockLayouts({ evaluacion: { with_practice: true } });
+            mountEditor(evaluation());
+            await flushPromises();
+            expect(document.body.querySelector('[data-evaluation]')!.textContent).toContain('2.5 PUNTOS');
+            expect(document.body.querySelector('[data-evaluation]')!.textContent).toContain('práctico-experimental');
+        });
+
+        it('sin horas de práctico-experimental usa 3,5, 3 y 3,5 puntos y quita la fila', async () => {
+            setBlockLayouts({ evaluacion: { with_practice: false } });
+            mountEditor(evaluation());
+            await flushPromises();
+            const text = document.body.querySelector('[data-evaluation]')!.textContent!;
+            expect(text).toContain('3.0 PUNTOS');
+            expect(text).not.toContain('práctico-experimental');
+        });
+    });
 });

@@ -1,3 +1,5 @@
+import DocumentEvaluation from '@/components/domain/syllabus/DocumentEvaluation.vue';
+import DocumentUnits from '@/components/domain/syllabus/DocumentUnits.vue';
 import { h } from 'vue';
 import type { VNodeChild } from 'vue';
 import { identificationTable } from '@/lib/blockLayouts';
@@ -53,6 +55,8 @@ const renderBlock = (node: DocumentNode): VNodeChild => {
             ? h('p', {}, 'Identificación institucional')
             : renderFreeText(table, { variable: (id) => identificationSlotText(id, value.disability!) });
     }
+    if (kind === 'evaluacion') return h(DocumentEvaluation);
+    if (kind === 'unidades') return h(DocumentUnits, { units: value.units ?? [], hours: null, interactive: false });
     const showRows = kind === 'repetible' || (value.answer === 'si' && props.columns.length > 0);
     const table = showRows && props.columns.length > 0
         ? h('table', { class: 'free-text-table' }, [h('tbody', {}, [
