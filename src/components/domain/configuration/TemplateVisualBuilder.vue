@@ -97,7 +97,6 @@ const awaitingReload = ref(false);
 const source = computed<TemplateSectionPayload[]>(() => preview.value && !awaitingReload.value ? props.template.sections : draft.value);
 const dirty = ref(false);
 const titleDraft = ref('');
-const logoInput = ref<HTMLInputElement | null>(null);
 const logoOverride = ref<string | null>(null);
 const uploadingLogo = ref(false);
 const shownTitle = computed(() => preview.value && !awaitingReload.value ? props.template.titleBlock.text : titleDraft.value);
@@ -294,17 +293,17 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <div data-sheet-content class="flex flex-col gap-6">
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
-          <div class="flex items-center gap-2">
+          <label :class="cn('group relative block', !preview && !locked && 'cursor-pointer')">
             <img :src="logoOverride ?? logos.institution" alt="Logo de la universidad" class="max-h-12 object-contain" @load="paginate">
             <template v-if="!preview && !locked">
-              <Button type="button" variant="outline" size="sm" :disabled="uploadingLogo" aria-label="Cambiar el logo de la universidad" @click="logoInput?.click()"><Spinner v-if="uploadingLogo" data-icon="inline-start" /><ImageUp v-else data-icon="inline-start" aria-hidden="true" />Cambiar</Button>
-              <input ref="logoInput" type="file" accept="image/png" class="sr-only" tabindex="-1" aria-hidden="true" @change="changeLogo">
+              <span class="absolute inset-0 flex items-center justify-center gap-1 rounded-sm bg-background/80 text-sm font-medium opacity-0 outline outline-1 outline-border group-focus-within:opacity-100 group-hover:opacity-100"><Spinner v-if="uploadingLogo" /><ImageUp v-else class="size-4" aria-hidden="true" />Cambiar logo</span>
+              <input type="file" accept="image/png" class="sr-only" aria-label="Cambiar el logo de la universidad" :disabled="uploadingLogo" @change="changeLogo">
             </template>
-          </div>
+          </label>
           <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain" @load="paginate">
         </div>
         <div class="flex items-center justify-center px-2 py-1">
-          <Input v-if="!preview && !locked" :model-value="titleDraft" maxlength="180" aria-label="Título del documento" class="template-sheet-title h-auto border-transparent bg-transparent text-center shadow-none hover:border-input focus-visible:border-input" @update:model-value="setDocumentTitle(String($event))" />
+          <Input v-if="!preview && !locked" :model-value="titleDraft" maxlength="180" aria-label="Título del documento" class="template-sheet-title h-auto border-transparent bg-transparent px-0 py-0 shadow-none hover:border-input focus-visible:border-input" style="font-size: 14pt; font-weight: 700; color: var(--document-official-blue); text-align: center" @update:model-value="setDocumentTitle(String($event))" />
           <h2 v-else class="template-sheet-title">{{ shownTitle }}</h2>
         </div>
       </header>
