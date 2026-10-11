@@ -42,7 +42,7 @@ const name = (): string => field.value.label.trim() || 'Campo sin nombre';
 
 <template>
   <div :data-field-editor="field.id" class="flex min-w-0 flex-col gap-1" @focusin="emit('select')" @pointerdown="emit('select')">
-    <div class="flex min-w-0 items-center gap-2">
+    <div data-field-label class="flex min-w-0 items-center gap-2">
       <Input
         v-model="label"
         maxlength="180"
@@ -52,7 +52,7 @@ const name = (): string => field.value.label.trim() || 'Campo sin nombre';
         class="h-7 min-w-0 flex-1 border-transparent bg-transparent px-0 font-bold shadow-none hover:border-transparent focus-visible:border-input focus-visible:px-2"
       />
     </div>
-    <FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :disabled="locked" :toolbar="selected && !locked" bare />
+    <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :disabled="locked" :toolbar="selected && !locked" bare /></div>
     <div :class="cn('absolute -top-7 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selected ? 'opacity-100' : 'opacity-0')">
       <DropdownMenu>
         <DropdownMenuTrigger as-child>

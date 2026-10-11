@@ -14,11 +14,11 @@ const content = computed(() => sample(props.field.content));
 
 <template>
   <div class="flex min-w-0 flex-col gap-1">
-    <div v-if="field.label.trim() || !preview" class="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+    <div v-if="field.label.trim() || !preview" data-field-label class="flex min-w-0 flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
       <h4 v-if="field.label.trim()" class="min-w-0 break-words font-bold [overflow-wrap:anywhere]">{{ field.label }}</h4>
       <span v-else-if="!preview" class="text-xs italic text-muted-foreground">Campo sin nombre</span>
       <span v-if="!preview" class="ml-auto max-w-full rounded bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground" data-field-responsible>{{ responsibleLabel(field.quien_llena) }}</span>
     </div>
-    <FreeTextContent :value="content" />
+    <div data-field-body><FreeTextContent :value="content" /></div>
   </div>
 </template>

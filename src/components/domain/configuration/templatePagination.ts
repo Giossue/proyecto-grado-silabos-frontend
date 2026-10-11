@@ -7,7 +7,7 @@ const PAGE = {
     portrait: { width: 210 * PX_PER_MM, height: 297 * PX_PER_MM },
     landscape: { width: 297 * PX_PER_MM, height: 210 * PX_PER_MM },
 };
-const BLOCKS = ':scope > header, :scope > section > h3, :scope > section > [data-section-heading], :scope > section > ol > li[data-field], :scope > section > p';
+const BLOCKS = ':scope > header, :scope > section > h3, :scope > section > [data-section-heading], :scope > section > p';
 
 type SheetPaginator = { landscape: boolean; paginate: () => number };
 const paginators = new WeakMap<HTMLElement, SheetPaginator>();
@@ -27,12 +27,30 @@ const paginatorFor = (content: HTMLElement, landscape: boolean): SheetPaginator 
     return entry;
 };
 
+const setUnit = (element: Element, unit: boolean, keepNext = false): void => {
+    for (const [name, on] of [['data-page-unit', unit], ['data-page-keep-next', unit && keepNext]] as const) {
+        if (on) element.setAttribute(name, '');
+        else element.removeAttribute(name);
+    }
+};
+
 const markBlocks = (content: HTMLElement): void => {
-    for (const block of content.querySelectorAll<HTMLElement>(BLOCKS)) {
-        block.setAttribute('data-page-unit', '');
-        if (block.matches('h3, [data-section-heading]')) block.setAttribute('data-page-keep-next', '');
-        if (block.querySelector('table') && !block.querySelector('[contenteditable="true"]')) block.setAttribute('data-page-flow-through', '');
-        else block.removeAttribute('data-page-flow-through');
+    for (const block of content.querySelectorAll<HTMLElement>(BLOCKS)) setUnit(block, true, block.matches('h3, [data-section-heading]'));
+    for (const field of content.querySelectorAll<HTMLElement>(':scope > section > ol > li[data-field]')) {
+        const label = field.querySelector('[data-field-label]');
+        const body = field.querySelector('[data-field-body]');
+        if (!body) {
+            setUnit(field, true);
+            continue;
+        }
+        setUnit(field, false);
+        if (label) setUnit(label, true, true);
+        if (body.querySelector('[contenteditable="true"]')) {
+            setUnit(body, true);
+            continue;
+        }
+        setUnit(body, false);
+        for (const part of body.querySelectorAll('p, ul > li, ol > li')) setUnit(part, part.closest('table') === null);
     }
 };
 
