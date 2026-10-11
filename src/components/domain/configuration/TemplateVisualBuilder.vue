@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, ChevronDown, ListTree, Pencil, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, Pencil, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson } from '@/api/template';
@@ -12,7 +12,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { toast } from '@/lib/toast';
@@ -98,9 +97,6 @@ const awaitingReload = ref(false);
 const source = computed<TemplateSectionPayload[]>(() => preview.value && !awaitingReload.value ? props.template.sections : draft.value);
 const dirty = ref(false);
 const changed = computed(() => !preview.value && dirty.value);
-const goToSection = (id: string): void => {
-    root.value?.querySelector(`[data-section="${id}"]`)?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-};
 const saveWithKeyboard = (event: KeyboardEvent): void => {
     if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's' || preview.value) return;
     event.preventDefault();
@@ -258,14 +254,6 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
     <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full max-w-3xl justify-end">
       <div class="pointer-events-auto flex items-center gap-2 rounded-lg border bg-background/95 p-1.5 shadow-sm">
-        <DropdownMenu v-if="sections.length > 1">
-          <DropdownMenuTrigger as-child>
-            <Button type="button" variant="ghost" aria-label="Ir a una sección"><ListTree data-icon="inline-start" aria-hidden="true" />Secciones<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" class="max-h-80 w-80 overflow-y-auto">
-            <DropdownMenuItem v-for="entry in sections" :key="entry.section.id" @select="goToSection(entry.section.id)">{{ entry.section.title }}</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
         <Button v-if="preview" type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
         <template v-else>
           <span v-if="changed" class="px-1 text-sm text-muted-foreground" aria-live="polite">Sin guardar</span>

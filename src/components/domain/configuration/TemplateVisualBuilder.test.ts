@@ -103,11 +103,6 @@ describe('TemplateVisualBuilder', () => {
     expect(templateApi.importTemplateJson).toHaveBeenCalledTimes(1);
   });
 
-  it('ofrece ir directo a cada sección', async () => {
-    await mountBuilder();
-    expect(body().querySelector('[aria-label="Ir a una sección"]')).not.toBeNull();
-  });
-
   it('cancelar descarta los cambios y vuelve a la vista', async () => {
     await mountBuilder();
     await typeInto('Nombre del campo Primero', 'Cambiado');
