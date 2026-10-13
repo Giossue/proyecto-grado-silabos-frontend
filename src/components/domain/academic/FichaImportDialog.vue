@@ -105,7 +105,8 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                 <Alert v-if="!available"><AlertDescription>El asistente de IA no está configurado en este entorno. Pídale a Administración que lo active.</AlertDescription></Alert>
 
                 <template v-else-if="working">
-                  <p class="flex items-center gap-2 text-sm" role="status"><Spinner /> Analizando los documentos… {{ current?.progress.done ?? 0 }} de {{ current?.progress.total ?? 0 }} materias.</p>
+                  <p class="flex items-center gap-2 text-sm" role="status"><Spinner /> {{ current?.progress.total ? `Analizando las materias… ${current.progress.done} de ${current.progress.total}.` : 'Leyendo los documentos… puede tardar unos minutos.' }}</p>
+                  <div><Button type="button" variant="outline" :disabled="busy" @click="discard"><X data-icon="inline-start" aria-hidden="true" />Cancelar la importación</Button></div>
                 </template>
 
                 <template v-else-if="current?.state === 'fallida'">
