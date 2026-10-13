@@ -47,6 +47,19 @@ describe('Editor de documentos compartido', () => {
         });
     });
 
+    it('muestra «Agregar fila» cuando el campo trae una tabla y la agrega al final sin poner el cursor en ella', async () => {
+        const cell = (text: string) => ({ type: 'tableCell', content: [{ type: 'paragraph', content: text ? [{ type: 'text', text }] : [] }] });
+        const value: DocumentNode = { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [cell('Autor'), cell('Título')] }, { type: 'tableRow', content: [cell(''), cell('')] }] }] };
+        const wrapper = mountEditor(value);
+        await flushPromises();
+        const add = wrapper.findAll('button').find((button) => button.text() === 'Agregar fila')!;
+        await add.trigger('click');
+        await flushPromises();
+        const emitted = wrapper.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
+        expect(nodesOfType(emitted, 'tableRow')).toHaveLength(3);
+        expect(mountEditor(doc('sin tabla')).findAll('button').some((button) => button.text() === 'Agregar fila')).toBe(false);
+    });
+
     it('conserva celdas combinadas, estilos y variables al escribir', async () => {
         const value: DocumentNode = { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 2, rowspan: 1, colwidth: [100, 200], backgroundColor: '#DBE5F1', textColor: '#0070C0', bold: true }, content: [{ type: 'paragraph', content: [{ type: 'variable', attrs: { id: 'nombre_asignatura' } }] }] }] }] }] };
         const wrapper = mountEditor(value);

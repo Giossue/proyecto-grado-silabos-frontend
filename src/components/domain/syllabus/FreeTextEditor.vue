@@ -3,7 +3,7 @@ import { Table, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
 import { Extension, type Editor } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
-import { Bold, Braces, ChevronDown, Italic, Underline, List, ListOrdered, Table2 } from '@lucide/vue';
+import { Bold, Braces, ChevronDown, Italic, Underline, List, ListOrdered, Plus, Table2 } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -86,6 +86,21 @@ const editor = useEditor({
     onSelectionUpdate: ({ editor: current }) => refreshSlash(current),
     onBlur: () => closeSlash(),
 });
+const hasTable = computed(() => JSON.stringify(props.modelValue ?? {}).includes('"type":"table"'));
+// Agrega una fila a la tabla donde está el cursor o, si no hay cursor en una tabla, al final de la última.
+const addTableRow = (): void => {
+    const current = editor.value;
+    if (!current || props.disabled) return;
+    if (current.isActive('table')) {
+        current.chain().focus().addRowAfter().run();
+        return;
+    }
+    let lastCell = -1;
+    current.state.doc.descendants((node, position) => {
+        if (node.type.name === 'tableCell' || node.type.name === 'tableHeader') lastCell = position;
+    });
+    if (lastCell >= 0) current.chain().focus().setTextSelection(lastCell + 2).addRowAfter().run();
+};
 const insertVariable = (key: unknown): void => {
     const variable = props.variables.find((item) => item.key === key);
     if (!variable || props.disabled) return;
@@ -141,6 +156,7 @@ defineExpose({ editor });
       </DropdownMenu>
     </div>
     <EditorContent :editor="editor" :class="['overflow-x-auto text-sm', bare ? 'min-h-8 px-1 py-1' : 'min-h-32 px-3 py-2']" />
+    <div v-if="editor && toolbar && hasTable && !disabled" class="px-3 pb-2"><Button type="button" variant="outline" size="sm" @mousedown.prevent @click="addTableRow"><Plus data-icon="inline-start" aria-hidden="true" />Agregar fila</Button></div>
     <div v-if="slash.open && slashItems.length" role="listbox" aria-label="Datos del sistema" class="fixed z-50 flex min-w-48 flex-col rounded-md border bg-popover p-1 text-sm shadow-menu" :style="{ left: `${slash.left}px`, top: `${slash.top}px` }">
       <Button v-for="(item, position) in slashItems" :key="item.key" type="button" variant="ghost" size="sm" role="option" :aria-selected="position === slash.index" :class="['justify-start', position === slash.index ? 'bg-accent text-accent-foreground' : '']" @mousedown.prevent="chooseSlash(item.key)">{{ item.label }}</Button>
     </div>
