@@ -30,6 +30,24 @@ const ready = computed(() => current.value?.state === 'lista');
 const proposed = computed(() => (current.value?.subjects ?? []).filter((subject) => subject.state === 'lista'));
 const fieldLabel = (key: string): string => current.value?.fields.find((field) => field.key === key)?.label ?? key;
 const stateText = (subject: FichaImportSubject): string => ({ lista: 'Ficha propuesta', sin_evidencia: 'Sin información en los documentos', fallida: 'No se pudo proponer', pendiente: 'Analizando…' })[subject.state];
+const now = ref(Date.now());
+const ocrText = (state: string | null): string => (state === 'queued' ? 'en cola del OCR' : state === 'running' ? 'el OCR lo está leyendo' : 'enviando al OCR');
+const elapsed = (from: string): string => {
+  const seconds = Math.max(0, Math.round((now.value - new Date(from).getTime()) / 1000));
+  return seconds < 60 ? `${seconds} s` : `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+};
+const workingText = computed(() => {
+  const value = current.value;
+  if (value?.progress.total) return `Analizando las materias… ${value.progress.done} de ${value.progress.total}.`;
+  if (value?.reading) return `Leyendo «${value.reading.name}» (${value.reading.index} de ${value.reading.total}) · ${ocrText(value.reading.ocr)} · ${elapsed(value.reading.started_at)}`;
+  return 'Preparando los documentos…';
+});
+let clock: number | undefined;
+watch(working, (value) => {
+  if (clock !== undefined) window.clearInterval(clock);
+  clock = value ? window.setInterval(() => { now.value = Date.now(); }, 1000) : undefined;
+}, { immediate: true });
+onBeforeUnmount(() => { if (clock !== undefined) window.clearInterval(clock); });
 const asLines = (value: string | string[]): string[] => (Array.isArray(value) ? value : [value]);
 
 const stop = (): void => { if (timer !== undefined) { window.clearTimeout(timer); timer = undefined; } };
@@ -105,7 +123,8 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                 <Alert v-if="!available"><AlertDescription>El asistente de IA no está configurado en este entorno. Pídale a Administración que lo active.</AlertDescription></Alert>
 
                 <template v-else-if="working">
-                  <p class="flex items-center gap-2 text-sm" role="status"><Spinner /> {{ current?.progress.total ? `Analizando las materias… ${current.progress.done} de ${current.progress.total}.` : 'Leyendo los documentos… puede tardar unos minutos.' }}</p>
+                  <p class="flex items-center gap-2 text-sm" role="status"><Spinner /> {{ workingText }}</p>
+                  <p v-if="current?.reading && !current.progress.total" class="text-xs text-muted-foreground">El OCR no informa porcentaje; los PDF largos pueden tardar varios minutos.</p>
                   <div><Button type="button" variant="outline" :disabled="busy" @click="discard"><X data-icon="inline-start" aria-hidden="true" />Cancelar la importación</Button></div>
                 </template>
 

@@ -17,6 +17,7 @@ export type FichaImport = {
   state: 'pendiente' | 'en_ejecucion' | 'lista' | 'fallida' | 'aplicada' | 'descartada';
   error: string | null;
   documents: Array<{ name: string; size: number }>;
+  reading: { index: number; total: number; name: string; ocr: string | null; started_at: string } | null;
   progress: { done: number; total: number };
   fields: Array<{ key: string; label: string }>;
   subjects: FichaImportSubject[];

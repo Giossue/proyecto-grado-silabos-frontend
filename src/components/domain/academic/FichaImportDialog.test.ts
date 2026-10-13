@@ -6,7 +6,7 @@ import { applyFichaImport, getFichaImport, type FichaImport } from '@/api/ficha-
 vi.mock('@/api/ficha-imports', () => ({ getFichaImport: vi.fn(), startFichaImport: vi.fn(), applyFichaImport: vi.fn(), discardFichaImport: vi.fn() }));
 
 const ready: FichaImport = {
-  id: 'imp-1', state: 'lista', error: null, documents: [{ name: 'proyecto.pdf', size: 10 }], progress: { done: 2, total: 2 },
+  id: 'imp-1', state: 'lista', error: null, documents: [{ name: 'proyecto.pdf', size: 10 }], reading: null, progress: { done: 2, total: 2 },
   fields: [{ key: 'descripcion', label: 'Descripción' }],
   subjects: [
     { subject_id: 's1', code: 'SW-1', name: 'Algoritmos', cycle: 1, state: 'lista', values: { descripcion: 'Texto propuesto' }, replaces: false, current: {} },
@@ -30,6 +30,15 @@ describe('FichaImportDialog', () => {
     await openDialog();
 
     expect(document.body.textContent).toContain('El asistente de IA no está configurado');
+  });
+
+  it('muestra qué documento lee el OCR y permite cancelar', async () => {
+    const reading: FichaImport = { ...ready, state: 'en_ejecucion', subjects: [], progress: { done: 0, total: 0 }, reading: { index: 1, total: 3, name: 'proyecto.pdf', ocr: 'running', started_at: new Date().toISOString() } };
+    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: reading });
+    await openDialog();
+
+    expect(document.body.textContent).toContain('Leyendo «proyecto.pdf» (1 de 3) · el OCR lo está leyendo');
+    expect(button('Cancelar la importación')).toBeTruthy();
   });
 
   it('muestra la propuesta y aplica solo las materias marcadas', async () => {
