@@ -699,11 +699,6 @@
     z-index: 2;
     border: 2px solid var(--card);
     background-color: var(--success);
-    /* El «+» se dibuja con dos barras centradas: un carácter de texto queda corrido por su línea base. */
-    background-image: linear-gradient(var(--success-foreground), var(--success-foreground)), linear-gradient(var(--success-foreground), var(--success-foreground));
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 8px 2px, 2px 8px;
     cursor: crosshair;
     transition: transform var(--duration-layout) ease-out;
 }
@@ -713,6 +708,16 @@
     position: absolute;
     inset: -12px;
     border-radius: 9999px;
+}
+
+.curriculum-canvas .vue-flow__handle.curriculum-handle::after {
+    /* El «+» es un ícono vectorial como máscara: queda centrado y nítido con cualquier zoom. */
+    content: '';
+    width: 10px;
+    height: 10px;
+    background-color: var(--success-foreground);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='4' stroke-linecap='round'%3E%3Cpath d='M12 4v16M4 12h16'/%3E%3C/svg%3E") center / contain no-repeat;
+    pointer-events: none;
 }
 
 .curriculum-canvas .vue-flow__handle-top.curriculum-handle:hover,

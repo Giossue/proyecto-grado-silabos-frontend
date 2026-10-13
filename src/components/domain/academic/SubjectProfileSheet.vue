@@ -69,7 +69,7 @@ const save = async (close: () => void) => {
 </script>
 
 <template>
-  <FormDialog v-model:open="open" fit :show-trigger="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha">
+  <FormDialog v-model:open="open" wide :show-trigger="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha">
     <template #default="{ close }">
       <form class="contents" @submit.prevent="save(close)">
         <FieldGroup>
@@ -77,12 +77,13 @@ const save = async (close: () => void) => {
           <LoadingSkeleton v-if="loading" variant="form" :rows="4" />
           <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos de Coordinación. Pídale a Administración que los agregue.</AlertDescription></Alert>
           <template v-else>
-            <Tabs v-if="sections.length > 1" v-model="activeSection" class="w-full shrink-0">
-              <TabsList class="h-auto min-h-9 w-full shrink-0 flex-wrap justify-start gap-1" aria-label="Secciones de la ficha">
-                <TabsTrigger v-for="section in sections" :key="section" :value="section" class="h-auto flex-none whitespace-normal py-1.5 text-left">{{ section }}<span v-if="sectionHasEmpty(section)" class="ml-1 text-warning" aria-hidden="true">●</span><span v-if="sectionHasEmpty(section)" class="sr-only"> (con campos sin llenar)</span></TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <fieldset class="contents" :disabled="disabled">
+            <div class="flex flex-col gap-6 md:flex-row md:items-start">
+              <Tabs v-if="sections.length > 1" v-model="activeSection" orientation="vertical" class="w-full shrink-0 md:w-72">
+                <TabsList class="h-auto w-full flex-col items-stretch justify-start gap-1" aria-label="Secciones de la ficha">
+                  <TabsTrigger v-for="section in sections" :key="section" :value="section" class="h-auto flex-none justify-start whitespace-normal border-b-0 border-l-2 py-2 text-left">{{ section }}<span v-if="sectionHasEmpty(section)" class="ml-1 text-warning" aria-hidden="true">●</span><span v-if="sectionHasEmpty(section)" class="sr-only"> (con campos sin llenar)</span></TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <fieldset class="flex min-w-0 flex-1 flex-col gap-7" :disabled="disabled">
               <Field v-for="field in shownFields" :key="field.id">
                 <div class="flex flex-wrap items-center gap-2">
                   <FieldLabel :for="`ficha-${field.id}`" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || sectionOf(field) }}</FieldLabel>
@@ -97,7 +98,8 @@ const save = async (close: () => void) => {
                   @update:model-value="values[field.id] = $event"
                 />
               </Field>
-            </fieldset>
+              </fieldset>
+            </div>
           </template>
           <FormSheetActions :close="close" :processing="saving" :disabled="!canSave" label="Guardar ficha" />
         </FieldGroup>

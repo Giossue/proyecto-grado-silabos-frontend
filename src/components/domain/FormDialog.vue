@@ -19,12 +19,14 @@ withDefaults(
         disabled?: boolean;
         compact?: boolean;
         fit?: boolean;
+        wide?: boolean;
     }>(),
     {
         showTrigger: true,
         disabled: false,
         compact: false,
         fit: false,
+        wide: false,
     },
 );
 
@@ -50,7 +52,7 @@ const close = (): void => {
                 </Button>
             </slot>
         </DialogTrigger>
-        <DialogContent :aria-describedby="undefined" :class="['flex flex-col gap-0 overflow-hidden p-0', compact ? 'sm:max-w-3xl' : 'sm:max-w-5xl', compact || fit ? 'max-h-[calc(100dvh-2rem)]' : 'h-[calc(100dvh-2rem)]']">
+        <DialogContent :aria-describedby="undefined" :class="['flex flex-col gap-0 overflow-hidden p-0', compact ? 'sm:max-w-3xl' : wide ? 'sm:max-w-7xl' : 'sm:max-w-5xl', compact || fit ? 'max-h-[calc(100dvh-2rem)]' : 'h-[calc(100dvh-2rem)]']">
             <DialogHeader class="px-6 pt-6 pb-4">
                 <DialogTitle>{{ title }}</DialogTitle>
             </DialogHeader>

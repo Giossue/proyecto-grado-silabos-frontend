@@ -28,10 +28,10 @@ const selectingRoleId = ref<string | null>(null);
 const selectionDescription = 'Seleccione la carrera con la que trabajará en esta sesión.';
 
 const roleDescription = (role: ActiveRole): string => {
-    if (role.code === 'docente') return `Docencia en ${role.career_name ?? 'la carrera asignada'}.`;
-    if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}.`;
-    if (role.code === 'bibliotecario') return 'Verificación de la bibliografía de los sílabos de todas las carreras.';
-    if (role.code === 'administrador') return 'Administración general del sistema.';
+    if (role.code === 'docente') return `Docencia en ${role.career_name ?? 'la carrera asignada'}`;
+    if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}`;
+    if (role.code === 'bibliotecario') return 'Verificación de la bibliografía de los sílabos de todas las carreras';
+    if (role.code === 'administrador') return 'Administración general del sistema';
     return role.career_name ? `${roleLabel(role.code)} · ${role.career_name}` : roleLabel(role.code);
 };
 

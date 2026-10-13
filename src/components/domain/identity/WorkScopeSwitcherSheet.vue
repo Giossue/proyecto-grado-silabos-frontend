@@ -25,10 +25,10 @@ const coordinatorCareerCount = computed(() => roles.value.filter((role) => role.
 const title = computed(() => coordinatorCareerCount.value > 1 ? 'Cambiar carrera' : 'Cambiar ámbito de trabajo');
 type Role = (typeof roles.value)[number];
 const scopeDescription = (role: Role): string => {
-  if (role.code === 'docente') return `Docencia en ${role.career_name ?? 'la carrera asignada'}.`;
-  if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}.`;
-  if (role.code === 'bibliotecario') return 'Verificación de la bibliografía de los sílabos de todas las carreras.';
-  if (role.code === 'administrador') return 'Administración general del sistema.';
+  if (role.code === 'docente') return `Docencia en ${role.career_name ?? 'la carrera asignada'}`;
+  if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}`;
+  if (role.code === 'bibliotecario') return 'Verificación de la bibliografía de los sílabos de todas las carreras';
+  if (role.code === 'administrador') return 'Administración general del sistema';
   return role.career_name ? `${roleLabel(role.code)} · ${role.career_name}` : roleLabel(role.code);
 };
 const actionLabel = (role: Role): string => {
