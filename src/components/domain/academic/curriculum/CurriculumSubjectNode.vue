@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { ArrowLeft, ArrowRight, Link2, Pencil, Trash2, Unlink } from "@lucide/vue";
+import { ArrowLeft, ArrowRight, Link2, Pencil, Plus, Trash2, Unlink } from "@lucide/vue";
 import { Handle, Position } from "@vue-flow/core";
 import { computed, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
@@ -111,7 +111,7 @@ const totalFields = computed(
       :connectable="data.editable"
       :class="cn(data.editable && 'curriculum-handle')"
       aria-label="Recibir relación académica"
-    />
+    ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
     <article
       class="relative w-full overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-2 data-[dragging=true]:ring-ring"
       :class="cn(data.editable && 'cursor-move')"
@@ -273,6 +273,6 @@ const totalFields = computed(
       :connectable="data.editable"
       :class="cn(data.editable && 'curriculum-handle')"
       aria-label="Crear relación académica"
-    />
+    ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
   </template>
 </template>
