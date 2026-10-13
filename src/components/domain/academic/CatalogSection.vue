@@ -4,6 +4,7 @@ import { Eye } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import type { ComponentPublicInstance } from 'vue';
 import CatalogActions from '@/components/domain/academic/CatalogActions.vue';
+import StatusBadge from '@/components/domain/StatusBadge.vue';
 import { activateRow } from '@/lib/rowActivation';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
@@ -297,6 +298,7 @@ const {
                     >
                         <TableCell>
                             {{ career.name }}
+                            <StatusBadge v-if="!career.active" class="ml-2" label="Inactiva" tone="neutral" />
                             <CatalogActions
                                 :ref="(actions) => setActions(career.id, actions)"
                                 entity="carrera"

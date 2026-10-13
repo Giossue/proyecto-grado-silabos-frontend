@@ -2,7 +2,9 @@ import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import CatalogActions from '@/components/domain/academic/CatalogActions.vue';
 
-vi.mock('@/api/academic', () => ({ deleteAcademicRecord: vi.fn().mockResolvedValue({ message: 'Eliminado.' }), updateAcademicRecord: vi.fn() }));
+import { setAcademicRecordStatus } from '@/api/academic';
+
+vi.mock('@/api/academic', () => ({ deleteAcademicRecord: vi.fn().mockResolvedValue({ message: 'Eliminado.' }), setAcademicRecordStatus: vi.fn().mockResolvedValue({ message: 'Registro desactivado sin borrar su historial.' }), updateAcademicRecord: vi.fn() }));
 
 enableAutoUnmount(afterEach);
 
@@ -45,5 +47,23 @@ describe('CatalogActions', () => {
     const remove = document.body.querySelector('button[aria-label="Eliminar"]') as HTMLButtonElement;
     expect(remove.disabled).toBe(true);
     expect(document.body.textContent).toContain('No se puede eliminar: tiene 2 carreras asociadas.');
+  });
+
+  it('una carrera se desactiva con confirmación y una inactiva ofrece Reactivar', async () => {
+    const wrapper = await open({ entity: 'carrera', coordinator: null, coordinatorUsers: [] });
+
+    (document.body.querySelector('button[aria-label="Desactivar carrera"]') as HTMLButtonElement).click();
+    await flushPromises();
+    const confirm = [...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Desactivar') as HTMLButtonElement;
+    confirm.click();
+    await flushPromises();
+
+    expect(setAcademicRecordStatus).toHaveBeenCalledWith('carrera', 'r1', false);
+    expect(wrapper.emitted('changed')?.[0]).toEqual(['Registro desactivado sin borrar su historial.']);
+    wrapper.unmount();
+
+    await open({ entity: 'carrera', active: false });
+    expect(document.body.querySelector('button[aria-label="Reactivar carrera"]')).not.toBeNull();
+    expect(document.body.querySelector('button[aria-label="Asignar coordinador"]')).toBeNull();
   });
 });
