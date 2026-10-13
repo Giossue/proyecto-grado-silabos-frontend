@@ -11,13 +11,11 @@ import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
-import TablePagination from '@/components/domain/TablePagination.vue';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
-import { useClientPagination } from '@/composables/useClientPagination';
 import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
@@ -59,7 +57,11 @@ const filter = useClientFilter(() => subjects.value, (subject) => [subject.nombr
     estado: { matches: (subject, value) => (value === 'complete' ? Boolean(subject.profile_complete) : !subject.profile_complete) },
 });
 const cycleOptions = computed(() => [...new Set(subjects.value.map(cycleLabel))].sort((a, b) => a.localeCompare(b, 'es', { numeric: true })));
-const { items, meta, setPage } = useClientPagination(() => filter.items.value);
+const groups = computed(() => {
+    const byCycle = new Map<string, Subject[]>();
+    for (const subject of filter.items.value) byCycle.set(cycleLabel(subject), [...(byCycle.get(cycleLabel(subject)) ?? []), subject]);
+    return [...byCycle].sort(([a], [b]) => a.localeCompare(b, 'es', { numeric: true })).map(([cycle, list]) => ({ cycle, list }));
+});
 const open = (subject: Subject): void => {
     selected.value = subject;
     profileOpen.value = true;
@@ -77,7 +79,7 @@ onMounted(() => { void load(); });
     <template #actions><FichaImportDialog :disabled="!data || Boolean(data.career.lock_reason)" @applied="saved" /></template>
     <ProcessLockAlert v-if="data?.career.lock_reason" :lock="data.career.lock" />
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :actions="false" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="2" :filters="1" :actions="false" />
     <Card v-else-if="data"><CardContent class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="career-project-search" label="Buscar por materia" placeholder="Buscar por materia">
         <template #filters>
@@ -94,17 +96,18 @@ onMounted(() => { void load(); });
         </template>
       </ClientFilterBar>
       <Table label="Materias de la malla">
-        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead class="text-center">Ciclo</TableHead><TableHead class="text-center">Ficha</TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead class="text-center">Ficha</TableHead></TableRow></TableHeader>
         <TableBody>
-          <TableEmpty v-if="!items.length" :colspan="3">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</TableEmpty>
-          <TableRow v-for="subject in items" v-else :key="subject.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="activateRow($event, () => open(subject))" @keydown.enter.self.prevent="open(subject)" @keydown.space.self.prevent="open(subject)">
+          <TableEmpty v-if="!groups.length" :colspan="2">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</TableEmpty>
+          <template v-for="group in groups" v-else :key="group.cycle">
+            <TableRow class="bg-muted/60 hover:bg-muted/60"><TableCell colspan="2" class="font-semibold">{{ group.cycle === 'Sin ciclo' ? group.cycle : `Ciclo ${group.cycle}` }}</TableCell></TableRow>
+          <TableRow v-for="subject in group.list" :key="subject.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="activateRow($event, () => open(subject))" @keydown.enter.self.prevent="open(subject)" @keydown.space.self.prevent="open(subject)">
             <TableCell>{{ subject.nombre }}</TableCell>
-            <TableCell class="text-center">{{ cycleLabel(subject) }}</TableCell>
             <TableCell class="text-center"><StatusBadge :label="statusOf(subject)" :tone="subject.profile_complete ? 'success' : 'warning'" /></TableCell>
           </TableRow>
+          </template>
         </TableBody>
       </Table>
-      <TablePagination :meta="meta" mode="client" label="Paginación de materias" @update:page="setPage" />
     </CardContent></Card>
     <SubjectProfileSheet v-if="selected" v-model:open="profileOpen" :subject-id="selected.id" :subject-name="selected.nombre" :disabled="Boolean(data?.career.lock_reason)" @saved="saved" />
   </PageFrame>
