@@ -21,22 +21,27 @@ const emit = defineEmits<{
 
 const processing = ref(false);
 const error = ref<string | null>(null);
+const warnings = ref<string[]>([]);
 
 watch(() => props.open, (open) => {
   if (!open) return;
   error.value = null;
+  warnings.value = [];
 });
 
 const submit = async (): Promise<void> => {
   processing.value = true;
   error.value = null;
+  warnings.value = [];
   try {
     const result = await createConvocation(props.processId);
     emit('update:open', false);
     emit('opened', result.message, result.convocation_id);
   } catch (reason) {
     if (reason instanceof ApiError) {
-      error.value = reason.message;
+      // El servidor devuelve todo lo que falta de una vez; se muestra como lista.
+      warnings.value = Object.values(reason.errors).flat();
+      error.value = warnings.value.length > 1 ? 'Todavía no puede abrir la convocatoria:' : (warnings.value[0] ?? reason.message);
     } else {
       error.value = 'No se pudo abrir la convocatoria.';
     }
@@ -54,7 +59,12 @@ const submit = async (): Promise<void> => {
       </DialogHeader>
       <form class="flex flex-col gap-4" @submit.prevent="submit">
         <Alert v-if="error" variant="destructive">
-          <AlertDescription>{{ error }}</AlertDescription>
+          <AlertDescription>
+            <p>{{ error }}</p>
+            <ul v-if="warnings.length > 1" class="list-disc pl-5">
+              <li v-for="warning in warnings" :key="warning">{{ warning }}</li>
+            </ul>
+          </AlertDescription>
         </Alert>
         <DialogFooter>
           <DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose>
