@@ -25,7 +25,7 @@ const coordinatorCareerCount = computed(() => roles.value.filter((role) => role.
 const title = computed(() => coordinatorCareerCount.value > 1 ? 'Cambiar carrera' : 'Cambiar ámbito de trabajo');
 type Role = (typeof roles.value)[number];
 const scopeDescription = (role: Role): string => {
-  if (role.code === 'docente') return '';
+  if (role.code === 'docente') return `Docencia en ${role.career_name ?? 'la carrera asignada'}.`;
   if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}.`;
   if (role.code === 'bibliotecario') return 'Verificación de la bibliografía de los sílabos de todas las carreras.';
   if (role.code === 'administrador') return 'Administración general del sistema.';
@@ -33,7 +33,7 @@ const scopeDescription = (role: Role): string => {
 };
 const actionLabel = (role: Role): string => {
   if (role.code === 'coordinador') return 'Cambiar a esta carrera';
-  if (role.code === 'docente') return 'Cambiar';
+  if (role.code === 'docente') return 'Cambiar a docencia';
   if (role.code === 'bibliotecario') return 'Cambiar a Biblioteca';
   return `Cambiar a ${roleLabel(role.code)}`;
 };
@@ -68,7 +68,7 @@ const select = async (roleAssignmentId: string): Promise<void> => {
               <Card v-for="role in roles" :key="role.id" class="h-full">
                 <CardHeader>
                   <CardTitle>{{ scopeTitle(role) }}</CardTitle>
-                  <CardDescription v-if="scopeDescription(role)">{{ scopeDescription(role) }}</CardDescription>
+                  <CardDescription>{{ scopeDescription(role) }}</CardDescription>
                   <CardAction v-if="activeRole?.id === role.id"><Badge variant="secondary"><CheckCircle2 aria-hidden="true" />Activo</Badge></CardAction>
                 </CardHeader>
                 <CardFooter class="mt-auto"><Button v-if="activeRole?.id === role.id" type="button" variant="secondary" class="w-full" disabled>Carrera o rol actual</Button><Button v-else type="button" class="w-full" :disabled="pendingRoleId !== null" @click="select(role.id)"><Spinner v-if="pendingRoleId === role.id" data-icon="inline-start" /><ArrowRight v-else data-icon="inline-start" aria-hidden="true" />{{ actionLabel(role) }}</Button></CardFooter>
