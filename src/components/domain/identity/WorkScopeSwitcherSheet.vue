@@ -24,12 +24,19 @@ const activeRole = computed(() => sessionState.current.value?.active_role ?? nul
 const coordinatorCareerCount = computed(() => roles.value.filter((role) => role.code === 'coordinador').length);
 const title = computed(() => coordinatorCareerCount.value > 1 ? 'Cambiar carrera' : 'Cambiar ámbito de trabajo');
 type Role = (typeof roles.value)[number];
+// Título: la función; descripción: dónde se ejerce. Así la carrera no se repite en la tarjeta.
+const cardTitle = (role: Role): string => {
+  if (role.code === 'docente') return 'Docencia';
+  if (role.code === 'coordinador') return 'Coordinación';
+  if (role.code === 'bibliotecario') return 'Biblioteca';
+  if (role.code === 'administrador') return 'Administración';
+  return scopeTitle(role);
+};
 const scopeDescription = (role: Role): string => {
-  if (role.code === 'docente') return `Docencia en ${role.career_name ?? 'la carrera asignada'}`;
-  if (role.code === 'coordinador') return `Coordinación de ${role.career_name ?? 'la carrera asignada'}`;
-  if (role.code === 'bibliotecario') return 'Verificación de la bibliografía de los sílabos de todas las carreras';
-  if (role.code === 'administrador') return 'Administración general del sistema';
-  return role.career_name ? `${roleLabel(role.code)} · ${role.career_name}` : roleLabel(role.code);
+  if (role.code === 'docente' || role.code === 'coordinador') return role.career_name ?? 'Carrera asignada';
+  if (role.code === 'bibliotecario') return 'Bibliografía de todas las carreras';
+  if (role.code === 'administrador') return 'Todo el sistema';
+  return role.career_name ?? roleLabel(role.code);
 };
 const actionLabel = (role: Role): string => {
   if (role.code === 'coordinador') return 'Cambiar a esta carrera';
@@ -67,7 +74,7 @@ const select = async (roleAssignmentId: string): Promise<void> => {
             <div class="grid gap-4 sm:grid-cols-2">
               <Card v-for="role in roles" :key="role.id" class="h-full">
                 <CardHeader>
-                  <CardTitle>{{ scopeTitle(role) }}</CardTitle>
+                  <CardTitle>{{ cardTitle(role) }}</CardTitle>
                   <CardDescription>{{ scopeDescription(role) }}</CardDescription>
                   <CardAction v-if="activeRole?.id === role.id"><Badge variant="secondary"><CheckCircle2 aria-hidden="true" />Activo</Badge></CardAction>
                 </CardHeader>
