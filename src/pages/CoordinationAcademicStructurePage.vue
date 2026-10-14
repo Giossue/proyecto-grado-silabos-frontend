@@ -217,7 +217,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         <ProcessLockAlert v-if="curriculum.curriculum.lock_reason" :lock="curriculum.curriculum.lock" />
         <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" :editing="false" @changed="handleCurriculumChanged" />
       </template>
-      <ProcessLockAlert v-if="mode === 'schedule' && schedule.career.lock_reason" :lock="schedule.career.lock" />
+      <ProcessLockAlert v-if="mode === 'schedule' && schedule.career.lock_reason" :lock="schedule.career.lock" teachers-editable />
       <ScheduledSubjectsTab
         v-if="mode === 'schedule'"
         :data="schedule"

@@ -54,7 +54,8 @@ const shiftOptions = computed(() => [...new Map(periodRows.value.flatMap((item) 
   { value: shiftKey(parallel.shift), label: shiftLabel(parallel.shift, props.data.options.shiftOptions) },
 ])).values()].sort((a, b) => a.label.localeCompare(b.label, "es")));
 const { items, meta, setPage } = useClientPagination(() => filter.items.value);
-const canPlan = (item: ScheduledRow): boolean => !props.data.career.lock_reason && item.editable;
+const structureLocked = computed(() => Boolean(props.data.career.lock_reason));
+const canPlan = (item: ScheduledRow): boolean => structureLocked.value ? item.parallels.length > 0 : item.editable;
 const planningId = ref<string | null>(null);
 const planningOpen = ref(false);
 const planning = computed(() => props.data.scheduledSubjects.find((item) => item.subject_id === planningId.value) ?? null);
@@ -108,6 +109,7 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
         :shift-options="data.options.shiftOptions"
         :teacher-users="teacherUsers"
         :assignments="assignments"
+        :structure-locked="structureLocked"
         @changed="emit('changed', $event)"
         @failed="emit('failed', $event)"
         @clear="selected = []"
@@ -137,6 +139,7 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
         :shift-options="data.options.shiftOptions"
         :teacher-users="teacherUsers"
         :assignments="assignments"
+        :structure-locked="structureLocked"
         @saved="emit('changed', $event)"
         @changed="emit('changed', $event)"
       />

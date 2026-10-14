@@ -23,6 +23,7 @@ const props = defineProps<{
   shiftOptions: ScheduledSubjects['options']['shiftOptions'];
   teacherUsers: TeacherAssignments['options']['teacherUsers'];
   assignments: TeacherAssignments['teacherAssignments'];
+  structureLocked?: boolean;
 }>();
 const emit = defineEmits<{ changed: [message: string]; failed: [message: string]; clear: [] }>();
 
@@ -94,13 +95,13 @@ const setTeacher = (userId: string) => run(
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        <DropdownMenuSub>
+        <DropdownMenuSub v-if="!structureLocked">
           <DropdownMenuSubTrigger>Agregar un paralelo</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuItem v-for="option in shiftOptions" :key="option.value" @select="addParallel(option.value)">{{ option.label }}</DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-        <DropdownMenuSub>
+        <DropdownMenuSub v-if="!structureLocked">
           <DropdownMenuSubTrigger>Asignar jornada</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuItem v-for="option in shiftOptions" :key="option.value" @select="setShift(option.value)">{{ option.label }}</DropdownMenuItem>

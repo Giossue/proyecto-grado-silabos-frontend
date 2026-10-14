@@ -36,6 +36,7 @@ const props = defineProps<{
   parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }>;
   teacherUsers?: Array<{ id: string; name: string; email: string }>;
   assignments?: Array<{ id: string; parallel_id: string; user_id: string; user_name: string; active: boolean; editable: boolean }>;
+  structureLocked?: boolean;
 }>();
 const emit = defineEmits<{ saved: [message: string]; changed: [message: string] }>();
 const open = defineModel<boolean>("open", { default: false });
@@ -165,7 +166,7 @@ watch(open, (value) => value && reset());
           <Alert v-if="error && !fieldError" variant="destructive">
             <AlertDescription>{{ error }}</AlertDescription>
           </Alert>
-          <div class="grid items-start gap-4 sm:grid-cols-2">
+          <div v-if="!structureLocked" class="grid items-start gap-4 sm:grid-cols-2">
           <Field :data-invalid="Boolean(fieldError)">
             <FieldLabel :for="`parallel-code-${subjectId}`" required>Código de paralelo</FieldLabel>
             <Input
@@ -244,7 +245,7 @@ watch(open, (value) => value && reset());
             </div>
             <p class="text-xs text-muted-foreground">Con el lápiz cambia el paralelo o su docente; con el basurero quita el docente. Cambiar o quitar el docente borra el sílabo del paralelo con todo lo que hizo: el siguiente docente empieza en limpio.</p>
           </section>
-          <FormSheetActions :close="close" :processing="saving" :icon="Plus" label="Crear paralelo" />
+          <FormSheetActions v-if="!structureLocked" :close="close" :processing="saving" :icon="Plus" label="Crear paralelo" />
         </FieldGroup>
       </form>
     </template>

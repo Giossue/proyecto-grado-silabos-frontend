@@ -9,7 +9,7 @@ import { formatDateDisplay } from '@/lib/dateDisplay';
 import { paths } from '@/lib/routes';
 import { sessionState } from '@/state/session';
 
-const props = defineProps<{ lock?: LockDetail | null; title?: string; message?: string; hideAction?: boolean; icon?: Component }>();
+const props = defineProps<{ lock?: LockDetail | null; title?: string; message?: string; hideAction?: boolean; icon?: Component; teachersEditable?: boolean }>();
 
 const isAdministrator = computed(() => sessionState.current.value?.active_role?.code === 'administrador');
 const href = computed(() => isAdministrator.value ? paths.admin.convocations : paths.coordination.panel);
@@ -20,6 +20,7 @@ const headline = computed(() => {
 });
 const summary = computed(() => {
     if (props.message) return props.message;
+    if (props.teachersEditable) return 'Puede cambiar de docente. Para agregar o cambiar paralelos y jornadas, pause la convocatoria de su carrera.';
 
     return isAdministrator.value
         ? 'Pause el proceso para editar.'
@@ -37,7 +38,11 @@ const reason = computed(() => {
         ? 'Administración pausó la convocatoria institucional, pero la de su carrera sigue abierta. '
         : '';
 
-    return `${institutional}La convocatoria de su carrera está ${open}. Pausarla permite corregir la malla y las fichas. ${consequence}`;
+    const teachers = props.teachersEditable
+        ? ' Cambiar o quitar al docente de un paralelo sí se puede sin pausar: se borra el sílabo de ese paralelo y quien entra empieza desde cero.'
+        : '';
+
+    return `${institutional}La convocatoria de su carrera está ${open}. Pausarla permite corregir la malla y las fichas. ${consequence}${teachers}`;
 });
 </script>
 
