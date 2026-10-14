@@ -40,7 +40,7 @@ provide(pageTitleKey, pageTitle);
             />
             <slot />
             <ScreenHelpButton v-if="!editorOpen" />
-            <AccessibilityDialog v-if="!editorOpen" />
+            <AccessibilityDialog v-if="!editorOpen" floating />
         </AppContent>
     </AppShell>
     <Toaster />

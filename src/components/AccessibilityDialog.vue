@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineProps<{ floating?: boolean }>();
 import { PersonStanding, RotateCcw } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
@@ -28,7 +29,8 @@ const setSize = (value: string): void => { settings.value.textSize = value as Te
     <TooltipProvider><Tooltip>
       <TooltipTrigger as-child>
         <DialogTrigger as-child>
-          <Button type="button" size="icon" class="fixed right-4 bottom-4 z-40 size-11 rounded-full shadow-lg" aria-label="Accesibilidad"><PersonStanding aria-hidden="true" /></Button>
+          <Button v-if="floating" type="button" size="icon" class="fixed right-4 bottom-4 z-40 size-11 rounded-full shadow-lg max-sm:hidden" aria-label="Accesibilidad"><PersonStanding aria-hidden="true" /></Button>
+          <Button v-else type="button" variant="ghost" size="icon-sm" aria-label="Accesibilidad"><PersonStanding data-icon="inline-start" aria-hidden="true" /></Button>
         </DialogTrigger>
       </TooltipTrigger>
       <TooltipContent side="left">Accesibilidad</TooltipContent>
