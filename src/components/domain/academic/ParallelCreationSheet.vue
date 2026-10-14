@@ -242,7 +242,7 @@ watch(open, (value) => value && reset());
                 </TableBody>
               </Table>
             </div>
-            <p class="text-xs text-muted-foreground">Con el lápiz cambia el paralelo o su docente; con el basurero quita el docente. Cambiar o quitar el docente borra el sílabo del paralelo con todo lo que hizo: el siguiente docente empieza en limpio.</p>
+            <p class="text-xs text-muted-foreground">Con el lápiz cambia el paralelo o su docente; con el basurero quita el docente. Cambiar o quitar el docente borra el sílabo del paralelo con todo lo que hizo: el siguiente docente empieza en limpio. Cambiar la jornada o el código solo lo borra si el sílabo ya fue enviado; antes de eso se conserva lo escrito.</p>
           </section>
           <FormSheetActions :close="close" :processing="saving" :icon="Plus" label="Crear paralelo" />
         </FieldGroup>

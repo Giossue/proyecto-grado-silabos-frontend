@@ -244,10 +244,12 @@ export const createParallels = (payload: {
     body: JSON.stringify(payload),
   });
 export const updateParallel = (id: string, payload: { code: string; shift: string }) =>
-  api<{ message: string }>(`/coordination/academic/parallels/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(payload),
-  });
+  withPurgeConfirmation((confirm) =>
+    api<{ message: string }>(`/coordination/academic/parallels/${id}`, {
+      method: "PATCH",
+      body: jsonBody(payload, confirm),
+    }),
+  );
 export const deleteParallel = (id: string) =>
   api<{ message: string }>(`/coordination/academic/parallels/${id}`, {
     method: "DELETE",
