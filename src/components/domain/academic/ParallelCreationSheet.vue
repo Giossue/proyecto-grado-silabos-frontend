@@ -5,12 +5,10 @@ import { computed, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
 import { createCareerRecord, createParallels, deleteCareerRecord, deleteParallel, updateParallel } from "@/api/career-academics";
 import FormDialog from "@/components/domain/FormDialog.vue";
-import FormSheetActions from "@/components/domain/FormSheetActions.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -41,15 +39,14 @@ const props = defineProps<{
 const emit = defineEmits<{ saved: [message: string]; changed: [message: string] }>();
 const open = defineModel<boolean>("open", { default: false });
 const defaultShift = computed(() => props.shiftOptions[0]?.value ?? '');
-const tab = ref("registrados");
 const code = ref("");
 const shift = ref(defaultShift.value);
+const adding = ref(false);
 const saving = ref(false);
 const error = ref<string | null>(null);
-const fieldError = computed(() => (error.value && code.value.trim() === "" ? error.value : undefined));
 
 const reset = () => {
-  tab.value = "registrados";
+  adding.value = false;
   code.value = "";
   shift.value = defaultShift.value;
   error.value = null;
@@ -129,7 +126,18 @@ const replaceTeacher = async (parallelId: string, value: string): Promise<{ mess
   return result;
 };
 const removeTeacher = (parallelId: string) => runRowAction(() => replaceTeacher(parallelId, NO_TEACHER), "No se pudo quitar el docente del paralelo.");
-const submit = async (close: () => void) => {
+const startAdd = () => {
+  code.value = "";
+  shift.value = defaultShift.value;
+  error.value = null;
+  editingId.value = null;
+  adding.value = true;
+};
+const cancelAdd = () => {
+  adding.value = false;
+  error.value = null;
+};
+const submit = async () => {
   if (!code.value.trim() || !shift.value) {
     error.value = "Escriba el código y elija la jornada del paralelo.";
     return;
@@ -144,7 +152,6 @@ const submit = async (close: () => void) => {
     });
     emit("saved", result.message);
     reset();
-    close();
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : "No se pudo crear el paralelo.";
   } finally {
@@ -163,57 +170,22 @@ watch(open, (value) => value && reset());
     title="Paralelos y docentes de la materia"
   >
     <template #default="{ close }">
-      <form class="contents" @submit.prevent="submit(close)">
+      <div class="contents">
         <FieldGroup>
-          <Alert v-if="error && !fieldError" variant="destructive">
+          <Alert v-if="error" variant="destructive">
             <AlertDescription>{{ error }}</AlertDescription>
           </Alert>
-          <Tabs v-model="tab">
-          <TabsList>
-            <TabsTrigger value="registrados">Paralelos registrados</TabsTrigger>
-            <TabsTrigger value="crear">Crear paralelo</TabsTrigger>
-          </TabsList>
-          <TabsContent value="crear" class="flex flex-col gap-4">
-          <div class="grid items-start gap-4 sm:grid-cols-2">
-          <Field :data-invalid="Boolean(fieldError)">
-            <FieldLabel :for="`parallel-code-${subjectId}`" required>Código de paralelo</FieldLabel>
-            <Input
-              :id="`parallel-code-${subjectId}`"
-              v-model="code"
-              :maxlength="VALIDATION_LIMITS.parallelCode"
-              placeholder="Ej. B"
-              required
-              :aria-invalid="Boolean(fieldError)"
-            />
-            <FieldError :errors="[fieldError]" />
-          </Field>
-          <Field>
-            <FieldLabel :for="`parallel-shift-${subjectId}`" required>Jornada</FieldLabel>
-            <Select v-model="shift" required>
-              <SelectTrigger :id="`parallel-shift-${subjectId}`">
-                <SelectValue placeholder="Elija la jornada" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem v-for="option in shiftOptions" :key="option.value" :value="option.value">
-                    {{ option.label }}
-                  </SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </Field>
-          </div>
-          <FormSheetActions :close="close" :processing="saving" :icon="Plus" label="Crear paralelo" />
-          </TabsContent>
-          <TabsContent value="registrados">
           <section class="flex flex-col gap-2" aria-labelledby="parallel-summary-title">
-            <h3 id="parallel-summary-title" class="text-sm font-medium">Paralelos registrados</h3>
+            <div class="flex items-center justify-between gap-2">
+              <h3 id="parallel-summary-title" class="text-sm font-medium">Paralelos registrados</h3>
+              <Button type="button" size="sm" variant="outline" :disabled="adding || rowBusy" @click="startAdd"><Plus aria-hidden="true" /> Agregar paralelo</Button>
+            </div>
             <Alert v-if="rowError" variant="destructive"><AlertDescription>{{ rowError }}</AlertDescription></Alert>
             <div class="overflow-hidden rounded-md border">
               <Table label="Paralelos de la materia">
-                <TableHeader><TableRow><TableHead>Paralelo</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead v-if="showActions" class="text-right">Acciones</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>Paralelo</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead v-if="showActions || adding" class="text-right">Acciones</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  <TableEmpty v-if="parallels.length === 0" :colspan="showActions ? 4 : 3">Sin paralelos registrados</TableEmpty>
+                  <TableEmpty v-if="parallels.length === 0 && !adding" :colspan="showActions ? 4 : 3">Sin paralelos registrados</TableEmpty>
                   <TableRow v-for="parallel in parallels" v-else :key="parallel.id">
                     <template v-if="editingId === parallel.id">
                       <TableCell v-if="parallel.editable === false">{{ parallel.code }}</TableCell>
@@ -251,15 +223,28 @@ watch(open, (value) => value && reset());
                       </TableCell>
                     </template>
                   </TableRow>
+                  <TableRow v-if="adding">
+                    <TableCell><Input :id="`parallel-code-${subjectId}`" v-model="code" :maxlength="VALIDATION_LIMITS.parallelCode" class="w-20" placeholder="Ej. B" aria-label="Código del nuevo paralelo" :aria-invalid="Boolean(error) && !code.trim()" @keydown.enter.prevent="submit" /></TableCell>
+                    <TableCell>
+                      <Select v-model="shift">
+                        <SelectTrigger class="w-36" aria-label="Jornada del nuevo paralelo"><SelectValue placeholder="Elija la jornada" /></SelectTrigger>
+                        <SelectContent><SelectGroup><SelectItem v-for="option in shiftOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell class="text-muted-foreground">Sin docente</TableCell>
+                    <TableCell class="text-right">
+                      <Button type="button" size="icon-sm" variant="ghost" :disabled="saving" aria-label="Guardar nuevo paralelo" @click="submit"><Check aria-hidden="true" /></Button>
+                      <Button type="button" size="icon-sm" variant="ghost" :disabled="saving" aria-label="Cancelar nuevo paralelo" @click="cancelAdd"><X aria-hidden="true" /></Button>
+                    </TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
             </div>
             <p class="text-xs text-muted-foreground">Con el lápiz cambia el paralelo o su docente; con el basurero quita el docente. Cambiar o quitar el docente borra el sílabo del paralelo con todo lo que hizo: el siguiente docente empieza en limpio. Cambiar la jornada o el código solo lo borra si el sílabo ya fue enviado; antes de eso se conserva lo escrito.</p>
           </section>
-          </TabsContent>
-          </Tabs>
+          <div class="flex justify-end"><Button type="button" variant="outline" @click="close">Cerrar</Button></div>
         </FieldGroup>
-      </form>
+      </div>
     </template>
   </FormDialog>
 </template>

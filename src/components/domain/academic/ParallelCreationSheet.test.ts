@@ -35,11 +35,13 @@ describe('ParallelCreationSheet', () => {
     await flushPromises();
 
     expect(document.body.textContent).not.toContain('Sin jornada');
+    [...document.body.querySelectorAll('button')].find((item) => item.textContent?.includes('Agregar paralelo'))!.click();
+    await flushPromises();
     const input = document.body.querySelector<HTMLInputElement>('#parallel-code-subject-1')!;
     input.value = 'C';
     input.dispatchEvent(new Event('input'));
     await flushPromises();
-    document.body.querySelector('form')!.dispatchEvent(new Event('submit'));
+    button('Guardar nuevo paralelo')!.click();
     await flushPromises();
 
     expect(api.createParallels).toHaveBeenCalledWith({ subject_id: 'subject-1', codes: ['C'], shift: 'matutina' });
