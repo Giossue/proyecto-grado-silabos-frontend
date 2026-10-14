@@ -164,7 +164,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                             // Con una sola acción el botón flotante es redondo y sin texto
                             // (el nombre sigue ahí para lectores de pantalla).
                             !needsTrigger &&
-                                'max-sm:[&_button]:size-14 max-sm:[&_button]:rounded-full max-sm:[&_button]:p-0 max-sm:[&_button]:text-[0px] max-sm:[&_button]:[&_svg]:size-5',
+                                'max-sm:[&_button]:size-14 max-sm:[&_button]:rounded-full max-sm:[&_button]:gap-0 max-sm:[&_button]:p-0 max-sm:[&_button]:text-[0px] max-sm:[&_button]:[&_svg]:size-5',
                         )
                     "
                 >
