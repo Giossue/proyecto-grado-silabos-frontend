@@ -161,6 +161,10 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                                 !expanded &&
                                 'max-sm:hidden max-sm:[&>*]:hidden',
                             'max-sm:[&>*]:shadow-menu',
+                            // Con una sola acción el botón flotante es redondo y sin texto
+                            // (el nombre sigue ahí para lectores de pantalla).
+                            !needsTrigger &&
+                                'max-sm:[&>*]:size-14 max-sm:[&>*]:rounded-full max-sm:[&>*]:p-0 max-sm:[&>*]:text-[0px] max-sm:[&>*]:[&_svg]:size-5',
                         )
                     "
                 >
