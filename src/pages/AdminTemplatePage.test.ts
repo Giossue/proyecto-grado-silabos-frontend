@@ -32,10 +32,10 @@ const payload: TemplatePayload = {
     description: null,
     titleBlock: { text: "PROGRAMA DE ASIGNATURA (SÍLABO)" },
     sections: [{
-      id: "section-1", key: "descripcion", title: "Descripción de la asignatura", description: null,
+      id: "section-1", key: "descripcion", title: "Descripción de la asignatura",
       orientation: 'portrait', fields: [
-        { id: 'field-1', key: 'descripcion', label: 'Descripción', help: null, quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
-        { id: 'field-2', key: 'sin_nombre', label: '', help: null, quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
+        { id: 'field-1', key: 'descripcion', label: 'Descripción', quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
+        { id: 'field-2', key: 'sin_nombre', label: '', quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
       ],
     }],
   },

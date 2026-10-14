@@ -31,7 +31,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import FieldView from '@/components/domain/syllabus/FieldView.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
@@ -485,7 +485,6 @@ onBeforeUnmount(() => {
               <template v-for="field in section.fields" :key="field.id">
                 <Field v-if="showEditor && isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel>
-                  <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
                   <FreeTextEditor :label="field.label.trim() || section.title" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
                 </Field>
                 <FieldView v-else :id="`field-${field.id}`" :field="field" />

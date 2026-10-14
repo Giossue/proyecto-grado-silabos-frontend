@@ -86,7 +86,6 @@ export type SyllabusDetail = {
 
 export type SyllabusField = DocumentField & {
   id: string;
-  help: string | null;
   required: boolean;
   teacher_editable: boolean;
 };

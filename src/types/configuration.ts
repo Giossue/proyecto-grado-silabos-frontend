@@ -5,7 +5,6 @@ export type DocumentField = {
     id?: string;
     key: string;
     label: string;
-    help?: string | null;
     quien_llena: FieldResponsible;
     value: DocumentNode | null;
     document?: DocumentNode | null;

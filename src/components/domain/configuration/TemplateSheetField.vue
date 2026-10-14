@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, ChevronDown, CircleHelp, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, ChevronDown, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onMounted, ref } from 'vue';
 import type { TemplateField, TemplatePreset } from '@/api/template';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import type { DocumentNode } from '@/lib/templateDocument';
 import { cn } from '@/lib/utils';
 import { FIELD_RESPONSIBLES, responsibleLabel, type FieldResponsible } from '@/types/configuration';
@@ -27,7 +25,6 @@ const emit = defineEmits<{ select: []; move: [direction: -1 | 1]; remove: [] }>(
 
 const patch = (changes: Partial<TemplateField>): void => { field.value = { ...field.value, ...changes }; };
 const label = computed({ get: () => field.value.label, set: (value: string) => patch({ label: value }) });
-const help = computed({ get: () => field.value.help ?? '', set: (value: string) => patch({ help: value === '' ? null : value }) });
 const content = computed({ get: () => field.value.content, set: (value: DocumentNode) => patch({ content: value }) });
 const editor = ref<{ editor: { commands: { focus: (position?: string) => void } } | null } | null>(null);
 
@@ -74,22 +71,6 @@ const name = (): string => field.value.label.trim() || 'Campo sin nombre';
           </template>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Popover v-if="!block">
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <PopoverTrigger as-child>
-              <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Ayuda del campo ${name()}`"><CircleHelp aria-hidden="true" /></Button>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          <TooltipContent>{{ help.trim() || 'Sin ayuda: clic para escribir una' }}</TooltipContent>
-        </Tooltip>
-        <PopoverContent class="w-80">
-          <label class="flex flex-col gap-2 text-sm">
-            <span class="font-medium">Ayuda para quien lo llena (opcional)</span>
-            <Input v-model="help" maxlength="2000" :aria-label="`Texto de ayuda de ${name()}`" />
-          </label>
-        </PopoverContent>
-      </Popover>
       <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !canMoveUp" :aria-label="`Subir el campo ${name()}`" @click="emit('move', -1)"><ArrowUp aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !canMoveDown" :aria-label="`Bajar el campo ${name()}`" @click="emit('move', 1)"><ArrowDown aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar el campo ${name()}`" @click="emit('remove')"><Trash2 aria-hidden="true" /></Button>

@@ -10,12 +10,12 @@ import type { DocumentNode } from '@/lib/templateDocument';
 vi.mock('@/api/template');
 
 type Template = NonNullable<TemplatePayload['template']>;
-const field = (id: string, label: string, quien_llena: FieldResponsible = 'docente') => ({ id, key: id, label, help: null, quien_llena, content: emptyDocument() });
+const field = (id: string, label: string, quien_llena: FieldResponsible = 'docente') => ({ id, key: id, label, quien_llena, content: emptyDocument() });
 const template: Template = {
   id: 't1', name: 'Plantilla', description: null, titleBlock: { text: 'SÍLABO' },
   sections: [
-    { id: 's1', key: 'uno', title: 'Uno', description: null, orientation: 'portrait', fields: [field('f1', 'Primero'), field('f2', 'Segundo', 'coordinacion')] },
-    { id: 's2', key: 'dos', title: 'Dos', description: null, orientation: 'portrait', fields: [] },
+    { id: 's1', key: 'uno', title: 'Uno', orientation: 'portrait', fields: [field('f1', 'Primero'), field('f2', 'Segundo', 'coordinacion')] },
+    { id: 's2', key: 'dos', title: 'Dos', orientation: 'portrait', fields: [] },
   ],
 };
 
@@ -142,7 +142,7 @@ describe('TemplateVisualBuilder', () => {
     sheetField(wrapper).applyPreset(presets[0]);
     await flushPromises();
     expect(body().querySelector<HTMLInputElement>('[aria-label="Nombre del campo Primero"]')!.disabled).toBe(false);
-    expect(body().querySelector('[aria-label="Ayuda del campo Primero"]')).not.toBeNull();
+    expect(body().querySelector('[aria-label="Ayuda del campo Primero"]')).toBeNull();
   });
 
   it('agrega el campo vacío donde se pasó el cursor, sin llamar al servidor hasta guardar', async () => {
@@ -222,7 +222,7 @@ describe('TemplateVisualBuilder', () => {
 
   it('dibuja la tabla de identificación sin subtitular los campos sin nombre', async () => {
     const table: DocumentNode = { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'FACULTAD: CIENCIAS' }] }] }] }] }] };
-    const official: Template = { ...template, sections: [{ id: 's1', key: 'identificacion', title: 'Identificación Institucional', description: null, orientation: 'portrait', fields: [{ ...field('a', '', 'institucional'), content: table }] }] };
+    const official: Template = { ...template, sections: [{ id: 's1', key: 'identificacion', title: 'Identificación Institucional', orientation: 'portrait', fields: [{ ...field('a', '', 'institucional'), content: table }] }] };
     mount(TemplateVisualBuilder, { props: { template: official }, attachTo: document.body });
     await click(byText('button', 'Editar'));
     await vi.advanceTimersByTimeAsync(50);

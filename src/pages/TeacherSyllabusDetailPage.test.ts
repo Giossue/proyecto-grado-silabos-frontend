@@ -56,7 +56,7 @@ const appearance = {
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
 const field = (id: string, quien_llena: FieldResponsible = 'docente', overrides: Partial<SyllabusField> = {}): SyllabusField => ({
-  id, key: `campo_${id}`, label: 'Contenido', help: null, quien_llena,
+  id, key: `campo_${id}`, label: 'Contenido', quien_llena,
   required: true, teacher_editable: quien_llena === 'docente', value: doc('Texto enviado'), ...overrides,
 });
 

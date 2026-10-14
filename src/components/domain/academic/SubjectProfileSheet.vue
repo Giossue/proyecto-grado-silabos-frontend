@@ -7,7 +7,7 @@ import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatusBadge from '@/components/domain/StatusBadge.vue';
 import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
@@ -89,7 +89,6 @@ const save = async (close: () => void) => {
                   <FieldLabel :for="`ficha-${field.id}`" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || sectionOf(field) }}</FieldLabel>
                   <StatusBadge v-if="isEmpty(field.id)" label="Sin llenar" tone="warning" />
                 </div>
-                <FieldDescription v-if="field.help">{{ field.help }}</FieldDescription>
                 <FreeTextEditor
                   :id="`ficha-${field.id}`"
                   :label="field.label.trim() || sectionOf(field)"

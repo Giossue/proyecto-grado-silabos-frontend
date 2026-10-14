@@ -158,7 +158,7 @@ const save = async (): Promise<void> => {
                 key: section.key,
                 title: section.title.trim(),
                 orientation: section.orientation,
-                fields: section.fields.map((field) => ({ key: field.key, label: field.label.trim(), help: field.help?.trim() ? field.help.trim() : null, quien_llena: field.quien_llena, content: field.content })),
+                fields: section.fields.map((field) => ({ key: field.key, label: field.label.trim(), quien_llena: field.quien_llena, content: field.content })),
             })),
         });
         toast.success('Plantilla guardada');
@@ -215,7 +215,7 @@ const moveField = (sectionId: string, index: number, direction: -1 | 1): void =>
 };
 
 const addSection = (index?: number): void => {
-    const created: TemplateSectionPayload = { id: temporaryId(), key: uniqueKey('nueva seccion', 'seccion', usedSectionKeys.value), title: 'Nueva sección', description: null, orientation: 'portrait', fields: [] };
+    const created: TemplateSectionPayload = { id: temporaryId(), key: uniqueKey('nueva seccion', 'seccion', usedSectionKeys.value), title: 'Nueva sección', orientation: 'portrait', fields: [] };
     draft.value.splice(index ?? draft.value.length, 0, created);
     focusId.value = created.id;
     touched();
@@ -223,7 +223,7 @@ const addSection = (index?: number): void => {
 const addField = (sectionId: string, index?: number): void => {
     const section = draft.value.find((item) => item.id === sectionId);
     if (!section) return;
-    const created: TemplateField = { id: temporaryId(), key: uniqueKey('', 'campo', usedFieldKeys.value), label: '', help: null, quien_llena: 'docente', content: emptyDocument() };
+    const created: TemplateField = { id: temporaryId(), key: uniqueKey('', 'campo', usedFieldKeys.value), label: '', quien_llena: 'docente', content: emptyDocument() };
     section.fields.splice(index ?? section.fields.length, 0, created);
     focusId.value = created.id;
     touched();
