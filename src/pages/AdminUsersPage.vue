@@ -66,7 +66,7 @@ onMounted(load);
 
 <template>
     <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca." size="wide">
-        <template #actions><div v-if="result" class="flex flex-wrap gap-2"><ImportSpreadsheetDialog title="Importar cuentas" endpoint="/admin/users/import" template-endpoint="/admin/users/import-template" template-name="plantilla-usuarios.xlsx" :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }, { key: 'rol', label: 'Rol' }, { key: 'carrera', label: 'Carrera' }]" @imported="changed" /><ManagedUserSheet :roles="result.roles" :careers="result.careers" @saved="changed" /></div></template>
+        <template #actions><template v-if="result"><ImportSpreadsheetDialog title="Importar cuentas" endpoint="/admin/users/import" template-endpoint="/admin/users/import-template" template-name="plantilla-usuarios.xlsx" :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }, { key: 'rol', label: 'Rol' }, { key: 'carrera', label: 'Carrera' }]" @imported="changed" /><ManagedUserSheet :roles="result.roles" :careers="result.careers" @saved="changed" /></template></template>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="5" :filters="3" :cell-lines="2" />
 
