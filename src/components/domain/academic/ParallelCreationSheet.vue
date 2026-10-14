@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -40,6 +41,7 @@ const props = defineProps<{
 const emit = defineEmits<{ saved: [message: string]; changed: [message: string] }>();
 const open = defineModel<boolean>("open", { default: false });
 const defaultShift = computed(() => props.shiftOptions[0]?.value ?? '');
+const tab = ref("registrados");
 const code = ref("");
 const shift = ref(defaultShift.value);
 const saving = ref(false);
@@ -47,6 +49,7 @@ const error = ref<string | null>(null);
 const fieldError = computed(() => (error.value && code.value.trim() === "" ? error.value : undefined));
 
 const reset = () => {
+  tab.value = "registrados";
   code.value = "";
   shift.value = defaultShift.value;
   error.value = null;
@@ -165,6 +168,12 @@ watch(open, (value) => value && reset());
           <Alert v-if="error && !fieldError" variant="destructive">
             <AlertDescription>{{ error }}</AlertDescription>
           </Alert>
+          <Tabs v-model="tab">
+          <TabsList>
+            <TabsTrigger value="registrados">Paralelos registrados</TabsTrigger>
+            <TabsTrigger value="crear">Crear paralelo</TabsTrigger>
+          </TabsList>
+          <TabsContent value="crear" class="flex flex-col gap-4">
           <div class="grid items-start gap-4 sm:grid-cols-2">
           <Field :data-invalid="Boolean(fieldError)">
             <FieldLabel :for="`parallel-code-${subjectId}`" required>Código de paralelo</FieldLabel>
@@ -194,6 +203,9 @@ watch(open, (value) => value && reset());
             </Select>
           </Field>
           </div>
+          <FormSheetActions :close="close" :processing="saving" :icon="Plus" label="Crear paralelo" />
+          </TabsContent>
+          <TabsContent value="registrados">
           <section class="flex flex-col gap-2" aria-labelledby="parallel-summary-title">
             <h3 id="parallel-summary-title" class="text-sm font-medium">Paralelos registrados</h3>
             <Alert v-if="rowError" variant="destructive"><AlertDescription>{{ rowError }}</AlertDescription></Alert>
@@ -244,7 +256,8 @@ watch(open, (value) => value && reset());
             </div>
             <p class="text-xs text-muted-foreground">Con el lápiz cambia el paralelo o su docente; con el basurero quita el docente. Cambiar o quitar el docente borra el sílabo del paralelo con todo lo que hizo: el siguiente docente empieza en limpio. Cambiar la jornada o el código solo lo borra si el sílabo ya fue enviado; antes de eso se conserva lo escrito.</p>
           </section>
-          <FormSheetActions :close="close" :processing="saving" :icon="Plus" label="Crear paralelo" />
+          </TabsContent>
+          </Tabs>
         </FieldGroup>
       </form>
     </template>
