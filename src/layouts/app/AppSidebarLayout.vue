@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, provide, ref, toRef } from 'vue';
+import AccessibilityDialog from '@/components/AccessibilityDialog.vue';
 import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
@@ -39,6 +40,7 @@ provide(pageTitleKey, pageTitle);
             />
             <slot />
             <ScreenHelpButton v-if="!editorOpen" />
+            <AccessibilityDialog v-if="!editorOpen" />
         </AppContent>
     </AppShell>
     <Toaster />

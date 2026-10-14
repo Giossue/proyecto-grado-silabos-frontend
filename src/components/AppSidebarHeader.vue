@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import AccessibilityDialog from '@/components/AccessibilityDialog.vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import NavUser from '@/components/NavUser.vue';
 import NotificationsPopover from '@/components/NotificationsPopover.vue';
@@ -22,7 +21,6 @@ withDefaults(defineProps<{ breadcrumbs?: BreadcrumbItem[]; pageTitle?: string }>
         <div class="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
             <NotificationsPopover />
             <AppearanceToggle />
-            <AccessibilityDialog />
             <NavUser />
         </div>
     </header>
