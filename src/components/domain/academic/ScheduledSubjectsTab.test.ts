@@ -35,7 +35,7 @@ const mountTab = (value: ScheduledSubjects = data) => mount(ScheduledSubjectsTab
     props: { data: value, assignments: [], teacherUsers: [] },
     global: {
         stubs: {
-            Card: passthrough, CardContent: passthrough, ParallelCreationSheet: { name: 'ParallelCreationSheet', props: ['open', 'subjectLabel', 'structureLocked'], template: '<div class="parallel-sheet">{{ subjectLabel }}</div>' }, ClientFilterBar: passthrough,
+            Card: passthrough, CardContent: passthrough, ParallelCreationSheet: { props: ['open', 'subjectLabel'], template: '<div class="parallel-sheet">{{ subjectLabel }}</div>' }, ClientFilterBar: passthrough,
             Field: passthrough, FieldLabel: passthrough, Select: SelectStub, SelectContent: passthrough, SelectGroup: passthrough,
             SelectItem: passthrough, SelectTrigger: passthrough, SelectValue: passthrough, Badge: passthrough, Alert: passthrough,
             AlertDescription: passthrough, Table: passthrough, TableBody: passthrough, TableCell: passthrough, TableEmpty: passthrough,
@@ -86,21 +86,10 @@ describe('ScheduledSubjectsTab', () => {
         expect(wrapper.get('.parallel-sheet').text()).toBe('Bases de Datos');
     });
 
-    it('con la convocatoria abierta abre la hoja solo para cambiar de docente', async () => {
+    it('no abre la hoja si la edición está bloqueada o el período es de solo lectura', async () => {
         const locked = mountTab({ ...data, career: { ...data.career, lock_reason: 'Convocatoria activa' } });
         await locked.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
-        expect(locked.find('.parallel-sheet').exists()).toBe(true);
-        expect(locked.getComponent({ name: 'ParallelCreationSheet' }).props('structureLocked')).toBe(true);
-    });
-
-    it('no abre la hoja si no hay nada que cambiar o el período es de solo lectura', async () => {
-        const noParallels = mountTab({
-            ...data,
-            career: { ...data.career, lock_reason: 'Convocatoria activa' },
-            scheduledSubjects: data.scheduledSubjects.map((item) => ({ ...item, parallels: [] })),
-        });
-        await noParallels.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
-        expect(noParallels.find('.parallel-sheet').exists()).toBe(false);
+        expect(locked.find('.parallel-sheet').exists()).toBe(false);
 
         const readonly = mountTab({ ...data, scheduledSubjects: data.scheduledSubjects.map((item) => ({ ...item, editable: false })) });
         await readonly.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
