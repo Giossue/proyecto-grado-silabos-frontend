@@ -20,6 +20,7 @@ withDefaults(
         compact?: boolean;
         fit?: boolean;
         wide?: boolean;
+        noFooter?: boolean;
     }>(),
     {
         showTrigger: true,
@@ -27,6 +28,7 @@ withDefaults(
         compact: false,
         fit: false,
         wide: false,
+        noFooter: false,
     },
 );
 
@@ -58,7 +60,7 @@ const close = (): void => {
             </DialogHeader>
             <div class="relative flex min-h-0 flex-1 flex-col">
                 <ScrollArea class="min-h-0 flex-1">
-                    <div class="px-6 pt-1 pb-28">
+                    <div :class="['px-6 pt-1', noFooter ? 'pb-6' : 'pb-28']">
                         <slot :close="close" />
                     </div>
                 </ScrollArea>

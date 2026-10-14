@@ -126,7 +126,10 @@ const replaceTeacher = async (parallelId: string, value: string): Promise<{ mess
   return result;
 };
 const removeTeacher = (parallelId: string) => runRowAction(() => replaceTeacher(parallelId, NO_TEACHER), "No se pudo quitar el docente del paralelo.");
+const newTeacher = ref("none");
+const pendingTeacher = ref<{ code: string; shift: string; userId: string } | null>(null);
 const startAdd = () => {
+  newTeacher.value = "none";
   code.value = "";
   shift.value = defaultShift.value;
   error.value = null;
@@ -150,6 +153,7 @@ const submit = async () => {
       codes: [code.value.trim()],
       shift: shift.value,
     });
+    if (newTeacher.value !== "none") pendingTeacher.value = { code: code.value.trim(), shift: shift.value, userId: newTeacher.value };
     emit("saved", result.message);
     reset();
   } catch (reason) {
@@ -159,12 +163,20 @@ const submit = async () => {
   }
 };
 watch(open, (value) => value && reset());
+watch(() => props.parallels, async (list) => {
+  const pending = pendingTeacher.value;
+  const created = pending && list.find((item) => item.code === pending.code && item.shift === pending.shift);
+  if (!pending || !created) return;
+  pendingTeacher.value = null;
+  await runRowAction(() => replaceTeacher(created.id, pending.userId), "El paralelo se creó, pero no se pudo asignar el docente.");
+});
 </script>
 
 <template>
   <FormDialog
     v-model:open="open"
     compact
+    no-footer
     :show-trigger="false"
     trigger-label="Agregar paralelo"
     title="Paralelos y docentes de la materia"
@@ -231,7 +243,16 @@ watch(open, (value) => value && reset());
                         <SelectContent><SelectGroup><SelectItem v-for="option in shiftOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell class="text-muted-foreground">Sin docente</TableCell>
+                    <TableCell>
+                      <Select v-if="teacherUsers" v-model="newTeacher">
+                        <SelectTrigger class="min-w-40 max-w-60" aria-label="Docente del nuevo paralelo"><SelectValue placeholder="Elija el docente" /></SelectTrigger>
+                        <SelectContent><SelectGroup>
+                          <SelectItem value="none">Sin docente</SelectItem>
+                          <SelectItem v-for="user in teacherUsers" :key="user.id" :value="user.id">{{ user.name }}</SelectItem>
+                        </SelectGroup></SelectContent>
+                      </Select>
+                      <span v-else class="text-muted-foreground">Sin docente</span>
+                    </TableCell>
                     <TableCell class="text-right">
                       <Button type="button" size="icon-sm" variant="ghost" :disabled="saving" aria-label="Guardar nuevo paralelo" @click="submit"><Check aria-hidden="true" /></Button>
                       <Button type="button" size="icon-sm" variant="ghost" :disabled="saving" aria-label="Cancelar nuevo paralelo" @click="cancelAdd"><X aria-hidden="true" /></Button>
