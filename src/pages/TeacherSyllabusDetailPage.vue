@@ -83,7 +83,7 @@ const showEditor = computed(() => canEdit.value || pausedEdit.value);
 const allFields = computed(() => (syllabus.value?.sections ?? []).flatMap((section) => section.fields));
 const editableFieldIds = computed(() => new Set(allFields.value.map((field) => field.id)));
 const isTeacherField = (field: SyllabusField): boolean => field.quien_llena === 'docente' && field.teacher_editable !== false;
-const REVIEW_STAGE_TEXT: Record<string, string> = { biblioteca: 'Biblioteca revisa la bibliografía.', coordinacion: 'Biblioteca aprobó; coordinación revisa y decide.' };
+const REVIEW_STAGE_TEXT: Record<string, string> = { coordinacion: 'Coordinación revisa y decide.', biblioteca: 'Coordinación aprobó; biblioteca revisa la bibliografía.' };
 const reviewStageLabel = computed(() => REVIEW_STAGE_TEXT[syllabus.value?.review_stage ?? ''] ?? '');
 const STAGE_NAME: Record<string, string> = { biblioteca: 'Biblioteca', coordinacion: 'Coordinación' };
 const stageName = (stage: string): string => STAGE_NAME[stage] ?? stage;
@@ -460,7 +460,7 @@ onBeforeUnmount(() => {
           <DocumentSignatureCard v-if="syllabus.state === 'aprobado' && syllabus.approved_revision_id" :revision-id="syllabus.approved_revision_id" :file-name="`silabo-${syllabus.code}`" />
 
           <Card v-if="latestReviewComment" class="library-comment-card">
-            <CardHeader><CardTitle>Comentario de {{ stageName(latestReviewComment.stage) }}</CardTitle><CardDescription>{{ syllabus.state === 'correccion_solicitada' ? 'Corrija lo indicado y reenvíe el sílabo; volverá a biblioteca.' : 'Último comentario que recibió este sílabo en la revisión.' }}</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Comentario de {{ stageName(latestReviewComment.stage) }}</CardTitle><CardDescription>{{ syllabus.state === 'correccion_solicitada' ? (latestReviewComment.stage === 'biblioteca' ? 'Corrija lo indicado y reenvíe el sílabo; irá directo a biblioteca.' : 'Corrija lo indicado y reenvíe el sílabo; volverá a coordinación.') : 'Último comentario que recibió este sílabo en la revisión.' }}</CardDescription></CardHeader>
             <CardContent class="flex flex-col gap-4">
               <CommentEntry :revision="latestReviewComment.revision_number" :content="latestReviewComment.comment" :author="`${latestReviewComment.commented_by} · ${stageName(latestReviewComment.stage)}`" :date="latestReviewComment.commented_at" />
               <section v-if="reviewComments.length > 1" class="flex flex-col gap-3 text-sm" aria-label="Comentarios anteriores de la revisión">
@@ -511,7 +511,7 @@ onBeforeUnmount(() => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Enviar a revisión?</DialogTitle>
-          <DialogDescription>Biblioteca revisa primero la bibliografía; después coordinación decide la aprobación final. Mientras lo revisan, no podrá hacer cambios.</DialogDescription>
+          <DialogDescription>Coordinación revisa primero; después biblioteca aprueba la bibliografía y el sílabo queda aprobado. Mientras lo revisan, no podrá hacer cambios.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>

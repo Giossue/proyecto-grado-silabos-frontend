@@ -553,7 +553,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.find(".library-correction").exists()).toBe(false);
     const commentCard = wrapper.get(".library-comment-card");
     expect(commentCard.text()).toContain("Comentario de Biblioteca");
-    expect(commentCard.text()).toContain("volverá a biblioteca");
+    expect(commentCard.text()).toContain("irá directo a biblioteca");
     expect(commentCard.text().indexOf("La 10.ª edición no está disponible.")).toBeLessThan(commentCard.text().indexOf("Comentario anterior."));
     expect(buttonNamed(wrapper, "Reenviar bibliografía")).toBeUndefined();
     expect(buttonNamed(wrapper, "Enviar sílabo")).toBeDefined();

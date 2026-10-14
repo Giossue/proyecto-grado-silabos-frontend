@@ -124,14 +124,14 @@ onMounted(load);
 
       <aside class="flex min-w-0 flex-col gap-6">
         <Card v-if="canReviewCurrent">
-          <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>El sílabo vuelve al docente con su comentario; al reenviarlo pasa otra vez por biblioteca.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Solicitar corrección</CardTitle><CardDescription>El sílabo vuelve al docente con su comentario; al reenviarlo vuelve a coordinación.</CardDescription></CardHeader>
           <CardContent><form id="correction-form" class="flex flex-col gap-4" @submit.prevent="submitCorrection">
             <Field><FieldLabel for="correction-justification" required>Comentario para el docente</FieldLabel><Textarea id="correction-justification" v-model="correctionJustification" rows="4" required /><FieldError :errors="[...(errors.revision ?? []), ...(errors.justification ?? [])]" /></Field>
             <Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" /><Undo2 v-else aria-hidden="true" />Solicitar corrección</Button>
           </form></CardContent>
         </Card>
 
-        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>La aprobación fija la revisión {{ data.revision.number }} y genera el PDF para las firmas.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button></CardContent></Card>
+        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>Si no hay cambios, apruebe la revisión {{ data.revision.number }}: pasa a biblioteca, que aprueba la bibliografía y deja el sílabo aprobado.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button></CardContent></Card>
 
         <DocumentSignatureCard v-if="data.history.some((item) => item.id === data!.revision.id && item.approved_at)" :key="data.revision.id" :revision-id="data.revision.id" :file-name="`silabo-${data.syllabus.code}-revision-${data.revision.number}`" />
 

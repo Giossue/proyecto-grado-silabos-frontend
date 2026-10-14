@@ -142,8 +142,7 @@ onMounted(load);
 
     <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo completar la acción</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <Alert v-if="review.state === 'firmado'"><BookCheck aria-hidden="true" /><AlertTitle>Bibliografía verificada</AlertTitle><AlertDescription>Biblioteca ya firmó este sílabo.</AlertDescription></Alert>
-    <Alert v-else-if="review.state === 'por_firmar'"><BookCheck aria-hidden="true" /><AlertTitle>Aprobado por coordinación</AlertTitle><AlertDescription>Bibliografía aprobada<template v-if="review.verified_by"> por {{ review.verified_by }}</template><template v-if="review.verified_at"> el {{ formatDate(review.verified_at) }}</template>. Firme el PDF cuando docente y coordinación hayan firmado.</AlertDescription></Alert>
-    <Alert v-else-if="review.state === 'aprobado'"><BookCheck aria-hidden="true" /><AlertTitle>Bibliografía aprobada</AlertTitle><AlertDescription>Aprobada<template v-if="review.verified_by"> por {{ review.verified_by }}</template><template v-if="review.verified_at"> el {{ formatDate(review.verified_at) }}</template>. El sílabo sigue en coordinación y volverá aquí para su firma.</AlertDescription></Alert>
+    <Alert v-else-if="review.state === 'por_firmar'"><BookCheck aria-hidden="true" /><AlertTitle>Sílabo aprobado</AlertTitle><AlertDescription>Bibliografía aprobada<template v-if="review.verified_by"> por {{ review.verified_by }}</template><template v-if="review.verified_at"> el {{ formatDate(review.verified_at) }}</template>. Firme el PDF cuando docente y coordinación hayan firmado.</AlertDescription></Alert>
     <Alert v-else-if="review.state === 'comentado'"><MessageSquareText aria-hidden="true" /><AlertTitle>Comentario enviado al docente</AlertTitle><AlertDescription>El docente corregirá el sílabo y lo reenviará. Volverá a esta bandeja como una nueva revisión.</AlertDescription></Alert>
     <Alert v-else-if="review.state === 'anulado'"><CircleSlash aria-hidden="true" /><AlertTitle>Revisión reemplazada</AlertTitle><AlertDescription>Hay una revisión más reciente o el sílabo se reabrió. Esta queda solo para consulta.</AlertDescription></Alert>
 
@@ -162,7 +161,7 @@ onMounted(load);
 
       <aside class="flex min-w-0 flex-col gap-6">
         <Card v-if="review.can_verify">
-          <CardHeader><CardTitle>Aprobar bibliografía</CardTitle><CardDescription>Si todos los libros están en biblioteca, apruebe la bibliografía. El sílabo pasa a coordinación; al aprobarlo, firman docente, coordinación y biblioteca.</CardDescription></CardHeader>
+          <CardHeader><CardTitle>Aprobar bibliografía</CardTitle><CardDescription>Si todos los libros están en biblioteca, apruebe la bibliografía. Coordinación ya lo aprobó; al aprobarlo, el sílabo queda aprobado y firman docente, coordinación y biblioteca.</CardDescription></CardHeader>
           <CardContent><Button type="button" :disabled="verifying" @click="askVerify"><BookCheck data-icon="inline-start" aria-hidden="true" />Aprobar bibliografía</Button></CardContent>
         </Card>
 
@@ -214,7 +213,7 @@ onMounted(load);
       <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Aprobar la bibliografía?</DialogTitle>
-          <DialogDescription>Confirma que los libros están disponibles en biblioteca. El sílabo pasa a coordinación; biblioteca firmará el PDF después de docente y coordinación.</DialogDescription>
+          <DialogDescription>Confirma que los libros están disponibles en biblioteca. El sílabo queda aprobado; biblioteca firmará el PDF después de docente y coordinación.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose as-child><Button type="button" variant="outline" :disabled="verifying">Cancelar</Button></DialogClose>
