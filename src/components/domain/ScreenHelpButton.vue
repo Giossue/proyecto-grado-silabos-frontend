@@ -55,7 +55,7 @@ const measure = (): void => {
 
 const cornerPosition = (value: Corner): { x: number; y: number } => ({
   x: value.endsWith('left') ? bounds.value.left + MARGIN : bounds.value.right - SIZE - MARGIN,
-  y: value.startsWith('top') ? bounds.value.top + MARGIN : bounds.value.bottom - SIZE - MARGIN,
+  y: value.startsWith('top') ? bounds.value.top + MARGIN : bounds.value.bottom - SIZE - MARGIN - (value === 'bottom-right' ? SIZE + MARGIN : 0),
 });
 
 const style = computed(() => {
