@@ -86,11 +86,13 @@ describe('ScheduledSubjectsTab', () => {
         expect(wrapper.get('.parallel-sheet').text()).toBe('Bases de Datos');
     });
 
-    it('no abre la hoja si la edición está bloqueada o el período es de solo lectura', async () => {
-        const locked = mountTab({ ...data, career: { ...data.career, lock_reason: 'Convocatoria activa' } });
-        await locked.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
-        expect(locked.find('.parallel-sheet').exists()).toBe(false);
+    it('abre la hoja aunque la convocatoria esté abierta: paralelos y docentes no se bloquean', async () => {
+        const open = mountTab({ ...data, career: { ...data.career, lock_reason: 'Convocatoria activa' } });
+        await open.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
+        expect(open.find('.parallel-sheet').exists()).toBe(true);
+    });
 
+    it('no abre la hoja si el período es de solo lectura', async () => {
         const readonly = mountTab({ ...data, scheduledSubjects: data.scheduledSubjects.map((item) => ({ ...item, editable: false })) });
         await readonly.findAll('div').find((item) => item.text().startsWith('Bases de Datos'))!.trigger('click');
         expect(readonly.find('.parallel-sheet').exists()).toBe(false);
