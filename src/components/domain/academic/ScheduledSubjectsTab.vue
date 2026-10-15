@@ -79,7 +79,7 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
 
 <template>
   <div class="flex flex-col gap-4">
-    <Card><CardContent>
+    <Card class="py-3"><CardContent>
       <ClientFilterBar :filter="filter" input-id="scheduled-subjects-search" label="Buscar materia programada" placeholder="Buscar por materia">
         <template #filters>
           <Field><FieldLabel for="scheduled-subject-cycle" class="sr-only">Ciclo</FieldLabel>

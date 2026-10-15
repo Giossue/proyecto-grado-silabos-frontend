@@ -82,7 +82,7 @@ onMounted(() => { void load(); });
     <ProcessLockAlert v-if="data?.career.lock_reason" :lock="data.career.lock" />
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="2" :filters="1" :actions="false" />
-    <div v-else-if="data" class="flex flex-col gap-4"><Card><CardContent>
+    <div v-else-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent>
       <ClientFilterBar :filter="filter" input-id="career-project-search" label="Buscar por materia" placeholder="Buscar por materia">
         <template #filters>
           <Field><FieldLabel for="career-project-cycle" class="sr-only">Ciclo</FieldLabel>
