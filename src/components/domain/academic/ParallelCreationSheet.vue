@@ -7,6 +7,7 @@ import { createCareerRecord, createParallels, deleteCareerRecord, deleteParallel
 import FormDialog from "@/components/domain/FormDialog.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -219,8 +220,8 @@ watch(() => props.parallels, async (list) => {
                         <span v-else>{{ assignmentOf(parallel.id)?.user_name ?? "Sin docente" }}</span>
                       </TableCell>
                       <TableCell class="text-right">
-                        <Button type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Guardar paralelo ${parallel.code}`" @click="saveEdit"><Check aria-hidden="true" /></Button>
-                        <Button type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" aria-label="Cancelar edición" @click="cancelEdit"><X aria-hidden="true" /></Button>
+                        <TooltipProvider><Tooltip><TooltipTrigger as-child><Button type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Guardar paralelo ${parallel.code}`" @click="saveEdit"><Check aria-hidden="true" /></Button></TooltipTrigger><TooltipContent>Guardar</TooltipContent></Tooltip></TooltipProvider>
+                        <TooltipProvider><Tooltip><TooltipTrigger as-child><Button type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" aria-label="Cancelar edición" @click="cancelEdit"><X aria-hidden="true" /></Button></TooltipTrigger><TooltipContent>Cancelar</TooltipContent></Tooltip></TooltipProvider>
                       </TableCell>
                     </template>
                     <template v-else>
@@ -229,9 +230,9 @@ watch(() => props.parallels, async (list) => {
                       <TableCell :class="assignmentOf(parallel.id) ? '' : 'text-muted-foreground'">{{ assignmentOf(parallel.id)?.user_name ?? "Sin docente" }}
                       </TableCell>
                       <TableCell v-if="showActions" class="text-right">
-                        <Button v-if="canEditRow(parallel)" type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Editar paralelo ${parallel.code}`" @click="startEdit(parallel)"><Pencil aria-hidden="true" /></Button>
-                        <Button v-if="canRemoveTeacher(parallel.id)" type="button" size="icon-sm" variant="ghost" class="text-destructive hover:bg-destructive/10 hover:text-destructive" :disabled="rowBusy" :aria-label="`Quitar el docente del paralelo ${parallel.code}`" @click="removeTeacher(parallel.id)"><Trash2 aria-hidden="true" /></Button>
-                        <Button v-else-if="canDeleteParallel(parallel)" type="button" size="icon-sm" variant="ghost" class="text-destructive hover:bg-destructive/10 hover:text-destructive" :disabled="rowBusy" :aria-label="`Eliminar paralelo ${parallel.code}`" @click="removeParallel(parallel.id)"><Trash2 aria-hidden="true" /></Button>
+                        <TooltipProvider v-if="canEditRow(parallel)"><Tooltip><TooltipTrigger as-child><Button type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Editar paralelo ${parallel.code}`" @click="startEdit(parallel)"><Pencil aria-hidden="true" /></Button></TooltipTrigger><TooltipContent>Editar paralelo</TooltipContent></Tooltip></TooltipProvider>
+                        <TooltipProvider v-if="canRemoveTeacher(parallel.id)"><Tooltip><TooltipTrigger as-child><Button type="button" size="icon-sm" variant="ghost" class="text-destructive hover:bg-destructive/10 hover:text-destructive" :disabled="rowBusy" :aria-label="`Quitar el docente del paralelo ${parallel.code}`" @click="removeTeacher(parallel.id)"><Trash2 aria-hidden="true" /></Button></TooltipTrigger><TooltipContent>Quitar docente</TooltipContent></Tooltip></TooltipProvider>
+                        <TooltipProvider v-else-if="canDeleteParallel(parallel)"><Tooltip><TooltipTrigger as-child><Button type="button" size="icon-sm" variant="ghost" class="text-destructive hover:bg-destructive/10 hover:text-destructive" :disabled="rowBusy" :aria-label="`Eliminar paralelo ${parallel.code}`" @click="removeParallel(parallel.id)"><Trash2 aria-hidden="true" /></Button></TooltipTrigger><TooltipContent>Eliminar paralelo</TooltipContent></Tooltip></TooltipProvider>
                       </TableCell>
                     </template>
                   </TableRow>
