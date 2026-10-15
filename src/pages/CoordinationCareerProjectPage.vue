@@ -115,7 +115,7 @@ onMounted(() => { void load(); });
           </CollapsibleContent>
         </Collapsible>
       </div>
-      <Table label="Materias de la malla" class="max-sm:hidden">
+      <div class="max-sm:hidden"><Table label="Materias de la malla">
         <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead class="text-center">Ficha</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="!groups.length" :colspan="2">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</TableEmpty>
@@ -127,7 +127,7 @@ onMounted(() => { void load(); });
           </TableRow>
           </template>
         </TableBody>
-      </Table>
+      </Table></div>
     </CardContent></Card>
     <SubjectProfileSheet v-if="selected" v-model:open="profileOpen" :subject-id="selected.id" :subject-name="selected.nombre" :disabled="Boolean(data?.career.lock_reason)" @saved="saved" />
   </PageFrame>
