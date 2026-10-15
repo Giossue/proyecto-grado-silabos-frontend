@@ -381,6 +381,10 @@
             box-shadow: var(--shadow-surface-value);
         }
 
+        table[data-cards='true'] > tbody > tr:nth-child(even) {
+            background-color: var(--secondary);
+        }
+
         table[data-cards='true'] > tbody > tr:hover {
             background-color: var(--muted);
         }
