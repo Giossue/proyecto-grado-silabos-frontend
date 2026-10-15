@@ -717,3 +717,47 @@
     transform: translate(-50%, 50%) scale(1.4);
 }
 
+
+/* Vista del docente: el sílabo se llena como un formulario de shadcn, no como la hoja de la plantilla.
+   Se ignoran los colores, negritas, alineaciones y bordes gruesos que la plantilla pone en cada celda. */
+@layer components {
+    .teacher-form {
+        --document-table-border: var(--border);
+        --document-table-header-background: var(--muted);
+        --document-table-header-strong-background: var(--muted);
+        --document-table-total-background: var(--muted);
+        --document-table-header-color: var(--foreground);
+    }
+
+    .teacher-form table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+    }
+
+    .teacher-form td,
+    .teacher-form th {
+        border: 0 !important;
+        border-right: 1px solid var(--border) !important;
+        border-bottom: 1px solid var(--border) !important;
+        background-color: transparent !important;
+        color: var(--foreground) !important;
+        font-style: normal !important;
+        font-weight: 400 !important;
+        text-align: start !important;
+        padding: 0.5rem 0.75rem !important;
+        vertical-align: middle;
+    }
+
+    .teacher-form th {
+        background-color: color-mix(in oklab, var(--muted) 60%, transparent) !important;
+        font-weight: 500 !important;
+        color: var(--muted-foreground) !important;
+    }
+
+    .teacher-form tr > :last-child { border-right: 0 !important; }
+    .teacher-form tr:last-child > * { border-bottom: 0 !important; }
+}

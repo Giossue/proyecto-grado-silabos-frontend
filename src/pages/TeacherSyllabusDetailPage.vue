@@ -479,7 +479,7 @@ onBeforeUnmount(() => {
           </Tabs>
           <template v-for="section in shownSections" :key="section.id">
           <Separator v-if="!showEditor && section.id !== visibleSections[0]?.id" />
-          <section :id="`section-${section.id}`" class="flex scroll-mt-6 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
+          <section :id="`section-${section.id}`" class="teacher-form flex scroll-mt-6 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
             <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
             <FieldGroup>
               <template v-for="field in section.fields" :key="field.id">
