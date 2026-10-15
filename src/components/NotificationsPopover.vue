@@ -3,14 +3,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
 import EmptyState from '@/components/domain/EmptyState.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { Bell, BookOpen, CalendarClock, CheckCheck, ClipboardCheck, FileText, Library, MoreHorizontal, Sparkles, UserRound, X } from '@lucide/vue';
+import { Bell, BookOpen, CalendarClock, CheckCheck, ClipboardCheck, FileText, Library, Sparkles, UserRound, X } from '@lucide/vue';
 import { computed, onMounted, ref, watch, type Component } from 'vue';
 import { useRoute } from 'vue-router';
 import { getNotifications, markAllNotificationsRead, markNotificationRead, type Notification } from '@/api/notifications';
 import { useOpenNotification } from '@/composables/useOpenNotification';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetClose, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -131,28 +130,28 @@ onMounted(refreshCount);
     <Sheet v-model:open="open">
         <SheetContent
             :aria-describedby="undefined"
+            @interact-outside="open = false"
             class="top-0 right-0 left-auto h-dvh max-h-none w-full translate-x-0 translate-y-0 gap-0 rounded-none border-y-0 border-r-0 duration-300 data-[state=closed]:zoom-out-100 data-[state=open]:zoom-in-100 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-md"
         >
             <div class="flex items-center justify-between gap-2 border-b px-6 py-4">
                 <SheetTitle class="text-lg font-semibold">Notificaciones</SheetTitle>
+                <TooltipProvider :delay-duration="150">
                 <div class="flex items-center gap-1">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger as-child>
-                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Opciones de notificaciones">
-                                <MoreHorizontal aria-hidden="true" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem :disabled="unreadCount === 0" @select="readAll">
-                                <CheckCheck aria-hidden="true" />
-                                Marcar todas como leídas
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Tooltip>
+                        <TooltipTrigger as-child>
+                            <span class="inline-flex">
+                                <Button type="button" variant="ghost" size="icon-sm" aria-label="Marcar todas como leídas" :disabled="unreadCount === 0" @click="readAll">
+                                    <CheckCheck aria-hidden="true" />
+                                </Button>
+                            </span>
+                        </TooltipTrigger>
+                        <TooltipContent>Marcar todas como leídas</TooltipContent>
+                    </Tooltip>
                     <SheetClose as-child>
                         <Button type="button" variant="ghost" size="icon-sm" aria-label="Cerrar notificaciones"><X aria-hidden="true" /></Button>
                     </SheetClose>
                 </div>
+                </TooltipProvider>
             </div>
 
             <ChoiceGroup :model-value="status" :options="statusOptions" label="Filtrar notificaciones" class="px-6 py-3" @update:model-value="updateStatus" />
