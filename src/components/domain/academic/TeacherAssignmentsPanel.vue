@@ -86,7 +86,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4"><Card class="py-3"><CardContent>
+  <div class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
     <ClientFilterBar :filter="filter" input-id="teacher-assignments-search" label="Buscar docente" placeholder="Buscar por docente o correo">
       <template #filters><Field><FieldLabel for="teacher-assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="teacher-assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="pending">Pendiente</SelectItem></SelectGroup></SelectContent></Select></Field></template>
     </ClientFilterBar></CardContent></Card>

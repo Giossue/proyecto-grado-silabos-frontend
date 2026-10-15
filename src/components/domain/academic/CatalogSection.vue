@@ -122,7 +122,7 @@ const {
 
 <template>
     <div v-if="section === 'faculties'" class="flex flex-col gap-4">
-        <Card class="py-3"><CardContent>
+        <Card class="py-3"><CardContent class="px-3">
             <ClientFilterBar
                 :filter="facultyFilter"
                 input-id="faculties-search"
@@ -225,7 +225,7 @@ const {
     </div>
 
     <div v-else class="flex flex-col gap-4">
-        <Card class="py-3"><CardContent>
+        <Card class="py-3"><CardContent class="px-3">
             <ClientFilterBar
                 :filter="careerFilter"
                 input-id="careers-search"
