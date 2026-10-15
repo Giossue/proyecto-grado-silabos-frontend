@@ -119,7 +119,7 @@ onBeforeUnmount(() => {
         </div>
 
         <div
-            class="max-sm:min-h-0 max-sm:flex-1 max-sm:overflow-y-auto sm:contents"
+            class="max-sm:flex max-sm:min-h-0 max-sm:flex-1 max-sm:flex-col max-sm:gap-4 max-sm:overflow-y-auto sm:contents"
         >
             <slot />
         </div>
