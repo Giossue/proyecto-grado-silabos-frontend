@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import NotificationsPopover from '@/components/NotificationsPopover.vue';
+import NotificationsSheet from '@/components/NotificationsSheet.vue';
 import { getNotifications, openNotification, type Notification, type NotificationsResponse } from '@/api/notifications';
 import { sessionState } from '@/state/session';
 
@@ -31,7 +31,7 @@ const notification = (overrides: Partial<Notification> = {}): Notification => ({
 });
 
 const mountOpen = async () => {
-    const wrapper = mount(NotificationsPopover, {
+    const wrapper = mount(NotificationsSheet, {
         attachTo: document.body,
         global: {
             stubs: {
@@ -50,7 +50,7 @@ const mountOpen = async () => {
     return wrapper;
 };
 
-describe('NotificationsPopover', () => {
+describe('NotificationsSheet', () => {
     beforeEach(() => {
         push.mockReset();
         load.mockReset();

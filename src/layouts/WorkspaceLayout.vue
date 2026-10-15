@@ -2,7 +2,7 @@
 import { computed, provide, ref } from 'vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import AppLogo from '@/components/AppLogo.vue';
-import NotificationsPopover from '@/components/NotificationsPopover.vue';
+import NotificationsSheet from '@/components/NotificationsSheet.vue';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -40,7 +40,7 @@ const user = computed<User>(() => ({
                 <AppLogo />
             </div>
             <div class="ml-auto flex items-center gap-2">
-                <NotificationsPopover />
+                <NotificationsSheet />
                 <AppearanceToggle />
                 <DropdownMenu>
                     <DropdownMenuTrigger as-child>
