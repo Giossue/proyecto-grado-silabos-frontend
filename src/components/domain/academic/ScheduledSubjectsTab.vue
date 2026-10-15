@@ -78,8 +78,8 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
 </script>
 
 <template>
-  <Card>
-    <CardContent class="flex flex-col gap-4">
+  <div class="flex flex-col gap-4">
+    <Card><CardContent>
       <ClientFilterBar :filter="filter" input-id="scheduled-subjects-search" label="Buscar materia programada" placeholder="Buscar por materia">
         <template #filters>
           <Field><FieldLabel for="scheduled-subject-cycle" class="sr-only">Ciclo</FieldLabel>
@@ -102,6 +102,7 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
           </Field>
         </template>
       </ClientFilterBar>
+    </CardContent></Card>
       <ParallelBulkActions
         v-if="selectedRows.length"
         :items="selectedRows"
@@ -140,6 +141,5 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
         @saved="emit('changed', $event)"
         @changed="emit('changed', $event)"
       />
-    </CardContent>
-  </Card>
+  </div>
 </template>

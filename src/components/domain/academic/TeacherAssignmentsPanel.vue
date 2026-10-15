@@ -86,10 +86,10 @@ const resendInvitation = async (userId: string): Promise<void> => {
 </script>
 
 <template>
-  <Card><CardContent class="flex flex-col gap-4">
+  <div class="flex flex-col gap-4"><Card><CardContent>
     <ClientFilterBar :filter="filter" input-id="teacher-assignments-search" label="Buscar docente" placeholder="Buscar por docente o correo">
       <template #filters><Field><FieldLabel for="teacher-assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="teacher-assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="pending">Pendiente</SelectItem></SelectGroup></SelectContent></Select></Field></template>
-    </ClientFilterBar>
+    </ClientFilterBar></CardContent></Card>
     <FeedbackAlert v-if="resendError" :message="resendError" />
     <Table label="Docentes de la carrera"><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader>
       <TableBody>
@@ -116,5 +116,5 @@ const resendInvitation = async (userId: string): Promise<void> => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  </CardContent></Card>
+  </div>
 </template>

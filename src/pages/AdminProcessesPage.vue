@@ -90,7 +90,7 @@ onMounted(load);
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :columns="4" :filters="1" />
     <ProcessLockAlert v-if="loaded && inProgress" title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra." hide-action />
-    <Card v-if="loaded"><CardContent class="flex flex-col gap-4">
+    <div v-if="loaded" class="flex flex-col gap-4"><Card><CardContent>
       <ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar período" placeholder="Buscar por período">
         <template #filters>
           <Field><FieldLabel for="processes-search-state" class="sr-only">Estado</FieldLabel>
@@ -100,6 +100,7 @@ onMounted(load);
           </Field>
         </template>
       </ClientFilterBar>
+      </CardContent></Card>
       <Table label="Convocatorias" data-cards="true">
         <TableHeader><TableRow><TableHead>Período</TableHead><TableHead>Clases</TableHead><TableHead>Elaboración de sílabos</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader>
         <TableBody>
@@ -114,7 +115,7 @@ onMounted(load);
         </TableBody>
       </Table>
       <TablePagination :meta="meta" label="Paginación de convocatorias" @update:page="setPage" />
-    </CardContent></Card>
+    </div>
     <template v-if="current">
       <ConvocationOptionsDialog v-model:open="sheetOpen" :row="current" @action="runAction" />
       <ConvocationRowActions ref="rowActions" :key="current.id" :row="current" :menu="false" @changed="changed" />

@@ -82,7 +82,7 @@ onMounted(() => { void load(); });
     <ProcessLockAlert v-if="data?.career.lock_reason" :lock="data.career.lock" />
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="2" :filters="1" :actions="false" />
-    <Card v-else-if="data"><CardContent class="flex flex-col gap-4">
+    <div v-else-if="data" class="flex flex-col gap-4"><Card><CardContent>
       <ClientFilterBar :filter="filter" input-id="career-project-search" label="Buscar por materia" placeholder="Buscar por materia">
         <template #filters>
           <Field><FieldLabel for="career-project-cycle" class="sr-only">Ciclo</FieldLabel>
@@ -97,6 +97,7 @@ onMounted(() => { void load(); });
           </Field>
         </template>
       </ClientFilterBar>
+      </CardContent></Card>
       <div class="flex flex-col gap-2">
         <p v-if="!groups.length" class="py-6 text-center text-sm text-muted-foreground">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</p>
         <Collapsible v-for="group in groups" :key="`${group.cycle}-${filter.active.value}`" :default-open="filter.active.value" class="group/cycle rounded-md border bg-card">
@@ -113,7 +114,7 @@ onMounted(() => { void load(); });
           </CollapsibleContent>
         </Collapsible>
       </div>
-    </CardContent></Card>
+    </div>
     <SubjectProfileSheet v-if="selected" v-model:open="profileOpen" :subject-id="selected.id" :subject-name="selected.nombre" :disabled="Boolean(data?.career.lock_reason)" @saved="saved" />
   </PageFrame>
 </template>

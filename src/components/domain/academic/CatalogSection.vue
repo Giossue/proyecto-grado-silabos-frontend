@@ -121,8 +121,8 @@ const {
 </script>
 
 <template>
-    <Card v-if="section === 'faculties'">
-        <CardContent class="flex flex-col gap-4">
+    <div v-if="section === 'faculties'" class="flex flex-col gap-4">
+        <Card><CardContent>
             <ClientFilterBar
                 :filter="facultyFilter"
                 input-id="faculties-search"
@@ -155,6 +155,7 @@ const {
                     </Field>
                 </template>
             </ClientFilterBar>
+        </CardContent></Card>
             <Table label="Listado académico">
                 <TableHeader>
                     <TableRow>
@@ -221,11 +222,10 @@ const {
                 label="Paginación de facultades"
                 @update:page="setFacultyPage"
             />
-        </CardContent>
-    </Card>
+    </div>
 
-    <Card v-else>
-        <CardContent class="flex flex-col gap-4">
+    <div v-else class="flex flex-col gap-4">
+        <Card><CardContent>
             <ClientFilterBar
                 :filter="careerFilter"
                 input-id="careers-search"
@@ -270,6 +270,7 @@ const {
                     </Field>
                 </template>
             </ClientFilterBar>
+        </CardContent></Card>
             <Table label="Listado académico">
                 <TableHeader>
                     <TableRow>
@@ -334,8 +335,7 @@ const {
                 label="Paginación de carreras"
                 @update:page="setCareerPage"
             />
-        </CardContent>
-    </Card>
+    </div>
 
     <Dialog :open="logoPreviewOpen" @update:open="updateLogoPreviewOpen">
         <DialogContent class="sm:max-w-3xl">
