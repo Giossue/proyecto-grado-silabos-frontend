@@ -11,6 +11,9 @@ import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import { ChevronDown } from '@lucide/vue';
+import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -62,6 +65,7 @@ const groups = computed(() => {
     for (const subject of filter.items.value) byCycle.set(cycleLabel(subject), [...(byCycle.get(cycleLabel(subject)) ?? []), subject]);
     return [...byCycle].sort(([a], [b]) => a.localeCompare(b, 'es', { numeric: true })).map(([cycle, list]) => ({ cycle, list }));
 });
+const completeCount = (list: Subject[]): number => list.filter((subject) => subject.profile_complete).length;
 const open = (subject: Subject): void => {
     selected.value = subject;
     profileOpen.value = true;
@@ -95,7 +99,23 @@ onMounted(() => { void load(); });
           </Field>
         </template>
       </ClientFilterBar>
-      <Table label="Materias de la malla">
+      <div class="flex flex-col gap-2 sm:hidden">
+        <p v-if="!groups.length" class="py-6 text-center text-sm text-muted-foreground">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</p>
+        <Collapsible v-for="group in groups" :key="`${group.cycle}-${filter.active.value}`" :default-open="filter.active.value" class="group/cycle rounded-md border bg-card">
+          <CollapsibleTrigger class="flex w-full items-center gap-2 px-4 py-3 text-left font-semibold">
+            <span class="flex-1">{{ group.cycle === 'Sin ciclo' ? group.cycle : `Ciclo ${group.cycle}` }}</span>
+            <Badge :variant="completeCount(group.list) === group.list.length ? 'success' : 'warning'" :aria-label="`${completeCount(group.list)} de ${group.list.length} fichas completas`">{{ completeCount(group.list) }}/{{ group.list.length }}</Badge>
+            <ChevronDown class="size-4 transition-transform group-data-[state=open]/cycle:rotate-180" aria-hidden="true" />
+          </CollapsibleTrigger>
+          <CollapsibleContent class="flex flex-col divide-y border-t">
+            <button v-for="subject in group.list" :key="subject.id" type="button" class="flex items-center justify-between gap-3 px-4 py-3 text-left text-sm" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="open(subject)">
+              <span>{{ subject.nombre }}</span>
+              <StatusBadge :label="statusOf(subject)" :tone="subject.profile_complete ? 'success' : 'warning'" />
+            </button>
+          </CollapsibleContent>
+        </Collapsible>
+      </div>
+      <Table label="Materias de la malla" class="max-sm:hidden">
         <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead class="text-center">Ficha</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="!groups.length" :colspan="2">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</TableEmpty>
