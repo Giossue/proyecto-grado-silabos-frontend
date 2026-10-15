@@ -7,7 +7,6 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import ScreenHelpEditSheet from '@/components/domain/identity/ScreenHelpEditSheet.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
-import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { helpScreens, type HelpScreen } from '@/lib/helpScreens';
 import { toast } from '@/lib/toast';
@@ -53,7 +52,7 @@ onMounted(() => { void load(); });
   <PageFrame title="Ayuda de pantallas" description="Textos de ayuda que se ven en el botón flotante de cada pantalla." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && helps.length === 0" variant="table" :columns="3" :filters="0" :actions="false" />
-    <Card v-else><CardContent>
+    <template v-else>
       <Table label="Ayuda de pantallas">
         <TableHeader><TableRow><TableHead>Pantalla</TableHead><TableHead>Rol</TableHead><TableHead class="text-center">Ayuda</TableHead></TableRow></TableHeader>
         <TableBody>
@@ -64,7 +63,7 @@ onMounted(() => { void load(); });
           </TableRow>
         </TableBody>
       </Table>
-    </CardContent></Card>
+    </template>
     <ScreenHelpEditSheet v-if="selected" v-model:open="editing" :screen="selected" :help="selectedHelp" @saved="saved" />
   </PageFrame>
 </template>

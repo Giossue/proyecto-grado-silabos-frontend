@@ -6,7 +6,6 @@ import { getTeacherHistory, type HistoryCareer } from '@/api/syllabi';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
-import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
@@ -32,7 +31,7 @@ onMounted(load);
   <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading" variant="table" :columns="2" :filters="0" />
-    <Card v-else-if="careers"><CardContent>
+    <template v-else-if="careers">
       <Table label="Carreras con historial">
         <TableHeader><TableRow><TableHead>Carrera</TableHead><TableHead class="text-center">Sílabos</TableHead></TableRow></TableHeader>
         <TableBody>
@@ -43,6 +42,6 @@ onMounted(load);
           </TableRow>
         </TableBody>
       </Table>
-    </CardContent></Card>
+    </template>
   </PageFrame>
 </template>

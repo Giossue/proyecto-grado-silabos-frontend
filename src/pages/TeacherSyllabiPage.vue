@@ -48,8 +48,8 @@ onMounted(load);
 <template>
   <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <Card v-if="result">
-      <CardContent>
+    <Card v-if="result" class="py-3">
+      <CardContent class="px-3">
         <form @submit.prevent="load()">
           <FilterToolbar @clear="clearFilters">
             <template #search><Field><FieldLabel for="syllabi-search" class="sr-only">Buscar por asignatura</FieldLabel><Input id="syllabi-search" v-model="query" type="search" placeholder="Buscar por asignatura" /></Field></template>

@@ -9,7 +9,6 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
-import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { paths } from '@/lib/routes';
 
@@ -43,11 +42,8 @@ onMounted(() => { void load(); });
 <template>
   <PageFrame title="Auditoría" description="Registro de las acciones realizadas en el sistema." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <Card v-else-if="loading && !data">
-      <CardContent><LoadingSkeleton variant="table-body" :columns="3" :search="false" :filters="0" :actions="false" :cell-lines="2" /></CardContent>
-    </Card>
-    <Card v-else-if="data">
-      <CardContent class="flex flex-col gap-4">
+    <LoadingSkeleton v-else-if="loading && !data" variant="table-body" :columns="3" :search="false" :filters="0" :actions="false" :cell-lines="2" />
+    <div v-else-if="data" class="flex flex-col gap-4">
         <Table label="Registro de auditoría">
           <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Actividad</TableHead><TableHead>Responsable</TableHead></TableRow></TableHeader>
           <TableBody>
@@ -60,7 +56,6 @@ onMounted(() => { void load(); });
           </TableBody>
         </Table>
         <TablePagination :meta="data.events" label="Paginación del registro de auditoría" @update:page="load" />
-      </CardContent>
-    </Card>
+    </div>
   </PageFrame>
 </template>

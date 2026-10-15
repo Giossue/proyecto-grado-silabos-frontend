@@ -70,7 +70,7 @@ onMounted(load);
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="5" :filters="3" :cell-lines="2" />
 
-        <Card v-if="result"><CardContent class="flex flex-col gap-4">
+        <div v-if="result" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
             <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters">
                 <template #search><Field><FieldLabel for="users-search" class="sr-only">Buscar por nombre o correo</FieldLabel><Input id="users-search" v-model="q" type="search" placeholder="Buscar por nombre o correo" /></Field></template>
                 <template #filters>
@@ -78,7 +78,7 @@ onMounted(load);
                     <Field><FieldLabel for="users-career" class="sr-only">Carrera</FieldLabel><Select v-model="career" name="career"><SelectTrigger id="users-career"><SelectValue placeholder="Todas las carreras" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todas las carreras</SelectItem><SelectItem v-for="item in result.careers" :key="item.id" :value="item.id">{{ item.nombre }}</SelectItem></SelectGroup></SelectContent></Select></Field>
                     <Field><FieldLabel for="users-status" class="sr-only">Estado</FieldLabel><Select v-model="status" name="status"><SelectTrigger id="users-status"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activos</SelectItem><SelectItem value="pending">Pendiente</SelectItem><SelectItem value="inactive">Inactivos</SelectItem></SelectGroup></SelectContent></Select></Field>
                 </template>
-            </FilterToolbar></form>
+            </FilterToolbar></form></CardContent></Card>
 
             <Table label="Usuarios y roles"><TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Rol vigente</TableHead><TableHead>Carrera</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader><TableBody>
                 <TableEmpty v-if="result.users.data.length === 0" :colspan="4">No se encontraron cuentas con estos filtros.</TableEmpty>
@@ -94,6 +94,6 @@ onMounted(load);
             <ManagedUserAccessAction v-if="viewing" v-model:open="accessOpen" :user="viewing" @changed="changed" />
             <ManagedUserPendingActions v-if="viewing" v-model:resend-open="resendOpen" v-model:delete-open="deleteOpen" :user-id="viewing.id" :user-name="viewing.nombre" :user-email="viewing.correo_electronico" @changed="changed" />
             <TablePagination :meta="result.users" label="Paginación de usuarios" @update:page="load" />
-        </CardContent></Card>
+        </div>
     </PageFrame>
 </template>

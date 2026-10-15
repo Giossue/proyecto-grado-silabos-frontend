@@ -67,8 +67,7 @@ onMounted(() => { void load(initialPage); });
     <template v-if="periods.length > 0" #meta><Badge v-for="period in periods" :key="period" variant="secondary">Período {{ period }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :cell-lines="2" :actions="false" />
-    <Card v-if="data">
-      <CardContent class="flex flex-col gap-4">
+    <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
         <form @submit.prevent="load()">
           <FilterToolbar @clear="clearFilters">
             <template #search>
@@ -92,7 +91,7 @@ onMounted(() => { void load(initialPage); });
               </Field>
             </template>
           </FilterToolbar>
-        </form>
+        </form></CardContent></Card>
         <Table label="Revisiones de biblioteca">
           <TableHeader>
             <TableRow>
@@ -111,7 +110,6 @@ onMounted(() => { void load(initialPage); });
           </TableBody>
         </Table>
         <TablePagination :meta="data.reviews" label="Paginación de revisiones de biblioteca" @update:page="load" />
-      </CardContent>
-    </Card>
+      </div>
   </PageFrame>
 </template>

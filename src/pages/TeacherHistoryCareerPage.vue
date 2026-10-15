@@ -7,7 +7,6 @@ import { getTeacherHistoryCareer, type HistorySyllabus } from '@/api/syllabi';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
-import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { activateRow } from '@/lib/rowActivation';
@@ -49,7 +48,7 @@ onMounted(load);
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading" variant="table" :columns="4" :filters="0" />
     <template v-else>
-      <Card v-for="group in groups" :key="group.period"><CardContent class="flex flex-col gap-3">
+      <div v-for="group in groups" :key="group.period" class="flex flex-col gap-3">
         <h2 class="text-sm font-semibold">Período {{ group.period }}</h2>
         <Table :label="`Sílabos del período ${group.period}`">
           <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos</TableHead><TableHead class="text-center">Estado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
@@ -62,7 +61,7 @@ onMounted(load);
             </TableRow>
           </TableBody>
         </Table>
-      </CardContent></Card>
+      </div>
     </template>
   </PageFrame>
 </template>
