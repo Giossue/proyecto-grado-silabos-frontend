@@ -17,9 +17,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
-import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
@@ -99,7 +97,7 @@ onMounted(() => { void load(); });
           </Field>
         </template>
       </ClientFilterBar>
-      <div class="flex flex-col gap-2 sm:hidden">
+      <div class="flex flex-col gap-2">
         <p v-if="!groups.length" class="py-6 text-center text-sm text-muted-foreground">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</p>
         <Collapsible v-for="group in groups" :key="`${group.cycle}-${filter.active.value}`" :default-open="filter.active.value" class="group/cycle rounded-md border bg-card">
           <CollapsibleTrigger class="flex w-full items-center gap-2 px-4 py-3 text-left font-semibold">
@@ -108,26 +106,13 @@ onMounted(() => { void load(); });
             <ChevronDown class="size-4 transition-transform group-data-[state=open]/cycle:rotate-180" aria-hidden="true" />
           </CollapsibleTrigger>
           <CollapsibleContent class="flex flex-col divide-y border-t">
-            <button v-for="subject in group.list" :key="subject.id" type="button" class="flex items-center justify-between gap-3 px-4 py-3 text-left text-sm" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="open(subject)">
+            <button v-for="subject in group.list" :key="subject.id" type="button" class="flex items-center justify-between gap-3 px-4 py-3 text-left text-sm hover:bg-muted/60" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="open(subject)">
               <span>{{ subject.nombre }}</span>
               <StatusBadge :label="statusOf(subject)" :tone="subject.profile_complete ? 'success' : 'warning'" />
             </button>
           </CollapsibleContent>
         </Collapsible>
       </div>
-      <div class="max-sm:hidden"><Table label="Materias de la malla">
-        <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead class="text-center">Ficha</TableHead></TableRow></TableHeader>
-        <TableBody>
-          <TableEmpty v-if="!groups.length" :colspan="2">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</TableEmpty>
-          <template v-for="group in groups" v-else :key="group.cycle">
-            <TableRow class="bg-muted/60 hover:bg-muted/60"><TableCell colspan="2" class="font-semibold">{{ group.cycle === 'Sin ciclo' ? group.cycle : `Ciclo ${group.cycle}` }}</TableCell></TableRow>
-          <TableRow v-for="subject in group.list" :key="subject.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="activateRow($event, () => open(subject))" @keydown.enter.self.prevent="open(subject)" @keydown.space.self.prevent="open(subject)">
-            <TableCell>{{ subject.nombre }}</TableCell>
-            <TableCell class="text-center"><StatusBadge :label="statusOf(subject)" :tone="subject.profile_complete ? 'success' : 'warning'" /></TableCell>
-          </TableRow>
-          </template>
-        </TableBody>
-      </Table></div>
     </CardContent></Card>
     <SubjectProfileSheet v-if="selected" v-model:open="profileOpen" :subject-id="selected.id" :subject-name="selected.nombre" :disabled="Boolean(data?.career.lock_reason)" @saved="saved" />
   </PageFrame>
