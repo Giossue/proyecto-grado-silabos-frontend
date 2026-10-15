@@ -35,9 +35,10 @@ const mountOpen = async () => {
         attachTo: document.body,
         global: {
             stubs: {
-                Popover: { template: '<div><slot /></div>' },
-                PopoverAnchor: { template: '<div><slot /></div>' },
-                PopoverContent: { template: '<div><slot /></div>' },
+                Sheet: { template: '<div><slot /></div>' },
+                SheetContent: { template: '<div><slot /></div>' },
+                SheetTitle: { template: '<h2><slot /></h2>' },
+                SheetClose: { template: '<div><slot /></div>' },
                 DropdownMenu: { template: '<div />' },
             },
         },
