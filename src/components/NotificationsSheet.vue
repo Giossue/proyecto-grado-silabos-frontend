@@ -119,7 +119,7 @@ onMounted(refreshCount);
                         v-if="unreadCount > 0"
                         as="span"
                         variant="destructive"
-                        class="absolute top-1 right-1 size-1.5 border-0 p-0 ring-2 ring-background"
+                        class="absolute top-1 right-1 size-1.5 border-0 p-0 ring-1 ring-background"
                         aria-hidden="true"
                     />
                 </Button>

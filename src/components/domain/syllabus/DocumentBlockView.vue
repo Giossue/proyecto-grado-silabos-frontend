@@ -51,13 +51,13 @@ const toggleFollowUp = (): void => setProps({ columns: followUp.value ? [] : [{ 
 </script>
 
 <template>
-  <NodeViewWrapper v-if="kind === 'evaluacion'" as="div" data-block data-kind="evaluacion" contenteditable="false" :class="['document-block my-2', selected ? 'outline outline-2 outline-primary' : '']">
+  <NodeViewWrapper v-if="kind === 'evaluacion'" as="div" data-block data-kind="evaluacion" contenteditable="false" :class="['document-block my-2', selected ? 'outline outline-2 outline-offset-2 outline-primary' : '']">
     <DocumentEvaluation />
   </NodeViewWrapper>
-  <NodeViewWrapper v-else-if="kind === 'unidades'" as="div" data-block data-kind="unidades" contenteditable="false" :class="['document-block my-2', selected ? 'outline outline-2 outline-primary' : '']">
+  <NodeViewWrapper v-else-if="kind === 'unidades'" as="div" data-block data-kind="unidades" contenteditable="false" :class="['document-block my-2', selected ? 'outline outline-2 outline-offset-2 outline-primary' : '']">
     <DocumentUnits :units="block.value.units ?? []" :hours="unitsContext()?.hours ?? null" :interactive="filling && !configuring" @update="setUnits" />
   </NodeViewWrapper>
-  <NodeViewWrapper v-else-if="kind === 'identificacion'" as="div" data-block data-kind="identificacion" contenteditable="false" :class="['document-block my-2 flex flex-col gap-1', selected ? 'outline outline-2 outline-primary' : '']">
+  <NodeViewWrapper v-else-if="kind === 'identificacion'" as="div" data-block data-kind="identificacion" contenteditable="false" :class="['document-block my-2 flex flex-col gap-1', selected ? 'outline outline-2 outline-offset-2 outline-primary' : '']">
     <DocumentIdentification :disability="disability" :interactive="filling && !configuring" @update="setDisability" />
   </NodeViewWrapper>
   <NodeViewWrapper v-else as="div" data-block :data-kind="kind" contenteditable="false" :class="['document-block my-2 flex flex-col gap-2 rounded-md border p-2', selected ? 'border-primary' : 'border-border']">

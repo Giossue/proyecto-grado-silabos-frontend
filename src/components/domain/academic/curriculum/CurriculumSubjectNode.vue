@@ -113,7 +113,7 @@ const totalFields = computed(
       aria-label="Recibir relación académica"
     ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
     <article
-      class="relative w-full overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-2 data-[dragging=true]:ring-ring"
+      class="relative w-full overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-3 data-[dragging=true]:ring-ring/50"
       :class="cn(data.editable && 'cursor-move')"
       :data-dragging="dragging"
       :aria-label="`${data.subject.code}: ${data.subject.name}`"

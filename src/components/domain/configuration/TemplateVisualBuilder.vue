@@ -338,7 +338,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
         <ol class="flex flex-col gap-3">
           <template v-for="(field, fieldIndex) in fields" :key="field.id">
-          <li :data-field="field.id" :data-field-responsible="field.quien_llena" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-transparent hover:outline-border'])">
+          <li :data-field="field.id" :data-field-responsible="field.quien_llena" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-transparent hover:outline-primary/40'])">
             <TemplateInsertPoint v-if="!preview && !locked" :disabled="busy" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="top" gap="field" @insert="addField(section.id, fieldIndex)" />
             <TemplateInsertPoint v-if="!preview && !locked && fieldIndex === fields.length - 1" :disabled="busy" :actions="[{ key: 'section', label: 'Nueva sección' }, { key: 'field', label: 'Agregar campo' }]" position="bottom" gap="field" @insert="insertAfterLastField($event, section.id, sectionIndex)" />
             <TemplateFieldContent v-if="preview" :field="field" :variables="variables" preview />

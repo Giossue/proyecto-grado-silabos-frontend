@@ -228,7 +228,7 @@
     --document-mark-yes-no-border: hsl(340 65% 50%);
     --document-mark-signature-background: hsl(262 83% 95%);
     --document-mark-signature-border: hsl(262 52% 50%);
-    --document-paper-shadow: 0 1px 3px rgb(0 0 0 / 0.2);
+    --document-paper-shadow: var(--shadow-surface-value);
     --document-official-blue: #2f5597;
     --document-sheet-paper: #ffffff;
     --document-table-fill: #c3d4ea;

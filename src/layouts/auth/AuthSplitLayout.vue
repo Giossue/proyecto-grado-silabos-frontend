@@ -40,7 +40,7 @@ defineProps<{
                 decoding="async"
             />
             <div class="absolute inset-0 bg-brand-surface/70" aria-hidden="true" />
-            <div class="relative z-10 flex max-w-md flex-col gap-2 p-10 text-center drop-shadow-sm">
+            <div class="relative z-10 flex max-w-md flex-col gap-2 p-10 text-center">
                 <p class="text-4xl font-semibold tracking-tight">Sílabos UEB</p>
                 <p class="text-lg text-brand-foreground/90">
                     Gestión de sílabos de la Carrera de Software
