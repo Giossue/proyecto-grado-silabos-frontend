@@ -44,7 +44,7 @@ const user = computed<User>(() => ({
         <DropdownMenuContent
             class="w-72 max-w-(--reka-dropdown-menu-content-available-width) rounded-lg"
             :side="compact ? 'top' : 'bottom'"
-            align="end"
+            :align="compact ? 'center' : 'end'"
             :side-offset="4"
         >
             <UserMenuContent :user="user" />
