@@ -64,7 +64,7 @@ const preventImplicitDismiss = (event: Event): void => {
 
       <DialogClose
         v-if="!hideClose"
-        class="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none"
+        class="focus-visible:ring-ring/50 focus-visible:ring-3 data-[state=open]:bg-secondary outline-hidden absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 disabled:pointer-events-none"
       >
         <X class="size-4" />
         <span class="sr-only">Cerrar</span>

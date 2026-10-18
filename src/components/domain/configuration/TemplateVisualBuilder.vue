@@ -278,7 +278,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
     <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full max-w-3xl justify-end">
-      <div class="pointer-events-auto flex items-center gap-2 rounded-lg border bg-background/95 p-1.5 shadow-sm">
+      <div class="pointer-events-auto flex items-center gap-2 rounded-lg border bg-background/95 p-1.5 shadow-menu">
         <Button v-if="preview" type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
         <template v-else>
           <span v-if="changed" class="px-1 text-sm text-muted-foreground" aria-live="polite">Sin guardar</span>

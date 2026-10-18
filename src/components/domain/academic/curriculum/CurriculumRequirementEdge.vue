@@ -83,7 +83,7 @@ const onFocusIn = (): void => {
 
 <template>
     <g
-        class="cursor-pointer focus:outline-none"
+        class="cursor-pointer focus:outline-hidden"
         @mouseenter="onHoverMove"
         @mousemove="onHoverMove"
         @mouseleave="hoverPoint = null"

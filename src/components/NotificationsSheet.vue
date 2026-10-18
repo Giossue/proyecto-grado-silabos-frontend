@@ -176,7 +176,7 @@ onMounted(refreshCount);
                         <li v-for="notification in items" :key="notification.id">
                             <button
                                 type="button"
-                                class="flex w-full items-start gap-3 px-6 py-4 text-left transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-none"
+                                class="flex w-full items-start gap-3 px-6 py-4 text-left transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-hidden"
                                 @click="select(notification)"
                             >
                                 <component :is="iconFor(notification.tipo)" class="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />

@@ -56,7 +56,7 @@ const activityLabels = ['Aprendizaje en contacto con el docente (ACD)', 'Aprendi
 
 <template>
   <div data-units class="flex flex-col gap-3">
-    <div v-if="interactive" data-units-summary class="sticky top-16 z-10 flex flex-wrap items-center gap-2 rounded-md border bg-background p-2 text-sm shadow-sm" aria-live="polite">
+    <div v-if="interactive" data-units-summary class="sticky top-16 z-10 flex flex-wrap items-center gap-2 rounded-md border bg-background p-2 text-sm shadow-surface" aria-live="polite">
       <span :class="weekCount === PLANNING_WEEKS ? 'text-success' : 'text-destructive'">Semanas {{ weekCount }} de {{ PLANNING_WEEKS }}</span>
       <span v-for="item in targets" :key="item.key" :class="ok(item.planned, item.target) ? 'text-success' : 'text-destructive'">{{ item.label }} {{ fmt(item.planned) }} de {{ fmt(item.target) }}</span>
       <span class="text-muted-foreground">Las horas deben coincidir con las de la asignatura para poder enviar</span>

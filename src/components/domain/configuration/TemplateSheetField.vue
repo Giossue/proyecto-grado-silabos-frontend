@@ -51,7 +51,7 @@ const name = (): string => field.value.label.trim() || 'Campo sin nombre';
       />
     </div>
     <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :blocks="field.quien_llena === 'institucional' ? 'fill' : 'configure'" :disabled="locked || block" :toolbar="selected && !locked && !block" bare /></div>
-    <div :class="cn('absolute -top-7 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm focus-within:opacity-100 group-hover:opacity-100', selected ? 'opacity-100' : 'opacity-0')">
+    <div :class="cn('absolute -top-7 right-0 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-menu focus-within:opacity-100 group-hover:opacity-100', selected ? 'opacity-100' : 'opacity-0')">
       <DropdownMenu v-if="!block">
         <DropdownMenuTrigger as-child>
           <Button type="button" variant="ghost" size="sm" :disabled="locked" :aria-label="`Quién llena el campo ${name()}`" data-field-responsible>{{ responsibleLabel(field.quien_llena) }}<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>

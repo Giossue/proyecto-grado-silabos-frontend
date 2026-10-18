@@ -28,7 +28,7 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
 </script>
 
 <template>
-    <a href="#contenido" class="sr-only z-50 rounded-md bg-background px-4 py-2 text-sm font-medium text-foreground shadow-lg focus:not-sr-only focus:fixed focus:top-2 focus:left-2" @click.prevent="focusContent">Saltar al contenido</a>
+    <a href="#contenido" class="sr-only z-50 rounded-md bg-background px-4 py-2 text-sm font-medium text-foreground shadow-menu focus:not-sr-only focus:fixed focus:top-2 focus:left-2" @click.prevent="focusContent">Saltar al contenido</a>
     <ScrollArea data-app-scroll class="h-dvh">
         <SyllabusEditorLayout v-if="usesSyllabusEditorLayout">
             <RouterView />

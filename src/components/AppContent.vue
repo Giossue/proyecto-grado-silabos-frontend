@@ -15,7 +15,7 @@ const className = computed(() => props.class);
 </script>
 
 <template>
-    <SidebarInset v-if="props.variant === 'sidebar'" id="contenido" tabindex="-1" :class="['outline-none', className]">
+    <SidebarInset v-if="props.variant === 'sidebar'" id="contenido" tabindex="-1" :class="['outline-hidden', className]">
         <slot />
     </SidebarInset>
     <main

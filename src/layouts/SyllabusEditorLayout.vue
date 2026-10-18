@@ -7,7 +7,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 <template>
     <div class="min-h-dvh min-w-0 bg-background text-foreground">
         <TooltipProvider>
-            <main id="contenido" tabindex="-1" class="min-h-dvh w-full outline-none">
+            <main id="contenido" tabindex="-1" class="min-h-dvh w-full outline-hidden">
                 <slot />
             </main>
         </TooltipProvider>

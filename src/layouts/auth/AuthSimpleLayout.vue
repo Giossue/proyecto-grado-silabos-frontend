@@ -6,7 +6,7 @@ defineProps<{ title?: string; description?: string }>();
 </script>
 <template>
   <Toaster />
-  <main id="contenido" tabindex="-1" class="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 outline-none md:p-10">
+  <main id="contenido" tabindex="-1" class="relative flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 outline-hidden md:p-10">
     <div class="absolute top-4 right-4"><AppearanceToggle /></div>
     <div class="w-full max-w-sm"><div class="flex flex-col gap-8">
       <div class="flex flex-col items-center gap-4">

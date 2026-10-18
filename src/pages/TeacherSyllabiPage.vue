@@ -72,7 +72,7 @@ onMounted(load);
     <ul v-else-if="result" class="grid gap-4 sm:grid-cols-2" aria-label="Mis sílabos">
       <li v-for="syllabus in result.syllabi.data" :key="syllabus.id">
         <Card
-          class="h-full cursor-pointer transition-colors hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+          class="h-full cursor-pointer transition-colors hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-hidden"
           tabindex="0"
           :aria-label="`Abrir sílabo de ${syllabus.subject}`"
           @click="openSyllabus(syllabus.id)"
