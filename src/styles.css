@@ -166,7 +166,7 @@
 :root,
 .theme-light,
 .template-sheet {
-    --background: #caced2;
+    --background: #e2e6eb;
     --foreground: #121c28;
     --card: hsl(0 0% 100%);
     --card-foreground: #121c28;
