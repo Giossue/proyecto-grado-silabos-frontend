@@ -377,6 +377,7 @@
             min-width: 0;
             flex-direction: column;
             padding: 1rem;
+            border-width: 0;
             border-radius: 0.75rem;
             background-color: var(--card);
             color: var(--card-foreground);
