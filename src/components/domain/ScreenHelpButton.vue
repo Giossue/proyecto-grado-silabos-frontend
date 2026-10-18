@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CircleHelp } from '@lucide/vue';
+import { useMediaQuery } from '@vueuse/core';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 const STORAGE_KEY = 'silabos:ayuda-posicion';
 const CORNERS: readonly Corner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-const SIZE = 56;
+const SIZE = 48;
 const MARGIN = 16;
 const DRAG_THRESHOLD = 3;
 
@@ -20,7 +21,13 @@ const route = useRoute();
 const open = ref(false);
 const panelId = 'ayuda-pantalla';
 const button = ref<{ $el: HTMLElement } | null>(null);
-const corner = ref<Corner>('bottom-left');
+const stored = ref<Corner>('bottom-left');
+// En móvil queda fijo abajo a la izquierda: a la derecha va el botón de acciones de la pantalla.
+const compact = useMediaQuery('(width < 40rem)');
+const corner = computed<Corner>({
+  get: () => (compact.value ? 'bottom-left' : stored.value),
+  set: (value) => { stored.value = value; },
+});
 const bounds = ref({ left: 0, top: 0, right: 0, bottom: 0 });
 const area = ref({ left: 0, top: 0, right: 0, bottom: 0 });
 const dragging = ref<{ x: number; y: number } | null>(null);
@@ -95,6 +102,7 @@ const restore = (): void => {
 
 let drag: { startX: number; startY: number; originX: number; originY: number; moved: boolean } | null = null;
 const startDrag = (event: PointerEvent): void => {
+  if (compact.value) return;
   measure();
   const origin = cornerPosition(corner.value);
   drag = { startX: event.clientX, startY: event.clientY, originX: origin.x, originY: origin.y, moved: false };
@@ -140,7 +148,7 @@ const toggle = (): void => {
   open.value = !open.value;
 };
 const nudge = (event: KeyboardEvent): void => {
-  if (!event.altKey) return;
+  if (!event.altKey || compact.value) return;
   const keys: Record<string, (current: Corner) => Corner> = {
     ArrowLeft: (current) => `${current.split('-')[0]}-left` as Corner,
     ArrowRight: (current) => `${current.split('-')[0]}-right` as Corner,
@@ -191,12 +199,13 @@ onBeforeUnmount(() => {
         ref="button"
         type="button"
         size="icon"
-        class="fixed top-0 left-0 z-40 size-14 touch-none rounded-full [&_svg]:size-5 shadow-menu will-change-transform"
-        :class="dragging ? 'cursor-grabbing transition-none' : ['cursor-grab', animating ? 'transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]' : 'transition-none']"
+        variant="secondary"
+        class="fixed top-0 left-0 z-40 size-12 touch-none rounded-full shadow-menu ring-1 ring-surface-ring will-change-transform [&_svg]:size-5"
+        :class="dragging ? 'cursor-grabbing transition-none' : [compact ? 'cursor-pointer' : 'cursor-grab', animating ? 'transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]' : 'transition-none']"
         :style="style"
         aria-label="Ayuda de esta pantalla"
-        aria-description="Arrástrelo a una esquina o use Alt y las flechas para moverlo"
-        aria-keyshortcuts="Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight"
+        :aria-description="compact ? undefined : 'Arrástrelo a una esquina o use Alt y las flechas para moverlo'"
+        :aria-keyshortcuts="compact ? undefined : 'Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight'"
         aria-haspopup="dialog"
         :aria-expanded="open"
         :aria-controls="open ? panelId : undefined"
