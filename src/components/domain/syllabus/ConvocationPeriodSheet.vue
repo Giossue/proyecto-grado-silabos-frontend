@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarPlus } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, CalendarPlus } from '@lucide/vue';
 import { getLocalTimeZone, today } from '@internationalized/date';
 import { computed, ref, watch } from 'vue';
 import { createAcademicRecord } from '@/api/academic';
@@ -7,10 +7,10 @@ import { ApiError } from '@/api/client';
 import { createProcess } from '@/api/processes';
 import DatePicker from '@/components/DatePicker.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
-import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
+import { SheetFooter } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 
 const props = withDefaults(defineProps<{ disabled?: boolean }>(), { disabled: false });
@@ -28,6 +28,14 @@ const todayIso = today(getLocalTimeZone()).toString();
 const periodEndMinimum = computed(() => form.value.starts_on || todayIso);
 const dueMinimum = computed(() => (form.value.starts_at > todayIso ? form.value.starts_at : todayIso));
 const periodEnd = computed(() => form.value.ends_on || undefined);
+// Paso 1: periodo lectivo; paso 2: elaboración de sílabos. `forward` define hacia dónde se desliza.
+const step = ref<1 | 2>(1);
+const forward = ref(true);
+const goTo = (target: 1 | 2): void => {
+    forward.value = target > step.value;
+    step.value = target;
+};
+const periodComplete = computed(() => Boolean(form.value.starts_on && form.value.ends_on));
 const periodCreated = computed(() => createdPeriodId.value !== null);
 
 watch(open, (value) => {
@@ -36,6 +44,7 @@ watch(open, (value) => {
         errors.value = {};
         createdPeriodId.value = null;
         confirmOpen.value = false;
+        step.value = 1;
     }
 });
 watch(() => form.value.starts_on, (startsOn) => {
@@ -44,6 +53,10 @@ watch(() => form.value.starts_on, (startsOn) => {
 
 // El formulario solo pide confirmación; el envío real ocurre al aceptar el diálogo.
 const askConfirmation = (): void => {
+    if (step.value === 1) {
+        if (periodComplete.value) goTo(2);
+        return;
+    }
     if (!props.disabled) confirmOpen.value = true;
 };
 const submit = async (): Promise<void> => {
@@ -68,6 +81,7 @@ const submit = async (): Promise<void> => {
         emit('saved', message);
     } catch (reason) {
         errors.value = reason instanceof ApiError ? reason.errors : {};
+        if (errors.value.starts_on || errors.value.ends_on) goTo(1);
     } finally {
         processing.value = false;
     }
@@ -85,7 +99,9 @@ const submit = async (): Promise<void> => {
             <form @submit.prevent="askConfirmation">
                 <FieldGroup>
                     <Field v-if="errors.process" data-invalid><FieldError :errors="errors.process" /></Field>
-                    <FieldSet>
+                    <div class="relative overflow-hidden">
+                    <Transition :name="forward ? 'step-next' : 'step-back'" mode="out-in">
+                    <FieldSet v-if="step === 1" key="period">
                         <FieldLegend>Periodo lectivo</FieldLegend>
                         <FieldDescription>{{ periodCreated ? 'El periodo ya quedó creado; solo falta abrir la convocatoria.' : 'Fechas de inicio y fin de clases; la etiqueta se genera con el rango de meses y año.' }}</FieldDescription>
                         <div class="grid grid-cols-2 items-start gap-4">
@@ -101,9 +117,9 @@ const submit = async (): Promise<void> => {
                             </Field>
                         </div>
                     </FieldSet>
-                    <FieldSet>
+                    <FieldSet v-else key="syllabus">
                         <FieldLegend>Elaboración de sílabos</FieldLegend>
-                        <FieldDescription>Elija cuándo empieza la elaboración y hasta cuándo se entrega.</FieldDescription>
+                        <FieldDescription>{{ periodCreated ? 'El periodo ya quedó creado; solo falta abrir la convocatoria.' : 'Elija cuándo empieza la elaboración y hasta cuándo se entrega.' }}</FieldDescription>
                         <div class="grid grid-cols-2 items-start gap-4">
                             <Field :data-invalid="Boolean(errors.starts_at)">
                                 <FieldLabel for="convocation-starts" required>Inicio de la elaboración</FieldLabel>
@@ -117,7 +133,20 @@ const submit = async (): Promise<void> => {
                             </Field>
                         </div>
                     </FieldSet>
-                    <FormSheetActions :close="close" :processing="processing" :icon="CalendarPlus" label="Abrir convocatoria" />
+                    </Transition>
+                    </div>
+                    <SheetFooter class="absolute inset-x-0 bottom-0 border-t bg-card pb-(--safe-footer-inset)">
+                        <Field orientation="horizontal" class="justify-end">
+                            <Button v-if="step === 1" type="button" variant="outline" @click="close">Cancelar</Button>
+                            <Button v-else type="button" variant="outline" @click="goTo(1)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
+                            <Button v-if="step === 1" type="submit" :disabled="!periodComplete">Siguiente<ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
+                            <Button v-else type="submit" :disabled="processing || props.disabled">
+                                <Spinner v-if="processing" data-icon="inline-start" />
+                                <CalendarPlus v-else data-icon="inline-start" aria-hidden="true" />
+                                Abrir convocatoria
+                            </Button>
+                        </Field>
+                    </SheetFooter>
                 </FieldGroup>
             </form>
             <Dialog v-model:open="confirmOpen">
@@ -135,3 +164,30 @@ const submit = async (): Promise<void> => {
         </template>
     </FormSheet>
 </template>
+
+<style scoped>
+.step-next-enter-active,
+.step-next-leave-active,
+.step-back-enter-active,
+.step-back-leave-active {
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.step-next-enter-from,
+.step-back-leave-to {
+    transform: translateX(2rem);
+    opacity: 0;
+}
+.step-next-leave-to,
+.step-back-enter-from {
+    transform: translateX(-2rem);
+    opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+    .step-next-enter-active,
+    .step-next-leave-active,
+    .step-back-enter-active,
+    .step-back-leave-active {
+        transition: none;
+    }
+}
+</style>

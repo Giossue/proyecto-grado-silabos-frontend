@@ -18,6 +18,19 @@ const confirmSubmit = async (): Promise<void> => {
   (confirm as HTMLButtonElement).click();
   await flushPromises();
 };
+// Paso 1 (periodo) y paso 2 (elaboración): rellena el primero, avanza y rellena el segundo.
+const fillSteps = async (wrapper: Awaited<ReturnType<typeof mountSheet>>): Promise<void> => {
+  const [starts, ends] = wrapper.findAllComponents(DatePicker);
+  starts.vm.$emit('update:modelValue', '2026-10-05');
+  ends.vm.$emit('update:modelValue', '2027-02-26');
+  await flushPromises();
+  document.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+  await flushPromises();
+  const [opens, due] = wrapper.findAllComponents(DatePicker);
+  opens.vm.$emit('update:modelValue', '2026-10-06');
+  due.vm.$emit('update:modelValue', '2026-10-30');
+  await flushPromises();
+};
 const mountSheet = async () => {
   const wrapper = mount(ConvocationPeriodSheet, { attachTo: document.body, props: { open: true } });
   await flushPromises();
@@ -25,11 +38,25 @@ const mountSheet = async () => {
 };
 
 describe('ConvocationPeriodSheet', () => {
-  it('exige las cuatro fechas y las deja vacías al abrir', async () => {
+  it('pide el periodo primero, no avanza sin fechas y luego pide la elaboración', async () => {
     const wrapper = await mountSheet();
-    const pickers = wrapper.findAllComponents(DatePicker);
-    expect(pickers).toHaveLength(4);
+    let pickers = wrapper.findAllComponents(DatePicker);
+    expect(pickers).toHaveLength(2);
     expect(pickers.every((picker) => picker.props('required'))).toBe(true);
+    expect(pickers.every((picker) => picker.props('modelValue') === '')).toBe(true);
+    document.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await flushPromises();
+    expect(wrapper.findAllComponents(DatePicker)).toHaveLength(2);
+    expect(document.body.textContent).toContain('Periodo lectivo');
+
+    pickers[0].vm.$emit('update:modelValue', '2026-10-05');
+    pickers[1].vm.$emit('update:modelValue', '2027-02-26');
+    await flushPromises();
+    document.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await flushPromises();
+    pickers = wrapper.findAllComponents(DatePicker);
+    expect(pickers).toHaveLength(2);
+    expect(document.body.textContent).toContain('Elaboración de sílabos');
     expect(pickers.every((picker) => picker.props('modelValue') === '')).toBe(true);
     wrapper.unmount();
   });
@@ -38,11 +65,7 @@ describe('ConvocationPeriodSheet', () => {
     api.createAcademicRecord.mockResolvedValue({ message: 'Registro institucional creado.', id: 'p1' });
     api.createProcess.mockRejectedValueOnce(new ApiError('Error', 422, { process: ['Ya hay una convocatoria en curso.'] })).mockResolvedValueOnce({ message: 'Convocatoria institucional abierta.' });
     const wrapper = await mountSheet();
-    const [starts, ends, opens, due] = wrapper.findAllComponents(DatePicker);
-    starts.vm.$emit('update:modelValue', '2026-10-05');
-    ends.vm.$emit('update:modelValue', '2027-02-26');
-    opens.vm.$emit('update:modelValue', '2026-10-06');
-    due.vm.$emit('update:modelValue', '2026-10-30');
+    await fillSteps(wrapper);
     await confirmSubmit();
     expect(document.body.textContent).toContain('El periodo ya quedó creado');
     await confirmSubmit();
@@ -57,11 +80,7 @@ describe('ConvocationPeriodSheet', () => {
     api.createAcademicRecord.mockResolvedValue({ message: 'Registro institucional creado.', id: 'p1' });
     api.createProcess.mockResolvedValue({ message: 'Convocatoria institucional abierta.' });
     const wrapper = await mountSheet();
-    const [starts, ends, opens, due] = wrapper.findAllComponents(DatePicker);
-    starts.vm.$emit('update:modelValue', '2026-10-05');
-    ends.vm.$emit('update:modelValue', '2027-02-26');
-    opens.vm.$emit('update:modelValue', '2026-10-06');
-    due.vm.$emit('update:modelValue', '2026-10-30');
+    await fillSteps(wrapper);
     await confirmSubmit();
 
     expect(api.createProcess).toHaveBeenCalledWith({ period_id: 'p1', starts_at: '2026-10-06', due_at: '2026-10-30' });
