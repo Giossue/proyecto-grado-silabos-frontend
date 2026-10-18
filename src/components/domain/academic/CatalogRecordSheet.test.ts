@@ -65,7 +65,7 @@ describe('academic catalog code fields', () => {
     expect(document.body.textContent).toContain('Medida recomendada: 600 × 180 px');
     expect(document.body.textContent).toContain('fondo transparente');
     expect(document.body.textContent).not.toContain('fondo sólido');
-    expect(document.body.textContent).toContain('se necesita para abrir convocatorias');
+    expect(document.body.textContent).not.toContain('abrir convocatorias');
     expect(nameLabel!.compareDocumentPosition(campusLabel!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(campusLabel!.compareDocumentPosition(logoLabel!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     faculty.unmount();

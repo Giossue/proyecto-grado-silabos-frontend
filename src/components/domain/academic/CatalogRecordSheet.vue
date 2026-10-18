@@ -90,7 +90,7 @@ const submit = async (): Promise<void> => {
                     <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.logo)">
                         <FieldLabel for="faculty-logo">Logo de la facultad (PNG sin fondo)</FieldLabel>
                         <FileDropzone v-model="logo" input-id="faculty-logo" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" @validation-error="logoValidationError" />
-                        <FieldDescription>Opcional, pero se necesita para abrir convocatorias. Medida recomendada: 600 × 180 px. Use una imagen con fondo transparente.</FieldDescription>
+                        <FieldDescription>Medida recomendada: 600 × 180 px. Use una imagen con fondo transparente.</FieldDescription>
                         <FieldError :errors="errors.logo" />
                     </Field>
                     <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.faculty_id)">
