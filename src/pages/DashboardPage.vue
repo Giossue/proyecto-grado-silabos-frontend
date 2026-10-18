@@ -28,7 +28,6 @@ const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: C
 const setupRoutes: Record<string, string> = {
   faculties: paths.admin.academic,
   careers: paths.admin.academicWithSection('carrera'),
-  periods: paths.admin.convocations,
   accounts: paths.admin.users,
   coordinators: paths.admin.academicWithSection('carrera'),
   template: paths.admin.template,
