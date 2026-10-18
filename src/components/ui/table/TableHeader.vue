@@ -11,7 +11,7 @@ const props = defineProps<{
   <thead
     data-slot="table-header"
     role="rowgroup"
-    :class="cn('bg-muted [&_tr]:border-b', props.class)"
+    :class="cn('bg-field dark:bg-muted [&_tr]:border-b', props.class)"
   >
     <slot />
   </thead>

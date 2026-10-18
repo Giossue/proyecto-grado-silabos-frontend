@@ -62,6 +62,7 @@
 
     --color-border: var(--border);
     --color-input: var(--input);
+    --color-field: var(--field);
     --color-ring: var(--ring);
 
     --color-chart-1: var(--chart-1);
@@ -167,6 +168,7 @@
 .theme-light,
 .template-sheet {
     --background: #eef2f7;
+    --field: #f6f8fb;
     --foreground: #121c28;
     --card: hsl(0 0% 100%);
     --card-foreground: #121c28;
@@ -253,6 +255,7 @@
 
 .dark {
     --background: #151719;
+    --field: #151719;
     --foreground: #f1f2f3;
     --card: #272a2f;
     --card-foreground: #f1f2f3;
