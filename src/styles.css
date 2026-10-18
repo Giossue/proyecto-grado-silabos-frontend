@@ -166,14 +166,6 @@
     --duration-layout: 150ms;
 }
 
-@media (width < 40rem) {
-    :root {
-        /* En móvil la barra de la aplicación va abajo: arriba solo queda la franja del sistema. */
-        --app-header-height: env(safe-area-inset-top);
-        --app-header-compact-height: env(safe-area-inset-top);
-    }
-}
-
 :root,
 .theme-light,
 .template-sheet {
