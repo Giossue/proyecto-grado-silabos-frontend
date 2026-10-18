@@ -255,7 +255,10 @@ export const deleteParallel = (id: string) =>
     method: "DELETE",
   });
 export const createCareerTeacher = (payload: {
-  nombre: string;
+  primer_nombre: string;
+  segundo_nombre: string;
+  primer_apellido: string;
+  segundo_apellido: string;
   correo_electronico: string;
 }) =>
   api<{ message: string }>("/coordination/academic/teachers", {

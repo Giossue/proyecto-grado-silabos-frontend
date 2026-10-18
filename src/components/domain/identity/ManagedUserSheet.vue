@@ -21,19 +21,28 @@ const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
-const form = ref({ nombre: '', correo_electronico: '', role_code: 'docente', career_id: '' });
+const emptyForm = () => ({ nombre: '', primer_nombre: '', segundo_nombre: '', primer_apellido: '', segundo_apellido: '', correo_electronico: '', role_code: 'docente', career_id: '' });
+const form = ref(emptyForm());
+// El docente se crea con las cuatro partes del nombre, todas obligatorias.
+const nameParts = [
+    { key: 'primer_nombre', label: 'Primer nombre', placeholder: 'Ej. ANA' },
+    { key: 'segundo_nombre', label: 'Segundo nombre', placeholder: 'Ej. MARÍA' },
+    { key: 'primer_apellido', label: 'Primer apellido', placeholder: 'Ej. PÉREZ' },
+    { key: 'segundo_apellido', label: 'Segundo apellido', placeholder: 'Ej. LÓPEZ' },
+] as const;
+const setPart = (key: (typeof nameParts)[number]['key'], value: string | number): void => { form.value[key] = String(value).normalize('NFC').toLocaleUpperCase('es-EC'); };
 const visibleName = computed({
     get: () => form.value.nombre,
     set: (value: string) => { form.value.nombre = value.normalize('NFC').toLocaleUpperCase('es-EC'); },
 });
-const reset = (): void => { form.value = { nombre: '', correo_electronico: '', role_code: 'docente', career_id: '' }; errors.value = {}; };
+const reset = (): void => { form.value = emptyForm(); errors.value = {}; };
 watch(open, (value) => { if (value) reset(); });
 const submit = async (): Promise<void> => {
     processing.value = true; errors.value = {};
     try {
         const result = props.teacherCareer
-            ? await createCareerTeacher({ nombre: form.value.nombre, correo_electronico: form.value.correo_electronico })
-            : await createManagedUser({ ...form.value, career_id: roleNeedsCareer(form.value.role_code) ? form.value.career_id : null });
+            ? await createCareerTeacher({ primer_nombre: form.value.primer_nombre, segundo_nombre: form.value.segundo_nombre, primer_apellido: form.value.primer_apellido, segundo_apellido: form.value.segundo_apellido, correo_electronico: form.value.correo_electronico })
+            : await createManagedUser({ nombre: form.value.nombre, correo_electronico: form.value.correo_electronico, role_code: form.value.role_code, career_id: roleNeedsCareer(form.value.role_code) ? form.value.career_id : null });
         open.value = false; emit('saved', result.message);
     } catch (reason) { errors.value = reason instanceof ApiError ? reason.errors : {}; }
     finally { processing.value = false; }
@@ -43,7 +52,10 @@ const submit = async (): Promise<void> => {
 <template>
     <FormSheet v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? 'Crear docente para su carrera' : 'Crear cuenta institucional'" :show-trigger="showTrigger">
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
-            <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel for="managed-user-name" required>Nombre completo</FieldLabel><Input id="managed-user-name" v-model="visibleName" lang="es" autocomplete="name" autocapitalize="characters" placeholder="Ej. ANA PÉREZ" required /><FieldError :errors="errors.nombre" /></Field>
+            <div v-if="teacherCareer" class="grid grid-cols-2 items-start gap-4">
+                <Field v-for="part in nameParts" :key="part.key" :data-invalid="Boolean(errors[part.key])"><FieldLabel :for="`managed-user-${part.key}`" required>{{ part.label }}</FieldLabel><Input :id="`managed-user-${part.key}`" :model-value="form[part.key]" lang="es" autocapitalize="characters" :placeholder="part.placeholder" required @update:model-value="setPart(part.key, $event)" /><FieldError :errors="errors[part.key]" /></Field>
+            </div>
+            <Field v-else :data-invalid="Boolean(errors.nombre)"><FieldLabel for="managed-user-name" required>Nombre completo</FieldLabel><Input id="managed-user-name" v-model="visibleName" lang="es" autocomplete="name" autocapitalize="characters" placeholder="Ej. ANA PÉREZ" required /><FieldError :errors="errors.nombre" /></Field>
             <Field :data-invalid="Boolean(errors.correo_electronico)"><FieldLabel for="managed-user-email" required>Correo institucional</FieldLabel><Input id="managed-user-email" v-model="form.correo_electronico" type="email" placeholder="Ej. ana.perez@ueb.edu.ec" required /><FieldError :errors="errors.correo_electronico" /></Field>
             <Field v-if="!teacherCareer" :data-invalid="Boolean(errors.role_code)"><FieldLabel for="managed-user-role" required>Rol inicial</FieldLabel><Select v-model="form.role_code" required><SelectTrigger id="managed-user-role"><SelectValue placeholder="Seleccione" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="role in roles" :key="role.codigo" :value="role.codigo">{{ role.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.role_code" /></Field>
             <Field v-if="!teacherCareer && roleNeedsCareer(form.role_code)" :data-invalid="Boolean(errors.career_id)"><FieldLabel for="managed-user-career" required>Carrera</FieldLabel><Select v-model="form.career_id" required><SelectTrigger id="managed-user-career"><SelectValue placeholder="Seleccione" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="career in careers" :key="career.id" :value="career.id">{{ career.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.career_id" /></Field>

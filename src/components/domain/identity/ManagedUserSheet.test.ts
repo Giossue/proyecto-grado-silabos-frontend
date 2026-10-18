@@ -21,4 +21,30 @@ describe('ManagedUserSheet', () => {
 
     wrapper.unmount();
   });
+
+  it('pide las cuatro partes del nombre del docente, todas obligatorias', async () => {
+    const wrapper = mount(ManagedUserSheet, {
+      attachTo: document.body,
+      props: { open: true, teacherCareer: { id: 'career-1', name: 'Software' } },
+    });
+    await flushPromises();
+
+    for (const part of ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido']) {
+      const input = document.querySelector<HTMLInputElement>(`#managed-user-${part}`);
+      expect(input?.required).toBe(true);
+    }
+    expect(document.querySelector('#managed-user-name')).toBeNull();
+
+    wrapper.unmount();
+  });
+
+  it('mantiene el nombre completo en el alta de cuentas de Administración', async () => {
+    const wrapper = mount(ManagedUserSheet, { attachTo: document.body, props: { open: true } });
+    await flushPromises();
+
+    expect(document.querySelector('#managed-user-name')).not.toBeNull();
+    expect(document.querySelector('#managed-user-primer_nombre')).toBeNull();
+
+    wrapper.unmount();
+  });
 });
