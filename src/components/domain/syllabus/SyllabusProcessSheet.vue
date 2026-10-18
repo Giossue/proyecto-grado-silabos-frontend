@@ -73,7 +73,7 @@ const submit = async (): Promise<void> => {
           <Field v-if="errors.process" data-invalid><FieldError :errors="errors.process" /></Field>
           <Field v-if="period">
             <FieldLabel>Periodo académico</FieldLabel>
-            <div class="rounded-md border bg-muted/30 px-3 py-2 text-sm">{{ period.codigo }}</div>
+            <div class="rounded-md ring-1 ring-surface-ring bg-muted/30 px-3 py-2 text-sm">{{ period.codigo }}</div>
             <p class="text-sm text-muted-foreground">Se fija desde el período seleccionado y no se vuelve a elegir aquí.</p>
           </Field>
           <Field v-else :data-invalid="Boolean(errors.period_id)">

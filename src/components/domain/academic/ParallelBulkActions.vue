@@ -83,7 +83,7 @@ const setTeacher = (userId: string) => run(
 </script>
 
 <template>
-  <div class="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2" role="region" aria-label="Acciones masivas de materias">
+  <div class="flex flex-wrap items-center gap-2 rounded-md ring-1 ring-surface-ring bg-muted/40 px-3 py-2" role="region" aria-label="Acciones masivas de materias">
     <span class="text-sm font-medium">{{ label }}</span>
     <DropdownMenu>
       <DropdownMenuTrigger as-child>

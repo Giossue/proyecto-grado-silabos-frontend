@@ -137,7 +137,7 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                   <p class="text-sm">Propuesta para {{ proposed.length }} de {{ current?.subjects.length }} materias. Marque las que desea aplicar; lo que no marque no se toca. En cada materia puede comparar con la ficha actual y elegir qué campos aplicar.</p>
                   <ScrollArea class="[&>[data-slot=scroll-area-viewport]]:max-h-96">
                       <ul class="flex flex-col gap-2">
-                        <li v-for="subject in current?.subjects" :key="subject.subject_id" class="rounded-md border p-3">
+                        <li v-for="subject in current?.subjects" :key="subject.subject_id" class="rounded-md ring-1 ring-surface-ring p-3">
                           <div class="flex items-start gap-3">
                             <Checkbox :id="`ficha-${subject.subject_id}`" :model-value="chosen.has(subject.subject_id)" :disabled="subject.state !== 'lista' || busy" :aria-label="`Aplicar la ficha de ${subject.name}`" @update:model-value="toggle(subject.subject_id, $event === true)" />
                             <div class="flex min-w-0 flex-1 flex-col gap-1">
@@ -145,7 +145,7 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                               <p class="text-sm text-muted-foreground">{{ stateText(subject) }}<template v-if="subject.state === 'lista' && subject.replaces"> · reemplaza la ficha actual</template></p>
                               <div v-if="subject.state === 'lista'" class="text-sm">
                                 <Button type="button" variant="link" size="sm" class="h-auto px-0" :aria-expanded="expanded.has(subject.subject_id)" @click="toggleExpanded(subject.subject_id)">{{ expanded.has(subject.subject_id) ? 'Ocultar la comparación' : (subject.replaces ? 'Comparar con la ficha actual' : 'Ver lo que propone') }}</Button>
-                                <div v-for="(value, key) in expanded.has(subject.subject_id) ? subject.values : {}" :key="key" class="mt-3 rounded-md border p-2">
+                                <div v-for="(value, key) in expanded.has(subject.subject_id) ? subject.values : {}" :key="key" class="mt-3 rounded-md ring-1 ring-surface-ring p-2">
                                   <div class="flex items-center gap-2">
                                     <Checkbox :id="`ficha-${subject.subject_id}-${key}`" :model-value="fieldChosen(subject.subject_id, String(key))" :disabled="!chosen.has(subject.subject_id) || busy" @update:model-value="toggleField(subject.subject_id, String(key), $event === true)" />
                                     <FieldLabel :for="`ficha-${subject.subject_id}-${key}`" class="font-medium">{{ fieldLabel(String(key)) }}</FieldLabel>

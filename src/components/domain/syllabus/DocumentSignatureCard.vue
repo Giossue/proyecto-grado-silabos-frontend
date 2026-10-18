@@ -164,7 +164,7 @@ onMounted(load);
       <div v-else-if="loading && !status" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando firma electrónica">
         <span class="sr-only">Consultando el estado de la firma…</span>
         <div aria-hidden="true" class="flex flex-col gap-4">
-          <div class="flex items-start gap-2 rounded-md border p-3">
+          <div class="flex items-start gap-2 rounded-md ring-1 ring-surface-ring p-3">
             <Skeleton class="size-4 shrink-0" />
             <div class="flex min-w-0 flex-1 flex-col gap-2"><Skeleton class="h-4 w-full" /><Skeleton class="h-4 w-3/4" /></div>
           </div>
@@ -173,12 +173,12 @@ onMounted(load);
       </div>
       <template v-if="status">
         <ol v-if="orderedSignatures.length" class="flex flex-col gap-2">
-          <li v-for="item in orderedSignatures" :key="item.role" class="flex items-start gap-2 rounded-md border p-3 text-sm">
+          <li v-for="item in orderedSignatures" :key="item.role" class="flex items-start gap-2 rounded-md ring-1 ring-surface-ring p-3 text-sm">
             <ShieldCheck class="mt-0.5 size-4 shrink-0 text-primary-readable" aria-hidden="true" />
             <div class="min-w-0"><p class="font-medium">{{ roleLabel(item.role) }}: {{ item.certificate_holder }}</p><p class="text-muted-foreground">{{ item.signer }} · {{ formatDate(item.signed_at) }}</p></div>
           </li>
         </ol>
-        <p v-if="status.library" class="flex items-start gap-2 rounded-md border p-3 text-sm" data-testid="library-submission">
+        <p v-if="status.library" class="flex items-start gap-2 rounded-md ring-1 ring-surface-ring p-3 text-sm" data-testid="library-submission">
           <Library class="mt-0.5 size-4 shrink-0 text-primary-readable" aria-hidden="true" />
           <span>Enviado a revisión el {{ formatDate(status.library.sent_at) }} por {{ status.library.sent_by }}.<template v-if="status.library.verified_at"> Bibliografía aprobada el {{ formatDate(status.library.verified_at) }} por {{ status.library.verified_by }}.</template></span>
         </p>

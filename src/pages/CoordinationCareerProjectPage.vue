@@ -100,7 +100,7 @@ onMounted(() => { void load(); });
       </CardContent></Card>
       <div class="flex flex-col gap-2">
         <p v-if="!groups.length" class="py-6 text-center text-sm text-muted-foreground">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</p>
-        <Collapsible v-for="group in groups" :key="`${group.cycle}-${filter.active.value}`" :default-open="filter.active.value" class="group/cycle rounded-md border bg-card">
+        <Collapsible v-for="group in groups" :key="`${group.cycle}-${filter.active.value}`" :default-open="filter.active.value" class="group/cycle rounded-md ring-1 ring-surface-ring bg-card">
           <CollapsibleTrigger class="flex w-full items-center gap-2 px-4 py-3 text-left font-semibold">
             <span class="flex-1">{{ group.cycle === 'Sin ciclo' ? group.cycle : `Ciclo ${group.cycle}` }}</span>
             <Badge :variant="completeCount(group.list) === group.list.length ? 'success' : 'warning'" :aria-label="`${completeCount(group.list)} de ${group.list.length} fichas completas`">{{ completeCount(group.list) }}/{{ group.list.length }}</Badge>

@@ -117,7 +117,7 @@ defineExpose({ editor });
 </script>
 
 <template>
-  <div :class="['free-text-editor flex min-w-0 flex-col', bare ? 'bg-transparent' : 'rounded-md border bg-background']" :data-disabled="disabled || undefined">
+  <div :class="['free-text-editor flex min-w-0 flex-col', bare ? 'bg-transparent' : 'rounded-md ring-1 ring-surface-ring bg-background']" :data-disabled="disabled || undefined">
     <div v-if="editor && toolbar" role="toolbar" :aria-label="`Formato de ${label}`" class="flex flex-wrap items-center gap-1 border-b p-1.5">
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Negrita" :aria-pressed="editor.isActive('bold')" :disabled="disabled" @click="editor.chain().focus().toggleBold().run()"><Bold aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Cursiva" :aria-pressed="editor.isActive('italic')" :disabled="disabled" @click="editor.chain().focus().toggleItalic().run()"><Italic aria-hidden="true" /></Button>
@@ -157,7 +157,7 @@ defineExpose({ editor });
     </div>
     <EditorContent :editor="editor" :class="['overflow-x-auto text-sm', bare ? 'min-h-8 px-1 py-1' : 'min-h-32 px-3 py-2']" />
     <div v-if="editor && toolbar && hasTable && !disabled" class="px-3 pb-2"><Button type="button" variant="outline" size="sm" @mousedown.prevent @click="addTableRow"><Plus data-icon="inline-start" aria-hidden="true" />Agregar fila</Button></div>
-    <div v-if="slash.open && slashItems.length" role="listbox" aria-label="Datos del sistema" class="fixed z-50 flex min-w-48 flex-col rounded-md border bg-popover p-1 text-sm shadow-menu" :style="{ left: `${slash.left}px`, top: `${slash.top}px` }">
+    <div v-if="slash.open && slashItems.length" role="listbox" aria-label="Datos del sistema" class="fixed z-50 flex min-w-48 flex-col rounded-md ring-1 ring-surface-ring bg-popover p-1 text-sm shadow-menu" :style="{ left: `${slash.left}px`, top: `${slash.top}px` }">
       <Button v-for="(item, position) in slashItems" :key="item.key" type="button" variant="ghost" size="sm" role="option" :aria-selected="position === slash.index" :class="['justify-start', position === slash.index ? 'bg-accent text-accent-foreground' : '']" @mousedown.prevent="chooseSlash(item.key)">{{ item.label }}</Button>
     </div>
   </div>

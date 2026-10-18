@@ -20,7 +20,7 @@ const props = withDefaults(
     <div
         v-if="mode === 'curriculum'"
         data-skeleton="curriculum-canvas"
-        class="curriculum-canvas relative h-(--curriculum-canvas-height) min-h-136 overflow-hidden rounded-lg border bg-(--curriculum-canvas-background) shadow-surface"
+        class="curriculum-canvas relative h-(--curriculum-canvas-height) min-h-136 overflow-hidden rounded-lg ring-1 ring-surface-ring bg-(--curriculum-canvas-background) shadow-surface"
     >
         <div class="absolute inset-0 flex items-start justify-center p-4">
             <Skeleton data-skeleton="curriculum-level" class="h-full w-full max-w-3xl" />

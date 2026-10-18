@@ -194,7 +194,7 @@ watch(() => props.parallels, async (list) => {
               <Button type="button" size="sm" variant="outline" :disabled="adding || rowBusy" @click="startAdd"><Plus aria-hidden="true" /> Agregar paralelo</Button>
             </div>
             <Alert v-if="rowError" variant="destructive"><AlertDescription>{{ rowError }}</AlertDescription></Alert>
-            <div class="overflow-hidden rounded-md border">
+            <div class="overflow-hidden rounded-md ring-1 ring-surface-ring">
               <Table label="Paralelos de la materia">
                 <TableHeader><TableRow><TableHead>Paralelo</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead v-if="showActions || adding" class="text-right">Acciones</TableHead></TableRow></TableHeader>
                 <TableBody>

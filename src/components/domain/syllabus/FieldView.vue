@@ -8,7 +8,7 @@ defineProps<{ field: DocumentField; badge?: string }>();
 </script>
 
 <template>
-  <div class="syllabus-readonly-field flex flex-col gap-2 rounded-md border bg-muted/30 p-4">
+  <div class="syllabus-readonly-field flex flex-col gap-2 rounded-md ring-1 ring-surface-ring bg-muted/30 p-4">
     <div class="flex flex-wrap items-center gap-2 font-medium">
       <span v-if="field.label.trim()">{{ field.label }}</span>
       <Badge variant="outline">{{ badge ?? responsibleLabel(field.quien_llena) }}</Badge>

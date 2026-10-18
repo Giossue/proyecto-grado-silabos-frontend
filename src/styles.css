@@ -377,11 +377,12 @@
             min-width: 0;
             flex-direction: column;
             padding: 1rem;
-            border: 1px solid var(--input);
-            border-radius: var(--radius);
+            border-radius: 0.75rem;
             background-color: var(--card);
             color: var(--card-foreground);
-            box-shadow: var(--shadow-surface-value);
+            box-shadow:
+                var(--shadow-surface-value),
+                0 0 0 1px var(--surface-ring);
         }
 
         table[data-cards='true'] > tbody > tr:nth-child(even) {

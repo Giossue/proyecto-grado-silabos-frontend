@@ -59,7 +59,7 @@ const reviewPanels = computed(() =>
                             <Skeleton class="h-4 w-80 max-w-full" />
                         </header>
                         <div class="flex min-w-0 flex-col gap-6">
-                            <div v-if="section === 1" data-skeleton="academic-context" class="overflow-hidden rounded-md border">
+                            <div v-if="section === 1" data-skeleton="academic-context" class="overflow-hidden rounded-md ring-1 ring-surface-ring">
                                 <div v-for="row in 5" :key="row" class="grid grid-cols-1 gap-2 border-b p-3 last:border-b-0 sm:grid-cols-[minmax(8rem,0.8fr)_minmax(0,2fr)]">
                                     <Skeleton class="h-3.5 w-3/4" />
                                     <Skeleton class="h-4 w-full" />
@@ -94,7 +94,7 @@ const reviewPanels = computed(() =>
                     </div>
                     <Separator />
                     <CardContent class="shrink-0 px-4 py-4">
-                        <div class="flex flex-col gap-3 rounded-md border p-3">
+                        <div class="flex flex-col gap-3 rounded-md ring-1 ring-surface-ring p-3">
                             <Skeleton class="h-4 w-3/4" />
                             <Skeleton class="h-4 w-1/2" />
                             <Skeleton class="h-8 w-20 self-end" />
@@ -130,7 +130,7 @@ const reviewPanels = computed(() =>
                         <Skeleton class="h-4 w-80 max-w-full" />
                     </CardHeader>
                     <CardContent class="flex min-w-0 flex-col gap-6">
-                        <div v-for="field in 2" :key="field" class="flex min-w-0 flex-col gap-3 rounded-md border p-4">
+                        <div v-for="field in 2" :key="field" class="flex min-w-0 flex-col gap-3 rounded-md ring-1 ring-surface-ring p-4">
                             <Skeleton class="h-5 w-44 max-w-full" />
                             <Skeleton class="h-4 w-full" />
                             <Skeleton class="h-4 w-5/6" />
@@ -155,7 +155,7 @@ const reviewPanels = computed(() =>
                         </template>
                         <Skeleton v-else-if="panel === 'approval'" class="h-9 w-48 max-w-full" />
                         <template v-else>
-                            <div v-for="item in panel === 'history' ? 2 : 1" :key="item" class="flex min-w-0 flex-col gap-3 rounded-md border p-3">
+                            <div v-for="item in panel === 'history' ? 2 : 1" :key="item" class="flex min-w-0 flex-col gap-3 rounded-md ring-1 ring-surface-ring p-3">
                                 <div class="flex flex-wrap items-center justify-between gap-2">
                                     <Skeleton class="h-4 w-28" />
                                     <Skeleton class="h-5 w-20 rounded-full" />
@@ -187,7 +187,7 @@ const reviewPanels = computed(() =>
                             <Skeleton class="h-4 w-2/5" />
                             <Skeleton class="h-5 w-20" />
                         </div>
-                        <div class="flex flex-col gap-2 rounded-sm border p-3">
+                        <div class="flex flex-col gap-2 rounded-sm ring-1 ring-surface-ring p-3">
                             <Skeleton class="h-3.5 w-full" />
                             <Skeleton class="h-3.5 w-5/6" />
                         </div>
@@ -205,7 +205,7 @@ const reviewPanels = computed(() =>
                         <Skeleton class="h-4 w-2/5" />
                         <Skeleton class="h-5 w-20" />
                     </div>
-                    <div class="overflow-hidden rounded-sm border">
+                    <div class="overflow-hidden rounded-sm ring-1 ring-surface-ring">
                         <div class="grid grid-cols-9 gap-2 border-b bg-muted/40 p-2">
                             <Skeleton v-for="column in 9" :key="column" class="h-3.5 w-3/4" />
                         </div>
@@ -238,7 +238,7 @@ const reviewPanels = computed(() =>
                 </div>
             </CardHeader>
             <CardContent class="grid min-w-0 gap-4 lg:grid-cols-2">
-                <div v-for="side in 2" :key="side" class="flex min-w-0 flex-col gap-4 rounded-md border p-4">
+                <div v-for="side in 2" :key="side" class="flex min-w-0 flex-col gap-4 rounded-md ring-1 ring-surface-ring p-4">
                     <Skeleton class="h-5 w-28 max-w-full" />
                     <div class="flex flex-col gap-3">
                         <Skeleton class="h-4 w-full" />

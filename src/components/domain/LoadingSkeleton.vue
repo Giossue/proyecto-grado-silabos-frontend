@@ -100,7 +100,7 @@ const tableProps = computed(() => ({
 
             <Card v-else-if="variant === 'notifications'">
                 <CardContent class="flex flex-col gap-3">
-                    <div v-for="notification in rows" :key="notification" class="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div v-for="notification in rows" :key="notification" class="flex flex-col gap-3 rounded-lg ring-1 ring-surface-ring p-4 sm:flex-row sm:items-start sm:justify-between">
                         <div class="flex min-w-0 flex-1 flex-col gap-2">
                             <div class="flex flex-wrap items-center gap-2">
                                 <Skeleton class="h-5 w-56 max-w-full" />
