@@ -29,7 +29,7 @@ const region = computed(
         <div
             ref="container"
             data-slot="table-container"
-            class="w-full overflow-x-auto overflow-y-hidden rounded-xl bg-card shadow-surface ring-1 ring-surface-ring [&:has(>table[data-cards=true])]:max-sm:shadow-none [&:has(>table[data-cards=true])]:max-sm:ring-0 [scrollbar-color:var(--color-border)_transparent] [scrollbar-width:thin]"
+            class="w-full overflow-x-auto overflow-y-hidden rounded-xl bg-card shadow-surface ring-1 ring-surface-ring [&:has(>table[data-cards=true])]:max-sm:shadow-none [&:has(>table[data-cards=true])]:max-sm:ring-0 [&:has(>table[data-cards=true])]:max-sm:overflow-visible [&:has(>table[data-cards=true])]:max-sm:bg-transparent [scrollbar-color:var(--color-border)_transparent] [scrollbar-width:thin]"
             :tabindex="overflows ? 0 : undefined"
             :role="overflows ? 'region' : undefined"
             :aria-label="overflows ? region : undefined"
