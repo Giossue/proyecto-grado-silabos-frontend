@@ -32,16 +32,13 @@ describe('CatalogEditSheet · logo de la facultad', () => {
     wrapper.unmount();
   });
 
-  it('quitar el logo sin subir otro no deja guardar, y cancelar vuelve a mostrar el logo', async () => {
+  it('quitar el logo deja el campo opcional, y cancelar vuelve a mostrar el logo', async () => {
     const wrapper = mountSheet();
     await flushPromises();
     button('Quitar logo')!.click();
     await flushPromises();
 
-    expect(document.body.querySelector<HTMLInputElement>('#edit-faculty-logo-faculty-1')?.required).toBe(true);
-    button('Guardar cambios')!.click();
-    await flushPromises();
-    expect(updateAcademicRecord).not.toHaveBeenCalled();
+    expect(document.body.querySelector<HTMLInputElement>('#edit-faculty-logo-faculty-1')?.required).toBe(false);
 
     await wrapper.setProps({ open: false });
     await wrapper.setProps({ open: true });
