@@ -5,7 +5,8 @@ import EmptyState from '@/components/domain/EmptyState.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Bell, BookOpen, CalendarClock, CheckCheck, ClipboardCheck, FileText, Library, Sparkles, UserRound, X } from '@lucide/vue';
 import { computed, onMounted, ref, watch, type Component } from 'vue';
-import { useRoute } from 'vue-router';
+import { useMediaQuery } from '@vueuse/core';
+import { useRoute, useRouter } from 'vue-router';
 import { getNotifications, markAllNotificationsRead, markNotificationRead, type Notification } from '@/api/notifications';
 import { useOpenNotification } from '@/composables/useOpenNotification';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetClose, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { paths } from '@/lib/routes';
+import { paths, roleNotifications } from '@/lib/routes';
 import { relativeTime } from '@/lib/relativeTime';
 import { sessionState } from '@/state/session';
 
@@ -22,6 +23,9 @@ const statusOptions = [{ value: 'all', label: 'Todas' }, { value: 'unread', labe
 const updateStatus = (value: string): void => { if (value === 'all' || value === 'unread') status.value = value; };
 
 const route = useRoute();
+const router = useRouter();
+// En móvil la barra inferior lleva a la página completa; en escritorio abre el panel.
+const compact = useMediaQuery('(width < 40rem)');
 const { open: openDestination } = useOpenNotification();
 const open = ref(false);
 const status = ref<'all' | 'unread'>('all');
@@ -42,6 +46,12 @@ const iconFor = (tipo: string): Component => {
     if (tipo.startsWith('silabo')) return ClipboardCheck;
     if (tipo.startsWith('docente') || tipo.startsWith('coordinacion') || tipo.startsWith('usuario')) return UserRound;
     return Bell;
+};
+
+const openNotifications = (): void => {
+    const role = sessionState.current.value?.active_role?.code;
+    if (compact.value && role) void router.push(roleNotifications(role));
+    else open.value = true;
 };
 
 const load = async (): Promise<void> => {
@@ -112,7 +122,7 @@ onMounted(refreshCount);
                     :aria-label="unreadCount > 0 ? 'Notificaciones sin leer' : 'Notificaciones'"
                     aria-haspopup="dialog"
                     :aria-expanded="open"
-                    @click="open = true"
+                    @click="openNotifications"
                 >
                     <Bell data-icon="inline-start" aria-hidden="true" />
                     <span class="text-xs font-medium sm:hidden" aria-hidden="true">Notificaciones</span>
