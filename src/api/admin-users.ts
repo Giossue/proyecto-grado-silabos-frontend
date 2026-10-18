@@ -26,7 +26,7 @@ export const getManagedUsers = (filters: { q?: string; status?: string; role?: s
   return api<ManagedUsersResponse>(`/admin/users${query.size ? `?${query}` : ''}`);
 };
 
-export const createManagedUser = (payload: { nombre: string; correo_electronico: string; role_code: string; career_id: string | null }) =>
+export const createManagedUser = (payload: { primer_nombre: string; segundo_nombre: string; primer_apellido: string; segundo_apellido: string; correo_electronico: string; role_code: string; career_id: string | null }) =>
   api<{ message: string }>('/admin/users', { method: 'POST', body: JSON.stringify(payload) });
 export const resendManagedUserInvitation = (userId: string) =>
   api<{ message: string }>(`/admin/users/${userId}/resend-activation`, { method: 'POST' });

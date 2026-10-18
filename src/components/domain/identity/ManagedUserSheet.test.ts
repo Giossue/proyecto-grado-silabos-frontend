@@ -38,12 +38,14 @@ describe('ManagedUserSheet', () => {
     wrapper.unmount();
   });
 
-  it('mantiene el nombre completo en el alta de cuentas de Administración', async () => {
+  it('también pide las cuatro partes del nombre en el alta de cuentas de Administración', async () => {
     const wrapper = mount(ManagedUserSheet, { attachTo: document.body, props: { open: true } });
     await flushPromises();
 
-    expect(document.querySelector('#managed-user-name')).not.toBeNull();
-    expect(document.querySelector('#managed-user-primer_nombre')).toBeNull();
+    for (const part of ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido']) {
+      expect(document.querySelector<HTMLInputElement>(`#managed-user-${part}`)?.required).toBe(true);
+    }
+    expect(document.querySelector('#managed-user-name')).toBeNull();
 
     wrapper.unmount();
   });
