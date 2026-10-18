@@ -15,6 +15,8 @@ import SheetOverlay from "./SheetOverlay.vue"
 interface SheetContentProps extends DialogContentProps {
   class?: HTMLAttributes["class"]
   hideClose?: boolean
+  // Paneles sin formulario (p. ej. el menú móvil) se cierran tocando fuera.
+  dismissable?: boolean
 }
 
 defineOptions({
@@ -23,10 +25,11 @@ defineOptions({
 
 const props = withDefaults(defineProps<SheetContentProps>(), {
   hideClose: true,
+  dismissable: false,
 })
 const emits = defineEmits<DialogContentEmits>()
 
-const delegatedProps = reactiveOmit(props, "class", "hideClose")
+const delegatedProps = reactiveOmit(props, "class", "hideClose", "dismissable")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
@@ -41,7 +44,7 @@ const onEscapeKeyDown = (event: KeyboardEvent): void => {
 }
 
 const preventImplicitDismiss = (event: Event): void => {
-  event.preventDefault()
+  if (!props.dismissable) event.preventDefault()
 }
 </script>
 
