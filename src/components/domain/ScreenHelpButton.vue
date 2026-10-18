@@ -12,7 +12,7 @@ type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 const STORAGE_KEY = 'silabos:ayuda-posicion';
 const CORNERS: readonly Corner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-const SIZE = 44;
+const SIZE = 56;
 const MARGIN = 16;
 const DRAG_THRESHOLD = 3;
 
@@ -188,7 +188,7 @@ onBeforeUnmount(() => {
         ref="button"
         type="button"
         size="icon"
-        class="fixed top-0 left-0 z-40 size-11 touch-none rounded-full shadow-menu will-change-transform"
+        class="fixed top-0 left-0 z-40 size-14 touch-none rounded-full [&_svg]:size-5 shadow-menu will-change-transform"
         :class="dragging ? 'cursor-grabbing transition-none' : ['cursor-grab', animating ? 'transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]' : 'transition-none']"
         :style="style"
         aria-label="Ayuda de esta pantalla"
