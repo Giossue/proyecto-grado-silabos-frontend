@@ -37,7 +37,10 @@ const measure = (): void => {
   const container = button.value?.$el.parentElement;
   if (!container) return;
   const rect = container.getBoundingClientRect();
-  const header = container.querySelector('header')?.getBoundingClientRect().bottom ?? 0;
+  const bar = container.querySelector('header')?.getBoundingClientRect();
+  // Barra superior: el botón queda debajo. Barra inferior (móvil): queda encima.
+  const bottomBar = bar !== undefined && bar.top > window.innerHeight / 2;
+  const header = bar && !bottomBar ? bar.bottom : 0;
   ready.value = true;
   area.value = {
     left: Math.max(rect.left, 0),
@@ -49,7 +52,7 @@ const measure = (): void => {
     left: Math.max(rect.left, 0),
     top: Math.max(rect.top, header, 0),
     right: Math.min(rect.right, window.innerWidth),
-    bottom: Math.min(rect.bottom, window.innerHeight),
+    bottom: Math.min(rect.bottom, window.innerHeight, bottomBar && bar ? bar.top : Infinity),
   };
 };
 

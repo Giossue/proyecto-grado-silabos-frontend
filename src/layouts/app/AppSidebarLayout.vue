@@ -32,7 +32,7 @@ provide(pageTitleKey, pageTitle);
 <template>
     <AppShell variant="sidebar">
         <AppSidebar v-if="!editorOpen" />
-        <AppContent variant="sidebar" class="overflow-clip">
+        <AppContent variant="sidebar" :class="editorOpen ? 'overflow-clip' : 'overflow-clip max-sm:pb-(--mobile-nav-height)'">
             <AppSidebarHeader
                 v-if="!editorOpen"
                 :breadcrumbs="breadcrumbs"

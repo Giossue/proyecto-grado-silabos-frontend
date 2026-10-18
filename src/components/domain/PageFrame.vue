@@ -144,7 +144,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                         // esa franja mide cero porque la página no se dibuja debajo de
                         // ella; el día que alguien lo permita, el botón no queda tapado.
                         'max-sm:fixed max-sm:z-40 max-sm:w-auto max-sm:flex-col max-sm:items-end',
-                        'max-sm:right-(--page-mobile-actions-right) max-sm:bottom-(--safe-footer-inset)',
+                        'max-sm:right-(--page-mobile-actions-right) max-sm:bottom-(--page-mobile-actions-bottom)',
                         'max-sm:transition-all max-sm:duration-200 max-sm:ease-out',
                         floatingHidden &&
                             'max-sm:pointer-events-none max-sm:translate-y-24 max-sm:opacity-0',

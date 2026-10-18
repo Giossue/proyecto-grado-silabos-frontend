@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ChevronDown } from '@lucide/vue';
+import { useMediaQuery } from '@vueuse/core';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,6 +13,8 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
 
+// En móvil la barra está abajo: el menú se abre hacia arriba.
+const compact = useMediaQuery('(width < 40rem)');
 const user = computed<User>(() => ({
     id: sessionState.current.value?.user.id ?? '',
     nombre: sessionState.current.value?.user.name ?? '',
@@ -38,7 +41,7 @@ const user = computed<User>(() => ({
         </DropdownMenuTrigger>
         <DropdownMenuContent
             class="w-72 max-w-(--reka-dropdown-menu-content-available-width) rounded-lg"
-            side="bottom"
+            :side="compact ? 'top' : 'bottom'"
             align="end"
             :side-offset="4"
         >

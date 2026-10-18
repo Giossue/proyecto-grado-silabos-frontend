@@ -134,7 +134,9 @@
     --app-header-compact-height: calc(3rem + env(safe-area-inset-top));
     --safe-footer-inset: calc(1rem + env(safe-area-inset-bottom));
     --safe-header-inset: calc(1rem + env(safe-area-inset-top));
-    --page-mobile-actions-inset: calc(6rem + env(safe-area-inset-bottom));
+    --mobile-nav-height: calc(3.5rem + env(safe-area-inset-bottom));
+    --page-mobile-actions-inset: calc(6rem + var(--mobile-nav-height));
+    --page-mobile-actions-bottom: calc(var(--mobile-nav-height) + 1rem);
     --page-mobile-actions-right: calc(1rem + env(safe-area-inset-right));
     --configuration-workspace-columns: minmax(0, 2fr) minmax(18rem, 1fr);
     --layer-modal: 50;
@@ -162,6 +164,14 @@
     --document-page-number-size: 9pt;
     --document-page-number-inset: 1cm;
     --duration-layout: 150ms;
+}
+
+@media (width < 40rem) {
+    :root {
+        /* En móvil la barra de la aplicación va abajo: arriba solo queda la franja del sistema. */
+        --app-header-height: env(safe-area-inset-top);
+        --app-header-compact-height: env(safe-area-inset-top);
+    }
 }
 
 :root,
