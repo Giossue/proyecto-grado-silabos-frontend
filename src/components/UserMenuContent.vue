@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOut, Settings } from '@lucide/vue';
+import { LogOut, Moon, PersonStanding, Settings, Sun } from '@lucide/vue';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import {
@@ -9,6 +9,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import UserInfo from '@/components/UserInfo.vue';
 import { logout } from '@/api/session';
+import { useAppearance } from '@/composables/useAppearance';
+import { accessibilityDialogOpen } from '@/state/accessibilityDialog';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
 import { clearIntendedRoute } from '@/lib/intended-route';
@@ -17,6 +19,8 @@ import { paths, roleSetting } from '@/lib/routes';
 defineProps<{ user: User }>();
 
 const router = useRouter();
+const { appearance, updateAppearance } = useAppearance();
+const dark = computed(() => appearance.value === 'dark');
 const settingsHref = computed(() => {
     const code = sessionState.current.value?.active_role?.code;
     return code ? roleSetting(code, 'profile') : null;
@@ -41,6 +45,15 @@ const handleLogout = async (): Promise<void> => {
             <Settings data-icon="inline-start" aria-hidden="true" />
             Configuración
         </RouterLink>
+    </DropdownMenuItem>
+    <DropdownMenuItem class="sm:hidden" @select="updateAppearance(dark ? 'light' : 'dark')">
+        <Sun v-if="dark" data-icon="inline-start" aria-hidden="true" />
+        <Moon v-else data-icon="inline-start" aria-hidden="true" />
+        {{ dark ? 'Tema claro' : 'Tema oscuro' }}
+    </DropdownMenuItem>
+    <DropdownMenuItem class="sm:hidden" @select="accessibilityDialogOpen = true">
+        <PersonStanding data-icon="inline-start" aria-hidden="true" />
+        Accesibilidad
     </DropdownMenuItem>
     <DropdownMenuSeparator v-if="settingsHref" />
     <DropdownMenuItem

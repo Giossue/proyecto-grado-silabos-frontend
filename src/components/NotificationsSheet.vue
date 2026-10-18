@@ -108,18 +108,19 @@ onMounted(refreshCount);
                     type="button"
                     :variant="open || isNotificationsPage ? 'secondary' : 'ghost'"
                     size="icon-sm"
-                    class="relative"
+                    class="relative max-sm:h-12 max-sm:w-auto max-sm:min-w-16 max-sm:flex-col max-sm:gap-0.5 max-sm:px-3 max-sm:order-1 [&_svg]:max-sm:size-5"
                     :aria-label="unreadCount > 0 ? 'Notificaciones sin leer' : 'Notificaciones'"
                     aria-haspopup="dialog"
                     :aria-expanded="open"
                     @click="open = true"
                 >
                     <Bell data-icon="inline-start" aria-hidden="true" />
+                    <span class="text-xs font-medium sm:hidden" aria-hidden="true">Notificaciones</span>
                     <Badge
                         v-if="unreadCount > 0"
                         as="span"
                         variant="destructive"
-                        class="absolute top-1 right-1 size-1.5 border-0 p-0 ring-1 ring-background"
+                        class="absolute top-1 right-1 size-1.5 border-0 p-0 ring-1 ring-background max-sm:top-1.5 max-sm:right-4"
                         aria-hidden="true"
                     />
                 </Button>

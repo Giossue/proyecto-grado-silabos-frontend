@@ -1,12 +1,21 @@
 <script setup lang="ts">
-defineProps<{ floating?: boolean }>();
 import { PersonStanding, RotateCcw } from '@lucide/vue';
+import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAccessibility, type TextSize } from '@/composables/useAccessibility';
+import { accessibilityDialogOpen } from '@/state/accessibilityDialog';
+
+// `remote`: sin disparador propio; se abre desde el menú de usuario.
+const props = defineProps<{ floating?: boolean; remote?: boolean }>();
+const localOpen = ref(false);
+const open = computed({
+  get: () => (props.remote ? accessibilityDialogOpen.value : localOpen.value),
+  set: (value: boolean) => { if (props.remote) accessibilityDialogOpen.value = value; else localOpen.value = value; },
+});
 
 const { settings, reset } = useAccessibility();
 const sizes = [
@@ -25,8 +34,8 @@ const setSize = (value: string): void => { settings.value.textSize = value as Te
 </script>
 
 <template>
-  <Dialog>
-    <TooltipProvider><Tooltip>
+  <Dialog v-model:open="open">
+    <TooltipProvider v-if="!remote"><Tooltip>
       <TooltipTrigger as-child>
         <DialogTrigger as-child>
           <Button v-if="floating" type="button" size="icon" class="fixed right-4 bottom-4 z-40 size-14 rounded-full shadow-menu [&_svg]:size-5 max-sm:hidden" aria-label="Accesibilidad"><PersonStanding aria-hidden="true" /></Button>
