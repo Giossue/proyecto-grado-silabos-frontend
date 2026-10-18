@@ -82,7 +82,7 @@ onMounted(() => { void load(); });
   <PageFrame class="h-full flex-1" size="wide" title="Panel de trabajo" description="">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <template v-else-if="dashboard">
-      <div v-if="dashboard.metrics.length > 0" class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div v-if="dashboard.metrics.length > 0" class="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
         <StatTile v-for="metric in dashboard.metrics.slice(0, 3)" :key="metric.key" :label="metric.label" :value="metric.value" :suffix="metric.suffix ?? undefined" :hint="metric.hint" :icon="icons[metric.key]" />
       </div>
       <p v-else class="text-sm text-muted-foreground">No hay indicadores disponibles para este rol.</p>
