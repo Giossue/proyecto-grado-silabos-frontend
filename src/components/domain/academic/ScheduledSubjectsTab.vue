@@ -121,9 +121,19 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
             <TableCell><Checkbox v-if="canPlan(item)" :model-value="selected.includes(item.subject_id)" :aria-label="`Seleccionar ${item.label}`" @update:model-value="toggleItem(item, $event)" /></TableCell>
             <TableCell>{{ item.subject_name }}</TableCell>
             <TableCell class="text-center">{{ item.subject_cycle === null ? "Sin ciclo" : item.subject_cycle }}</TableCell>
-            <TableCell class="text-center"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center justify-center border-border px-2 not-first:border-t">{{ parallel.code }}</li></ul><span v-else class="text-muted-foreground">Sin paralelos</span></TableCell>
-            <TableCell class="text-center"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center justify-center border-border px-2 not-first:border-t">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
-            <TableCell><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center border-border px-2 not-first:border-t" :class="teacherByParallel.get(parallel.id) ? '' : 'text-muted-foreground'">{{ teacherByParallel.get(parallel.id) ?? 'Sin docente' }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
+            <TableCell data-card-hide="true" class="text-center"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center justify-center border-border px-2 not-first:border-t">{{ parallel.code }}</li></ul><span v-else class="text-muted-foreground">Sin paralelos</span></TableCell>
+            <TableCell data-card-hide="true" class="text-center"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center justify-center border-border px-2 not-first:border-t">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
+            <TableCell data-card-hide="true"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center border-border px-2 not-first:border-t" :class="teacherByParallel.get(parallel.id) ? '' : 'text-muted-foreground'">{{ teacherByParallel.get(parallel.id) ?? 'Sin docente' }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
+            <TableCell class="sm:hidden" data-card-span="full">
+              <p class="mb-1 text-xs font-medium text-muted-foreground">Paralelos</p>
+              <ul v-if="item.parallels.length" class="flex flex-col divide-y divide-border rounded-md ring-1 ring-surface-ring">
+                <li v-for="parallel in item.parallels" :key="parallel.id" class="flex flex-col gap-0.5 px-3 py-2">
+                  <span class="flex items-baseline gap-2"><span class="font-semibold">Paralelo {{ parallel.code }}</span><span class="text-sm text-muted-foreground">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</span></span>
+                  <span class="text-sm" :class="teacherByParallel.get(parallel.id) ? '' : 'text-muted-foreground'">{{ teacherByParallel.get(parallel.id) ?? 'Sin docente' }}</span>
+                </li>
+              </ul>
+              <span v-else class="text-sm text-muted-foreground">Sin paralelos</span>
+            </TableCell>
           </TableRow>
         </TableBody>
       </Table>

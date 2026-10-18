@@ -426,6 +426,18 @@
             font-weight: 500;
         }
 
+        table[data-cards='true'] > tbody > tr > :is(th, td)[data-card-hide='true'] {
+            display: none;
+        }
+
+        table[data-cards='true'] > tbody > tr > :is(th, td) ul {
+            margin-inline: 0 !important;
+        }
+
+        table[data-cards='true'] > tbody > tr > :is(th, td) li {
+            justify-content: flex-start !important;
+        }
+
         table[data-cards='true'] > tbody > tr > :is(th, td)[data-label='']::before {
             content: none;
         }

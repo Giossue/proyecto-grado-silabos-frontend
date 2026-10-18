@@ -44,7 +44,7 @@ const annotate = (): void => {
         }
         cell.dataset.label = role === 'data' ? name : '';
         cell.dataset.cardRole = role;
-        const wide = text.length > 22 || cell.querySelector('input, select, textarea, [role="combobox"], table') !== null;
+        const wide = text.length > 22 || cell.querySelector('input, select, textarea, [role="combobox"], table') !== null || cell.dataset.cardSpan === 'full';
         cell.dataset.cardWide = String(role === 'data' && wide);
         column += cell.colSpan;
     }
