@@ -62,6 +62,7 @@ const close = (): void => {
         </SheetTrigger>
         <SheetContent
             :aria-describedby="undefined"
+            :aria-label="hideTitle ? title : undefined"
             :class="
                 cn({
                     'top-0 left-0 h-dvh max-h-none w-full max-w-none translate-x-0 translate-y-0 rounded-none border-0 sm:max-w-none': fullScreen,
@@ -71,7 +72,7 @@ const close = (): void => {
             "
         >
             <SheetHeader class="pb-0">
-                <SheetTitle :class="{ 'sr-only': hideTitle }">{{ title }}</SheetTitle>
+                <SheetTitle v-if="!hideTitle">{{ title }}</SheetTitle>
             </SheetHeader>
             <ScrollArea class="min-h-0 flex-1">
                 <div class="px-4 pt-1 pb-28">
