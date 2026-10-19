@@ -71,11 +71,11 @@ const close = (): void => {
                 })
             "
         >
-            <SheetHeader class="pb-0">
-                <SheetTitle v-if="!hideTitle">{{ title }}</SheetTitle>
+            <SheetHeader v-if="!hideTitle" class="pb-0">
+                <SheetTitle>{{ title }}</SheetTitle>
             </SheetHeader>
             <ScrollArea class="min-h-0 flex-1">
-                <div class="px-4 pt-1 pb-28">
+                <div :class="cn('px-4 pb-28', hideTitle ? 'pt-4' : 'pt-1')">
                     <slot :close="close" />
                 </div>
             </ScrollArea>
