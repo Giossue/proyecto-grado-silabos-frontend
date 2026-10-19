@@ -70,8 +70,8 @@ const close = (): void => {
                 })
             "
         >
-            <SheetHeader :class="hideTitle ? 'sr-only' : 'pb-0'">
-                <SheetTitle>{{ title }}</SheetTitle>
+            <SheetHeader class="pb-0">
+                <SheetTitle :class="{ 'sr-only': hideTitle }">{{ title }}</SheetTitle>
             </SheetHeader>
             <ScrollArea class="min-h-0 flex-1">
                 <div class="px-4 pt-1 pb-28">
