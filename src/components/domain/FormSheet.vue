@@ -17,12 +17,14 @@ withDefaults(
     defineProps<{
         triggerLabel: string;
         title: string;
+        hideTitle?: boolean;
         showTrigger?: boolean;
         disabled?: boolean;
         fullScreen?: boolean;
         wide?: boolean;
     }>(),
     {
+        hideTitle: false,
         showTrigger: true,
         disabled: false,
         fullScreen: false,
@@ -68,7 +70,7 @@ const close = (): void => {
                 })
             "
         >
-            <SheetHeader class="pb-0">
+            <SheetHeader :class="hideTitle ? 'sr-only' : 'pb-0'">
                 <SheetTitle>{{ title }}</SheetTitle>
             </SheetHeader>
             <ScrollArea class="min-h-0 flex-1">

@@ -91,6 +91,7 @@ const submit = async (): Promise<void> => {
         :disabled="props.disabled"
         trigger-label="Nueva convocatoria"
         title="Nueva convocatoria"
+        hide-title
     >
         <template #default="{ close }">
             <form @submit.prevent="askConfirmation">
