@@ -13,7 +13,7 @@ type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
 const STORAGE_KEY = 'silabos:ayuda-posicion';
 const CORNERS: readonly Corner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-const SIZE = 48;
+const BASE_SIZE = 48;
 const MARGIN = 16;
 const DRAG_THRESHOLD = 3;
 
@@ -29,6 +29,7 @@ const corner = computed<Corner>({
 });
 const bounds = ref({ left: 0, top: 0, right: 0, bottom: 0 });
 const area = ref({ left: 0, top: 0, right: 0, bottom: 0 });
+const size = ref(BASE_SIZE);
 const dragging = ref<{ x: number; y: number } | null>(null);
 const screen = computed(() => route.matched.at(-1)?.path ?? '');
 const help = computed(() => screenHelpState.forScreen(screen.value));
@@ -42,6 +43,7 @@ const isLeft = computed(() => corner.value.endsWith('left'));
 const measure = (): void => {
   const container = button.value?.$el.parentElement;
   if (!container) return;
+  size.value = button.value?.$el.offsetWidth || BASE_SIZE;
   const rect = container.getBoundingClientRect();
   const bar = container.querySelector('header')?.getBoundingClientRect();
   const bottomBar = bar !== undefined && bar.top > window.innerHeight / 2;
@@ -62,8 +64,8 @@ const measure = (): void => {
 };
 
 const cornerPosition = (value: Corner): { x: number; y: number } => ({
-  x: value.endsWith('left') ? bounds.value.left + MARGIN : bounds.value.right - SIZE - MARGIN,
-  y: value.startsWith('top') ? bounds.value.top + MARGIN : bounds.value.bottom - SIZE - MARGIN - (value === 'bottom-right' ? SIZE + MARGIN : 0),
+  x: value.endsWith('left') ? bounds.value.left + MARGIN : bounds.value.right - size.value - MARGIN,
+  y: value.startsWith('top') ? bounds.value.top + MARGIN : bounds.value.bottom - size.value - MARGIN - (value === 'bottom-right' ? (size.value * 7) / 6 + MARGIN : 0),
 });
 
 const style = computed(() => {
@@ -73,8 +75,8 @@ const style = computed(() => {
 });
 
 const nearestCorner = (point: { x: number; y: number }): Corner => {
-  const centerX = point.x + SIZE / 2;
-  const centerY = point.y + SIZE / 2;
+  const centerX = point.x + size.value / 2;
+  const centerY = point.y + size.value / 2;
   const vertical = centerY < (bounds.value.top + bounds.value.bottom) / 2 ? 'top' : 'bottom';
   const horizontal = centerX < (bounds.value.left + bounds.value.right) / 2 ? 'left' : 'right';
 
@@ -115,8 +117,8 @@ const applyDrag = (): void => {
   frame = 0;
   if (!drag?.moved) return;
   dragging.value = {
-    x: Math.min(Math.max(drag.originX + pointer.x - drag.startX, area.value.left), area.value.right - SIZE),
-    y: Math.min(Math.max(drag.originY + pointer.y - drag.startY, area.value.top), area.value.bottom - SIZE),
+    x: Math.min(Math.max(drag.originX + pointer.x - drag.startX, area.value.left), area.value.right - size.value),
+    y: Math.min(Math.max(drag.originY + pointer.y - drag.startY, area.value.top), area.value.bottom - size.value),
   };
 };
 const moveDrag = (event: PointerEvent): void => {
@@ -175,6 +177,7 @@ watch(help, (value) => {
     if (container && !observer && typeof ResizeObserver !== 'undefined') {
       observer = new ResizeObserver(refresh);
       observer.observe(container);
+      if (button.value) observer.observe(button.value.$el);
     }
   });
 }, { immediate: true, flush: 'post' });
