@@ -34,6 +34,7 @@ const goTo = (target: 1 | 2): void => {
     step.value = target;
 };
 const periodComplete = computed(() => Boolean(form.value.starts_on && form.value.ends_on));
+const processComplete = computed(() => Boolean(form.value.starts_at && form.value.due_at));
 const periodCreated = computed(() => createdPeriodId.value !== null);
 
 watch(open, (value) => {
@@ -54,7 +55,7 @@ const askConfirmation = (): void => {
         if (periodComplete.value) goTo(2);
         return;
     }
-    if (!props.disabled) confirmOpen.value = true;
+    if (!props.disabled && processComplete.value) confirmOpen.value = true;
 };
 const submit = async (): Promise<void> => {
     if (props.disabled) return;
@@ -138,7 +139,7 @@ const submit = async (): Promise<void> => {
                             <Button v-if="step === 1" type="button" variant="outline" @click="close">Cancelar</Button>
                             <Button v-else type="button" variant="outline" @click="goTo(1)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
                             <Button v-if="step === 1" type="submit" :disabled="!periodComplete">Siguiente<ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
-                            <Button v-else type="submit" :disabled="processing || props.disabled">
+                            <Button v-else type="submit" :disabled="processing || props.disabled || !processComplete">
                                 <Spinner v-if="processing" data-icon="inline-start" />
                                 <CalendarPlus v-else data-icon="inline-start" aria-hidden="true" />
                                 Abrir convocatoria
