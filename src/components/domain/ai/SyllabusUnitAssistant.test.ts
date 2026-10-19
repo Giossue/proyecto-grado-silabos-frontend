@@ -52,7 +52,7 @@ describe('SyllabusUnitAssistant', () => {
     await wrapper.get('textarea').setValue('  Ayúdame con la unidad de pruebas.  ');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
-    expect(sendAiChatMessage).toHaveBeenCalledWith('syllabus-1', 'Ayúdame con la unidad de pruebas.');
+    expect(sendAiChatMessage).toHaveBeenCalledWith('syllabus-1', 'Ayúdame con la unidad de pruebas.', expect.any(String));
     expect(wrapper.text()).toContain('Preparando una propuesta');
     expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeDefined();
     await vi.advanceTimersByTimeAsync(2500);

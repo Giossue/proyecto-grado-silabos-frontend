@@ -382,7 +382,7 @@ describe("TeacherSyllabusDetailPage", () => {
     confirm!.click();
     await flushPromises();
 
-    expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2);
+    expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2, expect.any(String));
     expect(wrapper.find(".submit-feedback").exists()).toBe(false);
     expect(buttonNamed(wrapper, "Ir a la primera")).toBeUndefined();
     expect(wrapper.get(".feedback.error").text()).toContain("Falta el dato institucional de créditos.");
