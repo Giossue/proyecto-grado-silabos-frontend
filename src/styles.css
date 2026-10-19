@@ -435,6 +435,10 @@
             justify-content: flex-start !important;
         }
 
+        table[data-cards='true'] > tbody > tr > :is(th, td) ul.-mx-2 > li {
+            padding-inline: 0 !important;
+        }
+
         table[data-cards='true'] > tbody > tr > :is(th, td)[data-label='']::before {
             content: none;
         }
