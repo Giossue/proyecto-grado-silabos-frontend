@@ -36,6 +36,7 @@ import { Spinner } from '@/components/ui/spinner';
 import FieldView from '@/components/domain/syllabus/FieldView.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
+import { attemptKey } from '@/lib/attemptKey';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { ArrowLeft, Copy, FileText, Library, Send } from '@lucide/vue';
@@ -326,6 +327,7 @@ const confirmSubmit = (): void => {
   void submit();
 };
 
+const submitKey = attemptKey();
 const submit = async (): Promise<void> => {
   if (!syllabus.value) return;
   try {
@@ -336,8 +338,10 @@ const submit = async (): Promise<void> => {
       await submitTeacherSyllabus(
         syllabus.value.id,
         syllabus.value.version_bloqueo,
+        submitKey.use(`${syllabus.value.id}:${syllabus.value.version_bloqueo}`),
       )
     ).syllabus;
+    submitKey.reset();
     invalidateValidation();
     validationResults.value = [];
   } catch (reason) {

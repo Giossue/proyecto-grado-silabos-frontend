@@ -184,25 +184,25 @@ export const validateTeacherSyllabus = (syllabusId: string) =>
       }>;
     };
   }>(`/teacher/syllabi/${syllabusId}/validate`, { method: "POST" });
-export const submitTeacherSyllabus = (syllabusId: string, version: number) =>
+export const submitTeacherSyllabus = (syllabusId: string, version: number, idempotencyKey: string = crypto.randomUUID()) =>
   api<{ message: string; syllabus: SyllabusDetail }>(
     `/teacher/syllabi/${syllabusId}/submit`,
     {
       method: "POST",
       body: JSON.stringify({
         version_bloqueo: version,
-        idempotency_key: crypto.randomUUID(),
+        idempotency_key: idempotencyKey,
       }),
     },
   );
 export const getAiChat = (syllabusId: string) =>
   api<AiChat>(`/teacher/syllabi/${syllabusId}/ai-chat`);
-export const sendAiChatMessage = (syllabusId: string, message: string) =>
+export const sendAiChatMessage = (syllabusId: string, message: string, idempotencyKey: string = crypto.randomUUID()) =>
   api<{ message: string; assistant_message_id: string }>(
     `/teacher/syllabi/${syllabusId}/ai-chat/messages`,
     {
       method: "POST",
-      body: JSON.stringify({ message, idempotency_key: crypto.randomUUID() }),
+      body: JSON.stringify({ message, idempotency_key: idempotencyKey }),
     },
   );
 export const clearAiChat = (syllabusId: string) =>

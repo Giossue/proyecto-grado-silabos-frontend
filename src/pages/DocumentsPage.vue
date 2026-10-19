@@ -5,6 +5,7 @@ import { ArrowLeft, Download, FileArchive, FileText, ShieldCheck } from '@lucide
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
+import { attemptKey } from '@/lib/attemptKey';
 import { downloadDocument, getDocuments, requestDocuments, type DocumentsPayload } from '@/api/documents';
 import { getSession, type Session } from '@/api/session';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
@@ -50,8 +51,9 @@ const load = async (): Promise<void> => {
   catch (reason) { if (reason instanceof ApiError && reason.status === 401) { await router.replace(paths.login); return; } loadError.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los documentos.'; }
   finally { loading.value = false; }
 };
+const exportKey = attemptKey();
 const requestExport = async (): Promise<void> => {
-  try { working.value = true; actionError.value = null; toast.success((await requestDocuments(revisionId())).message); await load(); }
+  try { working.value = true; actionError.value = null; toast.success((await requestDocuments(revisionId(), exportKey.use(revisionId()))).message); exportKey.reset(); await load(); }
   catch (reason) { actionError.value = reason instanceof ApiError ? reason.message : 'No se pudo solicitar la exportación.'; }
   finally { working.value = false; }
 };

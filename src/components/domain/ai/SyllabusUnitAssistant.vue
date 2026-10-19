@@ -19,6 +19,7 @@ import { Spinner } from '@/components/ui/spinner';
 import RobotAvatar from '@/components/domain/ai/avatar/RobotAvatar.vue';
 import { useAvatarController } from '@/components/domain/ai/avatar/useAvatarController';
 import { renderChatMarkdown } from '@/components/domain/ai/chatMarkdown';
+import { attemptKey } from '@/lib/attemptKey';
 
 const props = defineProps<{ syllabusId: string; enabled: boolean; saving: boolean }>();
 const chat = ref<AiChat | null>(null);
@@ -60,6 +61,7 @@ const load = async (): Promise<void> => {
         if (request === generation) error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la conversación.';
     } finally { if (request === generation) loading.value = false; }
 };
+const messageKey = attemptKey();
 const send = async (): Promise<void> => {
     if (!canSend.value) return;
     stop();
@@ -67,7 +69,9 @@ const send = async (): Promise<void> => {
     sending.value = true;
     error.value = null;
     try {
-        await sendAiChatMessage(props.syllabusId, message.value.trim());
+        const text = message.value.trim();
+        await sendAiChatMessage(props.syllabusId, text, messageKey.use(`${props.syllabusId}:${text}`));
+        messageKey.reset();
         if (request !== generation) return;
         message.value = '';
         await load();
