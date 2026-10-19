@@ -56,6 +56,10 @@ watch(open, (value) => { if (value) reset(); });
 const submit = async (): Promise<void> => {
     if (props.disabled) return;
     errors.value = {};
+    if (props.entity === 'facultad' && !logo.value) {
+        errors.value = { logo: ['El logo de la facultad es obligatorio.'] };
+        return;
+    }
     processing.value = true;
     const payload = new FormData();
     for (const [key, value] of Object.entries(form.value)) {
@@ -88,9 +92,9 @@ const submit = async (): Promise<void> => {
                         <FieldError :errors="errors.campus" />
                     </Field>
                     <Field v-if="entity === 'facultad'" :data-invalid="Boolean(errors.logo)">
-                        <FieldLabel for="faculty-logo">Logo de la facultad (PNG sin fondo)</FieldLabel>
-                        <FileDropzone v-model="logo" input-id="faculty-logo" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" @validation-error="logoValidationError" />
-                        <FieldDescription>Medida recomendada: 600 × 180 px. Use una imagen con fondo transparente.</FieldDescription>
+                        <FieldLabel for="faculty-logo" required>Logo de la facultad (PNG sin fondo)</FieldLabel>
+                        <FileDropzone v-model="logo" input-id="faculty-logo" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" required @validation-error="logoValidationError" />
+                        <FieldDescription>Obligatorio. Medida recomendada: 600 × 180 px. Use una imagen con fondo transparente.</FieldDescription>
                         <FieldError :errors="errors.logo" />
                     </Field>
                     <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.faculty_id)">

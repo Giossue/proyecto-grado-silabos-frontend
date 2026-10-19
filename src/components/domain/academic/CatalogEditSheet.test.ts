@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
+import { updateAcademicRecord } from '@/api/academic';
 
 vi.mock('@/api/academic', () => ({ updateAcademicRecord: vi.fn() }));
 
@@ -31,13 +32,16 @@ describe('CatalogEditSheet · logo de la facultad', () => {
     wrapper.unmount();
   });
 
-  it('quitar el logo deja el campo opcional, y cancelar vuelve a mostrar el logo', async () => {
+  it('quitar el logo sin subir otro no deja guardar, y cancelar vuelve a mostrar el logo', async () => {
     const wrapper = mountSheet();
     await flushPromises();
     button('Quitar logo')!.click();
     await flushPromises();
 
-    expect(document.body.querySelector<HTMLInputElement>('#edit-faculty-logo-faculty-1')?.required).toBe(false);
+    expect(document.body.querySelector<HTMLInputElement>('#edit-faculty-logo-faculty-1')?.required).toBe(true);
+    button('Guardar cambios')!.click();
+    await flushPromises();
+    expect(updateAcademicRecord).not.toHaveBeenCalled();
 
     await wrapper.setProps({ open: false });
     await wrapper.setProps({ open: true });

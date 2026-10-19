@@ -61,11 +61,11 @@ describe('academic catalog code fields', () => {
     expect(nameLabel).not.toBeNull();
     expect(campusLabel).not.toBeNull();
     expect(logoLabel).not.toBeNull();
-    expect(document.body.querySelector<HTMLInputElement>('#faculty-logo')?.required).toBe(false);
+    expect(document.body.querySelector<HTMLInputElement>('#faculty-logo')?.required).toBe(true);
     expect(document.body.textContent).toContain('Medida recomendada: 600 × 180 px');
     expect(document.body.textContent).toContain('fondo transparente');
     expect(document.body.textContent).not.toContain('fondo sólido');
-    expect(document.body.textContent).not.toContain('abrir convocatorias');
+    expect(document.body.textContent).not.toContain('Opcional para Administración');
     expect(nameLabel!.compareDocumentPosition(campusLabel!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(campusLabel!.compareDocumentPosition(logoLabel!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     faculty.unmount();
@@ -126,7 +126,7 @@ describe('academic catalog code fields', () => {
     wrapper.unmount();
   });
 
-  it('does not require a faculty logo for administration', async () => {
+  it('requires a faculty logo only when no current logo is configured', async () => {
     const withoutLogo = mount(CatalogEditSheet, {
       attachTo: document.body,
       props: {
@@ -142,7 +142,7 @@ describe('academic catalog code fields', () => {
     await flushPromises();
 
     expect(document.body.querySelector('img[alt="Logo actual de la facultad"]')).toBeNull();
-    expect(document.body.querySelector<HTMLInputElement>('#edit-faculty-logo-faculty-without-logo')?.required).toBe(false);
+    expect(document.body.querySelector<HTMLInputElement>('#edit-faculty-logo-faculty-without-logo')?.required).toBe(true);
     withoutLogo.unmount();
 
     const withLogo = mount(CatalogEditSheet, {
