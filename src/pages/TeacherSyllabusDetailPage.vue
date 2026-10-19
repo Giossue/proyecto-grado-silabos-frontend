@@ -35,15 +35,17 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Spinner } from '@/components/ui/spinner';
 import FieldView from '@/components/domain/syllabus/FieldView.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
+import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
-import { ArrowLeft, Copy, Library, Send } from '@lucide/vue';
+import { ArrowLeft, Copy, FileText, Library, Send } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
 const route = useRoute();
 const router = useRouter();
 const syllabus = ref<SyllabusDetail | null>(null);
+const previewOpen = ref(false);
 const error = ref<string | null>(null);
 const starting = ref(false);
 const savingFieldId = ref<string | null>(null);
@@ -426,6 +428,7 @@ onBeforeUnmount(() => {
   <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-surface backdrop-blur sm:px-5" aria-label="Herramientas del sílabo">
     <Button variant="link" size="sm" class="h-auto px-0" as-child><RouterLink :to="paths.teacher.syllabi"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</RouterLink></Button>
     <span class="flex-1" />
+    <Button v-if="syllabus" type="button" variant="outline" size="sm" @click="previewOpen = true"><FileText data-icon="inline-start" aria-hidden="true" />Vista previa</Button>
     <AppearanceToggle />
   </header>
   <PageFrame title="" description="">
@@ -506,6 +509,17 @@ onBeforeUnmount(() => {
       </WorkspaceLayout>
     </template>
 
+    <Dialog v-model:open="previewOpen">
+      <DialogContent class="flex max-h-(--overlay-max-height) flex-col gap-4 overflow-hidden sm:max-w-5xl">
+        <DialogHeader>
+          <DialogTitle>Vista previa del sílabo</DialogTitle>
+          <DialogDescription>Así se verá el documento con lo que lleva escrito hasta ahora.</DialogDescription>
+        </DialogHeader>
+        <div class="min-h-0 flex-1 overflow-y-auto rounded-md bg-background p-2 sm:p-4">
+          <SyllabusDocumentPreview v-if="syllabus && previewOpen" :presentation="syllabus.presentation" :sections="syllabus.sections" />
+        </div>
+      </DialogContent>
+    </Dialog>
     <Dialog v-model:open="confirmSubmitOpen">
       <DialogContent>
         <DialogHeader>

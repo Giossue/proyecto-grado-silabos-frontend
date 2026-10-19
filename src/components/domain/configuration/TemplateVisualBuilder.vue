@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, ImageUp, Pencil, Plus, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
+import { ArrowDown, ArrowUp, ImageUp, Pencil, Plus, Ruler, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
@@ -11,6 +11,10 @@ import { apiMessage, uniqueKey } from '@/components/domain/configuration/templat
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { layoutOf, layoutStyle, type DocumentLayout } from '@/lib/documentLayout';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -97,6 +101,24 @@ const awaitingReload = ref(false);
 const source = computed<TemplateSectionPayload[]>(() => preview.value && !awaitingReload.value ? props.template.sections : draft.value);
 const dirty = ref(false);
 const titleDraft = ref('');
+const layoutDraft = ref<DocumentLayout>(layoutOf(props.template.layout));
+const shownLayout = computed(() => preview.value && !awaitingReload.value ? layoutOf(props.template.layout) : layoutDraft.value);
+const layoutControls = computed(() => {
+    const options = props.template.layoutOptions;
+    if (!options) return [];
+    return [
+        { key: 'margin_cm', label: 'Márgenes', options: options.margins },
+        { key: 'title_font_size', label: 'Tamaño del título', options: options.title_sizes },
+        { key: 'section_font_size', label: 'Tamaño de las secciones', options: options.section_sizes },
+        { key: 'body_font_size', label: 'Tamaño del contenido', options: options.body_sizes },
+    ] as const;
+});
+const setLayout = (key: keyof DocumentLayout, value: unknown): void => {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return;
+    layoutDraft.value = { ...layoutDraft.value, [key]: number };
+    touched();
+};
 const logoOverride = ref<string | null>(null);
 const uploadingLogo = ref(false);
 const shownTitle = computed(() => preview.value && !awaitingReload.value ? props.template.titleBlock.text : titleDraft.value);
@@ -134,6 +156,7 @@ const startEditing = (): void => {
     if (!awaitingReload.value) {
         draft.value = clone(props.template.sections);
         titleDraft.value = props.template.titleBlock.text;
+        layoutDraft.value = layoutOf(props.template.layout);
         dirty.value = false;
     }
     error.value = null;
@@ -154,6 +177,7 @@ const save = async (): Promise<void> => {
         await importTemplateJson(props.template.id, {
             version: 1,
             title: titleDraft.value.trim() || props.template.titleBlock.text,
+            layout: layoutDraft.value,
             sections: draft.value.map((section) => ({
                 key: section.key,
                 title: section.title.trim(),
@@ -282,6 +306,23 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         <Button v-if="preview" type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
         <template v-else>
           <span v-if="changed" class="px-1 text-sm text-muted-foreground" aria-live="polite">Sin guardar</span>
+          <Popover v-if="layoutControls.length">
+            <PopoverTrigger as-child>
+              <Button type="button" variant="outline" :disabled="busy || locked"><Ruler data-icon="inline-start" aria-hidden="true" />Diseño</Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" class="w-72">
+              <FieldGroup class="gap-4">
+                <p class="text-sm text-muted-foreground">Márgenes y tamaños del documento. La letra, los colores y la alineación son los institucionales.</p>
+                <Field v-for="control in layoutControls" :key="control.key">
+                  <FieldLabel :for="`template-layout-${control.key}`">{{ control.label }}</FieldLabel>
+                  <Select :model-value="String(layoutDraft[control.key])" @update:model-value="setLayout(control.key, $event)">
+                    <SelectTrigger :id="`template-layout-${control.key}`"><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectGroup><SelectItem v-for="option in control.options" :key="option.value" :value="String(option.value)">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
+                  </Select>
+                </Field>
+              </FieldGroup>
+            </PopoverContent>
+          </Popover>
           <Button type="button" variant="outline" :disabled="busy" @click="cancelEditing">Cancelar</Button>
           <Button type="button" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar</Button>
         </template>
@@ -289,7 +330,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     </div>
 
     <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto py-4" tabindex="0" role="region" :aria-label="`Hoja ${sheetIndex + 1} de la plantilla con desplazamiento horizontal`">
-    <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape) }" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
+    <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape), ...layoutStyle(shownLayout) }" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
       <div data-sheet-content class="flex flex-col gap-6">
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
@@ -303,7 +344,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
           <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain" @load="paginate">
         </div>
         <div class="flex items-center justify-center px-2 py-1">
-          <Input v-if="!preview && !locked" :model-value="titleDraft" maxlength="180" aria-label="Título del documento" class="template-sheet-title h-auto border-transparent bg-transparent px-0 py-0 shadow-none hover:border-input focus-visible:border-input" style="font-size: 14pt; font-weight: 700; color: var(--document-official-blue); text-align: center" @update:model-value="setDocumentTitle(String($event))" />
+          <Input v-if="!preview && !locked" :model-value="titleDraft" maxlength="180" aria-label="Título del documento" class="template-sheet-title h-auto border-transparent bg-transparent px-0 py-0 shadow-none hover:border-input focus-visible:border-input" style="font-size: var(--document-title-size); font-weight: 700; color: var(--document-official-blue); text-align: center" @update:model-value="setDocumentTitle(String($event))" />
           <h2 v-else class="template-sheet-title">{{ shownTitle }}</h2>
         </div>
       </header>
@@ -311,7 +352,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <template v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id">
       <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 scroll-mt-36 flex-col gap-3">
         <TemplateInsertPoint v-if="!preview && !locked && (sectionIndex === 0 || (sections[sectionIndex - 1]?.fields.length ?? 0) === 0)" :disabled="locked || busy" :actions="[{ key: 'section', label: 'Nueva sección' }]" position="top" gap="section" @insert="addSection(sectionIndex)" />
-        <h3 v-if="preview" class="font-bold">{{ section.title }}</h3>
+        <h3 v-if="preview" class="font-bold" data-section-title>{{ section.title }}</h3>
         <div v-else data-section-heading :class="cn('group relative flex items-center gap-2 rounded-sm px-1 py-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')" @focusin="selectSection(section.id)">
           <Input
             :ref="(element) => setTitleRef(element, section.id)"
@@ -320,6 +361,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
             :disabled="locked"
             :aria-label="`Sección ${section.title}`"
             class="h-auto min-w-0 flex-1 border-transparent bg-transparent px-0 py-0 font-bold shadow-none focus-visible:border-transparent focus-visible:ring-0"
+            data-section-title
+            style="font-size: var(--document-section-size)"
             @update:model-value="setTitle(section, String($event))"
             @keydown.enter.prevent="blurTarget($event)"
           />

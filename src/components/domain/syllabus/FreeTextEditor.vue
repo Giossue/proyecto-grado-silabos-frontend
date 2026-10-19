@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { Table, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
+import TextAlign from '@tiptap/extension-text-align';
 import { Extension, type Editor } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
-import { Bold, Braces, ChevronDown, Italic, Underline, List, ListOrdered, Plus, Table2 } from '@lucide/vue';
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, Braces, ChevronDown, Italic, Underline, List, ListOrdered, Plus, Table2 } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -26,6 +27,12 @@ const props = withDefaults(defineProps<{
     blocks?: 'configure' | 'fill';
 }>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true, blocks: 'fill' });
 const emit = defineEmits<{ 'update:modelValue': [value: DocumentNode] }>();
+const alignments = [
+    { value: 'left', label: 'Alinear a la izquierda', icon: AlignLeft },
+    { value: 'center', label: 'Centrar', icon: AlignCenter },
+    { value: 'right', label: 'Alinear a la derecha', icon: AlignRight },
+    { value: 'justify', label: 'Justificar', icon: AlignJustify },
+] as const;
 const slash = ref({ open: false, left: 0, top: 0, query: '', index: 0 });
 const slashItems = computed(() => props.variables.filter((item) => item.label.toLowerCase().includes(slash.value.query.toLowerCase())).slice(0, 8));
 const closeSlash = (): void => { slash.value.open = false; };
@@ -73,6 +80,7 @@ const editor = useEditor({
     editorProps: { handleKeyDown: (_view, event) => onSlashKey(event), handleDrop: () => true, handleDOMEvents: { dragstart: (_view, event) => { event.preventDefault(); return true; } }, attributes: { id: props.id, 'aria-label': props.label, role: 'textbox', 'aria-multiline': 'true', class: 'free-text-editor__content' } },
     extensions: [
         StarterKit.configure({ document: false, heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false }),
+        TextAlign.configure({ types: ['paragraph'], alignments: ['left', 'center', 'right', 'justify'] }),
         Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
         DocumentWithBlocks,
         PageSpacers,
@@ -122,6 +130,9 @@ defineExpose({ editor });
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Negrita" :aria-pressed="editor.isActive('bold')" :disabled="disabled" @click="editor.chain().focus().toggleBold().run()"><Bold aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Cursiva" :aria-pressed="editor.isActive('italic')" :disabled="disabled" @click="editor.chain().focus().toggleItalic().run()"><Italic aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Subrayado" :aria-pressed="editor.isActive('underline')" :disabled="disabled" @click="editor.chain().focus().toggleUnderline().run()"><Underline aria-hidden="true" /></Button>
+      <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
+      <Button v-for="alignment in alignments" :key="alignment.value" type="button" variant="ghost" size="icon-sm" :aria-label="alignment.label" :aria-pressed="editor.isActive({ textAlign: alignment.value })" :disabled="disabled" @click="editor.chain().focus().setTextAlign(alignment.value).run()"><component :is="alignment.icon" aria-hidden="true" /></Button>
+      <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista con viñetas" :aria-pressed="editor.isActive('bulletList')" :disabled="disabled" @click="editor.chain().focus().toggleBulletList().run()"><List aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista numerada" :aria-pressed="editor.isActive('orderedList')" :disabled="disabled" @click="editor.chain().focus().toggleOrderedList().run()"><ListOrdered aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" :disabled="disabled" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"><Table2 aria-hidden="true" /></Button>

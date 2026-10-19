@@ -575,7 +575,7 @@
         padding: var(--document-margin);
         overflow-wrap: anywhere;
         font-family: Arial, Helvetica, sans-serif;
-        font-size: 11pt;
+        font-size: var(--document-body-size, 11pt);
         line-height: var(--document-line-height);
         text-align: left;
         display: flex;
@@ -605,7 +605,15 @@
         color: var(--document-official-blue);
         text-align: center;
         font-weight: 700;
-        font-size: 14pt;
+        font-size: var(--document-title-size, 14pt);
+    }
+
+    .template-sheet [data-section-title] {
+        font-size: var(--document-section-size, 11pt);
+    }
+
+    .template-sheet [data-field-body] > :is(p, div) {
+        font-size: inherit !important;
     }
 
     /* Los campos de texto van en un recuadro con borde fino, como en el sílabo impreso. */

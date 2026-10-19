@@ -75,6 +75,23 @@ describe('TemplateVisualBuilder', () => {
     expect(saved().sections[0]!.fields[0]).toMatchObject({ key: 'f1', label: 'Primer campo', quien_llena: 'docente' });
   });
 
+  it('aplica márgenes y tamaños del diseño a la hoja y los guarda con la plantilla', async () => {
+    const options = { margins: [{ value: 1.5, label: '1,5 cm' }, { value: 2.5, label: '2,5 cm' }], title_sizes: [{ value: 14, label: '14 pt' }], section_sizes: [{ value: 11, label: '11 pt' }], body_sizes: [{ value: 11, label: '11 pt' }, { value: 12, label: '12 pt' }] };
+    const designed = { ...template, layout: { margin_cm: 1.5, title_font_size: 14, section_font_size: 11, body_font_size: 11 }, layoutOptions: options };
+    const wrapper = mount(TemplateVisualBuilder, { props: { template: designed, presets }, attachTo: document.body });
+    expect(body().querySelector<HTMLElement>('[data-sheet]')!.style.getPropertyValue('--document-margin')).toBe('1.5cm');
+    await click(byText('button', 'Editar'));
+    expect(byText('button', 'Diseño')).toBeTruthy();
+    const state = (wrapper.vm as unknown as { $: { setupState: { setLayout: (key: string, value: unknown) => void } } }).$.setupState;
+    state.setLayout('margin_cm', '2.5');
+    state.setLayout('body_font_size', '12');
+    await flushPromises();
+    expect(body().querySelector<HTMLElement>('[data-sheet]')!.style.getPropertyValue('--document-margin')).toBe('2.5cm');
+    expect(body().querySelector<HTMLElement>('[data-sheet]')!.style.getPropertyValue('--document-body-size')).toBe('12pt');
+    await save();
+    expect((saved() as unknown as { layout: unknown }).layout).toEqual({ margin_cm: 2.5, title_font_size: 14, section_font_size: 11, body_font_size: 12 });
+  });
+
   it('Guardar queda deshabilitado mientras no haya cambios', async () => {
     await mountBuilder();
     expect(byText('button', 'Guardar')!.hasAttribute('disabled')).toBe(true);

@@ -22,7 +22,13 @@ const paginatorFor = (content: HTMLElement, landscape: boolean): SheetPaginator 
         landscape,
         paginate: () => created.paginate(),
     };
-    const created = createDocumentPaginator(content, () => ({ ...PAGE[entry.landscape ? 'landscape' : 'portrait'], margin: MARGIN, gap: GAP }));
+    const margin = (): number => {
+        const sheet = content.parentElement;
+        const padding = sheet ? Number.parseFloat(getComputedStyle(sheet).paddingTop) : Number.NaN;
+
+        return Number.isFinite(padding) && padding > 0 ? padding : MARGIN;
+    };
+    const created = createDocumentPaginator(content, () => ({ ...PAGE[entry.landscape ? 'landscape' : 'portrait'], margin: margin(), gap: GAP }));
     paginators.set(content, entry);
     return entry;
 };
