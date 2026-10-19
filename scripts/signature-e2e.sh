@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# I-139. Prueba de extremo a extremo de la firma en el navegador:
-#   1. crea dos .p12 de prueba con OpenSSL (docente y coordinación);
-#   2. pide al backend la posición del sello (SignatureStampLocator);
-#   3. firma con el módulo del frontend (src/lib/signature) en Node;
-#   4. valida cada paso con IncrementalPdfSignatureVerifier del backend y con pdfsig.
-# Uso: scripts/signature-e2e.sh documento.pdf [carpeta-de-salida]
-# Variables: BACKEND_DIR (por defecto ../proyecto-grado-silabos-backend), P12_LEGACY=1
-# para cifrar el .p12 con 3DES/SHA-1 como muchas CA.
 set -euo pipefail
 
 input=$(realpath "${1:?Indique el PDF a firmar}")
