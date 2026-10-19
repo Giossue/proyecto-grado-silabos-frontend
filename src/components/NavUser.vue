@@ -13,7 +13,6 @@ import UserMenuContent from '@/components/UserMenuContent.vue';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
 
-// En móvil la barra está abajo: el menú se abre hacia arriba.
 const compact = useMediaQuery('(width < 40rem)');
 const user = computed<User>(() => ({
     id: sessionState.current.value?.user.id ?? '',

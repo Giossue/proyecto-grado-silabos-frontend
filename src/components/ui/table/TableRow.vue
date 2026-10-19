@@ -26,8 +26,6 @@ const annotate = (): void => {
         cell instanceof HTMLTableCellElement,
     );
     node.dataset.cardEmpty = String(cells.length === 1 && cells[0].colSpan > 1);
-    // En móvil la fila es una tarjeta: la primera columna con contenido hace de título (sin etiqueta),
-    // la casilla de selección va en la esquina y los datos cortos se reparten en dos columnas.
     let titled = false;
     let column = 0;
     for (const cell of cells) {

@@ -23,7 +23,6 @@ const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const emptyForm = () => ({ primer_nombre: '', segundo_nombre: '', primer_apellido: '', segundo_apellido: '', correo_electronico: '', role_code: 'docente', career_id: '' });
 const form = ref(emptyForm());
-// Toda cuenta se crea con las cuatro partes del nombre, todas obligatorias.
 const nameParts = [
     { key: 'primer_nombre', label: 'Primer nombre', placeholder: 'Ej. ANA' },
     { key: 'segundo_nombre', label: 'Segundo nombre', placeholder: 'Ej. MARÍA' },

@@ -15,7 +15,6 @@ import SheetOverlay from "./SheetOverlay.vue"
 interface SheetContentProps extends DialogContentProps {
   class?: HTMLAttributes["class"]
   hideClose?: boolean
-  // Paneles sin formulario (p. ej. el menú móvil) se cierran tocando fuera.
   dismissable?: boolean
 }
 

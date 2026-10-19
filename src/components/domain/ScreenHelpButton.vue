@@ -22,7 +22,6 @@ const open = ref(false);
 const panelId = 'ayuda-pantalla';
 const button = ref<{ $el: HTMLElement } | null>(null);
 const stored = ref<Corner>('bottom-left');
-// En móvil queda fijo abajo a la izquierda: a la derecha va el botón de acciones de la pantalla.
 const compact = useMediaQuery('(width < 40rem)');
 const corner = computed<Corner>({
   get: () => (compact.value ? 'bottom-left' : stored.value),
@@ -45,7 +44,6 @@ const measure = (): void => {
   if (!container) return;
   const rect = container.getBoundingClientRect();
   const bar = container.querySelector('header')?.getBoundingClientRect();
-  // Barra superior: el botón queda debajo. Barra inferior (móvil): queda encima.
   const bottomBar = bar !== undefined && bar.top > window.innerHeight / 2;
   const header = bar && !bottomBar ? bar.bottom : 0;
   ready.value = true;

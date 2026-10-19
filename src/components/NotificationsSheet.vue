@@ -24,7 +24,6 @@ const updateStatus = (value: string): void => { if (value === 'all' || value ===
 
 const route = useRoute();
 const router = useRouter();
-// En móvil la barra inferior lleva a la página completa; en escritorio abre el panel.
 const compact = useMediaQuery('(width < 40rem)');
 const { open: openDestination } = useOpenNotification();
 const open = ref(false);

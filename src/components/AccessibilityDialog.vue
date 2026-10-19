@@ -9,7 +9,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useAccessibility, type TextSize } from '@/composables/useAccessibility';
 import { accessibilityDialogOpen } from '@/state/accessibilityDialog';
 
-// `remote`: sin disparador propio; se abre desde el menú de usuario.
 const props = defineProps<{ floating?: boolean; remote?: boolean }>();
 const localOpen = ref(false);
 const open = computed({
