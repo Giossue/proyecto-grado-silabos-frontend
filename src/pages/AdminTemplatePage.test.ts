@@ -64,9 +64,10 @@ describe("AdminTemplatePage", () => {
     await flushPromises();
     await wrapper.findAll('button').find((button) => button.text() === 'Editar')!.trigger('click');
 
-    expect(wrapper.get<HTMLInputElement>('[data-section="section-1"] [aria-label="Sección Descripción de la asignatura"]').element.value).toBe('Descripción de la asignatura');
-    expect(wrapper.get<HTMLInputElement>('[data-field="field-1"] input').element.value).toBe('Descripción');
-    expect(wrapper.get<HTMLInputElement>('[aria-label="Nombre del campo Campo sin nombre"]').element.value).toBe('');
+    expect(wrapper.get<HTMLTextAreaElement>('[data-section="section-1"] [aria-label="Sección Descripción de la asignatura"]').element.value).toBe('Descripción de la asignatura');
+    expect(wrapper.get<HTMLTextAreaElement>('[data-field="field-1"] [data-field-label] textarea').element.value).toBe('Descripción');
+    expect(wrapper.findAll('[data-field-editor]')).toHaveLength(2);
+    expect(wrapper.find('[aria-label="Nombre del campo Campo sin nombre"]').exists()).toBe(false);
     expect(wrapper.find('[data-sheet], .template-sheet').exists()).toBe(true);
   });
 

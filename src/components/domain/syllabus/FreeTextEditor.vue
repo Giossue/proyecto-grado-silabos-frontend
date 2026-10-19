@@ -79,7 +79,7 @@ const editor = useEditor({
     editable: !props.disabled,
     editorProps: { handleKeyDown: (_view, event) => onSlashKey(event), handleDrop: () => true, handleDOMEvents: { dragstart: (_view, event) => { event.preventDefault(); return true; } }, attributes: { id: props.id, 'aria-label': props.label, role: 'textbox', 'aria-multiline': 'true', class: 'free-text-editor__content' } },
     extensions: [
-        StarterKit.configure({ document: false, heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false }),
+        StarterKit.configure({ document: false, heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false, ...(props.bare ? { trailingNode: false } : {}) }),
         TextAlign.configure({ types: ['paragraph'], alignments: ['left', 'center', 'right', 'justify'] }),
         Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
         DocumentWithBlocks,
@@ -165,7 +165,7 @@ defineExpose({ editor });
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
-    <EditorContent :editor="editor" :class="['overflow-x-auto text-sm', bare ? 'min-h-8 px-1 py-1' : 'min-h-32 px-3 py-2']" />
+    <EditorContent :editor="editor" :class="['overflow-x-auto', bare ? '' : 'min-h-32 px-3 py-2 text-sm']" />
     <div v-if="editor && toolbar && hasTable && !disabled" class="px-3 pb-2"><Button type="button" variant="outline" size="sm" @mousedown.prevent @click="addTableRow"><Plus data-icon="inline-start" aria-hidden="true" />Agregar fila</Button></div>
     <div v-if="slash.open && slashItems.length" role="listbox" aria-label="Datos del sistema" class="fixed z-50 flex min-w-48 flex-col rounded-md ring-1 ring-surface-ring bg-popover p-1 text-sm shadow-menu" :style="{ left: `${slash.left}px`, top: `${slash.top}px` }">
       <Button v-for="(item, position) in slashItems" :key="item.key" type="button" variant="ghost" size="sm" role="option" :aria-selected="position === slash.index" :class="['justify-start', position === slash.index ? 'bg-accent text-accent-foreground' : '']" @mousedown.prevent="chooseSlash(item.key)">{{ item.label }}</Button>

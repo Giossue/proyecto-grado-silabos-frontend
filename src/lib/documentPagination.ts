@@ -60,6 +60,16 @@ function editorUnits(host: HTMLElement): Unit[] {
             return tableUnits(table);
         }
 
+        if (child.hasAttribute('data-block')) {
+            const tables = Array.from(child.querySelectorAll('table')).filter(
+                (candidate) => !candidate.parentElement?.closest('table'),
+            );
+
+            if (tables.length > 0) {
+                return tables.flatMap(tableUnits);
+            }
+        }
+
         if (['UL', 'OL'].includes(child.tagName)) {
             const items = Array.from(child.children).filter(
                 (item): item is HTMLLIElement =>
@@ -110,6 +120,12 @@ function tableUnits(table: HTMLTableElement): Unit[] {
         ? rows.slice(0, firstBodyRow === -1 ? rows.length : firstBodyRow)
         : [];
     const units: Unit[] = [];
+    const headingOnly = (from: number, to: number) =>
+        rows
+            .slice(from, to + 1)
+            .every((row) =>
+                Array.from(row.cells).every((cell) => cell.tagName === 'TH'),
+            );
 
     for (let start = 0; start < rows.length;) {
         let end = start;
@@ -138,7 +154,8 @@ function tableUnits(table: HTMLTableElement): Unit[] {
             last: rows[end],
             keepNext:
                 rows[start].parentElement === table.tHead ||
-                repeatHeader.includes(rows[start]),
+                repeatHeader.includes(rows[start]) ||
+                headingOnly(start, end),
             flowThrough: false,
             table,
             repeatHeader:
@@ -407,7 +424,7 @@ export function createDocumentPaginator(
             );
         const editor = editorOf(unit.first);
 
-        if (editor) {
+        if (editor && !unit.first.closest('[data-block]')) {
             const requests = editorRequests.get(editor) ?? [];
 
             requests.push({

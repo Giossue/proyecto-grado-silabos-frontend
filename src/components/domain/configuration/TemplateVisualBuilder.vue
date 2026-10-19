@@ -1,23 +1,26 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, ImageUp, Pencil, Plus, Ruler, Save, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import type { TemplateField, TemplatePayload, TemplateSectionPayload } from '@/api/template';
+import type { Editor } from '@tiptap/core';
+import { ImageUp, Pencil, Plus, Ruler, Save, Trash2 } from '@lucide/vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import type { TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
 import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
+import TemplateFormatTools from '@/components/domain/configuration/TemplateFormatTools.vue';
+import TemplateInlineText from '@/components/domain/configuration/TemplateInlineText.vue';
+import TemplateSelectionTools, { type TemplateSelection } from '@/components/domain/configuration/TemplateSelectionTools.vue';
 import TemplateSheetField from '@/components/domain/configuration/TemplateSheetField.vue';
 import { apiMessage, uniqueKey } from '@/components/domain/configuration/templateStructure';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { layoutOf, layoutStyle, type DocumentLayout } from '@/lib/documentLayout';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { emptyDocument } from '@/types/configuration';
@@ -30,9 +33,11 @@ const locked = computed(() => Boolean(props.processLock));
 const preview = ref(true);
 const selectedField = ref<string | null>(null);
 const selectedSection = ref<string | null>(null);
-const selectField = (id: string): void => { selectedField.value = id; selectedSection.value = null; };
+const activeEditor = shallowRef<Editor | null>(null);
+const naming = ref<string | null>(null);
+const selectField = (id: string, editor: Editor | null): void => { selectedField.value = id; selectedSection.value = null; activeEditor.value = editor; };
 const focusId = ref<string | null>(null);
-const selectSection = (id: string): void => { selectedSection.value = id; selectedField.value = null; };
+const selectSection = (id: string): void => { selectedSection.value = id; selectedField.value = null; activeEditor.value = null; };
 const root = ref<HTMLElement | null>(null);
 const available = ref(0);
 let resizeObserver: ResizeObserver | null = null;
@@ -67,9 +72,10 @@ const paginate = (): void => {
 const clearSelectionOutside = (event: PointerEvent): void => {
     const target = event.target;
     if (!(target instanceof Element)) return;
-    if (target.closest('[data-field], [data-section-heading], [data-insert-point], [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [data-slot="popover-content"]')) return;
+    if (target.closest('[data-field], [data-section-heading], [data-insert-point], [data-template-ribbon], [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [data-slot="popover-content"]')) return;
     selectedField.value = null;
     selectedSection.value = null;
+    activeEditor.value = null;
 };
 onMounted(() => {
     document.addEventListener('pointerdown', clearSelectionOutside);
@@ -168,6 +174,7 @@ const cancelEditing = (): void => {
     error.value = null;
     selectedField.value = null;
     selectedSection.value = null;
+    activeEditor.value = null;
 };
 const save = async (): Promise<void> => {
     if (busy.value) return;
@@ -190,6 +197,7 @@ const save = async (): Promise<void> => {
         preview.value = true;
         selectedField.value = null;
         selectedSection.value = null;
+        activeEditor.value = null;
         emit('changed');
     } catch (reason) {
         error.value = apiMessage(reason, 'No se pudo guardar la plantilla');
@@ -272,16 +280,55 @@ const setOrientation = (section: TemplateSectionPayload, orientation: 'portrait'
     section.orientation = orientation;
     touched();
 };
+const selected = computed(() => {
+    for (const [sectionIndex, section] of draft.value.entries()) {
+        if (selectedSection.value === section.id) return { section, sectionIndex, fieldIndex: -1 };
+        const fieldIndex = section.fields.findIndex((field) => field.id === selectedField.value);
+        if (fieldIndex >= 0) return { section, sectionIndex, fieldIndex };
+    }
+    return null;
+});
+const selection = computed<TemplateSelection | null>(() => {
+    const target = selected.value;
+    if (!target) return null;
+    if (target.fieldIndex < 0) return { kind: 'section', section: target.section, canMoveUp: target.sectionIndex > 0, canMoveDown: target.sectionIndex < draft.value.length - 1 };
+    return { kind: 'field', field: target.section.fields[target.fieldIndex]!, canMoveUp: target.fieldIndex > 0, canMoveDown: target.fieldIndex < target.section.fields.length - 1 };
+});
+const ribbonEditor = computed(() => selection.value?.kind === 'field' && activeEditor.value && !activeEditor.value.isDestroyed ? activeEditor.value : null);
+const patchSelectedField = (changes: Partial<TemplateField>): void => {
+    const target = selected.value;
+    const field = target && target.fieldIndex >= 0 ? target.section.fields[target.fieldIndex] : undefined;
+    if (target && field) setField(target.section.id, field.id, { ...field, ...changes });
+};
+const applyPreset = (preset: TemplatePreset): void => patchSelectedField({ quien_llena: preset.quien_llena, content: JSON.parse(JSON.stringify(preset.content)) as TemplateField['content'] });
+const moveSelected = (direction: -1 | 1): void => {
+    const target = selected.value;
+    if (!target) return;
+    if (target.fieldIndex < 0) moveSection(target.sectionIndex, direction);
+    else moveField(target.section.id, target.fieldIndex, direction);
+};
+const removeSelected = (): void => {
+    const target = selected.value;
+    if (!target) return;
+    const field = target.section.fields[target.fieldIndex];
+    removal.value = field
+        ? { kind: 'field', id: field.id, name: fieldName(field), count: 0 }
+        : { kind: 'section', id: target.section.id, name: target.section.title, count: target.section.fields.length };
+};
+const toggleOrientation = (): void => {
+    const section = selected.value?.section;
+    if (section && selected.value!.fieldIndex < 0) setOrientation(section, section.orientation === 'landscape' ? 'portrait' : 'landscape');
+};
+const nameSelected = (): void => { naming.value = selectedField.value; };
 const setTitle = (section: TemplateSectionPayload, title: string): void => {
     section.title = title;
     touched();
 };
-const blurTarget = (event: Event): void => { if (event.target instanceof HTMLElement) event.target.blur(); };
 const setTitleRef = (component: unknown, sectionId: string): void => {
-    const element = (component as { $el?: unknown } | null)?.$el;
-    if (focusId.value !== sectionId || !(element instanceof HTMLInputElement)) return;
+    const input = component as { focus?: () => void } | null;
+    if (focusId.value !== sectionId || !input?.focus) return;
     focusId.value = null;
-    void nextTick(() => { element.focus(); element.select(); });
+    void nextTick(() => input.focus?.());
 };
 
 const confirmRemoval = (): void => {
@@ -301,11 +348,27 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
   <div ref="root" class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
-    <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full max-w-3xl justify-end">
-      <div class="pointer-events-auto flex items-center gap-2 rounded-lg ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
-        <Button v-if="preview" type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
-        <template v-else>
-          <span v-if="changed" class="px-1 text-sm text-muted-foreground" aria-live="polite">Sin guardar</span>
+    <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full justify-end">
+      <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-lg ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
+        <Button type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
+      </div>
+      <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 flex-wrap items-center gap-1 rounded-lg ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
+        <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" />
+        <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
+        <TemplateSelectionTools
+          :selection="selection"
+          :presets="presets"
+          :locked="locked"
+          :busy="busy"
+          @responsible="patchSelectedField({ quien_llena: $event })"
+          @preset="applyPreset"
+          @name="nameSelected"
+          @move="moveSelected"
+          @remove="removeSelected"
+          @orientation="toggleOrientation"
+        />
+        <div class="ml-auto flex shrink-0 items-center gap-2 pl-2">
+          <span class="sr-only" aria-live="polite"><template v-if="changed">Sin guardar</template></span>
           <Popover v-if="layoutControls.length">
             <PopoverTrigger as-child>
               <Button type="button" variant="outline" :disabled="busy || locked"><Ruler data-icon="inline-start" aria-hidden="true" />Diseño</Button>
@@ -324,8 +387,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
             </PopoverContent>
           </Popover>
           <Button type="button" variant="outline" :disabled="busy" @click="cancelEditing">Cancelar</Button>
-          <Button type="button" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar</Button>
-        </template>
+          <Button type="button" class="relative" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar<span v-if="changed" data-unsaved class="absolute -right-1 -top-1 size-2.5 rounded-full bg-warning ring-2 ring-background" aria-hidden="true" /></Button>
+        </div>
       </div>
     </div>
 
@@ -344,7 +407,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
           <img :src="logos.faculty" alt="Logo de la facultad" class="max-h-12 object-contain" @load="paginate">
         </div>
         <div class="flex items-center justify-center px-2 py-1">
-          <Input v-if="!preview && !locked" :model-value="titleDraft" maxlength="180" aria-label="Título del documento" class="template-sheet-title h-auto border-transparent bg-transparent px-0 py-0 shadow-none hover:border-input focus-visible:border-input" style="font-size: var(--document-title-size); font-weight: 700; color: var(--document-official-blue); text-align: center" @update:model-value="setDocumentTitle(String($event))" />
+          <div v-if="!preview && !locked" class="template-sheet-title w-full"><TemplateInlineText :model-value="titleDraft" :maxlength="180" label="Título del documento" class="rounded-sm text-center hover:outline hover:outline-1 hover:outline-primary/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary" @update:model-value="setDocumentTitle" /></div>
           <h2 v-else class="template-sheet-title">{{ shownTitle }}</h2>
         </div>
       </header>
@@ -353,30 +416,15 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 scroll-mt-36 flex-col gap-3">
         <TemplateInsertPoint v-if="!preview && !locked && (sectionIndex === 0 || (sections[sectionIndex - 1]?.fields.length ?? 0) === 0)" :disabled="locked || busy" :actions="[{ key: 'section', label: 'Nueva sección' }]" position="top" gap="section" @insert="addSection(sectionIndex)" />
         <h3 v-if="preview" class="font-bold" data-section-title>{{ section.title }}</h3>
-        <div v-else data-section-heading :class="cn('group relative flex items-center gap-2 rounded-sm px-1 py-1 outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')" @focusin="selectSection(section.id)">
-          <Input
+        <div v-else data-section-heading data-section-title :class="cn('rounded-sm font-bold outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')" @focusin="selectSection(section.id)">
+          <TemplateInlineText
             :ref="(element) => setTitleRef(element, section.id)"
             :model-value="section.title"
-            maxlength="180"
+            :maxlength="180"
             :disabled="locked"
-            :aria-label="`Sección ${section.title}`"
-            class="h-auto min-w-0 flex-1 border-transparent bg-transparent px-0 py-0 font-bold shadow-none focus-visible:border-transparent focus-visible:ring-0"
-            data-section-title
-            style="font-size: var(--document-section-size)"
-            @update:model-value="setTitle(section, String($event))"
-            @keydown.enter.prevent="blurTarget($event)"
+            :label="`Sección ${section.title}`"
+            @update:model-value="setTitle(section, $event)"
           />
-          <div :class="cn('flex shrink-0 items-center gap-0.5 focus-within:opacity-100 group-hover:opacity-100', selectedSection === section.id ? 'opacity-100' : 'opacity-0')">
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <Button type="button" variant="ghost" size="sm" :disabled="locked || busy" :aria-label="`Orientación de la sección ${section.title}`" :aria-pressed="section.orientation === 'landscape'" @click="setOrientation(section, section.orientation === 'landscape' ? 'portrait' : 'landscape')"><RectangleHorizontal v-if="section.orientation === 'landscape'" data-icon="inline-start" aria-hidden="true" /><RectangleVertical v-else data-icon="inline-start" aria-hidden="true" />{{ section.orientation === 'landscape' ? 'Horizontal' : 'Vertical' }}</Button>
-              </TooltipTrigger>
-              <TooltipContent>{{ section.orientation === 'landscape' ? 'Hoja horizontal: pasar a vertical' : 'Hoja vertical: pasar a horizontal' }}</TooltipContent>
-            </Tooltip>
-            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === 0" :aria-label="`Subir la sección ${section.title}`" @click="moveSection(sectionIndex, -1)"><ArrowUp aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || sectionIndex === sections.length - 1" :aria-label="`Bajar la sección ${section.title}`" @click="moveSection(sectionIndex, 1)"><ArrowDown aria-hidden="true" /></Button>
-            <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar la sección ${section.title}`" @click="removal = { kind: 'section', id: section.id, name: section.title, count: fields.length }"><Trash2 aria-hidden="true" /></Button>
-          </div>
         </div>
 
         <ol class="flex flex-col gap-3">
@@ -388,17 +436,12 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
             <TemplateSheetField
               v-else
               :field="field"
-              :presets="presets"
               :locked="locked"
-              :selected="selectedField === field.id"
               :focus-on-create="focusId === field.id"
-              :can-move-up="fieldIndex > 0"
-              :can-move-down="fieldIndex < fields.length - 1"
-              :busy="busy"
-              @select="selectField(field.id)"
+              :naming="naming === field.id"
+              @select="selectField(field.id, $event)"
+              @named="naming = null"
               @update:field="setField(section.id, field.id, $event)"
-              @move="moveField(section.id, fieldIndex, $event)"
-              @remove="removal = { kind: 'field', id: field.id, name: fieldName(field), count: 0 }"
             />
           </li>
           </template>

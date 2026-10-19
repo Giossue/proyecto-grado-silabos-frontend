@@ -109,6 +109,7 @@ export const renderFreeText = (node: DocumentNode, options?: RenderOptions): VNo
         ]);
     }
     const tag = TAGS[node.type] ?? 'div';
+    if (node.type === 'paragraph' && children.length === 0) children.push(h('br'));
     const span = node.type === 'tableCell' || node.type === 'tableHeader'
         ? {
             colspan: Number(node.attrs?.colspan ?? 1),

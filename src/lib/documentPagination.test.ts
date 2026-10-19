@@ -65,6 +65,57 @@ describe('createDocumentPaginator', () => {
         expect(last[0].height).toBe(30);
     });
 
+    it('no deja filas solo de encabezado al final de una hoja', () => {
+        const root = document.createElement('div');
+        root.innerHTML = `
+            <table><tbody>
+                <tr><th>Unidad</th><th>1</th></tr>
+                <tr><th>Resultados</th><th></th></tr>
+                <tr><td>Semana</td><td>1</td></tr>
+            </tbody></table>`;
+        const bounds = [[50, 65], [65, 80], [80, 130]];
+        root.querySelectorAll('tr').forEach((row, index) => {
+            row.getBoundingClientRect = () =>
+                ({ top: bounds[index][0], bottom: bounds[index][1], left: 0, right: 100 }) as DOMRect;
+        });
+        root.getBoundingClientRect = () => ({ top: 0 }) as DOMRect;
+        document.body.append(root);
+
+        createDocumentPaginator(root, () => PAGE).paginate();
+
+        const rows = Array.from(root.querySelectorAll('tr'));
+        expect(rows.filter((row) => row.hasAttribute('data-page-spacer'))).toHaveLength(1);
+        expect(rows[0].hasAttribute('data-page-spacer')).toBe(true);
+    });
+
+    it('parte por filas las tablas de un bloque dentro del editor, sin pedirle el salto al editor', () => {
+        const root = document.createElement('div');
+        root.innerHTML = `
+            <div data-page-unit>
+                <div contenteditable="true">
+                    <div data-block contenteditable="false">
+                        <table><tbody><tr><td>A</td></tr><tr><td>B</td></tr></tbody></table>
+                    </div>
+                </div>
+            </div>`;
+        root.querySelectorAll('tr').forEach((row, index) => {
+            row.getBoundingClientRect = () =>
+                ({ top: 10 + index * 60, bottom: 70 + index * 60, left: 0, right: 100 }) as DOMRect;
+        });
+        root.getBoundingClientRect = () => ({ top: 0 }) as DOMRect;
+        document.body.append(root);
+        const host = root.querySelector<HTMLElement>('[contenteditable="true"]')!;
+        const requests: PageSpacerRequest[][] = [];
+        const unregister = registerPageEditor(host, { clear: () => undefined, apply: (next) => requests.push(next) });
+
+        createDocumentPaginator(root, () => PAGE).paginate();
+        unregister();
+
+        expect(requests).toHaveLength(0);
+        expect(root.querySelectorAll('[data-block] tr[data-page-spacer]')).toHaveLength(1);
+        expect(root.querySelectorAll('tr')[1].hasAttribute('data-page-spacer')).toBe(true);
+    });
+
     it('mide respecto de la hoja aunque el navegador desplace la vista al insertar un salto', () => {
         const root = document.createElement('div');
         root.innerHTML = `

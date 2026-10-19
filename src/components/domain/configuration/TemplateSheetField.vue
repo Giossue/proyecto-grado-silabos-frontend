@@ -1,79 +1,55 @@
 <script setup lang="ts">
-import { ArrowDown, ArrowUp, ChevronDown, Trash2 } from '@lucide/vue';
-import { computed, nextTick, onMounted, ref } from 'vue';
-import type { TemplateField, TemplatePreset } from '@/api/template';
+import type { Editor } from '@tiptap/core';
+import { computed, nextTick, onMounted, ref, shallowRef, watch } from 'vue';
+import type { TemplateField } from '@/api/template';
+import TemplateInlineText from '@/components/domain/configuration/TemplateInlineText.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import type { DocumentNode } from '@/lib/templateDocument';
-import { cn } from '@/lib/utils';
-import { FIELD_RESPONSIBLES, responsibleLabel, type FieldResponsible } from '@/types/configuration';
 
 const props = defineProps<{
-    presets?: TemplatePreset[];
     block?: boolean;
     locked: boolean;
-    selected: boolean;
     focusOnCreate?: boolean;
-    canMoveUp: boolean;
-    canMoveDown: boolean;
-    busy?: boolean;
+    naming?: boolean;
 }>();
 const field = defineModel<TemplateField>('field', { required: true });
-const emit = defineEmits<{ select: []; move: [direction: -1 | 1]; remove: [] }>();
+const emit = defineEmits<{ select: [editor: Editor | null]; named: [] }>();
 
 const patch = (changes: Partial<TemplateField>): void => { field.value = { ...field.value, ...changes }; };
 const label = computed({ get: () => field.value.label, set: (value: string) => patch({ label: value }) });
 const content = computed({ get: () => field.value.content, set: (value: DocumentNode) => patch({ content: value }) });
-const editor = ref<{ editor: { commands: { focus: (position?: string) => void } } | null } | null>(null);
+const editor = shallowRef<{ editor: Editor | null } | null>(null);
+const labelInput = ref<{ focus: () => void } | null>(null);
+const labelFocused = ref(false);
+const showsLabel = computed(() => field.value.label.trim() !== '' || props.naming || labelFocused.value);
 
 onMounted(() => {
     if (props.focusOnCreate) void nextTick(() => editor.value?.editor?.commands.focus('end'));
 });
+watch(() => props.naming, (naming) => { if (naming) void nextTick(() => labelInput.value?.focus()); });
 
-const applyPreset = (preset: TemplatePreset): void => {
-    patch({ quien_llena: preset.quien_llena, content: JSON.parse(JSON.stringify(preset.content)) as DocumentNode });
+const leaveLabel = (): void => {
+    labelFocused.value = false;
+    emit('named');
 };
 const name = (): string => field.value.label.trim() || 'Campo sin nombre';
+const select = (): void => emit('select', editor.value?.editor ?? null);
 </script>
 
 <template>
-  <div :data-field-editor="field.id" class="flex min-w-0 flex-col gap-1" @focusin="emit('select')" @pointerdown="emit('select')">
-    <div data-field-label class="flex min-w-0 items-center gap-2">
-      <Input
+  <div :data-field-editor="field.id" class="flex min-w-0 flex-col gap-1" @focusin="select" @pointerdown="select">
+    <div v-if="showsLabel" data-field-label class="flex min-w-0 font-bold">
+      <TemplateInlineText
+        ref="labelInput"
         v-model="label"
-        maxlength="180"
-        placeholder="Nombre del campo (opcional)"
-        :aria-label="`Nombre del campo ${name()}`"
+        :maxlength="180"
+        placeholder="Nombre del campo"
+        :label="`Nombre del campo ${name()}`"
         :disabled="locked || block"
-        class="h-7 min-w-0 flex-1 border-transparent bg-transparent px-0 font-bold shadow-none hover:border-transparent focus-visible:border-input focus-visible:px-2"
+        @focus="labelFocused = true"
+        @blur="leaveLabel"
       />
     </div>
-    <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :blocks="field.quien_llena === 'institucional' ? 'fill' : 'configure'" :disabled="locked || block" :toolbar="selected && !locked && !block" bare /></div>
-    <div :class="cn('absolute -top-7 right-0 z-10 flex items-center gap-0.5 rounded-md ring-1 ring-surface-ring bg-background p-0.5 shadow-menu focus-within:opacity-100 group-hover:opacity-100', selected ? 'opacity-100' : 'opacity-0')">
-      <DropdownMenu v-if="!block">
-        <DropdownMenuTrigger as-child>
-          <Button type="button" variant="ghost" size="sm" :disabled="locked" :aria-label="`Quién llena el campo ${name()}`" data-field-responsible>{{ responsibleLabel(field.quien_llena) }}<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuRadioGroup :model-value="field.quien_llena" @update:model-value="patch({ quien_llena: $event as FieldResponsible })">
-            <DropdownMenuRadioItem v-for="item in FIELD_RESPONSIBLES" :key="item.value" :value="item.value">{{ item.label }}</DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
-          <template v-if="presets?.length">
-            <DropdownMenuSeparator />
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger>Plantilla</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuItem v-for="preset in presets" :key="preset.key" @select="applyPreset(preset)">{{ preset.label }}</DropdownMenuItem>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          </template>
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !canMoveUp" :aria-label="`Subir el campo ${name()}`" @click="emit('move', -1)"><ArrowUp aria-hidden="true" /></Button>
-      <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !canMoveDown" :aria-label="`Bajar el campo ${name()}`" @click="emit('move', 1)"><ArrowDown aria-hidden="true" /></Button>
-      <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar el campo ${name()}`" @click="emit('remove')"><Trash2 aria-hidden="true" /></Button>
-    </div>
+    <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :blocks="field.quien_llena === 'institucional' ? 'fill' : 'configure'" :disabled="locked || block" :toolbar="false" bare /></div>
   </div>
 </template>

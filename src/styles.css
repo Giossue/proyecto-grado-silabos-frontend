@@ -636,6 +636,48 @@
     }
 }
 
+.template-sheet.template-sheet :is(.free-text-content, .free-text-editor__content) {
+    min-height: 0;
+    line-height: var(--document-line-height);
+}
+
+.template-sheet.template-sheet :is(.free-text-content, .free-text-editor__content) p {
+    margin: 0 0 0.35em;
+}
+
+.template-sheet.template-sheet :is(.free-text-content, .free-text-editor__content) :is(td, th) p {
+    margin: 0;
+}
+
+.template-sheet.template-sheet :is(.free-text-content, .free-text-editor__content) table {
+    margin: 0.35em 0;
+}
+
+.template-sheet.template-sheet :is(.free-text-content, .free-text-editor__content) :is(td, th) {
+    line-height: var(--document-line-height);
+}
+
+.template-sheet.template-sheet .free-text-editor__content th {
+    background-color: transparent;
+    font-weight: bold;
+}
+
+.template-sheet [data-field-body] > p {
+    line-height: var(--document-line-height);
+}
+
+.template-sheet.template-sheet .free-text-editor__content > p:only-child:has(> br.ProseMirror-trailingBreak:only-child) {
+    margin: 0;
+}
+
+.template-sheet.template-sheet .free-text-editor__content > p:only-child:has(> br.ProseMirror-trailingBreak:only-child)::before {
+    content: 'Sin contenido';
+    float: left;
+    height: 0;
+    color: var(--muted-foreground);
+    pointer-events: none;
+}
+
 @layer components {
     .workspace-layout[data-layout='syllabus'] > aside {
         min-width: 0;
