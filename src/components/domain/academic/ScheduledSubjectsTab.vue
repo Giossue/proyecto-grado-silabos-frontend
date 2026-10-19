@@ -59,21 +59,44 @@ const planningId = ref<string | null>(null);
 const planningOpen = ref(false);
 const planning = computed(() => props.data.scheduledSubjects.find((item) => item.subject_id === planningId.value) ?? null);
 const openPlanning = (item: ScheduledRow): void => { planningId.value = item.subject_id; planningOpen.value = true; };
-const selected = ref<string[]>([]);
+const selectedParallels = ref<string[]>([]);
+const selectedBare = ref<string[]>([]);
+const selectableParallels = (item: ScheduledRow) => item.parallels.filter((parallel) => parallel.editable !== false);
+const subjectState = (item: ScheduledRow): boolean | "indeterminate" => {
+  const parallels = selectableParallels(item);
+  if (parallels.length === 0) return selectedBare.value.includes(item.subject_id);
+  const count = parallels.filter((parallel) => selectedParallels.value.includes(parallel.id)).length;
+  return count === 0 ? false : count === parallels.length ? true : "indeterminate";
+};
 const selectableItems = computed(() => filter.items.value.filter(canPlan));
-const selectedRows = computed(() => props.data.scheduledSubjects.filter((item) => selected.value.includes(item.subject_id)));
+const selectedRows = computed(() => props.data.scheduledSubjects.filter((item) => subjectState(item) !== false));
+const selectedParallelIds = computed(() => selectedParallels.value);
 const allSelected = computed<boolean | "indeterminate">(() => {
-  const count = selectableItems.value.filter((item) => selected.value.includes(item.subject_id)).length;
-  return count === 0 ? false : count === selectableItems.value.length ? true : "indeterminate";
+  const states = selectableItems.value.map(subjectState);
+  const full = states.filter((state) => state === true).length;
+  const some = states.filter((state) => state !== false).length;
+  return some === 0 ? false : full === selectableItems.value.length ? true : "indeterminate";
 });
-const toggleItem = (item: ScheduledRow, checked: boolean | "indeterminate"): void => {
-  selected.value = checked === true ? [...new Set([...selected.value, item.subject_id])] : selected.value.filter((id) => id !== item.subject_id);
+const setSubject = (item: ScheduledRow, checked: boolean): void => {
+  const parallels = selectableParallels(item).map((parallel) => parallel.id);
+  if (parallels.length === 0) {
+    selectedBare.value = checked ? [...new Set([...selectedBare.value, item.subject_id])] : selectedBare.value.filter((id) => id !== item.subject_id);
+    return;
+  }
+  selectedParallels.value = checked ? [...new Set([...selectedParallels.value, ...parallels])] : selectedParallels.value.filter((id) => !parallels.includes(id));
+};
+const toggleItem = (item: ScheduledRow, checked: boolean | "indeterminate"): void => setSubject(item, checked === true);
+const toggleParallel = (id: string, checked: boolean | "indeterminate"): void => {
+  selectedParallels.value = checked === true ? [...new Set([...selectedParallels.value, id])] : selectedParallels.value.filter((current) => current !== id);
 };
 const toggleAll = (checked: boolean | "indeterminate"): void => {
-  const ids = selectableItems.value.map((item) => item.subject_id);
-  selected.value = checked === true ? [...new Set([...selected.value, ...ids])] : selected.value.filter((id) => !ids.includes(id));
+  for (const item of selectableItems.value) setSubject(item, checked === true);
 };
-watch(() => props.data.scheduledSubjects, (rows) => { selected.value = selected.value.filter((id) => rows.some((item) => item.subject_id === id)); });
+const clearSelection = (): void => { selectedParallels.value = []; selectedBare.value = []; };
+watch(() => props.data.scheduledSubjects, (rows) => {
+  selectedParallels.value = selectedParallels.value.filter((id) => rows.some((item) => item.parallels.some((parallel) => parallel.id === id)));
+  selectedBare.value = selectedBare.value.filter((id) => rows.some((item) => item.subject_id === id));
+});
 const emptyMessage = computed(() => filter.active.value ? "No hay materias que coincidan con los filtros." : "No hay materias en la malla.");
 </script>
 
@@ -106,29 +129,30 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
       <ParallelBulkActions
         v-if="selectedRows.length"
         :items="selectedRows"
+        :parallel-ids="selectedParallelIds"
         :shift-options="data.options.shiftOptions"
         :teacher-users="teacherUsers"
         :assignments="assignments"
         @changed="emit('changed', $event)"
         @failed="emit('failed', $event)"
-        @clear="selected = []"
+        @clear="clearSelection"
       />
       <Table label="Materias programadas">
         <TableHeader><TableRow><TableHead class="w-10"><Checkbox v-if="selectableItems.length" :model-value="allSelected" aria-label="Seleccionar las materias visibles" @update:model-value="toggleAll" /></TableHead><TableHead>Materia</TableHead><TableHead class="text-center">Ciclo</TableHead><TableHead class="text-center">Paralelos</TableHead><TableHead class="text-center">Jornada</TableHead><TableHead>Docente</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="!items.length" :colspan="6">{{ emptyMessage }}</TableEmpty>
           <TableRow v-for="item in items" v-else :key="item.subject_id" :class="canPlan(item) ? 'cursor-pointer' : ''" :tabindex="canPlan(item) ? 0 : undefined" :aria-label="canPlan(item) ? `Paralelos y docentes de ${item.label}` : undefined" @click="canPlan(item) && activateRow($event, () => openPlanning(item))" @keydown.enter.self.prevent="canPlan(item) && openPlanning(item)" @keydown.space.self.prevent="canPlan(item) && openPlanning(item)">
-            <TableCell><Checkbox v-if="canPlan(item)" :model-value="selected.includes(item.subject_id)" :aria-label="`Seleccionar ${item.label}`" @update:model-value="toggleItem(item, $event)" /></TableCell>
+            <TableCell><Checkbox v-if="canPlan(item)" :model-value="subjectState(item)" :aria-label="`Seleccionar ${item.label}`" @update:model-value="toggleItem(item, $event)" /></TableCell>
             <TableCell>{{ item.subject_name }}</TableCell>
             <TableCell class="text-center">{{ item.subject_cycle === null ? "Sin ciclo" : item.subject_cycle }}</TableCell>
-            <TableCell data-card-hide="true" class="text-center"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center justify-center border-border px-2 not-first:border-t">{{ parallel.code }}</li></ul><span v-else class="text-muted-foreground">Sin paralelos</span></TableCell>
+            <TableCell data-card-hide="true" class="text-center"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center justify-center gap-2 border-border px-2 not-first:border-t"><Checkbox v-if="canPlan(item) && parallel.editable !== false" :model-value="selectedParallels.includes(parallel.id)" :aria-label="`Seleccionar el paralelo ${parallel.code} de ${item.label}`" @update:model-value="toggleParallel(parallel.id, $event)" />{{ parallel.code }}</li></ul><span v-else class="text-muted-foreground">Sin paralelos</span></TableCell>
             <TableCell data-card-hide="true" class="text-center"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center justify-center border-border px-2 not-first:border-t">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
             <TableCell data-card-hide="true"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center border-border px-2 not-first:border-t" :class="teacherByParallel.get(parallel.id) ? '' : 'text-muted-foreground'">{{ teacherByParallel.get(parallel.id) ?? 'Sin docente' }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
             <TableCell class="sm:hidden" data-card-span="full">
               <p class="mb-1 text-xs font-medium text-muted-foreground">Paralelos</p>
               <ul v-if="item.parallels.length" class="flex flex-col divide-y divide-border rounded-md ring-1 ring-surface-ring">
                 <li v-for="parallel in item.parallels" :key="parallel.id" class="flex flex-col gap-0.5 px-3 py-2">
-                  <span class="flex items-baseline gap-2"><span class="font-semibold">Paralelo {{ parallel.code }}</span><span class="text-sm text-muted-foreground">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</span></span>
+                  <span class="flex items-center gap-2"><Checkbox v-if="canPlan(item) && parallel.editable !== false" :model-value="selectedParallels.includes(parallel.id)" :aria-label="`Seleccionar el paralelo ${parallel.code} de ${item.label}`" @update:model-value="toggleParallel(parallel.id, $event)" /><span class="font-semibold">Paralelo {{ parallel.code }}</span><span class="text-sm text-muted-foreground">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</span></span>
                   <span class="text-sm" :class="teacherByParallel.get(parallel.id) ? '' : 'text-muted-foreground'">{{ teacherByParallel.get(parallel.id) ?? 'Sin docente' }}</span>
                 </li>
               </ul>

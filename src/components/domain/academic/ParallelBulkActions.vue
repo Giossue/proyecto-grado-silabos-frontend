@@ -20,6 +20,7 @@ type Row = ScheduledSubjects['scheduledSubjects'][number];
 
 const props = defineProps<{
   items: Row[];
+  parallelIds: string[];
   shiftOptions: ScheduledSubjects['options']['shiftOptions'];
   teacherUsers: TeacherAssignments['options']['teacherUsers'];
   assignments: TeacherAssignments['teacherAssignments'];
@@ -28,7 +29,12 @@ const emit = defineEmits<{ changed: [message: string]; failed: [message: string]
 
 const NO_TEACHER = 'none';
 const busy = ref(false);
-const label = computed(() => `${props.items.length} ${props.items.length === 1 ? 'materia seleccionada' : 'materias seleccionadas'}`);
+const label = computed(() => {
+  const subjects = `${props.items.length} ${props.items.length === 1 ? 'materia' : 'materias'}`;
+  const count = props.parallelIds.length;
+  return count === 0 ? `${subjects} seleccionada${props.items.length === 1 ? '' : 's'}` : `${subjects} y ${count} ${count === 1 ? 'paralelo seleccionado' : 'paralelos seleccionados'}`;
+});
+const chosen = (item: Row) => item.parallels.filter((parallel) => props.parallelIds.includes(parallel.id));
 const assignmentOf = (parallelId: string) => props.assignments.find((item) => item.parallel_id === parallelId && item.active) ?? null;
 
 const run = async (steps: Array<() => Promise<unknown>>, done: string, nothing: string): Promise<void> => {
@@ -63,14 +69,14 @@ const addParallel = (shift: string) => run(
   'No hay materias seleccionadas.',
 );
 const setShift = (shift: string) => run(
-  props.items.flatMap((item) => item.parallels
+  props.items.flatMap((item) => chosen(item)
     .filter((parallel) => parallel.editable !== false && parallel.shift !== shift)
     .map((parallel) => () => updateParallel(parallel.id, { code: parallel.code, shift }))),
   'Jornada actualizada en los paralelos seleccionados.',
   'Los paralelos seleccionados ya tenían esa jornada.',
 );
 const setTeacher = (userId: string) => run(
-  props.items.flatMap((item) => item.parallels
+  props.items.flatMap((item) => chosen(item)
     .filter((parallel) => assignmentOf(parallel.id)?.editable !== false && (assignmentOf(parallel.id)?.user_id ?? NO_TEACHER) !== userId)
     .map((parallel) => async () => {
       const current = assignmentOf(parallel.id);
@@ -101,13 +107,13 @@ const setTeacher = (userId: string) => run(
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Asignar jornada</DropdownMenuSubTrigger>
+          <DropdownMenuSubTrigger :disabled="parallelIds.length === 0">Asignar jornada</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
             <DropdownMenuItem v-for="option in shiftOptions" :key="option.value" @select="setShift(option.value)">{{ option.label }}</DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Asignar docente</DropdownMenuSubTrigger>
+          <DropdownMenuSubTrigger :disabled="parallelIds.length === 0">Asignar docente</DropdownMenuSubTrigger>
           <DropdownMenuSubContent class="max-h-72 overflow-y-auto">
             <DropdownMenuItem @select="setTeacher(NO_TEACHER)">Sin docente</DropdownMenuItem>
             <DropdownMenuItem v-for="teacher in teacherUsers" :key="teacher.id" @select="setTeacher(teacher.id)">{{ teacher.name }}</DropdownMenuItem>

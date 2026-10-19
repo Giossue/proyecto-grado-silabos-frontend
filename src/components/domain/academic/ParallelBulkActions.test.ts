@@ -17,6 +17,7 @@ const item = (id: string, parallels: Array<{ id: string; code: string; shift: st
 });
 const mountBar = () => mount(ParallelBulkActions, {
     props: {
+        parallelIds: ['p1'],
         items: [item('s1', [{ id: 'p1', code: 'A', shift: 'matutina' }]), item('s2', [])],
         shiftOptions: [{ value: 'matutina', label: 'Matutina' }, { value: 'vespertina', label: 'Vespertina' }],
         teacherUsers: [{ id: 't1', name: 'Docente Uno', email: 'a@b.c' }],
@@ -27,7 +28,7 @@ const mountBar = () => mount(ParallelBulkActions, {
 
 describe('ParallelBulkActions', () => {
     it('muestra cuántas materias hay seleccionadas', () => {
-        expect(mountBar().text()).toContain('2 materias seleccionadas');
+        expect(mountBar().text()).toContain('2 materias y 1 paralelo seleccionado');
     });
 
     it('agrega el siguiente paralelo libre a cada materia con la jornada elegida', async () => {
