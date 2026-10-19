@@ -127,7 +127,7 @@ describe('DocumentSignatureCard', () => {
     expect(wrapper.text()).toContain('Pendiente coordinación');
     expect(wrapper.text()).toContain('DOCENTE DE PRUEBA');
     expect(wrapper.text()).not.toContain('Firmar electrónicamente');
-    expect(wrapper.text()).toContain('Descargar PDF firmado');
+    expect(wrapper.text()).not.toContain('Descargar PDF');
   });
 
   it('explica la clave incorrecta junto al campo de la clave', async () => {
@@ -183,7 +183,14 @@ describe('DocumentSignatureCard', () => {
 
     expect(wrapper.text()).toContain('Primero firma el docente del sílabo');
     expect(wrapper.text()).not.toContain('Firmar electrónicamente');
-    expect(wrapper.text()).toContain('Descargar PDF');
+    expect(wrapper.text()).not.toContain('Descargar PDF');
+  });
+
+  it('solo ofrece descargar el PDF cuando están las tres firmas', async () => {
+    getSignatureStatus.mockResolvedValue(status({ state: 'firmado', can_sign: false, stamp: null }));
+    const wrapper = await mountCard();
+
+    expect(wrapper.text()).toContain('Descargar PDF firmado');
   });
 
   it('biblioteca completa el documento después de coordinación', async () => {

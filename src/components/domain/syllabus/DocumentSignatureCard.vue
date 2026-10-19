@@ -184,7 +184,7 @@ onMounted(load);
         </p>
         <div class="flex flex-wrap gap-2">
           <Button v-if="status.can_sign" @click="open = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar electrónicamente</Button>
-          <Button v-if="status.artifact_id && status.state !== 'sin_documento'" variant="outline" :disabled="downloading" @click="download"><Spinner v-if="downloading" data-icon="inline-start" /><Download v-else data-icon="inline-start" aria-hidden="true" />{{ status.signatures.length ? 'Descargar PDF firmado' : 'Descargar PDF' }}</Button>
+          <Button v-if="status.artifact_id && status.state === 'firmado'" variant="outline" :disabled="downloading" @click="download"><Spinner v-if="downloading" data-icon="inline-start" /><Download v-else data-icon="inline-start" aria-hidden="true" />Descargar PDF firmado</Button>
         </div>
       </template>
     </CardContent>
