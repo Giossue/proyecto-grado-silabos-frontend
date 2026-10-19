@@ -60,7 +60,7 @@ const qrImage = computed(() => `data:image/svg+xml;utf8,${encodeURIComponent(pro
             <div class="relative flex w-auto flex-col items-center justify-center gap-5">
                 <InputError v-if="error" :message="error" />
                 <template v-if="!verification">
-                    <div class="relative mx-auto aspect-square w-64 overflow-hidden rounded-lg ring-1 ring-surface-ring bg-background p-5">
+                    <div class="relative mx-auto aspect-square w-64 overflow-hidden rounded-md ring-1 ring-surface-ring bg-background p-5">
                         <div v-if="!qrCodeSvg" class="size-full" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando código QR"><span class="sr-only">Cargando código QR…</span><Skeleton aria-hidden="true" class="size-full" /></div>
                         <img v-else :src="qrImage" alt="Código QR para su aplicación autenticadora" class="size-full object-contain">
                     </div>

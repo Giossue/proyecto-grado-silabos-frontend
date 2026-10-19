@@ -22,7 +22,7 @@ const className = computed(() => props.class);
         v-else
         id="contenido"
         tabindex="-1"
-        class="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col gap-4 rounded-xl"
+        class="mx-auto flex h-full w-full max-w-7xl flex-1 flex-col gap-4 rounded-md"
         :class="className"
     >
         <slot />

@@ -61,7 +61,7 @@ const hasToolbar = computed(() => props.search || props.filters > 0);
         </component>
 
         <div class="min-w-0" data-skeleton="table-content">
-            <div class="hidden overflow-x-auto rounded-xl bg-card shadow-surface ring-1 ring-surface-ring sm:block" data-skeleton="table-desktop">
+            <div class="hidden overflow-x-auto rounded-md bg-card shadow-surface ring-1 ring-surface-ring sm:block" data-skeleton="table-desktop">
                 <div :style="{ minWidth: minimumWidth }">
                     <div class="grid h-10 items-stretch border-b" :style="{ gridTemplateColumns: gridColumns }">
                         <div v-if="selectable" class="flex items-center px-2"><Skeleton class="size-4" /></div>
@@ -84,7 +84,7 @@ const hasToolbar = computed(() => props.search || props.filters > 0);
             </div>
 
             <div class="flex flex-col gap-4 sm:hidden" data-skeleton="table-mobile">
-                <div v-for="row in rows" :key="row" data-skeleton="table-card" class="flex min-w-0 flex-col gap-6 rounded-xl bg-card p-4 shadow-surface ring-1 ring-surface-ring odd:bg-card even:bg-secondary">
+                <div v-for="row in rows" :key="row" data-skeleton="table-card" class="flex min-w-0 flex-col gap-6 rounded-md bg-card p-4 shadow-surface ring-1 ring-surface-ring odd:bg-card even:bg-secondary">
                     <div class="flex min-w-0 flex-col gap-1.5">
                         <Skeleton class="h-5 w-3/4" />
                         <Skeleton v-for="line in linesFor(1) - 1" :key="line" class="h-4 w-1/2" />

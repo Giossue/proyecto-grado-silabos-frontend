@@ -59,7 +59,7 @@ const nextKey = computed(
                 <li
                     v-for="(step, index) in setup.steps"
                     :key="step.key"
-                    class="flex items-start gap-3 rounded-lg p-2"
+                    class="flex items-start gap-3 rounded-md p-2"
                     :class="{
                         'bg-muted/60 ring-1 ring-border': step.key === nextKey,
                     }"

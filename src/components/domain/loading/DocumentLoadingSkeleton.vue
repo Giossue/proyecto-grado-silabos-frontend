@@ -53,7 +53,7 @@ const reviewPanels = computed(() =>
 
                 <template v-for="section in readonly ? sectionCount : 1" :key="`syllabus-section-${section}`">
                     <Separator v-if="section > 1" />
-                    <section data-skeleton="syllabus-section" class="flex min-w-0 flex-col gap-6 rounded-xl bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
+                    <section data-skeleton="syllabus-section" class="flex min-w-0 flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
                         <header class="flex min-w-0 flex-col gap-2">
                             <Skeleton class="h-6 w-56 max-w-full" />
                             <Skeleton class="h-4 w-80 max-w-full" />
@@ -109,7 +109,7 @@ const reviewPanels = computed(() =>
         <header class="flex min-w-0 flex-col gap-3" data-skeleton="review-heading">
             <Skeleton class="h-5 w-36 max-w-full" />
             <div class="flex min-w-0 items-start gap-3">
-                <Skeleton class="size-11 shrink-0 rounded-lg" />
+                <Skeleton class="size-11 shrink-0 rounded-md" />
                 <div class="flex min-w-0 flex-1 flex-col gap-2">
                     <Skeleton class="h-8 w-72 max-w-full" />
                     <Skeleton class="h-5 w-112 max-w-full" />

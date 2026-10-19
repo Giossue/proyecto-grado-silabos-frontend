@@ -39,7 +39,7 @@ const regenerate = (): void => {
                 {{ visible ? 'Ocultar' : 'Ver' }} códigos
             </Button>
             <div v-if="visible" ref="section" class="flex flex-col gap-4">
-                <div class="grid gap-1 rounded-lg bg-muted p-4 font-mono text-sm">
+                <div class="grid gap-1 rounded-md bg-muted p-4 font-mono text-sm">
                     <div v-if="codes.length === 0" class="text-muted-foreground">Genere códigos nuevos para mostrarlos aquí.</div>
                     <div v-for="code in codes" v-else :key="code">{{ code }}</div>
                 </div>

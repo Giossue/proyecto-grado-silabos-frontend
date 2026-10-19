@@ -110,7 +110,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 <div class="flex items-start gap-3">
                     <div
                         v-if="headerIcon && title"
-                        class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground"
+                        class="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground"
                         aria-hidden="true"
                     >
                         <component :is="headerIcon" class="size-5" />

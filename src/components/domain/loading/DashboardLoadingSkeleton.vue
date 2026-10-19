@@ -66,7 +66,7 @@ const hasDeadline = computed(() => props.role === 'coordinador' || props.role ==
                 </div>
             </CardHeader>
             <CardContent class="flex flex-col gap-2">
-                <div v-for="step in stepCount" :key="step" class="flex items-start gap-3 rounded-lg p-2">
+                <div v-for="step in stepCount" :key="step" class="flex items-start gap-3 rounded-md p-2">
                     <Skeleton class="mt-0.5 size-6 shrink-0 rounded-full" />
                     <div class="flex min-w-0 flex-1 flex-col gap-2">
                         <Skeleton class="h-4 w-3/4" />

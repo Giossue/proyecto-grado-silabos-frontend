@@ -29,7 +29,7 @@ const user = computed<User>(() => ({
             <Button
                 type="button"
                 variant="ghost"
-                class="h-11 rounded-lg px-2 max-sm:h-12 max-sm:min-w-16 max-sm:flex-col max-sm:gap-0.5 max-sm:order-2"
+                class="h-11 rounded-md px-2 max-sm:h-12 max-sm:min-w-16 max-sm:flex-col max-sm:gap-0.5 max-sm:order-2"
                 aria-label="Menú de usuario"
             >
                 <CircleUser class="sm:hidden size-5" aria-hidden="true" />
@@ -41,7 +41,7 @@ const user = computed<User>(() => ({
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent
-            class="w-72 max-w-(--reka-dropdown-menu-content-available-width) rounded-lg"
+            class="w-72 max-w-(--reka-dropdown-menu-content-available-width) rounded-md"
             :side="compact ? 'top' : 'bottom'"
             :align="compact ? 'center' : 'end'"
             :side-offset="4"

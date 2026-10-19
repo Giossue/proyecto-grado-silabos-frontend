@@ -34,7 +34,7 @@ const preventImplicitDismiss = (event: Event): void => {
       <DialogContent
         :class="
           cn(
-            'relative z-50 grid w-full max-w-lg my-8 gap-4 ring-1 ring-surface-ring bg-card text-card-foreground p-6 shadow-modal duration-200 sm:rounded-lg md:w-full',
+            'relative z-50 grid w-full max-w-lg my-8 gap-4 ring-1 ring-surface-ring bg-card text-card-foreground p-6 shadow-modal duration-200 sm:rounded-md md:w-full',
             props.class,
           )
         "
