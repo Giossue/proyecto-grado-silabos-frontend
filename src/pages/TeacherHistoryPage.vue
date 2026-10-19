@@ -30,7 +30,7 @@ onMounted(load);
 <template>
   <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading" variant="table" :columns="2" :filters="0" />
+    <LoadingSkeleton v-else-if="loading" variant="table-body" :columns="2" :actions="false" :pagination="false" />
     <template v-else-if="careers">
       <Table label="Carreras con historial">
         <TableHeader><TableRow><TableHead>Carrera</TableHead><TableHead class="text-center">Sílabos</TableHead></TableRow></TableHeader>

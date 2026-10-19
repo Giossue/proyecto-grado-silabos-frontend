@@ -16,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 
 const router = useRouter();
 const result = ref<SyllabiResponse | null>(null);
@@ -58,9 +58,7 @@ onMounted(load);
         </form>
       </CardContent>
     </Card>
-    <div v-if="!result && !error" class="grid gap-4 sm:grid-cols-2" aria-hidden="true">
-      <Skeleton v-for="index in 2" :key="index" class="h-32 rounded-xl" />
-    </div>
+    <LoadingSkeleton v-if="!result && !error" variant="syllabus-cards" :rows="4" />
     <Card v-else-if="result && result.syllabi.data.length === 0">
       <Empty class="gap-3 border-0 p-6 md:p-10">
         <EmptyHeader class="gap-3">

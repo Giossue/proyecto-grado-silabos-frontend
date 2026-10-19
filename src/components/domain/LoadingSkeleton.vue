@@ -22,6 +22,8 @@ type LoadingVariant =
     | 'academic-structure'
     | 'notifications'
     | 'cards'
+    | 'syllabus-cards'
+    | 'accordion'
     | 'workspace'
     | 'syllabus'
     | 'review'
@@ -40,7 +42,10 @@ const props = withDefaults(defineProps<{
     search?: boolean;
     pagination?: boolean;
     actions?: boolean;
-    cellLines?: number;
+    cellLines?: number | number[];
+    selectable?: boolean;
+    chip?: boolean;
+    plainToolbar?: boolean;
     dashboardRole?: RoleCode;
     workspaceCount?: number;
     reviewStage?: 'coordination' | 'library';
@@ -55,6 +60,9 @@ const props = withDefaults(defineProps<{
     pagination: true,
     actions: true,
     cellLines: 1,
+    selectable: false,
+    chip: false,
+    plainToolbar: false,
     workspaceCount: 3,
     readonly: false,
 });
@@ -67,6 +75,9 @@ const tableProps = computed(() => ({
     pagination: props.pagination,
     actions: props.actions,
     cellLines: props.cellLines,
+    selectable: props.selectable,
+    chip: props.chip,
+    plainToolbar: props.plainToolbar,
 }));
 </script>
 
@@ -76,13 +87,57 @@ const tableProps = computed(() => ({
         <div aria-hidden="true" class="contents">
             <TableLoadingSkeleton v-if="variant === 'table-body'" v-bind="tableProps" />
 
-            <Card v-else-if="variant === 'table' || variant === 'catalog' || variant === 'academic' || variant === 'table-detail'" class="min-w-0">
-                <CardHeader v-if="variant === 'table-detail'">
+            <TableLoadingSkeleton v-else-if="variant === 'table' || variant === 'catalog' || variant === 'academic'" v-bind="tableProps" />
+
+            <Card v-else-if="variant === 'table-detail'" class="min-w-0">
+                <CardHeader>
                     <Skeleton class="h-5 w-52 max-w-full" />
                     <Skeleton class="h-4 w-80 max-w-full" />
                 </CardHeader>
                 <CardContent><TableLoadingSkeleton v-bind="tableProps" /></CardContent>
             </Card>
+
+            <div v-else-if="variant === 'syllabus-cards'" class="flex min-w-0 flex-col gap-4">
+                <Card data-skeleton="table-toolbar" class="py-3">
+                    <CardContent class="flex flex-col gap-3 px-3 lg:flex-row lg:items-end">
+                        <Skeleton class="h-9 w-full lg:min-w-64 lg:flex-1" />
+                        <Skeleton class="h-9 w-full sm:hidden" />
+                        <Skeleton class="hidden h-9 sm:block lg:w-48" />
+                    </CardContent>
+                </Card>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <Card v-for="card in Math.max(1, rows)" :key="card" class="min-w-0" data-skeleton="syllabus-card">
+                        <CardHeader class="gap-2">
+                            <Skeleton class="h-5 w-3/4" />
+                            <Skeleton class="h-4 w-24" />
+                        </CardHeader>
+                        <CardContent class="flex flex-col gap-2">
+                            <Skeleton class="h-5 w-24 rounded-full" />
+                            <Skeleton class="h-4 w-2/3" />
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+
+            <div v-else-if="variant === 'accordion'" class="flex min-w-0 flex-col gap-4">
+                <Card data-skeleton="table-toolbar" class="py-3">
+                    <CardContent class="flex flex-col gap-3 px-3 lg:flex-row lg:items-end">
+                        <Skeleton class="h-9 w-full lg:min-w-64 lg:flex-1" />
+                        <Skeleton v-if="filters > 0" class="h-9 w-full sm:hidden" />
+                        <div v-if="filters > 0" class="hidden gap-3 sm:grid sm:grid-cols-2 lg:flex lg:items-end">
+                            <Skeleton v-for="filter in filters" :key="filter" class="h-9 w-full lg:w-48" />
+                        </div>
+                    </CardContent>
+                </Card>
+                <div class="flex flex-col gap-2">
+                    <div v-for="group in Math.max(1, rows)" :key="group" data-skeleton="accordion-row" class="flex items-center gap-2 rounded-md bg-card px-4 py-3 ring-1 ring-surface-ring">
+                        <Skeleton class="h-5 w-20" />
+                        <span class="flex-1" />
+                        <Skeleton class="h-5 w-10 rounded-full" />
+                        <Skeleton class="size-4" />
+                    </div>
+                </div>
+            </div>
 
             <DashboardLoadingSkeleton v-else-if="variant === 'dashboard'" :role="dashboardRole" />
 

@@ -66,7 +66,7 @@ onMounted(() => { void load(initialPage); });
   <PageFrame title="Revisiones de biblioteca" description="Bibliografía de los sílabos enviados." size="wide">
     <template v-if="periods.length > 0" #meta><Badge v-for="period in periods" :key="period" variant="secondary">Período {{ period }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :cell-lines="2" :actions="false" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :actions="false" chip />
     <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
         <form @submit.prevent="load()">
           <FilterToolbar @clear="clearFilters">

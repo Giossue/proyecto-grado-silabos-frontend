@@ -82,7 +82,7 @@ onMounted(() => { void load(); });
     <template #actions><FichaImportDialog :disabled="!data || Boolean(data.career.lock_reason)" @applied="saved" /></template>
     <ProcessLockAlert v-if="data?.career.lock_reason" :lock="data.career.lock" />
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="2" :filters="1" :actions="false" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="accordion" :rows="3" :filters="2" />
     <div v-else-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
       <ClientFilterBar :filter="filter" input-id="career-project-search" label="Buscar por materia" placeholder="Buscar por materia">
         <template #filters>

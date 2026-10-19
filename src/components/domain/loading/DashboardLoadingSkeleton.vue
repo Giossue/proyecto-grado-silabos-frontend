@@ -8,14 +8,14 @@ const props = withDefaults(defineProps<{ role?: RoleCode }>(), {
     role: 'administrador',
 });
 
-const metricCount = computed(() => props.role === 'docente' ? 2 : 3);
-const stepCount = computed(() => ({ administrador: 7, coordinador: 5, docente: 4, bibliotecario: 0 })[props.role]);
+const metricCount = 3;
+const stepCount = computed(() => ({ administrador: 6, coordinador: 5, docente: 4, bibliotecario: 0 })[props.role]);
 const hasDeadline = computed(() => props.role === 'coordinador' || props.role === 'docente');
 </script>
 
 <template>
     <div class="flex min-w-0 flex-col gap-6">
-        <div v-if="metricCount > 0" data-skeleton="dashboard-metrics" class="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
+        <div data-skeleton="dashboard-metrics" class="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
             <Card v-for="metric in metricCount" :key="metric" class="min-w-0">
                 <CardContent class="flex min-w-0 flex-col gap-0.5 py-3">
                     <div class="flex items-center gap-2">
@@ -50,7 +50,10 @@ const hasDeadline = computed(() => props.role === 'coordinador' || props.role ==
                     <Skeleton class="h-2 w-full rounded-full" />
                 </div>
             </CardContent>
-            <CardFooter><Skeleton class="h-9 w-full sm:w-44" /></CardFooter>
+            <CardFooter class="gap-2 max-sm:flex-col">
+                <Skeleton class="h-9 w-full sm:w-44" />
+                <Skeleton v-if="role === 'coordinador'" class="h-9 w-full sm:w-40" />
+            </CardFooter>
         </Card>
 
         <Card v-if="stepCount > 0" data-skeleton="dashboard-setup">

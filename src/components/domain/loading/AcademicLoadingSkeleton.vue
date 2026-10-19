@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import TableLoadingSkeleton from './TableLoadingSkeleton.vue';
 
-const props = withDefaults(
+withDefaults(
     defineProps<{
         mode?: 'curriculum' | 'schedule' | 'teachers';
         rows?: number;
@@ -42,70 +40,14 @@ const props = withDefaults(
             <Skeleton v-for="control in 2" :key="control" class="size-8" />
         </div>
     </div>
-    <Card v-else class="min-w-0">
-        <CardContent class="flex min-w-0 flex-col gap-4">
-            <div class="flex min-w-0 flex-col gap-3 lg:flex-row lg:items-end">
-                <Skeleton class="h-9 w-full min-w-0 lg:flex-1" />
-                <Skeleton class="h-9 w-full sm:hidden" />
-                <div class="hidden min-w-0 grid-cols-2 gap-3 sm:grid lg:flex lg:flex-none">
-                    <Skeleton v-for="filter in mode === 'schedule' ? 3 : 1" :key="filter" class="h-9 w-full lg:w-44" />
-                </div>
-            </div>
-            <TableLoadingSkeleton class="sm:hidden" :rows="rows" :columns="mode === 'schedule' ? 6 : 4" :pagination="false" />
-            <div class="hidden min-w-0 overflow-x-auto sm:block" :data-skeleton="mode === 'schedule' ? 'scheduled-subjects' : 'teachers'">
-                <div
-                    :class="cn(
-                        'grid grid-cols-(--layout-table-skeleton-mobile-columns) items-center gap-4 border-b bg-muted px-2 py-3',
-                        mode === 'schedule'
-                            ? 'sm:min-w-216 sm:grid-cols-(--layout-scheduled-skeleton-columns)'
-                            : 'sm:min-w-184 sm:grid-cols-(--layout-teachers-skeleton-columns)',
-                    )"
-                >
-                    <Skeleton class="h-3 w-16" />
-                    <Skeleton class="h-3 w-12" />
-                    <template v-if="mode === 'schedule'">
-                        <Skeleton class="hidden h-3 w-16 sm:block" />
-                        <Skeleton class="hidden h-3 w-16 sm:block" />
-                    </template>
-                    <Skeleton class="hidden h-3 w-16 sm:block" />
-                    <Skeleton class="h-3 w-16 justify-self-end sm:w-8" />
-                </div>
-                <div
-                    v-for="row in props.rows"
-                    :key="row"
-                    :class="cn(
-                        'grid grid-cols-(--layout-table-skeleton-mobile-columns) items-center gap-4 border-b px-2 py-2 last:border-b-0 odd:bg-card even:bg-muted/50',
-                        mode === 'schedule'
-                            ? 'sm:min-w-216 sm:grid-cols-(--layout-scheduled-skeleton-columns)'
-                            : 'sm:min-w-184 sm:grid-cols-(--layout-teachers-skeleton-columns)',
-                    )"
-                >
-                    <Skeleton class="h-3 w-4/5" />
-                    <Skeleton v-if="mode === 'schedule'" class="h-3 w-6" />
-                    <Skeleton v-else class="h-3 w-5/6" />
-                    <template v-if="mode === 'schedule'">
-                        <div class="hidden flex-col gap-1 sm:flex">
-                            <div v-for="parallel in row % 2 === 0 ? 1 : 2" :key="parallel" class="flex h-6 items-center"><Skeleton class="h-5 w-8 rounded-full" /></div>
-                        </div>
-                        <div class="hidden flex-col gap-1 sm:flex">
-                            <div v-for="parallel in row % 2 === 0 ? 1 : 2" :key="parallel" class="flex h-6 items-center"><Skeleton class="h-3 w-3/4" /></div>
-                        </div>
-                        <div class="hidden flex-col gap-1 sm:flex">
-                            <div v-for="parallel in row % 2 === 0 ? 1 : 2" :key="parallel" class="flex h-6 items-center"><Skeleton class="h-3 w-4/5" /></div>
-                        </div>
-                    </template>
-                    <Skeleton v-else class="hidden h-3 w-3/4 sm:block" />
-                    <Skeleton class="h-8 w-20 justify-self-end sm:size-8" />
-                </div>
-            </div>
-            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <Skeleton class="h-4 w-28" />
-                <div class="flex items-center gap-2">
-                    <Skeleton class="size-9 sm:w-24" />
-                    <Skeleton class="h-5 w-32 sm:size-9" />
-                    <Skeleton class="size-9 sm:w-24" />
-                </div>
-            </div>
-        </CardContent>
-    </Card>
+    <TableLoadingSkeleton
+        v-else
+        :data-skeleton="mode === 'schedule' ? 'scheduled-subjects' : 'teachers'"
+        :rows="rows"
+        :columns="mode === 'schedule' ? 5 : 3"
+        :filters="mode === 'schedule' ? 3 : 1"
+        :actions="false"
+        :selectable="mode === 'schedule'"
+        search
+    />
 </template>

@@ -86,7 +86,7 @@ onMounted(load);
       <ConvocationPeriodSheet v-if="loaded" :disabled="inProgress" @saved="changed" />
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :columns="4" :filters="1" />
+    <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :columns="4" :filters="1" :actions="false" />
     <ProcessLockAlert v-if="loaded && inProgress" title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra." hide-action />
     <div v-if="loaded" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
       <ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar período" placeholder="Buscar por período">

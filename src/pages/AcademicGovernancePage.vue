@@ -103,7 +103,7 @@ onMounted(load);
         </Tabs>
 
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 5 : 4" :filters="1" />
+        <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 4 : 3" :filters="entity === 'carrera' ? 2 : 1" :actions="false" />
 
         <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" @changed="changed" />
     </PageFrame>

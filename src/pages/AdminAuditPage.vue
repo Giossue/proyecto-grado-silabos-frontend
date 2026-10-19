@@ -42,7 +42,7 @@ onMounted(() => { void load(); });
 <template>
   <PageFrame title="Auditoría" description="Registro de las acciones realizadas en el sistema." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table-body" :columns="3" :search="false" :filters="0" :actions="false" :cell-lines="2" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table-body" :columns="3" :search="false" :filters="0" :actions="false" :cell-lines="[1, 2, 2]" />
     <div v-else-if="data" class="flex flex-col gap-4">
         <Table label="Registro de auditoría">
           <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Actividad</TableHead><TableHead>Responsable</TableHead></TableRow></TableHeader>

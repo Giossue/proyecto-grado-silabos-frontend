@@ -229,7 +229,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
       </template
     >
     <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading" variant="academic-structure" :mode="mode" :columns="mode === 'teachers' ? 4 : 6" :filters="mode === 'schedule' ? 3 : 1" />
+    <LoadingSkeleton v-else-if="loading" variant="academic-structure" :mode="mode" :filters="mode === 'schedule' ? 3 : 1" />
     <ManagedUserSheet
       v-if="mode === 'teachers'"
       v-model:open="teacherOpen"

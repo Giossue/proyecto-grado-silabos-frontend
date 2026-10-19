@@ -62,7 +62,7 @@ watch(() => props.open, (open) => {
       <ScrollArea class="min-h-0 flex-1">
           <div class="px-6 pt-1 pb-6">
             <LoadErrorState v-if="error" :message="error" @retry="load" />
-            <LoadingSkeleton v-else-if="loading && !data" variant="table-body" :columns="4" :search="true" :filters="1" :actions="false" :cell-lines="2" />
+            <LoadingSkeleton v-else-if="loading && !data" variant="table-body" :columns="4" :search="true" :filters="1" :actions="false" :cell-lines="[1, 2, 1, 1]" plain-toolbar />
             <div v-else-if="data" class="flex flex-col gap-4">
               <ClientFilterBar
                 :filter="syllabusFilter"

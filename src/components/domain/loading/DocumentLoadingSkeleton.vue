@@ -182,39 +182,27 @@ const reviewPanels = computed(() =>
                 <Skeleton class="mx-auto h-7 w-3/4" />
                 <div v-for="section in 3" :key="section" class="flex min-w-0 flex-col gap-3">
                     <Skeleton class="h-5 w-1/2 max-w-full" />
-                    <div v-for="field in section === 1 ? 2 : 1" :key="field" class="flex min-w-0 flex-col gap-2 rounded-sm px-2 py-1 outline outline-1 outline-dashed outline-muted-foreground">
-                        <div class="flex items-center justify-between gap-3">
-                            <Skeleton class="h-4 w-2/5" />
-                            <Skeleton class="h-5 w-20" />
-                        </div>
-                        <div class="flex flex-col gap-2 rounded-sm ring-1 ring-surface-ring p-3">
+                    <div class="overflow-hidden rounded-sm ring-1 ring-surface-ring">
+                        <div v-for="row in section === 1 ? 4 : 2" :key="row" class="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-2 border-b p-2 last:border-b-0">
+                            <Skeleton class="h-3.5 w-3/4" />
                             <Skeleton class="h-3.5 w-full" />
-                            <Skeleton class="h-3.5 w-5/6" />
                         </div>
                     </div>
                 </div>
-                <Skeleton class="h-8 w-32" />
             </article>
             </div>
 
             <div class="min-w-0 overflow-x-auto py-4">
             <article class="template-sheet template-sheet--landscape" data-skeleton="template-page" data-orientation="landscape">
                 <Skeleton class="h-5 w-1/2 max-w-full" />
-                <div class="flex min-w-0 flex-col gap-2 rounded-sm px-2 py-1 outline outline-1 outline-dashed outline-muted-foreground">
-                    <div class="flex items-center justify-between gap-3">
-                        <Skeleton class="h-4 w-2/5" />
-                        <Skeleton class="h-5 w-20" />
+                <div class="overflow-hidden rounded-sm ring-1 ring-surface-ring">
+                    <div class="grid grid-cols-9 gap-2 border-b bg-muted/40 p-2">
+                        <Skeleton v-for="column in 9" :key="column" class="h-3.5 w-3/4" />
                     </div>
-                    <div class="overflow-hidden rounded-sm ring-1 ring-surface-ring">
-                        <div class="grid grid-cols-9 gap-2 border-b bg-muted/40 p-2">
-                            <Skeleton v-for="column in 9" :key="column" class="h-3.5 w-3/4" />
-                        </div>
-                        <div v-for="row in 16" :key="row" class="grid grid-cols-9 gap-2 border-b p-2 last:border-b-0">
-                            <Skeleton v-for="column in 9" :key="column" class="h-3.5 w-full" />
-                        </div>
+                    <div v-for="row in 16" :key="row" class="grid grid-cols-9 gap-2 border-b p-2 last:border-b-0">
+                        <Skeleton v-for="column in 9" :key="column" class="h-3.5 w-full" />
                     </div>
                 </div>
-                <Skeleton class="h-8 w-32" />
             </article>
             </div>
         </div>
@@ -261,10 +249,6 @@ const reviewPanels = computed(() =>
                 <Skeleton v-if="notice === 1" class="h-4 w-5/6" />
             </AlertDescription>
         </Alert>
-        <Card>
-            <CardContent class="flex min-w-0 flex-col gap-4">
-                <TableLoadingSkeleton :rows="rows" :columns="4" :cell-lines="2" search :filters="1" />
-            </CardContent>
-        </Card>
+        <TableLoadingSkeleton :rows="rows" :columns="4" :actions="false" :cell-lines="[2, 1, 1, 1]" search :filters="1" />
     </template>
 </template>

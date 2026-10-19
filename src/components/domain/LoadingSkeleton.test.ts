@@ -13,6 +13,8 @@ const variants = [
   'academic',
   'catalog',
   'cards',
+  'syllabus-cards',
+  'accordion',
   'academic-structure',
   'notifications',
   'workspace',
@@ -68,6 +70,20 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.find('[data-skeleton="table-toolbar"]').exists()).toBe(true);
     expect(wrapper.findAll('[role="status"]')).toHaveLength(1);
     expect(wrapper.find('button, input, select, [tabindex]').exists()).toBe(false);
+  });
+
+  it.each(['administrador', 'coordinador', 'docente', 'bibliotecario'] as const)('muestra tres indicadores para %s', (dashboardRole) => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole } });
+
+    expect(wrapper.get('[data-skeleton="dashboard-metrics"]').findAll('[data-slot="card"]')).toHaveLength(3);
+  });
+
+  it('dibuja la barra de herramientas dentro de una tarjeta y sin acciones cuando la tabla no las tiene', () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'table', columns: 4, filters: 2, actions: false, rows: 2 } });
+
+    expect(wrapper.get('[data-skeleton="table-toolbar"]').attributes('data-slot')).toBe('card');
+    expect(wrapper.findAll('[data-skeleton="table-filters"] [data-slot="skeleton"]')).toHaveLength(2);
+    expect(wrapper.get('[data-skeleton="table-row"]').element.children).toHaveLength(4);
   });
 
   it.each(['bibliotecario'] as const)('no inventa plazo ni puesta en marcha para %s', (dashboardRole) => {
