@@ -1,6 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { updateAcademicRecord } from '@/api/academic';
 import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
 
 vi.mock('@/api/academic', () => ({ updateAcademicRecord: vi.fn() }));

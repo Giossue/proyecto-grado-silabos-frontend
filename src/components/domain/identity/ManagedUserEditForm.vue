@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Spinner } from '@/components/ui/spinner';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { roleNeedsCareer } from '@/lib/roles';
@@ -48,7 +48,7 @@ const submit = async (): Promise<void> => {
 
 <template>
     <form @submit.prevent="submit"><FieldGroup>
-            <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`managed-edit-name-${user.id}`" required>Nombre completo</FieldLabel><Input :id="`managed-edit-name-${user.id}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
+            <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`managed-edit-name-${user.id}`" required>Nombre completo</FieldLabel><Input :id="`managed-edit-name-${user.id}`" v-model="form.nombre" required /><FieldDescription>Primer y segundo nombre, primer y segundo apellido.</FieldDescription><FieldError :errors="errors.nombre" /></Field>
             <Field :data-invalid="Boolean(errors.correo_electronico)"><FieldLabel :for="`managed-edit-email-${user.id}`" required>Correo institucional</FieldLabel><Input :id="`managed-edit-email-${user.id}`" v-model="form.correo_electronico" type="email" required :disabled="!user.pending_activation" /><FieldError :errors="errors.correo_electronico" /></Field>
             <Field v-if="user.roles.length > 1"><FieldLabel>Roles vigentes</FieldLabel><ul class="flex flex-col gap-2"><li v-for="role in user.roles" :key="role.id" class="flex items-center justify-between gap-2 text-sm"><span>{{ role.name }}<span v-if="role.career_name" class="text-muted-foreground"> · {{ role.career_name }}</span></span><Button type="button" variant="ghost" size="sm" :aria-label="`Quitar el rol ${role.name}${role.career_name ? ' de ' + role.career_name : ''}`" @click="removing = role; removeError = null"><Trash2 aria-hidden="true" />Quitar</Button></li></ul></Field>
             <Field v-if="assignableRoles.length > 0" :data-invalid="Boolean(errors.role_code)"><FieldLabel :for="`managed-edit-role-${user.id}`">Agregar otro rol (opcional)</FieldLabel><Select v-model="form.role_code"><SelectTrigger :id="`managed-edit-role-${user.id}`"><SelectValue placeholder="No agregar otro rol" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="role in assignableRoles" :key="role.codigo" :value="role.codigo">{{ role.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.role_code" /></Field>

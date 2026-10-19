@@ -152,7 +152,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                                 'max-sm:hidden max-sm:[&>*]:hidden',
                             'max-sm:[&>*]:shadow-menu',
                             !needsTrigger &&
-                                'max-sm:[&_button]:size-14 max-sm:[&_button]:rounded-full max-sm:[&_button]:gap-0 max-sm:[&_button]:p-0 max-sm:[&_button]:text-[0px] max-sm:[&_button]:[&_svg]:size-5',
+                                'max-sm:[&_button]:size-14 max-sm:[&_button]:rounded-full max-sm:[&_button]:gap-0 max-sm:[&_button]:p-0 max-sm:[&_button]:text-[length:0] max-sm:[&_button]:[&_svg]:size-5',
                         )
                     "
                 >

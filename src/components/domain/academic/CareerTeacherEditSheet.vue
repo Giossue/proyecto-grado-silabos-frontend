@@ -47,7 +47,7 @@ const submit = async (): Promise<void> => {
             <SheetActions :actions="actions" :menu-label="`Acciones para ${teacher.name}`" @select="select" />
         </template>
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
-            <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`career-teacher-name-${teacher.id}`" required>Nombre completo</FieldLabel><Input :id="`career-teacher-name-${teacher.id}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
+            <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`career-teacher-name-${teacher.id}`" required>Nombre completo</FieldLabel><Input :id="`career-teacher-name-${teacher.id}`" v-model="form.nombre" required /><FieldDescription>Primer y segundo nombre, primer y segundo apellido.</FieldDescription><FieldError :errors="errors.nombre" /></Field>
             <Field :data-invalid="Boolean(errors.correo_electronico)"><FieldLabel :for="`career-teacher-email-${teacher.id}`" required>Correo institucional</FieldLabel><Input :id="`career-teacher-email-${teacher.id}`" v-model="form.correo_electronico" type="email" required :disabled="!teacher.pending_activation" /><FieldDescription v-if="teacher.pending_activation">Al cambiar el correo, la invitación anterior deja de servir y se envía una nueva al correo corregido.</FieldDescription><FieldDescription v-else>La cuenta ya fue activada y su correo no se cambia. Si otra persona asume sus funciones, cree su cuenta y asígnela.</FieldDescription><FieldError :errors="errors.correo_electronico" /></Field>
             <FormSheetActions :close="close" :processing="processing" :icon="Check" label="Guardar cambios" />
         </FieldGroup></form></template>

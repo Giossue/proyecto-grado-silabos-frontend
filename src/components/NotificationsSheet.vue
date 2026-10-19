@@ -184,9 +184,10 @@ onMounted(refreshCount);
                     <EmptyState v-else-if="items.length === 0" :title="status === 'unread' ? 'No tiene notificaciones sin leer.' : 'No tiene notificaciones.'" />
                     <ul v-else class="flex flex-col divide-y border-t">
                         <li v-for="notification in items" :key="notification.id">
-                            <button
+                            <Button
                                 type="button"
-                                class="flex w-full items-start gap-3 px-6 py-4 text-left transition-colors hover:bg-muted/60 focus-visible:bg-muted/60 focus-visible:outline-hidden"
+                                variant="ghost"
+                                class="h-auto w-full items-start justify-start gap-3 whitespace-normal rounded-none px-6 py-4 text-left font-normal"
                                 @click="select(notification)"
                             >
                                 <component :is="iconFor(notification.tipo)" class="mt-0.5 size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -201,7 +202,7 @@ onMounted(refreshCount);
                                     <span class="mt-1 block text-sm text-muted-foreground">{{ notification.mensaje }}</span>
                                     <span v-if="notification.context" class="mt-1 block text-xs text-muted-foreground">{{ notification.context }}</span>
                                 </span>
-                            </button>
+                            </Button>
                         </li>
                     </ul>
                 </div>

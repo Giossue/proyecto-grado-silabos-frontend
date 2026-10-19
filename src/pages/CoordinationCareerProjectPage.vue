@@ -12,6 +12,7 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import { ChevronDown } from '@lucide/vue';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Card, CardContent } from '@/components/ui/card';
@@ -107,10 +108,10 @@ onMounted(() => { void load(); });
             <ChevronDown class="size-4 transition-transform group-data-[state=open]/cycle:rotate-180" aria-hidden="true" />
           </CollapsibleTrigger>
           <CollapsibleContent class="flex flex-col divide-y border-t">
-            <button v-for="subject in group.list" :key="subject.id" type="button" class="flex items-center justify-between gap-3 px-4 py-3 text-left text-sm hover:bg-muted/60" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="open(subject)">
+            <Button v-for="subject in group.list" :key="subject.id" type="button" variant="ghost" class="h-auto justify-between rounded-none px-4 py-3 text-left font-normal" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="open(subject)">
               <span>{{ subject.nombre }}</span>
               <StatusBadge :label="statusOf(subject)" :tone="subject.profile_complete ? 'success' : 'warning'" />
-            </button>
+            </Button>
           </CollapsibleContent>
         </Collapsible>
       </div>
