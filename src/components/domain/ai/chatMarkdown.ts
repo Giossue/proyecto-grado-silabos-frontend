@@ -1,13 +1,8 @@
 import { h, type VNode } from 'vue';
 
-/** Negritas («**texto**») dentro de una línea; el resto queda como texto plano (sin HTML). */
 const inline = (text: string): Array<string | VNode> => text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean)
     .map((part) => (part.startsWith('**') && part.endsWith('**') ? h('strong', part.slice(2, -2)) : part));
 
-/**
- * Markdown sencillo de las respuestas del asistente: párrafos, títulos, listas con viñetas y
- * numeradas, y negritas. Se arma con nodos de Vue, nunca con HTML, para no ejecutar nada.
- */
 export const renderChatMarkdown = (text: string): VNode[] => {
     const blocks: VNode[] = [];
     let list: { ordered: boolean; items: string[] } | null = null;

@@ -10,7 +10,6 @@ vi.mock('@/api/processes', async (importOriginal) => ({ ...(await importOriginal
 
 afterEach(() => { document.body.innerHTML = ''; vi.clearAllMocks(); });
 
-// El envío pasa por un diálogo de confirmación: enviar el formulario y aceptar.
 const confirmSubmit = async (): Promise<void> => {
   document.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
   await flushPromises();
@@ -18,7 +17,6 @@ const confirmSubmit = async (): Promise<void> => {
   (confirm as HTMLButtonElement).click();
   await flushPromises();
 };
-// Paso 1 (periodo) y paso 2 (elaboración): rellena el primero, avanza y rellena el segundo.
 const fillSteps = async (wrapper: Awaited<ReturnType<typeof mountSheet>>): Promise<void> => {
   const [starts, ends] = wrapper.findAllComponents(DatePicker);
   starts.vm.$emit('update:modelValue', '2026-10-05');

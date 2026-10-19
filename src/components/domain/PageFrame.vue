@@ -24,7 +24,6 @@ const props = withDefaults(
         description: string;
         size?: 'full' | 'wide' | 'narrow';
         headerWidth?: number;
-        /** Sustituye el icono del menú cuando la página cambia de sección sin cambiar de ruta. */
         icon?: Component;
     }>(),
     {
@@ -93,7 +92,6 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
         :class="
             cn(
                 'flex min-w-0 flex-col gap-6 overflow-x-clip p-4 sm:p-6',
-                // Sitio para que el botón flotante no tape la última fila de una tabla.
                 actionCount > 0 &&
                     'max-sm:pb-(--page-mobile-actions-inset)',
                 widthClass,
@@ -137,12 +135,6 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 :class="
                     cn(
                         'flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end',
-                        // Columna normal, no invertida: el disparador es el último del DOM y así queda
-                        // abajo, al alcance del pulgar, con las opciones desplegándose hacia arriba.
-                        // Separado del borde por la franja del sistema —la barra de
-                        // gestos, la rayita del inicio— además de su propio margen. Hoy
-                        // esa franja mide cero porque la página no se dibuja debajo de
-                        // ella; el día que alguien lo permita, el botón no queda tapado.
                         'max-sm:fixed max-sm:z-40 max-sm:w-auto max-sm:flex-col max-sm:items-end',
                         'max-sm:right-(--page-mobile-actions-right) max-sm:bottom-(--page-mobile-actions-bottom)',
                         'max-sm:transition-all max-sm:duration-200 max-sm:ease-out',
@@ -155,14 +147,10 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                     :class="
                         cn(
                             'contents',
-                            // Las acciones se apilan sobre el disparador y solo existen
-                            // cuando está desplegado.
                             needsTrigger &&
                                 !expanded &&
                                 'max-sm:hidden max-sm:[&>*]:hidden',
                             'max-sm:[&>*]:shadow-menu',
-                            // Con una sola acción el botón flotante es redondo y sin texto
-                            // (el nombre sigue ahí para lectores de pantalla).
                             !needsTrigger &&
                                 'max-sm:[&_button]:size-14 max-sm:[&_button]:rounded-full max-sm:[&_button]:gap-0 max-sm:[&_button]:p-0 max-sm:[&_button]:text-[0px] max-sm:[&_button]:[&_svg]:size-5',
                         )

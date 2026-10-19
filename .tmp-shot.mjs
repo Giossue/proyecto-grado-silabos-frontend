@@ -1,6 +1,4 @@
 import { chromium } from 'playwright';
-// Required: SILABOS_DEBUG_BASE_URL, SILABOS_DEBUG_SYLLABUS_PATH,
-// SILABOS_DEBUG_EMAIL and SILABOS_DEBUG_PASSWORD. DOC keeps its existing behavior.
 const requiredEnv = (key) => {
   const value = process.env[key];
   if (!value) throw new Error('Falta la variable de entorno ' + key);

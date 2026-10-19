@@ -34,7 +34,6 @@ export const emptyWeek = (): UnitWeek => ({ contenidos: '', acd_h: '', ape_h: ''
 const textOf = (value: unknown): string => typeof value === 'string' ? value : '';
 const defaultUnits = (): PlanningUnit[] => Array.from({ length: PLANNING_UNITS }, () => ({ nombre: '', resultado: '', semanas: Array.from({ length: PLANNING_WEEKS / PLANNING_UNITS }, emptyWeek) }));
 
-/** Cuatro unidades que se reparten las 16 semanas; sin datos, cuatro semanas por unidad (igual que el servidor). */
 export const planningUnits = (raw: unknown): PlanningUnit[] => {
     if (!Array.isArray(raw)) return defaultUnits();
 

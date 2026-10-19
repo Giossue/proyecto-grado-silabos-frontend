@@ -19,7 +19,6 @@ import { paths } from '@/lib/routes';
 import { sessionState } from '@/state/session';
 import type { NavItem } from '@/types';
 
-// Ítems del menú lateral según el rol activo; compartidos con la cabecera.
 export function useMainNavItems(): ComputedRef<NavItem[]> {
     const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
     const mainNavItems = computed<NavItem[]>(() => [
@@ -71,8 +70,6 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
     return mainNavItems;
 }
 
-// Ítem del menú que corresponde a la ruta actual (hijo antes que padre). El hijo
-// hereda el icono del padre porque los subítems no tienen uno propio.
 export function useActiveNavItem(): ComputedRef<NavItem | null> {
     const items = useMainNavItems();
     const { isCurrentOrParentUrl } = useCurrentUrl();

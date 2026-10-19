@@ -30,7 +30,6 @@ const classes = computed(() => cn(
   'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-3',
   'aria-invalid:ring-destructive/30 aria-invalid:border-destructive',
   '[&::-webkit-search-cancel-button]:appearance-none',
-  // Los buscadores llevan la lupa al inicio; el texto empieza después de ella.
   props.type === 'search' && 'pl-9',
   props.class,
 ))

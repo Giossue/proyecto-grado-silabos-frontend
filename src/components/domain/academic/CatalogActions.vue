@@ -25,7 +25,6 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const editOpen = ref(false);
-/** Lo usa la fila de la tabla: un clic en ella equivale a Editar. */
 const edit = (): void => { if (!props.lockReason) editOpen.value = true; };
 defineExpose({ edit });
 const sheetActions = computed<SheetAction[]>(() => {

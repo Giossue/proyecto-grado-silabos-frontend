@@ -14,7 +14,6 @@ const show = (
     options?: ToastOptions,
 ): string | number => {
     const text = normalizeMessage(message);
-    // El mismo aviso repetido reemplaza al anterior en vez de apilarse debajo.
     const id = typeof text === 'string' ? `${type}:${text}` : undefined;
 
     return sonnerToast[type](text, {

@@ -34,7 +34,6 @@ describe('AdminProcessesPage', () => {
     expect(rows[0].text()).toContain('Abierto');
     expect(rows[1].text()).toContain('Sin iniciar');
     expect(rows[1].text()).toContain('Sin fechas');
-    // Con un proceso abierto no se puede abrir otra convocatoria.
     expect(wrapper.text()).toContain('Convocatoria en curso');
     expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('true');
     wrapper.unmount();

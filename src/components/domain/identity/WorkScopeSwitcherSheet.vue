@@ -24,7 +24,6 @@ const activeRole = computed(() => sessionState.current.value?.active_role ?? nul
 const coordinatorCareerCount = computed(() => roles.value.filter((role) => role.code === 'coordinador').length);
 const title = computed(() => coordinatorCareerCount.value > 1 ? 'Cambiar carrera' : 'Cambiar ámbito de trabajo');
 type Role = (typeof roles.value)[number];
-// Título: la función; descripción: dónde se ejerce. Así la carrera no se repite en la tarjeta.
 const cardTitle = (role: Role): string => {
   if (role.code === 'docente') return 'Docencia';
   if (role.code === 'coordinador') return 'Coordinación';

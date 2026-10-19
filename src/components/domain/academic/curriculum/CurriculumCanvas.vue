@@ -124,8 +124,6 @@ const summaryRows = computed(() => [
 
 const flowId = `curriculum-${props.curriculum.id}`;
 const { setEdges, setNodes, updateNode, fitView, viewport } = useVueFlow(flowId);
-// Tamaño real del lienzo: sirve para centrar la malla cuando sobra espacio y para
-// volver a encuadrarla la primera vez que el contenedor tiene medidas.
 const canvasElement = useTemplateRef<HTMLElement>("canvasElement");
 const canvasSize = ref({ width: 0, height: 0 });
 useResizeObserver(canvasElement, (entries) => {
@@ -200,8 +198,6 @@ const navigationExtent = computed<CoordinateExtent>(() => {
     props.curriculum.cycle_count * laneHeight - laneInset,
   );
 
-  // Cuando el lienzo es más ancho o alto que la malla, el límite de desplazamiento se
-  // ensancha para que la malla pueda quedar centrada y no pegada a la esquina.
   const zoom = Math.max(viewport.value?.zoom ?? 1, CANVAS_ZOOM.min);
   const slackX = Math.max(0, (canvasSize.value.width / zoom - laneWidth.value - navigationPadding * 2) / 2);
   const slackY = Math.max(0, (canvasSize.value.height / zoom - contentHeight - navigationPadding * 2) / 2);

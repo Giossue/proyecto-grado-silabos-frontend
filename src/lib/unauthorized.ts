@@ -19,8 +19,6 @@ export const handleUnauthorized = (router: Router): void => {
   }
 };
 
-// La sesión sigue viva pero sin rol (caducó la sesión y "recordarme" la renovó):
-// se pide elegir rol de nuevo en vez de dejar la pantalla con un error.
 export const handleRoleRequired = (router: Router): void => {
   const session = sessionState.current.value;
   if (!session) return;

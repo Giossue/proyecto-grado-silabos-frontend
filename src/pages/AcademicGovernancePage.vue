@@ -32,7 +32,6 @@ const routeSections: Array<{ value: CatalogEntity; label: string }> = [
 ];
 const tabIcons = { facultad: Building2, carrera: GraduationCap };
 const routeParamSections: Record<string, CatalogEntity> = { facultades: 'facultad', carreras: 'carrera' };
-// Los periodos viven ahora en Convocatorias; las rutas antiguas redirigen allí.
 const periodRoute = computed(() => route.query.seccion === 'periodo' || route.params.section === 'periodos-academicos');
 const entity = computed<CatalogEntity>(() =>
     typeof route.query.seccion === 'string' && routeSections.some((item) => item.value === route.query.seccion)

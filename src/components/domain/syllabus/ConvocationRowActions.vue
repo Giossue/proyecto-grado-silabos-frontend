@@ -41,7 +41,6 @@ const remove = async (): Promise<void> => {
 
 <template>
     <div class="flex justify-end">
-        <!-- El periodo no se edita nunca: con convocatoria mandan las acciones del proceso; sin ella, abrir o eliminar. -->
         <SyllabusProcessActions v-if="row.process" ref="processActions" :menu="menu" :process="row.process" @completed="emit('changed', $event)" />
         <TableActionsMenu v-else-if="menu" :label="`Acciones para ${row.code}`" :disabled="Boolean(row.lock_reason)">
             <DropdownMenuItem v-if="!row.lock_reason" @select="processOpen = true"><CalendarPlus aria-hidden="true" />Abrir convocatoria</DropdownMenuItem>

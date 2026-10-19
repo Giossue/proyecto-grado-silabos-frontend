@@ -39,7 +39,6 @@ const submit = async (): Promise<void> => {
     emit('opened', result.message, result.convocation_id);
   } catch (reason) {
     if (reason instanceof ApiError) {
-      // El servidor devuelve todo lo que falta de una vez; se muestra como lista.
       warnings.value = Object.values(reason.errors).flat();
       error.value = warnings.value.length > 1 ? 'Todavía no puede abrir la convocatoria:' : (warnings.value[0] ?? reason.message);
     } else {

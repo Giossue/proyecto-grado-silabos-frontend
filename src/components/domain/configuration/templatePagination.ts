@@ -60,10 +60,6 @@ const markBlocks = (content: HTMLElement): void => {
     }
 };
 
-/**
- * Reparte el contenido de la hoja en páginas A4 con margen de 1,5 cm: lo que no cabe baja a la
- * página siguiente, las tablas pasan fila por fila y el fondo dibuja cada página separada.
- */
 export const paginateSheet = (sheet: HTMLElement, landscape: boolean): void => {
     const content = sheet.querySelector<HTMLElement>(':scope > [data-sheet-content]');
     if (!content || sheet.getBoundingClientRect().width === 0) return;

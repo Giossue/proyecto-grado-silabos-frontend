@@ -19,7 +19,6 @@ import { useClientFilter } from "@/composables/useClientFilter";
 import { useClientPagination } from "@/composables/useClientPagination";
 import { Spinner } from "@/components/ui/spinner";
 
-/** Una fila por docente de la carrera. */
 const props = defineProps<{ data: TeacherAssignments }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 type TeacherRow = {

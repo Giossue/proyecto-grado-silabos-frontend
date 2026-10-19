@@ -96,9 +96,6 @@
     ::file-selector-button {
         border-color: var(--color-gray-200, currentColor);
     }
-
-    /* Los fieldset no se encogen por debajo de su contenido: sin esto, las tablas
-       anchas del sílabo desbordan la tarjeta en lugar de desplazarse. */
     fieldset {
         min-inline-size: 0;
     }
@@ -533,8 +530,6 @@
         display: none;
     }
 }
-
-/* La manito indica que el lienzo se arrastra; las flechas quedan para mover tarjetas. */
 .vue-flow .vue-flow__pane.draggable {
     cursor: grab;
 }
@@ -585,8 +580,6 @@
         color: var(--document-text);
         box-shadow: var(--document-paper-shadow);
     }
-
-    /* Hoja horizontal (A4 apaisada): una hoja aparte, más ancha, entre las verticales. */
     .template-sheet--landscape {
         width: 297mm;
         min-height: 210mm;
@@ -615,13 +608,9 @@
     .template-sheet [data-field-body] > :is(p, div) {
         font-size: inherit !important;
     }
-
-    /* Los campos de texto van en un recuadro con borde fino, como en el sílabo impreso. */
     .template-sheet [data-field]:not([data-field-kind='fijo']):has(.free-text-content):not(:has(.automatic-card)) {
         padding: 0.25cm 0.35cm;
     }
-
-    /* La tabla de identificación y las demás tablas del documento: bordes finos y celdas compactas. */
     .template-sheet.template-sheet .free-text-content .free-text-table {
         width: 100%;
         table-layout: fixed;
@@ -702,40 +691,26 @@
     background-color: var(--sidebar-accent);
     color: var(--sidebar-foreground);
 }
-
-/* Textos secundarios dentro del sidebar azul: tono claro legible. */
 [data-slot='sidebar'] .text-muted-foreground,
 [data-sidebar='sidebar'] .text-muted-foreground {
     color: color-mix(in srgb, var(--sidebar-foreground) 72%, transparent);
 }
-
-/* Avatar sin foto dentro del sidebar: tinte claro con iniciales blancas. */
 [data-slot='sidebar'] [data-slot='avatar-fallback'],
 [data-sidebar='sidebar'] [data-slot='avatar-fallback'] {
     background-color: color-mix(in srgb, var(--sidebar-foreground) 18%, transparent);
     color: var(--sidebar-foreground);
 }
-
-/* La hoja del constructor imita el Word: el texto de los campos va a 10 pt, no al tamaño de la interfaz. */
 .template-sheet .text-sm {
     font-size: 11pt;
     line-height: 1.3;
 }
-
-/* La tabla de planificación de unidades va a 11 pt, como la de identificación. */
 .template-sheet .units-field-view,
 .template-sheet .units-field-view .text-sm {
     font-size: 11pt;
 }
-
-/* Fuera de cualquier capa: deben ganarle a los estilos de Vue Flow, que no usan capas. */
-/* Fuera de edición los puntos de conexión no se ven: solo sirven de anclaje a las flechas. */
 .curriculum-canvas .vue-flow__handle:not(.curriculum-handle) {
     opacity: 0;
 }
-
-/* Puntos de conexión en edición: un círculo verde con «+» de 18px que se agarra en un área
-   mayor; crecen al pasar el cursor para confirmar que son el sitio donde arrastrar. */
 .curriculum-canvas .vue-flow__handle.curriculum-handle {
     display: flex;
     align-items: center;
@@ -765,10 +740,6 @@
 .curriculum-canvas .vue-flow__handle-bottom.curriculum-handle.connecting {
     transform: translate(-50%, 50%) scale(1.4);
 }
-
-
-/* Vista del docente: el sílabo se llena como un formulario de shadcn, no como la hoja de la plantilla.
-   Se ignoran los colores, negritas, alineaciones y bordes gruesos que la plantilla pone en cada celda. */
 @layer components {
     .teacher-form {
         --document-table-border: var(--border);

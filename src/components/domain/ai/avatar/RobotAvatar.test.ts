@@ -17,7 +17,6 @@ describe('RobotAvatar', () => {
         expect(wrapper.attributes('data-animation')).toBe('thinking');
         await wrapper.setProps({ mode: 'speaking' });
         expect(wrapper.attributes('data-animation')).toBe('speaking');
-        // La emoción manda sobre el modo mientras dura.
         await wrapper.setProps({ mode: 'idle', emotion: 'surprised' });
         expect(wrapper.attributes('data-animation')).toBe('surprised');
     });

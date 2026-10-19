@@ -41,8 +41,6 @@ const notifyUnauthorized = (): void => {
   window.dispatchEvent(new CustomEvent('silabos:unauthorized'));
 };
 
-// El backend responde 409 con este texto cuando la sesión sigue viva (p. ej. por
-// "recordarme") pero ya perdió el rol elegido.
 const ROLE_REQUIRED_MESSAGE = 'Seleccione un rol vigente.';
 
 const notifyRoleRequired = (): void => {

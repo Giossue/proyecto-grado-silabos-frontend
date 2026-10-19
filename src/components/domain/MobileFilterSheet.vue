@@ -86,13 +86,10 @@ onBeforeUnmount(() => {
         ref="panel"
         :class="
             cn(
-                // El reparto en pantalla ancha lo decide quien usa el componente.
                 attrs.class as string,
-                // Estrecho: panel que baja desde arriba, sobre el resto.
                 'max-sm:fixed max-sm:inset-x-0 max-sm:top-0 max-sm:z-50 max-sm:max-h-(--filter-sheet-max-height)',
                 'max-sm:flex max-sm:flex-col max-sm:gap-3 max-sm:overflow-hidden',
                 'max-sm:rounded-b-xl max-sm:bg-card max-sm:p-4',
-                // Por debajo de la barra de estado, no detrás de ella.
                 'max-sm:pt-(--safe-header-inset)',
                 'max-sm:shadow-modal max-sm:ring-1 max-sm:ring-surface-ring',
                 !open && 'max-sm:hidden',

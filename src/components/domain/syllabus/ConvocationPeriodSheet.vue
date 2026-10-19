@@ -21,14 +21,12 @@ const processing = ref(false);
 const confirmOpen = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const form = ref({ starts_on: '', ends_on: '', starts_at: '', due_at: '' });
-// Si el periodo ya se creó pero la convocatoria falló, el reintento solo abre la convocatoria.
 const createdPeriodId = ref<string | null>(null);
 
 const todayIso = today(getLocalTimeZone()).toString();
 const periodEndMinimum = computed(() => form.value.starts_on || todayIso);
 const dueMinimum = computed(() => (form.value.starts_at > todayIso ? form.value.starts_at : todayIso));
 const periodEnd = computed(() => form.value.ends_on || undefined);
-// Paso 1: periodo lectivo; paso 2: elaboración de sílabos. `forward` define hacia dónde se desliza.
 const step = ref<1 | 2>(1);
 const forward = ref(true);
 const goTo = (target: 1 | 2): void => {
@@ -51,7 +49,6 @@ watch(() => form.value.starts_on, (startsOn) => {
     if (startsOn && form.value.ends_on && form.value.ends_on < startsOn) form.value.ends_on = '';
 });
 
-// El formulario solo pide confirmación; el envío real ocurre al aceptar el diálogo.
 const askConfirmation = (): void => {
     if (step.value === 1) {
         if (periodComplete.value) goTo(2);

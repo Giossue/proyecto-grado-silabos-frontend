@@ -19,7 +19,6 @@ const props = defineProps<
 >();
 
 const OVERPASS_RISE = 18;
-// Hueco vertical entre la base de una tarjeta y la cima de la del nivel siguiente.
 const LEVEL_GAP = laneHeight - subjectHeight;
 const CHANNEL_MARGIN = 12;
 
@@ -53,7 +52,6 @@ const pathData = computed((): [string, number, number] => {
         ];
     }
 
-    // Tramo horizontal en su propio carril del hueco que precede a la materia destino.
     const usable = LEVEL_GAP - CHANNEL_MARGIN * 2;
     const step = usable / (props.data.channelCount + 1);
     const channelY =

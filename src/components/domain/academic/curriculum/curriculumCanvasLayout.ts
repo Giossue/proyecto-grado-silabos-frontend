@@ -176,19 +176,6 @@ type EdgeGeometry = {
     channelCount: number;
 };
 
-/**
- * Traza las relaciones sin que dos líneas compartan un tramo.
- *
- * Cada relación baja desde la base de la materia origen, recorre un tramo horizontal
- * por el hueco que precede a la materia destino y sube hasta su cima. Para que no se
- * monten:
- * - en cada hueco, todos los extremos que caen en la misma columna (bases de arriba y
- *   cimas de abajo) reciben una abscisa distinta, ordenada según hacia dónde va la
- *   línea, de modo que la que viene de la izquierda queda a la izquierda;
- * - cada relación del hueco recibe su propio carril horizontal, y el orden de los
- *   carriles se elige probando permutaciones para cruzar lo menos posible.
- * Los cruces que quedan son los inevitables con las materias fijas en su sitio.
- */
 const edgeGeometry = (
     requirements: CurriculumRequirement[],
     subjectById: Map<string, CurriculumBuilderSubject>,
@@ -218,7 +205,6 @@ const edgeGeometry = (
         return current;
     };
 
-    // 1. Abscisas: extremos agrupados por hueco y columna.
     type End = { requirement: CurriculumRequirement; end: 'source' | 'target'; towards: number };
     const groups = new Map<string, End[]>();
     const push = (key: string, end: End): void => {
@@ -236,8 +222,6 @@ const edgeGeometry = (
         });
     });
     groups.forEach((ends) => {
-        // Una relación recta (misma columna, niveles seguidos) ocupa un solo hueco con
-        // sus dos extremos; comparten abscisa para que baje sin codos.
         const slots: End[][] = [];
         const seen = new Map<string, End[]>();
         ends.forEach((end) => {
@@ -268,7 +252,6 @@ const edgeGeometry = (
         });
     });
 
-    // 2. Carriles: por hueco, con el orden que menos cruces produce.
     const byGap = new Map<number, CurriculumRequirement[]>();
     requirements.forEach((requirement) => {
         if (sameLevelIds.has(requirement.id)) return;
@@ -286,8 +269,6 @@ const edgeGeometry = (
             };
         });
         const between = (x: number, a: number, b: number): boolean => x > Math.min(a, b) && x < Math.max(a, b);
-        // Cruces entre carriles: la bajada de uno atraviesa el tramo horizontal del que
-        // está más arriba; la subida de uno atraviesa el del que está más abajo.
         const crossings = (order: number[]): number => {
             let total = 0;
             for (let upper = 0; upper < order.length; upper++) {

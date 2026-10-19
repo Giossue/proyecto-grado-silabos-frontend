@@ -15,8 +15,6 @@ import {
 } from './blobGeometry';
 import { clampIntensity, type AvatarEmotion, type AvatarMode } from './types';
 
-// Blob azul con dos ojos (estilo «Strobi»): la esfera gira y los ojos cambian de forma
-// según la animación del modo o de la emoción vigente.
 const props = withDefaults(defineProps<{
     mode?: AvatarMode;
     emotion?: AvatarEmotion;
@@ -66,7 +64,6 @@ const restart = (): void => {
         frame.value = renderFrame(current);
         return;
     }
-    // Arranca desde la expresión actual para no saltar de golpe.
     playback = startPlayback(animation.value, now(), current);
     tick();
 };
@@ -119,8 +116,6 @@ onBeforeUnmount(() => {
     transform-box: view-box;
     transform-origin: 0 0;
 }
-
-/* Las emociones fuertes añaden un pequeño salto o sobresalto del cuerpo entero. */
 [data-emotion='happy'] #robot_root {
     animation: bounce 520ms cubic-bezier(0.3, 0.7, 0.4, 1);
 }

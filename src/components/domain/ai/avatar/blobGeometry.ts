@@ -1,7 +1,3 @@
-// Geometría del avatar «blob»: una esfera con dos ojos en cápsula proyectados sobre su
-// superficie. Cada expresión gira la cabeza y cambia tamaño, separación y ángulo de los
-// ojos; las animaciones encadenan expresiones con transiciones suaves y parpadeo.
-// Modelo propio inspirado en el estilo de bible-strong-avatar-lab (sin dependencia).
 
 export type Vec3 = readonly [number, number, number];
 type Quaternion = readonly [number, number, number, number];
@@ -67,7 +63,6 @@ const project = ([x, y, z]: Vec3): Vec3 => {
     return [x * scale, y * scale, z];
 };
 
-// Punto sobre la cara frontal de la esfera para una coordenada plana (x, y).
 const spherePoint = (x: number, y: number): { point: Vec3; normal: Vec3 } => {
     const longitude = x / RADIUS;
     const latitude = y / RADIUS;
@@ -135,7 +130,6 @@ const eyeShape = (expression: Expression, orientation: Quaternion, side: -1 | 1,
     return { path: toPath(points), visible: facing > 0 };
 };
 
-/** Radio aparente de la esfera con la misma perspectiva que los ojos. */
 export const headRadius = (): number => {
     const z = (RADIUS * RADIUS) / FOCAL_LENGTH;
     return Math.sqrt(RADIUS * RADIUS - z * z) * (FOCAL_LENGTH / (FOCAL_LENGTH - z));
@@ -177,7 +171,6 @@ export const interpolate = (from: Expression, to: Expression, progress: number):
     };
 };
 
-/** Atenúa el giro de cabeza según la intensidad (0..1) sin tocar los ojos. */
 export const withIntensity = (expression: Expression, intensity: number): Expression => {
     const factor = 0.55 + 0.45 * intensity;
     return { ...expression, headX: expression.headX * factor, headY: expression.headY * factor, headZ: expression.headZ * factor };
@@ -187,10 +180,8 @@ const eyes = (width: number, height: number, spacing: number, angle = 0, positio
     widthLeft: width, widthRight: width, heightLeft: height, heightRight: height, spacing, positionY, leftAngle: angle, rightAngle: -angle,
 });
 
-// Catálogo de expresiones (valores propios, redondeados).
 export const EXPRESSIONS = {
     neutral: { headX: 0, headY: 0, headZ: 0, ...eyes(26, 48, 64, 0, -24) },
-    // Reposo, escucha y habla: casi de frente, con giros mínimos.
     restA: { headX: 2, headY: 5, headZ: -3, ...eyes(26, 48, 64, 0, -24) },
     restB: { headX: -2, headY: -5, headZ: 3, ...eyes(25, 50, 63, 0, -23) },
     listenA: { headX: 0, headY: 4, headZ: 6, ...eyes(27, 54, 64, 0, -22) },
@@ -265,7 +256,6 @@ export interface SampledFrame {
     state: PlaybackState;
 }
 
-/** Avanza la reproducción hasta `now` y devuelve la expresión y el parpadeo del instante. */
 export const sample = (state: PlaybackState, now: number, random: () => number = Math.random): SampledFrame => {
     const animation = ANIMATIONS[state.animation];
     let next = { ...state };

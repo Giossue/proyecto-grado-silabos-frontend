@@ -125,7 +125,6 @@ const isFieldEmpty = (field: SyllabusField): boolean => !field.value || freeText
 const emptyParts = computed(() =>
   allFields.value.filter((field) => field.required && isTeacherField(field)).filter(isFieldEmpty).length,
 );
-/** Las unidades deben repartir las 16 semanas y las horas exactas de la asignatura; el servidor lo vuelve a exigir al enviar. */
 const unitsIssue = computed((): string => {
   const target = unitsContext()?.hours;
   for (const field of allFields.value.filter(isTeacherField)) {

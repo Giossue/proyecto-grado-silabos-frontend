@@ -62,7 +62,6 @@ const createRequirement = async (type: 'prerrequisito' | 'correquisito'): Promis
     }
 };
 
-/** El tipo sale de los ciclos: un ciclo anterior es prerrequisito y el mismo ciclo, correquisito. */
 watch(pendingConnection, (pending) => {
     if (!pending) return;
     const requirementCycle = props.subjectCycle(pending.sourceId);

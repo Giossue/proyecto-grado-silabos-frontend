@@ -95,7 +95,6 @@ const editor = useEditor({
     onBlur: () => closeSlash(),
 });
 const hasTable = computed(() => JSON.stringify(props.modelValue ?? {}).includes('"type":"table"'));
-// Agrega una fila a la tabla donde está el cursor o, si no hay cursor en una tabla, al final de la última.
 const addTableRow = (): void => {
     const current = editor.value;
     if (!current || props.disabled) return;

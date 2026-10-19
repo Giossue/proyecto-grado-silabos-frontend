@@ -47,7 +47,6 @@ const runAction = async (key: string): Promise<void> => { await nextTick(); rowA
 const current = computed(() => rows.value.find((row) => row.id === selected.value?.id) ?? null);
 const loaded = computed(() => governance.value !== null && processData.value !== null);
 
-// Una fila por periodo; la convocatoria institucional (si existe) se cuelga del periodo.
 const rows = computed<ConvocationRow[]>(() => {
   const byPeriod = new Map((processData.value?.processes ?? []).map((process) => [process.period_id, process]));
   return [...(governance.value?.catalogs.periods ?? [])]
@@ -63,7 +62,6 @@ const stateTone = (row: ConvocationRow): StatusTone => row.process
 const filter = useClientFilter(rows, (row) => [row.code], {
   estado: { matches: (row, value) => (value === 'sin_iniciar' ? row.process === null : row.process?.state === value) },
 });
-// Mientras haya una convocatoria abierta o pausada no se abre otra ni se crean periodos.
 const inProgress = computed(() => Boolean(governance.value?.lock_reason) || rows.value.some((row) => row.process?.state === 'abierto' || row.process?.state === 'pausado'));
 const { items: page, meta, setPage } = useClientPagination(() => filter.items.value);
 const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'medium' });
