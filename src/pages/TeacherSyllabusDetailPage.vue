@@ -32,7 +32,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import FieldView from '@/components/domain/syllabus/FieldView.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
@@ -86,7 +86,7 @@ const pausedEdit = computed(() =>
 const showEditor = computed(() => canEdit.value || pausedEdit.value);
 const allFields = computed(() => (syllabus.value?.sections ?? []).flatMap((section) => section.fields));
 const editableFieldIds = computed(() => new Set(allFields.value.map((field) => field.id)));
-const isTeacherField = (field: SyllabusField): boolean => field.quien_llena === 'docente' && field.teacher_editable !== false;
+const isTeacherField = (field: SyllabusField): boolean => field.quien_llena !== 'institucional' && field.teacher_editable === true;
 const REVIEW_STAGE_TEXT: Record<string, string> = { coordinacion: 'Coordinación revisa y decide.', biblioteca: 'Coordinación aprobó; biblioteca revisa la bibliografía.' };
 const reviewStageLabel = computed(() => REVIEW_STAGE_TEXT[syllabus.value?.review_stage ?? ''] ?? '');
 const STAGE_NAME: Record<string, string> = { biblioteca: 'Biblioteca', coordinacion: 'Coordinación' };
@@ -486,6 +486,7 @@ onBeforeUnmount(() => {
               <template v-for="field in section.fields" :key="field.id">
                 <Field v-if="showEditor && isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel>
+                  <FieldDescription v-if="field.quien_llena === 'coordinacion'">Lo trae la ficha de la carrera; puede ajustarlo.</FieldDescription>
                   <FreeTextEditor :label="field.label.trim() || section.title" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
                 </Field>
                 <FieldView v-else :id="`field-${field.id}`" :field="field" />

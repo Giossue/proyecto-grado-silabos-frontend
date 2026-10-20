@@ -56,10 +56,10 @@ describe('subject profile API', () => {
     const values = { 'field-1': { type: 'doc', content: [{ type: 'paragraph' }] } };
     api.mockResolvedValue({ fields: [], values, complete: false });
     await getSubjectProfile('subject-1');
-    await saveSubjectProfile('subject-1', values);
+    await saveSubjectProfile('subject-1', values, { 'field-1': true });
     expect(api).toHaveBeenNthCalledWith(1, '/academic/asignaturas/subject-1/ficha');
     expect(api).toHaveBeenNthCalledWith(2, '/academic/asignaturas/subject-1/ficha', {
-      method: 'PUT', body: JSON.stringify({ values }),
+      method: 'PUT', body: JSON.stringify({ values, editable: { 'field-1': true } }),
     });
   });
 });

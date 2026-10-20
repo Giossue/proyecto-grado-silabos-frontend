@@ -169,16 +169,16 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
-  it('Carrera es de solo lectura incluso si otro indicador permite editar', async () => {
+  it('Carrera es de solo lectura salvo que la ficha permita editarlo', async () => {
     const detail = syllabus('borrador', 'coordinacion');
-    detail.sections[0]!.fields[0]!.teacher_editable = true;
     detail.sections[0]!.fields.push(field('field-2', 'docente', { label: 'Bibliografía' }));
+    detail.sections[0]!.fields.push(field('field-3', 'coordinacion', { label: 'Herramientas TIC', teacher_editable: true }));
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     const wrapper = mountPage();
     await flushPromises();
     expect(wrapper.get('#field-field-1').text()).toContain('Carrera');
-    expect(wrapper.findAllComponents(FreeTextEditor)).toHaveLength(1);
-    expect(wrapper.findComponent(FreeTextEditor).attributes('id')).toBe('input-field-2');
+    expect(wrapper.findAllComponents(FreeTextEditor).map((editor) => editor.attributes('id'))).toEqual(['input-field-2', 'input-field-3']);
+    expect(wrapper.get('#field-field-3').text()).toContain('Lo trae la ficha de la carrera; puede ajustarlo.');
     wrapper.unmount();
   });
 
