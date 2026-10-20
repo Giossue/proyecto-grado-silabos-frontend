@@ -132,6 +132,7 @@ describe('AppSidebarLayout', () => {
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
     expect(sidebar.get('a[href="/docente/panel"]').text()).toContain('Panel');
     expect(sidebar.get('a[href="/docente/mis-silabos"]').text()).toContain('Mis sílabos');
+    expect(sidebar.text()).not.toContain('Historial');
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Software');
     expect(wrapper.find('header [role="progressbar"]').exists()).toBe(false);
     expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);

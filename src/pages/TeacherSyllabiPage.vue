@@ -2,7 +2,7 @@
 import { SYLLABUS_STATE_OPTIONS } from '@/lib/syllabusStates';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -10,7 +10,8 @@ import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { paths } from '@/lib/routes';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
-import { Inbox } from '@lucide/vue';
+import { History, Inbox } from '@lucide/vue';
+import { Button } from '@/components/ui/button';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -47,6 +48,7 @@ onMounted(load);
 
 <template>
   <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide">
+    <template #actions><Button as-child variant="outline"><RouterLink :to="paths.teacher.history"><History data-icon="inline-start" aria-hidden="true" />Historial</RouterLink></Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <Card v-if="result" class="py-3">
       <CardContent class="px-3">
