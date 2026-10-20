@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { getSession } from "@/api/session";
-import { createTemplate, getTemplate, type TemplatePayload } from "@/api/template";
+import { createTemplate, getTemplate, getTemplateJson, type TemplatePayload } from "@/api/template";
 
 vi.mock("vue-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
@@ -17,6 +17,7 @@ vi.mock("@/api/template", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/template")>()),
   getTemplate: vi.fn(),
   createTemplate: vi.fn(),
+  getTemplateJson: vi.fn(),
 
 }));
 
@@ -153,5 +154,18 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.find('button[aria-label="Borrar la plantilla"]').exists()).toBe(false);
     expect(wrapper.find('button[aria-label="Exportar JSON"]').exists()).toBe(false);
     expect(wrapper.find('button[aria-label="Editar JSON"]').exists()).toBe(false);
+  });
+
+  it("abre el JSON de la plantilla desde el botón Editar JSON", async () => {
+    vi.mocked(getTemplateJson).mockReset().mockResolvedValue({ version: 2, sections: [] });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const button = wrapper.findAll('button').find((item) => item.text().includes('Editar JSON'))!;
+    await button.trigger('click');
+    await flushPromises();
+
+    expect(document.body.textContent).toContain('Plantilla como JSON');
+    expect(getTemplateJson).toHaveBeenCalledWith('template-1');
   });
 });

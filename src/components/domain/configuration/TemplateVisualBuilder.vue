@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/core';
-import { ImageUp, Pencil, Plus, Ruler, Save, Trash2 } from '@lucide/vue';
+import { Braces, ImageUp, Pencil, Plus, Ruler, Save, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
+import TemplateJsonDialog from '@/components/domain/configuration/TemplateJsonDialog.vue';
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
 import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
 import TemplateFormatTools from '@/components/domain/configuration/TemplateFormatTools.vue';
@@ -106,6 +107,11 @@ let temporary = 0;
 const temporaryId = (): string => `nuevo-${temporary += 1}`;
 
 const awaitingReload = ref(false);
+const jsonOpen = ref(false);
+const reloadAfterJson = (): void => {
+    toast.success('Plantilla actualizada desde el JSON');
+    emit('changed');
+};
 const source = computed<TemplateSectionPayload[]>(() => preview.value && !awaitingReload.value ? props.template.sections : draft.value);
 const dirty = ref(false);
 const titleDraft = ref('');
@@ -352,6 +358,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
     <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full justify-end">
       <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
+        <Button type="button" variant="outline" :disabled="locked" @click="jsonOpen = true"><Braces data-icon="inline-start" aria-hidden="true" />Editar JSON</Button>
         <Button type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
       </div>
       <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 flex-wrap items-center gap-1 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
@@ -459,6 +466,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
     </article>
     </div>
+
+    <TemplateJsonDialog v-model:open="jsonOpen" :template-id="template.id" :locked="locked" @imported="reloadAfterJson" />
 
     <Dialog :open="removal !== null" @update:open="(value: boolean) => { if (!value) removal = null }">
       <DialogContent>
