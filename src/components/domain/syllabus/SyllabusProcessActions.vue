@@ -130,7 +130,7 @@ const remove = async (): Promise<void> => {
     <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" @select="deadlineOpen = true"><CalendarClock />Prorrogar plazo</DropdownMenuItem>
     <DropdownMenuSeparator v-if="process.state !== 'cerrado'" />
     <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" variant="destructive" @select="pending = 'cerrar'"><Lock />Cerrar</DropdownMenuItem>
-    <DropdownMenuItem variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
+    <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
   </TableActionsMenu>
 
   <Dialog :open="pending !== null" @update:open="(value) => { if (!value) { pending = null; templateImpact = null; error = null; } }">
@@ -158,7 +158,7 @@ const remove = async (): Promise<void> => {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Eliminar convocatoria institucional</DialogTitle>
-        <DialogDescription>Se eliminarán esta convocatoria, sus alcances de carrera y todos sus sílabos, incluidos los iniciados, aprobados y firmados. Esta acción no se puede deshacer.</DialogDescription>
+        <DialogDescription>La convocatoria se cierra y desaparece de la aplicación para todos, con las de cada carrera y sus sílabos. No se borra nada: todo queda guardado en la base de datos. El período queda libre para abrir otra convocatoria. Esta acción no se puede deshacer.</DialogDescription>
       </DialogHeader>
       <Alert v-if="deleteError" variant="destructive"><AlertDescription>{{ deleteError }}</AlertDescription></Alert>
       <DialogFooter>

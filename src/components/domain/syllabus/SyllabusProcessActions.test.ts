@@ -74,11 +74,13 @@ describe('SyllabusProcessActions', () => {
     vi.mocked(transitionProcess).mockReset();
   });
 
-  it('confirms and deletes a process with all of its syllabi', async () => {
-    const wrapper = mountActions();
+  it('elimina una convocatoria en curso tras confirmar y explica que no se borra nada', async () => {
+    const wrapper = mountActions(openProcess());
 
-    await wrapper.find('.menu-item').trigger('click');
-    expect(wrapper.find('[data-dialog]').text()).toContain('incluidos los iniciados, aprobados y firmados');
+    const remove = wrapper.findAll('.menu-item').find((item) => item.text().includes('Eliminar'));
+    expect(remove).toBeDefined();
+    await remove!.trigger('click');
+    expect(wrapper.find('[data-dialog]').text()).toContain('No se borra nada');
 
     const confirm = wrapper.findAll('button').find((item) => item.text().includes('Eliminar convocatoria'));
     expect(confirm).toBeDefined();
@@ -106,9 +108,10 @@ describe('SyllabusProcessActions', () => {
     expect(wrapper.emitted('completed')).toEqual([['Convocatoria cerrada.']]);
   });
 
-  it('no ofrece cerrar una convocatoria ya cerrada', () => {
+  it('una convocatoria cerrada no ofrece cerrar ni eliminar', () => {
     const wrapper = mountActions();
     expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Cerrar'))).toBe(false);
+    expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Eliminar'))).toBe(false);
   });
 
   it('shows the state counts and requires explicit confirmation before rebuilding', async () => {
