@@ -54,7 +54,7 @@ const rows = computed<ConvocationRow[]>(() => {
     .map((period) => ({ ...period, process: byPeriod.get(period.id) ?? null }));
 });
 const stateLabel = (row: ConvocationRow): string => row.process
-  ? ({ abierto: 'Abierto', pausado: 'Pausado', cerrado: 'Finalizado' })[row.process.state]
+  ? ({ abierto: 'Abierto', pausado: 'Pausado', cerrado: 'Cerrado' })[row.process.state]
   : 'Sin iniciar';
 const stateTone = (row: ConvocationRow): StatusTone => row.process
   ? ({ abierto: 'success', pausado: 'warning', cerrado: 'info' } as const)[row.process.state]
@@ -93,7 +93,7 @@ onMounted(load);
         <template #filters>
           <Field><FieldLabel for="processes-search-state" class="sr-only">Estado</FieldLabel>
             <Select v-model="filter.values.estado.value"><SelectTrigger id="processes-search-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger>
-              <SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="sin_iniciar">Sin iniciar</SelectItem><SelectItem value="abierto">Abiertos</SelectItem><SelectItem value="pausado">Pausados</SelectItem><SelectItem value="cerrado">Finalizados</SelectItem></SelectGroup></SelectContent>
+              <SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="sin_iniciar">Sin iniciar</SelectItem><SelectItem value="abierto">Abiertos</SelectItem><SelectItem value="pausado">Pausados</SelectItem><SelectItem value="cerrado">Cerrados</SelectItem></SelectGroup></SelectContent>
             </Select>
           </Field>
         </template>

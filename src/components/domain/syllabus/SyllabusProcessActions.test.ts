@@ -40,6 +40,7 @@ const process = (): SyllabusProcess => ({
 });
 
 const pausedProcess = () => ({ ...process(), state: 'pausado' as const });
+const openProcess = () => ({ ...process(), state: 'abierto' as const });
 
 const mountActions = (value = process()) => mount(SyllabusProcessActions, {
   props: { process: value },
@@ -86,6 +87,28 @@ describe('SyllabusProcessActions', () => {
 
     expect(deleteProcess).toHaveBeenCalledWith('process-1');
     expect(wrapper.emitted('completed')).toEqual([['Convocatoria institucional eliminada.']]);
+  });
+
+  it('cierra la convocatoria tras confirmar y explica que los sílabos quedan para consulta', async () => {
+    vi.mocked(transitionProcess).mockResolvedValue({ message: 'Convocatoria cerrada.' });
+    const wrapper = mountActions(openProcess());
+
+    const close = wrapper.findAll('.menu-item').find((item) => item.text().includes('Cerrar'));
+    expect(close).toBeDefined();
+    await close!.trigger('click');
+    expect(wrapper.find('[data-dialog]').text()).toContain('solo para consulta');
+    expect(wrapper.find('[data-dialog]').text()).toContain('un cambio de docente no los borra');
+
+    await wrapper.find('[data-dialog] form').trigger('submit');
+    await flushPromises();
+
+    expect(transitionProcess).toHaveBeenCalledWith('process-1', 'cerrar', undefined);
+    expect(wrapper.emitted('completed')).toEqual([['Convocatoria cerrada.']]);
+  });
+
+  it('no ofrece cerrar una convocatoria ya cerrada', () => {
+    const wrapper = mountActions();
+    expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Cerrar'))).toBe(false);
   });
 
   it('shows the state counts and requires explicit confirmation before rebuilding', async () => {

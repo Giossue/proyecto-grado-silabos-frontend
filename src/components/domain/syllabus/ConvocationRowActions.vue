@@ -24,7 +24,7 @@ const processActions = useTemplateRef('processActions');
 const run = (key: string): void => {
     if (key === 'abrir') processOpen.value = true;
     else if (key === 'eliminar-periodo') { error.value = null; deleteOpen.value = true; }
-    else processActions.value?.run(key as 'pausar' | 'reanudar' | 'prorrogar' | 'eliminar');
+    else processActions.value?.run(key as 'pausar' | 'reanudar' | 'cerrar' | 'prorrogar' | 'eliminar');
 };
 defineExpose({ run });
 

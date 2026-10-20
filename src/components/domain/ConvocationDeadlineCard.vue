@@ -27,7 +27,7 @@ const stateLabel = computed(() => ({
   active: 'En curso',
   paused: 'Pausada',
   overdue: 'Plazo vencido',
-  closed: 'Finalizada',
+  closed: 'Cerrada',
 })[props.deadline.state]);
 
 const elapsed = computed(() => {

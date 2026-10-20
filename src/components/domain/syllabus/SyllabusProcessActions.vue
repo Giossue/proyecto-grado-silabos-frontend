@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarClock, Pause, Play, Trash2 } from '@lucide/vue';
+import { CalendarClock, Lock, Pause, Play, Trash2 } from '@lucide/vue';
 import { ref, type Component } from 'vue';
 import { ApiError } from '@/api/client';
 import { deleteProcess, transitionProcess, type SyllabusProcess, type SyllabusStateCounts } from '@/api/processes';
@@ -19,7 +19,7 @@ import {
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 
-type Transition = 'pausar' | 'reanudar';
+type Transition = 'pausar' | 'reanudar' | 'cerrar';
 
 const props = withDefaults(defineProps<{ process: SyllabusProcess; menu?: boolean }>(), { menu: true });
 const emit = defineEmits<{
@@ -47,6 +47,13 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
     description: 'Los envíos vuelven a admitirse y la plantilla vuelve a quedar protegida.',
     label: 'Reanudar',
     icon: Play,
+  },
+  cerrar: {
+    title: 'Cerrar la convocatoria',
+    description: 'Los sílabos del período quedan guardados solo para consulta: ya no se editan, envían ni revisan, y un cambio de docente no los borra. Los aprobados todavía pueden firmarse. Esta acción no se deshace.',
+    label: 'Cerrar',
+    icon: Lock,
+    destructive: true,
   },
 };
 
@@ -91,7 +98,7 @@ const openDelete = (event: Event): void => {
   deleteOpen.value = true;
 };
 
-const run = (key: 'pausar' | 'reanudar' | 'prorrogar' | 'eliminar'): void => {
+const run = (key: 'pausar' | 'reanudar' | 'cerrar' | 'prorrogar' | 'eliminar'): void => {
   if (key === 'prorrogar') deadlineOpen.value = true;
   else if (key === 'eliminar') { deleteError.value = null; deleteOpen.value = true; }
   else pending.value = key;
@@ -122,6 +129,7 @@ const remove = async (): Promise<void> => {
     <DropdownMenuItem v-if="process.state === 'pausado'" @select="pending = 'reanudar'"><Play />Reanudar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" @select="deadlineOpen = true"><CalendarClock />Prorrogar plazo</DropdownMenuItem>
     <DropdownMenuSeparator v-if="process.state !== 'cerrado'" />
+    <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" variant="destructive" @select="pending = 'cerrar'"><Lock />Cerrar</DropdownMenuItem>
     <DropdownMenuItem variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
   </TableActionsMenu>
 

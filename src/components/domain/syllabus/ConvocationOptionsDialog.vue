@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CalendarClock, CalendarPlus, Pause, Play, Trash2 } from '@lucide/vue';
+import { CalendarClock, CalendarPlus, Lock, Pause, Play, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
 import type { SheetAction } from '@/components/domain/SheetActions.vue';
 import { Button } from '@/components/ui/button';
@@ -27,6 +27,7 @@ const actions = computed<SheetAction[]>(() => {
         ...(process.state === 'abierto' ? [{ key: 'pausar', label: 'Pausar', icon: Pause }] : []),
         ...(process.state === 'pausado' ? [{ key: 'reanudar', label: 'Reanudar', icon: Play }] : []),
         ...(active ? [{ key: 'prorrogar', label: 'Prorrogar plazo', icon: CalendarClock }] : []),
+        ...(active ? [{ key: 'cerrar', label: 'Cerrar', icon: Lock, destructive: true }] : []),
         { key: 'eliminar', label: 'Eliminar', icon: Trash2, destructive: true },
     ];
 });

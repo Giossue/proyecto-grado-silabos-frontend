@@ -46,7 +46,7 @@ describe('AdminProcessesPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Finalizado');
+    expect(wrapper.text()).toContain('Cerrado');
     expect(wrapper.text()).not.toContain('Convocatoria en curso');
     expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('false');
     wrapper.unmount();
