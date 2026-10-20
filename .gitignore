@@ -10,3 +10,4 @@ tests/visual/current/
 
 .tmp-*
 .pw-*
+*.tsbuildinfo

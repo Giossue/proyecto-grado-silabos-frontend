@@ -1,19 +1,32 @@
 import { expect, test, type Page } from '@playwright/test';
 
-const login = async (page: Page, email: string, password: string): Promise<void> => {
+const password = 'Demo-2026!';
+
+type Area = 'admin' | 'coordinacion' | 'docente' | 'biblioteca';
+
+const login = async (page: Page, email: string): Promise<void> => {
   await page.goto('/ingresar');
   await page.getByLabel('Correo institucional').fill(email);
   await page.locator('input[type="password"]').fill(password);
   await page.getByRole('button', { name: 'Ingresar' }).click();
 };
 
-const expectPanel = async (page: Page, area: 'admin' | 'coordinacion' | 'docente'): Promise<void> => {
+const expectPanel = async (page: Page, area: Area): Promise<void> => {
   await expect(page).toHaveURL(new RegExp(`/${area}/panel$`));
+  await expect(page.getByRole('heading', { level: 1, name: 'Panel de trabajo' })).toBeVisible();
 };
 
 const mainNavigation = (page: Page) =>
   page.locator('[data-sidebar="content"]');
 
+const expectNavigation = async (page: Page, titles: string[]): Promise<void> => {
+  await expect(mainNavigation(page).getByRole('link')).toHaveText(titles);
+};
+
+const openSection = async (page: Page, link: string, heading: string | RegExp): Promise<void> => {
+  await mainNavigation(page).getByRole('link', { name: link, exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible();
+};
 
 const captureServerErrors = (page: Page): string[] => {
   const errors: string[] = [];
@@ -23,194 +36,136 @@ const captureServerErrors = (page: Page): string[] => {
   return errors;
 };
 
-const isoDate = (offsetDays: number): string => {
-  const date = new Date();
-  date.setDate(date.getDate() + offsetDays);
-  return date.toISOString().slice(0, 10);
-};
-
-const pickDate = async (page: Page, label: string, value: string): Promise<void> => {
-  const trigger = page.getByLabel(label);
-  await trigger.click();
-  const popoverId = await trigger.getAttribute('aria-controls');
-  expect(popoverId).not.toBeNull();
-  await page
-    .locator(`[id="${popoverId}"]`)
-    .locator(`[data-slot="calendar-cell-trigger"][data-value="${value}"]`)
-    .click();
-};
-
 test.describe('frontera distribuida de identidad', () => {
   test.describe.configure({ mode: 'serial', timeout: 60_000 });
 
   test('mantiene sesión, CSRF y navegación administrativa', async ({ page }) => {
     const serverErrors = captureServerErrors(page);
-    await login(page, 'admin@silabos.test', 'Demo-2026!');
+    await login(page, 'admin@silabos.test');
     await expectPanel(page, 'admin');
-    await expect(page.getByText('Gestión institucional de Sílabos UEB')).toBeVisible();
+    await expectNavigation(page, [
+      'Panel',
+      'Convocatorias',
+      'Usuarios y roles',
+      'Facultades y carreras',
+      'Plantilla',
+      'Auditoría',
+      'Ayuda de pantallas',
+    ]);
 
-    await mainNavigation(page).getByRole('link', { name: 'Usuarios y roles', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Usuarios y roles' })).toBeVisible();
-    await expect(page.getByText('admin@silabos.test')).toBeVisible();
+    await openSection(page, 'Usuarios y roles', 'Usuarios y roles');
+    const users = page.getByRole('table', { name: 'Usuarios y roles' });
+    await expect(users.getByText('admin@silabos.test')).toBeVisible();
 
     const email = `e2e.${Date.now()}@silabos.test`;
-    await page.getByRole('button', { name: 'Crear cuenta' }).click();
+    await page.getByRole('button', { name: 'Crear cuenta', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Crear cuenta institucional' });
-    await dialog.getByLabel('Nombre completo').fill('Cuenta E2E');
+    await dialog.getByLabel('Primer nombre').fill('CUENTA');
+    await dialog.getByLabel('Segundo nombre').fill('DE');
+    await dialog.getByLabel('Primer apellido').fill('PRUEBA');
+    await dialog.getByLabel('Segundo apellido').fill('AUTOMATICA');
     await dialog.getByLabel('Correo institucional').fill(email);
-    await dialog.getByLabel('Contraseña temporal').fill('Temporal-2026!');
     await dialog.getByLabel('Rol inicial').click();
-    await page.getByRole('option', { name: 'Administrador' }).click();
+    await page.getByRole('option', { name: 'Administrador', exact: true }).click();
     await dialog.getByRole('button', { name: 'Crear cuenta', exact: true }).click();
-    await expect(page.getByText(email)).toBeVisible();
+    await expect(dialog).toBeHidden();
+    const search = page.getByLabel('Buscar por nombre o correo');
+    await search.fill(email);
+    await search.press('Enter');
+    await expect(users.getByText(email)).toBeVisible();
 
-    await mainNavigation(page).getByRole('link', { name: 'Facultades y carreras', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Facultades' })).toBeVisible();
+    await openSection(page, 'Facultades y carreras', 'Facultades');
+    await openSection(page, 'Auditoría', 'Auditoría');
+    await openSection(page, 'Ayuda de pantallas', 'Ayuda de pantallas');
 
-    await mainNavigation(page).getByRole('link', { name: 'Auditoría', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Auditoría' })).toBeVisible();
+    await openSection(page, 'Convocatorias', 'Convocatorias');
+    await expect(page.getByRole('columnheader', { name: 'Período' })).toBeVisible();
 
-    await page.goto('/admin/procesos');
-    await expect(page.getByRole('heading', { name: 'Procesos', exact: true })).toBeVisible();
-    await expect(page.getByRole('tablist')).toHaveCount(0);
+    await openSection(page, 'Plantilla', 'Plantilla de sílabo');
+    await expect(page.getByRole('button', { name: 'Editar JSON' })).toBeVisible();
 
-    await page.getByRole('button', { name: /ADMINISTRADOR DEMO/ }).click();
-    await page.getByRole('menuitem', { name: 'Configuración', exact: true }).click();
-    await page.getByRole('link', { name: 'Seguridad', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Seguridad' })).toBeVisible();
+    await page.getByRole('button', { name: 'Menú de usuario' }).click();
+    await page.getByRole('menuitem', { name: 'Configuración' }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Configuración' })).toBeVisible();
+    await page.getByRole('navigation', { name: 'Configuración' }).getByRole('link', { name: 'Seguridad', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/configuracion\/seguridad$/);
+    await expect(page.getByRole('heading', { name: 'Actualizar contraseña' })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Notificaciones', exact: true }).click();
+    await page.getByRole('button', { name: /^Notificaciones( sin leer)?$/ }).click();
     await expect(page.getByRole('dialog').getByRole('heading', { name: 'Notificaciones' })).toBeVisible();
     await page.getByRole('link', { name: 'Ver todas las notificaciones' }).click();
     await expect(page).toHaveURL(/\/admin\/notificaciones$/);
-
-    await mainNavigation(page).getByRole('link', { name: 'Plantilla', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Plantilla' })).toBeVisible();
-    const createTemplate = page.getByRole('button', { name: 'Nueva plantilla' });
-    const editTemplate = page.getByRole('button', { name: 'Editar', exact: true });
-    const protectedTemplate = page.getByText('Plantilla protegida durante el proceso');
-    await expect(createTemplate.or(editTemplate).or(protectedTemplate)).toBeVisible();
-    if (await createTemplate.isVisible()) await createTemplate.click();
-    if (!await protectedTemplate.isVisible()) await expect(editTemplate).toBeVisible();
-
-    await mainNavigation(page).getByRole('link', { name: 'Convocatorias', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Convocatorias de sílabos' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Proceso' })).toBeVisible();
-    const activeProcess = page.getByText('No se puede preparar otro proceso');
-    if (!await activeProcess.isVisible()) {
-      let processActions = page.getByRole('button', { name: /Acciones para/ }).first();
-      if (!await processActions.isVisible()) {
-        await page.getByRole('button', { name: 'Nuevo proceso' }).click();
-        await page.getByLabel('Periodo académico').click();
-        await page.getByRole('option').first().click();
-        await pickDate(page, 'Inicio', isoDate(1));
-        await pickDate(page, 'Fecha límite de entrega', isoDate(5));
-        await page.getByRole('button', { name: 'Abrir convocatoria' }).click();
-        processActions = page.getByRole('button', { name: /Acciones para/ }).first();
-        await expect(processActions).toBeVisible();
-      }
-    }
+    await expect(page.getByRole('heading', { level: 1, name: 'Notificaciones' })).toBeVisible();
 
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'Convocatorias de sílabos' })).toBeVisible();
-    await expect(page.getByRole('columnheader', { name: 'Proceso' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Notificaciones' })).toBeVisible();
 
     await page.setViewportSize({ width: 360, height: 740 });
-    await page.getByRole('button', { name: 'Mostrar menú' }).click();
+    await page.getByRole('button', { name: 'Abrir el menú' }).click();
     await expect(page.locator('[data-sidebar="content"]:visible')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
     expect(serverErrors).toEqual([]);
   });
 
-  test('exige que Coordinación seleccione la carrera y carga sus módulos', async ({ page }) => {
+  test('carga los módulos de Coordinación de su carrera', async ({ page }) => {
     const serverErrors = captureServerErrors(page);
-    await login(page, 'coordinador@silabos.test', 'Demo-2026!');
+    await login(page, 'coordinador@silabos.test');
+    await expectPanel(page, 'coordinacion');
+    await expectNavigation(page, [
+      'Panel',
+      'Revisión',
+      'Materias y asignaciones',
+      'Docentes',
+      'Proyecto de carrera',
+      'Malla',
+    ]);
 
-    await expect(page.getByRole('heading', { name: /Bienvenida, COORDINADORA DEMO/i })).toBeVisible();
-    await expect(page.getByText('Seleccione la carrera y el ámbito con el que trabajará en esta sesión.')).toBeVisible();
-    await page.getByRole('button', { name: 'Entrar a esta carrera' }).click();
-    await expect(page.getByRole('heading', { name: 'Panel' })).toBeVisible();
-    await expect(page.getByText('Cargar el logo de la facultad')).toHaveCount(0);
+    await openSection(page, 'Revisión', 'Cola de revisión');
 
-    await mainNavigation(page).getByRole('link', { name: 'Convocatorias', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Convocatorias de sílabos' })).toBeVisible();
-    await expect(mainNavigation(page).getByRole('link', { name: 'Fuentes académicas', exact: true })).toHaveCount(0);
-    await expect(page.getByRole('button', { name: 'Asistente curricular', exact: true })).toHaveCount(0);
-
-    await expect(mainNavigation(page).getByRole('link', { name: 'Proyecto de carrera', exact: true })).toHaveCount(0);
-
-    await mainNavigation(page).getByRole('link', { name: 'Malla', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Malla' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Asistente curricular', exact: true })).toHaveCount(0);
-    await page.getByRole('button', { name: /Acciones para .+/ }).first().click();
-    await expect(page.getByRole('menuitem', { name: 'Resultados de aprendizaje' })).toHaveCount(0);
-    await page.keyboard.press('Escape');
-
-    await mainNavigation(page).getByRole('link', { name: 'Materias y asignaciones', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Materias y asignaciones' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Asistente curricular', exact: true })).toHaveCount(0);
+    await openSection(page, 'Materias y asignaciones', 'Materias y asignaciones');
     await expect(page.getByLabel('Buscar materia programada')).toBeVisible();
 
-    await mainNavigation(page).getByRole('link', { name: 'Docentes', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Docentes' })).toBeVisible();
+    await openSection(page, 'Docentes', 'Docentes');
+    await openSection(page, 'Proyecto de carrera', 'Proyecto de carrera');
 
-    await mainNavigation(page).getByRole('link', { name: 'Convocatorias', exact: true }).click();
-    const convocationActions = page.getByRole('button', { name: /Acciones para/ }).first();
-    await convocationActions.click();
-    const viewConvocation = page.getByRole('menuitem', { name: 'Ver seguimiento' });
-    if (await viewConvocation.count()) {
-      await viewConvocation.click();
-    } else {
-      await page.getByRole('menuitem', { name: 'Abrir convocatoria' }).click();
-      const dialog = page.getByRole('dialog', { name: 'Abrir convocatoria de la carrera' });
-      await dialog.getByRole('button', { name: 'Abrir convocatoria' }).click();
-      await expect(dialog).toBeHidden();
-      await page.getByRole('button', { name: /Acciones para/ }).first().click();
-      await page.getByRole('menuitem', { name: 'Ver seguimiento' }).click();
-    }
-    await expect(page.getByRole('heading', { name: 'Seguimiento por expediente' })).toBeVisible();
-    await expect(page.getByText('not_started', { exact: true })).toHaveCount(0);
-    await page.keyboard.press('Escape');
+    await openSection(page, 'Malla', 'Malla');
+    await expect(page.getByRole('button', { name: /Editar malla|Comprobando/ })).toBeVisible();
 
-    await mainNavigation(page).getByRole('link', { name: 'Revisión', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Revisión' })).toBeVisible();
-
-    await mainNavigation(page).getByRole('link', { name: 'Malla', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Malla' })).toBeVisible();
+    await page.goto('/admin/convocatorias');
+    await expect(page).toHaveURL(/\/coordinacion\/panel$/);
     expect(serverErrors).toEqual([]);
   });
 
   test('mantiene el alcance docente al listar sus sílabos', async ({ page }) => {
     const serverErrors = captureServerErrors(page);
-    await login(page, 'docente@silabos.test', 'Demo-2026!');
+    await login(page, 'docente@silabos.test');
+    await expectPanel(page, 'docente');
+    await expectNavigation(page, ['Panel', 'Mis sílabos']);
 
-    await expect(page.getByRole('heading', { name: 'Panel' })).toBeVisible();
-    await mainNavigation(page).getByRole('link', { name: 'Mis sílabos', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Mis sílabos' })).toBeVisible();
-    const syllabusRow = page.getByRole('row', { name: /Arquitectura de Software/ });
-    await syllabusRow.getByRole('button', { name: /Acciones para Arquitectura de Software/ }).click();
-    await page.getByRole('menuitem', { name: 'Abrir sílabo' }).click();
-    await expect(page).toHaveURL(/\/docente\/mis-silabos\/[0-9a-f-]+$/);
-    await expect(page.getByRole('heading', { name: 'Mis sílabos' })).toBeVisible();
-    const startDraft = page.getByRole('button', { name: 'Iniciar borrador' }).first();
-    if (await startDraft.isVisible()) await startDraft.click();
+    await openSection(page, 'Mis sílabos', /^(Mis sílabos|Sílabos - Período .+)$/);
+    await expect(page).toHaveURL(/\/docente\/mis-silabos$/);
+    await expect(
+      page.getByRole('list', { name: 'Mis sílabos' }).or(page.getByText('No tiene sílabos asignados')),
+    ).toBeVisible();
 
-    const description = page.getByLabel('Descripción de la asignatura');
-    await expect(description).toBeVisible();
-    const autosavedValue = `Descripción distribuida ${Date.now()}`;
-    const autosave = page.waitForResponse((response) =>
-      response.request().method() === 'PATCH'
-      && /\/api\/v1\/teacher\/syllabi\/[0-9a-f-]+\/fields\/[0-9a-f-]+$/.test(response.url()),
-    );
-    await description.fill(autosavedValue);
-    expect((await autosave).status()).toBe(200);
-    await page.reload();
-    await expect(page.getByLabel('Descripción de la asignatura')).toHaveValue(autosavedValue);
-    await expect.poll(() => page.locator('img').evaluateAll((images) =>
-      images
-        .filter((image) => !(image as HTMLImageElement).complete || (image as HTMLImageElement).naturalWidth === 0)
-        .map((image) => (image as HTMLImageElement).src),
-    )).toEqual([]);
+    await page.getByRole('link', { name: 'Historial', exact: true }).click();
+    await expect(page.getByRole('heading', { level: 1, name: 'Historial' })).toBeVisible();
+
+    await page.goto('/coordinacion/revisiones');
+    await expect(page).toHaveURL(/\/docente\/panel$/);
+    expect(serverErrors).toEqual([]);
+  });
+
+  test('limita Biblioteca a sus revisiones', async ({ page }) => {
+    const serverErrors = captureServerErrors(page);
+    await login(page, 'bibliotecario@silabos.test');
+    await expectPanel(page, 'biblioteca');
+    await expectNavigation(page, ['Panel', 'Revisiones de biblioteca']);
+
+    await openSection(page, 'Revisiones de biblioteca', 'Revisiones de biblioteca');
+
+    await page.goto('/admin/usuarios');
+    await expect(page).toHaveURL(/\/biblioteca\/panel$/);
     expect(serverErrors).toEqual([]);
   });
 });

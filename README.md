@@ -1,9 +1,28 @@
 # Sílabos UEB — Frontend
 
-SPA independiente de Sílabos UEB, construida con Vue 3, TypeScript, Vite y Vue Router.
-Consume únicamente la API versionada del repositorio
-`proyecto-grado-silabos-backend`; no usa Inertia ni rutas o acciones generadas por
-Laravel.
+SPA de Sílabos UEB hecha con Vue 3, TypeScript, Vite y Vue Router. Solo consume la API
+`/api/v1` del repositorio `proyecto-grado-silabos-backend`.
+
+Laravel decide permisos, alcance, validaciones y cambios de estado. Las guardas de Vue y
+los botones ocultos solo ordenan la pantalla; no reemplazan la autorización del servidor.
+
+## Qué cubre
+
+- **Identidad:** ingreso, recuperación de contraseña, activación de cuenta, verificación de
+  correo, segundo factor, perfil, seguridad y selección de carrera o rol.
+- **Administración:** panel, convocatorias, usuarios y roles (con importación desde
+  Excel), facultades y carreras, plantilla del sílabo (editor visual y «Editar JSON»),
+  auditoría y ayuda de pantallas.
+- **Coordinación:** panel con apertura y seguimiento de la convocatoria, revisión de
+  sílabos (detalle y comparación de revisiones), materias y asignaciones, docentes, malla
+  y proyecto de carrera. En el proyecto de carrera se llena la ficha de cada materia, se
+  puede importar desde un documento y se marca por campo si «El docente puede editarlo».
+- **Docencia:** mis sílabos, editor con autoguardado, copia desde otro paralelo,
+  asistente de IA e historial.
+- **Biblioteca:** revisiones de biblioteca y verificación de la bibliografía.
+- **Documentos y firmas:** Word y PDF del sílabo. La firma electrónica se hace en el
+  navegador con el archivo `.p12` o `.pfx` del usuario; solo se envía el PDF firmado.
+- **Comunes:** notificaciones, ayuda por pantalla y opciones de accesibilidad.
 
 ## Desarrollo
 
@@ -13,46 +32,29 @@ npm ci
 npm run dev
 ```
 
-`VITE_API_URL` debe apuntar al origen de Laravel, sin `/api/v1`. Antes de iniciar sesión
-el cliente solicita `/sanctum/csrf-cookie`; las credenciales nunca se persisten en el
-navegador.
+`VITE_API_URL` apunta al origen de Laravel, sin `/api/v1`. Antes de cada cambio el
+cliente pide `/sanctum/csrf-cookie` si hace falta; si la cookie CSRF caducó la renueva una
+vez y, si la sesión ya no es válida, limpia el estado y vuelve al ingreso. Las
+credenciales no se guardan en el navegador.
 
-## Imagen independiente
+El backend debe tener el origen del frontend en `FRONTEND_URL` y su host en
+`SANCTUM_STATEFUL_DOMAINS`. Ambos deben compartir el dominio raíz para que la cookie de
+sesión `HttpOnly` funcione con `SESSION_DOMAIN`.
 
-La imagen sirve la SPA con Nginx en el puerto `8080` y expone
-`GET /health/live`. La URL pública del backend se configura al arrancar, sin reconstruir
-el JavaScript:
+## Scripts
 
-```bash
-docker build -t silabos-frontend .
-docker run --rm -p 8080:8080 \
-  -e PUBLIC_API_URL=https://api.silabos.example.edu.ec \
-  silabos-frontend
-```
+| Comando | Qué hace |
+| --- | --- |
+| `npm run dev` | Servidor de desarrollo de Vite. |
+| `npm run build` | `vue-tsc` y compilación de producción. |
+| `npm run build:deploy` | Solo compilación con Vite (la usa el Dockerfile). |
+| `npm run lint` | Pruebas de las reglas de arquitectura y ESLint. |
+| `npm run contract:check` | Comprueba que las llamadas de `src/api/` existan en `docs/architecture/openapi.json` del backend (o en `OPENAPI_FILE`). |
+| `npm run typecheck` | `vue-tsc --noEmit`. |
+| `npm test` | Pruebas Vitest (`src/**/*.test.ts`). |
+| `npm run test:e2e` | Pruebas Playwright de `tests/e2e/`. |
 
-El Dockerfile usa la caché de BuildKit para el registro de npm y compila solo con Vite.
-En Dokploy use el tipo de build **Dockerfile**, la ruta `Dockerfile`, el contexto `.` y el
-puerto interno `8080`; no seleccione la etapa `build`, pues la imagen final es la que
-contiene Nginx y el chequeo de salud.
-
-El backend debe incluir el origen del frontend en `FRONTEND_URL` y su host en
-`SANCTUM_STATEFUL_DOMAINS`; ambos deben compartir el dominio raíz para que la cookie de
-sesión `HttpOnly` funcione con `SESSION_DOMAIN`. `PUBLIC_API_URL` es obligatorio al
-arrancar la imagen y debe contener solo el origen (`https://host[:puerto]`), sin ruta.
-
-## Superficie disponible
-
-La SPA cubre identidad completa —ingreso, recuperación y cambio de contraseña,
-verificación de correo, segundo factor, sesiones y selección de ámbito— y las áreas de
-Administración, Coordinación y Docencia. Incluye plantilla institucional, estructura
-académica, procesos y convocatorias, fuentes, revisión, documentos privados, auditoría,
-trabajos, informes, editor docente con autoguardado y tablas repetibles, observaciones y
-asistencia de IA explicable.
-
-Laravel sigue siendo la autoridad de permisos, alcance, validaciones y transiciones. Las
-guardas de Vue y los controles ocultos no sustituyen la autorización del servidor.
-
-## Verificación
+Antes de entregar un cambio:
 
 ```bash
 npm run lint
@@ -62,41 +64,44 @@ npm run typecheck
 npm run build
 ```
 
-El recorrido distribuido real se ejecuta aparte contra una base **de pruebas** recién
-migrada y sembrada. Requiere que la API Laravel de pruebas esté escuchando en loopback;
-el comando rechaza deliberadamente cualquier URL remota:
+## Pruebas de extremo a extremo
+
+Playwright corre contra una API Laravel **de pruebas**, recién migrada y sembrada, que
+escuche en loopback. La configuración rechaza cualquier otra URL:
 
 ```bash
 VITE_API_URL=http://127.0.0.1:8000 npm run test:e2e
 ```
 
-Playwright comprueba ingreso y sesión por cookie, CSRF y creación administrativa,
-plantilla, proceso, fuentes, logo, apertura de convocatoria, módulos de Coordinación,
-borrador docente, autoguardado, persistencia después de recargar, carga de imágenes,
-ausencia de respuestas 5xx y ausencia de desbordamiento global a 360 px.
-
-La cobertura transversal de accesibilidad (foco de hojas, cierre con Escape y overflow
-móvil) puede ejecutarse de forma aislada con:
+Las cuentas que usan las pruebas son las del seeder del backend
+(`admin@`, `coordinador@`, `docente@` y `bibliotecario@silabos.test`). Para correr un solo
+archivo:
 
 ```bash
 VITE_API_URL=http://127.0.0.1:8000 npx playwright test tests/e2e/accessibility.spec.ts
 ```
 
-Para revisar la paridad visual en local, levante la API aislada en loopback y ejecute:
+## Prueba manual de firmas
+
+`scripts/signature-e2e.sh <pdf> [carpeta]` es una herramienta manual. Crea certificados
+`.p12` de prueba, firma el PDF con el mismo código del navegador (docente y luego
+coordinación) y verifica cada firma con el verificador PHP del backend. Necesita
+`openssl`, `php`, el backend en `../proyecto-grado-silabos-backend` (o `BACKEND_DIR`) y
+`pdfsig` para el informe final. `P12_LEGACY=1` crea archivos `.p12` con cifrado antiguo.
+
+## Imagen de producción
+
+La imagen sirve la SPA con Nginx en el puerto `8080` y expone `GET /health/live`. La URL
+del backend se pasa al arrancar, sin recompilar:
 
 ```bash
-VITE_API_URL=http://127.0.0.1:8000 npm run test:visual-spa
-npm run test:visual-compare
+docker build -t silabos-frontend .
+docker run --rm -p 8080:8080 \
+  -e PUBLIC_API_URL=https://api.silabos.example.edu.ec \
+  silabos-frontend
 ```
 
-La primera orden captura claro/oscuro a 1440 px y claro a 360 px para los tres roles en
-`tests/visual/current/`. La segunda empareja esas capturas con la línea base generada
-desde el monolito en `tests/visual/baseline/`, valida dimensiones y muestra diferencias
-de píxeles. Los estados y datos dinámicos se revisan manualmente; el informe no sustituye
-la aceptación visual. El comparador es informativo por defecto; para convertir las
-dimensiones incompatibles en una puerta explícita, ejecuta
-`npm run test:visual-compare -- --strict`.
-
-El cliente prepara CSRF antes de cada mutación cuando hace falta, renueva una cookie CSRF
-caducada una sola vez y, si la sesión deja de ser válida, limpia el estado local y vuelve
-al ingreso.
+`PUBLIC_API_URL` es obligatorio y debe ser solo el origen (`https://host[:puerto]`), sin
+ruta. En Dokploy use el tipo de build **Dockerfile**, la ruta `Dockerfile`, el contexto
+`.` y el puerto interno `8080`. No elija la etapa `build`: la imagen final es la que tiene
+Nginx y el chequeo de salud.
