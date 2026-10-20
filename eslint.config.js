@@ -1,15 +1,25 @@
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
-import { globalIgnores } from 'eslint/config';
+import { defineConfig, globalIgnores } from 'eslint/config';
 import prettier from 'eslint-config-prettier/flat';
 import vue from 'eslint-plugin-vue';
 import vueAccessibility from 'eslint-plugin-vuejs-accessibility';
+import tseslint from 'typescript-eslint';
 import { semanticStyles, sharedComponents } from './scripts/eslint/frontendArchitecture.mjs';
 
-export default defineConfigWithVueTs(
+const everywhere = (config) => {
+  const { files, ...rest } = config;
+  return files === undefined ? config : rest;
+};
+
+export default defineConfig(
   globalIgnores(['dist/**', 'node_modules/**', 'coverage/**', 'src/components/ui/**']),
+  tseslint.configs.recommended.map(everywhere),
   vue.configs['flat/essential'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: { parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.vue'] } },
+    rules: { 'vue/block-lang': ['error', { script: { lang: 'ts' } }] },
+  },
   ...vueAccessibility.configs['flat/recommended'],
-  vueTsConfigs.recommended,
   {
     rules: {
       'vue/multi-word-component-names': 'off',
