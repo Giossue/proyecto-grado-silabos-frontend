@@ -1,9 +1,7 @@
-import DocumentEvaluation from '@/components/domain/syllabus/DocumentEvaluation.vue';
-import DocumentUnits from '@/components/domain/syllabus/DocumentUnits.vue';
 import { h } from 'vue';
 import type { VNodeChild } from 'vue';
-import { identificationTable } from '@/lib/blockLayouts';
-import { blockOf, blockPlain, identificationSlotText, type DocumentNode } from '@/lib/templateDocument';
+import { blockFilledText, expandBlock } from '@/lib/blocks/runtime';
+import type { DocumentNode } from '@/lib/templateDocument';
 
 const TAGS: Record<string, string> = {
     paragraph: 'p', bulletList: 'ul', orderedList: 'ol', listItem: 'li',
@@ -15,10 +13,10 @@ export const isFreeTextDocument = (value: unknown): value is DocumentNode =>
     typeof value === 'object' && value !== null && (value as DocumentNode).type === 'doc';
 
 export const freeTextPlain = (node: DocumentNode): string =>
-    node.type === 'documentBlock' ? blockPlain(node) : node.type === 'text' ? (node.text ?? '') : node.type === 'variable' ? String(node.attrs?.label || 'Dato del sistema') : (node.content ?? []).map(freeTextPlain).join(' ');
+    node.type === 'documentBlock' ? blockFilledText(node) : node.type === 'text' ? (node.text ?? '') : node.type === 'variable' ? String(node.attrs?.label || 'Dato del sistema') : (node.content ?? []).map(freeTextPlain).join(' ');
 
 export const freeTextLines = (node: DocumentNode): string => {
-    if (node.type === 'documentBlock') return blockPlain(node);
+    if (node.type === 'documentBlock') return blockFilledText(node);
     if (node.type === 'text') return node.text ?? '';
     if (node.type === 'hardBreak') return '\n';
     const children = (node.content ?? []).map(freeTextLines);
@@ -44,36 +42,15 @@ const tableColumnWidths = (table: DocumentNode): number[] | null => {
     return null;
 };
 
-export type RenderOptions = { variable?: (id: string) => VNodeChild | undefined };
+export type RenderOptions = { variable?: (id: string) => VNodeChild | undefined; node?: (node: DocumentNode, options: RenderOptions) => VNodeChild | undefined };
 
-const renderBlock = (node: DocumentNode): VNodeChild => {
-    const { kind, props, value } = blockOf(node);
-    if (kind === 'identificacion') {
-        const table = identificationTable();
-
-        return table === null
-            ? h('p', {}, 'Identificación institucional')
-            : renderFreeText(table, { variable: (id) => identificationSlotText(id, value.disability!) });
-    }
-    if (kind === 'evaluacion') return h(DocumentEvaluation);
-    if (kind === 'unidades') return h(DocumentUnits, { units: value.units ?? [], hours: null, interactive: false });
-    const showRows = kind === 'repetible' || (value.answer === 'si' && props.columns.length > 0);
-    const table = showRows && props.columns.length > 0
-        ? h('table', { class: 'free-text-table' }, [h('tbody', {}, [
-            h('tr', {}, props.columns.map((column) => h('th', {}, column.label))),
-            ...(value.rows.length > 0 ? value.rows : [{}]).map((row) => h('tr', {}, props.columns.map((column) => h('td', {}, row[column.key] ?? '')))),
-        ])])
-        : null;
-    if (kind === 'repetible') return h('div', { class: 'document-block' }, [props.label ? h('p', {}, [h('strong', {}, props.label)]) : null, table]);
-
-    return h('div', { class: 'document-block' }, [
-        h('p', {}, [h('strong', {}, props.question ?? ''), ' ', value.answer === 'si' ? 'Sí' : value.answer === 'no' ? 'No' : h('em', {}, 'Sin responder')]),
-        table,
-    ]);
-};
+const renderBlock = (node: DocumentNode, options?: RenderOptions): VNodeChild =>
+    h('div', { class: 'document-block', 'data-block-kind': String(node.attrs?.kind ?? '') }, expandBlock(node).map((child) => renderFreeText(child, options)));
 
 export const renderFreeText = (node: DocumentNode, options?: RenderOptions): VNodeChild => {
-    if (node.type === 'documentBlock') return renderBlock(node);
+    const custom = options?.node?.(node, options);
+    if (custom !== undefined) return custom;
+    if (node.type === 'documentBlock') return renderBlock(node, options);
     if (node.type === 'text') {
         const marks = new Set((node.marks ?? []).map((mark) => mark.type));
         let content: VNodeChild = node.text ?? '';

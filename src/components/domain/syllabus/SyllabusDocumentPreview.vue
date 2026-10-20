@@ -3,19 +3,19 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { DocumentPresentation, SyllabusDetail } from '@/api/syllabi';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
-import { layoutStyle } from '@/lib/documentLayout';
+import { documentLayout, layoutStyle, sheetPixels } from '@/lib/documentLayout';
 import { cn } from '@/lib/utils';
 
 const props = defineProps<{ presentation: DocumentPresentation; sections: SyllabusDetail['sections'] }>();
 
-const SHEET_PX = { portrait: 794, landscape: 1123 };
 const root = ref<HTMLElement | null>(null);
 const available = ref(0);
 const sheetElements = new Map<number, HTMLElement>();
 let resizeObserver: ResizeObserver | null = null;
 let frame = 0;
 
-const layout = computed(() => layoutStyle(props.presentation.appearance));
+const layout = computed(() => layoutStyle(props.presentation.document ? documentLayout(props.presentation.document) : props.presentation.appearance, props.presentation.document));
+const sheetPx = computed(() => sheetPixels(props.presentation.document));
 const sheets = computed(() => {
     const groups: Array<{ landscape: boolean; items: SyllabusDetail['sections'] }> = [];
     for (const section of props.sections) {
@@ -28,7 +28,7 @@ const sheets = computed(() => {
     return groups.length > 0 ? groups : [{ landscape: false, items: [] }];
 });
 const scaleFor = (landscape: boolean): number => {
-    const width = landscape ? SHEET_PX.landscape : SHEET_PX.portrait;
+    const width = landscape ? sheetPx.value.landscape : sheetPx.value.portrait;
 
     return available.value > 0 ? Math.min(1, available.value / width) : 1;
 };
@@ -39,7 +39,7 @@ const setSheet = (index: number, element: unknown): void => {
 const paginate = (): void => {
     cancelAnimationFrame(frame);
     frame = requestAnimationFrame(() => {
-        sheetElements.forEach((element, index) => paginateSheet(element, sheets.value[index]?.landscape ?? false));
+        sheetElements.forEach((element, index) => paginateSheet(element, sheets.value[index]?.landscape ?? false, props.presentation.document));
     });
 };
 

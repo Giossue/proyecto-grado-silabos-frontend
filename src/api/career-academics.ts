@@ -1,3 +1,5 @@
+import { setTemplateRuntime } from "@/lib/blocks/runtime";
+import type { TemplateDefinitionPayload } from "@/lib/blocks/types";
 import type { LockDetail } from '@/api/locks';
 import type { DocumentNode } from '@/lib/templateDocument';
 import { api, ApiError } from "@/api/client";
@@ -117,10 +119,17 @@ export type SubjectProfile = {
   fields: SubjectProfileField[];
   values: Record<string, DocumentNode | null>;
   complete: boolean;
+  definition?: TemplateDefinitionPayload;
+  variables?: Record<string, string>;
+};
+
+const rememberDefinition = (profile: SubjectProfile): SubjectProfile => {
+  setTemplateRuntime(profile.definition, profile.variables);
+  return profile;
 };
 
 export const getSubjectProfile = (subjectId: string) =>
-  api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`);
+  api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`).then(rememberDefinition);
 
 export const saveSubjectProfile = (subjectId: string, values: Record<string, DocumentNode | null>) =>
   withPurgeConfirmation((confirmPurge) => api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`, {

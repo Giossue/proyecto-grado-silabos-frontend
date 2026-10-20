@@ -17,7 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { layoutOf, layoutStyle, type DocumentLayout } from '@/lib/documentLayout';
+import { layoutOf, layoutStyle, sheetPixels, type DocumentLayout } from '@/lib/documentLayout';
+import { templateRuntime } from '@/lib/blocks/runtime';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -42,9 +43,10 @@ const root = ref<HTMLElement | null>(null);
 const available = ref(0);
 let resizeObserver: ResizeObserver | null = null;
 
-const SHEET_PX = { portrait: 794, landscape: 1123 };
+const documentStyle = computed(() => templateRuntime().definition?.document ?? null);
 const scaleFor = (landscape: boolean): number => {
-    const width = landscape ? SHEET_PX.landscape : SHEET_PX.portrait;
+    const pixels = sheetPixels(documentStyle.value);
+    const width = landscape ? pixels.landscape : pixels.portrait;
 
     return available.value > 0 ? Math.min(1, available.value / width) : 1;
 };
@@ -66,7 +68,7 @@ const paginateSoon = (): void => {
 const paginate = (): void => {
     cancelAnimationFrame(paginationFrame);
     paginationFrame = requestAnimationFrame(() => {
-        sheetElements.forEach((element, index) => paginateSheet(element, sheets.value[index]?.landscape ?? false));
+        sheetElements.forEach((element, index) => paginateSheet(element, sheets.value[index]?.landscape ?? false, documentStyle.value));
     });
 };
 const clearSelectionOutside = (event: PointerEvent): void => {
@@ -393,7 +395,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     </div>
 
     <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto py-4" tabindex="0" role="region" :aria-label="`Hoja ${sheetIndex + 1} de la plantilla con desplazamiento horizontal`">
-    <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape), ...layoutStyle(shownLayout) }" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
+    <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape), ...layoutStyle(shownLayout, documentStyle) }" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
       <div data-sheet-content class="flex flex-col gap-6">
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">

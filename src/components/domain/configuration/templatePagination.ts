@@ -1,25 +1,29 @@
+import type { DocumentStyle } from '@/lib/blocks/types';
+import { paperOf } from '@/lib/documentLayout';
 import { createDocumentPaginator } from '@/lib/documentPagination';
 
 const PX_PER_MM = 96 / 25.4;
 const MARGIN = 15 * PX_PER_MM;
 const GAP = 16;
-const PAGE = {
-    portrait: { width: 210 * PX_PER_MM, height: 297 * PX_PER_MM },
-    landscape: { width: 297 * PX_PER_MM, height: 210 * PX_PER_MM },
+const pageOf = (landscape: boolean, document: DocumentStyle | null | undefined): { width: number; height: number } => {
+    const paper = paperOf(document);
+    return landscape ? { width: paper.height * PX_PER_MM, height: paper.width * PX_PER_MM } : { width: paper.width * PX_PER_MM, height: paper.height * PX_PER_MM };
 };
 const BLOCKS = ':scope > header, :scope > section > h3, :scope > section > [data-section-heading], :scope > section > p';
 
-type SheetPaginator = { landscape: boolean; paginate: () => number };
+type SheetPaginator = { landscape: boolean; document: DocumentStyle | null | undefined; paginate: () => number };
 const paginators = new WeakMap<HTMLElement, SheetPaginator>();
 
-const paginatorFor = (content: HTMLElement, landscape: boolean): SheetPaginator => {
+const paginatorFor = (content: HTMLElement, landscape: boolean, document: DocumentStyle | null | undefined): SheetPaginator => {
     const existing = paginators.get(content);
     if (existing) {
         existing.landscape = landscape;
+        existing.document = document;
         return existing;
     }
     const entry: SheetPaginator = {
         landscape,
+        document,
         paginate: () => created.paginate(),
     };
     const margin = (): number => {
@@ -28,7 +32,7 @@ const paginatorFor = (content: HTMLElement, landscape: boolean): SheetPaginator 
 
         return Number.isFinite(padding) && padding > 0 ? padding : MARGIN;
     };
-    const created = createDocumentPaginator(content, () => ({ ...PAGE[entry.landscape ? 'landscape' : 'portrait'], margin: margin(), gap: GAP }));
+    const created = createDocumentPaginator(content, () => ({ ...pageOf(entry.landscape, entry.document), margin: margin(), gap: GAP }));
     paginators.set(content, entry);
     return entry;
 };
@@ -60,7 +64,7 @@ const markBlocks = (content: HTMLElement): void => {
     }
 };
 
-export const paginateSheet = (sheet: HTMLElement, landscape: boolean): void => {
+export const paginateSheet = (sheet: HTMLElement, landscape: boolean, document?: DocumentStyle | null): void => {
     const content = sheet.querySelector<HTMLElement>(':scope > [data-sheet-content]');
     if (!content || sheet.getBoundingClientRect().width === 0) return;
 
@@ -68,10 +72,10 @@ export const paginateSheet = (sheet: HTMLElement, landscape: boolean): void => {
     sheet.style.zoom = '1';
     sheet.style.height = '';
     markBlocks(content);
-    const pages = paginatorFor(content, landscape).paginate();
+    const pages = paginatorFor(content, landscape, document).paginate();
     sheet.style.zoom = zoom;
 
-    const page = PAGE[landscape ? 'landscape' : 'portrait'].height;
+    const page = pageOf(landscape, document).height;
     const stride = page + GAP;
     sheet.style.minHeight = '0';
     sheet.style.height = `${pages * stride - GAP}px`;

@@ -563,14 +563,14 @@
 
 @layer components {
     .template-sheet {
-        width: 210mm;
+        width: var(--document-page-width, 215.9mm);
         max-width: none;
-        min-height: 297mm;
+        min-height: var(--document-page-height, 279.4mm);
         flex-shrink: 0;
         margin-inline: auto;
         padding: var(--document-margin);
         overflow-wrap: anywhere;
-        font-family: Arial, Helvetica, sans-serif;
+        font-family: var(--document-font, Arial, Helvetica, sans-serif);
         font-size: var(--document-body-size, 11pt);
         line-height: var(--document-line-height);
         text-align: left;
@@ -582,8 +582,8 @@
         box-shadow: var(--document-paper-shadow);
     }
     .template-sheet--landscape {
-        width: 297mm;
-        min-height: 210mm;
+        width: var(--document-page-height, 279.4mm);
+        min-height: var(--document-page-width, 215.9mm);
     }
 
     .template-sheet [data-sheet-content] > [data-page-spacer] {
@@ -596,7 +596,7 @@
     }
 
     .template-sheet-title {
-        color: var(--document-official-blue);
+        color: var(--document-title-color, var(--document-official-blue));
         text-align: center;
         font-weight: 700;
         font-size: var(--document-title-size, 14pt);
@@ -660,6 +660,11 @@
 .template-sheet.template-sheet .free-text-editor__content th {
     background-color: transparent;
     font-weight: bold;
+}
+
+.template-sheet.template-sheet :is(.free-text-content, .free-text-editor__content) th:not([style*='background']) {
+    background-color: var(--document-th-background, transparent);
+    color: var(--document-th-color, inherit);
 }
 
 .template-sheet [data-field-body] > p {

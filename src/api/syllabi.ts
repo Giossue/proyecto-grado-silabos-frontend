@@ -1,10 +1,12 @@
-import { setBlockLayouts, type BlockLayouts } from "@/lib/blockLayouts";
+import { setTemplateRuntime } from "@/lib/blocks/runtime";
+import type { DocumentStyle, TemplateDefinitionPayload } from "@/lib/blocks/types";
 import { api } from "@/api/client";
 import type { TemplateAppearance } from "@/api/template";
 import type { DocumentField } from "@/types/configuration";
 import type { AgentAvatarHint } from "@/components/domain/ai/avatar/types";
 
 export type DocumentPresentation = {
+  document?: DocumentStyle;
   appearance: TemplateAppearance;
   title: string;
   logos: { institution: string; faculty: string };
@@ -58,7 +60,7 @@ export type SyllabusDetail = {
   copy_sources?: Array<{ id: string; parallel: string; state: SyllabusRow["state"] }>;
   teachers: string[];
   template_variables?: Record<string, string>;
-  blocks?: BlockLayouts;
+  definition?: TemplateDefinitionPayload;
   validation?: {
     version_bloqueo: number;
     blocking_errors: number;
@@ -137,7 +139,7 @@ export const getTeacherSyllabi = (
 };
 
 const rememberBlocks = <T extends { syllabus: SyllabusDetail }>(response: T): T => {
-  setBlockLayouts(response.syllabus.blocks);
+  setTemplateRuntime(response.syllabus.definition, response.syllabus.template_variables);
   return response;
 };
 export const getTeacherSyllabus = (syllabusId: string) =>

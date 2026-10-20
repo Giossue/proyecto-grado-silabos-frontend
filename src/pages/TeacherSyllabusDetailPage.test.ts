@@ -1,5 +1,7 @@
 import type { DocumentNode } from '@/lib/templateDocument';
-import { setBlockLayouts } from '@/lib/blockLayouts';
+import { setTemplateRuntime } from '@/lib/blocks/runtime';
+import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
+import definition from '@/test/fixtures/template-definition.json';
 import { defineComponent, h } from 'vue';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { flushPromises, mount } from "@vue/test-utils";
@@ -199,7 +201,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const week = (acd: string) => ({ contenidos: "", acd_h: acd, ape_h: "", aa_h: "", acd: "", ape: "", aa: "", evaluacion: "" });
     const units = (acd: string) => Array.from({ length: 4 }, (_, index) => ({ nombre: "U", resultado: "R", semanas: Array.from({ length: 4 }, (__, number) => week(index === 0 && number === 0 ? acd : "")) }));
     const planning = (acd: string): DocumentNode => ({ type: "doc", content: [{ type: "documentBlock", attrs: { kind: "unidades", props: {}, value: { units: units(acd) } } }] });
-    setBlockLayouts({ unidades: { weeks: 16, hours: { acd: 64, ape: 0, aa: 0 } } });
+    setTemplateRuntime(definition as unknown as TemplateDefinitionPayload, { horas_docencia: '64', horas_practicas: '0', horas_autonomas: '0' });
 
     const wrong = syllabus("borrador");
     wrong.sections[0]!.fields[0]!.value = planning("60");

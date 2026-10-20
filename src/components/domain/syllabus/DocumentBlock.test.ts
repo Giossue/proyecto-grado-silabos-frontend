@@ -1,18 +1,15 @@
 import { flushPromises, mount } from '@vue/test-utils';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
-import { setBlockLayouts } from '@/lib/blockLayouts';
-import { newBlock, nodesOfType, type DocumentNode } from '@/lib/templateDocument';
+import { setTemplateRuntime } from '@/lib/blocks/runtime';
+import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
+import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
+import definition from '@/test/fixtures/template-definition.json';
 
-const disability = (value: Record<string, unknown> = { answer: null, rows: [] }): DocumentNode => ({
-    type: 'doc',
-    content: [{ type: 'documentBlock', attrs: {
-        kind: 'si_no',
-        props: { question: '¿Hay estudiantes con discapacidad?', columns: [{ key: 'tipo', label: 'Tipo' }, { key: 'detalle', label: 'Breve descripción' }] },
-        value,
-    } }],
-});
+const official = definition as unknown as TemplateDefinitionPayload;
+const block = (kind: string, value: Record<string, unknown> = {}, props: Record<string, unknown> = {}): DocumentNode => ({ type: 'doc', content: [{ type: 'documentBlock', attrs: { kind, props, value } }] });
+const question = (value: Record<string, unknown> = { answer: null, rows: [] }): DocumentNode => block('si_no', value, { question: '¿Hay estudiantes con discapacidad?', columns: [{ key: 'tipo', label: 'Tipo' }, { key: 'detalle', label: 'Breve descripción' }] });
 const wrappers: Array<ReturnType<typeof mount>> = [];
 const mountEditor = (modelValue: DocumentNode, blocks: 'configure' | 'fill' = 'fill') => {
     const wrapper = mount(FreeTextEditor, { props: { id: 'campo', label: 'Campo', modelValue, blocks }, attachTo: document.body });
@@ -20,160 +17,136 @@ const mountEditor = (modelValue: DocumentNode, blocks: 'configure' | 'fill' = 'f
     return wrapper;
 };
 const last = (wrapper: ReturnType<typeof mountEditor>): DocumentNode => wrapper.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
-const attrsOf = (document: DocumentNode) => nodesOfType(document, 'documentBlock')[0]!.attrs as { props: { question: string; columns: Array<{ label: string }> }; value: { answer: string | null; rows: Array<Record<string, string>> } };
+const attrsOf = <T,>(document: DocumentNode): T => nodesOfType(document, 'documentBlock')[0]!.attrs as T;
+const byLabel = <T extends Element = HTMLInputElement>(label: string): T => document.body.querySelector<T>(`[aria-label="${label}"]`)!;
+const button = (text: string): HTMLButtonElement => [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes(text))!;
+const type = async (label: string, text: string): Promise<void> => {
+    const input = byLabel(label);
+    input.value = text;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushPromises();
+};
 
-describe('bloques dentro del documento', () => {
+describe('bloques definidos en la plantilla', () => {
+    beforeEach(() => setTemplateRuntime(official, { nombre_facultad: 'Ciencias', formacion_docente: 'Formación escrita en el perfil', horas_docencia: '32', horas_practicas: '0', horas_autonomas: '32' }));
     afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
 
-    it('el docente responde Sí, agrega una fila y la escribe', async () => {
-        const wrapper = mountEditor(disability());
-        await flushPromises();
-        expect(document.body.textContent).toContain('¿Hay estudiantes con discapacidad?');
-        expect(document.body.querySelector('table')).toBeNull();
+    describe('pregunta Sí/No', () => {
+        type Attrs = { props: { question: string; columns: Array<{ label: string }> }; value: { answer: string | null; rows: Array<Record<string, string>> } };
 
-        document.body.querySelector<HTMLElement>('[role="radio"][value="true"]')!.click();
-        await flushPromises();
-        expect(attrsOf(last(wrapper)).value.answer).toBe('si');
+        it('el docente responde Sí, agrega una fila y la escribe', async () => {
+            const wrapper = mountEditor(question());
+            await flushPromises();
+            expect(document.body.textContent).toContain('¿Hay estudiantes con discapacidad?');
+            expect(document.body.querySelector('table')).toBeNull();
 
-        const add = [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.includes('Agregar fila'))!;
-        add.click();
-        await flushPromises();
-        const input = document.body.querySelector<HTMLInputElement>('[aria-label="Tipo, fila 1"]')!;
-        input.value = 'Visual';
-        input.dispatchEvent(new Event('input', { bubbles: true }));
-        await flushPromises();
-        expect(attrsOf(last(wrapper)).value.rows).toEqual([{ tipo: 'Visual', detalle: '' }]);
+            document.body.querySelector<HTMLElement>('[role="radio"][value="si"]')!.click();
+            await flushPromises();
+            expect(attrsOf<Attrs>(last(wrapper)).value.answer).toBe('si');
+
+            button('Agregar fila').click();
+            await flushPromises();
+            await type('Tipo, fila 1', 'Visual');
+            expect(attrsOf<Attrs>(last(wrapper)).value.rows).toEqual([{ tipo: 'Visual', detalle: '' }]);
+        });
+
+        it('al responder No se descartan las filas', async () => {
+            const wrapper = mountEditor(question({ answer: 'si', rows: [{ tipo: 'Visual', detalle: 'x' }] }));
+            await flushPromises();
+            document.body.querySelector<HTMLElement>('[role="radio"][value="no"]')!.click();
+            await flushPromises();
+            expect(attrsOf<Attrs>(last(wrapper)).value).toEqual({ answer: 'no', rows: [] });
+        });
+
+        it('el administrador cambia la pregunta y las columnas, pero no responde', async () => {
+            const wrapper = mountEditor(question(), 'configure');
+            await flushPromises();
+            expect(document.body.querySelector('[role="radio"]')).toBeNull();
+            await type('Pregunta', 'Otra pregunta');
+            expect(attrsOf<Attrs>(last(wrapper)).props.question).toBe('Otra pregunta');
+
+            button('Agregar columna').click();
+            await flushPromises();
+            expect(attrsOf<Attrs>(last(wrapper)).props.columns).toHaveLength(3);
+        });
+
+        it('en modo vista se ve la pregunta, la respuesta y la tabla', () => {
+            const wrapper = mount(FreeTextContent, { props: { value: question({ answer: 'si', rows: [{ tipo: 'Visual', detalle: 'Baja visión' }] }) } });
+            expect(wrapper.text()).toContain('¿Hay estudiantes con discapacidad? Sí');
+            expect(wrapper.findAll('th').map((cell) => cell.text())).toEqual(['Tipo', 'Breve descripción']);
+            expect(wrapper.find('td').text()).toBe('Visual');
+        });
+
+        it('una pregunta sin responder muestra la pregunta y no cuenta como contenido', () => {
+            const wrapper = mount(FreeTextContent, { props: { value: question() } });
+            expect(wrapper.text()).toContain('¿Hay estudiantes con discapacidad?');
+            expect(wrapper.text()).not.toContain('Sin contenido');
+        });
     });
 
-    it('al responder No se descartan las filas', async () => {
-        const wrapper = mountEditor(disability({ answer: 'si', rows: [{ tipo: 'Visual', detalle: 'x' }] }));
-        await flushPromises();
-        document.body.querySelector<HTMLElement>('[role="radio"][value="false"]')!.click();
-        await flushPromises();
-        expect(attrsOf(last(wrapper)).value).toEqual({ answer: 'no', rows: [] });
-    });
+    describe('identificación', () => {
+        type Disability = { answer: string | null; type: string; description: string };
+        const identification = (disability: Disability = { answer: null, type: '', description: '' }) => block('identificacion', { disability });
+        const disabilityOf = (document: DocumentNode): Disability => attrsOf<{ value: { disability: Disability } }>(document).value.disability;
 
-    it('el administrador cambia la pregunta y las columnas, pero no responde', async () => {
-        const wrapper = mountEditor(disability(), 'configure');
-        await flushPromises();
-        expect(document.body.querySelector('[role="radio"]')).toBeNull();
-        const question = document.body.querySelector<HTMLInputElement>('[aria-label="Pregunta del bloque"]')!;
-        question.value = 'Otra pregunta';
-        question.dispatchEvent(new Event('input', { bubbles: true }));
-        await flushPromises();
-        expect(attrsOf(last(wrapper)).props.question).toBe('Otra pregunta');
-
-        [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.includes('Agregar columna'))!.click();
-        await flushPromises();
-        expect(attrsOf(last(wrapper)).props.columns).toHaveLength(3);
-    });
-
-    it('el menú Bloque inserta una pregunta Sí/No y una lista repetible', async () => {
-        const wrapper = mountEditor({ type: 'doc', content: [{ type: 'paragraph' }] }, 'configure');
-        await flushPromises();
-        const editor = (wrapper.vm as unknown as { editor: { commands: { insertContent: (content: unknown) => boolean } } }).editor;
-        editor.commands.insertContent([newBlock('si_no'), { type: 'paragraph' }]);
-        editor.commands.insertContent([newBlock('repetible'), { type: 'paragraph' }]);
-        await flushPromises();
-        expect(nodesOfType(last(wrapper), 'documentBlock').map((node) => node.attrs?.kind)).toEqual(['si_no', 'repetible']);
-    });
-
-    it('en modo vista se ve la pregunta, la respuesta y la tabla', async () => {
-        const wrapper = mount(FreeTextContent, { props: { value: disability({ answer: 'si', rows: [{ tipo: 'Visual', detalle: 'Baja visión' }] }) } });
-        expect(wrapper.text()).toContain('¿Hay estudiantes con discapacidad? Sí');
-        expect(wrapper.findAll('th').map((cell) => cell.text())).toEqual(['Tipo', 'Breve descripción']);
-        expect(wrapper.find('td').text()).toBe('Visual');
-    });
-
-    it('una pregunta sin responder no se muestra como contenido vacío', () => {
-        const wrapper = mount(FreeTextContent, { props: { value: disability() } });
-        expect(wrapper.text()).toContain('Sin responder');
-        expect(wrapper.text()).not.toContain('Sin contenido');
-    });
-
-    describe('identificación como una sola tabla', () => {
-        const cell = (type: string, text: string, attrs: Record<string, unknown> = {}): DocumentNode => ({ type, attrs: { colspan: 1, rowspan: 1, ...attrs }, content: [{ type: 'paragraph', content: text === '' ? [] : [{ type: 'text', text }] }] });
-        const slot = (id: string): DocumentNode => ({ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'variable', attrs: { id, label: id } }] }] });
-        const layout: DocumentNode = { type: 'table', content: [
-            { type: 'tableRow', content: [cell('tableHeader', 'FACULTAD: Ciencias')] },
-            { type: 'tableRow', content: [cell('tableHeader', 'ESTUDIANTES CON DISCAPACIDAD'), cell('tableCell', 'Sí'), slot('discapacidad_si'), cell('tableCell', 'No'), slot('discapacidad_no'), slot('discapacidad_tipo'), slot('discapacidad_descripcion')] },
-            { type: 'tableRow', content: [cell('tableCell', 'Formación escrita en el perfil')] },
-        ] };
-        const identification = (disability: Record<string, unknown> = { answer: null, type: '', description: '' }): DocumentNode => ({ type: 'doc', content: [{ type: 'documentBlock', attrs: { kind: 'identificacion', props: {}, value: { disability } } }] });
-        const disabilityOf = (document: DocumentNode) => (nodesOfType(document, 'documentBlock')[0]!.attrs as { value: { disability: { answer: string | null; type: string; description: string } } }).value.disability;
-
-        it('se dibuja como una sola tabla con la respuesta marcada', () => {
-            setBlockLayouts({ identificacion: { table: layout } });
+        it('se dibuja como una sola tabla con los datos del sistema y la respuesta marcada', () => {
             const wrapper = mount(FreeTextContent, { props: { value: identification({ answer: 'si', type: 'Visual', description: 'Baja visión' }) } });
             expect(wrapper.findAll('table')).toHaveLength(1);
             expect(wrapper.text()).toContain('FACULTAD: Ciencias');
             expect(wrapper.text()).toContain('Formación escrita en el perfil');
-            const cells = wrapper.findAll('td').map((item) => item.text());
-            expect(cells).toEqual(expect.arrayContaining(['X', 'Visual', 'Baja visión']));
+            expect(wrapper.text()).toContain('Tipo de discapacidad: Visual');
+            expect(wrapper.findAll('td').map((item) => item.text())).toContain('X');
         });
 
         it('el docente marca Sí y escribe el tipo dentro de la misma tabla', async () => {
-            setBlockLayouts({ identificacion: { table: layout } });
             const wrapper = mountEditor(identification());
             await flushPromises();
             expect(document.body.querySelectorAll('table')).toHaveLength(1);
-            expect(document.body.querySelector<HTMLInputElement>('[aria-label="Tipo de discapacidad"]')!.disabled).toBe(true);
+            expect(byLabel('Tipo de discapacidad').disabled).toBe(true);
 
-            document.body.querySelector<HTMLElement>('[aria-label="Hay estudiantes con discapacidad"]')!.click();
+            byLabel<HTMLElement>('Estudiantes con discapacidad: Sí').click();
             await flushPromises();
             expect(disabilityOf(last(wrapper)).answer).toBe('si');
 
-            const input = document.body.querySelector<HTMLInputElement>('[aria-label="Tipo de discapacidad"]')!;
-            input.value = 'Auditiva';
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            await flushPromises();
+            await type('Tipo de discapacidad', 'Auditiva');
             expect(disabilityOf(last(wrapper)).type).toBe('Auditiva');
         });
 
         it('marcar No borra el detalle', async () => {
-            setBlockLayouts({ identificacion: { table: layout } });
             const wrapper = mountEditor(identification({ answer: 'si', type: 'Visual', description: 'x' }));
             await flushPromises();
-            document.body.querySelector<HTMLElement>('[aria-label="No hay estudiantes con discapacidad"]')!.click();
+            byLabel<HTMLElement>('Estudiantes con discapacidad: No').click();
             await flushPromises();
             expect(disabilityOf(last(wrapper))).toEqual({ answer: 'no', type: '', description: '' });
         });
 
         it('el administrador la ve sin controles de respuesta', async () => {
-            setBlockLayouts({ identificacion: { table: layout } });
             mountEditor(identification(), 'configure');
             await flushPromises();
             expect(document.body.querySelector('[aria-label="Tipo de discapacidad"]')).toBeNull();
-            expect(document.body.querySelector('[aria-label="Quitar el bloque"]')).toBeNull();
+            expect(document.body.textContent).toContain('FACULTAD: Ciencias');
         });
     });
 
     describe('unidades', () => {
-        const units = (): DocumentNode => ({ type: 'doc', content: [{ type: 'documentBlock', attrs: { kind: 'unidades', props: {}, value: {} } }] });
-        const unitsOf = (document: DocumentNode) => (nodesOfType(document, 'documentBlock')[0]!.attrs as { value: { units: Array<{ semanas: Array<Record<string, string>> }> } }).value.units;
-        const type = async (label: string, text: string) => {
-            const input = document.body.querySelector<HTMLInputElement>(`[aria-label="${label}"]`)!;
-            input.value = text;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            await flushPromises();
-        };
+        const unitsOf = (document: DocumentNode) => attrsOf<{ value: { units: Array<{ semanas: Array<Record<string, string>> }> } }>(document).value.units;
+        const units = (weeks = 4): DocumentNode => block('unidades', { units: Array.from({ length: 4 }, () => ({ nombre: '', resultado: '', semanas: Array.from({ length: weeks }, () => ({ contenidos: '', acd_h: '', ape_h: '', aa_h: '', acd: '', ape: '', aa: '', evaluacion: '' })) })) });
 
-        it('arranca con cuatro unidades de cuatro semanas, numeradas del 1 al 16', async () => {
-            setBlockLayouts({ unidades: { weeks: 16, hours: { acd: 32, ape: 32, aa: 32 } } });
-            mountEditor(units());
-            await flushPromises();
-            expect(document.body.querySelectorAll('[data-unit]')).toHaveLength(4);
-            expect(document.body.querySelector('[aria-label="Contenidos temáticos, semana 16"]')).not.toBeNull();
-            expect(document.body.querySelector('[aria-label="Contenidos temáticos, semana 17"]')).toBeNull();
+        it('dibuja las cuatro unidades con la tabla oficial y las semanas numeradas del 1 al 16', () => {
+            const wrapper = mount(FreeTextContent, { props: { value: units() } });
+            expect(wrapper.findAll('table')).toHaveLength(4);
+            expect(wrapper.text()).toContain('Nombre de la unidad');
+            expect(wrapper.text()).toContain('DOCENCIA');
+            expect(wrapper.text()).toContain('Total, horas');
+            expect(wrapper.findAll('td').map((cell) => cell.text())).toContain('16');
         });
 
         it('compara las horas repartidas con las de la asignatura y avisa cuáles no cuadran', async () => {
-            setBlockLayouts({ unidades: { weeks: 16, hours: { acd: 32, ape: 0, aa: 32 } } });
             const wrapper = mountEditor(units());
             await flushPromises();
-            await type('ACD, semana 1', '32');
+            await type('ACD, unidad 1, semana 1', '32');
             expect(unitsOf(last(wrapper))[0]!.semanas[0]!.acd_h).toBe('32');
-            const summary = document.body.querySelector('[data-units-summary]')!.textContent!;
+            const summary = document.body.querySelector('[data-block-summary]')!.textContent!;
             expect(summary).toContain('Semanas 16 de 16');
             expect(summary).toContain('ACD 32 de 32');
             expect(summary).toContain('APE 0 de 0');
@@ -181,36 +154,28 @@ describe('bloques dentro del documento', () => {
         });
 
         it('no deja pasar de 16 semanas y quita las que sobran', async () => {
-            setBlockLayouts({ unidades: { weeks: 16, hours: { acd: 0, ape: 0, aa: 0 } } });
             const wrapper = mountEditor(units());
             await flushPromises();
-            const add = document.body.querySelector<HTMLButtonElement>('[aria-label="Agregar una semana a la unidad 1"]')!;
-            expect(add.disabled).toBe(true);
-            document.body.querySelector<HTMLButtonElement>('[aria-label="Quitar la semana 16"]')!.click();
+            expect(byLabel<HTMLButtonElement>('Agregar semana (unidad 1)').disabled).toBe(true);
+            byLabel<HTMLButtonElement>('Quitar unidad 4, semana 4').click();
             await flushPromises();
             expect(unitsOf(last(wrapper))[3]!.semanas).toHaveLength(3);
-            document.body.querySelector<HTMLButtonElement>('[aria-label="Agregar una semana a la unidad 1"]')!.click();
+            byLabel<HTMLButtonElement>('Agregar semana (unidad 1)').click();
             await flushPromises();
             expect(unitsOf(last(wrapper))[0]!.semanas).toHaveLength(5);
         });
     });
 
-    describe('evaluacion', () => {
-        const evaluation = (): DocumentNode => ({ type: 'doc', content: [{ type: 'documentBlock', attrs: { kind: 'evaluacion', props: {}, value: {} } }] });
-
-        it('con horas de práctico-experimental reparte 2,5, 2, 2 y 3,5 puntos', async () => {
-            setBlockLayouts({ evaluacion: { with_practice: true } });
-            mountEditor(evaluation());
-            await flushPromises();
-            expect(document.body.querySelector('[data-evaluation]')!.textContent).toContain('2.5 PUNTOS');
-            expect(document.body.querySelector('[data-evaluation]')!.textContent).toContain('práctico-experimental');
+    describe('evaluación', () => {
+        it('con horas de práctico-experimental reparte 2,5, 2, 2 y 3,5 puntos', () => {
+            setTemplateRuntime(official, { horas_practicas: '16' });
+            const text = mount(FreeTextContent, { props: { value: block('evaluacion') } }).text();
+            expect(text).toContain('2.5 PUNTOS');
+            expect(text).toContain('práctico-experimental');
         });
 
-        it('sin horas de práctico-experimental usa 3,5, 3 y 3,5 puntos y quita la fila', async () => {
-            setBlockLayouts({ evaluacion: { with_practice: false } });
-            mountEditor(evaluation());
-            await flushPromises();
-            const text = document.body.querySelector('[data-evaluation]')!.textContent!;
+        it('sin horas de práctico-experimental usa 3,5, 3 y 3,5 puntos y quita la fila', () => {
+            const text = mount(FreeTextContent, { props: { value: block('evaluacion') } }).text();
             expect(text).toContain('3.0 PUNTOS');
             expect(text).not.toContain('práctico-experimental');
         });

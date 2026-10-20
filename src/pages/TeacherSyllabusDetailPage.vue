@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
-import { unitsContext } from '@/lib/blockLayouts';
-import { blockOf, nodesOfType, PLANNING_WEEKS, plannedHours, type DocumentNode } from '@/lib/templateDocument';
+import { ruleFailures } from '@/lib/blocks/rules';
+import { blockAttrs, blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
+import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 import CommentEntry from '@/components/domain/CommentEntry.vue';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
@@ -126,26 +127,20 @@ const isFieldEmpty = (field: SyllabusField): boolean => !field.value || freeText
 const emptyParts = computed(() =>
   allFields.value.filter((field) => field.required && isTeacherField(field)).filter(isFieldEmpty).length,
 );
-const unitsIssue = computed((): string => {
-  const target = unitsContext()?.hours;
+const blockIssue = computed((): string => {
   for (const field of allFields.value.filter(isTeacherField)) {
     for (const node of field.value ? nodesOfType(field.value as DocumentNode, 'documentBlock') : []) {
-      const block = blockOf(node);
-      if (block.kind !== 'unidades') continue;
-      const units = block.value.units ?? [];
-      const weeks = units.reduce((sum, unit) => sum + unit.semanas.length, 0);
-      if (weeks !== PLANNING_WEEKS) return `Las unidades deben repartir las ${PLANNING_WEEKS} semanas: tienen ${weeks}`;
-      const planned = plannedHours(units);
-      if (target && ([['ACD', 'acd'], ['APE', 'ape'], ['AA', 'aa']] as const).some(([, key]) => Math.abs(planned[key] - target[key]) > 0.001)) {
-        return 'Las horas de las unidades deben sumar las de la asignatura';
-      }
+      const attrs = blockAttrs(node);
+      const definition = blockDefinition(attrs.kind);
+      const failure = definition ? ruleFailures(definition.rules, attrs.value, templateRuntime().variables, 'submit')[0] : undefined;
+      if (failure) return failure.message;
     }
   }
 
   return '';
 });
 const submitHint = computed(() => {
-  if (emptyParts.value === 0 && unitsIssue.value !== '') return unitsIssue.value;
+  if (emptyParts.value === 0 && blockIssue.value !== '') return blockIssue.value;
   if (emptyParts.value === 1) return "Falta 1 campo por completar";
   if (emptyParts.value > 1) return `Faltan ${emptyParts.value} campos por completar`;
   return "";
@@ -439,7 +434,7 @@ onBeforeUnmount(() => {
       <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
-      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || unitsIssue !== ''" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />Enviar sílabo</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || 'Enviar la revisión del sílabo' }}</TooltipContent></Tooltip></span>
+      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== ''" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />Enviar sílabo</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || 'Enviar la revisión del sílabo' }}</TooltipContent></Tooltip></span>
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
