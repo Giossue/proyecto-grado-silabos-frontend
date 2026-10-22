@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ArrowLeft, ArrowRight, CalendarPlus } from '@lucide/vue';
-import { getLocalTimeZone, today } from '@internationalized/date';
 import { computed, ref, watch } from 'vue';
 import { createAcademicRecord } from '@/api/academic';
 import { ApiError } from '@/api/client';
@@ -12,6 +11,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { SheetFooter } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
+import { useInstitutionToday } from '@/composables/useInstitutionDate';
 
 const props = withDefaults(defineProps<{ disabled?: boolean }>(), { disabled: false });
 const emit = defineEmits<{ saved: [message: string] }>();
@@ -23,9 +23,9 @@ const errors = ref<Record<string, string[]>>({});
 const form = ref({ starts_on: '', ends_on: '', starts_at: '', due_at: '' });
 const createdPeriodId = ref<string | null>(null);
 
-const todayIso = today(getLocalTimeZone()).toString();
-const periodEndMinimum = computed(() => form.value.starts_on || todayIso);
-const dueMinimum = computed(() => (form.value.starts_at > todayIso ? form.value.starts_at : todayIso));
+const todayIso = useInstitutionToday();
+const periodEndMinimum = computed(() => form.value.starts_on || todayIso.value);
+const dueMinimum = computed(() => (form.value.starts_at > todayIso.value ? form.value.starts_at : todayIso.value));
 const periodEnd = computed(() => form.value.ends_on || undefined);
 const step = ref<1 | 2>(1);
 const forward = ref(true);

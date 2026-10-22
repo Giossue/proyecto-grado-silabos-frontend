@@ -2,9 +2,11 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it } from 'vitest';
 import DatePicker from '@/components/DatePicker.vue';
 import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
+import { sessionState } from '@/state/session';
 
 afterEach(() => {
   document.body.innerHTML = '';
+  sessionState.clear();
 });
 
 describe('syllabus process dates', () => {
@@ -32,6 +34,43 @@ describe('syllabus process dates', () => {
     expect(datePickers[0].props('modelValue')).toBe('');
     expect(datePickers[1].props('modelValue')).toBe('');
     expect(datePickers.every((picker) => picker.props('required'))).toBe(true);
+
+    wrapper.unmount();
+  });
+
+  it('limits the dates to the day published by the server', async () => {
+    sessionState.replace({
+      user: {
+        id: 'user-1',
+        name: 'Administración',
+        email: 'admin@silabos.test',
+        email_verified: true,
+        can_edit_identity: true,
+      },
+      active_role: null,
+      available_roles: [],
+      institution: { today: '2026-10-21', timezone: 'America/Guayaquil' },
+    });
+
+    const wrapper = mount(SyllabusProcessSheet, {
+      attachTo: document.body,
+      props: {
+        open: true,
+        template: null,
+        periods: [],
+        period: {
+          id: 'period-1',
+          codigo: 'Septiembre-Enero 2026-2027',
+          starts_on: '2026-09-22',
+          ends_on: '2027-01-02',
+        },
+      },
+    });
+    await flushPromises();
+
+    const datePickers = wrapper.findAllComponents(DatePicker);
+    expect(datePickers[0].props('minValue')).toBe('2026-10-21');
+    expect(datePickers[1].props('minValue')).toBe('2026-10-21');
 
     wrapper.unmount();
   });

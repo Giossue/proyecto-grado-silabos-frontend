@@ -15,6 +15,7 @@ export type Session = {
   user: { id: string; name: string; email: string; email_verified: boolean; can_edit_identity: boolean; formation?: string | null; accessibility?: AccessibilityPreferences | null };
   active_role: ActiveRole | null;
   available_roles: ActiveRole[];
+  institution?: { today: string; timezone: string };
 };
 
 export type TwoFactorStatus = { enabled: boolean; confirmation_required: boolean };

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { VALIDATION_LIMITS } from '@/lib/validationLimits';
-import { getLocalTimeZone, today } from '@internationalized/date';
 import { Plus } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
@@ -13,6 +12,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { AcademicStructureProps, GovernanceCatalogEntity } from '@/types/academic';
+import { useInstitutionToday } from '@/composables/useInstitutionDate';
 
 const props = withDefaults(defineProps<Pick<AcademicStructureProps, 'options'> & { entity: GovernanceCatalogEntity; disabled?: boolean; showTrigger?: boolean }>(), { disabled: false, showTrigger: true });
 const emit = defineEmits<{ saved: [message: string] }>();
@@ -25,8 +25,8 @@ const form = ref({
     cycle_count: '', starts_on: '', ends_on: '',
 });
 const logo = ref<File | null>(null);
-const minimumPeriodDate = today(getLocalTimeZone()).toString();
-const minimumPeriodEndDate = computed(() => form.value.starts_on || minimumPeriodDate);
+const minimumPeriodDate = useInstitutionToday();
+const minimumPeriodEndDate = computed(() => form.value.starts_on || minimumPeriodDate.value);
 
 watch(() => form.value.starts_on, (startsOn) => {
     if (startsOn && form.value.ends_on && form.value.ends_on < startsOn) {

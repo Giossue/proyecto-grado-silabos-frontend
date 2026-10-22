@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { CalendarPlus } from '@lucide/vue';
-import { getLocalTimeZone, today } from '@internationalized/date';
 import { computed, ref, watch } from 'vue';
 import { createProcess } from '@/api/processes';
 import { ApiError } from '@/api/client';
@@ -9,6 +8,7 @@ import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useInstitutionToday } from '@/composables/useInstitutionDate';
 
 type AcademicPeriod = { id: string; codigo: string; starts_on?: string; ends_on?: string };
 
@@ -39,9 +39,9 @@ watch(open, (value) => {
     errors.value = {};
   }
 });
-const todayIso = today(getLocalTimeZone()).toString();
+const todayIso = useInstitutionToday();
 const periodEnd = computed(() => props.period?.ends_on?.slice(0, 10));
-const dueMinimum = computed(() => (form.value.starts_at > todayIso ? form.value.starts_at : todayIso));
+const dueMinimum = computed(() => (form.value.starts_at > todayIso.value ? form.value.starts_at : todayIso.value));
 const submit = async (): Promise<void> => {
   if (props.disabled) return;
   processing.value = true;

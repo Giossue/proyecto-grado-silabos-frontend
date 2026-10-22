@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DateFormatter, getLocalTimeZone, parseDate, today } from '@internationalized/date';
+import { DateFormatter, getLocalTimeZone, parseDate } from '@internationalized/date';
 import { CalendarDays, X } from '@lucide/vue';
 import type { DateValue } from 'reka-ui';
 import { createYearRange } from 'reka-ui/date';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { useInstitutionCalendarDate } from '@/composables/useInstitutionDate';
 
 const props = withDefaults(defineProps<{
   id: string;
@@ -46,9 +47,10 @@ const parse = (value: string | undefined): DateValue | undefined => {
 };
 const minimum = computed<DateValue | undefined>(() => parse(props.minValue));
 const maximum = computed<DateValue | undefined>(() => parse(props.maxValue));
+const institutionToday = useInstitutionCalendarDate();
 const yearRange = computed(() => createYearRange({
-  start: minimum.value ?? today(getLocalTimeZone()).cycle('year', -5),
-  end: maximum.value ?? today(getLocalTimeZone()).cycle('year', 10),
+  start: minimum.value ?? institutionToday.value.cycle('year', -5),
+  end: maximum.value ?? institutionToday.value.cycle('year', 10),
 }));
 const selected = computed<DateValue | undefined>({
   get: () => parse(model.value),
