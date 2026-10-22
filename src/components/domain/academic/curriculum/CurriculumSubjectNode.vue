@@ -115,7 +115,7 @@ const totalFields = computed(
           aria-label="Conectar el requisito de esta materia"
         ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
       </TooltipTrigger>
-      <TooltipContent v-if="data.editable">Conecte aquí la materia que es requisito de esta.</TooltipContent>
+      <TooltipContent v-if="data.editable">Conectar materias</TooltipContent>
     </Tooltip>
     <article
       class="relative w-full overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-3 data-[dragging=true]:ring-ring/50"
@@ -282,7 +282,7 @@ const totalFields = computed(
           aria-label="Conectar a la materia que requiere esta"
         ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
       </TooltipTrigger>
-      <TooltipContent v-if="data.editable">Inicie aquí la conexión hacia la materia que requiere esta asignatura.</TooltipContent>
+      <TooltipContent v-if="data.editable">Conectar materias</TooltipContent>
     </Tooltip>
   </template>
 </template>
