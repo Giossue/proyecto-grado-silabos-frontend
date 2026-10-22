@@ -4,7 +4,13 @@ set -euo pipefail
 input=$(realpath "${1:?Indique el PDF a firmar}")
 work=$(realpath -m "${2:-$(mktemp -d)}")
 frontend=$(cd "$(dirname "$0")/.." && pwd)
-backend=$(realpath "${BACKEND_DIR:-$frontend/../proyecto-grado-silabos-backend}")
+if [[ -n "${BACKEND_DIR:-}" ]]; then
+  backend=$(realpath "$BACKEND_DIR")
+elif [[ -f "$frontend/../artisan" ]]; then
+  backend=$(realpath "$frontend/..")
+else
+  backend=$(realpath "$frontend/../proyecto-grado-silabos-backend")
+fi
 mkdir -p "$work"
 legacy=()
 [[ "${P12_LEGACY:-0}" == 1 ]] && legacy=(-legacy)

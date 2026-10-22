@@ -5,10 +5,13 @@ import ts from "typescript";
 import { methodFrom } from './lib/apiContract.mjs';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const nestedContract = resolve(projectRoot, "../docs/architecture/openapi.json");
 const contractPath = resolve(
   projectRoot,
   process.env.OPENAPI_FILE
-    ?? "../proyecto-grado-silabos-backend/docs/architecture/openapi.json",
+    ?? (existsSync(nestedContract)
+      ? nestedContract
+      : "../proyecto-grado-silabos-backend/docs/architecture/openapi.json"),
 );
 
 if (!existsSync(contractPath)) {

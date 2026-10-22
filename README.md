@@ -86,7 +86,8 @@ VITE_API_URL=http://127.0.0.1:8000 npx playwright test tests/e2e/accessibility.s
 `scripts/signature-e2e.sh <pdf> [carpeta]` es una herramienta manual. Crea certificados
 `.p12` de prueba, firma el PDF con el mismo código del navegador (docente y luego
 coordinación) y verifica cada firma con el verificador PHP del backend. Necesita
-`openssl`, `php`, el backend en `../proyecto-grado-silabos-backend` (o `BACKEND_DIR`) y
+`openssl`, `php`, el backend como carpeta padre o en `../proyecto-grado-silabos-backend`
+(o indicado mediante `BACKEND_DIR`) y
 `pdfsig` para el informe final. `P12_LEGACY=1` crea archivos `.p12` con cifrado antiguo.
 
 ## Imagen de producción
