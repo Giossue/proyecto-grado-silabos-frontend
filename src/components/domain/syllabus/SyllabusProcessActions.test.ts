@@ -37,10 +37,12 @@ const process = (): SyllabusProcess => ({
   due_at: '2027-01-03T04:59:59Z',
   convocations_count: 1,
   configurable: false,
+  deletable: true,
 });
 
 const pausedProcess = () => ({ ...process(), state: 'pausado' as const });
 const openProcess = () => ({ ...process(), state: 'abierto' as const });
+const deliveredProcess = () => ({ ...process(), state: 'abierto' as const, deletable: false });
 
 const mountActions = (value = process()) => mount(SyllabusProcessActions, {
   props: { process: value },
@@ -74,13 +76,14 @@ describe('SyllabusProcessActions', () => {
     vi.mocked(transitionProcess).mockReset();
   });
 
-  it('elimina una convocatoria en curso tras confirmar y explica que no se borra nada', async () => {
+  it('elimina una convocatoria en curso tras confirmar y explica que se borra de verdad', async () => {
     const wrapper = mountActions(openProcess());
 
     const remove = wrapper.findAll('.menu-item').find((item) => item.text().includes('Eliminar'));
     expect(remove).toBeDefined();
     await remove!.trigger('click');
-    expect(wrapper.find('[data-dialog]').text()).toContain('No se borra nada');
+    expect(wrapper.find('[data-dialog]').text()).toContain('se borra de verdad');
+    expect(wrapper.find('[data-dialog]').text()).toContain('si ningún docente ha enviado su sílabo');
 
     const confirm = wrapper.findAll('button').find((item) => item.text().includes('Eliminar convocatoria'));
     expect(confirm).toBeDefined();
@@ -112,6 +115,14 @@ describe('SyllabusProcessActions', () => {
     const wrapper = mountActions();
     expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Cerrar'))).toBe(false);
     expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Eliminar'))).toBe(false);
+  });
+
+  it('una convocatoria con sílabos enviados no ofrece eliminar y explica por qué', () => {
+    const wrapper = mountActions(deliveredProcess());
+
+    const remove = wrapper.findAll('.menu-item').find((item) => item.text().includes('Eliminar'));
+    expect(remove).toBeUndefined();
+    expect(wrapper.text()).toContain('No se puede eliminar: ya hay sílabos enviados');
   });
 
   it('shows the state counts and requires explicit confirmation before rebuilding', async () => {

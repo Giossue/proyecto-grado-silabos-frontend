@@ -25,7 +25,7 @@ describe('AdminProcessesPage', () => {
     api.getAcademicGovernance.mockResolvedValue({ lock_reason: null, catalogs: { faculties: [], careers: [], periods: [
       period('p1', 'Septiembre-Marzo 2026-2027', { id: 'pr1', state: 'abierto' }), period('p2', 'Abril-Agosto 2027', null),
     ] }, options: {} });
-    api.getProcesses.mockResolvedValue({ processes: [{ id: 'pr1', name: 'Convocatoria', state: 'abierto', template: 'x', period_id: 'p1', period_name: 'Septiembre-Marzo 2026-2027', starts_at: '2026-10-01', due_at: '2026-10-20', convocations_count: 0, configurable: true }], template: null, periods: [], active_process: null });
+    api.getProcesses.mockResolvedValue({ processes: [{ id: 'pr1', name: 'Convocatoria', state: 'abierto', template: 'x', period_id: 'p1', period_name: 'Septiembre-Marzo 2026-2027', starts_at: '2026-10-01', due_at: '2026-10-20', convocations_count: 0, configurable: true, deletable: true }], template: null, periods: [], active_process: null });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -42,7 +42,7 @@ describe('AdminProcessesPage', () => {
   it('con todo finalizado permite abrir una nueva convocatoria', async () => {
     api.getSession.mockResolvedValue({ active_role: { code: 'administrador' } });
     api.getAcademicGovernance.mockResolvedValue({ lock_reason: null, catalogs: { faculties: [], careers: [], periods: [period('p1', 'Septiembre-Marzo 2026-2027', { id: 'pr1', state: 'cerrado' })] }, options: {} });
-    api.getProcesses.mockResolvedValue({ processes: [{ id: 'pr1', name: 'Convocatoria', state: 'cerrado', template: 'x', period_id: 'p1', period_name: 'Septiembre-Marzo 2026-2027', starts_at: '2026-10-01', due_at: '2026-10-20', convocations_count: 0, configurable: true }], template: null, periods: [], active_process: null });
+    api.getProcesses.mockResolvedValue({ processes: [{ id: 'pr1', name: 'Convocatoria', state: 'cerrado', template: 'x', period_id: 'p1', period_name: 'Septiembre-Marzo 2026-2027', starts_at: '2026-10-01', due_at: '2026-10-20', convocations_count: 0, configurable: true, deletable: true }], template: null, periods: [], active_process: null });
     const wrapper = mountPage();
     await flushPromises();
 

@@ -11,6 +11,7 @@ export type SyllabusProcess = {
   due_at: string;
   convocations_count: number;
   configurable: boolean;
+  deletable: boolean;
 };
 
 export type Processes = {
