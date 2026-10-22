@@ -45,7 +45,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? 'Crear docente para su carrera' : 'Crear cuenta institucional'" :show-trigger="showTrigger">
+    <FormSheet v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? undefined : 'Crear cuenta institucional'" :show-trigger="showTrigger">
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
             <div class="grid grid-cols-2 items-start gap-4">
                 <Field v-for="part in nameParts" :key="part.key" :data-invalid="Boolean(errors[part.key])"><FieldLabel :for="`managed-user-${part.key}`" required>{{ part.label }}</FieldLabel><Input :id="`managed-user-${part.key}`" :model-value="form[part.key]" lang="es" autocapitalize="characters" :placeholder="part.placeholder" required @update:model-value="setPart(part.key, $event)" /><FieldError :errors="errors[part.key]" /></Field>

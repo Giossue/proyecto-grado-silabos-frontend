@@ -16,15 +16,13 @@ import { cn } from '@/lib/utils';
 withDefaults(
     defineProps<{
         triggerLabel: string;
-        title: string;
-        hideTitle?: boolean;
+        title?: string;
         showTrigger?: boolean;
         disabled?: boolean;
         fullScreen?: boolean;
         wide?: boolean;
     }>(),
     {
-        hideTitle: false,
         showTrigger: true,
         disabled: false,
         fullScreen: false,
@@ -62,7 +60,7 @@ const close = (): void => {
         </SheetTrigger>
         <SheetContent
             :aria-describedby="undefined"
-            :aria-label="hideTitle ? title : undefined"
+            :aria-label="title ? undefined : triggerLabel"
             :class="
                 cn({
                     'top-0 left-0 h-dvh max-h-none w-full max-w-none translate-x-0 translate-y-0 rounded-none border-0 sm:max-w-none': fullScreen,
@@ -71,11 +69,11 @@ const close = (): void => {
                 })
             "
         >
-            <SheetHeader v-if="!hideTitle" class="pb-0">
+            <SheetHeader v-if="title" class="pb-0">
                 <SheetTitle>{{ title }}</SheetTitle>
             </SheetHeader>
             <ScrollArea class="min-h-0 flex-1">
-                <div :class="cn('px-4 pb-28', hideTitle ? 'pt-4' : 'pt-1')">
+                <div :class="cn('px-4 pb-28', title ? 'pt-1' : 'pt-4')">
                     <slot :close="close" />
                 </div>
             </ScrollArea>
