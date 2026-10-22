@@ -11,6 +11,8 @@ import { screenHelpState } from '@/state/screenHelp';
 
 type Corner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
+const props = withDefaults(defineProps<{ editorMode?: boolean }>(), { editorMode: false });
+
 const STORAGE_KEY = 'silabos:ayuda-posicion';
 const CORNERS: readonly Corner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 const BASE_SIZE = 48;
@@ -24,7 +26,7 @@ const button = ref<{ $el: HTMLElement } | null>(null);
 const stored = ref<Corner>('bottom-left');
 const compact = useMediaQuery('(width < 40rem)');
 const corner = computed<Corner>({
-  get: () => (compact.value ? 'bottom-left' : stored.value),
+  get: () => (props.editorMode ? 'bottom-right' : compact.value ? 'bottom-left' : stored.value),
   set: (value) => { stored.value = value; },
 });
 const bounds = ref({ left: 0, top: 0, right: 0, bottom: 0 });
@@ -65,7 +67,7 @@ const measure = (): void => {
 
 const cornerPosition = (value: Corner): { x: number; y: number } => ({
   x: value.endsWith('left') ? bounds.value.left + MARGIN : bounds.value.right - size.value - MARGIN,
-  y: value.startsWith('top') ? bounds.value.top + MARGIN : bounds.value.bottom - size.value - MARGIN - (value === 'bottom-right' ? (size.value * 7) / 6 + MARGIN : 0),
+  y: value.startsWith('top') ? bounds.value.top + MARGIN : bounds.value.bottom - size.value - MARGIN - (value === 'bottom-right' && !props.editorMode ? (size.value * 7) / 6 + MARGIN : 0),
 });
 
 const style = computed(() => {
@@ -102,7 +104,7 @@ const restore = (): void => {
 
 let drag: { startX: number; startY: number; originX: number; originY: number; moved: boolean } | null = null;
 const startDrag = (event: PointerEvent): void => {
-  if (compact.value) return;
+  if (compact.value || props.editorMode) return;
   measure();
   const origin = cornerPosition(corner.value);
   drag = { startX: event.clientX, startY: event.clientY, originX: origin.x, originY: origin.y, moved: false };
@@ -148,7 +150,7 @@ const toggle = (): void => {
   open.value = !open.value;
 };
 const nudge = (event: KeyboardEvent): void => {
-  if (!event.altKey || compact.value) return;
+  if (!event.altKey || compact.value || props.editorMode) return;
   const keys: Record<string, (current: Corner) => Corner> = {
     ArrowLeft: (current) => `${current.split('-')[0]}-left` as Corner,
     ArrowRight: (current) => `${current.split('-')[0]}-right` as Corner,
@@ -202,11 +204,11 @@ onBeforeUnmount(() => {
         size="icon"
         variant="secondary"
         class="fixed top-0 left-0 z-40 size-12 touch-none rounded-full bg-ring text-background shadow-menu will-change-transform hover:bg-ring/90 [&_svg]:size-5"
-        :class="dragging ? 'cursor-grabbing transition-none' : [compact ? 'cursor-pointer' : 'cursor-grab', animating ? 'transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]' : 'transition-none']"
+        :class="dragging ? 'cursor-grabbing transition-none' : [compact || props.editorMode ? 'cursor-pointer' : 'cursor-grab', animating ? 'transition-transform duration-200 ease-[cubic-bezier(0.2,0.8,0.2,1)]' : 'transition-none']"
         :style="style"
         aria-label="Ayuda de esta pantalla"
-        :aria-description="compact ? undefined : 'Arrástrelo a una esquina o use Alt y las flechas para moverlo'"
-        :aria-keyshortcuts="compact ? undefined : 'Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight'"
+        :aria-description="compact || props.editorMode ? undefined : 'Arrástrelo a una esquina o use Alt y las flechas para moverlo'"
+        :aria-keyshortcuts="compact || props.editorMode ? undefined : 'Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight'"
         aria-haspopup="dialog"
         :aria-expanded="open"
         :aria-controls="open ? panelId : undefined"

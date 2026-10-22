@@ -24,7 +24,8 @@ provide(breadcrumbsKey, toRef(props, 'breadcrumbs'));
 
 const pageTitle = ref('');
 const templateEditorOpen = templateEditorState.open;
-const editorOpen = computed(() => templateEditorOpen.value || curriculumEditorState.open.value);
+const curriculumEditorOpen = curriculumEditorState.open;
+const editorOpen = computed(() => templateEditorOpen.value || curriculumEditorOpen.value);
 
 provide(pageTitleKey, pageTitle);
 </script>
@@ -39,7 +40,7 @@ provide(pageTitleKey, pageTitle);
                 :page-title="pageTitle"
             />
             <slot />
-            <ScreenHelpButton v-if="!editorOpen" />
+            <ScreenHelpButton v-if="!templateEditorOpen" :editor-mode="curriculumEditorOpen" />
             <AccessibilityDialog v-if="!editorOpen" floating />
         </AppContent>
     </AppShell>

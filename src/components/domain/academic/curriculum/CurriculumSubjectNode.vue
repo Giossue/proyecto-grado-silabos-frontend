@@ -105,13 +105,18 @@ const totalFields = computed(
 
 <template>
   <template v-if="data.subject">
-    <Handle
-      type="target"
-      :position="Position.Top"
-      :connectable="data.editable"
-      :class="cn(data.editable && 'curriculum-handle')"
-      aria-label="Recibir relación académica"
-    ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
+    <Tooltip>
+      <TooltipTrigger as-child>
+        <Handle
+          type="target"
+          :position="Position.Top"
+          :connectable="data.editable"
+          :class="cn(data.editable && 'curriculum-handle')"
+          aria-label="Conectar el requisito de esta materia"
+        ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
+      </TooltipTrigger>
+      <TooltipContent v-if="data.editable">Conecte aquí la materia que es requisito de esta.</TooltipContent>
+    </Tooltip>
     <article
       class="relative w-full overflow-hidden rounded-md bg-card text-card-foreground shadow-surface ring-1 ring-surface-ring data-[dragging=true]:shadow-menu data-[dragging=true]:ring-3 data-[dragging=true]:ring-ring/50"
       :class="cn(data.editable && 'cursor-move')"
@@ -267,12 +272,17 @@ const totalFields = computed(
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    <Handle
-      type="source"
-      :position="Position.Bottom"
-      :connectable="data.editable"
-      :class="cn(data.editable && 'curriculum-handle')"
-      aria-label="Crear relación académica"
-    ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
+    <Tooltip>
+      <TooltipTrigger as-child>
+        <Handle
+          type="source"
+          :position="Position.Bottom"
+          :connectable="data.editable"
+          :class="cn(data.editable && 'curriculum-handle')"
+          aria-label="Conectar a la materia que requiere esta"
+        ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
+      </TooltipTrigger>
+      <TooltipContent v-if="data.editable">Inicie aquí la conexión hacia la materia que requiere esta asignatura.</TooltipContent>
+    </Tooltip>
   </template>
 </template>
