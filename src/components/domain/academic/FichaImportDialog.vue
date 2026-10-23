@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client';
 import { applyFichaImport, discardFichaImport, getFichaImport, startFichaImport, type FichaImport, type FichaImportSubject } from '@/api/ficha-imports';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
+import FichaProposalValue from '@/components/domain/academic/FichaProposalValue.vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -29,9 +30,15 @@ const working = computed(() => current.value?.state === 'pendiente' || current.v
 const ready = computed(() => current.value?.state === 'lista');
 const proposed = computed(() => (current.value?.subjects ?? []).filter((subject) => subject.state === 'lista'));
 const fieldLabel = (key: string): string => current.value?.fields.find((field) => field.key === key)?.label ?? key;
-const stateText = (subject: FichaImportSubject): string => ({ lista: 'Ficha propuesta', sin_evidencia: 'Sin información en los documentos', fallida: 'No se pudo proponer', pendiente: 'Analizando…' })[subject.state];
+const found = (subject: FichaImportSubject): number => subject.coverage?.found ?? Object.keys(subject.values).length;
+const total = (subject: FichaImportSubject): number => subject.coverage?.total ?? current.value?.fields.length ?? 0;
+const stateText = (subject: FichaImportSubject): string => subject.state === 'lista' || subject.state === 'sin_evidencia'
+  ? `${found(subject)} de ${total(subject)} campos encontrados`
+  : ({ fallida: 'No se pudo proponer', pendiente: 'Analizando…' })[subject.state];
+const missing = (subject: FichaImportSubject) => subject.missing ?? (current.value?.fields ?? []).filter((field) => !(field.key in subject.values)).map((field) => ({ ...field, reason: 'no_encontrado' as const }));
+const missingReason = (reason: string): string => ({ sin_contexto: 'No se localizó una sección de esta materia.', no_encontrado: 'No se encontró en los fragmentos analizados.', estructura_invalida: 'No se pudo recuperar con el formato de este campo.', servicio_no_disponible: 'No se pudo completar la consulta. Puede volver a intentarlo con una nueva importación.' })[reason] ?? 'No se encontró en los fragmentos analizados.';
 const now = ref(Date.now());
-const ocrText = (state: string | null): string => (state === 'queued' ? 'en cola del OCR' : state === 'running' ? 'el OCR lo está leyendo' : 'enviando al OCR');
+const ocrText = (state: string | null): string => (state === 'native' ? 'extrayendo texto' : state === 'queued' ? 'en cola del OCR' : state === 'running' ? 'el OCR lo está leyendo' : 'preparando la lectura');
 const elapsed = (from: string): string => {
   const seconds = Math.max(0, Math.round((now.value - new Date(from).getTime()) / 1000));
   return seconds < 60 ? `${seconds} s` : `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
@@ -48,7 +55,12 @@ watch(working, (value) => {
   clock = value ? window.setInterval(() => { now.value = Date.now(); }, 1000) : undefined;
 }, { immediate: true });
 onBeforeUnmount(() => { if (clock !== undefined) window.clearInterval(clock); });
-const asLines = (value: string | string[]): string[] => (Array.isArray(value) ? value : [value]);
+const analysisDuration = computed(() => {
+  const timing = current.value?.timing;
+  if (!timing?.started_at || !timing.ready_at) return null;
+  const seconds = Math.max(0, Math.round((new Date(timing.ready_at).getTime() - new Date(timing.started_at).getTime()) / 1000));
+  return seconds < 60 ? `${seconds} s` : `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
+});
 
 const stop = (): void => { if (timer !== undefined) { window.clearTimeout(timer); timer = undefined; } };
 const load = async (): Promise<void> => {
@@ -83,7 +95,7 @@ const run = async (action: () => Promise<unknown>, fallback: string): Promise<bo
   finally { busy.value = false; }
 };
 const analyze = async (): Promise<void> => { if (await run(async () => { current.value = (await startFichaImport(files.value)).import; }, 'No se pudieron enviar los documentos.')) void load(); };
-const discard = async (): Promise<void> => { if (current.value && await run(() => discardFichaImport(current.value!.id), 'No se pudo descartar.')) { current.value = null; chosen.value = new Set(); files.value = []; } };
+const discard = async (): Promise<void> => { if (current.value && await run(() => discardFichaImport(current.value!.id), 'No se pudo descartar.')) { stop(); current.value = null; chosen.value = new Set(); excluded.value = {}; expanded.value = new Set(); files.value = []; } };
 const excluded = ref<Record<string, string[]>>({});
 const fieldChosen = (subjectId: string, key: string): boolean => !(excluded.value[subjectId] ?? []).includes(key);
 const toggleField = (subjectId: string, key: string, value: boolean): void => {
@@ -132,7 +144,8 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                 </template>
 
                 <template v-else-if="ready">
-                  <p class="text-sm">Propuesta para {{ proposed.length }} de {{ current?.subjects.length }} materias. Marque las que desea aplicar; lo que no marque no se toca. En cada materia puede comparar con la ficha actual y elegir qué campos aplicar.</p>
+                  <p class="text-sm">Propuesta para {{ proposed.length }} de {{ current?.subjects.length }} materias. Puede estar incompleta. Revise los campos encontrados y los pendientes antes de aplicar.</p>
+                  <p v-if="analysisDuration" class="text-sm text-muted-foreground">Tiempo de análisis: {{ analysisDuration }}.</p>
                   <ScrollArea class="[&>[data-slot=scroll-area-viewport]]:max-h-96">
                       <ul class="flex flex-col gap-2">
                         <li v-for="subject in current?.subjects" :key="subject.subject_id" class="rounded-md ring-1 ring-surface-ring p-3">
@@ -140,9 +153,9 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                             <Checkbox :id="`ficha-${subject.subject_id}`" :model-value="chosen.has(subject.subject_id)" :disabled="subject.state !== 'lista' || busy" :aria-label="`Aplicar la ficha de ${subject.name}`" @update:model-value="toggle(subject.subject_id, $event === true)" />
                             <div class="flex min-w-0 flex-1 flex-col gap-1">
                               <FieldLabel :for="`ficha-${subject.subject_id}`" class="font-medium">{{ subject.name }}<span class="font-normal text-muted-foreground"> · {{ subject.code }}</span></FieldLabel>
-                              <p class="text-sm text-muted-foreground">{{ stateText(subject) }}<template v-if="subject.state === 'lista' && subject.replaces"> · reemplaza la ficha actual</template></p>
-                              <div v-if="subject.state === 'lista'" class="text-sm">
-                                <Button type="button" variant="link" size="sm" class="h-auto px-0" :aria-expanded="expanded.has(subject.subject_id)" @click="toggleExpanded(subject.subject_id)">{{ expanded.has(subject.subject_id) ? 'Ocultar la comparación' : (subject.replaces ? 'Comparar con la ficha actual' : 'Ver lo que propone') }}</Button>
+                              <p class="text-sm text-muted-foreground">{{ stateText(subject) }}<template v-if="subject.state === 'lista' && subject.replaces"> · actualiza solo los campos que aplique</template></p>
+                              <div v-if="subject.state !== 'pendiente'" class="text-sm">
+                                <Button type="button" variant="link" size="sm" class="h-auto px-0" :aria-expanded="expanded.has(subject.subject_id)" @click="toggleExpanded(subject.subject_id)">{{ expanded.has(subject.subject_id) ? 'Ocultar la comparación' : (subject.replaces ? 'Comparar con la ficha actual' : 'Revisar campos') }}</Button>
                                 <div v-for="(value, key) in expanded.has(subject.subject_id) ? subject.values : {}" :key="key" class="mt-3 rounded-md ring-1 ring-surface-ring p-2">
                                   <div class="flex items-center gap-2">
                                     <Checkbox :id="`ficha-${subject.subject_id}-${key}`" :model-value="fieldChosen(subject.subject_id, String(key))" :disabled="!chosen.has(subject.subject_id) || busy" @update:model-value="toggleField(subject.subject_id, String(key), $event === true)" />
@@ -155,9 +168,13 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                                     </div>
                                     <div>
                                       <p class="text-xs font-medium text-muted-foreground">Propuesta</p>
-                                      <p v-for="(line, index) in asLines(value)" :key="index" class="whitespace-pre-wrap">{{ Array.isArray(value) ? '• ' : '' }}{{ line }}</p>
+                                      <FichaProposalValue :value="value" :label="fieldLabel(String(key))" />
                                     </div>
                                   </div>
+                                </div>
+                                <div v-if="expanded.has(subject.subject_id) && missing(subject).length" class="mt-3 flex flex-col gap-2">
+                                  <p class="font-medium">Campos pendientes</p>
+                                  <ul class="flex flex-col gap-2"><li v-for="field in missing(subject)" :key="field.key"><span class="font-medium">{{ field.label }}</span><p class="text-muted-foreground">{{ missingReason(field.reason) }}</p></li></ul>
                                 </div>
                               </div>
                             </div>

@@ -56,7 +56,8 @@ describe('FichaImportDialog', () => {
     const wrapper = await openDialog();
 
     expect(document.body.textContent).toContain('Propuesta para 1 de 2 materias');
-    expect(document.body.textContent).toContain('Sin información en los documentos');
+    expect(document.body.textContent).toContain('1 de 1 campos encontrados');
+    expect(document.body.textContent).toContain('0 de 1 campos encontrados');
     expect(button('Cerrar')).toBeUndefined();
     expect(button('Descartar')).toBeTruthy();
     button('Aplicar a 1 materias')!.click();
@@ -84,5 +85,38 @@ describe('FichaImportDialog', () => {
     await flushPromises();
 
     expect(applyFichaImport).toHaveBeenCalledWith('imp-1', ['s1'], { s1: ['bibliografia'] });
+  });
+
+  it('muestra cobertura parcial, tablas y motivos de los campos pendientes', async () => {
+    const proposal: FichaImport = { ...ready,
+      fields: [{ key: 'relacion', label: 'Contribución al perfil' }, { key: 'descripcion', label: 'Descripción' }],
+      timing: { started_at: '2026-10-23T10:00:00Z', ready_at: '2026-10-23T10:01:12Z' },
+      subjects: [{ ...ready.subjects[0]!, values: { relacion: { columns: ['Resultado', 'Nivel'], rows: [['Resuelve sistemas', 'Alta']] } }, coverage: { found: 1, total: 2 }, missing: [{ key: 'descripcion', label: 'Descripción', reason: 'no_encontrado' }] }],
+    };
+    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: proposal });
+    await openDialog();
+
+    expect(document.body.textContent).toContain('1 de 2 campos encontrados');
+    expect(document.body.textContent).toContain('Puede estar incompleta');
+    expect(document.body.textContent).toContain('Tiempo de análisis: 1 min 12 s');
+    button('Revisar campos')!.click();
+    await flushPromises();
+
+    const table = document.body.querySelector('table');
+    expect(table?.getAttribute('aria-label')).toBe('Contribución al perfil');
+    expect(table?.textContent).toContain('Resuelve sistemas');
+    expect(table?.textContent).toContain('Alta');
+    expect(document.body.textContent).toContain('Campos pendientes');
+    expect(document.body.textContent).toContain('No se encontró en los fragmentos analizados');
+  });
+
+  it('permite revisar por qué una materia no tiene propuesta', async () => {
+    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: { ...ready, subjects: [{ ...ready.subjects[1]!, missing: [{ key: 'descripcion', label: 'Descripción', reason: 'sin_contexto' }] }] } });
+    await openDialog();
+    button('Revisar campos')!.click();
+    await flushPromises();
+
+    expect(document.body.textContent).toContain('No se localizó una sección de esta materia');
+    expect(button('Aplicar a 0 materias')!.disabled).toBe(true);
   });
 });

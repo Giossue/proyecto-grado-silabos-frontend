@@ -1,13 +1,20 @@
 import { withPurgeConfirmation } from '@/api/career-academics';
 import { api } from '@/api/client';
 
+export type FichaTableValue = { columns: string[]; rows: string[][] };
+export type FichaProposalValue = string | string[] | FichaTableValue;
+export type FichaMissingField = { key: string; label: string; reason: 'sin_contexto' | 'no_encontrado' | 'estructura_invalida' | 'servicio_no_disponible' };
+
 export type FichaImportSubject = {
   subject_id: string;
   code: string;
   name: string;
   cycle: number | null;
   state: 'pendiente' | 'lista' | 'sin_evidencia' | 'fallida';
-  values: Record<string, string | string[]>;
+  values: Record<string, FichaProposalValue>;
+  coverage?: { found: number; total: number };
+  missing?: FichaMissingField[];
+  extraction?: { attempts: number; duration_ms: number } | null;
   replaces: boolean;
   current: Record<string, string>;
 };
@@ -20,6 +27,7 @@ export type FichaImport = {
   reading: { index: number; total: number; name: string; ocr: string | null; started_at: string } | null;
   progress: { done: number; total: number };
   fields: Array<{ key: string; label: string }>;
+  timing?: { started_at?: string; ready_at?: string; reading_ms?: number } | null;
   subjects: FichaImportSubject[];
 };
 
