@@ -14,9 +14,9 @@ const filter = async (query: string) => {
   search().dispatchEvent(new Event('input', { bubbles: true }));
   await flushPromises();
 };
-const mountSelect = (modelValue = 'none', allowNone = true) => mount(TeacherSelect, {
+const mountSelect = (modelValue = '') => mount(TeacherSelect, {
   attachTo: document.body,
-  props: { teachers, label: 'Docente del nuevo paralelo', modelValue, allowNone },
+  props: { teachers, label: 'Docente del nuevo paralelo', modelValue },
 });
 
 const scrollIntoView = Element.prototype.scrollIntoView;
@@ -33,7 +33,7 @@ describe('TeacherSelect', () => {
     trigger().click();
     await flushPromises();
 
-    expect(options().map((option) => option.textContent?.trim())).toEqual(['Sin docente', 'MARÍA PÉREZ', 'EDUARDO NARVÁEZ']);
+    expect(options().map((option) => option.textContent?.trim())).toEqual(['MARÍA PÉREZ', 'EDUARDO NARVÁEZ']);
     await filter('maria perez');
     expect(options().map((option) => option.textContent?.trim())).toEqual(['MARÍA PÉREZ']);
     expect(wrapper.emitted('update:modelValue')).toBeUndefined();
@@ -48,7 +48,7 @@ describe('TeacherSelect', () => {
   });
 
   it('informa cuando no hay resultados y permite limpiar la búsqueda sin cambiar el docente', async () => {
-    const wrapper = mountSelect('teacher-2', false);
+    const wrapper = mountSelect('teacher-2');
     expect(trigger().textContent).toContain('EDUARDO NARVÁEZ');
     trigger().click();
     await flushPromises();
@@ -63,14 +63,16 @@ describe('TeacherSelect', () => {
     wrapper.unmount();
   });
 
-  it('permite elegir Sin docente al crear un paralelo', async () => {
-    const wrapper = mountSelect('teacher-2');
+  it('marca la elección obligatoria y no ofrece Sin docente entre las opciones', async () => {
+    const wrapper = mountSelect();
+    await wrapper.setProps({ required: true, invalid: true });
+    expect(trigger().textContent).toContain('Elija el docente');
+    expect(trigger().getAttribute('aria-required')).toBe('true');
+    expect(trigger().getAttribute('aria-invalid')).toBe('true');
     trigger().click();
     await flushPromises();
-    options().find((option) => option.textContent?.trim() === 'Sin docente')!.click();
-    await flushPromises();
 
-    expect(wrapper.emitted('update:modelValue')).toEqual([['none']]);
+    expect(options().map((option) => option.textContent?.trim())).not.toContain('Sin docente');
     wrapper.unmount();
   });
 
@@ -104,7 +106,7 @@ describe('TeacherSelect', () => {
     trigger().click();
     await flushPromises();
     expect(search().value).toBe('');
-    expect(options()).toHaveLength(3);
+    expect(options()).toHaveLength(2);
     wrapper.unmount();
   });
 });

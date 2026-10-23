@@ -26,6 +26,7 @@ const mountSheet = () => mount(ParallelCreationSheet, {
     open: true,
     shiftOptions: [{ value: 'matutina', label: 'Matutina' }, { value: 'vespertina', label: 'Vespertina' }, { value: 'nocturna', label: 'Nocturna' }], subjectId: 'subject-1',
     subjectLabel: 'SW-1 · Materia',
+    teacherUsers: [{ id: 'teacher-1', name: 'DOCENTE UNO', email: 'docente@example.test' }],
     parallels: [
       { id: 'p-a', code: 'A', shift: 'matutina', editable: true, deletable: false },
       { id: 'p-b', code: 'B', shift: 'vespertina', editable: true, deletable: true },
@@ -47,10 +48,37 @@ describe('ParallelCreationSheet', () => {
     input.value = 'C';
     input.dispatchEvent(new Event('input'));
     await flushPromises();
+    button('Docente del nuevo paralelo')!.click();
+    await flushPromises();
+    expect([...document.body.querySelectorAll('[data-slot="command-item"]')].map((option) => option.textContent?.trim())).toEqual(['DOCENTE UNO']);
+    document.body.querySelector<HTMLElement>('[data-slot="command-item"]')!.click();
+    await flushPromises();
     button('Guardar nuevo paralelo')!.click();
     await flushPromises();
 
-    expect(api.createParallels).toHaveBeenCalledWith({ subject_id: 'subject-1', codes: ['C'], shift: 'matutina' });
+    expect(api.createParallels).toHaveBeenCalledWith({ subject_id: 'subject-1', codes: ['C'], shift: 'matutina', user_id: 'teacher-1' });
+    expect(api.createCareerRecord).not.toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  it('no crea un paralelo con código y jornada completos si falta el docente', async () => {
+    const wrapper = mountSheet();
+    await flushPromises();
+    [...document.body.querySelectorAll('button')].find((item) => item.textContent?.includes('Agregar paralelo'))!.click();
+    await flushPromises();
+    const input = document.body.querySelector<HTMLInputElement>('#parallel-code-subject-1')!;
+    input.value = 'C';
+    input.dispatchEvent(new Event('input'));
+    await flushPromises();
+    expect(button('Docente del nuevo paralelo')?.textContent).toContain('Elija el docente');
+    expect(button('Docente del nuevo paralelo')?.getAttribute('aria-required')).toBe('true');
+
+    button('Guardar nuevo paralelo')!.click();
+    await flushPromises();
+
+    expect(api.createParallels).not.toHaveBeenCalled();
+    expect(button('Docente del nuevo paralelo')?.getAttribute('aria-invalid')).toBe('true');
+    expect(document.body.textContent).toContain('Escriba el código y elija la jornada y el docente del paralelo.');
     wrapper.unmount();
   });
 

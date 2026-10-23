@@ -248,6 +248,7 @@ export const createParallels = (payload: {
   subject_id: string;
   codes: string[];
   shift: string;
+  user_id: string;
 }) =>
   api<{ message: string }>("/coordination/academic/parallels", {
     method: "POST",

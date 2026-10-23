@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { ChevronDown, X } from '@lucide/vue';
+import { ChevronDown, Plus, X } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { createCareerRecord, createParallels, deleteCareerRecord, updateParallel, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
 import { Button } from '@/components/ui/button';
+import TeacherSelect from '@/components/domain/academic/TeacherSelect.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +34,10 @@ const emit = defineEmits<{ changed: [message: string]; failed: [message: string]
 
 const NO_TEACHER = 'none';
 const busy = ref(false);
+const addOpen = ref(false);
+const addShift = ref('');
+const addTeacher = ref('');
+const addError = ref<string | null>(null);
 const label = computed(() => {
   const subjects = `${props.items.length} ${props.items.length === 1 ? 'materia' : 'materias'}`;
   const count = props.parallelIds.length;
@@ -63,11 +72,27 @@ const run = async (steps: Array<() => Promise<unknown>>, done: string, nothing: 
   emit('clear');
 };
 
-const addParallel = (shift: string) => run(
-  props.items.map((item) => () => createParallels({ subject_id: item.subject_id, codes: [nextParallelCode(item.parallels)], shift })),
-  `Paralelo agregado a ${props.items.length} ${props.items.length === 1 ? 'materia' : 'materias'}.`,
-  'No hay materias seleccionadas.',
-);
+const openAdd = (): void => {
+  addShift.value = props.shiftOptions[0]?.value ?? '';
+  addTeacher.value = '';
+  addError.value = null;
+  addOpen.value = true;
+};
+const addParallel = async (): Promise<void> => {
+  if (busy.value) return;
+  if (!addShift.value || !addTeacher.value) {
+    addError.value = 'Elija la jornada y el docente de los nuevos paralelos.';
+    return;
+  }
+  const shift = addShift.value;
+  const userId = addTeacher.value;
+  addOpen.value = false;
+  await run(
+    props.items.map((item) => () => createParallels({ subject_id: item.subject_id, codes: [nextParallelCode(item.parallels)], shift, user_id: userId })),
+    `Paralelo agregado a ${props.items.length} ${props.items.length === 1 ? 'materia' : 'materias'}.`,
+    'No hay materias seleccionadas.',
+  );
+};
 const setShift = (shift: string) => run(
   props.items.flatMap((item) => chosen(item)
     .filter((parallel) => parallel.editable !== false && parallel.shift !== shift)
@@ -100,12 +125,7 @@ const setTeacher = (userId: string) => run(
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>Agregar un paralelo</DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuItem v-for="option in shiftOptions" :key="option.value" @select="addParallel(option.value)">{{ option.label }}</DropdownMenuItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
+        <DropdownMenuItem @select="openAdd">Agregar un paralelo</DropdownMenuItem>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger :disabled="parallelIds.length === 0">Asignar jornada</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
@@ -122,5 +142,30 @@ const setTeacher = (userId: string) => run(
       </DropdownMenuContent>
     </DropdownMenu>
     <Button type="button" size="sm" variant="ghost" :disabled="busy" @click="emit('clear')"><X data-icon="inline-start" aria-hidden="true" />Quitar selección</Button>
+    <Dialog v-model:open="addOpen">
+      <DialogContent :aria-describedby="undefined">
+        <DialogHeader><DialogTitle>Agregar un paralelo a las materias seleccionadas</DialogTitle></DialogHeader>
+        <form class="contents" @submit.prevent="addParallel">
+          <Alert v-if="addError" variant="destructive"><AlertDescription>{{ addError }}</AlertDescription></Alert>
+          <FieldGroup>
+            <Field :data-invalid="Boolean(addError) && !addShift">
+              <FieldLabel for="bulk-parallel-shift" required>Jornada</FieldLabel>
+              <Select v-model="addShift" required>
+                <SelectTrigger id="bulk-parallel-shift" :aria-invalid="Boolean(addError) && !addShift"><SelectValue placeholder="Elija la jornada" /></SelectTrigger>
+                <SelectContent><SelectGroup><SelectItem v-for="option in shiftOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
+              </Select>
+            </Field>
+            <Field :data-invalid="Boolean(addError) && !addTeacher">
+              <FieldLabel for="bulk-parallel-teacher" required>Docente</FieldLabel>
+              <TeacherSelect id="bulk-parallel-teacher" v-model="addTeacher" :teachers="teacherUsers" label="Docente de los nuevos paralelos" required :invalid="Boolean(addError) && !addTeacher" />
+            </Field>
+          </FieldGroup>
+          <DialogFooter>
+            <Button type="button" variant="outline" @click="addOpen = false">Cancelar</Button>
+            <Button type="submit" :disabled="busy"><Plus data-icon="inline-start" aria-hidden="true" />Agregar paralelos</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>

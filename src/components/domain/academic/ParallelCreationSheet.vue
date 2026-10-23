@@ -128,10 +128,9 @@ const replaceTeacher = async (parallelId: string, value: string): Promise<{ mess
   return result;
 };
 const removeTeacher = (parallelId: string) => runRowAction(() => replaceTeacher(parallelId, NO_TEACHER), "No se pudo quitar el docente del paralelo.");
-const newTeacher = ref("none");
-const pendingTeacher = ref<{ code: string; shift: string; userId: string } | null>(null);
+const newTeacher = ref("");
 const startAdd = () => {
-  newTeacher.value = "none";
+  newTeacher.value = "";
   code.value = "";
   shift.value = defaultShift.value;
   error.value = null;
@@ -143,8 +142,9 @@ const cancelAdd = () => {
   error.value = null;
 };
 const submit = async () => {
-  if (!code.value.trim() || !shift.value) {
-    error.value = "Escriba el código y elija la jornada del paralelo.";
+  if (saving.value) return;
+  if (!code.value.trim() || !shift.value || !newTeacher.value) {
+    error.value = "Escriba el código y elija la jornada y el docente del paralelo.";
     return;
   }
   saving.value = true;
@@ -154,8 +154,8 @@ const submit = async () => {
       subject_id: props.subjectId,
       codes: [code.value.trim()],
       shift: shift.value,
+      user_id: newTeacher.value,
     });
-    if (newTeacher.value !== "none") pendingTeacher.value = { code: code.value.trim(), shift: shift.value, userId: newTeacher.value };
     emit("saved", result.message);
     reset();
   } catch (reason) {
@@ -165,13 +165,6 @@ const submit = async () => {
   }
 };
 watch(open, (value) => value && reset());
-watch(() => props.parallels, async (list) => {
-  const pending = pendingTeacher.value;
-  const created = pending && list.find((item) => item.code === pending.code && item.shift === pending.shift);
-  if (!pending || !created) return;
-  pendingTeacher.value = null;
-  await runRowAction(() => replaceTeacher(created.id, pending.userId), "El paralelo se creó, pero no se pudo asignar el docente.");
-});
 </script>
 
 <template>
@@ -241,8 +234,7 @@ watch(() => props.parallels, async (list) => {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <TeacherSelect v-if="teacherUsers" v-model="newTeacher" :teachers="teacherUsers" label="Docente del nuevo paralelo" allow-none />
-                      <span v-else class="text-muted-foreground">Sin docente</span>
+                      <TeacherSelect v-model="newTeacher" :teachers="teacherUsers ?? []" label="Docente del nuevo paralelo" required :invalid="Boolean(error) && !newTeacher" />
                     </TableCell>
                     <TableCell class="text-right">
                       <Button type="button" size="icon-sm" variant="ghost" :disabled="saving" aria-label="Guardar nuevo paralelo" @click="submit"><Check aria-hidden="true" /></Button>

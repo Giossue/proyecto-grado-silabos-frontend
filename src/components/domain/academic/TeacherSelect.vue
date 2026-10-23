@@ -8,7 +8,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 const props = defineProps<{
   teachers: Array<{ id: string; name: string }>;
   label: string;
-  allowNone?: boolean;
+  id?: string;
+  required?: boolean;
+  invalid?: boolean;
 }>();
 const model = defineModel<string>({ required: true });
 const open = ref(false);
@@ -25,7 +27,7 @@ const select = (value: string): void => {
 <template>
   <Popover v-model:open="open">
     <PopoverTrigger as-child>
-      <Button type="button" variant="outline" role="combobox" :aria-label="label" :aria-expanded="open" :aria-controls="listId" class="min-w-40 max-w-60 justify-between">
+      <Button :id="id" type="button" variant="outline" role="combobox" :aria-label="label" :aria-expanded="open" :aria-controls="listId" :aria-required="required || undefined" :aria-invalid="invalid || undefined" class="min-w-40 max-w-60 justify-between">
         <span class="truncate">{{ selectedName }}</span>
         <ChevronDown data-icon="inline-end" aria-hidden="true" />
       </Button>
@@ -36,10 +38,6 @@ const select = (value: string): void => {
         <CommandList :id="listId" :aria-label="label">
           <CommandEmpty role="status">No se encontraron docentes.</CommandEmpty>
           <CommandGroup>
-            <CommandItem v-if="allowNone" value="none" @select="select('none')">
-              Sin docente
-              <Check v-if="model === 'none'" class="ml-auto" aria-hidden="true" />
-            </CommandItem>
             <CommandItem v-for="teacher in teachers" :key="teacher.id" :value="teacher.id" @select="select(teacher.id)">
               {{ teacher.name }}
               <Check v-if="model === teacher.id" class="ml-auto" aria-hidden="true" />
