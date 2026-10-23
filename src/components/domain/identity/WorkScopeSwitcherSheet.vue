@@ -25,8 +25,8 @@ const coordinatorCareerCount = computed(() => roles.value.filter((role) => role.
 const title = computed(() => coordinatorCareerCount.value > 1 ? 'Cambiar carrera' : 'Cambiar ámbito de trabajo');
 type Role = (typeof roles.value)[number];
 const cardTitle = (role: Role): string => {
-  if (role.code === 'docente') return 'Docencia';
-  if (role.code === 'coordinador') return 'Coordinación';
+  if (role.code === 'docente') return 'Docente';
+  if (role.code === 'coordinador') return 'Coordinador';
   if (role.code === 'bibliotecario') return 'Biblioteca';
   if (role.code === 'administrador') return 'Administración';
   return scopeTitle(role);
