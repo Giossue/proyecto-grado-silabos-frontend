@@ -181,7 +181,7 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
               </div>
               <DialogFooter>
                 <Button v-if="working" type="button" variant="outline" :disabled="busy" @click="discard">Cancelar la importación</Button>
-                <DialogClose v-else as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
+                <DialogClose v-else-if="!ready" as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
                 <template v-if="ready">
                   <Button type="button" variant="outline" :disabled="busy" @click="discard"><Trash2 data-icon="inline-start" aria-hidden="true" />Descartar</Button>
                   <Button type="button" :disabled="busy || chosen.size === 0" @click="apply"><Spinner v-if="busy" data-icon="inline-start" />Aplicar a {{ chosen.size }} materias</Button>

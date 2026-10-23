@@ -57,6 +57,8 @@ describe('FichaImportDialog', () => {
 
     expect(document.body.textContent).toContain('Propuesta para 1 de 2 materias');
     expect(document.body.textContent).toContain('Sin información en los documentos');
+    expect(button('Cerrar')).toBeUndefined();
+    expect(button('Descartar')).toBeTruthy();
     button('Aplicar a 1 materias')!.click();
     await flushPromises();
 
