@@ -38,7 +38,7 @@ const stateText = (subject: FichaImportSubject): string => subject.state === 'li
 const missing = (subject: FichaImportSubject) => subject.missing ?? (current.value?.fields ?? []).filter((field) => !(field.key in subject.values)).map((field) => ({ ...field, reason: 'no_encontrado' as const }));
 const missingReason = (reason: string): string => ({ sin_contexto: 'No se localizó una sección de esta materia.', no_encontrado: 'No se encontró en los fragmentos analizados.', estructura_invalida: 'No se pudo recuperar con el formato de este campo.', servicio_no_disponible: 'No se pudo completar la consulta. Puede volver a intentarlo con una nueva importación.' })[reason] ?? 'No se encontró en los fragmentos analizados.';
 const now = ref(Date.now());
-const ocrText = (state: string | null): string => (state === 'native' ? 'extrayendo texto' : state === 'queued' ? 'en cola del OCR' : state === 'running' ? 'el OCR lo está leyendo' : 'preparando la lectura');
+const ocrText = (state: string | null): string => (state === 'queued' ? 'en cola del OCR' : state === 'running' ? 'el OCR lo está leyendo' : 'preparando la lectura');
 const elapsed = (from: string): string => {
   const seconds = Math.max(0, Math.round((now.value - new Date(from).getTime()) / 1000));
   return seconds < 60 ? `${seconds} s` : `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
