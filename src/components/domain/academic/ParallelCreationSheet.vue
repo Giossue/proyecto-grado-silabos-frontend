@@ -5,6 +5,7 @@ import { computed, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
 import { createCareerRecord, createParallels, deleteCareerRecord, deleteParallel, updateParallel } from "@/api/career-academics";
 import FormDialog from "@/components/domain/FormDialog.vue";
+import TeacherSelect from "@/components/domain/academic/TeacherSelect.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -211,12 +212,7 @@ watch(() => props.parallels, async (list) => {
                         </Select>
                       </TableCell>
                       <TableCell>
-                        <Select v-if="teacherEditable(parallel.id)" v-model="editTeacher">
-                          <SelectTrigger class="min-w-40 max-w-60" :aria-label="`Docente del paralelo ${parallel.code}`"><SelectValue placeholder="Elija el docente" /></SelectTrigger>
-                          <SelectContent><SelectGroup>
-                            <SelectItem v-for="user in teacherChoices(parallel.id)" :key="user.id" :value="user.id">{{ user.name }}</SelectItem>
-                          </SelectGroup></SelectContent>
-                        </Select>
+                        <TeacherSelect v-if="teacherEditable(parallel.id)" v-model="editTeacher" :teachers="teacherChoices(parallel.id)" :label="`Docente del paralelo ${parallel.code}`" />
                         <span v-else>{{ assignmentOf(parallel.id)?.user_name ?? "Sin docente" }}</span>
                       </TableCell>
                       <TableCell class="text-right">
@@ -245,13 +241,7 @@ watch(() => props.parallels, async (list) => {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Select v-if="teacherUsers" v-model="newTeacher">
-                        <SelectTrigger class="min-w-40 max-w-60" aria-label="Docente del nuevo paralelo"><SelectValue placeholder="Elija el docente" /></SelectTrigger>
-                        <SelectContent><SelectGroup>
-                          <SelectItem value="none">Sin docente</SelectItem>
-                          <SelectItem v-for="user in teacherUsers" :key="user.id" :value="user.id">{{ user.name }}</SelectItem>
-                        </SelectGroup></SelectContent>
-                      </Select>
+                      <TeacherSelect v-if="teacherUsers" v-model="newTeacher" :teachers="teacherUsers" label="Docente del nuevo paralelo" allow-none />
                       <span v-else class="text-muted-foreground">Sin docente</span>
                     </TableCell>
                     <TableCell class="text-right">

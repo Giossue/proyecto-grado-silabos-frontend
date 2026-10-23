@@ -1,13 +1,19 @@
 import { flushPromises, mount } from '@vue/test-utils';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import ParallelCreationSheet from '@/components/domain/academic/ParallelCreationSheet.vue';
 
 const api = vi.hoisted(() => ({
   createParallels: vi.fn(),
   updateParallel: vi.fn(),
   deleteParallel: vi.fn(),
+  createCareerRecord: vi.fn(),
+  deleteCareerRecord: vi.fn(),
 }));
 vi.mock('@/api/career-academics', () => api);
+
+const scrollIntoView = Element.prototype.scrollIntoView;
+beforeAll(() => { Element.prototype.scrollIntoView = vi.fn(); });
+afterAll(() => { Element.prototype.scrollIntoView = scrollIntoView; });
 
 afterEach(() => {
   document.body.innerHTML = '';
@@ -84,6 +90,42 @@ describe('ParallelCreationSheet', () => {
 
     expect(api.updateParallel).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain('Escriba el código y elija la jornada del paralelo.');
+    wrapper.unmount();
+  });
+
+  it('busca al editar, conserva al docente actual fuera de la lista y guarda solo al confirmar', async () => {
+    api.deleteCareerRecord.mockResolvedValue({ message: 'Retirado.' });
+    api.createCareerRecord.mockResolvedValue({ message: 'Asignado.' });
+    const wrapper = mountSheet();
+    await wrapper.setProps({
+      teacherUsers: [{ id: 'teacher-new', name: 'MARÍA PÉREZ', email: 'maria@example.test' }],
+      assignments: [{ id: 'assignment-1', parallel_id: 'p-a', user_id: 'teacher-current', user_name: 'DOCENTE ACTUAL', active: true, editable: true }],
+    });
+    await flushPromises();
+    button('Editar paralelo A')!.click();
+    await flushPromises();
+    button('Docente del paralelo A')!.click();
+    await flushPromises();
+
+    expect(document.body.textContent).toContain('DOCENTE ACTUAL');
+    const search = document.body.querySelector<HTMLInputElement>('input[aria-label="Buscar docente por nombre"]')!;
+    search.value = 'maria perez';
+    search.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushPromises();
+    const options = [...document.body.querySelectorAll<HTMLElement>('[data-slot="command-item"]')];
+    expect(options).toHaveLength(1);
+    options[0]!.click();
+    await flushPromises();
+
+    expect(button('Docente del paralelo A')?.textContent).toContain('MARÍA PÉREZ');
+    expect(api.createCareerRecord).not.toHaveBeenCalled();
+    expect(api.deleteCareerRecord).not.toHaveBeenCalled();
+    button('Guardar paralelo A')!.click();
+    await flushPromises();
+
+    expect(api.deleteCareerRecord).toHaveBeenCalledWith('asignacion_docente', 'assignment-1');
+    expect(api.createCareerRecord).toHaveBeenCalledWith('asignacion_docente', { user_id: 'teacher-new', parallel_id: 'p-a' });
+    expect(wrapper.emitted('changed')?.[0]).toEqual(['Asignado.']);
     wrapper.unmount();
   });
 });
