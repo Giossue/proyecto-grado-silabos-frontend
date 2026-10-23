@@ -124,8 +124,6 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
 
                 <template v-else-if="working">
                   <p class="flex items-center gap-2 text-sm" role="status"><Spinner /> {{ workingText }}</p>
-                  <p v-if="current?.reading && !current.progress.total" class="text-xs text-muted-foreground">El OCR no informa porcentaje; los PDF largos pueden tardar varios minutos.</p>
-                  <div><Button type="button" variant="outline" :disabled="busy" @click="discard"><X data-icon="inline-start" aria-hidden="true" />Cancelar la importación</Button></div>
                 </template>
 
                 <template v-else-if="current?.state === 'fallida'">
@@ -182,7 +180,8 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                 </template>
               </div>
               <DialogFooter>
-                <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
+                <Button v-if="working" type="button" variant="outline" :disabled="busy" @click="discard">Cancelar la importación</Button>
+                <DialogClose v-else as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
                 <template v-if="ready">
                   <Button type="button" variant="outline" :disabled="busy" @click="discard"><Trash2 data-icon="inline-start" aria-hidden="true" />Descartar</Button>
                   <Button type="button" :disabled="busy || chosen.size === 0" @click="apply"><Spinner v-if="busy" data-icon="inline-start" />Aplicar a {{ chosen.size }} materias</Button>

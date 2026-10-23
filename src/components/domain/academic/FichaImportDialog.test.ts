@@ -1,7 +1,7 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import FichaImportDialog from '@/components/domain/academic/FichaImportDialog.vue';
-import { applyFichaImport, getFichaImport, type FichaImport } from '@/api/ficha-imports';
+import { applyFichaImport, discardFichaImport, getFichaImport, type FichaImport } from '@/api/ficha-imports';
 
 vi.mock('@/api/ficha-imports', () => ({ getFichaImport: vi.fn(), startFichaImport: vi.fn(), applyFichaImport: vi.fn(), discardFichaImport: vi.fn() }));
 
@@ -38,7 +38,16 @@ describe('FichaImportDialog', () => {
     await openDialog();
 
     expect(document.body.textContent).toContain('Leyendo «proyecto.pdf» (1 de 3) · el OCR lo está leyendo');
-    expect(button('Cancelar la importación')).toBeTruthy();
+    const cancel = button('Cancelar la importación');
+    expect(cancel?.closest('[data-slot="dialog-footer"]')).toBeTruthy();
+    expect(button('Cerrar')).toBeUndefined();
+    expect(document.body.textContent).not.toContain('El OCR no informa porcentaje');
+
+    cancel!.click();
+    await flushPromises();
+
+    expect(discardFichaImport).toHaveBeenCalledWith('imp-1');
+    expect(button('Analizar documentos')).toBeTruthy();
   });
 
   it('muestra la propuesta y aplica solo las materias marcadas', async () => {
