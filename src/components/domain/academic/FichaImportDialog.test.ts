@@ -32,12 +32,13 @@ describe('FichaImportDialog', () => {
     expect(document.body.textContent).toContain('El asistente de IA no está configurado');
   });
 
-  it('muestra qué documento lee el OCR y permite cancelar', async () => {
+  it('muestra el documento que está leyendo sin jerga ni contador y permite cancelar', async () => {
     const reading: FichaImport = { ...ready, state: 'en_ejecucion', subjects: [], progress: { done: 0, total: 0 }, reading: { index: 1, total: 3, name: 'proyecto.pdf', ocr: 'running', started_at: new Date().toISOString() } };
     vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: reading });
     await openDialog();
 
-    expect(document.body.textContent).toContain('Leyendo «proyecto.pdf» (1 de 3) · el OCR lo está leyendo');
+    const status = document.body.querySelector('[role="status"]');
+    expect(status?.textContent?.trim()).toBe('Leyendo el documento 1 de 3: proyecto.pdf');
     const cancel = button('Cancelar la importación');
     expect(cancel?.closest('[data-slot="dialog-footer"]')).toBeTruthy();
     expect(button('Cerrar')).toBeUndefined();

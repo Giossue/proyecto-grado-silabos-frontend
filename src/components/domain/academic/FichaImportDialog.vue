@@ -37,24 +37,12 @@ const stateText = (subject: FichaImportSubject): string => subject.state === 'li
   : ({ fallida: 'No se pudo proponer', pendiente: 'Analizando…' })[subject.state];
 const missing = (subject: FichaImportSubject) => subject.missing ?? (current.value?.fields ?? []).filter((field) => !(field.key in subject.values)).map((field) => ({ ...field, reason: 'no_encontrado' as const }));
 const missingReason = (reason: string): string => ({ sin_contexto: 'No se localizó una sección de esta materia.', no_encontrado: 'No se encontró en los fragmentos analizados.', estructura_invalida: 'No se pudo recuperar con el formato de este campo.', servicio_no_disponible: 'No se pudo completar la consulta. Puede volver a intentarlo con una nueva importación.' })[reason] ?? 'No se encontró en los fragmentos analizados.';
-const now = ref(Date.now());
-const ocrText = (state: string | null): string => (state === 'queued' ? 'en cola del OCR' : state === 'running' ? 'el OCR lo está leyendo' : 'preparando la lectura');
-const elapsed = (from: string): string => {
-  const seconds = Math.max(0, Math.round((now.value - new Date(from).getTime()) / 1000));
-  return seconds < 60 ? `${seconds} s` : `${Math.floor(seconds / 60)} min ${seconds % 60} s`;
-};
 const workingText = computed(() => {
   const value = current.value;
-  if (value?.progress.total) return `Analizando las materias… ${value.progress.done} de ${value.progress.total}.`;
-  if (value?.reading) return `Leyendo «${value.reading.name}» (${value.reading.index} de ${value.reading.total}) · ${ocrText(value.reading.ocr)} · ${elapsed(value.reading.started_at)}`;
+  if (value?.progress.total) return 'Preparando la propuesta para cada materia…';
+  if (value?.reading) return `Leyendo el documento ${value.reading.index} de ${value.reading.total}: ${value.reading.name}`;
   return 'Preparando los documentos…';
 });
-let clock: number | undefined;
-watch(working, (value) => {
-  if (clock !== undefined) window.clearInterval(clock);
-  clock = value ? window.setInterval(() => { now.value = Date.now(); }, 1000) : undefined;
-}, { immediate: true });
-onBeforeUnmount(() => { if (clock !== undefined) window.clearInterval(clock); });
 const analysisDuration = computed(() => {
   const timing = current.value?.timing;
   if (!timing?.started_at || !timing.ready_at) return null;
