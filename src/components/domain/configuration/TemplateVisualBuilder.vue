@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/core';
-import { Braces, ImageUp, Pencil, Plus, Ruler, Save, Trash2 } from '@lucide/vue';
+import { ChevronDown, ImageUp, Pencil, Plus, Ruler, Save, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
@@ -15,6 +15,7 @@ import TemplateSheetField from '@/components/domain/configuration/TemplateSheetF
 import { apiMessage, uniqueKey } from '@/components/domain/configuration/templateStructure';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -358,7 +359,16 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
     <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full justify-end">
       <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
-        <Button type="button" variant="outline" :disabled="locked" @click="jsonOpen = true"><Braces data-icon="inline-start" aria-hidden="true" />Editar JSON</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger as-child>
+            <Button type="button" variant="outline" :disabled="locked">Opciones avanzadas<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuGroup>
+              <DropdownMenuItem :disabled="locked" @select="jsonOpen = true">Editar JSON</DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
       </div>
       <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 flex-wrap items-center gap-1 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">

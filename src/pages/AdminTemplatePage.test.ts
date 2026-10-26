@@ -156,13 +156,15 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.find('button[aria-label="Editar JSON"]').exists()).toBe(false);
   });
 
-  it("abre el JSON de la plantilla desde el botón Editar JSON", async () => {
+  it("abre el JSON de la plantilla desde Opciones avanzadas", async () => {
     vi.mocked(getTemplateJson).mockReset().mockResolvedValue({ version: 2, sections: [] });
     const wrapper = mountPage();
     await flushPromises();
 
-    const button = wrapper.findAll('button').find((item) => item.text().includes('Editar JSON'))!;
-    await button.trigger('click');
+    const button = wrapper.findAll('button').find((item) => item.text().includes('Opciones avanzadas'))!;
+    await button.trigger('keydown', { key: 'Enter' });
+    await flushPromises();
+    document.body.querySelector<HTMLElement>('[role="menuitem"]')!.click();
     await flushPromises();
 
     expect(document.body.textContent).toContain('Plantilla como JSON');

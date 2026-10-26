@@ -82,7 +82,7 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByRole('columnheader', { name: 'Período' })).toBeVisible();
 
     await openSection(page, 'Plantilla', 'Plantilla de sílabo');
-    await expect(page.getByRole('button', { name: 'Editar JSON' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Opciones avanzadas' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Menú de usuario' }).click();
     await page.getByRole('menuitem', { name: 'Configuración' }).click();
