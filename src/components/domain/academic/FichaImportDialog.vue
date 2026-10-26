@@ -116,7 +116,7 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
 
 <template>
   <Dialog v-model:open="open">
-    <DialogTrigger as-child><Button type="button" :disabled="props.disabled"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></DialogTrigger>
+    <DialogTrigger as-child><Button type="button" variant="success" :disabled="props.disabled"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></DialogTrigger>
     <DialogContent :aria-describedby="undefined" class="max-h-screen flex flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
         <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
             <div class="grid gap-4 p-6">
