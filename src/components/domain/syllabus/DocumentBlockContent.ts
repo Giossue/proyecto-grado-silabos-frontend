@@ -74,7 +74,8 @@ export default defineComponent({
             const current = getAt(props.value, slot.path);
             const described = definition.value ? describe(definition.value, slot.path, props.props) : { label: '', where: '' };
             const label = [described.label || 'Dato', described.where].filter(Boolean).join(', ');
-            const disabled = !parentAllows(slot.path, schema);
+            const fromProfile = schema?.type === 'text' && schema.from !== undefined;
+            const disabled = fromProfile || !parentAllows(slot.path, schema);
             if (schema?.type === 'choice' && slot.option !== undefined) {
                 return h(Checkbox, {
                     modelValue: current === slot.option,
@@ -111,6 +112,7 @@ export default defineComponent({
                 maxlength: max,
                 class: schema?.type === 'text' && schema.multiline ? 'min-h-14 w-full min-w-0 px-2 py-1' : 'h-7 w-full min-w-0 px-2 py-0',
                 'aria-label': label,
+                ...(fromProfile ? { title: 'Lo define Coordinación en la ficha de la asignatura.' } : {}),
                 'onUpdate:modelValue': (value: string | number) => write(slot.path, String(value)),
             });
         };

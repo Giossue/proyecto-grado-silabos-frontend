@@ -7,7 +7,7 @@ export type Condition =
     | ({ value?: string; prop?: string; item?: string; variable?: string } & ({ equals: string | number | null } | { empty: boolean } | { zero: boolean }));
 
 type SchemaBase = { label?: string; error?: string; keep_if?: Condition; required?: boolean };
-export type TextSchema = SchemaBase & { type: 'text'; max: number; multiline: boolean };
+export type TextSchema = SchemaBase & { type: 'text'; max: number; multiline: boolean; from?: { field: string; column: number } };
 export type NumberSchema = SchemaBase & { type: 'number'; digits: number; decimals: number };
 export type ChoiceSchema = SchemaBase & { type: 'choice'; options: Record<string, string> };
 export type ObjectSchema = SchemaBase & { type: 'object'; fields: Record<string, ValueSchema> };

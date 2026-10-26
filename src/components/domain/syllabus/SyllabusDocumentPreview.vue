@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { DocumentPresentation, SyllabusDetail } from '@/api/syllabi';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
+import { sourceFieldKeys } from '@/lib/blocks/runtime';
 import { documentLayout, layoutStyle, sheetPixels } from '@/lib/documentLayout';
 import { cn } from '@/lib/utils';
 
@@ -18,7 +19,8 @@ const layout = computed(() => layoutStyle(props.presentation.document ? document
 const sheetPx = computed(() => sheetPixels(props.presentation.document));
 const sheets = computed(() => {
     const groups: Array<{ landscape: boolean; items: SyllabusDetail['sections'] }> = [];
-    for (const section of props.sections) {
+    const sources = sourceFieldKeys();
+    for (const section of props.sections.map((item) => ({ ...item, fields: item.fields.filter((field) => !sources.has(field.key)) }))) {
         const landscape = section.orientation === 'landscape';
         const last = groups[groups.length - 1];
         if (last && last.landscape === landscape) last.items.push(section);
