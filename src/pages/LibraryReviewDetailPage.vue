@@ -201,7 +201,7 @@ onMounted(load);
       <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Devolver el sílabo al docente?</DialogTitle>
-          <DialogDescription>El sílabo vuelve al docente para que lo corrija. Cuando lo reenvíe, llegará otra vez a esta bandeja y seguirá después a coordinación.</DialogDescription>
+          <DialogDescription>El sílabo vuelve al docente para que lo corrija. Cuando lo reenvíe, llegará otra vez a esta bandeja, sin pasar de nuevo por coordinación.</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose as-child><Button type="button" variant="outline" :disabled="sending">Cancelar</Button></DialogClose>
