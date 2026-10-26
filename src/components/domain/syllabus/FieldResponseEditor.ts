@@ -106,7 +106,7 @@ export default defineComponent({
                 'onUpdate:modelValue': (value: DocumentNode) => emit('update:modelValue', value),
             });
             const tree = decorate(props.template, document.value!);
-            return h('div', { id: props.id, class: 'free-text-content flex min-w-0 flex-col gap-3', role: 'group', 'aria-label': props.label }, (tree.content ?? []).map((node) => renderFreeText(node, options)));
+            return h('div', { id: props.id, class: 'field-response-editor free-text-content flex min-w-0 flex-col gap-3', role: 'group', 'aria-label': props.label }, (tree.content ?? []).map((node) => renderFreeText(node, options)));
         };
     },
 });
