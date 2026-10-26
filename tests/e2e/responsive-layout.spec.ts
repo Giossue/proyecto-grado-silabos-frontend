@@ -70,6 +70,21 @@ const tableFixture = `
     }}).mount('#mount');
 `;
 
+// Tabla del formato protegido: encabezados fijos, «Semana 1» fija y dos celdas de respuesta.
+const weekTable = `
+    const p = (text) => ({ type: 'paragraph', ...(text ? { content: [{ type: 'text', text }] } : {}) });
+    const th = (text) => ({ type: 'tableHeader', attrs: { colspan: 1, rowspan: 1 }, content: [p(text)] });
+    const td = (text) => ({ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [p(text)] });
+    const weekTemplate = { type: 'doc', content: [{ type: 'table', content: [
+        { type: 'tableRow', content: [th('Semana'), th('Contenido'), th('Evaluación')] },
+        { type: 'tableRow', content: [td('Semana 1'), td(), td()] },
+    ] }] };
+    const weekValue = (content, evaluation) => ({ type: 'doc', content: [{ type: 'table', content: [
+        weekTemplate.content[0].content[0],
+        { type: 'tableRow', content: [td('Semana 1'), td(content), td(evaluation)] },
+    ] }] });
+`;
+
 for (const dark of [false, true]) {
     test(`las tarjetas conservan todos los datos y acciones en tema ${dark ? 'oscuro' : 'claro'}`, async ({ page }) => {
         await mountFixture(page, tableFixture);
@@ -77,12 +92,13 @@ for (const dark of [false, true]) {
         for (const width of [320, 360, 639, 640, 768, 1024, 1440, 720]) {
             await page.setViewportSize({ width, height: 1100 });
             const row = page.locator('tbody tr');
-            await expect.poll(() => row.evaluate((element) => getComputedStyle(element).display)).toBe(width < 640 ? 'flex' : 'table-row');
+            await expect.poll(() => row.evaluate((element) => getComputedStyle(element).display)).toBe(width < 640 ? 'grid' : 'table-row');
             await expect(row.locator('td:visible')).toHaveCount(5);
             await expect(row.locator('td').nth(3)).toHaveText('Activo');
             if (width < 640) {
                 for (const cell of await row.locator('td').all()) {
-                    await expect(cell).toHaveAttribute('data-label', /.+/);
+                    // El título y las acciones de la tarjeta no llevan etiqueta.
+                    if (!['title', 'actions'].includes(await cell.getAttribute('data-card-role') ?? '')) await expect(cell).toHaveAttribute('data-label', /.+/);
                     const bounds = await cell.boundingBox();
                     expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width);
                     expect(await cell.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
@@ -112,23 +128,26 @@ for (const dark of [false, true]) {
     });
 }
 
-test('las tarjetas de tablas editables conservan una sola instancia de cada campo', async ({ page }) => {
+test('las tablas editables conservan una sola instancia de cada campo', async ({ page }) => {
     await page.setViewportSize({ width: 360, height: 900 });
     await mountFixture(page, `
         const { createApp, h, ref } = await import('/@id/vue');
-        const { default: Editor } = await import('/src/components/domain/fieldTypes/TableFieldEditor.vue');
-        const value = ref({ semana_1: { contenido: 'Contenido inicial' } });
+        const { default: Editor } = await import('/src/components/domain/syllabus/FieldResponseEditor.ts');
+        ${weekTable}
+        const value = ref(null);
         createApp({ setup: () => () => h('main', { class: 'p-4', 'data-responsive-fixture': true }, h(Editor, {
-            field: { id: 'field', key: 'plan', type: 'tabla', config: { columns: [{ key: 'contenido', label: 'Contenido' }, { key: 'evaluacion', label: 'Evaluación' }], rows: [{ key: 'semana_1', label: 'Semana 1' }] } },
-            modelValue: value.value, 'onUpdate:modelValue': next => value.value = next,
+            id: 'plan', label: 'Plan', template: weekTemplate, modelValue: value.value, 'onUpdate:modelValue': next => value.value = next,
         })) }).mount('#mount');
     `);
-    await expect(page.getByLabel('Semana 1, Contenido')).toHaveCount(1);
-    await page.getByLabel('Semana 1, Contenido').fill('Contenido modificado');
+    const cell = page.getByRole('textbox', { name: 'Plan, Semana 1, Contenido' });
+    await expect(cell).toHaveCount(1);
+    await cell.click();
+    await page.keyboard.type('Contenido modificado');
     await page.setViewportSize({ width: 1440, height: 900 });
-    await expect(page.getByLabel('Semana 1, Contenido')).toHaveValue('Contenido modificado');
+    await expect(cell).toHaveText('Contenido modificado');
     await page.setViewportSize({ width: 360, height: 900 });
-    await expect(page.getByLabel('Semana 1, Contenido')).toHaveValue('Contenido modificado');
+    await expect(cell).toHaveCount(1);
+    await expect(cell).toHaveText('Contenido modificado');
     await expectNoOverflow(page);
 });
 
@@ -183,41 +202,52 @@ test('la plantilla cargada y su esqueleto conservan papel y scroll interno', asy
         const { createApp, h } = await import('/@id/vue');
         const { default: Builder } = await import('/src/components/domain/configuration/TemplateVisualBuilder.vue');
         const { default: Loading } = await import('/src/components/domain/LoadingSkeleton.vue');
-        const template = { id: 't1', name: 'Plantilla', titleBlock: { text: 'SÍLABO' }, sections: [
-            { id: 's1', key: 'descripcion', title: 'Descripción de la asignatura', blocks: [{ id: 'b1', key: 'b1', title: '', fields: [
-                { id: 'f1', key: 'descripcion', label: 'Descripción', type: 'texto', config: {} },
-            ] }] },
-            { id: 's2', key: 'planificacion', title: 'Planificación de 16 semanas', blocks: [{ id: 'b2', key: 'b2', title: '', page_orientation: 'landscape', fields: [
-                { id: 'f2', key: 'planificacion', label: 'Planificación semanal', type: 'tabla', config: {
-                    columns: Array.from({ length: 9 }, (_, index) => ({ key: 'c' + index, label: 'Actividad ' + index })),
-                    rows: Array.from({ length: 16 }, (_, index) => ({ key: 's' + index, label: 'Semana ' + (index + 1) })),
-                } },
-            ] }] },
+        const p = (text) => ({ type: 'paragraph', content: [{ type: 'text', text }] });
+        const cell = (type, text) => ({ type, attrs: { colspan: 1, rowspan: 1 }, content: [p(text)] });
+        const wide = { type: 'doc', content: [{ type: 'table', content: [
+            { type: 'tableRow', content: Array.from({ length: 9 }, (_, index) => cell('tableHeader', 'Actividad ' + index)) },
+            ...Array.from({ length: 16 }, (_, row) => ({ type: 'tableRow', content: Array.from({ length: 9 }, (_, index) => cell('tableCell', index === 0 ? 'Semana ' + (row + 1) : '')) })),
+        ] }] };
+        const template = { id: 't1', name: 'Plantilla', description: null, titleBlock: { text: 'SÍLABO' }, sections: [
+            { id: 's1', key: 'descripcion', title: 'Descripción de la asignatura', orientation: 'portrait', fields: [
+                { id: 'f1', key: 'descripcion', label: 'Descripción', quien_llena: 'coordinacion', content: { type: 'doc', content: [p('Descripción de la asignatura')] } },
+            ] },
+            { id: 's2', key: 'planificacion', title: 'Planificación de 16 semanas', orientation: 'landscape', fields: [
+                { id: 'f2', key: 'planificacion', label: 'Planificación semanal', quien_llena: 'docente', content: wide },
+            ] },
         ] };
         createApp({ setup: () => () => h('main', { class: 'min-w-0 p-4', 'data-responsive-fixture': true }, [
             h(Builder, { template }),
             h(Loading, { variant: 'template' }),
         ]) }).mount('#mount');
     `);
+    // Papel carta: 215,9 × 279,4 mm. El constructor reduce la hoja con zoom para que quepa;
+    // el esqueleto conserva el tamaño real y se desplaza dentro de su contenedor.
+    const letter = { portrait: 215.9 * 96 / 25.4, landscape: 279.4 * 96 / 25.4 };
     for (const dark of [false, true]) {
         await page.evaluate((enabled) => document.documentElement.classList.toggle('dark', enabled), dark);
         for (const width of [320, 360, 768, 1440, 720]) {
             await page.setViewportSize({ width, height: 900 });
             const sheets = page.locator('.template-sheet');
+            await expect(sheets).toHaveCount(4);
             for (let index = 0; index < await sheets.count(); index++) {
-                const sheet = sheets.nth(index);
-                const geometry = await sheet.evaluate((element) => ({ width: element.getBoundingClientRect().width, landscape: element.classList.contains('template-sheet--landscape'), scrollWidth: element.parentElement!.scrollWidth, viewport: element.parentElement!.clientWidth }));
-                expect(geometry.width).toBeCloseTo((geometry.landscape ? 279 : 210) * 96 / 25.4, 0);
-                if (width <= 768) expect(geometry.scrollWidth).toBeGreaterThan(geometry.viewport);
+                const geometry = await sheets.nth(index).evaluate((element) => ({
+                    paper: parseFloat(getComputedStyle(element).width),
+                    shown: element.getBoundingClientRect().width,
+                    landscape: element.classList.contains('template-sheet--landscape'),
+                    builder: element.matches('[data-sheet]'),
+                    scrollWidth: element.parentElement!.scrollWidth,
+                    viewport: element.parentElement!.clientWidth,
+                }));
+                expect(geometry.paper).toBeCloseTo(geometry.landscape ? letter.landscape : letter.portrait, 0);
+                if (geometry.builder) expect(geometry.shown).toBeLessThanOrEqual(width + 0.5);
+                else if (width <= 768) expect(geometry.scrollWidth).toBeGreaterThan(geometry.viewport);
             }
             await expectNoOverflow(page);
         }
     }
     await page.setViewportSize({ width: 360, height: 900 });
-    const region = page.getByRole('region', { name: 'Hoja 1 de la plantilla con desplazamiento horizontal' });
-    await region.focus();
-    await page.keyboard.press('ArrowRight');
-    await expect.poll(() => region.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+    await expect(page.getByRole('region', { name: 'Hoja 1 de la plantilla con desplazamiento horizontal' })).toBeVisible();
 });
 
 const pageRouter = `
@@ -263,7 +293,7 @@ test('Biblioteca conserva su listado completo y abre la revisión por teclado en
         await page.evaluate(enabled => document.documentElement.classList.toggle('dark', enabled), dark);
         for (const width of [320, 360, 768, 1440, 720]) {
             await page.setViewportSize({ width, height: 900 });
-            await expect(row.locator('td:visible')).toHaveCount(4);
+            await expect(row.locator('td:visible')).toHaveCount(3);
             await expectNoOverflow(page);
         }
     }
@@ -285,10 +315,14 @@ test('Biblioteca conserva su listado completo y abre la revisión por teclado en
 });
 
 test('el sílabo cargado conserva pestañas, matriz editable y asistente al cambiar de ancho', async ({ page }) => {
+    const p = (text?: string) => ({ type: 'paragraph', ...(text ? { content: [{ type: 'text', text }] } : {}) });
+    const th = (text: string) => ({ type: 'tableHeader', attrs: { colspan: 1, rowspan: 1 }, content: [p(text)] });
+    const td = (text?: string) => ({ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [p(text)] });
+    const header = { type: 'tableRow', content: [th('Semana'), th('Contenido'), th('Evaluación')] };
+    const table = (content?: string, evaluation?: string) => ({ type: 'doc', content: [{ type: 'table', content: [header, { type: 'tableRow', content: [td('Semana 1'), td(content), td(evaluation)] }] }] });
     const field = (id: string, label: string) => ({
-        id, key: id, label, type: 'tabla', help: null, required: true, inherited: false, teacher_editable: true,
-        config: { columns: [{ key: 'contenido', label: 'Contenido' }, { key: 'evaluacion', label: 'Evaluación' }], rows: [{ key: 'semana_1', label: 'Semana 1' }] },
-        value: { semana_1: { contenido: 'Contenido inicial', evaluacion: 'Evaluación inicial' } },
+        id, key: id, label, quien_llena: 'docente', required: true, teacher_editable: true,
+        template: table(), value: table('Contenido inicial', 'Evaluación inicial'), document: table('Contenido inicial', 'Evaluación inicial'),
     });
     await mountFixture(page, `${pageRouter}
         const { default: Detail } = await import('/src/pages/TeacherSyllabusDetailPage.vue');
@@ -311,15 +345,18 @@ test('el sílabo cargado conserva pestañas, matriz editable y asistente al camb
         } },
         '/teacher/syllabi/s1/ai-chat': { available: false, conversation: null, suggested_questions: [] },
     });
-    await expect(page.getByLabel('Semana 1, Contenido')).toBeVisible();
+    const cell = page.getByRole('textbox', { name: 'Planificación, Semana 1, Contenido' });
+    await expect(cell).toBeVisible();
     for (const dark of [false, true]) {
         await page.evaluate(enabled => document.documentElement.classList.toggle('dark', enabled), dark);
         for (const width of [320, 360, 768, 1440, 720]) {
             await page.setViewportSize({ width, height: 900 });
             await expect(page.getByRole('tab')).toHaveCount(2);
-            await expect(page.getByLabel('Semana 1, Contenido')).toHaveCount(1);
-            await expect(page.getByLabel('Semana 1, Contenido')).toHaveValue('Contenido inicial');
-            await expectControlInside(page, 'Enviar sílabo');
+            await expect(cell).toHaveCount(1);
+            await expect(cell).toHaveText('Contenido inicial');
+            // En anchos pequeños las acciones se agrupan en un menú de la pantalla.
+            const grouped = page.getByRole('button', { name: /^Ver \d+ acciones de la pantalla$/ });
+            await expectControlInside(page, await grouped.isVisible() ? 'Ver 2 acciones de la pantalla' : 'Enviar sílabo');
             await expectNoOverflow(page);
             if (width === 360) await page.screenshot({ path: test.info().outputPath(`silabo-${dark ? 'oscuro' : 'claro'}-360.png`), fullPage: true });
         }

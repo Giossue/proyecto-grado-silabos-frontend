@@ -110,6 +110,9 @@ test.describe('frontera distribuida de identidad', () => {
   test('carga los módulos de Coordinación de su carrera', async ({ page }) => {
     const serverErrors = captureServerErrors(page);
     await login(page, 'coordinador@silabos.test');
+    // Coordinación elige su carrera al entrar, aunque tenga una sola.
+    await expect(page).toHaveURL(/\/rol$/);
+    await page.getByRole('button', { name: 'Entrar a esta carrera' }).click();
     await expectPanel(page, 'coordinacion');
     await expectNavigation(page, [
       'Panel',

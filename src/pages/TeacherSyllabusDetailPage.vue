@@ -426,7 +426,7 @@ onBeforeUnmount(() => {
   <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-surface backdrop-blur sm:px-5" aria-label="Herramientas del sílabo">
     <Button variant="link" size="sm" class="h-auto px-0" as-child><RouterLink :to="paths.teacher.syllabi"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</RouterLink></Button>
     <span class="flex-1" />
-    <Button v-if="syllabus" type="button" variant="outline" size="sm" @click="previewOpen = true"><FileText data-icon="inline-start" aria-hidden="true" />Vista previa</Button>
+    <Button v-if="syllabus" type="button" variant="outline" size="sm" @click="previewOpen = true"><FileText data-icon="inline-start" aria-hidden="true" /><span class="max-sm:sr-only">Vista previa</span></Button>
     <AppearanceToggle />
   </header>
   <PageFrame title="" description="">

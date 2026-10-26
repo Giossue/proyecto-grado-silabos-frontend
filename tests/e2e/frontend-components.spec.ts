@@ -85,16 +85,16 @@ test('la confirmación compartida queda sobre la hoja abierta y restaura el foco
     await expect(trigger).toBeFocused();
 });
 
-test('el Sheet izquierdo usa la misma transición al entrar y salir', async ({ page }) => {
+test('el Sheet emergente usa la misma transición al entrar y salir', async ({ page }) => {
     await mountFixture(page, `
         const { createApp, h, ref } = await import('/@id/vue');
         const { Sheet, SheetContent, SheetTitle, SheetDescription } = await import('/src/components/ui/sheet/index.ts');
         createApp({ setup() {
             const open = ref(true);
             return () => h(Sheet, { open: open.value, 'onUpdate:open': value => open.value = value }, () =>
-                h(SheetContent, { side: 'left' }, () => [
+                h(SheetContent, { hideClose: false }, () => [
                     h(SheetTitle, () => 'Navegación móvil'),
-                    h(SheetDescription, () => 'Panel izquierdo sintético.'),
+                    h(SheetDescription, () => 'Panel emergente sintético.'),
                 ]),
             );
         }}).mount('#mount');
@@ -134,7 +134,7 @@ test('el Sheet izquierdo usa la misma transición al entrar y salir', async ({ p
         });
     }));
 
-    expect(entering.content).toEqual({ animationDuration: '0.3s', transitionDuration: '0.3s', transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)' });
+    expect(entering.content).toEqual({ animationDuration: '0.2s', transitionDuration: '0.2s', transitionTimingFunction: 'ease' });
     expect(entering.overlay).toEqual(entering.content);
     expect(exiting.content).toEqual({ state: 'closed', ...entering.content });
     expect(exiting.overlay).toEqual({ state: 'closed', ...entering.overlay });
