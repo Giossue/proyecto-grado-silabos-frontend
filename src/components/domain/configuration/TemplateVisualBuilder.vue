@@ -19,7 +19,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { layoutOf, layoutStyle, sheetPixels, type DocumentLayout } from '@/lib/documentLayout';
+import { layoutOf, layoutStyle, paperOf, sheetPixels, type DocumentLayout } from '@/lib/documentLayout';
 import { templateRuntime } from '@/lib/blocks/runtime';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
@@ -227,6 +227,10 @@ const sheets = computed(() => {
     }
     return groups.length > 0 ? groups : [{ landscape: false, items: [] as typeof sections.value }];
 });
+const toolbarWidth = computed(() => {
+    const paper = paperOf(documentStyle.value);
+    return `${sheets.value[0]?.landscape ? paper.height : paper.width}mm`;
+});
 watch(changed, (value) => emit('dirty', value));
 watch(() => props.template, () => {
     if (!awaitingReload.value) return;
@@ -357,7 +361,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
   <div ref="root" class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
-    <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full justify-end">
+    <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full justify-end" :style="{ maxWidth: toolbarWidth }">
       <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
