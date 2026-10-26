@@ -1,12 +1,12 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import FichaImportDialog from '@/components/domain/academic/FichaImportDialog.vue';
-import { applyFichaImport, discardFichaImport, getFichaImport, type FichaImport } from '@/api/ficha-imports';
+import { applyFichaImport, getFichaImport, type FichaImport } from '@/api/ficha-imports';
 
-vi.mock('@/api/ficha-imports', () => ({ getFichaImport: vi.fn(), startFichaImport: vi.fn(), previewFichaWorkbook: vi.fn(), downloadFichaWorkbook: vi.fn(), applyFichaImport: vi.fn(), discardFichaImport: vi.fn() }));
+vi.mock('@/api/ficha-imports', () => ({ getFichaImport: vi.fn(), previewFichaWorkbook: vi.fn(), downloadFichaWorkbook: vi.fn(), applyFichaImport: vi.fn(), discardFichaImport: vi.fn() }));
 
 const ready: FichaImport = {
-  id: 'imp-1', state: 'lista', error: null, documents: [{ name: 'proyecto.pdf', size: 10 }], reading: null, progress: { done: 2, total: 2 },
+  id: 'imp-1', format: 'ficha_xlsx_v1', state: 'lista', error: null, documents: [{ name: 'proyecto.xlsx', size: 10 }],
   fields: [{ key: 'descripcion', label: 'Descripción' }],
   subjects: [
     { subject_id: 's1', code: 'SW-1', name: 'Algoritmos', cycle: 1, state: 'lista', values: { descripcion: 'Texto propuesto' }, replaces: false, current: {} },
@@ -34,31 +34,12 @@ describe('FichaImportDialog', () => {
     expect(document.body.textContent).not.toContain('El asistente de IA no está configurado');
   });
 
-  it('muestra el documento que está leyendo sin jerga ni contador y permite cancelar', async () => {
-    const reading: FichaImport = { ...ready, state: 'en_ejecucion', subjects: [], progress: { done: 0, total: 0 }, reading: { index: 1, total: 3, name: 'proyecto.pdf', ocr: 'running', started_at: new Date().toISOString() } };
-    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: reading });
-    await openDialog();
-
-    const status = document.body.querySelector('[role="status"]');
-    expect(status?.textContent?.trim()).toBe('Leyendo el documento 1 de 3: proyecto.pdf');
-    const cancel = button('Cancelar la importación');
-    expect(cancel?.closest('[data-slot="dialog-footer"]')).toBeTruthy();
-    expect(button('Cerrar')).toBeUndefined();
-    expect(document.body.textContent).not.toContain('El OCR no informa porcentaje');
-
-    cancel!.click();
-    await flushPromises();
-
-    expect(discardFichaImport).toHaveBeenCalledWith('imp-1');
-    expect(button('Revisar Excel')).toBeTruthy();
-  });
-
   it('muestra la propuesta y aplica solo las materias marcadas', async () => {
     vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: ready });
     vi.mocked(applyFichaImport).mockResolvedValue({ message: 'ok' });
     const wrapper = await openDialog();
 
-    expect(document.body.textContent).toContain('Propuesta para 1 de 2 materias');
+    expect(document.body.textContent).toContain('Vista previa del Excel para 1 de 2 materias');
     expect(document.body.textContent).toContain('1 de 1 campos con contenido');
     expect(document.body.textContent).toContain('0 de 1 campos con contenido');
     expect(button('Cerrar')).toBeUndefined();
@@ -93,7 +74,6 @@ describe('FichaImportDialog', () => {
   it('muestra cobertura parcial, tablas y motivos de los campos pendientes', async () => {
     const proposal: FichaImport = { ...ready,
       fields: [{ key: 'relacion', label: 'Contribución al perfil' }, { key: 'descripcion', label: 'Descripción' }],
-      timing: { started_at: '2026-10-23T10:00:00Z', ready_at: '2026-10-23T10:01:12Z' },
       subjects: [{ ...ready.subjects[0]!, values: { relacion: { columns: ['Resultado', 'Nivel'], rows: [['Resuelve sistemas', 'Alta']] } }, coverage: { found: 1, total: 2 }, missing: [{ key: 'descripcion', label: 'Descripción', reason: 'no_encontrado' }] }],
     };
     vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: proposal });
@@ -101,7 +81,6 @@ describe('FichaImportDialog', () => {
 
     expect(document.body.textContent).toContain('1 de 2 campos con contenido');
     expect(document.body.textContent).toContain('Revise el contenido antes de aplicar');
-    expect(document.body.textContent).toContain('Tiempo de análisis: 1 min 12 s');
     button('Revisar campos')!.click();
     await flushPromises();
 
@@ -114,12 +93,12 @@ describe('FichaImportDialog', () => {
   });
 
   it('permite revisar por qué una materia no tiene propuesta', async () => {
-    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: { ...ready, subjects: [{ ...ready.subjects[1]!, missing: [{ key: 'descripcion', label: 'Descripción', reason: 'sin_contexto' }] }] } });
+    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: { ...ready, subjects: [{ ...ready.subjects[1]!, missing: [{ key: 'descripcion', label: 'Descripción', reason: 'no_encontrado' }] }] } });
     await openDialog();
     button('Revisar campos')!.click();
     await flushPromises();
 
-    expect(document.body.textContent).toContain('No se incluyó contenido para esta materia');
+    expect(document.body.textContent).toContain('Sin contenido en el archivo');
     expect(button('Aplicar a 0 materias')!.disabled).toBe(true);
   });
 });

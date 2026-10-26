@@ -1,9 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 const proposal = {
-  id: 'import-sintetica', state: 'lista', error: null, reading: null,
-  documents: [{ name: 'documento-sintetico.pdf', size: 100 }],
-  progress: { done: 1, total: 1 },
+  id: 'import-sintetica', format: 'ficha_xlsx_v1', state: 'lista', error: null,
+  documents: [{ name: 'documento-sintetico.xlsx', size: 100 }],
   fields: [{ key: 'relacion', label: 'Contribución al perfil' }, { key: 'objetivo', label: 'Objetivo general' }],
   subjects: [{
     subject_id: 'materia-sintetica', code: 'MAT-01', name: 'Álgebra Lineal', cycle: 1,
