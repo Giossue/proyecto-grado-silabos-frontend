@@ -45,6 +45,7 @@ const root = ref<HTMLElement | null>(null);
 const available = ref(0);
 let resizeObserver: ResizeObserver | null = null;
 
+const protectedResponses = computed(() => templateRuntime().definition?.response_policy === 'protected');
 const documentStyle = computed(() => templateRuntime().definition?.document ?? null);
 const scaleFor = (landscape: boolean): number => {
     const pixels = sheetPixels(documentStyle.value);
@@ -360,6 +361,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
   <TooltipProvider>
   <div ref="root" class="flex min-w-0 flex-col gap-4" aria-label="Constructor visual de la plantilla del sílabo" role="region">
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
+
+    <p v-if="!preview && protectedResponses" class="text-sm text-muted-foreground">El texto escrito queda fijo. Deje un párrafo o una celda vacíos para las respuestas. Una tabla con encabezados y una sola fila vacía permite añadir filas.</p>
 
     <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full justify-end" :style="{ maxWidth: toolbarWidth }">
       <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">

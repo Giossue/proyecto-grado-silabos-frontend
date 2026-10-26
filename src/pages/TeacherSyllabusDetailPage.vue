@@ -35,7 +35,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import FieldView from '@/components/domain/syllabus/FieldView.vue';
-import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
+import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
 import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
 import { attemptKey } from '@/lib/attemptKey';
 import { paths } from '@/lib/routes';
@@ -487,7 +487,7 @@ onBeforeUnmount(() => {
                 <Field v-if="showEditor && isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                   <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel>
                   <FieldDescription v-if="field.quien_llena === 'coordinacion'">Lo trae la ficha de la carrera; puede ajustarlo.</FieldDescription>
-                  <FreeTextEditor :label="field.label.trim() || section.title" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
+                  <FieldResponseEditor :template="field.template" :label="field.label.trim() || section.title" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
                 </Field>
                 <FieldView v-else :id="`field-${field.id}`" :field="field" />
                 <FieldError :errors="visibleValidationMessages(field.id)" />

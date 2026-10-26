@@ -25,7 +25,8 @@ const props = withDefaults(defineProps<{
     bare?: boolean;
     toolbar?: boolean;
     blocks?: 'configure' | 'fill';
-}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true, blocks: 'fill' });
+    allowTables?: boolean;
+}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true, blocks: 'fill', allowTables: true });
 const emit = defineEmits<{ 'update:modelValue': [value: DocumentNode] }>();
 const alignments = [
     { value: 'left', label: 'Alinear a la izquierda', icon: AlignLeft },
@@ -94,7 +95,7 @@ const editor = useEditor({
     onSelectionUpdate: ({ editor: current }) => refreshSlash(current),
     onBlur: () => closeSlash(),
 });
-const hasTable = computed(() => JSON.stringify(props.modelValue ?? {}).includes('"type":"table"'));
+const hasTable = computed(() => props.allowTables && JSON.stringify(props.modelValue ?? {}).includes('"type":"table"'));
 const addTableRow = (): void => {
     const current = editor.value;
     if (!current || props.disabled) return;
@@ -134,7 +135,7 @@ defineExpose({ editor });
       <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista con viñetas" :aria-pressed="editor.isActive('bulletList')" :disabled="disabled" @click="editor.chain().focus().toggleBulletList().run()"><List aria-hidden="true" /></Button>
       <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista numerada" :aria-pressed="editor.isActive('orderedList')" :disabled="disabled" @click="editor.chain().focus().toggleOrderedList().run()"><ListOrdered aria-hidden="true" /></Button>
-      <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" :disabled="disabled" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"><Table2 aria-hidden="true" /></Button>
+      <Button v-if="allowTables" type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" :disabled="disabled" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"><Table2 aria-hidden="true" /></Button>
       <template v-if="editor.isActive('table')">
         <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
         <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().addRowAfter().run()">+ Fila</Button>

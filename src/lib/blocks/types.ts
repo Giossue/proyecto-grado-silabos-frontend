@@ -47,6 +47,6 @@ export type DocumentStyle = {
     choices: { margin_cm: number[]; title: number[]; section: number[]; body: number[] };
 };
 
-export type TemplateDefinitionPayload = { document: DocumentStyle; blocks: Record<string, BlockDefinition> };
+export type TemplateDefinitionPayload = { response_policy?: 'protected'; document: DocumentStyle; blocks: Record<string, BlockDefinition> };
 
 export type BlockAttrs = { kind: string; props: Record<string, unknown>; value: Record<string, unknown> };

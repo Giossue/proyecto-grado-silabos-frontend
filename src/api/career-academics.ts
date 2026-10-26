@@ -112,7 +112,7 @@ export type ScheduledSubjects = {
   };
 };
 
-export type SubjectProfileField = { id: string; key: string; label: string; section: string | null; quien_llena: 'coordinacion'; content: DocumentNode };
+export type SubjectProfileField = { id: string; key: string; label: string; section: string | null; quien_llena: 'coordinacion'; content: DocumentNode; template?: DocumentNode };
 
 
 export type SubjectProfile = {

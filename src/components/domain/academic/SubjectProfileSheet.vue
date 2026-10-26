@@ -5,13 +5,13 @@ import { getSubjectProfile, saveSubjectProfile, type SubjectProfileField } from 
 import FormDialog from '@/components/domain/FormDialog.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
-import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
+import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
+import { responseEmpty } from '@/lib/fieldResponses';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatusBadge from '@/components/domain/StatusBadge.vue';
-import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const props = defineProps<{ subjectId: string; subjectName: string; disabled?: boolean }>();
@@ -31,10 +31,7 @@ const activeSection = computed<string>({
   get: () => (chosen.value !== null && sections.value.includes(chosen.value) ? chosen.value : sections.value[0] ?? ''),
   set: (value) => { chosen.value = value; },
 });
-const isEmpty = (fieldId: string): boolean => {
-  const value = values.value[fieldId];
-  return !value || freeTextPlain(value).trim() === '';
-};
+const isEmpty = (fieldId: string): boolean => responseEmpty(fields.value.find((field) => field.id === fieldId)?.template, values.value[fieldId]);
 const pending = (fieldId: string): boolean => isEmpty(fieldId) && !editable.value[fieldId];
 const sectionHasEmpty = (section: string): boolean => fields.value.some((field) => sectionOf(field) === section && pending(field.id));
 const shownFields = computed(() => fields.value.filter((field) => sectionOf(field) === activeSection.value));
@@ -98,7 +95,8 @@ const save = async (close: () => void) => {
                     <Switch :id="`ficha-docente-${field.id}`" v-model="editable[field.id]" :disabled="disabled" />
                   </span>
                 </div>
-                <FreeTextEditor
+                <FieldResponseEditor
+                  :template="field.template"
                   :id="`ficha-${field.id}`"
                   :label="field.label.trim() || sectionOf(field)"
                   :disabled="disabled"
