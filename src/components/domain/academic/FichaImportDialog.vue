@@ -3,7 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Check, FileSpreadsheet, FileUp } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
-import { applyFichaImport, discardFichaImport, getFichaImport, previewFichaWorkbook, downloadFichaWorkbook, type FichaImport, type FichaImportSubject } from '@/api/ficha-imports';
+import { applyFichaWorkbook, previewFichaWorkbook, downloadFichaWorkbook, type FichaWorkbookPreview, type FichaWorkbookSubject } from '@/api/ficha-imports';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import FichaProposalValue from '@/components/domain/academic/FichaProposalValue.vue';
@@ -16,33 +16,22 @@ import { Spinner } from '@/components/ui/spinner';
 const props = defineProps<{ disabled?: boolean }>();
 const emit = defineEmits<{ applied: [message: string] }>();
 const open = ref(false);
-const current = ref<FichaImport | null>(null);
+const current = ref<FichaWorkbookPreview | null>(null);
 const file = ref<File | null>(null);
 const downloading = ref(false);
 const chosen = ref<Set<string>>(new Set());
 const busy = ref(false);
 const error = ref<string | null>(null);
 
-const ready = computed(() => current.value?.state === 'lista');
+const ready = computed(() => current.value !== null);
 const proposed = computed(() => (current.value?.subjects ?? []).filter((subject) => subject.state === 'lista'));
 const fieldLabel = (key: string): string => current.value?.fields.find((field) => field.key === key)?.label ?? key;
-const found = (subject: FichaImportSubject): number => subject.coverage?.found ?? Object.keys(subject.values).length;
-const total = (subject: FichaImportSubject): number => subject.coverage?.total ?? current.value?.fields.length ?? 0;
-const stateText = (subject: FichaImportSubject): string => `${found(subject)} de ${total(subject)} campos con contenido`;
-const missing = (subject: FichaImportSubject) => subject.missing ?? (current.value?.fields ?? []).filter((field) => !(field.key in subject.values)).map((field) => ({ ...field, reason: 'no_encontrado' as const }));
-const load = async (): Promise<void> => {
-  busy.value = true;
-  try {
-    const state = await getFichaImport();
-    current.value = state.import;
-    if (state.import?.state === 'lista' && chosen.value.size === 0) {
-      chosen.value = new Set(state.import.subjects.filter((subject) => subject.state === 'lista').map((subject) => subject.subject_id));
-    }
-  } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo consultar la importación.';
-  } finally { busy.value = false; }
-};
-watch(open, (value) => { if (value) { error.value = null; file.value = null; chosen.value = new Set(); excluded.value = {}; expanded.value = new Set(); void load(); } });
+const found = (subject: FichaWorkbookSubject): number => subject.coverage?.found ?? Object.keys(subject.values).length;
+const total = (subject: FichaWorkbookSubject): number => subject.coverage?.total ?? current.value?.fields.length ?? 0;
+const stateText = (subject: FichaWorkbookSubject): string => `${found(subject)} de ${total(subject)} campos con contenido`;
+const missing = (subject: FichaWorkbookSubject) => subject.missing ?? (current.value?.fields ?? []).filter((field) => !(field.key in subject.values)).map((field) => ({ ...field, reason: 'no_encontrado' as const }));
+const reset = (): void => { current.value = null; file.value = null; chosen.value = new Set(); excluded.value = {}; expanded.value = new Set(); error.value = null; };
+watch(open, () => { reset(); });
 
 const run = async (action: () => Promise<unknown>, fallback: string): Promise<boolean> => {
   busy.value = true; error.value = null;
@@ -58,13 +47,13 @@ const download = async (): Promise<void> => {
 const analyze = async (): Promise<void> => {
   if (!file.value) return;
   await run(async () => {
-    current.value = (await previewFichaWorkbook(file.value!)).import;
+    current.value = (await previewFichaWorkbook(file.value!)).preview;
     chosen.value = new Set(current.value.subjects.filter((subject) => subject.state === 'lista').map((subject) => subject.subject_id));
     excluded.value = {};
     expanded.value = new Set();
   }, 'No se pudo leer el Excel.');
 };
-const discard = async (): Promise<void> => { if (current.value && await run(() => discardFichaImport(current.value!.id), 'No se pudo descartar.')) { current.value = null; chosen.value = new Set(); excluded.value = {}; expanded.value = new Set(); file.value = null; } };
+const discard = (): void => { reset(); };
 const excluded = ref<Record<string, string[]>>({});
 const fieldChosen = (subjectId: string, key: string): boolean => !(excluded.value[subjectId] ?? []).includes(key);
 const toggleField = (subjectId: string, key: string, value: boolean): void => {
@@ -74,7 +63,7 @@ const toggleField = (subjectId: string, key: string, value: boolean): void => {
 const chosenFields = (): Record<string, string[]> | undefined => {
   const selection: Record<string, string[]> = {};
   for (const subject of current.value?.subjects ?? []) {
-    if (!chosen.value.has(subject.subject_id) || !(excluded.value[subject.subject_id] ?? []).length) continue;
+    if (!selectedSubjects.value.includes(subject.subject_id) || !(excluded.value[subject.subject_id] ?? []).length) continue;
     selection[subject.subject_id] = Object.keys(subject.values).filter((key) => fieldChosen(subject.subject_id, key));
   }
 
@@ -82,9 +71,9 @@ const chosenFields = (): Record<string, string[]> | undefined => {
 };
 const selectedSubjects = computed(() => proposed.value.filter((subject) => chosen.value.has(subject.subject_id) && Object.keys(subject.values).some((key) => fieldChosen(subject.subject_id, key))).map((subject) => subject.subject_id));
 const apply = async (): Promise<void> => {
-  if (!current.value) return;
-  const id = current.value.id;
-  if (await run(() => applyFichaImport(id, selectedSubjects.value, chosenFields()), 'No se pudieron aplicar las fichas.')) { open.value = false; emit('applied', `Fichas aplicadas a ${selectedSubjects.value.length} materias.`); }
+  if (!current.value || !file.value) return;
+  const count = selectedSubjects.value.length;
+  if (await run(() => applyFichaWorkbook(file.value!, current.value!, selectedSubjects.value, chosenFields()), 'No se pudieron aplicar las fichas.')) { open.value = false; emit('applied', `Fichas aplicadas a ${count} materias.`); }
 };
 const expanded = ref<Set<string>>(new Set());
 const toggleExpanded = (id: string): void => { const next = new Set(expanded.value); if (!next.delete(id)) next.add(id); expanded.value = next; };
@@ -102,6 +91,7 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
               </DialogHeader>
               <div class="flex flex-col gap-4">
                 <FeedbackAlert v-if="error" :message="error" />
+                <p class="text-sm text-muted-foreground">Al cerrar o recargar, deberá volver a subir el Excel para revisarlo.</p>
                 <template v-if="ready">
                   <p class="text-sm">Vista previa del Excel para {{ proposed.length }} de {{ current?.subjects.length }} materias. Revise el contenido antes de aplicar. Los campos vacíos conservan sus valores actuales.</p>
                   <ScrollArea class="[&>[data-slot=scroll-area-viewport]]:max-h-96">

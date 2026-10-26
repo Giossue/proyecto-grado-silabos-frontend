@@ -1,8 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 const proposal = {
-  id: 'import-sintetica', format: 'ficha_xlsx_v1', state: 'lista', error: null,
-  documents: [{ name: 'documento-sintetico.xlsx', size: 100 }],
+  format: 'ficha_xlsx_v1', fingerprint: 'a'.repeat(64), file_hash: 'b'.repeat(64),
   fields: [{ key: 'relacion', label: 'Contribución al perfil' }, { key: 'objetivo', label: 'Objetivo general' }],
   subjects: [{
     subject_id: 'materia-sintetica', code: 'MAT-01', name: 'Álgebra Lineal', cycle: 1,
@@ -15,9 +14,9 @@ const proposal = {
 for (const dark of [false, true]) {
   test(`la propuesta parcial conserva tablas, pendientes y acciones en tema ${dark ? 'oscuro' : 'claro'}`, async ({ page }) => {
     await page.route('**/api/v1/**', (route) => route.fulfill({
-      status: route.request().url().endsWith('/coordination/ficha-imports') ? 200 : 401,
+      status: route.request().url().endsWith('/coordination/ficha-imports/spreadsheet') ? 200 : 401,
       contentType: 'application/json',
-      body: JSON.stringify(route.request().url().endsWith('/coordination/ficha-imports') ? { available: true, import: proposal } : {}),
+      body: JSON.stringify(route.request().url().endsWith('/coordination/ficha-imports/spreadsheet') ? { preview: proposal } : {}),
     }));
     await page.goto('/ingresar', { waitUntil: 'networkidle' });
     await page.evaluate(() => {
@@ -34,6 +33,8 @@ for (const dark of [false, true]) {
     await page.getByRole('button', { name: 'Importar desde Excel', exact: true }).focus();
     await page.keyboard.press('Enter');
     const dialog = page.getByRole('dialog');
+    await dialog.locator('input[type=file]').setInputFiles({ name: 'proyecto.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: Buffer.from('Excel sintético') });
+    await dialog.getByRole('button', { name: 'Revisar Excel', exact: true }).click();
     await expect(dialog.getByText('1 de 2 campos con contenido')).toBeVisible();
     await expect(dialog.getByRole('button', { name: 'Cerrar', exact: true })).toHaveCount(0);
     await dialog.getByRole('button', { name: 'Revisar campos' }).click();

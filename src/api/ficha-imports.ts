@@ -5,7 +5,7 @@ export type FichaTableValue = { columns: string[]; rows: string[][] };
 export type FichaProposalValue = string | string[] | FichaTableValue;
 export type FichaMissingField = { key: string; label: string; reason: 'no_encontrado' };
 
-export type FichaImportSubject = {
+export type FichaWorkbookSubject = {
   subject_id: string;
   code: string;
   name: string;
@@ -18,34 +18,32 @@ export type FichaImportSubject = {
   current: Record<string, string>;
 };
 
-export type FichaImport = {
-  id: string;
+export type FichaWorkbookPreview = {
   format: 'ficha_xlsx_v1';
-  state: 'lista' | 'aplicada' | 'descartada';
-  error: string | null;
-  documents: Array<{ name: string; size: number }>;
+  fingerprint: string;
+  file_hash: string;
   fields: Array<{ key: string; label: string }>;
-  subjects: FichaImportSubject[];
+  subjects: FichaWorkbookSubject[];
 };
 
-export type FichaImportState = { available: boolean; import: FichaImport | null };
+export const applyFichaWorkbook = (file: File, preview: FichaWorkbookPreview, subjects: string[], fields?: Record<string, string[]>) =>
+  withPurgeConfirmation((confirmPurge) => {
+    const body = new FormData();
+    body.append('file', file);
+    body.append('fingerprint', preview.fingerprint);
+    body.append('file_hash', preview.file_hash);
+    subjects.forEach((subject) => body.append('subjects[]', subject));
+    Object.entries(fields ?? {}).forEach(([subject, keys]) => keys.forEach((key) => body.append(`fields[${subject}][]`, key)));
+    if (confirmPurge) body.append('confirm_purge', '1');
 
-export const getFichaImport = () => api<FichaImportState>('/coordination/ficha-imports');
-
-export const applyFichaImport = (id: string, subjects: string[], fields?: Record<string, string[]>) =>
-  withPurgeConfirmation((confirmPurge) => api<{ message: string }>(`/coordination/ficha-imports/${id}/apply`, {
-    method: 'POST',
-    body: JSON.stringify({ subjects, ...(fields ? { fields } : {}), ...(confirmPurge ? { confirm_purge: true } : {}) }),
-  }));
-
-export const discardFichaImport = (id: string) =>
-  api<{ message: string }>(`/coordination/ficha-imports/${id}`, { method: 'DELETE' });
+    return api<{ message: string; applied: number }>('/coordination/ficha-imports/apply', { method: 'POST', body });
+  });
 
 export const previewFichaWorkbook = (file: File) => {
   const body = new FormData();
   body.append('file', file);
 
-  return api<{ import: FichaImport }>('/coordination/ficha-imports/spreadsheet', { method: 'POST', body });
+  return api<{ preview: FichaWorkbookPreview }>('/coordination/ficha-imports/spreadsheet', { method: 'POST', body });
 };
 
 export const downloadFichaWorkbook = async (): Promise<void> => {

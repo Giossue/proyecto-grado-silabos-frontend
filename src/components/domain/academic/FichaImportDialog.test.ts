@@ -1,12 +1,13 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import FichaImportDialog from '@/components/domain/academic/FichaImportDialog.vue';
-import { applyFichaImport, getFichaImport, type FichaImport } from '@/api/ficha-imports';
+import FileDropzone from '@/components/domain/FileDropzone.vue';
+import { applyFichaWorkbook, previewFichaWorkbook, type FichaWorkbookPreview } from '@/api/ficha-imports';
 
-vi.mock('@/api/ficha-imports', () => ({ getFichaImport: vi.fn(), previewFichaWorkbook: vi.fn(), downloadFichaWorkbook: vi.fn(), applyFichaImport: vi.fn(), discardFichaImport: vi.fn() }));
+vi.mock('@/api/ficha-imports', () => ({ previewFichaWorkbook: vi.fn(), downloadFichaWorkbook: vi.fn(), applyFichaWorkbook: vi.fn() }));
 
-const ready: FichaImport = {
-  id: 'imp-1', format: 'ficha_xlsx_v1', state: 'lista', error: null, documents: [{ name: 'proyecto.xlsx', size: 10 }],
+const ready: FichaWorkbookPreview = {
+  format: 'ficha_xlsx_v1', fingerprint: 'a'.repeat(64), file_hash: 'b'.repeat(64),
   fields: [{ key: 'descripcion', label: 'Descripción' }],
   subjects: [
     { subject_id: 's1', code: 'SW-1', name: 'Algoritmos', cycle: 1, state: 'lista', values: { descripcion: 'Texto propuesto' }, replaces: false, current: {} },
@@ -14,10 +15,17 @@ const ready: FichaImport = {
   ],
 };
 
-const openDialog = async () => {
+const excel = new File(['contenido'], 'proyecto.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+const openDialog = async (review = true) => {
   const wrapper = mount(FichaImportDialog, { attachTo: document.body });
   await wrapper.get('button').trigger('click');
   await flushPromises();
+  if (review) {
+    wrapper.findComponent(FileDropzone).vm.$emit('update:modelValue', excel);
+    await flushPromises();
+    button('Revisar Excel')!.click();
+    await flushPromises();
+  }
   return wrapper;
 };
 const button = (text: string) => [...document.body.querySelectorAll('button')].find((item) => item.textContent?.includes(text));
@@ -26,8 +34,7 @@ describe('FichaImportDialog', () => {
   enableAutoUnmount(afterEach);
 
   it('ofrece la plantilla Excel aunque la IA no esté configurada', async () => {
-    vi.mocked(getFichaImport).mockResolvedValue({ available: false, import: null });
-    await openDialog();
+    await openDialog(false);
 
     expect(button('Descargar plantilla Excel')).toBeTruthy();
     expect(button('Revisar Excel')).toBeTruthy();
@@ -35,8 +42,8 @@ describe('FichaImportDialog', () => {
   });
 
   it('muestra la propuesta y aplica solo las materias marcadas', async () => {
-    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: ready });
-    vi.mocked(applyFichaImport).mockResolvedValue({ message: 'ok' });
+    vi.mocked(previewFichaWorkbook).mockResolvedValue({ preview: ready });
+    vi.mocked(applyFichaWorkbook).mockResolvedValue({ message: 'ok', applied: 1 });
     const wrapper = await openDialog();
 
     expect(document.body.textContent).toContain('Vista previa del Excel para 1 de 2 materias');
@@ -47,16 +54,16 @@ describe('FichaImportDialog', () => {
     button('Aplicar a 1 materias')!.click();
     await flushPromises();
 
-    expect(applyFichaImport).toHaveBeenCalledWith('imp-1', ['s1'], undefined);
+    expect(applyFichaWorkbook).toHaveBeenCalledWith(excel, ready, ['s1'], undefined);
     expect(wrapper.emitted('applied')).toHaveLength(1);
   });
 
   it('compara con la ficha actual y aplica solo los campos marcados', async () => {
-    const replacing: FichaImport = { ...ready, fields: [{ key: 'descripcion', label: 'Descripción' }, { key: 'bibliografia', label: 'Bibliografía' }], subjects: [
+    const replacing: FichaWorkbookPreview = { ...ready, fields: [{ key: 'descripcion', label: 'Descripción' }, { key: 'bibliografia', label: 'Bibliografía' }], subjects: [
       { subject_id: 's1', code: 'SW-1', name: 'Algoritmos', cycle: 1, state: 'lista', values: { descripcion: 'Texto propuesto', bibliografia: ['Libro nuevo'] }, replaces: true, current: { descripcion: 'Texto actual' } },
     ] };
-    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: replacing });
-    vi.mocked(applyFichaImport).mockResolvedValue({ message: 'ok' });
+    vi.mocked(previewFichaWorkbook).mockResolvedValue({ preview: replacing });
+    vi.mocked(applyFichaWorkbook).mockResolvedValue({ message: 'ok', applied: 1 });
     await openDialog();
 
     button('Comparar con la ficha actual')!.click();
@@ -68,15 +75,15 @@ describe('FichaImportDialog', () => {
     button('Aplicar a 1 materias')!.click();
     await flushPromises();
 
-    expect(applyFichaImport).toHaveBeenCalledWith('imp-1', ['s1'], { s1: ['bibliografia'] });
+    expect(applyFichaWorkbook).toHaveBeenCalledWith(excel, replacing, ['s1'], { s1: ['bibliografia'] });
   });
 
   it('muestra cobertura parcial, tablas y motivos de los campos pendientes', async () => {
-    const proposal: FichaImport = { ...ready,
+    const proposal: FichaWorkbookPreview = { ...ready,
       fields: [{ key: 'relacion', label: 'Contribución al perfil' }, { key: 'descripcion', label: 'Descripción' }],
       subjects: [{ ...ready.subjects[0]!, values: { relacion: { columns: ['Resultado', 'Nivel'], rows: [['Resuelve sistemas', 'Alta']] } }, coverage: { found: 1, total: 2 }, missing: [{ key: 'descripcion', label: 'Descripción', reason: 'no_encontrado' }] }],
     };
-    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: proposal });
+    vi.mocked(previewFichaWorkbook).mockResolvedValue({ preview: proposal });
     await openDialog();
 
     expect(document.body.textContent).toContain('1 de 2 campos con contenido');
@@ -93,7 +100,7 @@ describe('FichaImportDialog', () => {
   });
 
   it('permite revisar por qué una materia no tiene propuesta', async () => {
-    vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: { ...ready, subjects: [{ ...ready.subjects[1]!, missing: [{ key: 'descripcion', label: 'Descripción', reason: 'no_encontrado' }] }] } });
+    vi.mocked(previewFichaWorkbook).mockResolvedValue({ preview: { ...ready, subjects: [{ ...ready.subjects[1]!, missing: [{ key: 'descripcion', label: 'Descripción', reason: 'no_encontrado' }] }] } });
     await openDialog();
     button('Revisar campos')!.click();
     await flushPromises();
