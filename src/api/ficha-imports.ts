@@ -1,5 +1,5 @@
 import { withPurgeConfirmation } from '@/api/career-academics';
-import { api } from '@/api/client';
+import { api, apiBlob } from '@/api/client';
 
 export type FichaTableValue = { columns: string[]; rows: string[][] };
 export type FichaProposalValue = string | string[] | FichaTableValue;
@@ -21,6 +21,7 @@ export type FichaImportSubject = {
 
 export type FichaImport = {
   id: string;
+  format?: 'ficha_xlsx_v1' | null;
   state: 'pendiente' | 'en_ejecucion' | 'lista' | 'fallida' | 'aplicada' | 'descartada';
   error: string | null;
   documents: Array<{ name: string; size: number }>;
@@ -50,3 +51,20 @@ export const applyFichaImport = (id: string, subjects: string[], fields?: Record
 
 export const discardFichaImport = (id: string) =>
   api<{ message: string }>(`/coordination/ficha-imports/${id}`, { method: 'DELETE' });
+
+export const previewFichaWorkbook = (file: File) => {
+  const body = new FormData();
+  body.append('file', file);
+
+  return api<{ import: FichaImport }>('/coordination/ficha-imports/spreadsheet', { method: 'POST', body });
+};
+
+export const downloadFichaWorkbook = async (): Promise<void> => {
+  const url = URL.createObjectURL(await apiBlob('/coordination/ficha-imports/template'));
+  try {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'proyecto-carrera.xlsx';
+    link.click();
+  } finally { URL.revokeObjectURL(url); }
+};

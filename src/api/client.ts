@@ -106,8 +106,8 @@ export async function apiBlob(path: string): Promise<Blob> {
   if (response.status === 401) notifyUnauthorized();
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => ({}))) as { message?: string };
-    throw new ApiError(payload.message ?? 'No se pudo descargar el archivo.', response.status);
+    const payload = (await response.json().catch(() => ({}))) as { message?: string; errors?: Record<string, string[]> };
+    throw new ApiError(payload.message ?? 'No se pudo descargar el archivo.', response.status, payload.errors ?? {});
   }
 
   return response.blob();

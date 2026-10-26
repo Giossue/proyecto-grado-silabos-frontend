@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import FichaImportDialog from '@/components/domain/academic/FichaImportDialog.vue';
 import { applyFichaImport, discardFichaImport, getFichaImport, type FichaImport } from '@/api/ficha-imports';
 
-vi.mock('@/api/ficha-imports', () => ({ getFichaImport: vi.fn(), startFichaImport: vi.fn(), applyFichaImport: vi.fn(), discardFichaImport: vi.fn() }));
+vi.mock('@/api/ficha-imports', () => ({ getFichaImport: vi.fn(), startFichaImport: vi.fn(), previewFichaWorkbook: vi.fn(), downloadFichaWorkbook: vi.fn(), applyFichaImport: vi.fn(), discardFichaImport: vi.fn() }));
 
 const ready: FichaImport = {
   id: 'imp-1', state: 'lista', error: null, documents: [{ name: 'proyecto.pdf', size: 10 }], reading: null, progress: { done: 2, total: 2 },
@@ -25,11 +25,13 @@ const button = (text: string) => [...document.body.querySelectorAll('button')].f
 describe('FichaImportDialog', () => {
   enableAutoUnmount(afterEach);
 
-  it('explica que la IA no está configurada', async () => {
+  it('ofrece la plantilla Excel aunque la IA no esté configurada', async () => {
     vi.mocked(getFichaImport).mockResolvedValue({ available: false, import: null });
     await openDialog();
 
-    expect(document.body.textContent).toContain('El asistente de IA no está configurado');
+    expect(button('Descargar plantilla Excel')).toBeTruthy();
+    expect(button('Revisar Excel')).toBeTruthy();
+    expect(document.body.textContent).not.toContain('El asistente de IA no está configurado');
   });
 
   it('muestra el documento que está leyendo sin jerga ni contador y permite cancelar', async () => {
@@ -48,7 +50,7 @@ describe('FichaImportDialog', () => {
     await flushPromises();
 
     expect(discardFichaImport).toHaveBeenCalledWith('imp-1');
-    expect(button('Analizar documentos')).toBeTruthy();
+    expect(button('Revisar Excel')).toBeTruthy();
   });
 
   it('muestra la propuesta y aplica solo las materias marcadas', async () => {
@@ -57,8 +59,8 @@ describe('FichaImportDialog', () => {
     const wrapper = await openDialog();
 
     expect(document.body.textContent).toContain('Propuesta para 1 de 2 materias');
-    expect(document.body.textContent).toContain('1 de 1 campos encontrados');
-    expect(document.body.textContent).toContain('0 de 1 campos encontrados');
+    expect(document.body.textContent).toContain('1 de 1 campos con contenido');
+    expect(document.body.textContent).toContain('0 de 1 campos con contenido');
     expect(button('Cerrar')).toBeUndefined();
     expect(button('Descartar')).toBeTruthy();
     button('Aplicar a 1 materias')!.click();
@@ -97,8 +99,8 @@ describe('FichaImportDialog', () => {
     vi.mocked(getFichaImport).mockResolvedValue({ available: true, import: proposal });
     await openDialog();
 
-    expect(document.body.textContent).toContain('1 de 2 campos encontrados');
-    expect(document.body.textContent).toContain('Puede estar incompleta');
+    expect(document.body.textContent).toContain('1 de 2 campos con contenido');
+    expect(document.body.textContent).toContain('Revise el contenido antes de aplicar');
     expect(document.body.textContent).toContain('Tiempo de análisis: 1 min 12 s');
     button('Revisar campos')!.click();
     await flushPromises();
@@ -108,7 +110,7 @@ describe('FichaImportDialog', () => {
     expect(table?.textContent).toContain('Resuelve sistemas');
     expect(table?.textContent).toContain('Alta');
     expect(document.body.textContent).toContain('Campos pendientes');
-    expect(document.body.textContent).toContain('No se encontró en los fragmentos analizados');
+    expect(document.body.textContent).toContain('Sin contenido en el archivo');
   });
 
   it('permite revisar por qué una materia no tiene propuesta', async () => {
@@ -117,7 +119,7 @@ describe('FichaImportDialog', () => {
     button('Revisar campos')!.click();
     await flushPromises();
 
-    expect(document.body.textContent).toContain('No se localizó una sección de esta materia');
+    expect(document.body.textContent).toContain('No se incluyó contenido para esta materia');
     expect(button('Aplicar a 0 materias')!.disabled).toBe(true);
   });
 });

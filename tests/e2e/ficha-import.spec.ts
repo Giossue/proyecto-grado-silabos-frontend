@@ -32,13 +32,13 @@ for (const dark of [false, true]) {
       createApp({ render: () => h(Dialog) }).mount('#mount');
     ` });
     await page.evaluate((enabled) => document.documentElement.classList.toggle('dark', enabled), dark);
-    await page.getByRole('button', { name: 'Importar documentos', exact: true }).focus();
+    await page.getByRole('button', { name: 'Importar desde Excel', exact: true }).focus();
     await page.keyboard.press('Enter');
     const dialog = page.getByRole('dialog');
-    await expect(dialog.getByText('1 de 2 campos encontrados')).toBeVisible();
+    await expect(dialog.getByText('1 de 2 campos con contenido')).toBeVisible();
     await expect(dialog.getByRole('button', { name: 'Cerrar', exact: true })).toHaveCount(0);
     await dialog.getByRole('button', { name: 'Revisar campos' }).click();
-    await expect(dialog.getByText('No se encontró en los fragmentos analizados.')).toBeVisible();
+    await expect(dialog.getByText('Sin contenido en el archivo. Este campo no se cambiará.')).toBeVisible();
     for (const width of [360, 768, 1440]) {
       await page.setViewportSize({ width, height: 1100 });
       const table = dialog.getByRole('table', { name: 'Contribución al perfil' });
