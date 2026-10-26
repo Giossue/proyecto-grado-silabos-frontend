@@ -5,7 +5,10 @@ import { getSubjectProfile, saveSubjectProfile, type SubjectProfileField } from 
 import FormDialog from '@/components/domain/FormDialog.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import DocumentBlockContent from '@/components/domain/syllabus/DocumentBlockContent';
 import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
+import { templateRuntime } from '@/lib/blocks/runtime';
+import { blockFromSource, sourceBlockKind, sourceFromBlock } from '@/lib/blocks/sources';
 import { responseEmpty } from '@/lib/fieldResponses';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -35,6 +38,13 @@ const isEmpty = (fieldId: string): boolean => responseEmpty(fields.value.find((f
 const pending = (fieldId: string): boolean => isEmpty(fieldId) && !editable.value[fieldId];
 const sectionHasEmpty = (section: string): boolean => fields.value.some((field) => sectionOf(field) === section && pending(field.id));
 const shownFields = computed(() => fields.value.filter((field) => sectionOf(field) === activeSection.value));
+// Un campo que alimenta un bloque (`from`) se llena dentro del diseño de ese bloque.
+const blocks = computed(() => templateRuntime().definition?.blocks ?? {});
+const sourceKind = (field: SubjectProfileField): string | null => field.template ? sourceBlockKind(field.key, blocks.value) : null;
+const sourceValue = (field: SubjectProfileField): Record<string, unknown> => blockFromSource(blocks.value[sourceKind(field)!]!, field.key, values.value[field.id]);
+const writeSource = (field: SubjectProfileField, value: Record<string, unknown>): void => {
+    values.value[field.id] = sourceFromBlock(blocks.value[sourceKind(field)!]!, field.key, value, field.template!, values.value[field.id]);
+};
 const canSave = computed(() => !loading.value && !saving.value && !props.disabled && fields.value.length > 0);
 
 watch(open, async (value) => {
@@ -95,7 +105,11 @@ const save = async (close: () => void) => {
                     <Switch :id="`ficha-docente-${field.id}`" v-model="editable[field.id]" :disabled="disabled" />
                   </span>
                 </div>
+                <div v-if="sourceKind(field)" :id="`ficha-${field.id}`" class="field-response-editor min-w-0 overflow-x-auto" role="group" :aria-label="field.label.trim() || sectionOf(field)">
+                  <DocumentBlockContent :kind="sourceKind(field)!" :props="{}" :value="sourceValue(field)" :mode="disabled ? 'read' : 'source'" @update:value="writeSource(field, $event)" />
+                </div>
                 <FieldResponseEditor
+                  v-else
                   :template="field.template"
                   :id="`ficha-${field.id}`"
                   :label="field.label.trim() || sectionOf(field)"

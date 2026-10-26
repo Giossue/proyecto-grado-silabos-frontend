@@ -16,7 +16,8 @@ import { emptyValue, getAt, setAt, settle } from '@/lib/blocks/values';
 import { resolveBlock, toDocument, type ResolvedNode } from '@/lib/blocks/walk';
 import type { DocumentNode } from '@/lib/templateDocument';
 
-type Mode = 'read' | 'fill' | 'configure';
+// source: la ficha de Carrera llena solo los datos `from`; el resto se ve como en la plantilla.
+type Mode = 'read' | 'fill' | 'configure' | 'source';
 type Column = { key: string; label: string };
 
 const describe = (definition: BlockDefinition, path: Path, props: Record<string, unknown>): { label: string; where: string } => {
@@ -75,7 +76,10 @@ export default defineComponent({
             const described = definition.value ? describe(definition.value, slot.path, props.props) : { label: '', where: '' };
             const label = [described.label || 'Dato', described.where].filter(Boolean).join(', ');
             const fromProfile = schema?.type === 'text' && schema.from !== undefined;
-            const disabled = fromProfile || !parentAllows(slot.path, schema);
+            if (props.mode === 'source' && !fromProfile) {
+                return typeof current === 'string' || typeof current === 'number' ? String(current) : '';
+            }
+            const disabled = props.mode === 'source' ? false : fromProfile || !parentAllows(slot.path, schema);
             if (schema?.type === 'choice' && slot.option !== undefined) {
                 return h(Checkbox, {
                     modelValue: current === slot.option,
@@ -112,7 +116,7 @@ export default defineComponent({
                 maxlength: max,
                 class: schema?.type === 'text' && schema.multiline ? 'min-h-14 w-full min-w-0 px-2 py-1' : 'h-7 w-full min-w-0 px-2 py-0',
                 'aria-label': label,
-                ...(fromProfile ? { title: 'Lo define Coordinación en la ficha de la asignatura.' } : {}),
+                ...(fromProfile && props.mode !== 'source' ? { title: 'Lo define Coordinación en la ficha de la asignatura.' } : {}),
                 'onUpdate:modelValue': (value: string | number) => write(slot.path, String(value)),
             });
         };
@@ -133,7 +137,7 @@ export default defineComponent({
             const rows = (node.content ?? []) as ResolvedNode[];
             const lists = new Map<string, { path: Path; schema: ListSchema }>();
             for (const row of rows) {
-                if (row.row && resizable(row.row.schema)) lists.set(JSON.stringify(row.row.listPath), { path: row.row.listPath, schema: row.row.schema });
+                if (props.mode === 'fill' && row.row && resizable(row.row.schema)) lists.set(JSON.stringify(row.row.listPath), { path: row.row.listPath, schema: row.row.schema });
             }
             const slots = (item: ResolvedNode): number => (item.type === 'slot' ? 1 : 0) + (item.content ?? []).reduce((sum, child) => sum + slots(child as ResolvedNode), 0);
             const dense = rows.some((row) => slots(row) >= 4);
@@ -216,6 +220,7 @@ export default defineComponent({
             if (!block) return h('p', { class: 'text-muted-foreground' }, 'Bloque sin definición en la plantilla');
             if (props.mode === 'configure' && Object.keys(block.props).length > 0) return configure(block);
             const resolved = resolveBlock(block, props.props, props.value, variables.value);
+            if (props.mode === 'source') return h('div', { class: 'document-block flex flex-col gap-2' }, resolved.map((child) => renderFreeText(child as DocumentNode, { ...fillOptions, variable: (id) => variables.value[id] ?? '' })));
             if (props.mode !== 'fill') return h('div', { class: 'document-block' }, toDocument(resolved).map((child) => renderFreeText(child, { variable: (id) => variables.value[id] ?? '' })));
             return h('div', { class: 'document-block flex flex-col gap-2' }, [summary(), ...resolved.map((child) => renderFreeText(child as DocumentNode, { ...fillOptions, variable: (id) => variables.value[id] ?? '' }))]);
         };
