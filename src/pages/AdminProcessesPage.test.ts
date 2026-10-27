@@ -13,7 +13,7 @@ const period = (id: string, code: string, process: { id: string; state: 'abierto
   id, code, starts_on: '2026-09-29', ends_on: '2027-03-01', teaching_weeks: 23, status: 'en_curso', status_label: 'En curso', institutional_process: process, lock_reason: lockReason,
 });
 const mountPage = () => mount(AdminProcessesPage, { attachTo: document.body, global: { stubs: {
-  PageFrame: { props: ['title'], template: '<main><h1>{{ title }}</h1><slot name="actions" /><slot /></main>' },
+  PageFrame: { props: ['title'], template: '<main><slot name="banner" /><h1>{{ title }}</h1><slot name="actions" /><slot /></main>' },
   ConvocationPeriodSheet: true, ConvocationRowActions: true, RouterLink: { template: '<a><slot /></a>' },
 } } });
 

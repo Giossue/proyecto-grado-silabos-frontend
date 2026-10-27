@@ -18,6 +18,8 @@ import { useScrollDirection } from '@/composables/useScrollDirection';
 import { usePageTitle } from '@/composables/usePageBreadcrumbs';
 import { cn } from '@/lib/utils';
 
+defineOptions({ inheritAttrs: false });
+
 const props = withDefaults(
     defineProps<{
         title: string;
@@ -88,7 +90,12 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
 </script>
 
 <template>
+    <div class="contents">
+    <div v-if="$slots.banner" class="flex flex-col divide-y divide-primary/15 border-b border-primary/15 bg-accent text-accent-foreground">
+        <slot name="banner" />
+    </div>
     <div
+        v-bind="$attrs"
         :class="
             cn(
                 'flex min-w-0 flex-col gap-6 overflow-x-clip p-4 sm:p-6',
@@ -177,5 +184,6 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
         </header>
 
         <slot />
+    </div>
     </div>
 </template>

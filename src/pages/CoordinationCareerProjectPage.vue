@@ -79,8 +79,8 @@ onMounted(() => { void load(); });
 
 <template>
   <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos." size="wide">
+    <template v-if="data?.career.lock_reason" #banner><ProcessLockAlert banner :lock="data.career.lock" /></template>
     <template #actions><FichaImportDialog :disabled="!data || Boolean(data.career.lock_reason)" @applied="saved" /></template>
-    <ProcessLockAlert v-if="data?.career.lock_reason" :lock="data.career.lock" />
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="accordion" :rows="3" :filters="2" />
     <div v-else-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">

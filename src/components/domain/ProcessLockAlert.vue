@@ -9,7 +9,7 @@ import { formatDateDisplay } from '@/lib/dateDisplay';
 import { paths } from '@/lib/routes';
 import { sessionState } from '@/state/session';
 
-const props = defineProps<{ lock?: LockDetail | null; title?: string; message?: string; hideAction?: boolean; icon?: Component }>();
+const props = defineProps<{ lock?: LockDetail | null; title?: string; message?: string; hideAction?: boolean; icon?: Component; banner?: boolean }>();
 
 const isAdministrator = computed(() => sessionState.current.value?.active_role?.code === 'administrador');
 const href = computed(() => isAdministrator.value ? paths.admin.convocations : paths.coordination.panel);
@@ -42,7 +42,21 @@ const reason = computed(() => {
 </script>
 
 <template>
-    <Alert class="w-fit max-w-full border-primary/20 bg-accent text-accent-foreground">
+    <div v-if="banner" role="status" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm sm:px-6">
+        <component :is="icon ?? Lock" class="size-4 shrink-0 text-primary" aria-hidden="true" />
+        <span class="font-medium">{{ headline }}</span>
+        <span class="text-accent-foreground/80">{{ summary }}</span>
+        <Popover v-if="reason">
+            <PopoverTrigger as-child>
+                <Button type="button" variant="link" size="sm" class="h-auto p-0">¿Por qué?</Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" class="w-80 text-sm">{{ reason }}</PopoverContent>
+        </Popover>
+        <Button v-if="!hideAction" as-child size="sm" variant="link" class="h-auto p-0">
+            <RouterLink :to="href">Ir a Convocatorias</RouterLink>
+        </Button>
+    </div>
+    <Alert v-else class="w-fit max-w-full border-primary/20 bg-accent text-accent-foreground">
         <component :is="icon ?? Lock" class="text-primary" aria-hidden="true" />
         <AlertTitle>{{ headline }}</AlertTitle>
         <AlertDescription class="flex flex-col items-start gap-2 text-accent-foreground/80">

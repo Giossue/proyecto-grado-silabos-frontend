@@ -184,6 +184,9 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
     :description="pageDescription"
     :size="mode === 'curriculum' ? 'full' : 'wide'"
   >
+    <template v-if="mode === 'curriculum' && curriculum?.curriculum.lock_reason" #banner>
+      <ProcessLockAlert banner :lock="curriculum.curriculum.lock" />
+    </template>
     <template #actions>
       <ImportSpreadsheetDialog
         v-if="mode === 'teachers' && assignments?.canCreateTeacher"
@@ -212,7 +215,6 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
     <template v-if="curriculum && schedule && assignments"
       >
       <template v-if="mode === 'curriculum'">
-        <ProcessLockAlert v-if="curriculum.curriculum.lock_reason" :lock="curriculum.curriculum.lock" />
         <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" :editing="false" @changed="handleCurriculumChanged" />
       </template>
       <ScheduledSubjectsTab
