@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatDateDisplay } from '@/lib/dateDisplay';
+import { deadlineElapsed } from '@/lib/deadline';
 import { CalendarRange, Eye } from '@lucide/vue';
 import { computed } from 'vue';
 import type { DashboardDeadline } from '@/api/dashboard';
@@ -7,10 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 
-const props = defineProps<{
-  deadline: DashboardDeadline;
-  audience: 'coordinador' | 'docente';
-}>();
+const props = defineProps<{ deadline: DashboardDeadline }>();
 
 const slots = defineSlots<{ actions?: () => unknown }>();
 const emit = defineEmits<{ tracking: [] }>();
@@ -28,16 +26,7 @@ const stateLabel = computed(() => ({
   closed: 'Cerrada',
 })[props.deadline.state]);
 
-const elapsed = computed(() => {
-  if (['overdue', 'closed'].includes(props.deadline.state)) return 100;
-  if (props.deadline.state === 'upcoming') return 0;
-  const start = Date.parse(props.deadline.starts_at);
-  const due = Date.parse(props.deadline.due_at);
-  const total = Math.round((due - start) / 86_400_000);
-  if (!Number.isFinite(total) || total <= 0) return 100;
-  const done = total - Math.max(0, props.deadline.days_until_due);
-  return Math.min(100, Math.max(0, Math.round((done / total) * 100)));
-});
+const elapsed = computed(() => deadlineElapsed(props.deadline));
 
 const summary = computed(() => {
   if (props.deadline.state === 'paused') return '';
@@ -52,32 +41,10 @@ const summary = computed(() => {
   if (props.deadline.days_until_due === 1) return 'Queda 1 día para la entrega.';
   return `Quedan ${props.deadline.days_until_due} días para la entrega`;
 });
-
-const teacherSummary = computed(() => {
-  const { state, days_until_start: toStart, days_until_due: toDue } = props.deadline;
-  const due = formatDate(props.deadline.due_at);
-  if (state === 'paused') return 'La convocatoria está pausada.';
-  if (state === 'closed') return 'La convocatoria está cerrada.';
-  if (state === 'overdue') return `El plazo para enviar sus sílabos a revisión venció el ${due}.`;
-  if (state === 'upcoming') {
-    if (toStart === 0) return 'La elaboración de sus sílabos inicia hoy.';
-    if (toStart === 1) return 'La elaboración de sus sílabos inicia mañana.';
-    return `La elaboración de sus sílabos inicia en ${toStart} días, el ${formatDate(props.deadline.starts_at)}.`;
-  }
-  if (toDue === 0) return 'Hoy es el último día para enviar sus sílabos a revisión.';
-  if (toDue === 1) return `Queda 1 día para enviar sus sílabos a revisión: hasta el ${due}.`;
-  return `Quedan ${toDue} días para enviar sus sílabos a revisión: hasta el ${due}.`;
-});
 </script>
 
 <template>
-  <Card v-if="audience === 'docente'" class="py-4">
-    <CardContent class="flex flex-col gap-3">
-      <p class="font-semibold" aria-live="polite">{{ teacherSummary }}</p>
-      <Progress :model-value="elapsed" class="h-2" :aria-label="`Avance del plazo: ${elapsed} %`" />
-    </CardContent>
-  </Card>
-  <Card v-else>
+  <Card>
     <CardHeader>
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="flex flex-col gap-1">

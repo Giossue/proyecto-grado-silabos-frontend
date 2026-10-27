@@ -13,7 +13,7 @@ vi.mock('@/api/dashboard', () => ({ getDashboard: vi.fn() }));
 vi.mock('@/api/syllabi', () => ({ getTeacherSyllabi: vi.fn() }));
 
 const mountPage = () => mount(TeacherSyllabiPage, {
-  global: { stubs: { PageFrame: { template: '<div><slot name="actions" /><slot /></div>' } } },
+  global: { stubs: { PageFrame: { template: '<div><slot name="banner" /><slot name="actions" /><slot /></div>' } } },
 });
 
 const syllabi: SyllabiResponse = {
@@ -47,7 +47,7 @@ describe('TeacherSyllabiPage', () => {
 
     expect(wrapper.text()).toContain('Sílabos por entregar');
     expect(wrapper.text()).toContain('Por corregir');
-    expect(wrapper.text()).toContain('Quedan 19 días para enviar sus sílabos a revisión: hasta el 15 de noviembre de 2026.');
+    expect(wrapper.get('[role="status"]').text()).toBe('Quedan 19 días para enviar sus sílabos a revisiónHasta el 15 de noviembre de 2026.');
     expect(wrapper.text()).not.toContain('Continuar mis sílabos');
     expect(wrapper.get('[aria-label="Mis sílabos"]').text()).toContain('Álgebra Lineal');
   });

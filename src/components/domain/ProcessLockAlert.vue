@@ -42,7 +42,7 @@ const reason = computed(() => {
 </script>
 
 <template>
-    <div v-if="banner" role="status" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-sm sm:px-6">
+    <div v-if="banner" role="status" class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-primary/15 bg-accent px-4 py-2.5 text-sm text-accent-foreground sm:px-6">
         <component :is="icon ?? Lock" class="size-4 shrink-0 text-primary" aria-hidden="true" />
         <span class="font-medium">{{ headline }}</span>
         <span class="text-accent-foreground/80">{{ summary }}</span>

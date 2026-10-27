@@ -76,7 +76,7 @@ onMounted(() => { void load(); });
     <template v-else-if="dashboard">
       <MetricTiles v-if="dashboard.metrics.length > 0" :metrics="dashboard.metrics" />
       <p v-else class="text-sm text-muted-foreground">No hay indicadores disponibles para este rol.</p>
-      <ConvocationDeadlineCard v-if="dashboard.deadline && roleCode === 'coordinador'" :deadline="dashboard.deadline" audience="coordinador" @tracking="trackingOpen = true"><template v-if="dashboard.coordination_convocation" #actions><ConvocationActions :convocation="dashboard.coordination_convocation" @changed="handleOpened" /></template></ConvocationDeadlineCard>
+      <ConvocationDeadlineCard v-if="dashboard.deadline && roleCode === 'coordinador'" :deadline="dashboard.deadline" @tracking="trackingOpen = true"><template v-if="dashboard.coordination_convocation" #actions><ConvocationActions :convocation="dashboard.coordination_convocation" @changed="handleOpened" /></template></ConvocationDeadlineCard>
       <SetupChecklist v-if="setup" :setup="setup" @action="handleSetupAction" />
     </template>
     <LoadingSkeleton v-else variant="dashboard" :dashboard-role="roleCode ?? undefined" />

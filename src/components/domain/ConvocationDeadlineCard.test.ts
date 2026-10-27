@@ -13,33 +13,27 @@ const deadline = {
 };
 
 describe('ConvocationDeadlineCard', () => {
-  it('muestra al docente solo los días y la barra, sin fechas ni botones', () => {
-    const wrapper = mount(ConvocationDeadlineCard, { props: { deadline, audience: 'docente' } });
+  it('explica el inicio con su estado y fechas', () => {
+    const wrapper = mount(ConvocationDeadlineCard, { props: { deadline } });
 
-    expect(wrapper.text()).toBe('La elaboración de sus sílabos inicia en 2 días, el 25 de septiembre de 2026.');
-    expect(wrapper.find('[aria-label="Avance del plazo: 0 %"]').exists()).toBe(true);
-    expect(wrapper.find('button, a, time').exists()).toBe(false);
+    expect(wrapper.text()).toContain('La elaboración inicia en 2 días.');
+    expect(wrapper.text()).toContain('Por iniciar');
+    expect(wrapper.findAll('time')).toHaveLength(2);
   });
 
   it('muestra la pausa sin mensaje ni conteo engañoso', () => {
     const wrapper = mount(ConvocationDeadlineCard, {
-      props: {
-        deadline: { ...deadline, state: 'paused', days_until_start: 0, days_until_due: 0 },
-        audience: 'docente',
-      },
+      props: { deadline: { ...deadline, state: 'paused', days_until_start: 0, days_until_due: 0 } },
     });
 
-    expect(wrapper.text()).toBe('La convocatoria está pausada.');
+    expect(wrapper.text()).toContain('Pausada');
     expect(wrapper.text()).not.toContain('No se admiten envíos');
     expect(wrapper.text()).not.toContain('Quedan 0 días');
   });
 
   it('abre el seguimiento para coordinación cuando la carrera ya tiene convocatoria', async () => {
     const wrapper = mount(ConvocationDeadlineCard, {
-      props: {
-        deadline: { ...deadline, state: 'overdue', convocation_id: 'convocation-1' },
-        audience: 'coordinador',
-      },
+      props: { deadline: { ...deadline, state: 'overdue', convocation_id: 'convocation-1' } },
     });
 
     expect(wrapper.text()).toContain('El plazo de entrega venció.');
@@ -49,13 +43,9 @@ describe('ConvocationDeadlineCard', () => {
 
   it('muestra una barra con el avance del plazo entre inicio y entrega', () => {
     const wrapper = mount(ConvocationDeadlineCard, {
-      props: {
-        deadline: { ...deadline, state: 'active', days_until_start: 0, days_until_due: 2, starts_at: '2026-09-24T00:00:00Z', due_at: '2026-09-28T00:00:00Z' },
-        audience: 'docente',
-      },
+      props: { deadline: { ...deadline, state: 'active', days_until_start: 0, days_until_due: 2, starts_at: '2026-09-24T00:00:00Z', due_at: '2026-09-28T00:00:00Z' } },
     });
 
     expect(wrapper.find('[aria-label="Avance del plazo: 50 %"]').exists()).toBe(true);
-    expect(wrapper.text()).toBe('Quedan 2 días para enviar sus sílabos a revisión: hasta el 28 de septiembre de 2026.');
   });
 });
