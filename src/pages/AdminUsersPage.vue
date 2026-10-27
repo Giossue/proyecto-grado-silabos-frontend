@@ -65,7 +65,7 @@ onMounted(load);
 </script>
 
 <template>
-    <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca." size="wide">
+    <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca." size="wide" :loading="!result">
         <template #actions><template v-if="result"><ImportSpreadsheetDialog title="Importar cuentas" kind="users" template-name="plantilla-usuarios.xlsx" :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }, { key: 'rol', label: 'Rol' }, { key: 'carrera', label: 'Carrera' }]" @imported="changed" /><ManagedUserSheet :roles="result.roles" :careers="result.careers" @saved="changed" /></template></template>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="4" :filters="3" :actions="false" :cell-lines="[2, 1, 1, 1]" />

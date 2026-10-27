@@ -429,7 +429,7 @@ onBeforeUnmount(() => {
     <Button v-if="syllabus" type="button" variant="outline" size="sm" @click="previewOpen = true"><FileText data-icon="inline-start" aria-hidden="true" /><span class="max-sm:sr-only">Vista previa</span></Button>
     <AppearanceToggle />
   </header>
-  <PageFrame title="" description="">
+  <PageFrame title="" description="" :loading="!syllabus">
     <template #actions>
       <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>

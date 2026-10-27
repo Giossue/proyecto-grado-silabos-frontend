@@ -183,6 +183,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
     :title="pageTitle"
     :description="pageDescription"
     :size="mode === 'curriculum' ? 'full' : 'wide'"
+    :loading="!(curriculum && schedule && assignments)"
   >
     <template v-if="mode === 'curriculum' && curriculum?.curriculum.lock_reason" #banner>
       <ProcessLockAlert banner :lock="curriculum.curriculum.lock" />

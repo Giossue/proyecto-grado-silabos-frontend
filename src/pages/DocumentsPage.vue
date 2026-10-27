@@ -67,10 +67,10 @@ onBeforeUnmount(() => { if (timer !== null) clearInterval(timer); });
 </script>
 
 <template>
-  <PageFrame title="Documentos aprobados" description="Archivos de la revisión aprobada." size="wide">
+  <PageFrame title="Documentos aprobados" description="Archivos de la revisión aprobada." size="wide" :loading="!data">
     <template v-if="data" #meta><span class="text-sm">{{ data.syllabus.subject }} · {{ data.syllabus.code }} · revisión {{ data.revision.number }}</span></template>
     <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="backHref"><ArrowLeft aria-hidden="true" />Volver al expediente</RouterLink></Button></template>
-    <template #actions><Button class="max-sm:size-14 max-sm:rounded-full max-sm:p-0" :disabled="working || !data" aria-label="Generar DOCX y PDF" @click="requestExport"><Spinner v-if="working" data-icon="inline-start" /><FileArchive v-else data-icon="inline-start" aria-hidden="true" /><span class="max-sm:hidden">Generar DOCX y PDF</span></Button></template>
+    <template #actions><Button class="max-sm:size-14 max-sm:rounded-full max-sm:p-0" :disabled="working" aria-label="Generar DOCX y PDF" @click="requestExport"><Spinner v-if="working" data-icon="inline-start" /><FileArchive v-else data-icon="inline-start" aria-hidden="true" /><span class="max-sm:hidden">Generar DOCX y PDF</span></Button></template>
     <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !data" variant="documents" />

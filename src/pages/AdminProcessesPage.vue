@@ -81,7 +81,7 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Convocatorias" description="Periodos lectivos y sus fechas de clases y de elaboración de sílabos." size="wide">
+  <PageFrame title="Convocatorias" description="Periodos lectivos y sus fechas de clases y de elaboración de sílabos." size="wide" :loading="!loaded">
     <template v-if="loaded && inProgress" #banner>
       <ProcessLockAlert banner title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra." hide-action />
     </template>

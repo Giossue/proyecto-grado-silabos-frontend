@@ -83,7 +83,7 @@ onMounted(() => { void load(initialPage, true); });
 </script>
 
 <template>
-  <PageFrame title="Revisiones de biblioteca" description="Bibliografía de los sílabos enviados." size="wide">
+  <PageFrame title="Revisiones de biblioteca" description="Bibliografía de los sílabos enviados." size="wide" :loading="!data">
     <template #actions><Button as-child variant="outline"><RouterLink :to="paths.library.history"><History data-icon="inline-start" aria-hidden="true" />Historial</RouterLink></Button></template>
     <template v-if="periods.length > 0" #meta><Badge v-for="period in periods" :key="period" variant="secondary">Período {{ period }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" />

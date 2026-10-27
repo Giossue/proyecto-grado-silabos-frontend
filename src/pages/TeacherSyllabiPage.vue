@@ -56,7 +56,7 @@ onMounted(() => { void load(true); });
 </script>
 
 <template>
-  <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide">
+  <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide" :loading="!result">
     <template #actions><Button as-child variant="outline"><RouterLink :to="paths.teacher.history"><History data-icon="inline-start" aria-hidden="true" />Historial</RouterLink></Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(true)" />
     <MetricTiles v-if="result && summary?.metrics.length" :metrics="summary.metrics" />

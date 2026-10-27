@@ -72,7 +72,7 @@ onMounted(() => { void load(1, true); });
 </script>
 
 <template>
-  <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo." size="wide">
+  <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo." size="wide" :loading="!data">
     <template #actions>
       <ConvocationActions v-if="summary?.coordination_convocation" :convocation="summary.coordination_convocation" @changed="changed" />
       <Button as-child variant="outline"><RouterLink :to="paths.coordination.setup"><ListChecks data-icon="inline-start" aria-hidden="true" />Puesta en marcha</RouterLink></Button>

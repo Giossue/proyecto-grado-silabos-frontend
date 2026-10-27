@@ -27,9 +27,11 @@ const props = withDefaults(
         size?: 'full' | 'wide' | 'narrow';
         headerWidth?: number;
         icon?: Component;
+        loading?: boolean;
     }>(),
     {
         size: 'full',
+        loading: false,
     },
 );
 
@@ -74,7 +76,7 @@ const countActions = (nodes: VNode[]): number =>
         return total + 1;
     }, 0);
 
-const actionCount = computed(() => countActions(slots.actions?.() ?? []));
+const actionCount = computed(() => props.loading ? 0 : countActions(slots.actions?.() ?? []));
 
 const needsTrigger = computed(() => actionCount.value > 1);
 
