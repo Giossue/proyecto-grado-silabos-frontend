@@ -29,7 +29,6 @@ import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatur
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -386,16 +385,15 @@ const copyFromSource = async (): Promise<void> => {
 };
 
 
-const visibleSections = computed(() => syllabus.value?.sections ?? []);
+const visibleSections = computed(() => (syllabus.value?.sections ?? []).filter((section) => section.fields.some(isTeacherField)));
+const pageDescription = computed(() => syllabus.value ? [syllabus.value.period, syllabus.value.parallels.length ? `Paralelo ${syllabus.value.parallels.join(', ')}` : ''].filter(Boolean).join(' · ') : '');
 
 const chosenSectionId = ref<string | null>(null);
 const activeSectionId = computed<string>({
   get: () => visibleSections.value.find((section) => section.id === chosenSectionId.value)?.id ?? visibleSections.value[0]?.id ?? "",
   set: (value) => { chosenSectionId.value = value; },
 });
-const shownSections = computed(() => showEditor.value
-  ? visibleSections.value.filter((section) => section.id === activeSectionId.value)
-  : visibleSections.value);
+const shownSections = computed(() => visibleSections.value.filter((section) => section.id === activeSectionId.value));
 
 const warnBeforeUnload = (event: BeforeUnloadEvent): void => {
   if (!hasUnsavedChanges() && savingFieldId.value === null) return;
@@ -426,11 +424,11 @@ onBeforeUnmount(() => {
   <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-surface backdrop-blur sm:px-5" aria-label="Herramientas del sílabo">
     <Button variant="link" size="sm" class="h-auto px-0" as-child><RouterLink :to="paths.teacher.syllabi"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</RouterLink></Button>
     <span class="flex-1" />
-    <Button v-if="syllabus" type="button" variant="outline" size="sm" @click="previewOpen = true"><FileText data-icon="inline-start" aria-hidden="true" /><span class="max-sm:sr-only">Vista previa</span></Button>
     <AppearanceToggle />
   </header>
-  <PageFrame title="" description="" :loading="!syllabus">
+  <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="!syllabus">
     <template #actions>
+      <Button v-if="syllabus && showEditor" type="button" variant="outline" @click="previewOpen = true"><FileText aria-hidden="true" />Vista previa</Button>
       <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
@@ -441,7 +439,6 @@ onBeforeUnmount(() => {
     <LoadingSkeleton v-if="(!syllabus || canStart) && !error" variant="syllabus" :readonly="Boolean(syllabus && !canEdit)" />
 
     <template v-if="syllabus">
-      <h1 class="sr-only">Sílabo de {{ syllabus.subject }} · {{ syllabus.period }}</h1>
       <ProcessLockAlert v-if="editBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
       <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
@@ -450,13 +447,6 @@ onBeforeUnmount(() => {
       <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar' || pausedEdit" variant="syllabus">
         <div class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
           <ProcessLockAlert v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
-          <Card v-if="!showEditor" class="syllabus-document-header">
-            <CardContent class="flex flex-col items-center gap-5 py-8 text-center">
-              <div class="flex w-full items-center justify-between gap-6"><img :src="syllabus.presentation.logos.institution" alt="Logo institucional" class="max-h-10 max-w-40 object-contain" /><img :src="syllabus.presentation.logos.faculty" alt="Logo de facultad" class="max-h-14 max-w-40 object-contain" /></div>
-              <h2 class="text-xl font-semibold" :style="{ color: syllabus.presentation.appearance.accent_color }">{{ syllabus.presentation.title }}</h2>
-              <p class="text-sm text-muted-foreground">Esta versión es de solo lectura.</p>
-            </CardContent>
-          </Card>
 
           <DocumentSignatureCard v-if="syllabus.state === 'aprobado' && syllabus.approved_revision_id" :revision-id="syllabus.approved_revision_id" :file-name="`silabo-${syllabus.code}`" />
 
@@ -474,27 +464,31 @@ onBeforeUnmount(() => {
           </Card>
 
           <Tabs v-if="showEditor && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
-            <TabsList class="h-auto min-h-10 w-full shrink-0 flex-wrap items-end justify-start gap-1 px-1" aria-label="Secciones del sílabo">
-              <TabsTrigger v-for="section in visibleSections" :key="section.id" :value="section.id" class="h-9 max-w-56 flex-none rounded-t-xl rounded-b-none border border-b-0 border-transparent bg-muted/60 px-4 text-muted-foreground hover:bg-muted hover:text-foreground data-[state=active]:h-10 data-[state=active]:border-border data-[state=active]:bg-card data-[state=active]:font-semibold data-[state=active]:text-foreground data-[state=active]:shadow-control" :title="section.title"><span class="truncate">{{ section.title }}</span></TabsTrigger>
+            <TabsList class="h-auto w-full flex-wrap justify-start" aria-label="Secciones del sílabo">
+              <TabsTrigger v-for="section in visibleSections" :key="section.id" :value="section.id" class="h-10 max-w-64 flex-none px-4 data-[state=active]:font-semibold" :title="section.title"><span class="truncate">{{ section.title }}</span></TabsTrigger>
             </TabsList>
           </Tabs>
-          <template v-for="section in shownSections" :key="section.id">
-          <Separator v-if="!showEditor && section.id !== visibleSections[0]?.id" />
-          <section :id="`section-${section.id}`" class="teacher-form flex scroll-mt-6 flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
-            <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
-            <FieldGroup>
-              <template v-for="field in section.fields" :key="field.id">
-                <Field v-if="showEditor && isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                  <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || section.title }}</FieldLabel>
-                  <FieldDescription v-if="field.quien_llena === 'coordinacion'">Lo trae la ficha de la carrera; puede ajustarlo.</FieldDescription>
-                  <FieldResponseEditor :template="field.template" :label="field.label.trim() || section.title" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
-                </Field>
-                <FieldView v-else :id="`field-${field.id}`" :field="field" />
-                <FieldError :errors="visibleValidationMessages(field.id)" />
-              </template>
-            </FieldGroup>
-          </section>
+          <template v-if="showEditor">
+            <section v-for="section in shownSections" :id="`section-${section.id}`" :key="section.id" class="teacher-form flex scroll-mt-6 flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
+              <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
+              <FieldGroup>
+                <template v-for="field in section.fields" :key="field.id">
+                  <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                    <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() || field.label.trim() === section.title }">{{ field.label.trim() || section.title }}</FieldLabel>
+                    <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene de la ficha; puede ajustarlo.</FieldDescription>
+                    <FieldResponseEditor :template="field.template" :label="field.label.trim() || section.title" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
+                  </Field>
+                  <FieldView v-else :id="`field-${field.id}`" :field="field" />
+                  <FieldError :errors="visibleValidationMessages(field.id)" />
+                </template>
+              </FieldGroup>
+            </section>
           </template>
+          <Card v-else class="py-0">
+            <CardContent class="p-2 sm:p-4">
+              <SyllabusDocumentPreview :presentation="syllabus.presentation" :sections="syllabus.sections" />
+            </CardContent>
+          </Card>
 
         </div>
 

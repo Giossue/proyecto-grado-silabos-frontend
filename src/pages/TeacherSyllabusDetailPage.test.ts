@@ -8,6 +8,7 @@ import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import FreeTextEditor from "@/components/domain/syllabus/FreeTextEditor.vue";
+import SyllabusDocumentPreview from "@/components/domain/syllabus/SyllabusDocumentPreview.vue";
 import { copyTeacherSyllabus, getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField, startTeacherSyllabus } from "@/api/syllabi";
 import type { FieldResponsible } from "@/types/configuration";
 import { ApiError } from "@/api/client";
@@ -132,9 +133,10 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.get(".syllabus-document-header").text()).toContain("PROGRAMA");
+    const preview = wrapper.getComponent(SyllabusDocumentPreview);
+    expect(preview.text()).toContain("PROGRAMA");
+    expect(preview.text()).toContain("Texto enviado");
     expect(wrapper.findComponent(FreeTextEditor).exists()).toBe(false);
-    expect(wrapper.get(".syllabus-readonly-field").text()).toContain("Texto enviado");
   });
 
   it("el campo de texto se escribe con su editor y se guarda como documento", async () => {
@@ -178,11 +180,11 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
     expect(wrapper.get('#field-field-1').text()).toContain('Carrera');
     expect(wrapper.findAllComponents(FreeTextEditor).map((editor) => editor.attributes('id'))).toEqual(['input-field-2', 'input-field-3']);
-    expect(wrapper.get('#field-field-3').text()).toContain('Lo trae la ficha de la carrera; puede ajustarlo.');
+    expect(wrapper.get('#field-field-3').text()).toContain('Viene de la ficha; puede ajustarlo.');
     wrapper.unmount();
   });
 
-  it("el dato automático y el texto fijo son de solo lectura y no cuentan como faltantes", async () => {
+  it("una sección sin campos del docente no aparece en el formulario y no cuenta como faltante", async () => {
     const detail = syllabus("borrador", "institucional");
     detail.sections[0]!.fields[0]!.value = doc("Software");
     detail.sections[0]!.fields[0]!.document = { type: "doc", content: [{ type: "table", content: [{ type: "tableRow", content: [{ type: "tableCell", content: [{ type: "paragraph", content: [{ type: "text", text: "FACULTAD: Ciencias" }] }] }] }] }] };
@@ -192,8 +194,8 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.findAllComponents(FreeTextEditor)).toHaveLength(0);
-    expect(wrapper.get("#field-field-1").text()).toContain("FACULTAD: Ciencias");
-    expect(wrapper.get("#field-field-2").text()).toContain("Texto institucional");
+    expect(wrapper.find("#field-field-1").exists()).toBe(false);
+    expect(wrapper.find("#field-field-2").exists()).toBe(false);
     expect(buttonNamed(wrapper, "Enviar sílabo")!.attributes("disabled")).toBeUndefined();
   });
 
@@ -237,8 +239,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const readonly = mountPage();
     await flushPromises();
     expect(readonly.findAllComponents(FreeTextEditor)).toHaveLength(0);
-    expect(readonly.get('#field-field-2').text()).toContain('Texto enviado');
-    expect(readonly.get('#field-field-3').text()).toContain('Texto enviado');
+    expect(readonly.getComponent(SyllabusDocumentPreview).text()).toContain('Texto enviado');
     readonly.unmount();
   });
 
@@ -277,7 +278,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.get(".feedback.error button").text()).toBe("Recargar borrador");
   });
 
-  it("muestra la revisión final como contenido fijo, oculta el botón de validación y muestra los errores vigentes", async () => {
+  it("deja la revisión final fuera del formulario, oculta el botón de validación y muestra los errores vigentes", async () => {
     const draft = syllabus("borrador");
     draft.sections.push({
       id: "section-review",
@@ -303,11 +304,9 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("Descripción");
-    expect(wrapper.text()).toContain("Revisión y aprobación");
+    expect(wrapper.text()).not.toContain("Revisión y aprobación");
     expect(wrapper.text()).not.toContain("Resultados de validación");
     expect(wrapper.text()).toContain("está vacío");
-    await openTab(wrapper, "Revisión y aprobación");
-    expect(wrapper.text()).toContain("Firma del coordinador");
     expect(wrapper.findAll("button").some((button) => button.text() === "Validar sílabo")).toBe(false);
   });
 
