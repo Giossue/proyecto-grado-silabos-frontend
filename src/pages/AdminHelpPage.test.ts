@@ -22,8 +22,8 @@ describe('AdminHelpPage', () => {
 
     const rows = wrapper.findAll('tbody tr');
     const users = rows.find((row) => row.text().includes('Usuarios y roles'));
-    expect(users?.text()).toContain('Con ayuda');
-    expect(rows.find((row) => row.text().includes('Mis sílabos'))?.text()).toContain('Sin ayuda');
+    expect(users?.text()).toContain('Listo');
+    expect(rows.find((row) => row.text().includes('Mis sílabos'))?.text()).toContain('Pendiente');
     expect(rows.some((row) => row.text().includes('Biblioteca'))).toBe(true);
     expect(rows.some((row) => /-(profile|security|notifications|documents)/.test(row.text()))).toBe(false);
     expect(rows.filter((row) => row.text().includes('Facultades y carreras'))).toHaveLength(1);

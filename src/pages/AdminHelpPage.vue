@@ -20,16 +20,10 @@ const editing = ref(false);
 const byScreen = computed(() => new Map(helps.value.map((help) => [help.screen, help])));
 const selectedHelp = computed(() => (selected.value ? byScreen.value.get(selected.value.key) ?? null : null));
 
-const toneOf = (screen: HelpScreen): StatusTone => {
-    const help = byScreen.value.get(screen.key);
-    if (!help) return 'neutral';
-    return help.active ? 'success' : 'warning';
-};
-const statusOf = (screen: HelpScreen): string => {
-    const help = byScreen.value.get(screen.key);
-    if (!help) return 'Sin ayuda';
-    return help.active ? 'Con ayuda' : 'Oculta';
-};
+// «Listo» solo cuando la ayuda se ve en la pantalla; sin texto u oculta queda «Pendiente».
+const isReady = (screen: HelpScreen): boolean => byScreen.value.get(screen.key)?.active === true;
+const toneOf = (screen: HelpScreen): StatusTone => (isReady(screen) ? 'success' : 'warning');
+const statusOf = (screen: HelpScreen): string => (isReady(screen) ? 'Listo' : 'Pendiente');
 
 const load = async (): Promise<void> => {
     loading.value = true;
