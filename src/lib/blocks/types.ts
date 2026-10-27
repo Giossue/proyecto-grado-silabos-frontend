@@ -20,8 +20,25 @@ export const numberDigits = (schema: NumberSchema): { digits: number; decimals: 
     digits: String(Math.floor(schema.maximum)).length,
     decimals: schema.multipleOf >= 1 ? 0 : Math.round(-Math.log10(schema.multipleOf)),
 });
+export const numberText = (raw: string, schema: NumberSchema): string => {
+    const { digits, decimals } = numberDigits(schema);
+    const cleaned = raw.replace(/[^\d.,]/g, '');
+    const separator = cleaned.search(/[.,]/);
+    const whole = (separator < 0 ? cleaned : cleaned.slice(0, separator)).slice(0, digits);
+    if (separator < 0 || decimals === 0) return whole;
+    return `${whole}${cleaned[separator]}${cleaned.slice(separator + 1).replace(/[.,]/g, '').slice(0, decimals)}`;
+};
+export const guardNumber = (event: InputEvent, schema: NumberSchema): void => {
+    const input = event.target as HTMLInputElement;
+    const data = event.data ?? event.dataTransfer?.getData('text/plain') ?? '';
+    if (data === '') return;
+    const start = input.selectionStart ?? input.value.length;
+    const next = input.value.slice(0, start) + data + input.value.slice(input.selectionEnd ?? start);
+    if (numberText(next, schema) !== next) event.preventDefault();
+};
 
-export type RuleCheck = { label?: string; count?: string; filled?: string; sum?: string; equals?: number | { variable: string }; max?: number | { variable: string }; min?: number | { variable: string } };
+export type RuleTarget = number | { variable: string } | { count: string };
+export type RuleCheck = { label?: string; count?: string; filled?: string; sum?: string; equals?: RuleTarget; max?: RuleTarget; min?: RuleTarget };
 export type BlockRule = { code: string; on: 'save' | 'submit'; message: string; hint?: string; checks: RuleCheck[] };
 
 export type BlockDefinition = {

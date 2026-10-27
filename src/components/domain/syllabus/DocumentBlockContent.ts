@@ -10,7 +10,7 @@ import { holds } from '@/lib/blocks/condition';
 import { ruleFailures, ruleResults } from '@/lib/blocks/rules';
 import { blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
 import { Scope, type Path } from '@/lib/blocks/scope';
-import { isChoice, isText, numberDigits, optionTitle, type BlockDefinition, type ListSchema, type ValueSchema } from '@/lib/blocks/types';
+import { guardNumber, isChoice, isText, numberDigits, numberText, optionTitle, type BlockDefinition, type ListSchema, type ValueSchema } from '@/lib/blocks/types';
 import { emptyValue, getAt, setAt, settle } from '@/lib/blocks/values';
 import { resolveBlock, toDocument, type ResolvedNode } from '@/lib/blocks/walk';
 import type { DocumentNode } from '@/lib/templateDocument';
@@ -93,7 +93,8 @@ export default defineComponent({
                     maxlength: digits + (decimals > 0 ? decimals + 1 : 0),
                     class: 'h-7 w-full min-w-10 max-w-16 px-1 py-0 text-center',
                     'aria-label': label,
-                    'onUpdate:modelValue': (value: string | number) => write(slot.path, String(value)),
+                    onBeforeinput: (event: InputEvent) => guardNumber(event, schema),
+                    'onUpdate:modelValue': (value: string | number) => write(slot.path, numberText(String(value), schema)),
                 });
             }
             const multiline = isText(schema) && schema.multiline;
@@ -171,8 +172,8 @@ export default defineComponent({
             const results = definition.value.rules.filter((rule) => rule.on === 'submit').flatMap((rule) => ruleResults(rule, props.value, variables.value).filter((result) => result.label !== null));
             if (results.length === 0) return null;
             const hint = definition.value.rules.find((rule) => rule.on === 'submit' && rule.hint)?.hint;
-            return h('div', { 'data-block-summary': '', class: 'sticky top-16 z-10 flex flex-wrap items-center gap-2 rounded-md bg-background p-2 text-sm shadow-surface ring-1 ring-surface-ring', 'aria-live': 'polite' }, [
-                ...results.map((result) => h('span', { class: result.ok ? 'text-success' : 'text-destructive' }, `${result.label} ${result.actual} de ${result.expected}`)),
+            return h('div', { 'data-block-summary': '', class: 'flex flex-wrap items-center gap-2 text-sm text-muted-foreground', 'aria-live': 'polite' }, [
+                ...results.map((result) => h('span', { class: result.ok ? undefined : 'font-medium text-foreground' }, `${result.label} ${result.actual} de ${result.expected}`)),
                 hint ? h('span', { class: 'text-muted-foreground' }, hint) : null,
             ]);
         };

@@ -1,16 +1,21 @@
-import { Plus, Trash2 } from '@lucide/vue';
+import { Check, Plus, Trash2 } from '@lucide/vue';
 import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vue';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { holds } from '@/lib/blocks/condition';
 import { ruleFailures, ruleResults } from '@/lib/blocks/rules';
 import { blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
 import { Scope, type Path } from '@/lib/blocks/scope';
-import { isChoice, numberDigits, type ChoiceSchema, type ListSchema, type NumberSchema, type TextSchema, type ValueSchema } from '@/lib/blocks/types';
+import { guardNumber, isChoice, isText, numberDigits, numberText, type ChoiceSchema, type ListSchema, type NumberSchema, type ObjectSchema, type TextSchema, type ValueSchema } from '@/lib/blocks/types';
 import { emptyValue, getAt, setAt, settle } from '@/lib/blocks/values';
+
+type Scalar = TextSchema | NumberSchema | ChoiceSchema;
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const capitalize = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
@@ -23,6 +28,7 @@ export default defineComponent({
         props: { type: Object as PropType<Record<string, unknown>>, required: true },
         value: { type: Object as PropType<Record<string, unknown>>, required: true },
         disabled: { type: Boolean, default: false },
+        required: { type: Boolean, default: false },
     },
     emits: { 'update:value': (value: Record<string, unknown>) => typeof value === 'object' },
     setup(props, { emit }) {
@@ -45,39 +51,42 @@ export default defineComponent({
             return holds(schema.keep_if, new Scope(isRecord(parent) ? parent : {}, props.props, variables.value));
         };
 
-        const control = (schema: TextSchema | NumberSchema | ChoiceSchema, path: Path, label: string): VNodeChild => {
+        const input = (schema: Scalar, path: Path, label: string, inCell = false): VNodeChild => {
             const id = fieldId(path);
             const current = getAt(props.value, path);
             const disabled = props.disabled;
             const text = typeof current === 'string' || typeof current === 'number' ? String(current) : '';
-            let input: VNodeChild;
+            const ariaLabel = inCell ? label : undefined;
             if (isChoice(schema)) {
-                input = h(ChoiceGroup, {
+                return h(ChoiceGroup, {
                     modelValue: typeof current === 'string' ? current : undefined,
                     label,
                     disabled,
                     options: schema.oneOf.map((option) => ({ value: option.const, label: option.title })),
                     'onUpdate:modelValue': (value: unknown) => write(path, typeof value === 'string' ? value : null),
                 });
-            } else if (schema.type === 'number') {
+            }
+            if (schema.type === 'number') {
                 const { digits, decimals } = numberDigits(schema);
-                input = h(Input, {
-                    id, modelValue: text, disabled, inputmode: 'decimal',
+                return h(Input, {
+                    id, modelValue: text, disabled, inputmode: 'decimal', 'aria-label': ariaLabel,
                     maxlength: digits + (decimals > 0 ? decimals + 1 : 0),
-                    'onUpdate:modelValue': (value: string | number) => write(path, String(value)),
-                });
-            } else {
-                input = h(schema.multiline ? Textarea : Input, {
-                    id, modelValue: text, disabled, maxlength: schema.maxLength,
-                    class: schema.multiline ? 'min-h-9' : undefined,
-                    'onUpdate:modelValue': (value: string | number) => write(path, String(value)),
+                    class: inCell ? 'w-20 text-center' : undefined,
+                    onBeforeinput: (event: InputEvent) => guardNumber(event, schema),
+                    'onUpdate:modelValue': (value: string | number) => write(path, numberText(String(value), schema)),
                 });
             }
-            return h(Field, { key: id }, () => [
-                h(FieldLabel, { for: isChoice(schema) ? undefined : id }, () => label),
-                input,
-            ]);
+            return h(schema.multiline ? Textarea : Input, {
+                id, modelValue: text, disabled, maxlength: schema.maxLength, 'aria-label': ariaLabel,
+                class: schema.multiline ? 'min-h-9' : undefined,
+                'onUpdate:modelValue': (value: string | number) => write(path, String(value)),
+            });
         };
+
+        const control = (schema: Scalar, path: Path, label: string): VNodeChild => h(Field, { key: fieldId(path) }, () => [
+            h(FieldLabel, { for: isChoice(schema) ? undefined : fieldId(path), required: props.required }, () => label),
+            input(schema, path, label),
+        ]);
 
         const fields = (entries: Array<[string, ValueSchema]>, path: Path, depth: number): VNodeChild[] => {
             const nodes: VNodeChild[] = [];
@@ -119,35 +128,78 @@ export default defineComponent({
             return ruleFailures(definition.value.rules, next, variables.value, 'save').length === 0;
         };
 
-        const list = (schema: ListSchema, path: Path, depth: number): VNodeChild => {
+        const removeButton = (schema: ListSchema, path: Path, index: number, name: string): VNodeChild => h(Button, {
+            type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || listOf(path).length <= schema.minItems,
+            'aria-label': `Quitar ${name}`,
+            onClick: () => write(path, listOf(path).filter((__, position) => position !== index)),
+        }, () => h(Trash2, { 'aria-hidden': 'true' }));
+
+        const addButton = (schema: ListSchema, path: Path, name: string): VNodeChild => h(Button, {
+            type: 'button', variant: 'outline', size: 'sm', class: 'w-fit', disabled: !canAdd(path, schema),
+            onClick: () => write(path, [...listOf(path), emptyValue(schema.items, props.props)]),
+        }, () => [h(Plus, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), `Agregar ${name}`]);
+
+        const table = (schema: ListSchema, rows: ObjectSchema, path: Path): VNodeChild => {
             const items = listOf(path);
             const name = schema.title ?? 'elemento';
             const first = offset(path);
             const resizable = schema.minItems < schema.maxItems;
-            const container = depth === 0 ? 'flex flex-col gap-4 rounded-lg p-4 ring-1 ring-surface-ring' : 'flex flex-col gap-4 rounded-md bg-muted/40 p-4';
+            const columns = Object.entries(rows.properties) as Array<[string, Scalar]>;
+            return h('div', { class: 'flex min-w-0 flex-col gap-3' }, [
+                h(Table, { label: capitalize(name), cards: false }, () => [
+                    h(TableHeader, {}, () => h(TableRow, {}, () => [
+                        h(TableHead, { class: 'w-16' }, () => capitalize(name)),
+                        ...columns.map(([key, column]) => h(TableHead, { class: column.type === 'number' ? 'w-20 text-center' : 'min-w-48 whitespace-normal' }, () => column.title ?? key)),
+                        resizable ? h(TableHead, { class: 'w-10' }, () => h('span', { class: 'sr-only' }, 'Acciones')) : null,
+                    ])),
+                    h(TableBody, {}, () => items.map((_, index) => {
+                        const itemPath = [...path, index];
+                        const rowName = `${name} ${first + index + 1}`;
+                        return h(TableRow, { key: index }, () => [
+                            h(TableCell, { class: 'align-top font-medium' }, () => String(first + index + 1)),
+                            ...columns.map(([key, column]) => h(TableCell, { class: 'align-top' }, () => applies(column, [...itemPath, key]) ? input(column, [...itemPath, key], `${column.title ?? key}, ${rowName}`, true) : null)),
+                            resizable ? h(TableCell, { class: 'align-top' }, () => removeButton(schema, path, index, rowName)) : null,
+                        ]);
+                    })),
+                ]),
+                resizable ? addButton(schema, path, name) : null,
+            ]);
+        };
+
+        const list = (schema: ListSchema, path: Path, depth: number): VNodeChild => {
+            if (schema.items.type === 'object' && Object.values(schema.items.properties).every((column) => column.type === 'string' || column.type === 'number')) {
+                return table(schema, schema.items, path);
+            }
+            const items = listOf(path);
+            const name = schema.title ?? 'elemento';
+            const first = offset(path);
+            const resizable = schema.minItems < schema.maxItems;
+            const subtitle = (itemPath: Path): string => {
+                if (schema.items.type !== 'object') return '';
+                const key = Object.entries(schema.items.properties).find(([, child]) => isText(child))?.[0];
+                const value = key === undefined ? '' : getAt(props.value, [...itemPath, key]);
+                return typeof value === 'string' ? value.trim() : '';
+            };
             return h('div', { class: 'flex flex-col gap-4' }, [
-                ...items.map((_, index) => {
+                h(Accordion, { type: 'multiple', defaultValue: items.length > 0 ? ['0'] : [], class: 'rounded-lg px-4 ring-1 ring-surface-ring' }, () => items.map((_, index) => {
                     const itemPath = [...path, index];
                     const title = `${capitalize(name)} ${first + index + 1}`;
+                    const detail = subtitle(itemPath);
                     const content = schema.items.type === 'object'
                         ? fields(Object.entries(schema.items.properties), itemPath, depth + 1)
                         : [node(schema.items, itemPath, title, depth + 1)];
-                    return h('section', { key: index, class: container, 'aria-label': title }, [
-                        h('div', { class: 'flex items-center justify-between gap-2' }, [
-                            h('h3', { class: depth === 0 ? 'font-semibold' : 'text-sm font-medium' }, title),
-                            resizable ? h(Button, {
-                                type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || items.length <= schema.minItems,
-                                'aria-label': `Quitar ${name} ${first + index + 1}`,
-                                onClick: () => write(path, items.filter((__, position) => position !== index)),
-                            }, () => h(Trash2, { 'aria-hidden': 'true' })) : null,
+                    return h(AccordionItem, { key: index, value: String(index), 'aria-label': title }, () => [
+                        h(AccordionTrigger, { class: 'hover:no-underline' }, () => h('span', { class: 'flex min-w-0 flex-col gap-0.5' }, [
+                            h('span', { class: 'font-semibold' }, title),
+                            detail ? h('span', { class: 'line-clamp-1 font-normal text-muted-foreground' }, detail) : null,
+                        ])),
+                        h(AccordionContent, { class: 'flex flex-col gap-4' }, () => [
+                            ...content,
+                            resizable ? h('div', { class: 'flex justify-end' }, [removeButton(schema, path, index, `${name} ${first + index + 1}`)]) : null,
                         ]),
-                        ...content,
                     ]);
-                }),
-                resizable ? h(Button, {
-                    type: 'button', variant: 'outline', size: 'sm', class: 'w-fit', disabled: !canAdd(path, schema),
-                    onClick: () => write(path, [...items, emptyValue(schema.items, props.props)]),
-                }, () => [h(Plus, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), `Agregar ${name}`]) : null,
+                })),
+                resizable ? addButton(schema, path, name) : null,
             ]);
         };
 
@@ -161,8 +213,11 @@ export default defineComponent({
             if (!definition.value) return null;
             const results = definition.value.rules.filter((rule) => rule.on === 'submit').flatMap((rule) => ruleResults(rule, props.value, variables.value).filter((result) => result.label !== null));
             if (results.length === 0) return null;
-            return h('div', { 'data-block-summary': '', class: 'sticky top-16 z-10 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md bg-card px-3 py-2 text-sm shadow-surface ring-1 ring-surface-ring', 'aria-live': 'polite' },
-                results.map((result) => h('span', { class: result.ok ? 'text-success' : 'text-destructive' }, `${result.label} ${result.actual} de ${result.expected}`)));
+            return h('div', { 'data-block-summary': '', class: 'flex flex-wrap items-center gap-2', 'aria-live': 'polite' },
+                results.map((result) => h(Badge, { variant: 'outline', class: 'gap-1 font-normal' }, () => [
+                    result.ok ? h(Check, { 'aria-hidden': 'true' }) : null,
+                    `${result.label} ${result.actual} de ${result.expected}`,
+                ])));
         };
 
         return () => {

@@ -13,10 +13,13 @@ export const ruleResults = (rule: BlockRule, value: Record<string, unknown>, var
                 : scope.collect(check.sum ?? '').reduce<number>((sum, item) => sum + parseNumber(item), 0);
         const comparison = check.equals !== undefined ? 'equals' : check.max !== undefined ? 'max' : 'min';
         const target = check[comparison];
-        const expected = typeof target === 'object' && target !== null ? parseNumber(variables[target.variable] ?? '') : Number(target ?? 0);
-        const ok = comparison === 'equals'
+        const expected = typeof target !== 'object' || target === null
+            ? Number(target ?? 0)
+            : 'count' in target ? countOf(scope.collect(target.count)) : parseNumber(variables[target.variable] ?? '');
+        const unknown = typeof target === 'object' && target !== null && 'variable' in target && (variables[target.variable] ?? '').trim() === '';
+        const ok = unknown || (comparison === 'equals'
             ? Math.abs(actual - expected) <= 0.001
-            : comparison === 'max' ? actual <= expected + 0.001 : actual >= expected - 0.001;
+            : comparison === 'max' ? actual <= expected + 0.001 : actual >= expected - 0.001);
         return { label: check.label ?? null, actual: String(actual), expected: String(expected), ok };
     });
 };

@@ -147,11 +147,7 @@
     --avatar-body: #5b7be8;
     --avatar-outline: #1c1c1e;
     --layout-syllabus-aside-width: 28rem;
-    --layout-syllabus-aside-top: 8rem;
-    --layout-syllabus-aside-inset: 1rem;
-    --layout-syllabus-aside-height: calc(100dvh - 9rem);
     --layout-assistant-height: 38rem;
-    --layout-assistant-min-height: 30rem;
     --layout-review-aside-min-width: 22rem;
     --layout-skeleton-leading-column: 12rem;
     --layout-skeleton-column: 7rem;
@@ -695,47 +691,18 @@
 @layer components {
     .syllabus-editor-header {
         width: 100%;
-        max-width: 64rem;
+        max-width: 96rem;
         margin-inline: auto;
     }
 
-    .workspace-layout[data-layout='syllabus'] > aside {
-        min-width: 0;
-        align-self: start;
-    }
-
     .assistant-panel {
-        height: var(--layout-assistant-height);
-        min-height: var(--layout-assistant-min-height);
+        height: 100%;
+        min-height: 0;
         min-width: 0;
         max-width: 100%;
     }
 
     @media (width >= 80rem) {
-        .syllabus-editor-header {
-            max-width: min(64rem, calc(100% - var(--layout-syllabus-aside-width) - 1.5rem));
-            margin-left: max(0px, calc((100% - var(--layout-syllabus-aside-width) - 1.5rem - 64rem) / 2));
-            margin-right: auto;
-        }
-
-        .workspace-layout[data-layout='syllabus'] {
-            grid-template-columns: minmax(0, 1fr) var(--layout-syllabus-aside-width);
-        }
-
-        .workspace-layout[data-layout='syllabus'] > aside {
-            position: fixed;
-            right: var(--layout-syllabus-aside-inset);
-            top: var(--layout-syllabus-aside-top);
-            height: var(--layout-syllabus-aside-height);
-            width: var(--layout-syllabus-aside-width);
-            max-width: calc(100vw - 2 * var(--layout-syllabus-aside-inset));
-        }
-
-        .assistant-panel {
-            height: 100%;
-            min-height: 0;
-        }
-
         .workspace-layout[data-layout='review'] {
             grid-template-columns: minmax(0, 2fr) minmax(var(--layout-review-aside-min-width), 1fr);
         }

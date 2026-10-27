@@ -5,12 +5,30 @@ import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { renderFreeText } from '@/components/domain/syllabus/freeTextRender';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { blankResponse, cloneResponse, replaceResponse, responseAt, responseDocument, responseListTable, responseText } from '@/lib/fieldResponses';
 import { templateRuntime } from '@/lib/blocks/runtime';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const isHeaderRow = (row: DocumentNode): boolean => Boolean(row.content?.length) && row.content!.every((cell) => cell.type === 'tableHeader');
+const headerColumns = (headers: DocumentNode[]): string[] => {
+    const grid: string[][] = headers.map(() => []);
+    headers.forEach((row, rowIndex) => {
+        let column = 0;
+        for (const cell of row.content ?? []) {
+            while (grid[rowIndex]![column] !== undefined) column++;
+            const text = responseText(cell).trim();
+            for (let down = 0; down < Number(cell.attrs?.rowspan ?? 1) && rowIndex + down < headers.length; down++) {
+                for (let across = 0; across < Number(cell.attrs?.colspan ?? 1); across++) grid[rowIndex + down]![column + across] = text;
+            }
+            column += Number(cell.attrs?.colspan ?? 1);
+        }
+    });
+    return grid[grid.length - 1] ?? [];
+};
+const onlyBlocks = (document: DocumentNode): boolean => (document.content ?? []).some((node) => node.type === 'documentBlock')
+    && (document.content ?? []).every((node) => node.type === 'documentBlock' || blankResponse(node));
 const hasResponse = (node: DocumentNode): boolean => blankResponse(node) || node.type === 'documentBlock' || (node.content ?? []).some(hasResponse);
 const lineText = (node: DocumentNode): string => (node.content ?? []).map((part) => part.type === 'hardBreak' ? '\n' : part.text ?? '').join('');
 const inline = (text: string): DocumentNode[] => text.split('\n').flatMap((line, index) => [...(index > 0 ? [{ type: 'hardBreak' }] : []), ...(line ? [{ type: 'text', text: line }] : [])]);
@@ -23,6 +41,7 @@ export default defineComponent({
         template: { type: Object as PropType<DocumentNode | null>, default: null },
         modelValue: { type: Object as PropType<DocumentNode | null>, default: null },
         disabled: { type: Boolean, default: false },
+        required: { type: Boolean, default: false },
     },
     emits: { 'update:modelValue': (value: DocumentNode) => Boolean(value) },
     setup(props, { emit }) {
@@ -55,50 +74,43 @@ export default defineComponent({
             const rows = template.content ?? [];
             const values = current.content ?? [];
             const headers = rows.filter(isHeaderRow);
-            const columns: string[] = [];
-            for (const cell of headers[headers.length - 1]?.content ?? []) {
-                for (let span = 0; span < Number(cell.attrs?.colspan ?? 1); span++) columns.push(responseText(cell).trim());
-            }
+            const columns = headerColumns(headers);
             const list = responseListTable(template);
             let position = 0;
-            const groups = values.map((_, index) => {
+            const body = values.map((_, index) => {
                 const rowTemplate = rows[index] ?? rows[rows.length - 1]!;
-                if (isHeaderRow(rowTemplate) || !hasResponse(rowTemplate)) return null;
+                if (isHeaderRow(rowTemplate)) return null;
                 position++;
-                let title = `Fila ${position}`;
-                let column = 0;
-                const inputs: VNodeChild[] = [];
-                (rowTemplate.content ?? []).forEach((cell, cellIndex) => {
-                    const name = columns[column] || `Columna ${column + 1}`;
-                    column += Number(cell.attrs?.colspan ?? 1);
-                    const cellPath = [...path, index, cellIndex];
-                    if (blankResponse(cell)) {
-                        inputs.push(slot(cell, cellPath, name, true));
-                        return;
-                    }
-                    if (hasResponse(cell)) {
-                        inputs.push(h('div', { class: 'flex flex-col gap-4 sm:col-span-2' }, nodes(cell, cellPath)));
-                        return;
-                    }
-                    const text = responseText(cell).trim();
-                    if (cellIndex === 0 && !list && text) title = text;
-                    else if (text) inputs.push(h('p', { class: 'text-sm text-muted-foreground sm:col-span-2' }, [h('span', { class: 'font-medium text-foreground' }, `${name}: `), text]));
-                });
                 const number = position;
-                return h('section', { key: index, class: 'flex flex-col gap-4 rounded-lg p-4 ring-1 ring-surface-ring', 'aria-label': title }, [
-                    h('div', { class: 'flex items-center justify-between gap-2' }, [
-                        h('h3', { class: 'font-semibold' }, title),
-                        list ? h(Button, {
-                            type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || values.length <= rows.length,
-                            'aria-label': `Quitar fila ${number}`,
-                            onClick: () => update(path, { ...current, content: values.filter((__, other) => other !== index) }),
-                        }, () => h(Trash2, { 'aria-hidden': 'true' })) : null,
-                    ]),
-                    h('div', { class: 'grid gap-4 sm:grid-cols-2' }, inputs),
+                let column = 0;
+                const cells = (rowTemplate.content ?? []).map((cell, cellIndex) => {
+                    const name = columns[column] || `Columna ${column + 1}`;
+                    const span = { colspan: Number(cell.attrs?.colspan ?? 1), rowspan: Number(cell.attrs?.rowspan ?? 1) };
+                    column += span.colspan;
+                    const cellPath = [...path, index, cellIndex];
+                    if (blankResponse(cell)) return h(TableCell, { ...span, class: 'min-w-40 align-top' }, () => slot(cell, cellPath, `${name}, fila ${number}`, false));
+                    if (hasResponse(cell)) return h(TableCell, { ...span, class: 'min-w-40 align-top' }, () => nodes(cell, cellPath));
+                    return h(TableCell, { ...span, class: 'align-top text-sm' }, () => responseText(cell).trim());
+                });
+                return h(TableRow, { key: index }, () => [
+                    ...cells,
+                    list ? h(TableCell, { class: 'w-10 align-top' }, () => h(Button, {
+                        type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || values.length <= rows.length,
+                        'aria-label': `Quitar fila ${number}`,
+                        onClick: () => update(path, { ...current, content: values.filter((__, other) => other !== index) }),
+                    }, () => h(Trash2, { 'aria-hidden': 'true' }))) : null,
                 ]);
             });
-            return h('div', { class: 'flex flex-col gap-4' }, [
-                ...groups,
+            return h('div', { class: 'flex min-w-0 flex-col gap-3' }, [
+                h(Table, { label: props.label, cards: false }, () => [
+                    headers.length > 0 ? h(TableHeader, {}, () => headers.map((row, rowIndex) => h(TableRow, { key: rowIndex }, () => [
+                        ...(row.content ?? []).map((cell) => h(TableHead, {
+                            colspan: Number(cell.attrs?.colspan ?? 1), rowspan: Number(cell.attrs?.rowspan ?? 1), class: 'h-auto py-2 whitespace-normal',
+                        }, () => responseText(cell).trim())),
+                        list && rowIndex === 0 ? h(TableHead, { rowspan: headers.length, class: 'w-10' }, () => h('span', { class: 'sr-only' }, 'Acciones')) : null,
+                    ]))) : null,
+                    h(TableBody, {}, () => body),
+                ]),
                 list ? h(Button, {
                     type: 'button', variant: 'outline', size: 'sm', class: 'w-fit', disabled: props.disabled || values.length >= 100,
                     onClick: () => update(path, { ...current, content: [...values, cloneResponse(rows[rows.length - 1]!)] }),
@@ -115,6 +127,7 @@ export default defineComponent({
                     props: (current.attrs?.props ?? {}) as Record<string, unknown>,
                     value: (current.attrs?.value ?? {}) as Record<string, unknown>,
                     disabled: props.disabled,
+                    required: props.required,
                     'onUpdate:value': (value: Record<string, unknown>) => update(path, { ...responseAt(document.value!, path), attrs: { ...current.attrs, value } }),
                 });
             }
@@ -129,6 +142,11 @@ export default defineComponent({
         }
 
         return () => {
+            const legacy = props.modelValue;
+            if ((!props.template || blankResponse(props.template)) && legacy && onlyBlocks(legacy)) {
+                return h('div', { id: props.id, class: 'flex min-w-0 flex-col gap-4', role: 'group', 'aria-label': props.label },
+                    (legacy.content ?? []).map((node, index) => node.type === 'documentBlock' ? render(node, [index]) : null));
+            }
             if (!props.template || blankResponse(props.template)) return h(FreeTextEditor, {
                 id: props.id, label: props.label, modelValue: props.modelValue ?? props.template, disabled: props.disabled, allowTables: false,
                 'onUpdate:modelValue': (value: DocumentNode) => emit('update:modelValue', value),

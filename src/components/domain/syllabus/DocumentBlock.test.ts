@@ -26,7 +26,7 @@ const type = async (label: string, text: string): Promise<void> => {
 };
 
 describe('bloques definidos en la plantilla', () => {
-    beforeEach(() => setTemplateRuntime(official, { nombre_facultad: 'Ciencias', formacion_docente: 'Formación escrita en el perfil', horas_docencia: '32', horas_practicas: '0', horas_autonomas: '32' }));
+    beforeEach(() => setTemplateRuntime(official, { nombre_facultad: 'Ciencias', formacion_docente: 'Formación escrita en el perfil', horas_docencia: '32', horas_practicas: '0', horas_autonomas: '32', semanas_periodo: '16' }));
     afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
 
     describe('identificación', () => {

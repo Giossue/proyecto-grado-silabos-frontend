@@ -4,7 +4,6 @@ import { ruleFailures } from '@/lib/blocks/rules';
 import { blockAttrs, blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
 import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 import CommentEntry from '@/components/domain/CommentEntry.vue';
-import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -39,7 +38,7 @@ import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocume
 import { attemptKey } from '@/lib/attemptKey';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
-import { ArrowLeft, Copy, FileText, Library, Pencil, Send } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Bot, Copy, FileText, Library, Pencil, Send, X } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
@@ -47,6 +46,12 @@ const route = useRoute();
 const router = useRouter();
 const syllabus = ref<SyllabusDetail | null>(null);
 const previewing = ref(false);
+const assistantOpen = ref(false);
+const assistantLoaded = ref(false);
+const toggleAssistant = (): void => {
+  assistantLoaded.value = true;
+  assistantOpen.value = !assistantOpen.value;
+};
 const error = ref<string | null>(null);
 const starting = ref(false);
 const savingFieldId = ref<string | null>(null);
@@ -394,6 +399,14 @@ const activeSectionId = computed<string>({
   set: (value) => { chosenSectionId.value = value; },
 });
 const shownSections = computed(() => visibleSections.value.filter((section) => section.id === activeSectionId.value));
+const sectionPosition = computed(() => visibleSections.value.findIndex((section) => section.id === activeSectionId.value));
+const previousSection = computed(() => visibleSections.value[sectionPosition.value - 1] ?? null);
+const nextSection = computed(() => visibleSections.value[sectionPosition.value + 1] ?? null);
+const goToSection = async (id: string): Promise<void> => {
+  activeSectionId.value = id;
+  await nextTick();
+  document.getElementById(`section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
 
 const warnBeforeUnload = (event: BeforeUnloadEvent): void => {
   if (!hasUnsavedChanges() && savingFieldId.value === null) return;
@@ -442,8 +455,8 @@ onBeforeUnmount(() => {
     <template v-if="syllabus">
       <ProcessLockAlert v-if="editBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
-      <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar' || pausedEdit" variant="syllabus">
-        <div class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
+      <template v-if="syllabus.state !== 'sin_iniciar' || pausedEdit">
+        <div class="mx-auto flex w-full max-w-screen-2xl min-w-0 flex-col gap-8">
           <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
           <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
           <ProcessLockAlert v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
@@ -474,28 +487,38 @@ onBeforeUnmount(() => {
               <FieldGroup>
                 <template v-for="field in section.fields" :key="field.id">
                   <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                    <FieldLabel :for="`input-${field.id}`" :required="field.required" :class="{ 'sr-only': !field.label.trim() || field.label.trim() === section.title }">{{ field.label.trim() || section.title }}</FieldLabel>
+                    <FieldLabel :for="`input-${field.id}`" required :class="{ 'sr-only': !field.label.trim() || field.label.trim() === section.title }">{{ field.label.trim() || section.title }}</FieldLabel>
                     <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene de la ficha; puede ajustarlo.</FieldDescription>
-                    <FieldResponseEditor :template="field.template" :label="field.label.trim() || section.title" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
+                    <FieldResponseEditor required :template="field.template" :label="field.label.trim() || section.title" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
                   </Field>
                   <FieldView v-else :id="`field-${field.id}`" :field="field" />
                   <FieldError :errors="visibleValidationMessages(field.id)" />
                 </template>
               </FieldGroup>
+              <footer v-if="previousSection || nextSection" class="flex items-center justify-between gap-2 border-t pt-4">
+                <Button v-if="previousSection" type="button" variant="outline" @click="goToSection(previousSection.id)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Anterior</Button>
+                <span v-else />
+                <Button v-if="nextSection" type="button" variant="outline" @click="goToSection(nextSection.id)">Siguiente<ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
+              </footer>
             </section>
           </template>
           <SyllabusDocumentPreview v-else :presentation="syllabus.presentation" :sections="syllabus.sections" />
 
         </div>
 
-        <aside v-if="!pausedEdit" class="min-w-0" aria-label="Asistente de unidades">
-          <SyllabusUnitAssistant
-            :syllabus-id="syllabus.id"
-            :enabled="canEdit && !conflict"
-            :saving="processingAction || savingFieldId !== null || hasUnsavedChanges()"
-          />
-        </aside>
-      </WorkspaceLayout>
+        <template v-if="!pausedEdit">
+          <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-8rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de unidades">
+            <SyllabusUnitAssistant
+              :syllabus-id="syllabus.id"
+              :enabled="canEdit && !conflict"
+              :saving="processingAction || savingFieldId !== null || hasUnsavedChanges()"
+            />
+          </aside>
+          <Button type="button" class="fixed right-6 bottom-6 z-40 h-12 rounded-full px-5 shadow-menu max-sm:right-auto max-sm:left-4" :aria-expanded="assistantOpen" @click="toggleAssistant">
+            <X v-if="assistantOpen" data-icon="inline-start" aria-hidden="true" /><Bot v-else data-icon="inline-start" aria-hidden="true" />{{ assistantOpen ? 'Cerrar asistente' : 'Asistente' }}
+          </Button>
+        </template>
+      </template>
     </template>
 
     <Dialog v-model:open="confirmSubmitOpen">

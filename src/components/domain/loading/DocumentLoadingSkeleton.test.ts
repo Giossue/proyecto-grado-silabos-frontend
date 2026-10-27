@@ -13,12 +13,11 @@ describe('DocumentLoadingSkeleton', () => {
         },
     );
 
-    it('usa el layout documental y la altura real del asistente docente', () => {
+    it('ocupa el ancho del formulario sin columna del asistente, que es flotante', () => {
         const wrapper = mount(DocumentLoadingSkeleton, { props: { variant: 'syllabus' } });
-        const layout = wrapper.get('.workspace-layout[data-layout="syllabus"]');
 
-        expect(layout.find(':scope > div').exists()).toBe(true);
-        expect(layout.get(':scope > aside').find('.assistant-panel').exists()).toBe(true);
+        expect(wrapper.find('.max-w-screen-2xl').exists()).toBe(true);
+        expect(wrapper.find('[data-skeleton="unit-assistant"]').exists()).toBe(false);
         expect(wrapper.findAll('[data-skeleton="academic-context"]')).toHaveLength(1);
         expect(wrapper.find('[data-skeleton="syllabus-presentation"]').exists()).toBe(false);
     });

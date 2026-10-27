@@ -220,7 +220,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const week = (acd: string) => ({ contenidos: "", acd_h: acd, ape_h: "", aa_h: "", acd: "", ape: "", aa: "", evaluacion: "" });
     const units = (acd: string) => Array.from({ length: 4 }, (_, index) => ({ nombre: "U", resultado: "R", semanas: Array.from({ length: 4 }, (__, number) => week(index === 0 && number === 0 ? acd : "")) }));
     const planning = (acd: string): DocumentNode => ({ type: "doc", content: [{ type: "documentBlock", attrs: { kind: "unidades", props: {}, value: { units: units(acd) } } }] });
-    setTemplateRuntime(definition as unknown as TemplateDefinitionPayload, { horas_docencia: '64', horas_practicas: '0', horas_autonomas: '0' });
+    setTemplateRuntime(definition as unknown as TemplateDefinitionPayload, { horas_docencia: '64', horas_practicas: '0', horas_autonomas: '0', semanas_periodo: '16' });
 
     const wrong = syllabus("borrador");
     wrong.sections[0]!.fields[0]!.value = planning("60");
@@ -413,14 +413,20 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("habilita la generación de unidades sin exigir una validación previa", async () => {
+  it("el asistente es un botón flotante que abre el chat, habilitado sin validación previa", async () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
     const wrapper = mount(PageWithTooltips, {
       global: { stubs: { SyllabusUnitAssistant: { props: ["enabled"], template: '<div class="ai" :data-enabled="String(enabled)" />' } } },
     });
     await flushPromises();
+    expect(wrapper.find(".ai").exists()).toBe(false);
 
+    await buttonNamed(wrapper, "Asistente")!.trigger("click");
     expect(wrapper.get(".ai").attributes("data-enabled")).toBe("true");
+    expect(buttonNamed(wrapper, "Cerrar asistente")!.attributes("aria-expanded")).toBe("true");
+
+    await buttonNamed(wrapper, "Cerrar asistente")!.trigger("click");
+    expect(wrapper.get('aside[aria-label="Asistente de unidades"]').isVisible()).toBe(false);
   });
 
   it("al abrir un sílabo sin iniciar, inicia el borrador solo y muestra el formulario", async () => {
@@ -543,6 +549,45 @@ describe("TeacherSyllabusDetailPage", () => {
     choice!.click();
     await flushPromises();
     expect(await leaving).toBe(allowed);
+    wrapper.unmount();
+  });
+
+  it("marca con asterisco todo campo del docente: en el sílabo todos son obligatorios", async () => {
+    const detail = syllabus("borrador", "docente");
+    detail.sections[0]!.fields[0]!.required = false;
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find("#field-field-1").text()).toContain("*");
+    wrapper.unmount();
+  });
+
+  it("«Siguiente» y «Anterior» recorren las secciones como las pestañas", async () => {
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    const detail = syllabus("borrador", "docente");
+    detail.sections.push({
+      id: "section-2",
+      key: "bibliografia",
+      title: "Bibliografía",
+      description: null,
+      orientation: "portrait",
+      fields: [field("field-2", "docente", { key: "bibliografia_basica", label: "Bibliografía básica" })],
+    });
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    const wrapper = mountPage();
+    await flushPromises();
+    expect(buttonNamed(wrapper, "Anterior")).toBeUndefined();
+
+    await buttonNamed(wrapper, "Siguiente")!.trigger("click");
+    await flushPromises();
+    expect(wrapper.find("#field-field-2").exists()).toBe(true);
+    expect(wrapper.find("#field-field-1").exists()).toBe(false);
+    expect(buttonNamed(wrapper, "Siguiente")).toBeUndefined();
+
+    await buttonNamed(wrapper, "Anterior")!.trigger("click");
+    await flushPromises();
+    expect(wrapper.find("#field-field-1").exists()).toBe(true);
     wrapper.unmount();
   });
 

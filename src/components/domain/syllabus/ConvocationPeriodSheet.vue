@@ -7,6 +7,7 @@ import { createProcess } from '@/api/processes';
 import DatePicker from '@/components/DatePicker.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { SheetFooter } from '@/components/ui/sheet';
@@ -20,7 +21,7 @@ const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const confirmOpen = ref(false);
 const errors = ref<Record<string, string[]>>({});
-const form = ref({ starts_on: '', ends_on: '', starts_at: '', due_at: '' });
+const form = ref({ starts_on: '', ends_on: '', teaching_weeks: '', starts_at: '', due_at: '' });
 const createdPeriodId = ref<string | null>(null);
 
 const todayIso = useInstitutionToday();
@@ -34,12 +35,17 @@ const goTo = (target: 1 | 2): void => {
     step.value = target;
 };
 const periodComplete = computed(() => Boolean(form.value.starts_on && form.value.ends_on));
+const monday = (iso: string): number => {
+    const date = new Date(`${iso}T00:00:00Z`);
+    return date.getTime() - ((date.getUTCDay() + 6) % 7) * 86_400_000;
+};
+const calendarWeeks = computed(() => periodComplete.value ? Math.round((monday(form.value.ends_on) - monday(form.value.starts_on)) / 604_800_000) + 1 : null);
 const processComplete = computed(() => Boolean(form.value.starts_at && form.value.due_at));
 const periodCreated = computed(() => createdPeriodId.value !== null);
 
 watch(open, (value) => {
     if (value) {
-        form.value = { starts_on: '', ends_on: '', starts_at: '', due_at: '' };
+        form.value = { starts_on: '', ends_on: '', teaching_weeks: '', starts_at: '', due_at: '' };
         errors.value = {};
         createdPeriodId.value = null;
         confirmOpen.value = false;
@@ -66,7 +72,11 @@ const submit = async (): Promise<void> => {
         let periodId = createdPeriodId.value;
         let message = 'Periodo académico creado.';
         if (!periodId) {
-            const period = await createAcademicRecord('periodo', { starts_on: form.value.starts_on, ends_on: form.value.ends_on });
+            const period = await createAcademicRecord('periodo', {
+                starts_on: form.value.starts_on,
+                ends_on: form.value.ends_on,
+                ...(form.value.teaching_weeks ? { teaching_weeks: Number(form.value.teaching_weeks) } : {}),
+            });
             periodId = period.id ?? null;
             message = period.message;
             createdPeriodId.value = periodId;
@@ -115,6 +125,12 @@ const submit = async (): Promise<void> => {
                                 <FieldError :errors="errors.ends_on" />
                             </Field>
                         </div>
+                        <Field :data-invalid="Boolean(errors.teaching_weeks)">
+                            <FieldLabel for="convocation-period-weeks">Semanas de clase</FieldLabel>
+                            <Input id="convocation-period-weeks" v-model="form.teaching_weeks" type="number" min="1" :max="calendarWeeks ?? 52" step="1" :placeholder="calendarWeeks ? String(calendarWeeks) : ''" :disabled="periodCreated" :aria-invalid="Boolean(errors.teaching_weeks)" />
+                            <FieldDescription>{{ calendarWeeks ? `Si la deja vacía, se usan las ${calendarWeeks} semanas entre las fechas.` : 'Si la deja vacía, se cuentan con las fechas.' }}</FieldDescription>
+                            <FieldError :errors="errors.teaching_weeks" />
+                        </Field>
                     </FieldSet>
                     <FieldSet v-else key="syllabus">
                         <FieldLegend>Elaboración de sílabos</FieldLegend>

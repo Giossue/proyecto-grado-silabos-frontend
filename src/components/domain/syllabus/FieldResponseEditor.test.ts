@@ -28,39 +28,79 @@ describe('FieldResponseEditor', () => {
         expect(wrapper.find('[aria-label="Insertar tabla"]').exists()).toBe(false);
     });
 
-    it('las unidades se llenan como formulario: una tarjeta por unidad y las semanas numeradas en orden', async () => {
+    it('las unidades van en un acordeón y sus semanas en una tabla del sistema, numeradas en orden', async () => {
         const wrapper = mountEditor(block('unidades'), block('unidades', { units: units() }));
 
-        expect(wrapper.find('table').exists()).toBe(false);
         expect(wrapper.text()).toContain('Unidad 4');
-        expect(wrapper.get('[aria-label="Unidad 2"]').text()).toContain('Semana 5');
-        expect(wrapper.get('label[for="campo-0-units-0-semanas-0-acd_h"]').text()).toBe('ACD');
+        expect(wrapper.find('[aria-label="ACD, semana 5"]').exists()).toBe(false);
+        await wrapper.get('[aria-label="Unidad 2"] button').trigger('click');
+        await flushPromises();
+        const second = wrapper.get('[aria-label="Unidad 2"]');
+        expect(second.findAll('[data-slot="table-head"]').map((head) => head.text())).toContain('Contenidos temáticos');
+        expect(second.find('[aria-label="ACD, semana 5"]').exists()).toBe(true);
+        expect(wrapper.get('#campo-0-units-0-semanas-0-acd_h').attributes('aria-label')).toBe('ACD, semana 1');
         expect(wrapper.get('#campo-0-units-0-nombre').element.tagName).toBe('INPUT');
         expect(wrapper.get('#campo-0-units-0-resultado').element.tagName).toBe('TEXTAREA');
+
+        const hours = wrapper.get('#campo-0-units-0-semanas-0-acd_h').element as HTMLInputElement;
+        hours.value = '2,5';
+        hours.setSelectionRange(3, 3);
+        const typed = (data: string): boolean => !hours.dispatchEvent(new InputEvent('beforeinput', { data, cancelable: true }));
+        expect(typed('a')).toBe(true);
+        expect(typed('5')).toBe(false);
+        expect(typed(',')).toBe(true);
 
         await wrapper.get('#campo-0-units-0-nombre').setValue('Fundamentos');
         const value = emitted(wrapper).content![0]!.attrs!.value as { units: Array<{ nombre: string }> };
         expect(value.units[0]!.nombre).toBe('Fundamentos');
     });
 
-    it('los datos de discapacidad aparecen solo si responde Sí', async () => {
-        const wrapper = mountEditor(block('identificacion'), block('identificacion', { disability: { answer: 'no', type: '', description: '' } }));
-        expect(wrapper.text()).toContain('Estudiantes con discapacidad');
+    it('el docente agrega unidades hasta las que permite la plantilla', async () => {
+        const wrapper = mountEditor(block('unidades'), block('unidades', { units: units() }));
+
+        await wrapper.findAll('button').find((button) => button.text() === 'Agregar unidad')!.trigger('click');
+        expect((emitted(wrapper).content![0]!.attrs!.value as { units: unknown[] }).units).toHaveLength(5);
+    });
+
+    it('un campo de plantilla antigua que solo tiene bloques también se llena como formulario', () => {
+        const wrapper = mount(FieldResponseEditor, { props: { id: 'campo', label: 'Unidades', template: null, modelValue: block('unidades', { units: units() }) } });
+
+        expect(wrapper.find('[role="textbox"]').exists()).toBe(false);
+        expect(wrapper.text()).toContain('Unidad 1');
+        expect(wrapper.find('[data-block-summary]').classes()).not.toContain('sticky');
+    });
+
+    it('los datos de discapacidad aparecen solo si responde Sí y llevan asterisco de obligatorio', async () => {
+        const wrapper = mount(FieldResponseEditor, { props: { id: 'campo', label: 'Campo', required: true, template: block('identificacion'), modelValue: block('identificacion', { disability: { answer: 'no', type: '', description: '' } }) } });
+        expect(wrapper.text()).toContain('Estudiantes con discapacidad*');
         expect(wrapper.text()).not.toContain('Tipo de discapacidad');
 
         await wrapper.setProps({ modelValue: block('identificacion', { disability: { answer: 'si', type: '', description: '' } }) });
         expect(wrapper.text()).toContain('Tipo de discapacidad');
     });
 
-    it('una tabla de respuestas se llena por filas con la etiqueta de cada columna', async () => {
+    it('una tabla de respuestas se llena dentro de una tabla del sistema con el encabezado de la plantilla', async () => {
         const wrapper = mountEditor(bibliography, null);
 
-        expect(wrapper.find('table').exists()).toBe(false);
-        expect(wrapper.get('[aria-label="Fila 1"]').text()).toContain('Autor');
+        expect(wrapper.findAll('[data-slot="table-head"]').map((head) => head.text())).toEqual(['Autor', 'Título', 'Acciones']);
+        expect(wrapper.get('#campo-0-1-0').attributes('aria-label')).toBe('Autor, fila 1');
         await wrapper.get('#campo-0-1-0').setValue('García');
         expect(emitted(wrapper).content![0]!.content![1]!.content![0]!.content![0]!.content![0]!.text).toBe('García');
 
         await wrapper.findAll('button').find((button) => button.text() === 'Agregar fila')!.trigger('click');
         expect(emitted(wrapper).content![0]!.content).toHaveLength(3);
+    });
+
+    it('un encabezado de dos niveles nombra cada columna por su celda más baja', () => {
+        const head = (text: string, attrs: Record<string, number> = {}): DocumentNode => ({ ...cell('tableHeader', text), attrs });
+        const contribution: DocumentNode = { type: 'doc', content: [{ type: 'table', content: [
+            { type: 'tableRow', content: [head('Resultado de la asignatura', { rowspan: 2 }), head('Nivel', { colspan: 2 }), head('Resultado de la carrera', { rowspan: 2 })] },
+            { type: 'tableRow', content: [head('Alta'), head('Baja')] },
+            { type: 'tableRow', content: [cell('tableCell'), cell('tableCell'), cell('tableCell'), cell('tableCell')] },
+        ] }] };
+        const wrapper = mountEditor(contribution, null);
+
+        expect(['#campo-0-2-0', '#campo-0-2-1', '#campo-0-2-2', '#campo-0-2-3'].map((id) => wrapper.get(id).attributes('aria-label')))
+            .toEqual(['Resultado de la asignatura, fila 1', 'Alta, fila 1', 'Baja, fila 1', 'Resultado de la carrera, fila 1']);
     });
 });

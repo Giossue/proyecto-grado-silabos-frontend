@@ -34,8 +34,8 @@ const reviewPanels = computed(() =>
 
 <template>
     <template v-if="variant === 'syllabus'">
-        <WorkspaceLayout variant="syllabus">
-            <div class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
+        <div>
+            <div class="mx-auto flex w-full max-w-screen-2xl min-w-0 flex-col gap-8">
                 <Card v-if="readonly" data-skeleton="syllabus-presentation">
                     <CardContent class="flex flex-col items-center gap-5 py-8">
                         <div class="flex w-full items-center justify-between gap-6">
@@ -79,30 +79,7 @@ const reviewPanels = computed(() =>
                 </template>
             </div>
 
-            <aside class="min-w-0" data-skeleton="unit-assistant">
-                <Card class="assistant-panel gap-0 overflow-hidden py-0">
-                    <CardHeader class="min-w-0 shrink-0 grid-cols-1 py-4">
-                        <Skeleton class="h-5 w-48 max-w-full" />
-                    </CardHeader>
-                    <Separator />
-                    <div class="flex min-h-0 flex-1 flex-col items-center justify-center gap-5 px-4 py-6">
-                        <Skeleton class="h-28 w-36 rounded-full" />
-                        <Skeleton class="h-5 w-48 max-w-full" />
-                        <div class="flex w-full max-w-80 flex-col gap-3">
-                            <Skeleton v-for="question in 3" :key="question" class="h-14 w-full" />
-                        </div>
-                    </div>
-                    <Separator />
-                    <CardContent class="shrink-0 px-4 py-4">
-                        <div class="flex flex-col gap-3 rounded-md ring-1 ring-surface-ring p-3">
-                            <Skeleton class="h-4 w-3/4" />
-                            <Skeleton class="h-4 w-1/2" />
-                            <Skeleton class="h-8 w-20 self-end" />
-                        </div>
-                    </CardContent>
-                </Card>
-            </aside>
-        </WorkspaceLayout>
+        </div>
     </template>
 
     <div v-else-if="variant === 'review'" class="flex min-w-0 flex-col gap-6 p-4 sm:p-6">
