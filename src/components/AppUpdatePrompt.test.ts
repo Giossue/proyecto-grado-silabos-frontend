@@ -11,7 +11,7 @@ vi.mock('virtual:pwa-register/vue', () => ({
 }));
 
 describe('AppUpdatePrompt', () => {
-  it('avisa cuando hay una versión nueva y actualiza solo si la persona lo pide', async () => {
+  it('avisa cuando hay una versión nueva y solo ofrece actualizar', async () => {
     const wrapper = mount(AppUpdatePrompt);
     expect(wrapper.find('[role="status"]').exists()).toBe(false);
 
@@ -20,10 +20,9 @@ describe('AppUpdatePrompt', () => {
     expect(wrapper.text()).toContain('Hay una versión nueva del sistema.');
     expect(updateServiceWorker).not.toHaveBeenCalled();
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Actualizar')!.trigger('click');
-    expect(updateServiceWorker).toHaveBeenCalledWith(true);
+    expect(wrapper.findAll('button').map((button) => button.text())).toEqual(['Actualizar']);
 
-    await wrapper.findAll('button').find((button) => button.text() === 'Después')!.trigger('click');
-    expect(wrapper.find('[role="status"]').exists()).toBe(false);
+    await wrapper.get('button').trigger('click');
+    expect(updateServiceWorker).toHaveBeenCalledWith(true);
   });
 });
