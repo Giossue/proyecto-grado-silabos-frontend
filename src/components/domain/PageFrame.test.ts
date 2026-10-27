@@ -1,3 +1,4 @@
+import { Users } from '@lucide/vue';
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -17,5 +18,13 @@ describe('PageFrame', () => {
 
     await wrapper.setProps({ loading: false });
     expect(wrapper.get('button').text()).toBe('Historial');
+  });
+
+  it('centra el ícono entre el título y la descripción', () => {
+    const wrapper = mount(PageFrame, {
+      props: { title: 'Docentes', description: 'Docentes de su carrera.', icon: Users },
+    });
+
+    expect(wrapper.get('h1').element.closest('.gap-3')?.classList).toContain('items-center');
   });
 });

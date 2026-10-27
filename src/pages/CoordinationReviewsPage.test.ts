@@ -90,4 +90,15 @@ describe('CoordinationReviewsPage', () => {
     expect(wrapper.findAll('[role="tab"]').find((tab) => tab.text() === 'Seguimiento')!.attributes('data-disabled')).toBeDefined();
     wrapper.unmount();
   });
+
+  it('muestra un ícono en cada pestaña', async () => {
+    vi.mocked(getDashboard).mockResolvedValue(summary(null));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const tabs = wrapper.findAll('[role="tab"]');
+    expect(tabs.map((tab) => tab.text())).toEqual(['Cola de revisión', 'Seguimiento']);
+    expect(tabs.every((tab) => tab.find('svg').exists())).toBe(true);
+    wrapper.unmount();
+  });
 });

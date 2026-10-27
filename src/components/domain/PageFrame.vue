@@ -116,7 +116,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                     <slot name="eyebrow" />
                 </div>
 
-                <div class="flex items-start gap-3">
+                <div class="flex items-center gap-3">
                     <div
                         v-if="headerIcon && title"
                         class="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground"

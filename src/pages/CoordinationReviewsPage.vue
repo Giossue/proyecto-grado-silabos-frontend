@@ -2,7 +2,7 @@
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import { activateRow } from '@/lib/rowActivation';
 import { REVIEW_STATE_OPTIONS } from '@/lib/syllabusStates';
-import { ListChecks } from '@lucide/vue';
+import { ChartNoAxesColumn, Inbox, ListChecks } from '@lucide/vue';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -81,8 +81,8 @@ onMounted(() => { void load(1, true); });
     <MetricTiles v-if="data && summary?.metrics.length" :metrics="summary.metrics" />
     <Tabs v-if="data" v-model="tab" class="gap-4">
       <TabsList class="h-11 justify-start" aria-label="Vistas de revisión">
-        <TabsTrigger value="cola" class="flex-none px-4 data-[state=active]:font-semibold">Cola de revisión</TabsTrigger>
-        <TabsTrigger value="seguimiento" :disabled="!convocationId" class="flex-none px-4 data-[state=active]:font-semibold">Seguimiento</TabsTrigger>
+        <TabsTrigger value="cola" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><Inbox aria-hidden="true" />Cola de revisión</TabsTrigger>
+        <TabsTrigger value="seguimiento" :disabled="!convocationId" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><ChartNoAxesColumn aria-hidden="true" />Seguimiento</TabsTrigger>
       </TabsList>
       <TabsContent value="cola" class="flex flex-col gap-4">
         <Card class="py-3"><CardContent class="px-3">
