@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { RoleCode } from '@/api/session';
 import AcademicLoadingSkeleton from '@/components/domain/loading/AcademicLoadingSkeleton.vue';
 import DashboardLoadingSkeleton from '@/components/domain/loading/DashboardLoadingSkeleton.vue';
+import SetupLoadingSkeleton from '@/components/domain/loading/SetupLoadingSkeleton.vue';
 import DocumentLoadingSkeleton from '@/components/domain/loading/DocumentLoadingSkeleton.vue';
 import MetricsLoadingSkeleton from '@/components/domain/loading/MetricsLoadingSkeleton.vue';
 import SettingsLoadingSkeleton from '@/components/domain/loading/SettingsLoadingSkeleton.vue';
@@ -18,6 +18,7 @@ type LoadingVariant =
     | 'form'
     | 'document'
     | 'dashboard'
+    | 'setup'
     | 'academic'
     | 'catalog'
     | 'academic-structure'
@@ -47,7 +48,6 @@ const props = withDefaults(defineProps<{
     selectable?: boolean;
     chip?: boolean;
     plainToolbar?: boolean;
-    dashboardRole?: RoleCode;
     workspaceCount?: number;
     reviewStage?: 'coordination' | 'library';
     readonly?: boolean;
@@ -144,7 +144,9 @@ const tableProps = computed(() => ({
                 </div>
             </div>
 
-            <DashboardLoadingSkeleton v-else-if="variant === 'dashboard'" :role="dashboardRole" />
+            <DashboardLoadingSkeleton v-else-if="variant === 'dashboard'" />
+
+            <SetupLoadingSkeleton v-else-if="variant === 'setup'" :steps="5" />
 
             <SettingsLoadingSkeleton v-else-if="variant === 'settings'" :section="settingsSection" :readonly="readonly" />
 

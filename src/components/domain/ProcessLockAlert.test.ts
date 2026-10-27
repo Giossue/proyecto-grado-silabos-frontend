@@ -15,7 +15,7 @@ const signIn = (code: 'administrador' | 'coordinador') => sessionState.replace({
 const stubs = { RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } };
 
 describe('ProcessLockAlert', () => {
-  it('nombra la convocatoria y envía a Coordinación a sus convocatorias', () => {
+  it('nombra la convocatoria y envía a Coordinación a Revisión, donde se pausa', () => {
     signIn('coordinador');
     const wrapper = mount(ProcessLockAlert, {
       props: { lock: { scope: 'convocation', period: '2026-I', institutional_pause: false, delivery_on: '2026-10-30' } },
@@ -24,8 +24,8 @@ describe('ProcessLockAlert', () => {
 
     expect(wrapper.text()).toContain('Edición bloqueada · Convocatoria 2026-I');
     expect(wrapper.text()).toContain('Pause la convocatoria de su carrera para editar.');
-    expect(wrapper.get('a').text()).toBe('Ir a Convocatorias');
-    expect(wrapper.get('a').attributes('href')).toBe(paths.coordination.panel);
+    expect(wrapper.get('a').text()).toBe('Ir a Revisión');
+    expect(wrapper.get('a').attributes('href')).toBe(paths.coordination.reviews);
   });
 
   it('a Administración le habla del proceso y la envía a Convocatorias', () => {

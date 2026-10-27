@@ -12,7 +12,8 @@ import { sessionState } from '@/state/session';
 const props = defineProps<{ lock?: LockDetail | null; title?: string; message?: string; hideAction?: boolean; icon?: Component; banner?: boolean }>();
 
 const isAdministrator = computed(() => sessionState.current.value?.active_role?.code === 'administrador');
-const href = computed(() => isAdministrator.value ? paths.admin.convocations : paths.coordination.panel);
+const href = computed(() => isAdministrator.value ? paths.admin.convocations : paths.coordination.reviews);
+const actionLabel = computed(() => isAdministrator.value ? 'Ir a Convocatorias' : 'Ir a Revisión');
 const headline = computed(() => {
     if (props.title) return props.title;
 
@@ -53,7 +54,7 @@ const reason = computed(() => {
             <PopoverContent align="start" class="w-80 text-sm">{{ reason }}</PopoverContent>
         </Popover>
         <Button v-if="!hideAction" as-child size="sm" variant="link" class="h-auto p-0">
-            <RouterLink :to="href">Ir a Convocatorias</RouterLink>
+            <RouterLink :to="href">{{ actionLabel }}</RouterLink>
         </Button>
     </div>
     <Alert v-else class="w-fit max-w-full border-primary/20 bg-accent text-accent-foreground">
@@ -70,7 +71,7 @@ const reason = computed(() => {
                 </Popover>
             </span>
             <Button v-if="!hideAction" as-child size="sm" variant="link" class="h-auto p-0">
-                <RouterLink :to="href">Ir a Convocatorias</RouterLink>
+                <RouterLink :to="href">{{ actionLabel }}</RouterLink>
             </Button>
         </AlertDescription>
     </Alert>

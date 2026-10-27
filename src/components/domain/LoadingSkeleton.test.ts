@@ -72,10 +72,18 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.find('button, input, select, [tabindex]').exists()).toBe(false);
   });
 
-  it.each(['administrador', 'coordinador'] as const)('muestra tres indicadores para %s', (dashboardRole) => {
-    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole } });
+  it('anticipa el Panel de Administración: tres indicadores y seis pasos de puesta en marcha', () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard' } });
 
     expect(wrapper.get('[data-skeleton="metrics"]').findAll('[data-slot="card"]')).toHaveLength(3);
+    expect(wrapper.get('[data-skeleton="setup"]').findAll('.rounded-md.p-2')).toHaveLength(6);
+  });
+
+  it('anticipa la puesta en marcha de la carrera con sus cinco pasos y sin indicadores', () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'setup' } });
+
+    expect(wrapper.find('[data-skeleton="metrics"]').exists()).toBe(false);
+    expect(wrapper.get('[data-skeleton="setup"]').findAll('.rounded-md.p-2')).toHaveLength(5);
   });
 
   it('dibuja la barra de herramientas dentro de una tarjeta y sin acciones cuando la tabla no las tiene', () => {
@@ -92,18 +100,5 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.get('[data-skeleton="metrics"]').findAll('[data-slot="card"]')).toHaveLength(3);
     expect(wrapper.findAll(`[data-skeleton="${item}"]`)).toHaveLength(2);
     expect(mount(LoadingSkeleton, { props: { variant } }).find('[data-skeleton="metrics"]').exists()).toBe(false);
-  });
-
-  it('actualiza la superficie al cambiar el rol activo durante la carga', async () => {
-    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole: 'coordinador' } });
-
-    expect(wrapper.find('[data-skeleton="dashboard-deadline"]').exists()).toBe(true);
-    expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(true);
-
-    await wrapper.setProps({ dashboardRole: 'administrador' });
-
-    expect(wrapper.find('[data-skeleton="dashboard-deadline"]').exists()).toBe(false);
-    expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(true);
-    expect(wrapper.findAll('[role="status"]')).toHaveLength(1);
   });
 });

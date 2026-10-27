@@ -56,7 +56,9 @@ describe('LibraryReviewsPage', () => {
         { key: 'library_commented', label: 'Con comentario', value: 0, suffix: null, hint: 'Devueltos al docente desde biblioteca' },
         { key: 'library_signed', label: 'Firmados', value: 4, suffix: null, hint: 'Sílabos con la firma de biblioteca' },
       ],
-      setup: null, deadline: null, coordination_convocation: null,
+      setup: null,
+      deadline: { period: '2026-2027', starts_at: '2026-10-01', due_at: '2026-11-15', state: 'active', days_until_start: 0, days_until_due: 19, convocation_id: null },
+      coordination_convocation: null,
     });
   });
 
@@ -68,6 +70,7 @@ describe('LibraryReviewsPage', () => {
     expect(wrapper.text()).toContain('Por verificar');
     expect(wrapper.text()).toContain('Por firmar');
     expect(wrapper.text()).not.toContain('Firmados');
+    expect(wrapper.text()).toContain('Quedan 19 días para revisar y firmar los sílabos');
 
     await wrapper.get('form').trigger('submit');
     await flushPromises();

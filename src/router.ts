@@ -35,6 +35,7 @@ const AdminAuditPage = () => import("@/pages/AdminAuditPage.vue");
 const AdminHelpPage = () => import("@/pages/AdminHelpPage.vue");
 
 const CoordinationReviewsPage = () => import("@/pages/CoordinationReviewsPage.vue");
+const CoordinationSetupPage = () => import("@/pages/CoordinationSetupPage.vue");
 const CoordinationReviewDetailPage = () => import("@/pages/CoordinationReviewDetailPage.vue");
 const CoordinationReviewComparisonPage = () => import("@/pages/CoordinationReviewComparisonPage.vue");
 const CoordinationAcademicStructurePage = () => import("@/pages/CoordinationAcademicStructurePage.vue");
@@ -82,7 +83,7 @@ export const router = createRouter({
     { path: "/admin/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Seguridad" } },
     { path: "/admin/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Notificaciones" } },
 
-    { path: "/coordinacion/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Panel" } },
+    { path: "/coordinacion/puesta-en-marcha", component: CoordinationSetupPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Puesta en marcha" } },
     { path: "/coordinacion/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Notificaciones" } },
     { path: "/coordinacion/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Perfil" } },
     { path: "/coordinacion/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Seguridad" } },

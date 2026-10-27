@@ -6,7 +6,7 @@ import { RouterLink, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
-import TeacherDeadlineBanner from '@/components/domain/TeacherDeadlineBanner.vue';
+import DeadlineBanner from '@/components/domain/DeadlineBanner.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -58,7 +58,7 @@ onMounted(() => { void load(true); });
 
 <template>
   <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide">
-    <template v-if="summary?.deadline" #banner><TeacherDeadlineBanner :deadline="summary.deadline" /></template>
+    <template v-if="summary?.deadline" #banner><DeadlineBanner :deadline="summary.deadline" audience="docente" /></template>
     <template #actions><Button as-child variant="outline"><RouterLink :to="paths.teacher.history"><History data-icon="inline-start" aria-hidden="true" />Historial</RouterLink></Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(true)" />
     <MetricTiles v-if="result && summary?.metrics.length" :metrics="summary.metrics" />

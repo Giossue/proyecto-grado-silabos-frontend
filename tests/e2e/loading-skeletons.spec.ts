@@ -13,10 +13,8 @@ const scenarios: { name: string; props: FixtureProps }[] = [
     { name: 'catalog', props: { variant: 'catalog' } },
     { name: 'notifications', props: { variant: 'notifications' } },
     { name: 'workspace', props: { variant: 'workspace' } },
-    ...['administrador', 'coordinador'].map((dashboardRole) => ({
-        name: `dashboard-${dashboardRole}`,
-        props: { variant: 'dashboard', dashboardRole },
-    })),
+    { name: 'dashboard', props: { variant: 'dashboard' } },
+    { name: 'setup', props: { variant: 'setup' } },
     ...['curriculum', 'schedule', 'teachers'].map((mode) => ({
         name: `academic-${mode}`,
         props: { variant: 'academic-structure', mode },
@@ -37,7 +35,7 @@ const screenshotScenarios = new Set([
     'catalog',
     'notifications',
     'workspace',
-    'dashboard-coordinador',
+    'dashboard',
     'academic-curriculum',
     'academic-schedule',
     'academic-teachers',

@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const password = 'Demo-2026!';
 
-type Area = 'admin' | 'coordinacion';
+type Area = 'admin';
 
 const login = async (page: Page, email: string): Promise<void> => {
   await page.goto('/ingresar');
@@ -113,17 +113,17 @@ test.describe('frontera distribuida de identidad', () => {
     // Coordinación elige su carrera al entrar, aunque tenga una sola.
     await expect(page).toHaveURL(/\/rol$/);
     await page.getByRole('button', { name: 'Entrar a esta carrera' }).click();
-    await expectPanel(page, 'coordinacion');
+    await expect(page).toHaveURL(/\/coordinacion\/revisiones$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Revisión' })).toBeVisible();
+    await expect(page.getByRole('tab', { name: 'Cola de revisión' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Puesta en marcha' })).toBeVisible();
     await expectNavigation(page, [
-      'Panel',
       'Revisión',
       'Materias y asignaciones',
       'Docentes',
       'Proyecto de carrera',
       'Malla',
     ]);
-
-    await openSection(page, 'Revisión', 'Cola de revisión');
 
     await openSection(page, 'Materias y asignaciones', 'Materias y asignaciones');
     await expect(page.getByLabel('Buscar materia programada')).toBeVisible();
@@ -134,8 +134,11 @@ test.describe('frontera distribuida de identidad', () => {
     await openSection(page, 'Malla', 'Malla');
     await expect(page.getByRole('button', { name: /Editar malla|Comprobando/ })).toBeVisible();
 
+    await page.goto('/coordinacion/puesta-en-marcha');
+    await expect(page.getByRole('heading', { level: 1, name: 'Puesta en marcha' })).toBeVisible();
+
     await page.goto('/admin/convocatorias');
-    await expect(page).toHaveURL(/\/coordinacion\/panel$/);
+    await expect(page).toHaveURL(/\/coordinacion\/revisiones$/);
     expect(serverErrors).toEqual([]);
   });
 

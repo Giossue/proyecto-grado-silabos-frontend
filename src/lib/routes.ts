@@ -40,7 +40,7 @@ export const paths = {
   },
   coordination: {
     root: '/coordinacion',
-    panel: '/coordinacion/panel',
+    setup: '/coordinacion/puesta-en-marcha',
     notifications: '/coordinacion/notificaciones',
     profile: '/coordinacion/configuracion/perfil',
     security: '/coordinacion/configuracion/seguridad',
@@ -105,7 +105,7 @@ const areaPaths: Record<RoleArea, AreaPaths> = {
 
 const areaHomes: Record<RoleArea, string> = {
   admin: paths.admin.panel,
-  coordination: paths.coordination.panel,
+  coordination: paths.coordination.reviews,
   teacher: paths.teacher.syllabi,
   library: paths.library.reviews,
 };
@@ -202,7 +202,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'admin-security', path: paths.admin.security, component: 'SecurityPage', shortcut: 'security', ...admin },
   { name: 'admin-notifications', path: paths.admin.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...admin },
 
-  { name: 'coordination-panel', path: paths.coordination.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...coordinator },
+  { name: 'coordination-setup', path: paths.coordination.setup, component: 'CoordinationSetupPage', breadcrumb: 'Puesta en marcha', ...coordinator },
   { name: 'coordination-notifications', path: paths.coordination.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...coordinator },
   { name: 'coordination-profile', path: paths.coordination.profile, component: 'ProfilePage', shortcut: 'profile', ...coordinator },
   { name: 'coordination-security', path: paths.coordination.security, component: 'SecurityPage', shortcut: 'security', ...coordinator },

@@ -61,7 +61,7 @@ describe('navegación por ámbito activo', () => {
     sessionState.replace(session('coordinador'));
     await router.push('/panel');
 
-    expect(router.currentRoute.value.fullPath).toBe('/coordinacion/panel');
+    expect(router.currentRoute.value.fullPath).toBe('/coordinacion/revisiones');
   });
 
   it('resuelve la configuración genérica del monolito al área activa', async () => {
@@ -117,7 +117,7 @@ describe('navegación por ámbito activo', () => {
 
   it.each([
     ['administrador', '/coordinacion/malla', '/admin/panel'],
-    ['coordinador', '/admin/usuarios', '/coordinacion/panel'],
+    ['coordinador', '/admin/usuarios', '/coordinacion/revisiones'],
     ['docente', '/admin/plantilla', '/docente/mis-silabos'],
     ['docente', '/biblioteca/revisiones', '/docente/mis-silabos'],
     ['bibliotecario', '/coordinacion/revisiones', '/biblioteca/revisiones'],

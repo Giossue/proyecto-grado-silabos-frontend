@@ -4,10 +4,11 @@ import { activateRow } from '@/lib/rowActivation';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { getDashboard, type DashboardMetric } from '@/api/dashboard';
+import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getLibraryReviews, type LibraryReviewsPage } from '@/api/library';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import DeadlineBanner from '@/components/domain/DeadlineBanner.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import MetricTiles from '@/components/domain/MetricTiles.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -24,7 +25,7 @@ import { paths } from '@/lib/routes';
 const route = useRoute();
 const router = useRouter();
 const data = ref<LibraryReviewsPage | null>(null);
-const metrics = ref<DashboardMetric[]>([]);
+const summary = ref<Dashboard | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const queryText = (value: unknown): string => typeof value === 'string' ? value : '';
@@ -48,12 +49,12 @@ const load = async (page = 1, withSummary = false): Promise<void> => {
   loading.value = true;
   error.value = null;
   try {
-    const [reviews, summary] = await Promise.all([
+    const [reviews, dashboard] = await Promise.all([
       getLibraryReviews({ q: filters.q, state: filters.state, page }),
-      withSummary ? getDashboard().then((dashboard) => dashboard.metrics).catch(() => []) : metrics.value,
+      withSummary ? getDashboard().catch(() => null) : summary.value,
     ]);
     data.value = reviews;
-    metrics.value = summary;
+    summary.value = dashboard;
     syncUrl(page);
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las revisiones de biblioteca.';
@@ -72,10 +73,11 @@ onMounted(() => { void load(initialPage, true); });
 
 <template>
   <PageFrame title="Revisiones de biblioteca" description="Bibliografía de los sílabos enviados." size="wide">
+    <template v-if="summary?.deadline" #banner><DeadlineBanner :deadline="summary.deadline" audience="bibliotecario" /></template>
     <template v-if="periods.length > 0" #meta><Badge v-for="period in periods" :key="period" variant="secondary">Período {{ period }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :actions="false" chip metrics />
-    <MetricTiles v-if="data && metrics.length > 0" :metrics="metrics" />
+    <MetricTiles v-if="data && summary?.metrics.length" :metrics="summary.metrics" />
     <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
         <form @submit.prevent="load()">
           <FilterToolbar @clear="clearFilters">

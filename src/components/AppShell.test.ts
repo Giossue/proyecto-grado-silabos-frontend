@@ -86,7 +86,7 @@ describe('AppSidebarLayout', () => {
     expect(notificationsButton.get('[data-slot="badge"]').text()).toBe('');
   });
 
-  it('muestra el Panel de Coordinación en el sidebar', async () => {
+  it('no muestra Panel a Coordinación: entra a Revisión', async () => {
     sessionState.replace({
       ...administratorSession,
       active_role: { id: 'role-coordinador', code: 'coordinador', career_id: 'career-1', career_name: 'Software' },
@@ -95,8 +95,8 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
-    expect(sidebar.text()).toContain('Panel');
-    expect(sidebar.find('a[href="/coordinacion/panel"]').exists()).toBe(true);
+    expect(sidebar.findAll('[data-sidebar="content"] a').map((link) => link.text())).toEqual(['Revisión', 'Materias y asignaciones', 'Docentes', 'Proyecto de carrera', 'Malla']);
+    expect(sidebar.text()).not.toContain('Puesta en marcha');
     expect(sidebar.text()).not.toContain('Fuentes académicas');
     expect(sidebar.find('a[href="/coordinacion/fuentes"]').exists()).toBe(false);
     expect(sidebar.find('a[href="/coordinacion/proyecto-carrera"]').exists()).toBe(true);

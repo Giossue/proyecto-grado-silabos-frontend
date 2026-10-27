@@ -32,7 +32,7 @@ export type Setup = {
     steps: SetupStep[];
 };
 
-const props = defineProps<{ setup: Setup }>();
+const props = defineProps<{ setup: Setup; keepWhenDone?: boolean }>();
 const emit = defineEmits<{ action: [action: string] }>();
 
 const nextKey = computed(
@@ -41,7 +41,7 @@ const nextKey = computed(
 </script>
 
 <template>
-    <Card v-if="setup.total > 0 && setup.done < setup.total">
+    <Card v-if="setup.total > 0 && (keepWhenDone || setup.done < setup.total)">
         <CardHeader>
             <CardTitle>{{ setup.title }}</CardTitle>
             <CardDescription v-if="setup.intro">{{

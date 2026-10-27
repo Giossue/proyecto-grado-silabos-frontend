@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import TeacherDeadlineBanner from '@/components/domain/TeacherDeadlineBanner.vue';
+import DeadlineBanner from '@/components/domain/DeadlineBanner.vue';
 import type { DashboardDeadline } from '@/api/dashboard';
 
 const deadline: DashboardDeadline = {
@@ -13,9 +13,9 @@ const deadline: DashboardDeadline = {
   convocation_id: 'c1',
 };
 
-const text = (value: Partial<DashboardDeadline>) => mount(TeacherDeadlineBanner, { props: { deadline: { ...deadline, ...value } } });
+const text = (value: Partial<DashboardDeadline>, audience: 'docente' | 'coordinador' | 'bibliotecario' = 'docente') => mount(DeadlineBanner, { props: { deadline: { ...deadline, ...value }, audience } });
 
-describe('TeacherDeadlineBanner', () => {
+describe('DeadlineBanner', () => {
   it('dice para qué son los días y hasta cuándo, sin barra ni botones', () => {
     const wrapper = text({});
 
@@ -31,6 +31,17 @@ describe('TeacherDeadlineBanner', () => {
     [{ state: 'overdue', days_until_due: 0 }, 'Venció el plazo para enviar sus sílabos a revisión'],
   ] as const)('explica cada momento del plazo: %o', (value, headline) => {
     expect(text(value).text()).toContain(headline);
+  });
+
+  it.each([
+    ['coordinador', 'Quedan 2 días para recibir y revisar los sílabos de su carreraHasta el 28 de septiembre de 2026.'],
+    ['bibliotecario', 'Quedan 2 días para revisar y firmar los sílabosHasta el 28 de septiembre de 2026.'],
+  ] as const)('dice a %s qué le toca hacer antes del plazo', (audience, notice) => {
+    expect(text({}, audience).text()).toBe(notice);
+  });
+
+  it('avisa a Biblioteca, antes de empezar, hasta cuándo deben quedar firmados', () => {
+    expect(text({ state: 'upcoming', days_until_start: 3 }, 'bibliotecario').text()).toBe('La elaboración de los sílabos inicia en 3 díasDeben quedar revisados y firmados hasta el 28 de septiembre de 2026.');
   });
 
   it.each(['paused', 'closed'] as const)('en %s solo avisa el estado, sin conteo', (state) => {
