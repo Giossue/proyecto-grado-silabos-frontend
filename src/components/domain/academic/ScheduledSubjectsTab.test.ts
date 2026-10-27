@@ -13,7 +13,7 @@ const SelectStub = defineComponent({
 });
 
 const row = (id: string, name: string, code: string, cycle: number | null, parallels: Array<{ code: string; shift: string | null }>): ScheduledSubjects['scheduledSubjects'][number] => ({
-    subject_id: `s-${id}`, label: name, subject_code: code, subject_name: name, subject_cycle: cycle,
+    subject_id: `s-${id}`, label: name, subject_code: code, subject_name: name, subject_cycle: cycle, generates_syllabus: true,
     campus_name: 'Matriz', modality_name: 'Presencial',
     parallels: parallels.map((parallel, index) => ({ id: `${id}-${index}`, ...parallel })), editable: true,
 });
@@ -45,6 +45,13 @@ const mountTab = (value: ScheduledSubjects = data) => mount(ScheduledSubjectsTab
 });
 
 describe('ScheduledSubjectsTab', () => {
+    it('marca las materias que no generan sílabo', () => {
+        const withoutSyllabus = { ...row('4', 'Prácticas preprofesionales', 'SW-801', 8, []), generates_syllabus: false };
+        const wrapper = mountTab({ ...data, scheduledSubjects: [...data.scheduledSubjects, withoutSyllabus] });
+
+        expect(wrapper.text()).toContain('Prácticas preprofesionalesSin sílabo');
+        expect(wrapper.text()).not.toContain('CálculoSin sílabo');
+    });
     it('no muestra la ficha: vive en Proyecto de carrera', () => {
         const wrapper = mountTab();
         expect(wrapper.text()).not.toContain('Ficha');

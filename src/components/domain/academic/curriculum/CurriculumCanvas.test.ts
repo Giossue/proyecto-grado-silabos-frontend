@@ -39,6 +39,7 @@ const subject = (id: string, position: number): CurriculumBuilderSubject => ({
     credits: null,
     total_hours: null,
     active: true,
+    generates_syllabus: true,
     system_values: {},
     display_fields: [],
 });

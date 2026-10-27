@@ -49,7 +49,7 @@ const load = async (): Promise<void> => {
     }
 };
 
-const subjects = computed<Subject[]>(() => data.value?.options.activeSubjects ?? []);
+const subjects = computed<Subject[]>(() => (data.value?.options.activeSubjects ?? []).filter((subject) => subject.generates_syllabus !== false));
 const statusOf = (subject: Subject): string => (subject.profile_complete
     ? 'Completa'
     : subject.profile_total ? `${subject.profile_filled ?? 0} de ${subject.profile_total} campos` : 'Incompleta');

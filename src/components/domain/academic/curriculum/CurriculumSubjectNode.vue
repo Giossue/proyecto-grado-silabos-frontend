@@ -192,7 +192,7 @@ const totalFields = computed(
           data.subject.modality_label ??
           data.career.modality?.label ??
           "Sin modalidad"
-        }}
+        }}<template v-if="data.subject.generates_syllabus === false"> · Sin sílabo</template>
       </p>
 
       <dl

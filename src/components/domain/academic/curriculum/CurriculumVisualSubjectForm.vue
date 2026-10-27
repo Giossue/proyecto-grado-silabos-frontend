@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
 import { DialogFooter } from "@/components/ui/dialog";
 import { useCurriculumSubjectFieldValues } from "@/composables/useCurriculumSubjectFieldValues";
 import { INHERITED_MODALITY } from "@/lib/studyModalities";
@@ -63,6 +64,13 @@ const { updateValue, valueFor } = useCurriculumSubjectFieldValues(
 
 const errorKey = (field: FixedSubjectField): string => field.system_key;
 const organizationUnit = ref(props.subject?.organization_unit ?? "");
+const generatesSyllabus = ref(props.subject?.generates_syllabus ?? true);
+watch(
+  () => props.subject?.generates_syllabus,
+  (value) => {
+    generatesSyllabus.value = value ?? true;
+  },
+);
 
 watch(
   () => props.subject?.organization_unit,
@@ -213,6 +221,13 @@ const submit = async (event: Event): Promise<void> => {
           </SelectContent>
         </Select>
         <FieldError :errors="[errors.modality]" />
+      </Field>
+
+      <Field orientation="horizontal" :data-invalid="Boolean(errors.generates_syllabus)">
+        <input type="hidden" name="generates_syllabus" :value="generatesSyllabus ? '1' : '0'" />
+        <Switch :id="`visual-subject-syllabus-${subject?.id ?? cycle}`" v-model="generatesSyllabus" />
+        <FieldLabel :for="`visual-subject-syllabus-${subject?.id ?? cycle}`">Puede generar sílabos</FieldLabel>
+        <FieldError :errors="[errors.generates_syllabus]" />
       </Field>
 
       <div

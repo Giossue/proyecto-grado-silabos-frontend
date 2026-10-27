@@ -67,6 +67,7 @@ export type Curriculum = {
     credits: string | null;
     total_hours: number | null;
     active: boolean;
+    generates_syllabus: boolean;
     system_values: Record<string, number | string | null>;
     display_fields: Array<{
       id: string;
@@ -93,6 +94,7 @@ export type ScheduledSubjects = {
     subject_name: string;
     subject_cycle: number | null;
     profile_complete?: boolean;
+    generates_syllabus: boolean;
     campus_name: string | null;
     modality_name: string | null;
     parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }>;
@@ -105,6 +107,7 @@ export type ScheduledSubjects = {
       codigo_asignatura: string;
       nombre: string;
       ciclo: number;
+      generates_syllabus: boolean;
       profile_complete?: boolean;
       profile_filled?: number;
       profile_total?: number;

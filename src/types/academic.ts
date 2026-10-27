@@ -176,6 +176,7 @@ export type CurriculumBuilderSubject = {
   credits: string | null;
   total_hours: number | null;
   active: boolean;
+  generates_syllabus: boolean;
   system_values: Record<string, number | string | null>;
   display_fields: {
     id: string;

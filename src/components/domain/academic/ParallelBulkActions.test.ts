@@ -19,7 +19,7 @@ afterEach(() => {
 });
 
 const item = (id: string, parallels: Array<{ id: string; code: string; shift: string }>) => ({
-    subject_id: id, label: id, subject_code: id, subject_name: id, subject_cycle: 1, campus_name: null, modality_name: null, parallels, editable: true,
+    subject_id: id, label: id, subject_code: id, subject_name: id, subject_cycle: 1, generates_syllabus: true, campus_name: null, modality_name: null, parallels, editable: true,
 });
 const mountBar = () => mount(ParallelBulkActions, {
     attachTo: document.body,

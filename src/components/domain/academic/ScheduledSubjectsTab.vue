@@ -4,6 +4,7 @@ import { type ScheduledSubjects, type TeacherAssignments } from "@/api/career-ac
 import ParallelCreationSheet from "@/components/domain/academic/ParallelCreationSheet.vue";
 import { activateRow } from "@/lib/rowActivation";
 import ClientFilterBar from "@/components/domain/ClientFilterBar.vue";
+import StatusBadge from "@/components/domain/StatusBadge.vue";
 import TablePagination from "@/components/domain/TablePagination.vue";
 import ParallelBulkActions from "@/components/domain/academic/ParallelBulkActions.vue";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -143,7 +144,7 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
           <TableEmpty v-if="!items.length" :colspan="6">{{ emptyMessage }}</TableEmpty>
           <TableRow v-for="item in items" v-else :key="item.subject_id" :class="canPlan(item) ? 'cursor-pointer' : ''" :tabindex="canPlan(item) ? 0 : undefined" :aria-label="canPlan(item) ? `Paralelos y docentes de ${item.label}` : undefined" @click="canPlan(item) && activateRow($event, () => openPlanning(item))" @keydown.enter.self.prevent="canPlan(item) && openPlanning(item)" @keydown.space.self.prevent="canPlan(item) && openPlanning(item)">
             <TableCell><Checkbox v-if="canPlan(item)" :model-value="subjectState(item)" :aria-label="`Seleccionar ${item.label}`" @update:model-value="toggleItem(item, $event)" /></TableCell>
-            <TableCell>{{ item.subject_name }}</TableCell>
+            <TableCell><span class="flex flex-wrap items-center gap-2">{{ item.subject_name }}<StatusBadge v-if="item.generates_syllabus === false" label="Sin sílabo" tone="info" /></span></TableCell>
             <TableCell class="text-center">{{ item.subject_cycle === null ? "Sin ciclo" : item.subject_cycle }}</TableCell>
             <TableCell data-card-hide="true" class="text-center"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center justify-center gap-2 border-border px-2 not-first:border-t"><Checkbox v-if="canPlan(item) && parallel.editable !== false" :model-value="selectedParallels.includes(parallel.id)" :aria-label="`Seleccionar el paralelo ${parallel.code} de ${item.label}`" @update:model-value="toggleParallel(parallel.id, $event)" />{{ parallel.code }}</li></ul><span v-else class="text-muted-foreground">Sin paralelos</span></TableCell>
             <TableCell data-card-hide="true" class="text-center"><ul v-if="item.parallels.length" class="-mx-2 flex flex-col"><li v-for="parallel in item.parallels" :key="parallel.id" class="flex h-7 items-center justify-center border-border px-2 not-first:border-t">{{ shiftLabel(parallel.shift, data.options.shiftOptions) }}</li></ul><span v-else class="text-muted-foreground">—</span></TableCell>
