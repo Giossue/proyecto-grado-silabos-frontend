@@ -27,12 +27,13 @@ const annotate = (): void => {
     );
     node.dataset.cardEmpty = String(cells.length === 1 && cells[0].colSpan > 1);
     let titled = false;
+    let selectable = false;
     let column = 0;
     for (const cell of cells) {
         const name = names[column] ?? '';
         const text = cell.textContent?.trim() ?? '';
         const isActions = cell.querySelector('[data-table-actions]') !== null;
-        const isSelect = !isActions && name === '' && cell.querySelector('[role="checkbox"], input[type="checkbox"]') !== null;
+        const isSelect: boolean = !isActions && !selectable && name === '' && cell.querySelector('[role="checkbox"], input[type="checkbox"]') !== null;
         let role = 'data';
         if (isActions) role = 'actions';
         else if (isSelect) role = 'select';
@@ -42,6 +43,7 @@ const annotate = (): void => {
         }
         cell.dataset.label = role === 'data' ? name : '';
         cell.dataset.cardRole = role;
+        selectable ||= isSelect;
         const wide = text.length > 22 || cell.querySelector('input, select, textarea, [role="combobox"], table') !== null || cell.dataset.cardSpan === 'full';
         cell.dataset.cardWide = String(role === 'data' && wide);
         column += cell.colSpan;

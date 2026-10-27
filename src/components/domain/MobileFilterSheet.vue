@@ -87,10 +87,10 @@ onBeforeUnmount(() => {
         :class="
             cn(
                 attrs.class as string,
-                'max-sm:fixed max-sm:inset-x-0 max-sm:top-0 max-sm:z-50 max-sm:max-h-(--filter-sheet-max-height)',
+                'max-sm:fixed max-sm:inset-x-0 max-sm:bottom-0 max-sm:z-50 max-sm:max-h-(--filter-sheet-max-height)',
                 'max-sm:flex max-sm:flex-col max-sm:gap-3 max-sm:overflow-hidden',
-                'max-sm:rounded-b-xl max-sm:bg-card max-sm:p-4',
-                'max-sm:pt-(--safe-header-inset)',
+                'max-sm:rounded-t-xl max-sm:bg-card max-sm:p-4',
+                'max-sm:pb-(--safe-footer-inset)',
                 'max-sm:shadow-modal max-sm:ring-1 max-sm:ring-surface-ring',
                 !open && 'max-sm:hidden',
             )
