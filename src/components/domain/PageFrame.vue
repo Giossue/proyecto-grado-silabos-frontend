@@ -28,6 +28,7 @@ const props = withDefaults(
         headerWidth?: number;
         headerClass?: string;
         icon?: Component;
+        hideIcon?: boolean;
         loading?: boolean;
     }>(),
     {
@@ -52,7 +53,7 @@ const headerStyle = computed<CSSProperties | undefined>(() =>
 
 const pageTitle = usePageTitle();
 const navItem = useActiveNavItem();
-const headerIcon = computed(() => props.icon ?? navItem.value?.icon ?? null);
+const headerIcon = computed(() => props.hideIcon ? null : props.icon ?? navItem.value?.icon ?? null);
 
 watchEffect(() => {
     pageTitle.value = props.title;

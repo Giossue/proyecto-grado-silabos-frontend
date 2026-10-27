@@ -9,6 +9,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import FreeTextEditor from "@/components/domain/syllabus/FreeTextEditor.vue";
 import SyllabusDocumentPreview from "@/components/domain/syllabus/SyllabusDocumentPreview.vue";
+import PageFrame from "@/components/domain/PageFrame.vue";
 import { copyTeacherSyllabus, getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField, startTeacherSyllabus } from "@/api/syllabi";
 import type { FieldResponsible } from "@/types/configuration";
 import { ApiError } from "@/api/client";
@@ -273,8 +274,11 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Comentario de Coordinación");
-    expect(wrapper.text()).toContain("Aclare el resultado.");
+    const notice = wrapper.get(".review-comment");
+    expect(notice.text()).toContain("Coordinación pidió correcciones");
+    expect(notice.text()).toContain("Aclare el resultado.");
+    expect(wrapper.text()).not.toContain("Está preparando una nueva revisión");
+    expect(wrapper.getComponent(PageFrame).props("hideIcon")).toBe(true);
     expect(wrapper.text()).not.toContain("Guardar respuesta");
   });
 
@@ -578,6 +582,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
     expect(buttonNamed(wrapper, "Anterior")).toBeUndefined();
+    expect(buttonNamed(wrapper, "Siguiente")!.element.closest(".teacher-form")).toBeNull();
 
     await buttonNamed(wrapper, "Siguiente")!.trigger("click");
     await flushPromises();
@@ -614,12 +619,19 @@ describe("TeacherSyllabusDetailPage", () => {
     await openTab(wrapper, "Bibliografía");
     expect(wrapper.find("#input-field-2").exists()).toBe(true);
     expect(wrapper.find(".library-correction").exists()).toBe(false);
-    const commentCard = wrapper.get(".library-comment-card");
-    expect(commentCard.text()).toContain("Comentario de Biblioteca");
-    expect(commentCard.text()).toContain("irá directo a biblioteca");
-    expect(commentCard.text().indexOf("La 10.ª edición no está disponible.")).toBeLessThan(commentCard.text().indexOf("Comentario anterior."));
+    const notice = wrapper.get(".review-comment");
+    expect(notice.text()).toContain("Biblioteca pidió correcciones");
+    expect(notice.text()).toContain("La 10.ª edición no está disponible.");
+    expect(notice.text()).toContain("Comentarios anteriores (1)");
+    expect(notice.text()).not.toContain("Comentario anterior.");
+    await notice.get("button").trigger("click");
+    await flushPromises();
+    expect(notice.text().indexOf("La 10.ª edición no está disponible.")).toBeLessThan(notice.text().indexOf("Comentario anterior."));
     expect(buttonNamed(wrapper, "Reenviar bibliografía")).toBeUndefined();
     expect(buttonNamed(wrapper, "Enviar sílabo")).toBeDefined();
+    await buttonNamed(wrapper, "Enviar sílabo")!.trigger("click");
+    await flushPromises();
+    expect(document.body.textContent).toContain("Va directo a biblioteca");
     wrapper.unmount();
   });
 

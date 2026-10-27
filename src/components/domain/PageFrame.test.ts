@@ -28,6 +28,12 @@ describe('PageFrame', () => {
     expect(wrapper.get('h1').element.closest('.gap-3')?.classList).toContain('items-center');
   });
 
+  it('oculta el ícono cuando la pantalla lo pide', () => {
+    const wrapper = mount(PageFrame, { props: { title: 'Álgebra Lineal', description: 'Paralelo A', icon: Users, hideIcon: true } });
+
+    expect(wrapper.find('header svg').exists()).toBe(false);
+  });
+
   it('aplica la clase del encabezado para alinearlo con el contenido', () => {
     const wrapper = mount(PageFrame, { props: { title: 'Álgebra Lineal', description: 'Paralelo A', headerClass: 'syllabus-editor-header' } });
 

@@ -13,7 +13,7 @@ const showPassword = ref(false);
 <template>
   <div class="relative">
     <Input :model-value="props.modelValue" :type="showPassword ? 'text' : 'password'" :class="cn('pr-10', props.class)" v-bind="$attrs" @update:model-value="emit('update:modelValue', String($event))" />
-    <Button type="button" variant="ghost" size="icon" :class="cn('absolute inset-y-0 right-0 h-full rounded-l-none rounded-r-md px-3 text-muted-foreground hover:text-foreground')" :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" @click="showPassword = !showPassword">
+    <Button type="button" variant="ghost" size="icon" :class="cn('absolute inset-y-px right-px h-auto rounded-l-none rounded-r-md px-3 text-muted-foreground hover:bg-transparent hover:text-foreground')" :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'" @click="showPassword = !showPassword">
       <EyeOff v-if="showPassword" class="size-4" /><Eye v-else class="size-4" />
     </Button>
   </div>

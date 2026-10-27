@@ -2,7 +2,8 @@
 import { Building2, Download } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import AppLogo from '@/components/AppLogo.vue';
+import logoIcon from '@/assets/logo-ueb-sidebar.png';
+import logo from '@/assets/logo-ueb-horizontal.webp';
 import InstallAppDialog from '@/components/InstallAppDialog.vue';
 import WorkScopeSwitcherSheet from '@/components/domain/identity/WorkScopeSwitcherSheet.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -40,9 +41,10 @@ watch(() => route.fullPath, () => {
     <Sidebar collapsible="icon" variant="sidebar">
         <SidebarHeader>
             <div
-                class="flex h-12 items-center p-2 transition-[padding] duration-200 ease-linear group-data-[collapsible=icon]:p-0"
+                class="flex h-16 items-center p-2 transition-[padding] duration-200 ease-linear group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
             >
-                <AppLogo />
+                <img :src="logo" width="600" height="164" decoding="async" alt="Universidad Estatal de Bolívar" class="h-11 w-auto group-data-[collapsible=icon]:hidden" />
+                <img :src="logoIcon" width="36" height="37" decoding="async" alt="Universidad Estatal de Bolívar" class="hidden size-7 object-contain group-data-[collapsible=icon]:block" />
             </div>
         </SidebarHeader>
         <SidebarContent>

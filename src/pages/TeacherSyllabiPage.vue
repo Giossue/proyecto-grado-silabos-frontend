@@ -1,17 +1,14 @@
 <script setup lang="ts">
 import { SYLLABUS_STATE_OPTIONS } from '@/lib/syllabusStates';
-import { formatDateDisplay } from '@/lib/dateDisplay';
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { paths } from '@/lib/routes';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
-import MetricTiles from '@/components/domain/MetricTiles.vue';
 import { History, Inbox } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
@@ -23,27 +20,20 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 
 const router = useRouter();
 const result = ref<SyllabiResponse | null>(null);
-const summary = ref<Dashboard | null>(null);
 const query = ref('');
 const state = ref('all');
 const period = ref<string | null>(null);
 const error = ref<string | null>(null);
 
-const load = async (withSummary = false): Promise<void> => {
+const load = async (): Promise<void> => {
   error.value = null;
   try {
-    const [syllabi, dashboard] = await Promise.all([
-      getTeacherSyllabi({ q: query.value, state: state.value }),
-      withSummary ? getDashboard().catch(() => null) : summary.value,
-    ]);
-    result.value = syllabi;
-    summary.value = dashboard;
+    result.value = await getTeacherSyllabi({ q: query.value, state: state.value });
   } catch (reason) {
     if (reason instanceof ApiError && reason.status === 401) { await router.replace(paths.login); return; }
     error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar sus sílabos.';
   }
 };
-const formatSavedAt = (value: string | null): string => value ? formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin guardados';
 const periods = computed(() => [...new Set((result.value?.syllabi.data ?? []).map((syllabus) => syllabus.period))]);
 watch(periods, (value) => { if (value.length === 1) period.value = value[0]; });
 const clearFilters = (): void => {
@@ -52,14 +42,13 @@ const clearFilters = (): void => {
   void load();
 };
 const openSyllabus = (id: string): void => { void router.push(paths.teacher.syllabus(id)); };
-onMounted(() => { void load(true); });
+onMounted(() => { void load(); });
 </script>
 
 <template>
   <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide" :loading="!result">
     <template #actions><Button as-child variant="outline"><RouterLink :to="paths.teacher.history"><History data-icon="inline-start" aria-hidden="true" />Historial</RouterLink></Button></template>
-    <LoadErrorState v-if="error" :message="error" @retry="load(true)" />
-    <MetricTiles v-if="result && summary?.metrics.length" :metrics="summary.metrics" />
+    <LoadErrorState v-if="error" :message="error" @retry="load()" />
     <Card v-if="result" class="py-3">
       <CardContent class="px-3">
         <form @submit.prevent="load()">
@@ -70,7 +59,7 @@ onMounted(() => { void load(true); });
         </form>
       </CardContent>
     </Card>
-    <LoadingSkeleton v-if="!result && !error" variant="syllabus-cards" :rows="4" metrics />
+    <LoadingSkeleton v-if="!result && !error" variant="syllabus-cards" :rows="3" />
     <Card v-else-if="result && result.syllabi.data.length === 0">
       <Empty class="gap-3 border-0 p-6 md:p-10">
         <EmptyHeader class="gap-3">
@@ -79,7 +68,7 @@ onMounted(() => { void load(true); });
         </EmptyHeader>
       </Empty>
     </Card>
-    <ul v-else-if="result" class="grid gap-4 sm:grid-cols-2" aria-label="Mis sílabos">
+    <ul v-else-if="result" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Mis sílabos">
       <li v-for="syllabus in result.syllabi.data" :key="syllabus.id">
         <Card
           class="h-full cursor-pointer transition-colors hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-hidden"
@@ -95,7 +84,6 @@ onMounted(() => { void load(true); });
           </CardHeader>
           <CardContent class="flex flex-col gap-1 text-sm">
             <SyllabusStateBadge :state="syllabus.state" />
-            <span class="text-muted-foreground">{{ syllabus.guardado_en ? `Último guardado: ${formatSavedAt(syllabus.guardado_en)}` : 'Sin guardados' }}</span>
           </CardContent>
         </Card>
       </li>

@@ -110,7 +110,7 @@ const tableProps = computed(() => ({
                         <Skeleton class="hidden h-9 sm:block lg:w-48" />
                     </CardContent>
                 </Card>
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <Card v-for="card in Math.max(1, rows)" :key="card" class="min-w-0" data-skeleton="syllabus-card">
                         <CardHeader class="gap-2">
                             <Skeleton class="h-5 w-3/4" />
@@ -118,7 +118,6 @@ const tableProps = computed(() => ({
                         </CardHeader>
                         <CardContent class="flex flex-col gap-2">
                             <Skeleton class="h-5 w-24 rounded-full" />
-                            <Skeleton class="h-4 w-2/3" />
                         </CardContent>
                     </Card>
                 </div>

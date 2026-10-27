@@ -93,6 +93,7 @@ describe('AppSidebarLayout', () => {
     expect(wrapper.text()).toContain('Usuarios');
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
     expect(sidebar.text()).toContain('Panel');
+    expect(sidebar.get('[data-sidebar="header"] img').attributes('src')).toContain('logo-ueb-horizontal');
     expect(sidebar.get('a[href="/admin/panel"]').attributes('data-active')).toBe('true');
     expect(sidebar.get('a[href="/admin/panel"]').attributes('aria-current')).toBe('page');
     expect(sidebar.text()).not.toContain('Configuración');

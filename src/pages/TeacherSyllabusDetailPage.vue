@@ -3,7 +3,6 @@ import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
 import { ruleFailures } from '@/lib/blocks/rules';
 import { blockAttrs, blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
 import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
-import CommentEntry from '@/components/domain/CommentEntry.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -25,9 +24,9 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
+import ReviewCommentNotice from '@/components/domain/syllabus/ReviewCommentNotice.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -93,14 +92,14 @@ const editableFieldIds = computed(() => new Set(allFields.value.map((field) => f
 const isTeacherField = (field: SyllabusField): boolean => field.quien_llena !== 'institucional' && field.teacher_editable === true;
 const REVIEW_STAGE_TEXT: Record<string, string> = { coordinacion: 'Coordinación revisa y decide.', biblioteca: 'Coordinación aprobó; biblioteca revisa la bibliografía.' };
 const reviewStageLabel = computed(() => REVIEW_STAGE_TEXT[syllabus.value?.review_stage ?? ''] ?? '');
-const STAGE_NAME: Record<string, string> = { biblioteca: 'Biblioteca', coordinacion: 'Coordinación' };
-const stageName = (stage: string): string => STAGE_NAME[stage] ?? stage;
 const reviewComments = computed(() =>
   [...(syllabus.value?.review_comments ?? [])].sort(
     (left, right) => new Date(right.commented_at).getTime() - new Date(left.commented_at).getTime(),
   ),
 );
-const latestReviewComment = computed(() => reviewComments.value[0] ?? null);
+const submitDescription = computed(() => syllabus.value?.state === 'correccion_solicitada' && reviewComments.value[0]?.stage === 'biblioteca'
+  ? 'Va directo a biblioteca, que revisa la bibliografía. Mientras lo revisan, no podrá hacer cambios.'
+  : 'Coordinación revisa primero; después biblioteca aprueba la bibliografía y el sílabo queda aprobado. Mientras lo revisan, no podrá hacer cambios.');
 const canStart = computed(() =>
   syllabus.value?.state === "sin_iniciar" && editBlockReason.value === null,
 );
@@ -439,7 +438,7 @@ onBeforeUnmount(() => {
     <span class="flex-1" />
     <AppearanceToggle />
   </header>
-  <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="!syllabus" header-class="syllabus-editor-header">
+  <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="!syllabus" header-class="syllabus-editor-header" hide-icon>
     <template #actions>
       <Button v-if="syllabus && showEditor && previewing" type="button" variant="outline" @click="previewing = false"><Pencil aria-hidden="true" />Editar</Button>
       <Button v-else-if="syllabus && showEditor" type="button" variant="outline" @click="previewing = true"><FileText aria-hidden="true" />Vista previa</Button>
@@ -456,25 +455,13 @@ onBeforeUnmount(() => {
       <ProcessLockAlert v-if="editBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
       <template v-if="syllabus.state !== 'sin_iniciar' || pausedEdit">
-        <div class="mx-auto flex w-full max-w-screen-2xl min-w-0 flex-col gap-8">
+        <div class="mx-auto flex w-full max-w-screen-2xl min-w-0 flex-col gap-8" :class="{ 'pb-16': !pausedEdit }">
           <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
-          <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
           <ProcessLockAlert v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
           <DocumentSignatureCard v-if="syllabus.state === 'aprobado' && syllabus.approved_revision_id" :revision-id="syllabus.approved_revision_id" :file-name="`silabo-${syllabus.code}`" />
 
-          <Card v-if="latestReviewComment" class="library-comment-card">
-            <CardHeader><CardTitle>Comentario de {{ stageName(latestReviewComment.stage) }}</CardTitle><CardDescription>{{ syllabus.state === 'correccion_solicitada' ? (latestReviewComment.stage === 'biblioteca' ? 'Corrija lo indicado y reenvíe el sílabo; irá directo a biblioteca.' : 'Corrija lo indicado y reenvíe el sílabo; volverá a coordinación.') : 'Último comentario que recibió este sílabo en la revisión.' }}</CardDescription></CardHeader>
-            <CardContent class="flex flex-col gap-4">
-              <CommentEntry :revision="latestReviewComment.revision_number" :content="latestReviewComment.comment" :author="`${latestReviewComment.commented_by} · ${stageName(latestReviewComment.stage)}`" :date="latestReviewComment.commented_at" />
-              <section v-if="reviewComments.length > 1" class="flex flex-col gap-3 text-sm" aria-label="Comentarios anteriores de la revisión">
-                <h3 class="font-medium">Comentarios anteriores</h3>
-                <ol class="flex flex-col gap-3">
-                  <li v-for="(item, index) in reviewComments.slice(1)" :key="`${item.commented_at}-${index}`"><CommentEntry :revision="item.revision_number" :content="item.comment" :author="`${item.commented_by} · ${stageName(item.stage)}`" :date="item.commented_at" /></li>
-                </ol>
-              </section>
-            </CardContent>
-          </Card>
+          <ReviewCommentNotice v-if="reviewComments.length" :comments="reviewComments" :correction="syllabus.state === 'correccion_solicitada'" />
 
           <Tabs v-if="showEditor && !previewing && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
             <TabsList class="h-auto w-full flex-wrap justify-start" aria-label="Secciones del sílabo">
@@ -495,12 +482,12 @@ onBeforeUnmount(() => {
                   <FieldError :errors="visibleValidationMessages(field.id)" />
                 </template>
               </FieldGroup>
-              <footer v-if="previousSection || nextSection" class="flex items-center justify-between gap-2 border-t pt-4">
-                <Button v-if="previousSection" type="button" variant="outline" @click="goToSection(previousSection.id)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Anterior</Button>
-                <span v-else />
-                <Button v-if="nextSection" type="button" variant="outline" @click="goToSection(nextSection.id)">Siguiente<ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
-              </footer>
             </section>
+            <nav v-if="previousSection || nextSection" class="-mt-4 flex items-center justify-between gap-2" aria-label="Secciones anterior y siguiente">
+              <Button v-if="previousSection" type="button" variant="outline" @click="goToSection(previousSection.id)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Anterior</Button>
+              <span v-else />
+              <Button v-if="nextSection" type="button" variant="outline" @click="goToSection(nextSection.id)">Siguiente<ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
+            </nav>
           </template>
           <SyllabusDocumentPreview v-else :presentation="syllabus.presentation" :sections="syllabus.sections" />
 
@@ -525,7 +512,7 @@ onBeforeUnmount(() => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Enviar a revisión?</DialogTitle>
-          <DialogDescription>Coordinación revisa primero; después biblioteca aprueba la bibliografía y el sílabo queda aprobado. Mientras lo revisan, no podrá hacer cambios.</DialogDescription>
+          <DialogDescription>{{ submitDescription }}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>
