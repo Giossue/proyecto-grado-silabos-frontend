@@ -149,6 +149,7 @@ describe('AppSidebarLayout', () => {
 
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
     expect(sidebar.findAll('[data-sidebar="content"] a').map((link) => link.text())).toEqual(['Mis sílabos']);
+    expect(sidebar.get('[data-test="install-app"]').text()).toBe('Instalar aplicación');
     expect(sidebar.get('a[href="/docente/mis-silabos"]').text()).toContain('Mis sílabos');
     expect(sidebar.text()).not.toContain('Historial');
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Software');
