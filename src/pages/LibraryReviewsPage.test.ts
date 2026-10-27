@@ -11,6 +11,7 @@ vi.mock('vue-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
   useRoute: () => ({ query: { state: 'pendiente' }, fullPath: '/biblioteca/revisiones?state=pendiente' }),
   useRouter: () => ({ replace, push }),
+  RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
 }));
 vi.mock('@/api/dashboard', () => ({ getDashboard: vi.fn() }));
 vi.mock('@/api/library', async (importOriginal) => ({

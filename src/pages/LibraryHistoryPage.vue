@@ -1,0 +1,164 @@
+<script setup lang="ts">
+import StatusBadge from '@/components/domain/StatusBadge.vue';
+import { activateRow } from '@/lib/rowActivation';
+import { onMounted, reactive, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ApiError } from '@/api/client';
+import { getLibraryHistory, type LibraryHistoryPage } from '@/api/library';
+import FilterToolbar from '@/components/domain/FilterToolbar.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import PageFrame from '@/components/domain/PageFrame.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { Card, CardContent } from '@/components/ui/card';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { rememberLibraryFaculty, savedLibraryFaculty } from '@/lib/libraryFaculty';
+import { LIBRARY_STATE_LABELS, libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
+import { paths } from '@/lib/routes';
+
+const route = useRoute();
+const router = useRouter();
+const data = ref<LibraryHistoryPage | null>(null);
+const loading = ref(true);
+const error = ref<string | null>(null);
+const queryText = (value: unknown): string => typeof value === 'string' ? value : '';
+const filters = reactive({
+  q: queryText(route.query.q),
+  state: queryText(route.query.state) || 'all',
+  faculty: queryText(route.query.faculty) || savedLibraryFaculty() || 'all',
+  period: queryText(route.query.period) || 'all',
+  who: route.query.mine === '1' ? 'mine' : 'all',
+});
+const initialPage = Number(queryText(route.query.page)) || 1;
+const stateOptions = Object.entries(LIBRARY_STATE_LABELS).map(([value, label]) => ({ value, label }));
+
+const syncUrl = (page: number): void => {
+  const query: Record<string, string> = {};
+  if (filters.q) query.q = filters.q;
+  if (filters.state !== 'all') query.state = filters.state;
+  if (filters.faculty !== 'all') query.faculty = filters.faculty;
+  if (filters.period !== 'all') query.period = filters.period;
+  if (filters.who === 'mine') query.mine = '1';
+  if (page > 1) query.page = String(page);
+  void router.replace({ query });
+};
+
+const load = async (page = 1): Promise<void> => {
+  loading.value = true;
+  error.value = null;
+  try {
+    data.value = await getLibraryHistory({ q: filters.q, state: filters.state, faculty: filters.faculty, period: filters.period, mine: filters.who === 'mine', page });
+    rememberLibraryFaculty(filters.faculty);
+    syncUrl(page);
+  } catch (reason) {
+    if (reason instanceof ApiError && reason.status === 422 && (filters.faculty !== 'all' || filters.period !== 'all')) {
+      Object.assign(filters, { faculty: 'all', period: 'all' });
+      rememberLibraryFaculty(filters.faculty);
+      await load(page);
+      return;
+    }
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el historial de biblioteca.';
+  } finally {
+    loading.value = false;
+  }
+};
+
+const clearFilters = (): void => {
+  Object.assign(filters, { q: '', state: 'all', faculty: 'all', period: 'all', who: 'all' });
+  void load();
+};
+
+onMounted(() => { void load(initialPage); });
+</script>
+
+<template>
+  <PageFrame title="Historial" description="Sílabos de períodos terminados, en solo lectura." size="wide">
+    <LoadErrorState v-if="error" :message="error" @retry="load()" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="4" :actions="false" chip />
+    <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
+        <form @submit.prevent="load()">
+          <FilterToolbar @clear="clearFilters">
+            <template #search>
+              <Field>
+                <FieldLabel for="library-history-search" class="sr-only">Buscar por asignatura o código</FieldLabel>
+                <Input id="library-history-search" v-model="filters.q" type="search" placeholder="Buscar por asignatura o código" />
+              </Field>
+            </template>
+            <template #filters>
+              <Field>
+                <FieldLabel for="library-history-who" class="sr-only">Revisados por</FieldLabel>
+                <Select v-model="filters.who" name="who">
+                  <SelectTrigger id="library-history-who"><SelectValue placeholder="Toda la biblioteca" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="all">Toda la biblioteca</SelectItem>
+                      <SelectItem value="mine">Solo los míos</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel for="library-history-period" class="sr-only">Período</FieldLabel>
+                <Select v-model="filters.period" name="period">
+                  <SelectTrigger id="library-history-period"><SelectValue placeholder="Todos los períodos" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="all">Todos los períodos</SelectItem>
+                      <SelectItem v-for="period in data.periods" :key="period.id" :value="period.id">{{ period.code }}</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel for="library-history-faculty" class="sr-only">Facultad</FieldLabel>
+                <Select v-model="filters.faculty" name="faculty">
+                  <SelectTrigger id="library-history-faculty"><SelectValue placeholder="Todas las facultades" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="all">Todas las facultades</SelectItem>
+                      <SelectItem v-for="faculty in data.faculties ?? []" :key="faculty.id" :value="faculty.id">{{ faculty.name }}</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel for="library-history-state" class="sr-only">Estado</FieldLabel>
+                <Select v-model="filters.state" name="state">
+                  <SelectTrigger id="library-history-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="all">Todos los estados</SelectItem>
+                      <SelectItem v-for="option in stateOptions" :key="option.value" :value="option.value">{{ option.label }}</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
+            </template>
+          </FilterToolbar>
+        </form></CardContent></Card>
+        <Table label="Historial de biblioteca">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Período</TableHead>
+              <TableHead>Carrera</TableHead>
+              <TableHead>Docente</TableHead>
+              <TableHead class="text-center">Estado</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow v-for="item in data.reviews.data" :key="item.revision_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(paths.library.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(paths.library.review(item.revision_id))" @keydown.space.self.prevent="router.push(paths.library.review(item.revision_id))">
+              <TableCell>{{ item.period }}</TableCell>
+              <TableCell>{{ item.career }}</TableCell>
+              <TableCell>{{ item.teachers.join(', ') }}</TableCell>
+              <TableCell class="text-center"><StatusBadge :label="libraryStateLabel(item.state)" :tone="libraryStateTone(item.state)" /></TableCell>
+            </TableRow>
+            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="4">{{ filters.who === 'mine' ? 'No hay sílabos revisados por usted con estos filtros.' : 'No hay sílabos de períodos terminados con estos filtros.' }}</TableEmpty>
+          </TableBody>
+        </Table>
+        <TablePagination :meta="data.reviews" label="Paginación del historial de biblioteca" @update:page="load" />
+      </div>
+  </PageFrame>
+</template>

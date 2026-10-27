@@ -76,6 +76,7 @@ export const paths = {
     profile: '/biblioteca/configuracion/perfil',
     security: '/biblioteca/configuracion/seguridad',
     reviews: '/biblioteca/revisiones',
+    history: '/biblioteca/historial',
     review: (revision: string): string => `/biblioteca/revisiones/${segment(revision)}`,
   },
 } as const;
@@ -229,6 +230,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'library-profile', path: paths.library.profile, component: 'ProfilePage', shortcut: 'profile', ...librarian },
   { name: 'library-security', path: paths.library.security, component: 'SecurityPage', shortcut: 'security', ...librarian },
   { name: 'library-reviews', path: paths.library.reviews, component: 'LibraryReviewsPage', breadcrumb: 'Revisiones de biblioteca', ...librarian },
+  { name: 'library-history', path: paths.library.history, component: 'LibraryHistoryPage', breadcrumb: 'Historial', ...librarian },
   { name: 'library-review', path: '/biblioteca/revisiones/:revision', component: 'LibraryReviewDetailPage', breadcrumb: 'Revisión de bibliografía', ...librarian },
 
 

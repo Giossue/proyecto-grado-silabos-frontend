@@ -52,6 +52,19 @@ export const getLibraryReviews = (filters: { state?: string; q?: string; faculty
   return api<LibraryReviewsPage>(`/library/reviews${query.size ? `?${query}` : ''}`);
 };
 
+export type LibraryHistoryPage = LibraryReviewsPage & { periods: Array<{ id: string; code: string }> };
+
+export const getLibraryHistory = (filters: { state?: string; q?: string; faculty?: string; period?: string; mine?: boolean; page?: number } = {}) => {
+  const query = new URLSearchParams();
+  if (filters.state && filters.state !== 'all') query.set('state', filters.state);
+  if (filters.q) query.set('q', filters.q);
+  if (filters.faculty && filters.faculty !== 'all') query.set('faculty', filters.faculty);
+  if (filters.period && filters.period !== 'all') query.set('period', filters.period);
+  if (filters.mine) query.set('mine', '1');
+  if (filters.page && filters.page > 1) query.set('page', String(filters.page));
+  return api<LibraryHistoryPage>(`/library/history${query.size ? `?${query}` : ''}`);
+};
+
 export const getLibraryReview = (revisionId: string) =>
   api<{ review: LibraryReviewDetail }>(`/library/reviews/${revisionId}`);
 

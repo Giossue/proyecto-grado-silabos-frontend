@@ -2,7 +2,8 @@
 import StatusBadge from '@/components/domain/StatusBadge.vue';
 import { activateRow } from '@/lib/rowActivation';
 import { computed, onMounted, reactive, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { History } from '@lucide/vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getLibraryReviews, type LibraryReviewsPage } from '@/api/library';
@@ -13,6 +14,7 @@ import MetricTiles from '@/components/domain/MetricTiles.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -20,7 +22,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LIBRARY_STATE_LABELS, libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
-import { sessionState } from '@/state/session';
+import { rememberLibraryFaculty, savedLibraryFaculty } from '@/lib/libraryFaculty';
 
 const route = useRoute();
 const router = useRouter();
@@ -29,19 +31,11 @@ const summary = ref<Dashboard | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const queryText = (value: unknown): string => typeof value === 'string' ? value : '';
-const FACULTY_KEY = `silabos:biblioteca:facultad:${sessionState.current.value?.user.id ?? ''}`;
-const savedFaculty = (): string => { try { return localStorage.getItem(FACULTY_KEY) ?? ''; } catch { return ''; } };
 const filters = reactive({
   q: queryText(route.query.q),
   state: queryText(route.query.state) || 'all',
-  faculty: queryText(route.query.faculty) || savedFaculty() || 'all',
+  faculty: queryText(route.query.faculty) || savedLibraryFaculty() || 'all',
 });
-const rememberFaculty = (): void => {
-  try {
-    if (filters.faculty === 'all') localStorage.removeItem(FACULTY_KEY);
-    else localStorage.setItem(FACULTY_KEY, filters.faculty);
-  } catch { return; }
-};
 const initialPage = Number(queryText(route.query.page)) || 1;
 const stateOptions = Object.entries(LIBRARY_STATE_LABELS).map(([value, label]) => ({ value, label }));
 const periods = computed(() => [...new Set((data.value?.reviews.data ?? []).map((item) => item.period))]);
@@ -65,12 +59,12 @@ const load = async (page = 1, withSummary = false): Promise<void> => {
     ]);
     data.value = reviews;
     summary.value = dashboard;
-    rememberFaculty();
+    rememberLibraryFaculty(filters.faculty);
     syncUrl(page);
   } catch (reason) {
     if (reason instanceof ApiError && reason.status === 422 && filters.faculty !== 'all') {
       filters.faculty = 'all';
-      rememberFaculty();
+      rememberLibraryFaculty(filters.faculty);
       await load(page, withSummary);
       return;
     }
@@ -90,9 +84,10 @@ onMounted(() => { void load(initialPage, true); });
 
 <template>
   <PageFrame title="Revisiones de biblioteca" description="Bibliografía de los sílabos enviados." size="wide">
+    <template #actions><Button as-child variant="outline"><RouterLink :to="paths.library.history"><History data-icon="inline-start" aria-hidden="true" />Historial</RouterLink></Button></template>
     <template v-if="periods.length > 0" #meta><Badge v-for="period in periods" :key="period" variant="secondary">Período {{ period }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :actions="false" chip metrics />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="2" :actions="false" chip metrics />
     <MetricTiles v-if="data && summary?.metrics.length" :metrics="summary.metrics" />
     <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
         <form @submit.prevent="load()">

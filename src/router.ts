@@ -41,6 +41,7 @@ const CoordinationReviewComparisonPage = () => import("@/pages/CoordinationRevie
 const CoordinationAcademicStructurePage = () => import("@/pages/CoordinationAcademicStructurePage.vue");
 const DocumentsPage = () => import("@/pages/DocumentsPage.vue");
 const LibraryReviewsPage = () => import("@/pages/LibraryReviewsPage.vue");
+const LibraryHistoryPage = () => import("@/pages/LibraryHistoryPage.vue");
 const LibraryReviewDetailPage = () => import("@/pages/LibraryReviewDetailPage.vue");
 const NotFoundPage = () => import("@/pages/NotFoundPage.vue");
 
@@ -110,6 +111,7 @@ export const router = createRouter({
     { path: "/biblioteca/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Perfil" } },
     { path: "/biblioteca/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Seguridad" } },
     { path: "/biblioteca/revisiones", component: LibraryReviewsPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Revisiones de biblioteca" } },
+    { path: "/biblioteca/historial", component: LibraryHistoryPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Historial" } },
     { path: "/biblioteca/revisiones/:revision", component: LibraryReviewDetailPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Revisión de bibliografía" } },
 
 
