@@ -38,13 +38,15 @@ export type LibraryReviewDetail = LibraryReviewItem & {
 };
 
 export type LibraryReviewsPage = {
-  filters: { state: string | null; q: string | null };
+  filters: { state: string | null; q: string | null; faculty?: string | null };
+  faculties?: Array<{ id: string; name: string }>;
   reviews: PaginationMeta & { data: LibraryReviewItem[] };
 };
 
-export const getLibraryReviews = (filters: { state?: string; q?: string; page?: number } = {}) => {
+export const getLibraryReviews = (filters: { state?: string; q?: string; faculty?: string; page?: number } = {}) => {
   const query = new URLSearchParams();
   if (filters.state && filters.state !== 'all') query.set('state', filters.state);
+  if (filters.faculty && filters.faculty !== 'all') query.set('faculty', filters.faculty);
   if (filters.q) query.set('q', filters.q);
   if (filters.page && filters.page > 1) query.set('page', String(filters.page));
   return api<LibraryReviewsPage>(`/library/reviews${query.size ? `?${query}` : ''}`);

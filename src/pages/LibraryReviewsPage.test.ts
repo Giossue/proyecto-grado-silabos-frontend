@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/api/client';
 import { getDashboard } from '@/api/dashboard';
 import { getLibraryReviews, type LibraryReviewsPage } from '@/api/library';
 import LibraryReviewsPageView from '@/pages/LibraryReviewsPage.vue';
@@ -83,7 +84,7 @@ describe('LibraryReviewsPage', () => {
     const wrapper = mount(LibraryReviewsPageView, { attachTo: document.body });
     await flushPromises();
 
-    expect(getLibraryReviews).toHaveBeenCalledWith({ q: '', state: 'pendiente', page: 1 });
+    expect(getLibraryReviews).toHaveBeenCalledWith({ q: '', state: 'pendiente', faculty: 'all', page: 1 });
     expect(replace).toHaveBeenCalledWith({ query: { state: 'pendiente' } });
     const row = wrapper.findAll('tbody tr')[0]!;
     const headers = wrapper.findAll('thead th').map((header) => header.text());
@@ -95,6 +96,31 @@ describe('LibraryReviewsPage', () => {
     expect(wrapper.text()).toContain('Período ');
     expect(row.text()).not.toContain('N.º');
     expect(row.text()).toContain('Con comentario');
+    wrapper.unmount();
+  });
+
+  it('recuerda la facultad que cada bibliotecario eligió y la usa al volver', async () => {
+    vi.mocked(getLibraryReviews).mockResolvedValue({ ...page(), faculties: [{ id: 'f1', name: 'Ciencias Administrativas' }, { id: 'f2', name: 'Ciencias de la Salud' }] });
+    localStorage.setItem('silabos:biblioteca:facultad:', 'f2');
+    const wrapper = mount(LibraryReviewsPageView, { attachTo: document.body });
+    await flushPromises();
+
+    expect(getLibraryReviews).toHaveBeenCalledWith({ q: '', state: 'pendiente', faculty: 'f2', page: 1 });
+    expect(replace).toHaveBeenCalledWith({ query: { state: 'pendiente', faculty: 'f2' } });
+    expect(wrapper.text()).toContain('Ciencias de la Salud');
+    localStorage.clear();
+    wrapper.unmount();
+  });
+
+  it('si la facultad guardada ya no existe, vuelve a todas', async () => {
+    localStorage.setItem('silabos:biblioteca:facultad:', 'retirada');
+    vi.mocked(getLibraryReviews).mockRejectedValueOnce(new ApiError('La facultad seleccionada no es válida.', 422)).mockResolvedValue(page());
+    const wrapper = mount(LibraryReviewsPageView, { attachTo: document.body });
+    await flushPromises();
+
+    expect(getLibraryReviews).toHaveBeenLastCalledWith({ q: '', state: 'pendiente', faculty: 'all', page: 1 });
+    expect(localStorage.getItem('silabos:biblioteca:facultad:')).toBeNull();
+    expect(wrapper.text()).not.toContain('no es válida');
     wrapper.unmount();
   });
 });

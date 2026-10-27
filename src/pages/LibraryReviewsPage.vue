@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LIBRARY_STATE_LABELS, libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
+import { sessionState } from '@/state/session';
 
 const route = useRoute();
 const router = useRouter();
@@ -28,10 +29,19 @@ const summary = ref<Dashboard | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const queryText = (value: unknown): string => typeof value === 'string' ? value : '';
+const FACULTY_KEY = `silabos:biblioteca:facultad:${sessionState.current.value?.user.id ?? ''}`;
+const savedFaculty = (): string => { try { return localStorage.getItem(FACULTY_KEY) ?? ''; } catch { return ''; } };
 const filters = reactive({
   q: queryText(route.query.q),
   state: queryText(route.query.state) || 'all',
+  faculty: queryText(route.query.faculty) || savedFaculty() || 'all',
 });
+const rememberFaculty = (): void => {
+  try {
+    if (filters.faculty === 'all') localStorage.removeItem(FACULTY_KEY);
+    else localStorage.setItem(FACULTY_KEY, filters.faculty);
+  } catch { return; }
+};
 const initialPage = Number(queryText(route.query.page)) || 1;
 const stateOptions = Object.entries(LIBRARY_STATE_LABELS).map(([value, label]) => ({ value, label }));
 const periods = computed(() => [...new Set((data.value?.reviews.data ?? []).map((item) => item.period))]);
@@ -40,6 +50,7 @@ const syncUrl = (page: number): void => {
   const query: Record<string, string> = {};
   if (filters.q) query.q = filters.q;
   if (filters.state !== 'all') query.state = filters.state;
+  if (filters.faculty !== 'all') query.faculty = filters.faculty;
   if (page > 1) query.page = String(page);
   void router.replace({ query });
 };
@@ -49,13 +60,20 @@ const load = async (page = 1, withSummary = false): Promise<void> => {
   error.value = null;
   try {
     const [reviews, dashboard] = await Promise.all([
-      getLibraryReviews({ q: filters.q, state: filters.state, page }),
+      getLibraryReviews({ q: filters.q, state: filters.state, faculty: filters.faculty, page }),
       withSummary ? getDashboard().catch(() => null) : summary.value,
     ]);
     data.value = reviews;
     summary.value = dashboard;
+    rememberFaculty();
     syncUrl(page);
   } catch (reason) {
+    if (reason instanceof ApiError && reason.status === 422 && filters.faculty !== 'all') {
+      filters.faculty = 'all';
+      rememberFaculty();
+      await load(page, withSummary);
+      return;
+    }
     error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las revisiones de biblioteca.';
   } finally {
     loading.value = false;
@@ -63,7 +81,7 @@ const load = async (page = 1, withSummary = false): Promise<void> => {
 };
 
 const clearFilters = (): void => {
-  Object.assign(filters, { q: '', state: 'all' });
+  Object.assign(filters, { q: '', state: 'all', faculty: 'all' });
   void load();
 };
 
@@ -86,6 +104,18 @@ onMounted(() => { void load(initialPage, true); });
               </Field>
             </template>
             <template #filters>
+              <Field>
+                <FieldLabel for="library-faculty" class="sr-only">Facultad</FieldLabel>
+                <Select v-model="filters.faculty" name="faculty">
+                  <SelectTrigger id="library-faculty"><SelectValue placeholder="Todas las facultades" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="all">Todas las facultades</SelectItem>
+                      <SelectItem v-for="faculty in data.faculties ?? []" :key="faculty.id" :value="faculty.id">{{ faculty.name }}</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </Field>
               <Field>
                 <FieldLabel for="library-state" class="sr-only">Estado</FieldLabel>
                 <Select v-model="filters.state" name="state">
