@@ -7,7 +7,7 @@ export type SlotMeta = { path: Path; schema: ValueSchema | null; option?: string
 export type RowMeta = { listPath: Path; index: number; schema: ListSchema; placeholder?: boolean };
 export type ResolvedNode = DocumentNode & { slot?: SlotMeta; row?: RowMeta; content?: ResolvedNode[] };
 
-type Repeat = { value?: string; prop?: string; as?: string; at_least?: number };
+type Repeat = { value?: string; as?: string; at_least?: number };
 type Attrs = Record<string, unknown> & { repeat?: Repeat; when?: Condition; band?: string };
 const DIRECTIVES = ['repeat', 'when', 'band'];
 
@@ -17,10 +17,6 @@ export const schemaAt = (schema: ValueSchema | ObjectSchema | null, path: string
         if (current === null) return null;
         if (segment === '*') {
             current = current.type === 'list' ? current.item : null;
-            continue;
-        }
-        if (current.type === 'row') {
-            current = current.cell;
             continue;
         }
         current = current.type === 'object' ? current.fields[segment] ?? null : null;
@@ -87,7 +83,7 @@ const nodes = (sources: DocumentNode[], scope: Scope, schema: ValueSchema | null
             out.push(...node(source, scope, schema, id, padding));
             return;
         }
-        const raw = repeat.value !== undefined ? scope.value(repeat.value) : scope.prop(repeat.prop ?? '');
+        const raw = repeat.value !== undefined ? scope.value(repeat.value) : [];
         const items: unknown[] = Array.isArray(raw) ? [...raw] : [];
         const real = items.length;
         while (items.length < (repeat.at_least ?? 0)) items.push({});

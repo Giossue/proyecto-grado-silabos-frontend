@@ -2,17 +2,15 @@ import { Plus, Trash2 } from '@lucide/vue';
 import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vue';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
 import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
+import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { holds } from '@/lib/blocks/condition';
 import { ruleFailures, ruleResults } from '@/lib/blocks/rules';
 import { blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
 import { Scope, type Path } from '@/lib/blocks/scope';
-import type { ChoiceSchema, ListSchema, NumberSchema, RowSchema, TextSchema, ValueSchema } from '@/lib/blocks/types';
+import type { ChoiceSchema, ListSchema, NumberSchema, TextSchema, ValueSchema } from '@/lib/blocks/types';
 import { emptyValue, getAt, setAt, settle } from '@/lib/blocks/values';
-
-type Column = { key: string; label: string };
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
 const capitalize = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
@@ -50,8 +48,7 @@ export default defineComponent({
         const control = (schema: TextSchema | NumberSchema | ChoiceSchema, path: Path, label: string): VNodeChild => {
             const id = fieldId(path);
             const current = getAt(props.value, path);
-            const fromProfile = schema.type === 'text' && schema.from !== undefined;
-            const disabled = props.disabled || fromProfile;
+            const disabled = props.disabled;
             const text = typeof current === 'string' || typeof current === 'number' ? String(current) : '';
             let input: VNodeChild;
             if (schema.type === 'choice') {
@@ -78,7 +75,6 @@ export default defineComponent({
             return h(Field, { key: id }, () => [
                 h(FieldLabel, { for: schema.type === 'choice' ? undefined : id }, () => label),
                 input,
-                fromProfile ? h(FieldDescription, {}, () => 'Lo define Coordinación en la ficha.') : null,
             ]);
         };
 
@@ -101,11 +97,6 @@ export default defineComponent({
             }
             flush();
             return nodes;
-        };
-
-        const row = (schema: RowSchema, path: Path): VNodeChild[] => {
-            const columns = props.props[schema.columns];
-            return (Array.isArray(columns) ? columns as Column[] : []).map((column) => control(schema.cell, [...path, column.key], column.label));
         };
 
         const offset = (path: Path): number => {
@@ -139,9 +130,7 @@ export default defineComponent({
                     const title = `${capitalize(name)} ${first + index + 1}`;
                     const content = schema.item.type === 'object'
                         ? fields(Object.entries(schema.item.fields), itemPath, depth + 1)
-                        : schema.item.type === 'row'
-                            ? [h('div', { class: 'grid gap-4 sm:grid-cols-2' }, row(schema.item, itemPath))]
-                            : [node(schema.item, itemPath, title, depth + 1)];
+                        : [node(schema.item, itemPath, title, depth + 1)];
                     return h('section', { key: index, class: container, 'aria-label': title }, [
                         h('div', { class: 'flex items-center justify-between gap-2' }, [
                             h('h3', { class: depth === 0 ? 'font-semibold' : 'text-sm font-medium' }, title),
@@ -164,7 +153,6 @@ export default defineComponent({
         function node(schema: ValueSchema, path: Path, label: string, depth: number): VNodeChild {
             if (schema.type === 'object') return h('div', { class: 'flex flex-col gap-4' }, fields(Object.entries(schema.fields), path, depth));
             if (schema.type === 'list') return list(schema, path, depth);
-            if (schema.type === 'row') return h('div', { class: 'grid gap-4 sm:grid-cols-2' }, row(schema, path));
             return control(schema, path, label);
         }
 

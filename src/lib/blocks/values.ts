@@ -1,13 +1,8 @@
 import { holds } from '@/lib/blocks/condition';
-import { read, Scope, type Path } from '@/lib/blocks/scope';
+import { Scope, type Path } from '@/lib/blocks/scope';
 import type { ValueSchema } from '@/lib/blocks/types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
-
-export const columnKeys = (path: string, props: Record<string, unknown>): string[] => {
-    const columns = read(props, path);
-    return Array.isArray(columns) ? columns.map((column) => (isRecord(column) ? column.key : null)).filter((key): key is string => typeof key === 'string') : [];
-};
 
 export const emptyValue = (schema: ValueSchema, props: Record<string, unknown>): unknown => {
     switch (schema.type) {
@@ -20,8 +15,6 @@ export const emptyValue = (schema: ValueSchema, props: Record<string, unknown>):
             return Object.fromEntries(Object.entries(schema.fields).map(([key, field]) => [key, emptyValue(field, props)]));
         case 'list':
             return [];
-        case 'row':
-            return Object.fromEntries(columnKeys(schema.columns, props).map((key) => [key, emptyValue(schema.cell, props)]));
     }
 };
 

@@ -41,7 +41,5 @@ describe('intérprete de bloques', () => {
     it('borra lo que deja de aplicar como lo hace el backend', () => {
         const identification = official.blocks.identificacion!;
         expect(settle(identification.value, { disability: { answer: 'no', type: 'Visual', description: 'x' } }, {})).toEqual({ disability: { answer: 'no', type: '', description: '' } });
-        const question = official.blocks.si_no!;
-        expect(settle(question.value, { answer: 'no', rows: [{ autor: 'Ana' }] }, { columns: [{ key: 'autor', label: 'Autor' }] })).toEqual({ answer: 'no', rows: [] });
     });
 });

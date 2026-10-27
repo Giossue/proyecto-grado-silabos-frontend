@@ -9,7 +9,6 @@ import definition from '@/test/fixtures/template-definition.json';
 
 const official = definition as unknown as TemplateDefinitionPayload;
 const block = (kind: string, value: Record<string, unknown> = {}, props: Record<string, unknown> = {}): DocumentNode => ({ type: 'doc', content: [{ type: 'documentBlock', attrs: { kind, props, value } }] });
-const question = (value: Record<string, unknown> = { answer: null, rows: [] }): DocumentNode => block('si_no', value, { question: '¿Hay estudiantes con discapacidad?', columns: [{ key: 'tipo', label: 'Tipo' }, { key: 'detalle', label: 'Breve descripción' }] });
 const wrappers: Array<ReturnType<typeof mount>> = [];
 const mountEditor = (modelValue: DocumentNode, blocks: 'configure' | 'fill' = 'fill') => {
     const wrapper = mount(FreeTextEditor, { props: { id: 'campo', label: 'Campo', modelValue, blocks }, attachTo: document.body });
@@ -19,7 +18,6 @@ const mountEditor = (modelValue: DocumentNode, blocks: 'configure' | 'fill' = 'f
 const last = (wrapper: ReturnType<typeof mountEditor>): DocumentNode => wrapper.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
 const attrsOf = <T,>(document: DocumentNode): T => nodesOfType(document, 'documentBlock')[0]!.attrs as T;
 const byLabel = <T extends Element = HTMLInputElement>(label: string): T => document.body.querySelector<T>(`[aria-label="${label}"]`)!;
-const button = (text: string): HTMLButtonElement => [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.includes(text))!;
 const type = async (label: string, text: string): Promise<void> => {
     const input = byLabel(label);
     input.value = text;
@@ -30,59 +28,6 @@ const type = async (label: string, text: string): Promise<void> => {
 describe('bloques definidos en la plantilla', () => {
     beforeEach(() => setTemplateRuntime(official, { nombre_facultad: 'Ciencias', formacion_docente: 'Formación escrita en el perfil', horas_docencia: '32', horas_practicas: '0', horas_autonomas: '32' }));
     afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
-
-    describe('pregunta Sí/No', () => {
-        type Attrs = { props: { question: string; columns: Array<{ label: string }> }; value: { answer: string | null; rows: Array<Record<string, string>> } };
-
-        it('el docente responde Sí, agrega una fila y la escribe', async () => {
-            const wrapper = mountEditor(question());
-            await flushPromises();
-            expect(document.body.textContent).toContain('¿Hay estudiantes con discapacidad?');
-            expect(document.body.querySelector('table')).toBeNull();
-
-            document.body.querySelector<HTMLElement>('[role="radio"][value="si"]')!.click();
-            await flushPromises();
-            expect(attrsOf<Attrs>(last(wrapper)).value.answer).toBe('si');
-
-            button('Agregar fila').click();
-            await flushPromises();
-            await type('Tipo, fila 1', 'Visual');
-            expect(attrsOf<Attrs>(last(wrapper)).value.rows).toEqual([{ tipo: 'Visual', detalle: '' }]);
-        });
-
-        it('al responder No se descartan las filas', async () => {
-            const wrapper = mountEditor(question({ answer: 'si', rows: [{ tipo: 'Visual', detalle: 'x' }] }));
-            await flushPromises();
-            document.body.querySelector<HTMLElement>('[role="radio"][value="no"]')!.click();
-            await flushPromises();
-            expect(attrsOf<Attrs>(last(wrapper)).value).toEqual({ answer: 'no', rows: [] });
-        });
-
-        it('el administrador cambia la pregunta y las columnas, pero no responde', async () => {
-            const wrapper = mountEditor(question(), 'configure');
-            await flushPromises();
-            expect(document.body.querySelector('[role="radio"]')).toBeNull();
-            await type('Pregunta', 'Otra pregunta');
-            expect(attrsOf<Attrs>(last(wrapper)).props.question).toBe('Otra pregunta');
-
-            button('Agregar columna').click();
-            await flushPromises();
-            expect(attrsOf<Attrs>(last(wrapper)).props.columns).toHaveLength(3);
-        });
-
-        it('en modo vista se ve la pregunta, la respuesta y la tabla', () => {
-            const wrapper = mount(FreeTextContent, { props: { value: question({ answer: 'si', rows: [{ tipo: 'Visual', detalle: 'Baja visión' }] }) } });
-            expect(wrapper.text()).toContain('¿Hay estudiantes con discapacidad? Sí');
-            expect(wrapper.findAll('th').map((cell) => cell.text())).toEqual(['Tipo', 'Breve descripción']);
-            expect(wrapper.find('td').text()).toBe('Visual');
-        });
-
-        it('una pregunta sin responder muestra la pregunta y no cuenta como contenido', () => {
-            const wrapper = mount(FreeTextContent, { props: { value: question() } });
-            expect(wrapper.text()).toContain('¿Hay estudiantes con discapacidad?');
-            expect(wrapper.text()).not.toContain('Sin contenido');
-        });
-    });
 
     describe('identificación', () => {
         type Disability = { answer: string | null; type: string; description: string };

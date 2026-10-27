@@ -5,8 +5,6 @@ const isEmpty = (value: unknown): boolean =>
     value === null || value === undefined || (typeof value === 'string' && value.trim() === '') || (Array.isArray(value) && value.length === 0);
 
 export const holds = (condition: Condition, scope: Scope): boolean => {
-    if ('all' in condition) return condition.all.every((child) => holds(child, scope));
-    if ('any' in condition) return condition.any.some((child) => holds(child, scope));
     if ('not' in condition) return !holds(condition.not, scope);
     const value = condition.value !== undefined
         ? scope.value(condition.value)

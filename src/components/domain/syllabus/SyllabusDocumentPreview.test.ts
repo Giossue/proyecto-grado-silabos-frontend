@@ -3,8 +3,6 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { DocumentPresentation, SyllabusDetail } from '@/api/syllabi';
 import type { TemplateAppearance } from '@/api/template';
 import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
-import { setTemplateRuntime } from '@/lib/blocks/runtime';
-import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
 
 const paragraph = (text: string) => ({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] });
 const appearance = { margin_cm: 2.5, title_font_size: 16, section_font_size: 12, body_font_size: 10 } as unknown as TemplateAppearance;
@@ -39,18 +37,5 @@ describe('SyllabusDocumentPreview', () => {
     expect(wrapper.findAll('img')).toHaveLength(2);
 
     wrapper.unmount();
-  });
-
-  it('no imprime solo el campo de Carrera que alimenta las tablas de un bloque', async () => {
-    const units = { label: 'Unidades', props: {}, rules: [], layout: [], value: { units: { type: 'list', min: 1, max: 1, initial: 1, item: { type: 'object', fields: { nombre: { type: 'text', max: 100, multiline: false, from: { field: 'perfil', column: 2 } } } } } } };
-    setTemplateRuntime({ blocks: { unidades: units } } as unknown as TemplateDefinitionPayload, {});
-    const wrapper = mount(SyllabusDocumentPreview, { props: { presentation, sections }, attachTo: document.body });
-    await flushPromises();
-
-    expect(wrapper.text()).toContain('Texto del docente');
-    expect(wrapper.text()).not.toContain('Dato de la carrera');
-
-    wrapper.unmount();
-    setTemplateRuntime({ blocks: {} } as unknown as TemplateDefinitionPayload, {});
   });
 });

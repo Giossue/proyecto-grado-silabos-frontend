@@ -1,6 +1,6 @@
 import { shallowRef } from 'vue';
 import type { DocumentNode } from '@/lib/templateDocument';
-import type { BlockAttrs, BlockDefinition, TemplateDefinitionPayload, ValueSchema } from '@/lib/blocks/types';
+import type { BlockAttrs, BlockDefinition, TemplateDefinitionPayload } from '@/lib/blocks/types';
 import { filledText, resolveBlock, toDocument } from '@/lib/blocks/walk';
 
 type Runtime = { definition: TemplateDefinitionPayload | null; variables: Record<string, string> };
@@ -12,18 +12,6 @@ export const setTemplateRuntime = (definition: TemplateDefinitionPayload | null 
 };
 
 export const templateRuntime = (): Runtime => state.value;
-
-// Campos de Carrera que alimentan datos `from` de los bloques: no se imprimen solos.
-export const sourceFieldKeys = (blocks: Record<string, BlockDefinition> = state.value.definition?.blocks ?? {}): Set<string> => {
-    const keys = new Set<string>();
-    const visit = (schema: ValueSchema): void => {
-        if (schema.type === 'text' && schema.from) keys.add(schema.from.field);
-        if (schema.type === 'object') Object.values(schema.fields).forEach(visit);
-        if (schema.type === 'list') visit(schema.item);
-    };
-    Object.values(blocks).forEach((block) => Object.values(block.value).forEach(visit));
-    return keys;
-};
 
 export const blockDefinition = (kind: unknown): BlockDefinition | null =>
     typeof kind === 'string' ? state.value.definition?.blocks[kind] ?? null : null;

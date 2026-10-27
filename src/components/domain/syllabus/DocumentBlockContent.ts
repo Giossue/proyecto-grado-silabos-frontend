@@ -1,8 +1,7 @@
-import { Minus, Plus, X } from '@lucide/vue';
+import { Minus, Plus } from '@lucide/vue';
 import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vue';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
 import { renderFreeText, type RenderOptions } from '@/components/domain/syllabus/freeTextRender';
-import { uniqueKey } from '@/components/domain/configuration/templateStructure';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -16,11 +15,9 @@ import { emptyValue, getAt, setAt, settle } from '@/lib/blocks/values';
 import { resolveBlock, toDocument, type ResolvedNode } from '@/lib/blocks/walk';
 import type { DocumentNode } from '@/lib/templateDocument';
 
-// source: la ficha de Carrera llena solo los datos `from`; el resto se ve como en la plantilla.
-type Mode = 'read' | 'fill' | 'configure' | 'source';
-type Column = { key: string; label: string };
+type Mode = 'read' | 'fill' | 'configure';
 
-const describe = (definition: BlockDefinition, path: Path, props: Record<string, unknown>): { label: string; where: string } => {
+const describe = (definition: BlockDefinition, path: Path): { label: string; where: string } => {
     const parts: string[] = [];
     let label = '';
     let schema: ValueSchema | undefined = { type: 'object', fields: definition.value };
@@ -31,13 +28,6 @@ const describe = (definition: BlockDefinition, path: Path, props: Record<string,
                 parts.push(`${schema.label ?? 'fila'} ${segment + 1}`);
                 schema = schema.item;
             }
-            continue;
-        }
-        if (schema.type === 'row') {
-            const columns = props[schema.columns];
-            const column = Array.isArray(columns) ? (columns as Column[]).find((item) => item.key === segment) : undefined;
-            label = column?.label ?? segment;
-            schema = schema.cell;
             continue;
         }
         schema = schema.type === 'object' ? schema.fields[segment] : undefined;
@@ -73,13 +63,9 @@ export default defineComponent({
             const slot = node.slot!;
             const schema = slot.schema;
             const current = getAt(props.value, slot.path);
-            const described = definition.value ? describe(definition.value, slot.path, props.props) : { label: '', where: '' };
+            const described = definition.value ? describe(definition.value, slot.path) : { label: '', where: '' };
             const label = [described.label || 'Dato', described.where].filter(Boolean).join(', ');
-            const fromProfile = schema?.type === 'text' && schema.from !== undefined;
-            if (props.mode === 'source' && !fromProfile) {
-                return typeof current === 'string' || typeof current === 'number' ? String(current) : '';
-            }
-            const disabled = props.mode === 'source' ? false : fromProfile || !parentAllows(slot.path, schema);
+            const disabled = !parentAllows(slot.path, schema);
             if (schema?.type === 'choice' && slot.option !== undefined) {
                 return h(Checkbox, {
                     modelValue: current === slot.option,
@@ -116,7 +102,6 @@ export default defineComponent({
                 maxlength: max,
                 class: schema?.type === 'text' && schema.multiline ? 'min-h-14 w-full min-w-0 px-2 py-1' : 'h-7 w-full min-w-0 px-2 py-0',
                 'aria-label': label,
-                ...(fromProfile && props.mode !== 'source' ? { title: 'Lo define Coordinación en la ficha de la asignatura.' } : {}),
                 'onUpdate:modelValue': (value: string | number) => write(slot.path, String(value)),
             });
         };
@@ -145,7 +130,7 @@ export default defineComponent({
             const extra = (row: ResolvedNode): VNodeChild => {
                 if (!row.row || !resizable(row.row.schema) || row.row.index < 0) return h('td', { class: 'w-10 border-0' });
                 const { listPath, index, schema } = row.row;
-                const where = definition.value ? describe(definition.value, [...listPath, index], props.props).where : '';
+                const where = definition.value ? describe(definition.value, [...listPath, index]).where : '';
                 return h('td', { class: 'w-10 border-0 align-middle' }, h(Button, {
                     type: 'button', variant: 'ghost', size: 'icon-sm', disabled: listOf(listPath).length <= schema.min,
                     'aria-label': `Quitar ${where}`,
@@ -161,7 +146,7 @@ export default defineComponent({
                 ...(lists.size > 0 ? [extra(row)] : []),
             ])))]);
             const buttons = [...lists.values()].map(({ path, schema }) => {
-                const where = definition.value ? describe(definition.value, path, props.props).where : '';
+                const where = definition.value ? describe(definition.value, path).where : '';
                 return h(Button, {
                     type: 'button', variant: 'outline', size: 'sm', class: 'w-fit', disabled: !canAdd(path, schema),
                     'aria-label': `Agregar ${schema.label ?? 'fila'}${where ? ` (${where})` : ''}`,
@@ -191,26 +176,10 @@ export default defineComponent({
             ]);
         };
 
-        const columnsEditor = (key: string, label: string, columns: Column[], min: number, max: number): VNodeChild => {
-            const set = (next: Column[]): void => emit('update:props', { ...props.props, [key]: next });
-            return h('div', { class: 'flex flex-col gap-1' }, [
-                h('span', { class: 'text-xs font-medium text-muted-foreground' }, label),
-                ...columns.map((column, index) => h('div', { key: column.key, class: 'flex items-center gap-1' }, [
-                    h(Input, { modelValue: column.label, maxlength: 120, 'aria-label': `Nombre de la columna ${index + 1}`, 'onUpdate:modelValue': (text: string | number) => set(columns.map((item, position) => (position === index ? { ...item, label: String(text) } : item))) }),
-                    h(Button, { type: 'button', variant: 'ghost', size: 'icon-sm', disabled: columns.length <= min, 'aria-label': `Quitar la columna ${column.label}`, onClick: () => set(columns.filter((_, position) => position !== index)) }, () => h(X, { 'aria-hidden': 'true' })),
-                ])),
-                h(Button, { type: 'button', variant: 'outline', size: 'sm', class: 'w-fit', disabled: columns.length >= max, onClick: () => set([...columns, { key: uniqueKey('', 'columna', columns.map((column) => column.key)), label: `Columna ${columns.length + 1}` }]) }, () => [h(Plus, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), 'Agregar columna']),
-            ]);
-        };
-
         const configure = (block: BlockDefinition): VNodeChild => h('div', { class: 'flex flex-col gap-2 rounded-md border p-2' }, [
             h('span', { class: 'text-xs font-medium text-muted-foreground' }, block.label),
             ...Object.entries(block.props).map(([key, schema]) => {
                 const label = schema.label ?? key;
-                if (schema.type === 'columns') {
-                    const columns = Array.isArray(props.props[key]) ? (props.props[key] as Column[]) : [];
-                    return columnsEditor(key, label, columns, schema.min, schema.max);
-                }
                 return h(Input, { modelValue: typeof props.props[key] === 'string' ? props.props[key] as string : '', maxlength: schema.max, placeholder: label, 'aria-label': label, 'onUpdate:modelValue': (text: string | number) => emit('update:props', { ...props.props, [key]: String(text) }) });
             }),
         ]);
@@ -220,7 +189,6 @@ export default defineComponent({
             if (!block) return h('p', { class: 'text-muted-foreground' }, 'Bloque sin definición en la plantilla');
             if (props.mode === 'configure' && Object.keys(block.props).length > 0) return configure(block);
             const resolved = resolveBlock(block, props.props, props.value, variables.value);
-            if (props.mode === 'source') return h('div', { class: 'document-block flex flex-col gap-2' }, resolved.map((child) => renderFreeText(child as DocumentNode, { ...fillOptions, variable: (id) => variables.value[id] ?? '' })));
             if (props.mode !== 'fill') return h('div', { class: 'document-block' }, toDocument(resolved).map((child) => renderFreeText(child, { variable: (id) => variables.value[id] ?? '' })));
             return h('div', { class: 'document-block flex flex-col gap-2' }, [summary(), ...resolved.map((child) => renderFreeText(child as DocumentNode, { ...fillOptions, variable: (id) => variables.value[id] ?? '' }))]);
         };

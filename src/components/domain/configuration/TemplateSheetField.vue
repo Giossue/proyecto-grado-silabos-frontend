@@ -4,7 +4,6 @@ import { computed, nextTick, onMounted, ref, shallowRef, watch } from 'vue';
 import type { TemplateField } from '@/api/template';
 import TemplateInlineText from '@/components/domain/configuration/TemplateInlineText.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
-import { sourceFieldKeys } from '@/lib/blocks/runtime';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const props = defineProps<{
@@ -34,7 +33,6 @@ const leaveLabel = (): void => {
     emit('named');
 };
 const name = (): string => field.value.label.trim() || 'Campo sin nombre';
-const isSource = computed(() => sourceFieldKeys().has(field.value.key));
 const select = (): void => emit('select', editor.value?.editor ?? null);
 </script>
 
@@ -52,7 +50,6 @@ const select = (): void => emit('select', editor.value?.editor ?? null);
         @blur="leaveLabel"
       />
     </div>
-    <p v-if="isSource" data-field-source class="text-xs text-muted-foreground">Dato de la ficha: se muestra dentro de las tablas de otro campo y no se imprime aquí.</p>
     <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :blocks="field.quien_llena === 'institucional' ? 'fill' : 'configure'" :disabled="locked || block" :toolbar="false" align bare /></div>
   </div>
 </template>

@@ -50,7 +50,7 @@ export const DocumentBlock = Node.create<{ mode: 'configure' | 'fill' }>({
     draggable: false,
     addOptions: () => ({ mode: 'fill' }),
     addAttributes: () => ({
-        kind: { default: 'si_no' },
+        kind: { default: '' },
         props: { default: () => ({}) },
         value: { default: () => ({}) },
     }),
