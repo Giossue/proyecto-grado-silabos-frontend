@@ -109,6 +109,41 @@ describe('LibraryReviewDetailPage', () => {
     wrapper.unmount();
   });
 
+  it('con «Otro motivo» pide escribirlo y lo envía junto a los motivos marcados', async () => {
+    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail({
+      comment_reasons: [
+        { code: 'libro_no_disponible', label: 'El libro no está disponible en biblioteca' },
+        { code: 'otro', label: 'Otro motivo' },
+      ],
+    }) });
+    vi.mocked(commentLibraryReview).mockResolvedValue({ message: 'Comentario enviado al docente.' });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const boxes = wrapper.findAll('#library-comment-form [role="checkbox"]');
+    await boxes[0]!.trigger('click');
+    await boxes[1]!.trigger('click');
+    const textarea = wrapper.get('#library-other-reason');
+    await wrapper.get('#library-comment-form').trigger('submit');
+    await flushPromises();
+    expect(wrapper.text()).toContain('Escriba el otro motivo con al menos 5 caracteres.');
+    expect(document.body.textContent).not.toContain('¿Devolver el sílabo al docente?');
+
+    await textarea.setValue('Falta la 3.ª edición de Pressman.');
+    await wrapper.get('#library-comment-form').trigger('submit');
+    await flushPromises();
+    const confirm = [...document.body.querySelectorAll('[role="dialog"] button')]
+      .find((item) => item.textContent?.includes('Devolver al docente')) as HTMLButtonElement;
+    confirm.click();
+    await flushPromises();
+
+    expect(commentLibraryReview).toHaveBeenCalledWith('revision-2', {
+      reasons: ['libro_no_disponible', 'otro'],
+      other: 'Falta la 3.ª edición de Pressman.',
+    });
+    wrapper.unmount();
+  });
+
   it('pide confirmación antes de devolver el sílabo con los motivos marcados', async () => {
     vi.mocked(getLibraryReview)
       .mockResolvedValueOnce({ review: detail() })

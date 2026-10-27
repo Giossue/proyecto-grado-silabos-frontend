@@ -22,6 +22,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
 import { libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
@@ -32,6 +33,10 @@ const loading = ref(true);
 const loadError = ref('');
 const selectedReasons = ref<string[]>([]);
 const commentErrors = ref<string[]>([]);
+const otherReason = ref('');
+const otherErrors = ref<string[]>([]);
+const OTHER_REASON = 'otro';
+const otherSelected = computed(() => selectedReasons.value.includes(OTHER_REASON));
 const actionError = ref('');
 const confirmOpen = ref(false);
 const sending = ref(false);
@@ -63,9 +68,14 @@ const load = async (): Promise<void> => {
 
 const askConfirmation = (): void => {
   commentErrors.value = [];
+  otherErrors.value = [];
   actionError.value = '';
   if (selectedReasons.value.length === 0) {
     commentErrors.value = ['Elija al menos un motivo.'];
+    return;
+  }
+  if (otherSelected.value && otherReason.value.trim().length < 5) {
+    otherErrors.value = ['Escriba el otro motivo con al menos 5 caracteres.'];
     return;
   }
   confirmOpen.value = true;
@@ -78,14 +88,17 @@ const sendComment = async (): Promise<void> => {
   try {
     const result = await commentLibraryReview(review.value.revision_id, {
       reasons: selectedReasons.value,
+      ...(otherSelected.value ? { other: otherReason.value.trim() } : {}),
     });
     confirmOpen.value = false;
     selectedReasons.value = [];
+    otherReason.value = '';
     toast.success(result.message);
     await load();
   } catch (failure) {
     if (failure instanceof ApiError) {
       commentErrors.value = failure.errors.reasons ?? failure.errors['reasons.0'] ?? [];
+      otherErrors.value = failure.errors.other ?? [];
       actionError.value = failure.message;
     } else {
       actionError.value = 'No se pudo enviar el comentario.';
@@ -176,6 +189,12 @@ onMounted(load);
                 </div>
                 <FieldDescription>El docente verá los motivos marcados en su sílabo.</FieldDescription>
                 <FieldError :errors="commentErrors" />
+              </Field>
+              <Field v-if="otherSelected" :data-invalid="otherErrors.length > 0">
+                <FieldLabel for="library-other-reason" required>Otro motivo</FieldLabel>
+                <Textarea id="library-other-reason" v-model="otherReason" rows="3" maxlength="1000" />
+                <FieldDescription>Se envía junto a los motivos marcados.</FieldDescription>
+                <FieldError :errors="otherErrors" />
               </Field>
               <Button type="submit" variant="destructive" :disabled="sending"><MessageSquareText data-icon="inline-start" aria-hidden="true" />Devolver al docente</Button>
             </form>

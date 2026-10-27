@@ -53,7 +53,7 @@ export const getLibraryReviews = (filters: { state?: string; q?: string; page?: 
 export const getLibraryReview = (revisionId: string) =>
   api<{ review: LibraryReviewDetail }>(`/library/reviews/${revisionId}`);
 
-export const commentLibraryReview = (revisionId: string, payload: { reasons: string[] }) =>
+export const commentLibraryReview = (revisionId: string, payload: { reasons: string[]; other?: string }) =>
   api<{ message: string }>(`/library/reviews/${revisionId}/comments`, {
     method: 'POST',
     body: JSON.stringify(payload),
