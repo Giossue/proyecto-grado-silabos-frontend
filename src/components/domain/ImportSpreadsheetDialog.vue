@@ -3,7 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Download, FileSpreadsheet, Upload } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
-import { downloadImportTemplate, sendImport, type ImportResult } from '@/api/spreadsheet-import';
+import { downloadImportTemplate, sendImport, type ImportKind, type ImportResult } from '@/api/spreadsheet-import';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Button } from '@/components/ui/button';
@@ -13,8 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 const props = defineProps<{
     title: string;
-    endpoint: string;
-    templateEndpoint: string;
+    kind: ImportKind;
     templateName: string;
     columns: { key: string; label: string }[];
     extra?: Record<string, string>;
@@ -33,7 +32,7 @@ const run = async (confirm: boolean): Promise<void> => {
     if (!file.value) return;
     processing.value = true; error.value = null;
     try {
-        result.value = await sendImport(props.endpoint, file.value, confirm, props.extra);
+        result.value = await sendImport(props.kind, file.value, confirm, props.extra);
         if (confirm && result.value.valid) {
             open.value = false;
             emit('imported', `${result.value.created} registros importados.`);
@@ -46,7 +45,7 @@ const run = async (confirm: boolean): Promise<void> => {
 const reset = (): void => { result.value = null; };
 const invalidFile = (message: string | null): void => { error.value = message; };
 const download = async (): Promise<void> => {
-    try { await downloadImportTemplate(props.templateEndpoint, props.templateName); }
+    try { await downloadImportTemplate(props.kind, props.templateName); }
     catch { error.value = 'No se pudo descargar la plantilla.'; }
 };
 </script>

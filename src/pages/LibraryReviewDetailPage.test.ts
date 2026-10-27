@@ -86,7 +86,7 @@ describe('LibraryReviewDetailPage', () => {
     confirm.click();
     await flushPromises();
 
-    expect(verifyLibraryReview).toHaveBeenCalledWith('revision-2', expect.any(String));
+    expect(verifyLibraryReview).toHaveBeenCalledWith('revision-2');
     expect(toastSuccess).toHaveBeenCalledWith('Bibliografía aprobada.');
     expect(wrapper.text()).toContain('Por firmar');
     expect(wrapper.get('[data-testid="signature-card"]').text()).toBe('revision-2');
@@ -137,7 +137,6 @@ describe('LibraryReviewDetailPage', () => {
 
     expect(commentLibraryReview).toHaveBeenCalledWith('revision-2', {
       reasons: ['libro_no_disponible', 'codigo_incorrecto'],
-      idempotency_key: expect.any(String),
     });
     expect(toastSuccess).toHaveBeenCalledWith('Comentario enviado al docente.');
     expect(wrapper.text()).toContain('Con comentario');

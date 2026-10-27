@@ -35,10 +35,8 @@ const commentErrors = ref<string[]>([]);
 const actionError = ref('');
 const confirmOpen = ref(false);
 const sending = ref(false);
-const idempotencyKey = ref('');
 const verifyOpen = ref(false);
 const verifying = ref(false);
-const verifyKey = ref('');
 
 const formatDate = (value: string): string =>
   formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' });
@@ -70,7 +68,6 @@ const askConfirmation = (): void => {
     commentErrors.value = ['Elija al menos un motivo.'];
     return;
   }
-  idempotencyKey.value = crypto.randomUUID();
   confirmOpen.value = true;
 };
 
@@ -81,7 +78,6 @@ const sendComment = async (): Promise<void> => {
   try {
     const result = await commentLibraryReview(review.value.revision_id, {
       reasons: selectedReasons.value,
-      idempotency_key: idempotencyKey.value,
     });
     confirmOpen.value = false;
     selectedReasons.value = [];
@@ -102,7 +98,6 @@ const sendComment = async (): Promise<void> => {
 
 const askVerify = (): void => {
   actionError.value = '';
-  verifyKey.value = crypto.randomUUID();
   verifyOpen.value = true;
 };
 
@@ -111,7 +106,7 @@ const verify = async (): Promise<void> => {
   verifying.value = true;
   actionError.value = '';
   try {
-    const result = await verifyLibraryReview(review.value.revision_id, verifyKey.value);
+    const result = await verifyLibraryReview(review.value.revision_id);
     verifyOpen.value = false;
     toast.success(result.message);
     await load();

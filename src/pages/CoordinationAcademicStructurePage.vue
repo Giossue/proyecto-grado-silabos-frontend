@@ -188,8 +188,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
       <ImportSpreadsheetDialog
         v-if="mode === 'teachers' && assignments?.canCreateTeacher"
         title="Importar docentes"
-        endpoint="/coordination/academic/teachers/import"
-        template-endpoint="/coordination/academic/teachers/import-template"
+        kind="teachers"
         template-name="plantilla-docentes.xlsx"
         :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }]"
         @imported="handleAssignmentChanged"
@@ -198,8 +197,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
       <ImportSpreadsheetDialog
         v-if="mode === 'curriculum' && curriculum && curriculum.curriculum.editable && !curriculum.curriculum.lock_reason"
         title="Importar malla"
-        endpoint="/coordination/academic/curriculum-import"
-        template-endpoint="/coordination/academic/curriculum-import/template"
+        kind="curriculum"
         template-name="plantilla-malla.xlsx"
         :columns="[{ key: 'codigo', label: 'Código' }, { key: 'nombre', label: 'Materia' }, { key: 'ciclo', label: 'Ciclo' }, { key: 'unidad', label: 'Unidad' }]"
         @imported="handleCurriculumChanged"

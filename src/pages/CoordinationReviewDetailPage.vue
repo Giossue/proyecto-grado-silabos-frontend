@@ -6,7 +6,6 @@ import { ArrowLeft, LockKeyhole, ShieldCheck, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { attemptKey } from '@/lib/attemptKey';
 import {
   approveReview,
   getReview,
@@ -59,7 +58,6 @@ const changed = async (value: string): Promise<void> => {
   await load();
 };
 
-const approveKey = attemptKey();
 const run = async (action: () => Promise<{ message: string }>): Promise<void> => {
   processing.value = true;
   actionError.value = '';
@@ -133,7 +131,7 @@ onMounted(load);
           </form></CardContent>
         </Card>
 
-        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>Si no hay cambios, apruebe la revisión {{ data.revision.number }}: pasa a biblioteca, que aprueba la bibliografía y deja el sílabo aprobado.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id, approveKey.use(data!.revision.id)))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button></CardContent></Card>
+        <Card v-if="canReviewCurrent"><CardHeader><CardTitle>Aprobar revisión</CardTitle><CardDescription>Si no hay cambios, apruebe la revisión {{ data.revision.number }}: pasa a biblioteca, que aprueba la bibliografía y deja el sílabo aprobado.</CardDescription></CardHeader><CardContent class="flex flex-col gap-3"><FieldError :errors="errors.revision" /><Button :disabled="processing" @click="run(() => approveReview(data!.revision.id))"><Spinner v-if="processing" /><ShieldCheck v-else aria-hidden="true" />Aprobar revisión {{ data.revision.number }}</Button></CardContent></Card>
 
         <DocumentSignatureCard v-if="data.history.some((item) => item.id === data!.revision.id && item.approved_at)" :key="data.revision.id" :revision-id="data.revision.id" :file-name="`silabo-${data.syllabus.code}-revision-${data.revision.number}`" />
 

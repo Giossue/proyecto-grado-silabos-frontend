@@ -53,14 +53,11 @@ export const getLibraryReviews = (filters: { state?: string; q?: string; page?: 
 export const getLibraryReview = (revisionId: string) =>
   api<{ review: LibraryReviewDetail }>(`/library/reviews/${revisionId}`);
 
-export const commentLibraryReview = (revisionId: string, payload: { reasons: string[]; idempotency_key: string }) =>
+export const commentLibraryReview = (revisionId: string, payload: { reasons: string[] }) =>
   api<{ message: string }>(`/library/reviews/${revisionId}/comments`, {
     method: 'POST',
     body: JSON.stringify(payload),
   });
 
-export const verifyLibraryReview = (revisionId: string, idempotencyKey: string) =>
-  api<{ message: string }>(`/library/reviews/${revisionId}/verify`, {
-    method: 'POST',
-    body: JSON.stringify({ idempotency_key: idempotencyKey }),
-  });
+export const verifyLibraryReview = (revisionId: string) =>
+  api<{ message: string }>(`/library/reviews/${revisionId}/verify`, { method: 'POST' });

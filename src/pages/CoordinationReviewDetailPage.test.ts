@@ -164,7 +164,7 @@ describe("CoordinationReviewDetailPage", () => {
     await approve.trigger("click");
     await flushPromises();
 
-    expect(approveReview).toHaveBeenCalledWith("revision-1", expect.any(String));
+    expect(approveReview).toHaveBeenCalledWith("revision-1");
     wrapper.unmount();
   });
 

@@ -73,8 +73,7 @@ onMounted(load);
             <ImportSpreadsheetDialog
                 v-if="data && entity === 'carrera'"
                 title="Importar carreras"
-                endpoint="/admin/academic/careers/import"
-                template-endpoint="/admin/academic/careers/import-template"
+                kind="careers"
                 template-name="plantilla-carreras.xlsx"
                 :columns="[{ key: 'facultad', label: 'Facultad' }, { key: 'modalidad', label: 'Modalidad' }, { key: 'codigo', label: 'Código' }, { key: 'nombre', label: 'Nombre' }, { key: 'ciclos', label: 'Ciclos' }]"
                 @imported="changed"

@@ -121,11 +121,8 @@ export const requestCorrection = (
     `/coordination/reviews/${revisionId}/request-correction`,
     { method: "POST", body: JSON.stringify(payload) },
   );
-export const approveReview = (revisionId: string, idempotencyKey: string = crypto.randomUUID()) =>
-  api<{ message: string }>(`/coordination/reviews/${revisionId}/approve`, {
-    method: "POST",
-    body: JSON.stringify({ idempotency_key: idempotencyKey }),
-  });
+export const approveReview = (revisionId: string) =>
+  api<{ message: string }>(`/coordination/reviews/${revisionId}/approve`, { method: "POST" });
 export const deleteSyllabus = (syllabusId: string) =>
   api<{ message: string }>(`/coordination/syllabi/${syllabusId}`, { method: "DELETE" });
 export const resetSyllabus = (syllabusId: string) =>
