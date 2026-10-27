@@ -120,7 +120,7 @@ describe('navegación por ámbito activo', () => {
     ['coordinador', '/admin/usuarios', '/coordinacion/panel'],
     ['docente', '/admin/plantilla', '/docente/mis-silabos'],
     ['docente', '/biblioteca/revisiones', '/docente/mis-silabos'],
-    ['bibliotecario', '/coordinacion/revisiones', '/biblioteca/panel'],
+    ['bibliotecario', '/coordinacion/revisiones', '/biblioteca/revisiones'],
   ] as const)('redirige una ruta de otro rol al panel de %s', async (code, target, expected) => {
     sessionState.replace(session(code));
     await router.push(target);
@@ -129,7 +129,7 @@ describe('navegación por ámbito activo', () => {
   });
 
   it.each([
-    ['/panel', '/biblioteca/panel'],
+    ['/panel', '/biblioteca/revisiones'],
     ['/notificaciones', '/biblioteca/notificaciones'],
     ['/configuracion/seguridad', '/biblioteca/configuracion/seguridad'],
     ['/revisiones/revision-1/documentos', '/biblioteca/revisiones/revision-1'],
@@ -140,12 +140,12 @@ describe('navegación por ámbito activo', () => {
     expect(router.currentRoute.value.fullPath).toBe(expected);
   });
 
-  it('lleva a Biblioteca directo a su panel al entrar', async () => {
+  it('lleva a Biblioteca directo a su bandeja al entrar', async () => {
     sessionState.replace(session('bibliotecario'));
     await router.push('/rol');
     await router.push('/ingresar');
 
-    expect(router.currentRoute.value.fullPath).toBe('/biblioteca/panel');
+    expect(router.currentRoute.value.fullPath).toBe('/biblioteca/revisiones');
   });
 
   it('no entra en bucle con un rol que la SPA aún no conoce', async () => {

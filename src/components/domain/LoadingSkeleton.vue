@@ -4,6 +4,7 @@ import type { RoleCode } from '@/api/session';
 import AcademicLoadingSkeleton from '@/components/domain/loading/AcademicLoadingSkeleton.vue';
 import DashboardLoadingSkeleton from '@/components/domain/loading/DashboardLoadingSkeleton.vue';
 import DocumentLoadingSkeleton from '@/components/domain/loading/DocumentLoadingSkeleton.vue';
+import MetricsLoadingSkeleton from '@/components/domain/loading/MetricsLoadingSkeleton.vue';
 import SettingsLoadingSkeleton from '@/components/domain/loading/SettingsLoadingSkeleton.vue';
 import TableLoadingSkeleton from '@/components/domain/loading/TableLoadingSkeleton.vue';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
@@ -51,6 +52,7 @@ const props = withDefaults(defineProps<{
     reviewStage?: 'coordination' | 'library';
     readonly?: boolean;
     settingsSection?: 'profile' | 'security';
+    metrics?: boolean;
 }>(), {
     variant: 'table',
     rows: 5,
@@ -65,6 +67,7 @@ const props = withDefaults(defineProps<{
     plainToolbar: false,
     workspaceCount: 3,
     readonly: false,
+    metrics: false,
 });
 
 const tableProps = computed(() => ({
@@ -85,6 +88,8 @@ const tableProps = computed(() => ({
     <div class="flex w-full min-w-0 flex-col gap-6" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando contenido">
         <span class="sr-only">Cargando contenido…</span>
         <div aria-hidden="true" class="contents">
+            <MetricsLoadingSkeleton v-if="metrics" />
+
             <TableLoadingSkeleton v-if="variant === 'table-body'" v-bind="tableProps" />
 
             <TableLoadingSkeleton v-else-if="variant === 'table' || variant === 'catalog' || variant === 'academic'" v-bind="tableProps" />
@@ -98,18 +103,6 @@ const tableProps = computed(() => ({
             </Card>
 
             <div v-else-if="variant === 'syllabus-cards'" class="flex min-w-0 flex-col gap-4">
-                <div data-skeleton="syllabus-metrics" class="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
-                    <Card v-for="metric in 3" :key="metric" class="min-w-0">
-                        <CardContent class="flex min-w-0 flex-col gap-0.5 py-3">
-                            <div class="flex items-center gap-2">
-                                <Skeleton class="size-4 shrink-0" />
-                                <Skeleton class="h-4 w-28 max-w-full" />
-                            </div>
-                            <Skeleton class="h-6 w-16" />
-                            <Skeleton class="h-3 w-4/5" />
-                        </CardContent>
-                    </Card>
-                </div>
                 <Card data-skeleton="table-toolbar" class="py-3">
                     <CardContent class="flex flex-col gap-3 px-3 lg:flex-row lg:items-end">
                         <Skeleton class="h-9 w-full lg:min-w-64 lg:flex-1" />

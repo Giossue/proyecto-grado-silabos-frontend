@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { BookOpenCheck, Building2, CalendarRange, CircleAlert, ClipboardCheck, FileSignature, FilePen, FileStack, Library, MessageSquareText, PencilLine, UsersRound } from '@lucide/vue';
-import type { Component } from 'vue';
 import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -11,7 +9,7 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ConvocationDeadlineCard from '@/components/domain/ConvocationDeadlineCard.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
-import StatTile from '@/components/domain/StatTile.vue';
+import MetricTiles from '@/components/domain/MetricTiles.vue';
 import ConvocationActions from '@/components/domain/syllabus/ConvocationActions.vue';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
 import ConvocationTrackingDialog from '@/components/domain/syllabus/ConvocationTrackingDialog.vue';
@@ -24,7 +22,6 @@ const error = ref<string | null>(null);
 const openingOpen = ref(false);
 const trackingOpen = ref(false);
 
-const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: CalendarRange, careers_without_convocation: Building2, not_started: PencilLine, in_review: ClipboardCheck, pending: FileStack, correction_requested: CircleAlert, teachers_pending: UsersRound, library_pending: Library, library_to_sign: FilePen, library_signed: FileSignature, library_commented: MessageSquareText };
 const setupRoutes: Record<string, string> = {
   faculties: paths.admin.academic,
   careers: paths.admin.academicWithSection('carrera'),
@@ -77,9 +74,7 @@ onMounted(() => { void load(); });
   <PageFrame class="h-full flex-1" size="wide" title="Panel de trabajo" description="">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <template v-else-if="dashboard">
-      <div v-if="dashboard.metrics.length > 0" class="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
-        <StatTile v-for="metric in dashboard.metrics.slice(0, 3)" :key="metric.key" :label="metric.label" :value="metric.value" :suffix="metric.suffix ?? undefined" :hint="metric.hint" :icon="icons[metric.key]" />
-      </div>
+      <MetricTiles v-if="dashboard.metrics.length > 0" :metrics="dashboard.metrics" />
       <p v-else class="text-sm text-muted-foreground">No hay indicadores disponibles para este rol.</p>
       <ConvocationDeadlineCard v-if="dashboard.deadline && roleCode === 'coordinador'" :deadline="dashboard.deadline" audience="coordinador" @tracking="trackingOpen = true"><template v-if="dashboard.coordination_convocation" #actions><ConvocationActions :convocation="dashboard.coordination_convocation" @changed="handleOpened" /></template></ConvocationDeadlineCard>
       <SetupChecklist v-if="setup" :setup="setup" @action="handleSetupAction" />

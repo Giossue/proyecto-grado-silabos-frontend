@@ -72,7 +72,6 @@ export const paths = {
   },
   library: {
     root: '/biblioteca',
-    panel: '/biblioteca/panel',
     notifications: '/biblioteca/notificaciones',
     profile: '/biblioteca/configuracion/perfil',
     security: '/biblioteca/configuracion/seguridad',
@@ -108,7 +107,7 @@ const areaHomes: Record<RoleArea, string> = {
   admin: paths.admin.panel,
   coordination: paths.coordination.panel,
   teacher: paths.teacher.syllabi,
-  library: paths.library.panel,
+  library: paths.library.reviews,
 };
 
 const areaDocuments: Record<RoleArea, (revision: string) => string> = {
@@ -226,7 +225,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'teacher-syllabus', path: '/docente/mis-silabos/:syllabus', component: 'TeacherSyllabusDetailPage', states: ['resumen', 'edicion', 'ia', 'envio'], breadcrumb: 'Mis sílabos', layout: 'syllabus-editor', ...teacher },
   { name: 'teacher-documents', path: '/docente/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...teacher },
 
-  { name: 'library-panel', path: paths.library.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...librarian },
   { name: 'library-notifications', path: paths.library.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...librarian },
   { name: 'library-profile', path: paths.library.profile, component: 'ProfilePage', shortcut: 'profile', ...librarian },
   { name: 'library-security', path: paths.library.security, component: 'SecurityPage', shortcut: 'security', ...librarian },

@@ -14,7 +14,7 @@ describe('contrato de rutas', () => {
     expect(roleHome('coordinador')).toBe(paths.coordination.panel);
     expect(roleHome('docente')).toBe(paths.teacher.syllabi);
     expect(roleSetting('docente', 'security')).toBe(paths.teacher.security);
-    expect(roleHome('bibliotecario')).toBe('/biblioteca/panel');
+    expect(roleHome('bibliotecario')).toBe('/biblioteca/revisiones');
     expect(roleSetting('bibliotecario', 'profile')).toBe('/biblioteca/configuracion/perfil');
     expect(roleNotifications('bibliotecario')).toBe('/biblioteca/notificaciones');
     expect(roleDocuments('bibliotecario', 'revision-1')).toBe('/biblioteca/revisiones/revision-1');
@@ -32,10 +32,10 @@ describe('contrato de rutas', () => {
     expect(roleDocuments(unknown, 'revision-1')).toBe(paths.roleSelection);
   });
 
-  it('envía cada rol a su inicio al entrar: el docente, a sus sílabos', () => {
+  it('envía cada rol a su inicio al entrar: docente y biblioteca, a su lista de trabajo', () => {
     expect(roleEntry('docente')).toBe(paths.teacher.syllabi);
     expect(roleEntry('coordinador')).toBe(paths.coordination.panel);
-    expect(roleEntry('bibliotecario')).toBe(paths.library.panel);
+    expect(roleEntry('bibliotecario')).toBe(paths.library.reviews);
     expect(roleEntry(undefined)).toBe(paths.roleSelection);
   });
 
@@ -45,7 +45,7 @@ describe('contrato de rutas', () => {
   });
 
   it('no conserva rutas en inglés ni alias retirados', () => {
-    const retired = ['/login', '/dashboard', '/settings', '/fuentes', '/seguridad', '/administracion', '/mis-silabos', '/docente/panel'];
+    const retired = ['/login', '/dashboard', '/settings', '/fuentes', '/seguridad', '/administracion', '/mis-silabos', '/docente/panel', '/biblioteca/panel'];
     for (const route of routeRegistry) expect(retired.some((prefix) => route.path === prefix || route.path.startsWith(`${prefix}/`))).toBe(false);
   });
 

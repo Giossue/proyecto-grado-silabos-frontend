@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { getDashboard } from '@/api/dashboard';
 import { getLibraryReviews, type LibraryReviewsPage } from '@/api/library';
 import LibraryReviewsPageView from '@/pages/LibraryReviewsPage.vue';
 
@@ -10,6 +11,7 @@ vi.mock('vue-router', async (importOriginal) => ({
   useRoute: () => ({ query: { state: 'pendiente' }, fullPath: '/biblioteca/revisiones?state=pendiente' }),
   useRouter: () => ({ replace, push }),
 }));
+vi.mock('@/api/dashboard', () => ({ getDashboard: vi.fn() }));
 vi.mock('@/api/library', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/library')>()),
   getLibraryReviews: vi.fn(),
@@ -46,6 +48,32 @@ describe('LibraryReviewsPage', () => {
     replace.mockReset();
     push.mockReset();
     vi.mocked(getLibraryReviews).mockReset();
+    vi.mocked(getDashboard).mockReset();
+    vi.mocked(getDashboard).mockResolvedValue({
+      metrics: [
+        { key: 'library_pending', label: 'Por verificar', value: 2, suffix: null, hint: 'Aprobados por coordinación; falta la bibliografía' },
+        { key: 'library_to_sign', label: 'Por firmar', value: 1, suffix: null, hint: 'Su firma va después de docente y coordinación' },
+        { key: 'library_commented', label: 'Con comentario', value: 0, suffix: null, hint: 'Devueltos al docente desde biblioteca' },
+        { key: 'library_signed', label: 'Firmados', value: 4, suffix: null, hint: 'Sílabos con la firma de biblioteca' },
+      ],
+      setup: null, deadline: null, coordination_convocation: null,
+    });
+  });
+
+  it('muestra arriba los tres indicadores de Biblioteca y no los vuelve a pedir al filtrar', async () => {
+    vi.mocked(getLibraryReviews).mockResolvedValue(page());
+    const wrapper = mount(LibraryReviewsPageView);
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Por verificar');
+    expect(wrapper.text()).toContain('Por firmar');
+    expect(wrapper.text()).not.toContain('Firmados');
+
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(getDashboard).toHaveBeenCalledTimes(1);
+    expect(getLibraryReviews).toHaveBeenCalledTimes(2);
+    wrapper.unmount();
   });
 
   it('carga la bandeja con el filtro de la URL y nombra los estados de biblioteca', async () => {

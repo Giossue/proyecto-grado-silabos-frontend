@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const password = 'Demo-2026!';
 
-type Area = 'admin' | 'coordinacion' | 'biblioteca';
+type Area = 'admin' | 'coordinacion';
 
 const login = async (page: Page, email: string): Promise<void> => {
   await page.goto('/ingresar');
@@ -161,13 +161,13 @@ test.describe('frontera distribuida de identidad', () => {
   test('limita Biblioteca a sus revisiones', async ({ page }) => {
     const serverErrors = captureServerErrors(page);
     await login(page, 'bibliotecario@silabos.test');
-    await expectPanel(page, 'biblioteca');
-    await expectNavigation(page, ['Panel', 'Revisiones de biblioteca']);
-
-    await openSection(page, 'Revisiones de biblioteca', 'Revisiones de biblioteca');
+    await expect(page).toHaveURL(/\/biblioteca\/revisiones$/);
+    await expect(page.getByRole('heading', { level: 1, name: 'Revisiones de biblioteca' })).toBeVisible();
+    await expectNavigation(page, ['Revisiones de biblioteca']);
+    await expect(page.getByText('Por verificar')).toBeVisible();
 
     await page.goto('/admin/usuarios');
-    await expect(page).toHaveURL(/\/biblioteca\/panel$/);
+    await expect(page).toHaveURL(/\/biblioteca\/revisiones$/);
     expect(serverErrors).toEqual([]);
   });
 });

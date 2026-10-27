@@ -115,7 +115,7 @@ describe('WorkspacePage', () => {
     await flushPromises();
 
     expect(selectActiveRole).toHaveBeenCalledWith('role-library');
-    expect(replace).toHaveBeenCalledWith('/biblioteca/panel');
+    expect(replace).toHaveBeenCalledWith('/biblioteca/revisiones');
     wrapper.unmount();
   });
 });

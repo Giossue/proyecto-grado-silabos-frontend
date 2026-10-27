@@ -72,10 +72,10 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.find('button, input, select, [tabindex]').exists()).toBe(false);
   });
 
-  it.each(['administrador', 'coordinador', 'bibliotecario'] as const)('muestra tres indicadores para %s', (dashboardRole) => {
+  it.each(['administrador', 'coordinador'] as const)('muestra tres indicadores para %s', (dashboardRole) => {
     const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole } });
 
-    expect(wrapper.get('[data-skeleton="dashboard-metrics"]').findAll('[data-slot="card"]')).toHaveLength(3);
+    expect(wrapper.get('[data-skeleton="metrics"]').findAll('[data-slot="card"]')).toHaveLength(3);
   });
 
   it('dibuja la barra de herramientas dentro de una tarjeta y sin acciones cuando la tabla no las tiene', () => {
@@ -86,19 +86,12 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.get('[data-skeleton="table-row"]').element.children).toHaveLength(4);
   });
 
-  it.each(['bibliotecario'] as const)('no inventa plazo ni puesta en marcha para %s', (dashboardRole) => {
-    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole } });
+  it.each([['syllabus-cards', 'syllabus-card'], ['table', 'table-row']] as const)('anticipa los indicadores sobre la lista %s cuando la pantalla los tiene', (variant, item) => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant, rows: 2, metrics: true } });
 
-    expect(wrapper.find('[data-skeleton="dashboard-metrics"]').exists()).toBe(true);
-    expect(wrapper.find('[data-skeleton="dashboard-deadline"]').exists()).toBe(false);
-    expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(false);
-  });
-
-  it('anticipa los indicadores del docente sobre sus sílabos', () => {
-    const wrapper = mount(LoadingSkeleton, { props: { variant: 'syllabus-cards', rows: 2 } });
-
-    expect(wrapper.get('[data-skeleton="syllabus-metrics"]').findAll('[data-slot="card"]')).toHaveLength(3);
-    expect(wrapper.findAll('[data-skeleton="syllabus-card"]')).toHaveLength(2);
+    expect(wrapper.get('[data-skeleton="metrics"]').findAll('[data-slot="card"]')).toHaveLength(3);
+    expect(wrapper.findAll(`[data-skeleton="${item}"]`)).toHaveLength(2);
+    expect(mount(LoadingSkeleton, { props: { variant } }).find('[data-skeleton="metrics"]').exists()).toBe(false);
   });
 
   it('actualiza la superficie al cambiar el rol activo durante la carga', async () => {
@@ -107,10 +100,10 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.find('[data-skeleton="dashboard-deadline"]').exists()).toBe(true);
     expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(true);
 
-    await wrapper.setProps({ dashboardRole: 'bibliotecario' });
+    await wrapper.setProps({ dashboardRole: 'administrador' });
 
     expect(wrapper.find('[data-skeleton="dashboard-deadline"]').exists()).toBe(false);
-    expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(false);
+    expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(true);
     expect(wrapper.findAll('[role="status"]')).toHaveLength(1);
   });
 });

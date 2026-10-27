@@ -105,7 +105,6 @@ export const router = createRouter({
     { path: "/docente/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", layout: "syllabus-editor" } },
     { path: "/docente/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos" } },
 
-    { path: "/biblioteca/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Panel" } },
     { path: "/biblioteca/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Notificaciones" } },
     { path: "/biblioteca/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Perfil" } },
     { path: "/biblioteca/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Seguridad" } },

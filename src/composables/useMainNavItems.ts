@@ -56,10 +56,7 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
             ? [{ title: 'Mis sílabos', href: paths.teacher.syllabi, icon: BookOpenCheck }]
             : []),
         ...(activeRole.value?.code === 'bibliotecario'
-            ? [
-                  { title: 'Panel', href: paths.library.panel, icon: LayoutGrid },
-                  { title: 'Revisiones de biblioteca', href: paths.library.reviews, icon: Library },
-              ]
+            ? [{ title: 'Revisiones de biblioteca', href: paths.library.reviews, icon: Library }]
             : []),
     ]);
     return mainNavItems;

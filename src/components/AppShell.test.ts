@@ -103,7 +103,7 @@ describe('AppSidebarLayout', () => {
     expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
   });
 
-  it('muestra a Biblioteca su panel y su bandeja, sin carrera', async () => {
+  it('muestra a Biblioteca solo su bandeja, sin carrera', async () => {
     sessionState.replace({
       ...administratorSession,
       active_role: { id: 'role-bibliotecario', code: 'bibliotecario', career_id: null, career_name: null },
@@ -112,7 +112,7 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
-    expect(sidebar.find('a[href="/biblioteca/panel"]').text()).toContain('Panel');
+    expect(sidebar.findAll('[data-sidebar="content"] a').map((link) => link.text())).toEqual(['Revisiones de biblioteca']);
     expect(sidebar.get('a[href="/biblioteca/revisiones"]').text()).toContain('Revisiones de biblioteca');
     expect(sidebar.find('a[href="/biblioteca/configuracion/perfil"]').exists()).toBe(false);
     expect(sidebar.text()).not.toContain('Mis sílabos');

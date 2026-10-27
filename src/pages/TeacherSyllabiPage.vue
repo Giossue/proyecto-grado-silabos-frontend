@@ -12,9 +12,8 @@ import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { paths } from '@/lib/routes';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
-import StatTile from '@/components/domain/StatTile.vue';
-import { CircleAlert, ClipboardCheck, FileStack, History, Inbox } from '@lucide/vue';
-import type { Component } from 'vue';
+import MetricTiles from '@/components/domain/MetricTiles.vue';
+import { History, Inbox } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,8 +29,6 @@ const query = ref('');
 const state = ref('all');
 const period = ref<string | null>(null);
 const error = ref<string | null>(null);
-
-const icons: Record<string, Component> = { pending: FileStack, correction_requested: CircleAlert, in_review: ClipboardCheck };
 
 const load = async (withSummary = false): Promise<void> => {
   error.value = null;
@@ -63,9 +60,7 @@ onMounted(() => { void load(true); });
   <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide">
     <template #actions><Button as-child variant="outline"><RouterLink :to="paths.teacher.history"><History data-icon="inline-start" aria-hidden="true" />Historial</RouterLink></Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(true)" />
-    <div v-if="result && summary?.metrics.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
-      <StatTile v-for="metric in summary.metrics" :key="metric.key" :label="metric.label" :value="metric.value" :suffix="metric.suffix ?? undefined" :hint="metric.hint" :icon="icons[metric.key]" />
-    </div>
+    <MetricTiles v-if="result && summary?.metrics.length" :metrics="summary.metrics" />
     <ConvocationDeadlineCard v-if="result && summary?.deadline" :deadline="summary.deadline" audience="docente" />
     <Card v-if="result" class="py-3">
       <CardContent class="px-3">
@@ -77,7 +72,7 @@ onMounted(() => { void load(true); });
         </form>
       </CardContent>
     </Card>
-    <LoadingSkeleton v-if="!result && !error" variant="syllabus-cards" :rows="4" />
+    <LoadingSkeleton v-if="!result && !error" variant="syllabus-cards" :rows="4" metrics />
     <Card v-else-if="result && result.syllabi.data.length === 0">
       <Empty class="gap-3 border-0 p-6 md:p-10">
         <EmptyHeader class="gap-3">
