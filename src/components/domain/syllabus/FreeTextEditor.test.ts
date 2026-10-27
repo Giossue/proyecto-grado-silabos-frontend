@@ -28,19 +28,24 @@ describe('Editor de documentos compartido', () => {
         expect(wrapper.find('[aria-label="Insertar dato del sistema"]').exists()).toBe(true);
     });
 
-    it('no ofrece alinear y conserva la alineación que trae el documento', async () => {
-        const wrapper = mountEditor(doc('Texto a centrar'));
+    it('el texto del docente queda siempre a la izquierda, aunque venga alineado', async () => {
+        const justified: DocumentNode = { type: 'doc', content: [{ type: 'paragraph', attrs: { textAlign: 'justify' }, content: [{ type: 'text', text: 'Justificado' }] }] };
+        const wrapper = mountEditor(justified);
         await flushPromises();
         for (const label of ['Alinear a la izquierda', 'Centrar', 'Alinear a la derecha', 'Justificar']) expect(wrapper.find(`[aria-label="${label}"]`).exists()).toBe(false);
-        editorOf(wrapper).commands.setTextAlign('center');
+        expect(wrapper.get('[role="textbox"] p').attributes('style') ?? '').not.toContain('text-align');
+        editorOf(wrapper).commands.insertContent(' más');
         await flushPromises();
         const value = wrapper.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
-        expect(nodesOfType(value, 'paragraph')[0]!.attrs?.textAlign).toBe('center');
+        expect(nodesOfType(value, 'paragraph')[0]!.attrs?.textAlign).toBeUndefined();
+    });
 
+    it('la plantilla del administrador sí conserva la alineación', async () => {
         const justified: DocumentNode = { type: 'doc', content: [{ type: 'paragraph', attrs: { textAlign: 'justify' }, content: [{ type: 'text', text: 'Justificado' }] }] };
-        const second = mountEditor(justified);
+        const wrapper = mount(FreeTextEditor, { props: { id: 'plantilla', label: 'Plantilla', modelValue: justified, toolbar: false, align: true }, attachTo: document.body });
         await flushPromises();
-        expect(second.get('[role="textbox"] p').attributes('style')).toContain('text-align: justify');
+        expect(wrapper.get('[role="textbox"] p').attributes('style')).toContain('text-align: justify');
+        wrapper.unmount();
     });
 
     it('añade filas y columnas y guarda los totales como texto sin cálculo', async () => {

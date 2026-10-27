@@ -53,6 +53,6 @@ const select = (): void => emit('select', editor.value?.editor ?? null);
       />
     </div>
     <p v-if="isSource" data-field-source class="text-xs text-muted-foreground">Dato de la ficha: se muestra dentro de las tablas de otro campo y no se imprime aquí.</p>
-    <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :blocks="field.quien_llena === 'institucional' ? 'fill' : 'configure'" :disabled="locked || block" :toolbar="false" bare /></div>
+    <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :blocks="field.quien_llena === 'institucional' ? 'fill' : 'configure'" :disabled="locked || block" :toolbar="false" align bare /></div>
   </div>
 </template>

@@ -26,7 +26,8 @@ const props = withDefaults(defineProps<{
     toolbar?: boolean;
     blocks?: 'configure' | 'fill';
     allowTables?: boolean;
-}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true, blocks: 'fill', allowTables: true });
+    align?: boolean;
+}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true, blocks: 'fill', allowTables: true, align: false });
 const emit = defineEmits<{ 'update:modelValue': [value: DocumentNode] }>();
 const slash = ref({ open: false, left: 0, top: 0, query: '', index: 0 });
 const slashItems = computed(() => props.variables.filter((item) => item.label.toLowerCase().includes(slash.value.query.toLowerCase())).slice(0, 8));
@@ -75,7 +76,7 @@ const editor = useEditor({
     editorProps: { handleKeyDown: (_view, event) => onSlashKey(event), handleDrop: () => true, handleDOMEvents: { dragstart: (_view, event) => { event.preventDefault(); return true; } }, attributes: { id: props.id, 'aria-label': props.label, role: 'textbox', 'aria-multiline': 'true', class: 'free-text-editor__content' } },
     extensions: [
         StarterKit.configure({ document: false, heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false, ...(props.bare ? { trailingNode: false } : {}) }),
-        TextAlign.configure({ types: ['paragraph'], alignments: ['left', 'center', 'right', 'justify'] }),
+        ...(props.align ? [TextAlign.configure({ types: ['paragraph'], alignments: ['left', 'center', 'right', 'justify'] })] : []),
         Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
         DocumentWithBlocks,
         PageSpacers,
