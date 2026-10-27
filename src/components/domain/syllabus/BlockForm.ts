@@ -9,7 +9,7 @@ import { holds } from '@/lib/blocks/condition';
 import { ruleFailures, ruleResults } from '@/lib/blocks/rules';
 import { blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
 import { Scope, type Path } from '@/lib/blocks/scope';
-import type { ChoiceSchema, ListSchema, NumberSchema, TextSchema, ValueSchema } from '@/lib/blocks/types';
+import { isChoice, numberDigits, type ChoiceSchema, type ListSchema, type NumberSchema, type TextSchema, type ValueSchema } from '@/lib/blocks/types';
 import { emptyValue, getAt, setAt, settle } from '@/lib/blocks/values';
 
 const isRecord = (value: unknown): value is Record<string, unknown> => typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -51,29 +51,30 @@ export default defineComponent({
             const disabled = props.disabled;
             const text = typeof current === 'string' || typeof current === 'number' ? String(current) : '';
             let input: VNodeChild;
-            if (schema.type === 'choice') {
+            if (isChoice(schema)) {
                 input = h(ChoiceGroup, {
                     modelValue: typeof current === 'string' ? current : undefined,
                     label,
                     disabled,
-                    options: Object.entries(schema.options).map(([value, optionLabel]) => ({ value, label: optionLabel })),
+                    options: schema.oneOf.map((option) => ({ value: option.const, label: option.title })),
                     'onUpdate:modelValue': (value: unknown) => write(path, typeof value === 'string' ? value : null),
                 });
             } else if (schema.type === 'number') {
+                const { digits, decimals } = numberDigits(schema);
                 input = h(Input, {
                     id, modelValue: text, disabled, inputmode: 'decimal',
-                    maxlength: schema.digits + (schema.decimals > 0 ? schema.decimals + 1 : 0),
+                    maxlength: digits + (decimals > 0 ? decimals + 1 : 0),
                     'onUpdate:modelValue': (value: string | number) => write(path, String(value)),
                 });
             } else {
-                input = h(schema.multiline || schema.max > 200 ? Textarea : Input, {
-                    id, modelValue: text, disabled, maxlength: schema.max,
-                    class: schema.multiline || schema.max > 200 ? 'min-h-9' : undefined,
+                input = h(schema.multiline ? Textarea : Input, {
+                    id, modelValue: text, disabled, maxlength: schema.maxLength,
+                    class: schema.multiline ? 'min-h-9' : undefined,
                     'onUpdate:modelValue': (value: string | number) => write(path, String(value)),
                 });
             }
             return h(Field, { key: id }, () => [
-                h(FieldLabel, { for: schema.type === 'choice' ? undefined : id }, () => label),
+                h(FieldLabel, { for: isChoice(schema) ? undefined : id }, () => label),
                 input,
             ]);
         };
@@ -89,11 +90,11 @@ export default defineComponent({
                 const childPath = [...path, key];
                 if (!applies(schema, childPath)) continue;
                 if (schema.type === 'number') {
-                    numbers.push(control(schema, childPath, schema.label ?? key));
+                    numbers.push(control(schema, childPath, schema.title ?? key));
                     continue;
                 }
                 flush();
-                nodes.push(node(schema, childPath, schema.label ?? key, depth));
+                nodes.push(node(schema, childPath, schema.title ?? key, depth));
             }
             flush();
             return nodes;
@@ -113,29 +114,29 @@ export default defineComponent({
 
         const canAdd = (path: Path, schema: ListSchema): boolean => {
             const list = listOf(path);
-            if (props.disabled || list.length >= schema.max || !definition.value) return false;
-            const next = setAt(props.value, path, [...list, emptyValue(schema.item, props.props)]) as Record<string, unknown>;
+            if (props.disabled || list.length >= schema.maxItems || !definition.value) return false;
+            const next = setAt(props.value, path, [...list, emptyValue(schema.items, props.props)]) as Record<string, unknown>;
             return ruleFailures(definition.value.rules, next, variables.value, 'save').length === 0;
         };
 
         const list = (schema: ListSchema, path: Path, depth: number): VNodeChild => {
             const items = listOf(path);
-            const name = schema.label ?? 'elemento';
+            const name = schema.title ?? 'elemento';
             const first = offset(path);
-            const resizable = schema.min < schema.max;
+            const resizable = schema.minItems < schema.maxItems;
             const container = depth === 0 ? 'flex flex-col gap-4 rounded-lg p-4 ring-1 ring-surface-ring' : 'flex flex-col gap-4 rounded-md bg-muted/40 p-4';
             return h('div', { class: 'flex flex-col gap-4' }, [
                 ...items.map((_, index) => {
                     const itemPath = [...path, index];
                     const title = `${capitalize(name)} ${first + index + 1}`;
-                    const content = schema.item.type === 'object'
-                        ? fields(Object.entries(schema.item.fields), itemPath, depth + 1)
-                        : [node(schema.item, itemPath, title, depth + 1)];
+                    const content = schema.items.type === 'object'
+                        ? fields(Object.entries(schema.items.properties), itemPath, depth + 1)
+                        : [node(schema.items, itemPath, title, depth + 1)];
                     return h('section', { key: index, class: container, 'aria-label': title }, [
                         h('div', { class: 'flex items-center justify-between gap-2' }, [
                             h('h3', { class: depth === 0 ? 'font-semibold' : 'text-sm font-medium' }, title),
                             resizable ? h(Button, {
-                                type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || items.length <= schema.min,
+                                type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || items.length <= schema.minItems,
                                 'aria-label': `Quitar ${name} ${first + index + 1}`,
                                 onClick: () => write(path, items.filter((__, position) => position !== index)),
                             }, () => h(Trash2, { 'aria-hidden': 'true' })) : null,
@@ -145,14 +146,14 @@ export default defineComponent({
                 }),
                 resizable ? h(Button, {
                     type: 'button', variant: 'outline', size: 'sm', class: 'w-fit', disabled: !canAdd(path, schema),
-                    onClick: () => write(path, [...items, emptyValue(schema.item, props.props)]),
+                    onClick: () => write(path, [...items, emptyValue(schema.items, props.props)]),
                 }, () => [h(Plus, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), `Agregar ${name}`]) : null,
             ]);
         };
 
         function node(schema: ValueSchema, path: Path, label: string, depth: number): VNodeChild {
-            if (schema.type === 'object') return h('div', { class: 'flex flex-col gap-4' }, fields(Object.entries(schema.fields), path, depth));
-            if (schema.type === 'list') return list(schema, path, depth);
+            if (schema.type === 'object') return h('div', { class: 'flex flex-col gap-4' }, fields(Object.entries(schema.properties), path, depth));
+            if (schema.type === 'array') return list(schema, path, depth);
             return control(schema, path, label);
         }
 

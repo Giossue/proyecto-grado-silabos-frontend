@@ -10,7 +10,7 @@ import { holds } from '@/lib/blocks/condition';
 import { ruleFailures, ruleResults } from '@/lib/blocks/rules';
 import { blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
 import { Scope, type Path } from '@/lib/blocks/scope';
-import type { BlockDefinition, ListSchema, ValueSchema } from '@/lib/blocks/types';
+import { isChoice, isText, numberDigits, optionTitle, type BlockDefinition, type ListSchema, type ValueSchema } from '@/lib/blocks/types';
 import { emptyValue, getAt, setAt, settle } from '@/lib/blocks/values';
 import { resolveBlock, toDocument, type ResolvedNode } from '@/lib/blocks/walk';
 import type { DocumentNode } from '@/lib/templateDocument';
@@ -20,18 +20,18 @@ type Mode = 'read' | 'fill' | 'configure';
 const describe = (definition: BlockDefinition, path: Path): { label: string; where: string } => {
     const parts: string[] = [];
     let label = '';
-    let schema: ValueSchema | undefined = { type: 'object', fields: definition.value };
+    let schema: ValueSchema | undefined = { type: 'object', properties: definition.value };
     for (const segment of path) {
         if (!schema) break;
         if (typeof segment === 'number') {
-            if (schema.type === 'list') {
-                parts.push(`${schema.label ?? 'fila'} ${segment + 1}`);
-                schema = schema.item;
+            if (schema.type === 'array') {
+                parts.push(`${schema.title ?? 'fila'} ${segment + 1}`);
+                schema = schema.items;
             }
             continue;
         }
-        schema = schema.type === 'object' ? schema.fields[segment] : undefined;
-        label = schema?.label ?? label;
+        schema = schema.type === 'object' ? schema.properties[segment] : undefined;
+        label = schema?.title ?? label;
     }
     return { label, where: parts.join(', ') };
 };
@@ -66,41 +66,42 @@ export default defineComponent({
             const described = definition.value ? describe(definition.value, slot.path) : { label: '', where: '' };
             const label = [described.label || 'Dato', described.where].filter(Boolean).join(', ');
             const disabled = !parentAllows(slot.path, schema);
-            if (schema?.type === 'choice' && slot.option !== undefined) {
+            if (isChoice(schema) && slot.option !== undefined) {
                 return h(Checkbox, {
                     modelValue: current === slot.option,
                     disabled,
-                    'aria-label': `${label}: ${schema.options[slot.option] ?? slot.option}`,
+                    'aria-label': `${label}: ${optionTitle(schema, slot.option) || slot.option}`,
                     'onUpdate:modelValue': (checked: boolean | 'indeterminate') => write(slot.path, checked === true ? slot.option : null),
                 });
             }
-            if (schema?.type === 'choice') {
+            if (isChoice(schema)) {
                 return h(ChoiceGroup, {
                     modelValue: typeof current === 'string' ? current : undefined,
                     label,
                     disabled,
-                    options: Object.entries(schema.options).map(([value, text]) => ({ value, label: text })),
+                    options: schema.oneOf.map((option) => ({ value: option.const, label: option.title })),
                     'onUpdate:modelValue': (value: unknown) => write(slot.path, typeof value === 'string' ? value : null),
                 });
             }
             const text = typeof current === 'string' || typeof current === 'number' ? String(current) : '';
             if (schema?.type === 'number') {
+                const { digits, decimals } = numberDigits(schema);
                 return h(Input, {
                     modelValue: text,
                     disabled,
                     inputmode: 'decimal',
-                    maxlength: schema.digits + (schema.decimals > 0 ? schema.decimals + 1 : 0),
+                    maxlength: digits + (decimals > 0 ? decimals + 1 : 0),
                     class: 'h-7 w-full min-w-10 max-w-16 px-1 py-0 text-center',
                     'aria-label': label,
                     'onUpdate:modelValue': (value: string | number) => write(slot.path, String(value)),
                 });
             }
-            const max = schema?.type === 'text' ? schema.max : 1000;
-            return h(schema?.type === 'text' && schema.multiline ? Textarea : Input, {
+            const multiline = isText(schema) && schema.multiline;
+            return h(multiline ? Textarea : Input, {
                 modelValue: text,
                 disabled,
-                maxlength: max,
-                class: schema?.type === 'text' && schema.multiline ? 'min-h-14 w-full min-w-0 px-2 py-1' : 'h-7 w-full min-w-0 px-2 py-0',
+                maxlength: isText(schema) ? schema.maxLength : 1000,
+                class: multiline ? 'min-h-14 w-full min-w-0 px-2 py-1' : 'h-7 w-full min-w-0 px-2 py-0',
                 'aria-label': label,
                 'onUpdate:modelValue': (value: string | number) => write(slot.path, String(value)),
             });
@@ -110,11 +111,11 @@ export default defineComponent({
             const list = getAt(props.value, path);
             return Array.isArray(list) ? list : [];
         };
-        const resizable = (schema: ListSchema): boolean => schema.min < schema.max;
+        const resizable = (schema: ListSchema): boolean => schema.minItems < schema.maxItems;
         const canAdd = (path: Path, schema: ListSchema): boolean => {
             const list = listOf(path);
-            if (list.length >= schema.max || !definition.value) return false;
-            const next = setAt(props.value, path, [...list, emptyValue(schema.item, props.props)]) as Record<string, unknown>;
+            if (list.length >= schema.maxItems || !definition.value) return false;
+            const next = setAt(props.value, path, [...list, emptyValue(schema.items, props.props)]) as Record<string, unknown>;
             return ruleFailures(definition.value.rules, next, variables.value, 'save').length === 0;
         };
 
@@ -132,7 +133,7 @@ export default defineComponent({
                 const { listPath, index, schema } = row.row;
                 const where = definition.value ? describe(definition.value, [...listPath, index]).where : '';
                 return h('td', { class: 'w-10 border-0 align-middle' }, h(Button, {
-                    type: 'button', variant: 'ghost', size: 'icon-sm', disabled: listOf(listPath).length <= schema.min,
+                    type: 'button', variant: 'ghost', size: 'icon-sm', disabled: listOf(listPath).length <= schema.minItems,
                     'aria-label': `Quitar ${where}`,
                     onClick: () => {
                         const list = [...listOf(listPath)];
@@ -149,9 +150,9 @@ export default defineComponent({
                 const where = definition.value ? describe(definition.value, path).where : '';
                 return h(Button, {
                     type: 'button', variant: 'outline', size: 'sm', class: 'w-fit', disabled: !canAdd(path, schema),
-                    'aria-label': `Agregar ${schema.label ?? 'fila'}${where ? ` (${where})` : ''}`,
-                    onClick: () => write(path, [...listOf(path), emptyValue(schema.item, props.props)]),
-                }, () => [h(Plus, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), `Agregar ${schema.label ?? 'fila'}`]);
+                    'aria-label': `Agregar ${schema.title ?? 'fila'}${where ? ` (${where})` : ''}`,
+                    onClick: () => write(path, [...listOf(path), emptyValue(schema.items, props.props)]),
+                }, () => [h(Plus, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), `Agregar ${schema.title ?? 'fila'}`]);
             });
             return h('div', { class: 'flex flex-col gap-1' }, [h('div', { class: 'overflow-x-auto' }, rendered), ...buttons]);
         };
@@ -179,8 +180,8 @@ export default defineComponent({
         const configure = (block: BlockDefinition): VNodeChild => h('div', { class: 'flex flex-col gap-2 rounded-md border p-2' }, [
             h('span', { class: 'text-xs font-medium text-muted-foreground' }, block.label),
             ...Object.entries(block.props).map(([key, schema]) => {
-                const label = schema.label ?? key;
-                return h(Input, { modelValue: typeof props.props[key] === 'string' ? props.props[key] as string : '', maxlength: schema.max, placeholder: label, 'aria-label': label, 'onUpdate:modelValue': (text: string | number) => emit('update:props', { ...props.props, [key]: String(text) }) });
+                const label = schema.title ?? key;
+                return h(Input, { modelValue: typeof props.props[key] === 'string' ? props.props[key] as string : '', maxlength: schema.maxLength, placeholder: label, 'aria-label': label, 'onUpdate:modelValue': (text: string | number) => emit('update:props', { ...props.props, [key]: String(text) }) });
             }),
         ]);
 

@@ -1,7 +1,7 @@
 import type { DocumentNode } from '@/lib/templateDocument';
 import { holds } from '@/lib/blocks/condition';
 import { countOf, formatTotal, parseNumber, Scope, segments, type Path } from '@/lib/blocks/scope';
-import type { BlockDefinition, Condition, ListSchema, ObjectSchema, ValueSchema } from '@/lib/blocks/types';
+import { isChoice, optionTitle, type BlockDefinition, type Condition, type ListSchema, type ObjectSchema, type ValueSchema } from '@/lib/blocks/types';
 
 export type SlotMeta = { path: Path; schema: ValueSchema | null; option?: string; mark?: string; text: string; scope: Scope };
 export type RowMeta = { listPath: Path; index: number; schema: ListSchema; placeholder?: boolean };
@@ -16,10 +16,10 @@ export const schemaAt = (schema: ValueSchema | ObjectSchema | null, path: string
     for (const segment of segments(path)) {
         if (current === null) return null;
         if (segment === '*') {
-            current = current.type === 'list' ? current.item : null;
+            current = current.type === 'array' ? current.items : null;
             continue;
         }
-        current = current.type === 'object' ? current.fields[segment] ?? null : null;
+        current = current.type === 'object' ? current.properties[segment] ?? null : null;
     }
     return current;
 };
@@ -29,7 +29,7 @@ const slotText = (attrs: Record<string, unknown>, scope: Scope, schema: ValueSch
         const value = scope.value(attrs.value);
         if (typeof attrs.option === 'string') return value === attrs.option ? (typeof attrs.mark === 'string' ? attrs.mark : 'X') : '';
         const target = schemaAt(schema, attrs.value);
-        if (target?.type === 'choice') return typeof value === 'string' ? target.options[value] ?? '' : '';
+        if (isChoice(target)) return optionTitle(target, value);
         return typeof value === 'string' || typeof value === 'number' ? String(value) : '';
     }
     if (typeof attrs.prop === 'string') {
@@ -88,8 +88,8 @@ const nodes = (sources: DocumentNode[], scope: Scope, schema: ValueSchema | null
         const real = items.length;
         while (items.length < (repeat.at_least ?? 0)) items.push({});
         const list = repeat.value !== undefined ? schemaAt(schema, repeat.value) : null;
-        const itemSchema = list?.type === 'list' ? list.item : schema;
-        const tracked = repeat.value !== undefined && list?.type === 'list' && source.type === 'tableRow' && !padding;
+        const itemSchema = list?.type === 'array' ? list.items : schema;
+        const tracked = repeat.value !== undefined && list?.type === 'array' && source.type === 'tableRow' && !padding;
         if (tracked && items.length === 0) out.push({ type: 'tableRow', content: [], row: { listPath: scope.absolute(repeat.value!), index: -1, schema: list, placeholder: true } });
         items.forEach((item, index) => {
             const record = typeof item === 'object' && item !== null && !Array.isArray(item) ? item as Record<string, unknown> : {};
@@ -107,7 +107,7 @@ const nodes = (sources: DocumentNode[], scope: Scope, schema: ValueSchema | null
 };
 
 export const resolveBlock = (definition: BlockDefinition, props: Record<string, unknown>, value: Record<string, unknown>, variables: Record<string, string>): ResolvedNode[] =>
-    nodes(definition.layout, new Scope(value, props, variables), { type: 'object', fields: definition.value } as ObjectSchema, 'b');
+    nodes(definition.layout, new Scope(value, props, variables), { type: 'object', properties: definition.value } as ObjectSchema, 'b');
 
 const plain = (resolved: ResolvedNode): DocumentNode[] => {
     if (resolved.row?.placeholder) return [];

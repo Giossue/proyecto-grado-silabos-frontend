@@ -4,14 +4,22 @@ export type Condition =
     | { not: Condition }
     | ({ value?: string; prop?: string; item?: string; variable?: string } & ({ equals: string | number | null } | { empty: boolean } | { zero: boolean }));
 
-type SchemaBase = { label?: string; error?: string; keep_if?: Condition; required?: boolean };
-export type TextSchema = SchemaBase & { type: 'text'; max: number; multiline: boolean };
-export type NumberSchema = SchemaBase & { type: 'number'; digits: number; decimals: number };
-export type ChoiceSchema = SchemaBase & { type: 'choice'; options: Record<string, string> };
-export type ObjectSchema = SchemaBase & { type: 'object'; fields: Record<string, ValueSchema> };
-export type ListSchema = SchemaBase & { type: 'list'; min: number; max: number; initial: number; item: ValueSchema };
+type SchemaBase = { title?: string; errorMessage?: string; keep_if?: Condition };
+export type TextSchema = SchemaBase & { type: 'string'; maxLength: number; minLength?: number; multiline: boolean; oneOf?: undefined };
+export type ChoiceSchema = SchemaBase & { type: 'string'; oneOf: Array<{ const: string; title: string }> };
+export type NumberSchema = SchemaBase & { type: 'number'; maximum: number; multipleOf: number };
+export type ObjectSchema = SchemaBase & { type: 'object'; properties: Record<string, ValueSchema> };
+export type ListSchema = SchemaBase & { type: 'array'; minItems: number; maxItems: number; initial: number; items: ValueSchema };
 export type ValueSchema = TextSchema | NumberSchema | ChoiceSchema | ObjectSchema | ListSchema;
 export type PropSchema = TextSchema;
+
+export const isChoice = (schema: ValueSchema | null | undefined): schema is ChoiceSchema => schema?.type === 'string' && Array.isArray(schema.oneOf);
+export const isText = (schema: ValueSchema | null | undefined): schema is TextSchema => schema?.type === 'string' && !Array.isArray(schema.oneOf);
+export const optionTitle = (schema: ChoiceSchema, value: unknown): string => schema.oneOf.find((option) => option.const === value)?.title ?? '';
+export const numberDigits = (schema: NumberSchema): { digits: number; decimals: number } => ({
+    digits: String(Math.floor(schema.maximum)).length,
+    decimals: schema.multipleOf >= 1 ? 0 : Math.round(-Math.log10(schema.multipleOf)),
+});
 
 export type RuleCheck = { label?: string; count?: string; filled?: string; sum?: string; equals?: number | { variable: string }; max?: number | { variable: string }; min?: number | { variable: string } };
 export type BlockRule = { code: string; on: 'save' | 'submit'; message: string; hint?: string; checks: RuleCheck[] };

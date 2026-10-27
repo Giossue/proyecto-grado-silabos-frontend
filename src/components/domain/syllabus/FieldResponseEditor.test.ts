@@ -35,6 +35,8 @@ describe('FieldResponseEditor', () => {
         expect(wrapper.text()).toContain('Unidad 4');
         expect(wrapper.get('[aria-label="Unidad 2"]').text()).toContain('Semana 5');
         expect(wrapper.get('label[for="campo-0-units-0-semanas-0-acd_h"]').text()).toBe('ACD');
+        expect(wrapper.get('#campo-0-units-0-nombre').element.tagName).toBe('INPUT');
+        expect(wrapper.get('#campo-0-units-0-resultado').element.tagName).toBe('TEXTAREA');
 
         await wrapper.get('#campo-0-units-0-nombre').setValue('Fundamentos');
         const value = emitted(wrapper).content![0]!.attrs!.value as { units: Array<{ nombre: string }> };
