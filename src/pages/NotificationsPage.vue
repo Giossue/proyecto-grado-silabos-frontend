@@ -19,7 +19,7 @@ import { paths } from '@/lib/routes';
 const router = useRouter();
 const { open, openingId } = useOpenNotification();
 const result = ref<NotificationsResponse | null>(null);
-const status = ref<'all' | 'unread'>('all');
+const status = ref<'all' | 'unread'>('unread');
 const error = ref<string | null>(null);
 const loading = ref(true);
 const pending = ref(false);

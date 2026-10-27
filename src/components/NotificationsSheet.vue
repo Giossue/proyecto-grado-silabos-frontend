@@ -27,7 +27,7 @@ const router = useRouter();
 const compact = useMediaQuery('(width < 40rem)');
 const { open: openDestination } = useOpenNotification();
 const open = ref(false);
-const status = ref<'all' | 'unread'>('all');
+const status = ref<'all' | 'unread'>('unread');
 const items = ref<Notification[]>([]);
 const unreadCount = ref(0);
 const loading = ref(false);
@@ -98,7 +98,9 @@ const readAll = async (): Promise<void> => {
 };
 
 watch(open, (value) => {
-    if (value) void load();
+    if (!value) return;
+    if (status.value === 'unread') void load();
+    else status.value = 'unread';
 });
 watch(status, () => {
     if (open.value) void load();

@@ -81,6 +81,23 @@ describe('NotificationsSheet', () => {
         wrapper.unmount();
     });
 
+    it('abre siempre en «No leídas»', async () => {
+        const wrapper = await mountOpen();
+        const vm = wrapper.vm as unknown as { open: boolean };
+
+        expect(getNotifications).toHaveBeenLastCalledWith('unread');
+        await wrapper.findAll('[role="radio"]').find((option) => option.text() === 'Todas')!.trigger('click');
+        await flushPromises();
+        expect(getNotifications).toHaveBeenLastCalledWith('all');
+
+        vm.open = false;
+        await flushPromises();
+        vm.open = true;
+        await flushPromises();
+        expect(getNotifications).toHaveBeenLastCalledWith('unread');
+        wrapper.unmount();
+    });
+
     it('sin avisos aclara que solo cuenta el período en curso', async () => {
         vi.mocked(getNotifications).mockResolvedValue({
             filters: { status: 'all' },
@@ -89,7 +106,7 @@ describe('NotificationsSheet', () => {
         });
         const wrapper = await mountOpen();
 
-        expect(wrapper.text()).toContain('No tiene notificaciones en este período');
+        expect(wrapper.text()).toContain('No tiene notificaciones sin leer en este período');
         wrapper.unmount();
     });
 
