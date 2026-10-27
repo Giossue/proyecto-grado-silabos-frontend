@@ -22,8 +22,8 @@ const formatted = computed(() =>
 </script>
 
 <template>
-    <Card>
-        <CardContent class="flex flex-col gap-0.5 py-3">
+    <Card class="py-4">
+        <CardContent class="flex flex-col gap-0.5">
             <div class="flex items-center gap-2 text-muted-foreground">
                 <component
                     :is="icon"

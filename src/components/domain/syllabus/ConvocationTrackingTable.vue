@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
-import { formatDateDisplay } from '@/lib/dateDisplay';
 import { SYLLABUS_STATE_OPTIONS } from '@/lib/syllabusStates';
 import { ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
@@ -21,9 +20,6 @@ const data = ref<ConvocationDetail | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
-const formatStartedAt = (value: string | null): string => value
-  ? formatDateDisplay(value, { dateStyle: 'medium' })
-  : 'Sin iniciar';
 const syllabusFilter = useClientFilter(
   () => data.value?.convocation.syllabi ?? [],
   (item) => [item.subject, item.code, item.state],
@@ -49,7 +45,7 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
 
 <template>
   <LoadErrorState v-if="error" :message="error" @retry="load" />
-  <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :actions="false" :cell-lines="[1, 2, 1, 1]" />
+  <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :actions="false" :cell-lines="[1, 2, 1]" />
   <div v-else-if="data" class="flex flex-col gap-4">
     <Card class="py-3"><CardContent class="px-3"><ClientFilterBar
       :filter="syllabusFilter"
@@ -82,11 +78,10 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
             <TableHead>Asignatura</TableHead>
             <TableHead>Paralelos y docentes</TableHead>
             <TableHead class="text-center">Estado</TableHead>
-            <TableHead>Iniciado</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableEmpty v-if="syllabusPage.length === 0" :colspan="4">
+          <TableEmpty v-if="syllabusPage.length === 0" :colspan="3">
             {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros.' : 'Los expedientes aparecerán después de abrir la convocatoria.' }}
           </TableEmpty>
           <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id">
@@ -95,11 +90,10 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
               <div class="text-sm text-muted-foreground">{{ syllabus.code }}</div>
             </TableCell>
             <TableCell>
-              <div>Paralelos {{ syllabus.parallels.join(', ') }}</div>
+              <div>{{ syllabus.parallels.length === 1 ? 'Paralelo' : 'Paralelos' }} {{ syllabus.parallels.join(', ') }}</div>
               <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
             </TableCell>
             <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /></TableCell>
-            <TableCell>{{ formatStartedAt(syllabus.iniciado_en) }}</TableCell>
           </TableRow>
         </TableBody>
       </Table>
