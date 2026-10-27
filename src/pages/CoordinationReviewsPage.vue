@@ -9,7 +9,6 @@ import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getReviews, reviewStageLabel, type ReviewsPage } from '@/api/reviews';
 import { getSession } from '@/api/session';
-import DeadlineBanner from '@/components/domain/DeadlineBanner.vue';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import MetricTiles from '@/components/domain/MetricTiles.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -27,6 +26,7 @@ import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableR
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { paths, reviewAreaPaths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
+import { deadlineState } from '@/state/deadline';
 
 const router = useRouter();
 const data = ref<ReviewsPage | null>(null);
@@ -64,7 +64,8 @@ const clearFilters = (): void => {
 };
 const changed = async (message: string): Promise<void> => {
   toast.success(message);
-  summary.value = await getDashboard().catch(() => summary.value);
+  const [dashboard] = await Promise.all([getDashboard().catch(() => summary.value), deadlineState.load()]);
+  summary.value = dashboard;
 };
 
 onMounted(() => { void load(1, true); });
@@ -72,7 +73,6 @@ onMounted(() => { void load(1, true); });
 
 <template>
   <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo." size="wide">
-    <template v-if="summary?.deadline" #banner><DeadlineBanner :deadline="summary.deadline" audience="coordinador" /></template>
     <template #actions>
       <ConvocationActions v-if="summary?.coordination_convocation" :convocation="summary.coordination_convocation" @changed="changed" />
       <Button as-child variant="outline"><RouterLink :to="paths.coordination.setup"><ListChecks data-icon="inline-start" aria-hidden="true" />Puesta en marcha</RouterLink></Button>

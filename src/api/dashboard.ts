@@ -51,3 +51,5 @@ export type Dashboard = {
 };
 
 export const getDashboard = () => api<Dashboard>('/dashboard');
+
+export const getDeadline = () => api<{ deadline: DashboardDeadline | null }>('/dashboard/deadline');

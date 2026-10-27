@@ -53,11 +53,10 @@ describe('CoordinationReviewsPage', () => {
     });
   });
 
-  it('reúne arriba el plazo, los indicadores, Pausar y Puesta en marcha', async () => {
+  it('reúne arriba los indicadores, Pausar y Puesta en marcha', async () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.get('[role="status"]').text()).toBe('Quedan 3 días para recibir y revisar los sílabos de su carreraHasta el 30 de octubre de 2026.');
     expect(wrapper.text()).toContain('Por revisar');
     expect(wrapper.text()).toContain('Sílabos sin iniciar');
     expect(wrapper.get('.actions').text()).toContain('Pausar convocatoria');

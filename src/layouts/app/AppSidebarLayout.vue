@@ -5,6 +5,7 @@ import AppContent from '@/components/AppContent.vue';
 import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
+import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import ScreenHelpButton from '@/components/domain/ScreenHelpButton.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { breadcrumbsKey, pageTitleKey } from '@/composables/usePageBreadcrumbs';
@@ -39,6 +40,7 @@ provide(pageTitleKey, pageTitle);
                 :breadcrumbs="breadcrumbs"
                 :page-title="pageTitle"
             />
+            <RoleDeadlineBanner v-if="!editorOpen" />
             <slot />
             <ScreenHelpButton v-if="!templateEditorOpen" :editor-mode="curriculumEditorOpen" />
             <AccessibilityDialog v-if="!editorOpen" floating />

@@ -41,13 +41,12 @@ describe('TeacherSyllabiPage', () => {
     vi.mocked(getDashboard).mockResolvedValue(summary);
   });
 
-  it('reúne los indicadores, el plazo y los sílabos en una sola pantalla', async () => {
+  it('reúne los indicadores y los sílabos en una sola pantalla', async () => {
     const wrapper = mountPage();
     await flushPromises();
 
     expect(wrapper.text()).toContain('Sílabos por entregar');
     expect(wrapper.text()).toContain('Por corregir');
-    expect(wrapper.get('[role="status"]').text()).toBe('Quedan 19 días para enviar sus sílabos a revisiónHasta el 15 de noviembre de 2026.');
     expect(wrapper.text()).not.toContain('Continuar mis sílabos');
     expect(wrapper.get('[aria-label="Mis sílabos"]').text()).toContain('Álgebra Lineal');
   });

@@ -8,7 +8,6 @@ import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getLibraryReviews, type LibraryReviewsPage } from '@/api/library';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
-import DeadlineBanner from '@/components/domain/DeadlineBanner.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import MetricTiles from '@/components/domain/MetricTiles.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -73,7 +72,6 @@ onMounted(() => { void load(initialPage, true); });
 
 <template>
   <PageFrame title="Revisiones de biblioteca" description="Bibliografía de los sílabos enviados." size="wide">
-    <template v-if="summary?.deadline" #banner><DeadlineBanner :deadline="summary.deadline" audience="bibliotecario" /></template>
     <template v-if="periods.length > 0" #meta><Badge v-for="period in periods" :key="period" variant="secondary">Período {{ period }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :actions="false" chip metrics />

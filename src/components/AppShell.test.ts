@@ -5,13 +5,15 @@ import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
 import { curriculumEditorState } from '@/state/curriculumEditor';
 import { sessionState } from '@/state/session';
 
-const { getNotifications, logout, selectActiveRole } = vi.hoisted(() => ({
+const { getDeadline, getNotifications, logout, selectActiveRole } = vi.hoisted(() => ({
+  getDeadline: vi.fn(),
   getNotifications: vi.fn(),
   logout: vi.fn(),
   selectActiveRole: vi.fn(),
 }));
 
 vi.mock('@/api/notifications', () => ({ getNotifications }));
+vi.mock('@/api/dashboard', () => ({ getDeadline }));
 vi.mock('@/api/session', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/api/session')>(),
   logout,
@@ -54,6 +56,23 @@ const mountShell = async () => {
 };
 
 describe('AppSidebarLayout', () => {
+  it('muestra el aviso de plazo bajo la barra superior en cualquier pantalla del coordinador, y no a Administración', async () => {
+    getDeadline.mockResolvedValue({ deadline: { period: '2026-2027', starts_at: '2026-10-26', due_at: '2026-10-30', state: 'active', days_until_start: 0, days_until_due: 3, convocation_id: 'c1' } });
+    sessionState.replace({ ...administratorSession, active_role: { id: 'role-2', code: 'coordinador', career_id: 'career-1', career_name: 'Software' } });
+    const wrapper = await mountShell();
+    await flushPromises();
+
+    const banner = wrapper.get('[role="status"]');
+    expect(banner.text()).toBe('Quedan 3 días para recibir y revisar los sílabos de su carreraHasta el 30 de octubre de 2026.');
+    expect(banner.element.compareDocumentPosition(wrapper.get('header').element) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+    expect(getDeadline).toHaveBeenCalledTimes(1);
+
+    sessionState.replace(administratorSession);
+    await flushPromises();
+    expect(wrapper.text()).not.toContain('Quedan 3 días');
+    expect(getDeadline).toHaveBeenCalledTimes(1);
+  });
+
   afterEach(() => {
     curriculumEditorState.setOpen(false);
     mountedWrappers.splice(0).forEach((wrapper) => wrapper.unmount());

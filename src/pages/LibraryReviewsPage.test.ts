@@ -70,7 +70,6 @@ describe('LibraryReviewsPage', () => {
     expect(wrapper.text()).toContain('Por verificar');
     expect(wrapper.text()).toContain('Por firmar');
     expect(wrapper.text()).not.toContain('Firmados');
-    expect(wrapper.text()).toContain('Quedan 19 días para revisar y firmar los sílabos');
 
     await wrapper.get('form').trigger('submit');
     await flushPromises();
