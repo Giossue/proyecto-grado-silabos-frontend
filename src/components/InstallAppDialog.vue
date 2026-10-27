@@ -30,21 +30,17 @@ const install = async (): Promise<void> => {
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>Instalar Sílabos UEB</DialogTitle>
-        <DialogDescription>Agregue el sistema a su celular o computadora para abrirlo como una aplicación, con su propio ícono y sin la barra del navegador. Necesita internet para trabajar.</DialogDescription>
+        <DialogDescription>Úselo como una aplicación en su celular o computadora.</DialogDescription>
       </DialogHeader>
-      <p v-if="canPrompt" class="text-sm">Pulse «Instalar» y confirme en el aviso del navegador.</p>
-      <ol v-else-if="platform === 'ios'" class="flex list-decimal flex-col gap-2 pl-5 text-sm">
+      <ol v-if="!canPrompt && platform === 'ios'" class="flex list-decimal flex-col gap-2 pl-5 text-sm">
         <li>Abra el sistema en Safari.</li>
-        <li>Pulse el botón Compartir <Share class="inline size-4 align-text-bottom" aria-label="Compartir" />.</li>
-        <li>Elija «Agregar a pantalla de inicio» y pulse «Agregar».</li>
+        <li>Pulse Compartir <Share class="inline size-4 align-text-bottom" aria-label="Compartir" />.</li>
+        <li>Elija «Agregar a pantalla de inicio».</li>
       </ol>
-      <div v-else class="flex flex-col gap-2 text-sm">
-        <p>Este navegador no ofrece la instalación desde aquí.</p>
-        <ul class="flex list-disc flex-col gap-2 pl-5">
-          <li>En Chrome o Edge, use «Instalar» en la barra de direcciones o en el menú ⋮.</li>
-          <li>En Safari de Mac, use Archivo → «Agregar al Dock».</li>
-        </ul>
-      </div>
+      <ul v-else-if="!canPrompt" class="flex list-disc flex-col gap-2 pl-5 text-sm">
+        <li>Chrome o Edge: menú ⋮ → «Instalar».</li>
+        <li>Safari en Mac: Archivo → «Agregar al Dock».</li>
+      </ul>
       <DialogFooter>
         <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
         <Button v-if="canPrompt" type="button" :disabled="installing" @click="install"><Spinner v-if="installing" data-icon="inline-start" /><Download v-else data-icon="inline-start" aria-hidden="true" />Instalar</Button>

@@ -15,7 +15,7 @@ describe('InstallAppDialog', () => {
     await flushPromises();
 
     expect(document.body.textContent).toContain('Instalar Sílabos UEB');
-    expect(document.body.textContent).toContain('En Chrome o Edge, use «Instalar»');
+    expect(document.body.textContent).toContain('Chrome o Edge: menú ⋮ → «Instalar»');
     expect(Array.from(document.querySelectorAll('button')).some((button) => button.textContent?.trim() === 'Instalar')).toBe(false);
     wrapper.unmount();
   });
