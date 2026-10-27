@@ -59,6 +59,9 @@
 
     --color-warning: var(--warning);
     --color-warning-foreground: var(--warning-foreground);
+    --color-notice: var(--notice);
+    --color-notice-border: var(--notice-border);
+    --color-notice-foreground: var(--notice-foreground);
 
     --color-border: var(--border);
     --color-input: var(--input);
@@ -192,6 +195,9 @@
     --success-foreground: hsl(0 0% 98%);
     --warning: #8a4f00;
     --warning-foreground: hsl(0 0% 98%);
+    --notice: #fdf6e7;
+    --notice-border: #f1dfb6;
+    --notice-foreground: #5c3b00;
     --border: #dbe3ec;
     --input: #7c8c9f;
     --ring: #4a78a8;
@@ -279,6 +285,9 @@
     --success-foreground: #052e16;
     --warning: #fbbf24;
     --warning-foreground: #422006;
+    --notice: rgb(251 191 36 / 0.1);
+    --notice-border: rgb(251 191 36 / 0.3);
+    --notice-foreground: #f1f2f3;
     --border: #464a50;
     --input: #7a8087;
     --ring: #a8b2c0;

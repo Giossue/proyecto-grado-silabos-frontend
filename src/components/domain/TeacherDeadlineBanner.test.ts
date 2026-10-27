@@ -16,12 +16,11 @@ const deadline: DashboardDeadline = {
 const text = (value: Partial<DashboardDeadline>) => mount(TeacherDeadlineBanner, { props: { deadline: { ...deadline, ...value } } });
 
 describe('TeacherDeadlineBanner', () => {
-  it('dice para qué son los días, hasta cuándo y cuánto del plazo pasó', () => {
+  it('dice para qué son los días y hasta cuándo, sin barra ni botones', () => {
     const wrapper = text({});
 
     expect(wrapper.get('[role="status"]').text()).toBe('Quedan 2 días para enviar sus sílabos a revisiónHasta el 28 de septiembre de 2026.');
-    expect(wrapper.find('[aria-label="Avance del plazo: 50 %"]').exists()).toBe(true);
-    expect(wrapper.find('button, a').exists()).toBe(false);
+    expect(wrapper.find('[role="progressbar"], button, a').exists()).toBe(false);
   });
 
   it.each([
@@ -34,10 +33,7 @@ describe('TeacherDeadlineBanner', () => {
     expect(text(value).text()).toContain(headline);
   });
 
-  it.each(['paused', 'closed'] as const)('en %s solo avisa el estado, sin conteo ni barra', (state) => {
-    const wrapper = text({ state, days_until_due: 0 });
-
-    expect(wrapper.text()).toBe(state === 'paused' ? 'La convocatoria está pausada' : 'La convocatoria está cerrada');
-    expect(wrapper.find('[aria-label^="Avance del plazo"]').exists()).toBe(false);
+  it.each(['paused', 'closed'] as const)('en %s solo avisa el estado, sin conteo', (state) => {
+    expect(text({ state, days_until_due: 0 }).text()).toBe(state === 'paused' ? 'La convocatoria está pausada' : 'La convocatoria está cerrada');
   });
 });

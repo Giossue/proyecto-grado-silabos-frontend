@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { formatDateDisplay } from '@/lib/dateDisplay';
-import { deadlineElapsed } from '@/lib/deadline';
 import { CalendarRange, Eye } from '@lucide/vue';
 import { computed } from 'vue';
 import type { DashboardDeadline } from '@/api/dashboard';
@@ -26,7 +25,16 @@ const stateLabel = computed(() => ({
   closed: 'Cerrada',
 })[props.deadline.state]);
 
-const elapsed = computed(() => deadlineElapsed(props.deadline));
+const elapsed = computed(() => {
+  if (['overdue', 'closed'].includes(props.deadline.state)) return 100;
+  if (props.deadline.state === 'upcoming') return 0;
+  const start = Date.parse(props.deadline.starts_at);
+  const due = Date.parse(props.deadline.due_at);
+  const total = Math.round((due - start) / 86_400_000);
+  if (!Number.isFinite(total) || total <= 0) return 100;
+  const done = total - Math.max(0, props.deadline.days_until_due);
+  return Math.min(100, Math.max(0, Math.round((done / total) * 100)));
+});
 
 const summary = computed(() => {
   if (props.deadline.state === 'paused') return '';

@@ -2,15 +2,11 @@
 import { CalendarClock } from '@lucide/vue';
 import { computed } from 'vue';
 import type { DashboardDeadline } from '@/api/dashboard';
-import { Progress } from '@/components/ui/progress';
 import { formatDateDisplay } from '@/lib/dateDisplay';
-import { deadlineElapsed } from '@/lib/deadline';
 
 const props = defineProps<{ deadline: DashboardDeadline }>();
 
 const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'long', timeZone: 'UTC' });
-const elapsed = computed(() => deadlineElapsed(props.deadline));
-const showProgress = computed(() => !['paused', 'closed'].includes(props.deadline.state));
 
 const notice = computed((): { headline: string; detail: string | null } => {
   const { state, days_until_start: toStart, days_until_due: toDue } = props.deadline;
@@ -28,10 +24,9 @@ const notice = computed((): { headline: string; detail: string | null } => {
 </script>
 
 <template>
-  <div role="status" class="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-warning/30 bg-warning/10 px-4 py-2.5 text-sm text-foreground sm:px-6">
+  <div role="status" class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-notice-border bg-notice px-4 py-2.5 text-sm text-notice-foreground sm:px-6">
     <CalendarClock class="size-4 shrink-0 text-warning" aria-hidden="true" />
     <span class="font-medium">{{ notice.headline }}</span>
-    <span v-if="notice.detail" class="text-muted-foreground">{{ notice.detail }}</span>
-    <Progress v-if="showProgress" :model-value="elapsed" tone="warning" class="h-1.5 w-full bg-warning/20 sm:ml-auto sm:w-40" :aria-label="`Avance del plazo: ${elapsed} %`" />
+    <span v-if="notice.detail" class="text-notice-foreground/80">{{ notice.detail }}</span>
   </div>
 </template>
