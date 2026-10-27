@@ -37,7 +37,7 @@
     "clsx": "^2.1.1",
     "embla-carousel-vue": "^8.6.0",
     "nanoid": "^6.0.1",
-    "node-forge": "^1.4.0",
+    "node-forge": "^1.4.2",
     "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4",
     "reka-ui": "^2.10.4",

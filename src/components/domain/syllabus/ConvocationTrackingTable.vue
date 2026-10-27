@@ -71,33 +71,31 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
       </template>
     </ClientFilterBar></CardContent></Card>
 
-    <div class="overflow-x-auto">
-      <Table label="Seguimiento de la convocatoria">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Asignatura</TableHead>
-            <TableHead>Paralelos y docentes</TableHead>
-            <TableHead class="text-center">Estado</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <TableEmpty v-if="syllabusPage.length === 0" :colspan="3">
-            {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros.' : 'Los expedientes aparecerán después de abrir la convocatoria.' }}
-          </TableEmpty>
-          <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id">
-            <TableCell>
-              <div>{{ syllabus.subject }}</div>
-              <div class="text-sm text-muted-foreground">{{ syllabus.code }}</div>
-            </TableCell>
-            <TableCell>
-              <div>{{ syllabus.parallels.length === 1 ? 'Paralelo' : 'Paralelos' }} {{ syllabus.parallels.join(', ') }}</div>
-              <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
-            </TableCell>
-            <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /></TableCell>
-          </TableRow>
-        </TableBody>
-      </Table>
-    </div>
+    <Table label="Seguimiento de la convocatoria">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Asignatura</TableHead>
+          <TableHead>Paralelos y docentes</TableHead>
+          <TableHead class="text-center">Estado</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableEmpty v-if="syllabusPage.length === 0" :colspan="3">
+          {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros.' : 'Los expedientes aparecerán después de abrir la convocatoria.' }}
+        </TableEmpty>
+        <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id">
+          <TableCell>
+            <div>{{ syllabus.subject }}</div>
+            <div class="text-sm text-muted-foreground">{{ syllabus.code }}</div>
+          </TableCell>
+          <TableCell>
+            <div>{{ syllabus.parallels.length === 1 ? 'Paralelo' : 'Paralelos' }} {{ syllabus.parallels.join(', ') }}</div>
+            <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
+          </TableCell>
+          <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /></TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
     <TablePagination :meta="syllabusMeta" label="Paginación del seguimiento de convocatoria" @update:page="setSyllabusPage" />
   </div>
 </template>
