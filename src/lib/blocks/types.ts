@@ -17,7 +17,7 @@ export type ColumnsSchema = SchemaBase & { type: 'columns'; min: number; max: nu
 export type ValueSchema = TextSchema | NumberSchema | ChoiceSchema | ObjectSchema | ListSchema | RowSchema;
 export type PropSchema = TextSchema | ColumnsSchema;
 
-export type RuleCheck = { label?: string; count?: string; sum?: string; equals?: number | { variable: string }; max?: number | { variable: string }; min?: number | { variable: string } };
+export type RuleCheck = { label?: string; count?: string; filled?: string; sum?: string; equals?: number | { variable: string }; max?: number | { variable: string }; min?: number | { variable: string } };
 export type BlockRule = { code: string; on: 'save' | 'submit'; message: string; hint?: string; checks: RuleCheck[] };
 
 export type BlockDefinition = {

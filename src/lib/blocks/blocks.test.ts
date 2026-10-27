@@ -23,9 +23,19 @@ describe('intérprete de bloques', () => {
         const value = { units: [{ nombre: '', resultado: '', semanas: [{ acd_h: '3', ape_h: '1,5', aa_h: '' }, { acd_h: '2' }] }, { nombre: '', resultado: '', semanas: [{ aa_h: '4' }] }] };
 
         expect(ruleFailures(units.rules, value, { horas_docencia: '5', horas_practicas: '2', horas_autonomas: '4' }, 'submit')).toEqual([
+            { code: 'unidades_sin_nombre', message: 'Escriba el nombre y el resultado de aprendizaje de las 4 unidades: Nombres 0 de 4, Resultados 0 de 4.' },
             { code: 'semanas_unidades_incompletas', message: 'Las unidades deben repartir las 16 semanas del período: tienen 3.' },
             { code: 'horas_unidades_no_coinciden', message: 'Las horas de las unidades deben sumar las de la asignatura: APE 1.5 de 2.' },
         ]);
+    });
+
+    it('exige el nombre y el resultado de las cuatro unidades, sin contar los vacíos', () => {
+        const units = official.blocks.unidades!;
+        const unit = (nombre: string, resultado: string) => ({ nombre, resultado, semanas: [{ acd_h: '1' }] });
+        const codes = (list: ReturnType<typeof unit>[]) => ruleFailures(units.rules, { units: list }, { horas_docencia: '4', horas_practicas: '0', horas_autonomas: '0' }, 'submit').map((failure) => failure.code);
+
+        expect(codes([unit('Uno', 'R1'), unit('Dos', 'R2'), unit('Tres', '  '), unit('', 'R4')])).toContain('unidades_sin_nombre');
+        expect(codes([unit('Uno', 'R1'), unit('Dos', 'R2'), unit('Tres', 'R3'), unit('Cuatro', 'R4')])).not.toContain('unidades_sin_nombre');
     });
 
     it('borra lo que deja de aplicar como lo hace el backend', () => {
