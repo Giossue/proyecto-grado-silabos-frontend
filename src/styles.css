@@ -693,6 +693,12 @@
 }
 
 @layer components {
+    .syllabus-editor-header {
+        width: 100%;
+        max-width: 64rem;
+        margin-inline: auto;
+    }
+
     .workspace-layout[data-layout='syllabus'] > aside {
         min-width: 0;
         align-self: start;
@@ -706,6 +712,12 @@
     }
 
     @media (width >= 80rem) {
+        .syllabus-editor-header {
+            max-width: min(64rem, calc(100% - var(--layout-syllabus-aside-width) - 1.5rem));
+            margin-left: max(0px, calc((100% - var(--layout-syllabus-aside-width) - 1.5rem - 64rem) / 2));
+            margin-right: auto;
+        }
+
         .workspace-layout[data-layout='syllabus'] {
             grid-template-columns: minmax(0, 1fr) var(--layout-syllabus-aside-width);
         }

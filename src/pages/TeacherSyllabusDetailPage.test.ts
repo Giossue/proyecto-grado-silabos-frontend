@@ -139,6 +139,23 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.findComponent(FreeTextEditor).exists()).toBe(false);
   });
 
+  it("«Vista previa» muestra la hoja en la pantalla y «Editar» vuelve al formulario", async () => {
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador", "docente") });
+    const wrapper = mountPage();
+    await flushPromises();
+    expect(wrapper.findComponent(SyllabusDocumentPreview).exists()).toBe(false);
+
+    await buttonNamed(wrapper, "Vista previa")!.trigger("click");
+    expect(wrapper.findComponent(SyllabusDocumentPreview).exists()).toBe(true);
+    expect(wrapper.find("#field-field-1").exists()).toBe(false);
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+
+    await buttonNamed(wrapper, "Editar")!.trigger("click");
+    expect(wrapper.findComponent(SyllabusDocumentPreview).exists()).toBe(false);
+    expect(wrapper.find("#field-field-1").exists()).toBe(true);
+    wrapper.unmount();
+  });
+
   it("el campo de texto se escribe con su editor y se guarda como documento", async () => {
     vi.useFakeTimers();
     const detail = syllabus("borrador", "docente");

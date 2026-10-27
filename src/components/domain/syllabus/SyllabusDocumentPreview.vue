@@ -66,7 +66,7 @@ watch(() => [props.sections, props.presentation], () => { void nextTick(paginate
 
 <template>
   <div ref="root" class="flex min-w-0 flex-col gap-6" role="region" aria-label="Vista previa del sílabo">
-    <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto">
+    <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto py-4">
       <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet data-preview="true" :style="{ zoom: scaleFor(sheet.landscape), ...layout }" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
         <div data-sheet-content class="flex flex-col gap-6">
           <header v-if="sheetIndex === 0" class="flex flex-col gap-3">

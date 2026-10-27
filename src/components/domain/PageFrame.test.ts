@@ -27,4 +27,10 @@ describe('PageFrame', () => {
 
     expect(wrapper.get('h1').element.closest('.gap-3')?.classList).toContain('items-center');
   });
+
+  it('aplica la clase del encabezado para alinearlo con el contenido', () => {
+    const wrapper = mount(PageFrame, { props: { title: 'Álgebra Lineal', description: 'Paralelo A', headerClass: 'syllabus-editor-header' } });
+
+    expect(wrapper.get('header').classes()).toContain('syllabus-editor-header');
+  });
 });

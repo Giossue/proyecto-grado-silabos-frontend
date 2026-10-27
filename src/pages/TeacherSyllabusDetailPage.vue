@@ -39,14 +39,14 @@ import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocume
 import { attemptKey } from '@/lib/attemptKey';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
-import { ArrowLeft, Copy, FileText, Library, Send } from '@lucide/vue';
+import { ArrowLeft, Copy, FileText, Library, Pencil, Send } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
 const route = useRoute();
 const router = useRouter();
 const syllabus = ref<SyllabusDetail | null>(null);
-const previewOpen = ref(false);
+const previewing = ref(false);
 const error = ref<string | null>(null);
 const starting = ref(false);
 const savingFieldId = ref<string | null>(null);
@@ -426,9 +426,10 @@ onBeforeUnmount(() => {
     <span class="flex-1" />
     <AppearanceToggle />
   </header>
-  <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="!syllabus">
+  <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="!syllabus" header-class="syllabus-editor-header">
     <template #actions>
-      <Button v-if="syllabus && showEditor" type="button" variant="outline" @click="previewOpen = true"><FileText aria-hidden="true" />Vista previa</Button>
+      <Button v-if="syllabus && showEditor && previewing" type="button" variant="outline" @click="previewing = false"><Pencil aria-hidden="true" />Editar</Button>
+      <Button v-else-if="syllabus && showEditor" type="button" variant="outline" @click="previewing = true"><FileText aria-hidden="true" />Vista previa</Button>
       <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
@@ -441,11 +442,10 @@ onBeforeUnmount(() => {
     <template v-if="syllabus">
       <ProcessLockAlert v-if="editBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
-      <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
-      <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
-
       <WorkspaceLayout v-if="syllabus.state !== 'sin_iniciar' || pausedEdit" variant="syllabus">
         <div class="mx-auto flex w-full max-w-5xl min-w-0 flex-col gap-8">
+          <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
+          <Alert v-if="syllabus.state === 'correccion_solicitada'"><AlertTitle>Está preparando una nueva revisión</AlertTitle><AlertDescription>Modifique el trabajo según el comentario de la revisión antes de reenviar.</AlertDescription></Alert>
           <ProcessLockAlert v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
           <DocumentSignatureCard v-if="syllabus.state === 'aprobado' && syllabus.approved_revision_id" :revision-id="syllabus.approved_revision_id" :file-name="`silabo-${syllabus.code}`" />
@@ -463,12 +463,12 @@ onBeforeUnmount(() => {
             </CardContent>
           </Card>
 
-          <Tabs v-if="showEditor && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
+          <Tabs v-if="showEditor && !previewing && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
             <TabsList class="h-auto w-full flex-wrap justify-start" aria-label="Secciones del sílabo">
               <TabsTrigger v-for="section in visibleSections" :key="section.id" :value="section.id" class="h-10 max-w-64 flex-none px-4 data-[state=active]:font-semibold" :title="section.title"><span class="truncate">{{ section.title }}</span></TabsTrigger>
             </TabsList>
           </Tabs>
-          <template v-if="showEditor">
+          <template v-if="showEditor && !previewing">
             <section v-for="section in shownSections" :id="`section-${section.id}`" :key="section.id" class="teacher-form flex scroll-mt-6 flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
               <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
               <FieldGroup>
@@ -484,11 +484,7 @@ onBeforeUnmount(() => {
               </FieldGroup>
             </section>
           </template>
-          <Card v-else class="py-0">
-            <CardContent class="p-2 sm:p-4">
-              <SyllabusDocumentPreview :presentation="syllabus.presentation" :sections="syllabus.sections" />
-            </CardContent>
-          </Card>
+          <SyllabusDocumentPreview v-else :presentation="syllabus.presentation" :sections="syllabus.sections" />
 
         </div>
 
@@ -502,17 +498,6 @@ onBeforeUnmount(() => {
       </WorkspaceLayout>
     </template>
 
-    <Dialog v-model:open="previewOpen">
-      <DialogContent class="flex max-h-(--overlay-max-height) flex-col gap-4 overflow-hidden sm:max-w-5xl">
-        <DialogHeader>
-          <DialogTitle>Vista previa del sílabo</DialogTitle>
-          <DialogDescription>Así se verá el documento con lo que lleva escrito hasta ahora.</DialogDescription>
-        </DialogHeader>
-        <div class="min-h-0 flex-1 overflow-y-auto rounded-md bg-background p-2 sm:p-4">
-          <SyllabusDocumentPreview v-if="syllabus && previewOpen" :presentation="syllabus.presentation" :sections="syllabus.sections" />
-        </div>
-      </DialogContent>
-    </Dialog>
     <Dialog v-model:open="confirmSubmitOpen">
       <DialogContent>
         <DialogHeader>
