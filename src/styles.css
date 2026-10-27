@@ -166,7 +166,7 @@
 :root,
 .theme-light,
 .template-sheet {
-    --background: #eef2f7;
+    --background: #f5f6f8;
     --field: #f6f8fb;
     --foreground: #121c28;
     --card: hsl(0 0% 100%);
@@ -256,8 +256,8 @@
 }
 
 .dark {
-    --background: #151719;
-    --field: #151719;
+    --background: #17191c;
+    --field: #1e2125;
     --foreground: #f1f2f3;
     --card: #272a2f;
     --card-foreground: #f1f2f3;
@@ -315,8 +315,8 @@
 }
 
 .dark .curriculum-canvas {
-    --curriculum-canvas-background: hsl(0 0% 5.5%);
-    --curriculum-lane: hsl(0 0% 6%);
+    --curriculum-canvas-background: #1a1d20;
+    --curriculum-lane: #1d2023;
 }
 
 @layer base {
