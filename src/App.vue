@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { RouterView, useRoute } from 'vue-router';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import AppUpdatePrompt from '@/components/AppUpdatePrompt.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SyllabusEditorLayout from '@/layouts/SyllabusEditorLayout.vue';
 import WorkspaceLayout from '@/layouts/WorkspaceLayout.vue';
@@ -41,4 +42,5 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
         </AppLayout>
         <RouterView v-else />
     </ScrollArea>
+    <AppUpdatePrompt />
 </template>
