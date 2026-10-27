@@ -21,4 +21,10 @@ describe('AccessibilityDialog', () => {
     await nextTick();
     expect(document.documentElement.dataset.textSize).toBe('130');
   });
+
+  it('el botón flotante mide lo mismo que el de ayuda', () => {
+    const wrapper = mount(AccessibilityDialog, { props: { floating: true } });
+
+    expect(wrapper.get('[aria-label="Accesibilidad"]').classes()).toContain('size-12');
+  });
 });

@@ -31,6 +31,7 @@ describe('ScreenHelpButton', () => {
     await flushPromises();
 
     expect(listAvailableScreenHelp).toHaveBeenCalledTimes(1);
+    expect(wrapper.get('[aria-label="Ayuda de esta pantalla"]').classes()).toContain('size-12');
     await wrapper.get('[aria-label="Ayuda de esta pantalla"]').trigger('click');
     expect(document.body.textContent).toContain('Usuarios y roles');
     expect(document.body.textContent).toContain('Segundo párrafo.');

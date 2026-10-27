@@ -67,7 +67,7 @@ const measure = (): void => {
 
 const cornerPosition = (value: Corner): { x: number; y: number } => ({
   x: value.endsWith('left') ? bounds.value.left + MARGIN : bounds.value.right - size.value - MARGIN,
-  y: value.startsWith('top') ? bounds.value.top + MARGIN : bounds.value.bottom - size.value - MARGIN - (value === 'bottom-right' && !props.editorMode ? (size.value * 7) / 6 + MARGIN : 0),
+  y: value.startsWith('top') ? bounds.value.top + MARGIN : bounds.value.bottom - size.value - MARGIN - (value === 'bottom-right' && !props.editorMode ? size.value + MARGIN : 0),
 });
 
 const style = computed(() => {
