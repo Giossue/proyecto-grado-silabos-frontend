@@ -1,4 +1,4 @@
-import { mount } from '@vue/test-utils';
+import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it } from 'vitest';
 import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
 import { setTemplateRuntime } from '@/lib/blocks/runtime';
@@ -19,6 +19,14 @@ const emitted = (wrapper: ReturnType<typeof mountEditor>): DocumentNode => wrapp
 
 describe('FieldResponseEditor', () => {
     beforeEach(() => setTemplateRuntime(definition as unknown as TemplateDefinitionPayload, { horas_docencia: '64', horas_practicas: '0', horas_autonomas: '0' }));
+
+    it('un campo de texto libre ofrece formato y listas, pero no tablas', async () => {
+        const wrapper = mountEditor({ type: 'doc', content: [{ type: 'paragraph' }] }, null);
+        await flushPromises();
+
+        expect(wrapper.find('[aria-label="Lista con viñetas"]').exists()).toBe(true);
+        expect(wrapper.find('[aria-label="Insertar tabla"]').exists()).toBe(false);
+    });
 
     it('las unidades se llenan como formulario: una tarjeta por unidad y las semanas numeradas en orden', async () => {
         const wrapper = mountEditor(block('unidades'), block('unidades', { units: units() }));

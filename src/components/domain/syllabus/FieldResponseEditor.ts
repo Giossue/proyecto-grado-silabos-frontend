@@ -130,7 +130,7 @@ export default defineComponent({
 
         return () => {
             if (!props.template || blankResponse(props.template)) return h(FreeTextEditor, {
-                id: props.id, label: props.label, modelValue: props.modelValue ?? props.template, disabled: props.disabled,
+                id: props.id, label: props.label, modelValue: props.modelValue ?? props.template, disabled: props.disabled, allowTables: false,
                 'onUpdate:modelValue': (value: DocumentNode) => emit('update:modelValue', value),
             });
             return h('div', { id: props.id, class: 'flex min-w-0 flex-col gap-4', role: 'group', 'aria-label': props.label }, nodes(props.template, []));
