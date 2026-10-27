@@ -181,7 +181,7 @@ onMounted(refreshCount);
                         </div>
                     </div>
                     <FeedbackAlert v-else-if="error" :message="error" class="mx-6" />
-                    <EmptyState v-else-if="items.length === 0" :title="status === 'unread' ? 'No tiene notificaciones sin leer.' : 'No tiene notificaciones.'" />
+                    <EmptyState v-else-if="items.length === 0" :title="status === 'unread' ? 'No tiene notificaciones sin leer en este período.' : 'No tiene notificaciones en este período.'" />
                     <ul v-else class="flex flex-col divide-y border-t">
                         <li v-for="notification in items" :key="notification.id">
                             <Button

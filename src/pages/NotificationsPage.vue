@@ -44,7 +44,7 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Notificaciones" description="Avisos de lo que va pasando con sus sílabos y sus documentos." size="wide" :loading="!result">
+  <PageFrame title="Notificaciones" description="Avisos del período en curso sobre sus sílabos y sus documentos." size="wide" :loading="!result">
     <template #actions><Button v-if="result?.unread_count" type="button" variant="outline" :disabled="pending" @click="readAll"><Spinner v-if="pending" /><CheckCheck v-else aria-hidden="true" />Marcar todas como leídas</Button></template>
     <nav class="flex gap-2" aria-label="Filtrar notificaciones"><Button :variant="status === 'all' ? 'default' : 'outline'" :disabled="pending" @click="status = 'all'; load()">Todas</Button><Button :variant="status === 'unread' ? 'default' : 'outline'" :disabled="pending" @click="status = 'unread'; load()">No leídas</Button></nav>
     <LoadErrorState v-if="error" :message="error" @retry="load" />

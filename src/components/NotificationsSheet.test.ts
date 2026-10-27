@@ -81,6 +81,18 @@ describe('NotificationsSheet', () => {
         wrapper.unmount();
     });
 
+    it('sin avisos aclara que solo cuenta el período en curso', async () => {
+        vi.mocked(getNotifications).mockResolvedValue({
+            filters: { status: 'all' },
+            unread_count: 0,
+            notifications: { data: [], current_page: 1, last_page: 1, per_page: 20, from: null, to: null, total: 0 },
+        });
+        const wrapper = await mountOpen();
+
+        expect(wrapper.text()).toContain('No tiene notificaciones en este período');
+        wrapper.unmount();
+    });
+
     it('sin ámbito elegido muestra el contexto y no ofrece la página completa', async () => {
         const wrapper = await mountOpen();
 
