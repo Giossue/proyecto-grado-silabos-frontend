@@ -28,10 +28,10 @@ describe('Editor de documentos compartido', () => {
         expect(wrapper.find('[aria-label="Insertar dato del sistema"]').exists()).toBe(true);
     });
 
-    it('alinea el párrafo y conserva la alineación al recibir el documento', async () => {
+    it('no ofrece alinear y conserva la alineación que trae el documento', async () => {
         const wrapper = mountEditor(doc('Texto a centrar'));
         await flushPromises();
-        for (const label of ['Alinear a la izquierda', 'Centrar', 'Alinear a la derecha', 'Justificar']) expect(wrapper.find(`[aria-label="${label}"]`).exists()).toBe(true);
+        for (const label of ['Alinear a la izquierda', 'Centrar', 'Alinear a la derecha', 'Justificar']) expect(wrapper.find(`[aria-label="${label}"]`).exists()).toBe(false);
         editorOf(wrapper).commands.setTextAlign('center');
         await flushPromises();
         const value = wrapper.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
