@@ -76,6 +76,8 @@ describe('CoordinationReviewsPage', () => {
     expect(getConvocation).toHaveBeenCalledWith('c1');
     expect(wrapper.text()).toContain('Programación Orientada a Objetos');
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    // Un contenedor con desplazamiento propio recortaría el borde y la sombra de la tabla.
+    expect(wrapper.find('.overflow-x-auto > div > [data-slot="table-container"]').exists()).toBe(false);
     wrapper.unmount();
   });
 
