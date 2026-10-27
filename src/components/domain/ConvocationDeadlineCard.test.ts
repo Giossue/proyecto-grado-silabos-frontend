@@ -13,12 +13,12 @@ const deadline = {
 };
 
 describe('ConvocationDeadlineCard', () => {
-  it('explica el inicio al docente sin botones: ya está en sus sílabos', () => {
+  it('muestra al docente solo los días y la barra, sin fechas ni botones', () => {
     const wrapper = mount(ConvocationDeadlineCard, { props: { deadline, audience: 'docente' } });
 
-    expect(wrapper.text()).toContain('La elaboración inicia en 2 días.');
-    expect(wrapper.text()).toContain('Por iniciar');
-    expect(wrapper.find('button, a').exists()).toBe(false);
+    expect(wrapper.text()).toBe('La elaboración de sus sílabos inicia en 2 días, el 25 de septiembre de 2026.');
+    expect(wrapper.find('[aria-label="Avance del plazo: 0 %"]').exists()).toBe(true);
+    expect(wrapper.find('button, a, time').exists()).toBe(false);
   });
 
   it('muestra la pausa sin mensaje ni conteo engañoso', () => {
@@ -29,7 +29,7 @@ describe('ConvocationDeadlineCard', () => {
       },
     });
 
-    expect(wrapper.text()).toContain('Pausada');
+    expect(wrapper.text()).toBe('La convocatoria está pausada.');
     expect(wrapper.text()).not.toContain('No se admiten envíos');
     expect(wrapper.text()).not.toContain('Quedan 0 días');
   });
@@ -56,5 +56,6 @@ describe('ConvocationDeadlineCard', () => {
     });
 
     expect(wrapper.find('[aria-label="Avance del plazo: 50 %"]').exists()).toBe(true);
+    expect(wrapper.text()).toBe('Quedan 2 días para enviar sus sílabos a revisión: hasta el 28 de septiembre de 2026.');
   });
 });

@@ -47,7 +47,7 @@ describe('TeacherSyllabiPage', () => {
 
     expect(wrapper.text()).toContain('Sílabos por entregar');
     expect(wrapper.text()).toContain('Por corregir');
-    expect(wrapper.text()).toContain('Quedan 19 días para la entrega');
+    expect(wrapper.text()).toContain('Quedan 19 días para enviar sus sílabos a revisión: hasta el 15 de noviembre de 2026.');
     expect(wrapper.text()).not.toContain('Continuar mis sílabos');
     expect(wrapper.get('[aria-label="Mis sílabos"]').text()).toContain('Álgebra Lineal');
   });

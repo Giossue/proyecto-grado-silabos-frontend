@@ -52,10 +52,32 @@ const summary = computed(() => {
   if (props.deadline.days_until_due === 1) return 'Queda 1 día para la entrega.';
   return `Quedan ${props.deadline.days_until_due} días para la entrega`;
 });
+
+const teacherSummary = computed(() => {
+  const { state, days_until_start: toStart, days_until_due: toDue } = props.deadline;
+  const due = formatDate(props.deadline.due_at);
+  if (state === 'paused') return 'La convocatoria está pausada.';
+  if (state === 'closed') return 'La convocatoria está cerrada.';
+  if (state === 'overdue') return `El plazo para enviar sus sílabos a revisión venció el ${due}.`;
+  if (state === 'upcoming') {
+    if (toStart === 0) return 'La elaboración de sus sílabos inicia hoy.';
+    if (toStart === 1) return 'La elaboración de sus sílabos inicia mañana.';
+    return `La elaboración de sus sílabos inicia en ${toStart} días, el ${formatDate(props.deadline.starts_at)}.`;
+  }
+  if (toDue === 0) return 'Hoy es el último día para enviar sus sílabos a revisión.';
+  if (toDue === 1) return `Queda 1 día para enviar sus sílabos a revisión: hasta el ${due}.`;
+  return `Quedan ${toDue} días para enviar sus sílabos a revisión: hasta el ${due}.`;
+});
 </script>
 
 <template>
-  <Card>
+  <Card v-if="audience === 'docente'" class="py-4">
+    <CardContent class="flex flex-col gap-3">
+      <p class="font-semibold" aria-live="polite">{{ teacherSummary }}</p>
+      <Progress :model-value="elapsed" class="h-2" :aria-label="`Avance del plazo: ${elapsed} %`" />
+    </CardContent>
+  </Card>
+  <Card v-else>
     <CardHeader>
       <div class="flex flex-wrap items-start justify-between gap-3">
         <div class="flex flex-col gap-1">
@@ -81,9 +103,9 @@ const summary = computed(() => {
         <Progress :model-value="elapsed" class="h-2" :aria-label="`Avance del plazo: ${elapsed} %`" />
       </div>
     </CardContent>
-    <CardFooter v-if="(audience !== 'docente' && deadline.convocation_id) || slots.actions" class="flex flex-wrap gap-3">
+    <CardFooter v-if="deadline.convocation_id || slots.actions" class="flex flex-wrap gap-3">
       <slot name="actions" />
-      <Button v-if="audience !== 'docente' && deadline.convocation_id" type="button" variant="outline" class="max-sm:w-full" @click="emit('tracking')"><Eye data-icon="inline-start" aria-hidden="true" />Ver seguimiento</Button>
+      <Button v-if="deadline.convocation_id" type="button" variant="outline" class="max-sm:w-full" @click="emit('tracking')"><Eye data-icon="inline-start" aria-hidden="true" />Ver seguimiento</Button>
     </CardFooter>
   </Card>
 </template>
