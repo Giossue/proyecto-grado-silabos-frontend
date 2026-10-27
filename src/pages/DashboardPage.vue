@@ -37,10 +37,6 @@ const setupRoutes: Record<string, string> = {
   parallels: paths.coordination.scheduledSubjects,
   teachers: paths.coordination.teachers,
   convocation: paths.coordination.panel,
-  assigned: paths.teacher.syllabi,
-  started: paths.teacher.syllabi,
-  submitted: paths.teacher.syllabi,
-  signed: paths.teacher.syllabi,
 };
 const setup = computed(() => dashboard.value?.setup ? {
   ...dashboard.value.setup,
@@ -50,7 +46,6 @@ const setup = computed(() => dashboard.value?.setup ? {
   })),
 } : null);
 const roleCode = computed(() => sessionState.current.value?.active_role?.code ?? null);
-const deadlineRole = computed(() => roleCode.value === 'coordinador' || roleCode.value === 'docente' ? roleCode.value : null);
 const trackingId = computed(() => dashboard.value?.coordination_convocation?.convocation_id ?? dashboard.value?.deadline?.convocation_id ?? null);
 
 const handleSetupAction = (action: string): void => {
@@ -86,7 +81,7 @@ onMounted(() => { void load(); });
         <StatTile v-for="metric in dashboard.metrics.slice(0, 3)" :key="metric.key" :label="metric.label" :value="metric.value" :suffix="metric.suffix ?? undefined" :hint="metric.hint" :icon="icons[metric.key]" />
       </div>
       <p v-else class="text-sm text-muted-foreground">No hay indicadores disponibles para este rol.</p>
-      <ConvocationDeadlineCard v-if="dashboard.deadline && deadlineRole" :deadline="dashboard.deadline" :role="deadlineRole" @tracking="trackingOpen = true"><template v-if="roleCode === 'coordinador' && dashboard.coordination_convocation" #actions><ConvocationActions :convocation="dashboard.coordination_convocation" @changed="handleOpened" /></template></ConvocationDeadlineCard>
+      <ConvocationDeadlineCard v-if="dashboard.deadline && roleCode === 'coordinador'" :deadline="dashboard.deadline" audience="coordinador" @tracking="trackingOpen = true"><template v-if="dashboard.coordination_convocation" #actions><ConvocationActions :convocation="dashboard.coordination_convocation" @changed="handleOpened" /></template></ConvocationDeadlineCard>
       <SetupChecklist v-if="setup" :setup="setup" @action="handleSetupAction" />
     </template>
     <LoadingSkeleton v-else variant="dashboard" :dashboard-role="roleCode ?? undefined" />

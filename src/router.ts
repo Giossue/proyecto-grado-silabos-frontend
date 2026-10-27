@@ -96,7 +96,6 @@ export const router = createRouter({
     { path: "/coordinacion/docentes", component: CoordinationAcademicStructurePage, props: { mode: "teachers" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Docentes" } },
     { path: "/coordinacion/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Documentos" } },
 
-    { path: "/docente/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["docente"], title: "Panel" } },
     { path: "/docente/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Notificaciones" } },
     { path: "/docente/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["docente"], title: "Perfil" } },
     { path: "/docente/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["docente"], title: "Seguridad" } },

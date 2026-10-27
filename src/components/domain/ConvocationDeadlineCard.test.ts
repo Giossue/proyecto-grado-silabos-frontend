@@ -13,28 +13,20 @@ const deadline = {
 };
 
 describe('ConvocationDeadlineCard', () => {
-  it('explica el inicio y ofrece al docente continuar sus sílabos', () => {
-    const wrapper = mount(ConvocationDeadlineCard, {
-      props: { deadline, role: 'docente' },
-      global: {
-        stubs: {
-          RouterLink: { props: ['to'], template: '<a :data-to="to"><slot /></a>' },
-        },
-      },
-    });
+  it('explica el inicio al docente sin botones: ya está en sus sílabos', () => {
+    const wrapper = mount(ConvocationDeadlineCard, { props: { deadline, audience: 'docente' } });
 
     expect(wrapper.text()).toContain('La elaboración inicia en 2 días.');
     expect(wrapper.text()).toContain('Por iniciar');
-    expect(wrapper.text()).toContain('Continuar mis sílabos');
+    expect(wrapper.find('button, a').exists()).toBe(false);
   });
 
   it('muestra la pausa sin mensaje ni conteo engañoso', () => {
     const wrapper = mount(ConvocationDeadlineCard, {
       props: {
         deadline: { ...deadline, state: 'paused', days_until_start: 0, days_until_due: 0 },
-        role: 'docente',
+        audience: 'docente',
       },
-      global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
     });
 
     expect(wrapper.text()).toContain('Pausada');
@@ -46,7 +38,7 @@ describe('ConvocationDeadlineCard', () => {
     const wrapper = mount(ConvocationDeadlineCard, {
       props: {
         deadline: { ...deadline, state: 'overdue', convocation_id: 'convocation-1' },
-        role: 'coordinador',
+        audience: 'coordinador',
       },
     });
 
@@ -59,9 +51,8 @@ describe('ConvocationDeadlineCard', () => {
     const wrapper = mount(ConvocationDeadlineCard, {
       props: {
         deadline: { ...deadline, state: 'active', days_until_start: 0, days_until_due: 2, starts_at: '2026-09-24T00:00:00Z', due_at: '2026-09-28T00:00:00Z' },
-        role: 'docente',
+        audience: 'docente',
       },
-      global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
     });
 
     expect(wrapper.find('[aria-label="Avance del plazo: 50 %"]').exists()).toBe(true);

@@ -60,7 +60,6 @@ export const paths = {
   },
   teacher: {
     root: '/docente',
-    panel: '/docente/panel',
     notifications: '/docente/notificaciones',
     profile: '/docente/configuracion/perfil',
     security: '/docente/configuracion/seguridad',
@@ -86,7 +85,6 @@ export type RoleArea = 'admin' | 'coordination' | 'teacher' | 'library';
 
 type AreaPaths = {
   root: string;
-  panel: string;
   notifications: string;
   profile: string;
   security: string;
@@ -104,6 +102,13 @@ const areaPaths: Record<RoleArea, AreaPaths> = {
   coordination: paths.coordination,
   teacher: paths.teacher,
   library: paths.library,
+};
+
+const areaHomes: Record<RoleArea, string> = {
+  admin: paths.admin.panel,
+  coordination: paths.coordination.panel,
+  teacher: paths.teacher.syllabi,
+  library: paths.library.panel,
 };
 
 const areaDocuments: Record<RoleArea, (revision: string) => string> = {
@@ -125,7 +130,8 @@ const areaOf = (role: RoleCode): AreaPaths | null => {
 
 export const roleHome = (role: RoleCode | undefined): string => {
   if (!role) return paths.root;
-  return areaOf(role)?.panel ?? paths.roleSelection;
+  const area = rolePrefix(role);
+  return area ? areaHomes[area] : paths.roleSelection;
 };
 
 export const roleEntry = (role: RoleCode | undefined): string => {
@@ -211,7 +217,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-teachers', path: paths.coordination.teachers, component: 'CoordinationAcademicStructurePage', states: ['teachers'], breadcrumb: 'Docentes', ...coordinator },
   { name: 'coordination-documents', path: '/coordinacion/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...coordinator },
 
-  { name: 'teacher-panel', path: paths.teacher.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...teacher },
   { name: 'teacher-notifications', path: paths.teacher.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...teacher },
   { name: 'teacher-profile', path: paths.teacher.profile, component: 'ProfilePage', shortcut: 'profile', ...teacher },
   { name: 'teacher-security', path: paths.teacher.security, component: 'SecurityPage', shortcut: 'security', ...teacher },

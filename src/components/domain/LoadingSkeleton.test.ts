@@ -72,7 +72,7 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.find('button, input, select, [tabindex]').exists()).toBe(false);
   });
 
-  it.each(['administrador', 'coordinador', 'docente', 'bibliotecario'] as const)('muestra tres indicadores para %s', (dashboardRole) => {
+  it.each(['administrador', 'coordinador', 'bibliotecario'] as const)('muestra tres indicadores para %s', (dashboardRole) => {
     const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole } });
 
     expect(wrapper.get('[data-skeleton="dashboard-metrics"]').findAll('[data-slot="card"]')).toHaveLength(3);
@@ -94,8 +94,15 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(false);
   });
 
+  it('anticipa los indicadores del docente sobre sus sílabos', () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'syllabus-cards', rows: 2 } });
+
+    expect(wrapper.get('[data-skeleton="syllabus-metrics"]').findAll('[data-slot="card"]')).toHaveLength(3);
+    expect(wrapper.findAll('[data-skeleton="syllabus-card"]')).toHaveLength(2);
+  });
+
   it('actualiza la superficie al cambiar el rol activo durante la carga', async () => {
-    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole: 'docente' } });
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'dashboard', dashboardRole: 'coordinador' } });
 
     expect(wrapper.find('[data-skeleton="dashboard-deadline"]').exists()).toBe(true);
     expect(wrapper.find('[data-skeleton="dashboard-setup"]').exists()).toBe(true);

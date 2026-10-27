@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 const password = 'Demo-2026!';
 
-type Area = 'admin' | 'coordinacion' | 'docente' | 'biblioteca';
+type Area = 'admin' | 'coordinacion' | 'biblioteca';
 
 const login = async (page: Page, email: string): Promise<void> => {
   await page.goto('/ingresar');
@@ -142,11 +142,10 @@ test.describe('frontera distribuida de identidad', () => {
   test('mantiene el alcance docente al listar sus sílabos', async ({ page }) => {
     const serverErrors = captureServerErrors(page);
     await login(page, 'docente@silabos.test');
-    await expectPanel(page, 'docente');
-    await expectNavigation(page, ['Panel', 'Mis sílabos']);
-
-    await openSection(page, 'Mis sílabos', /^(Mis sílabos|Sílabos - Período .+)$/);
     await expect(page).toHaveURL(/\/docente\/mis-silabos$/);
+    await expect(page.getByRole('heading', { level: 1, name: /^(Mis sílabos|Sílabos - Período .+)$/ })).toBeVisible();
+    await expectNavigation(page, ['Mis sílabos']);
+    await expect(page.getByText('Sílabos por entregar')).toBeVisible();
     await expect(
       page.getByRole('list', { name: 'Mis sílabos' }).or(page.getByText('No tiene sílabos asignados')),
     ).toBeVisible();
@@ -155,7 +154,7 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Historial' })).toBeVisible();
 
     await page.goto('/coordinacion/revisiones');
-    await expect(page).toHaveURL(/\/docente\/panel$/);
+    await expect(page).toHaveURL(/\/docente\/mis-silabos$/);
     expect(serverErrors).toEqual([]);
   });
 

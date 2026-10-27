@@ -13,7 +13,7 @@ const scenarios: { name: string; props: FixtureProps }[] = [
     { name: 'catalog', props: { variant: 'catalog' } },
     { name: 'notifications', props: { variant: 'notifications' } },
     { name: 'workspace', props: { variant: 'workspace' } },
-    ...['administrador', 'coordinador', 'docente', 'bibliotecario'].map((dashboardRole) => ({
+    ...['administrador', 'coordinador', 'bibliotecario'].map((dashboardRole) => ({
         name: `dashboard-${dashboardRole}`,
         props: { variant: 'dashboard', dashboardRole },
     })),

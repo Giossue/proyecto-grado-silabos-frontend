@@ -59,7 +59,7 @@ describe('WorkspacePage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(replace).toHaveBeenCalledWith('/docente/panel');
+    expect(replace).toHaveBeenCalledWith('/docente/mis-silabos');
     expect(selectActiveRole).not.toHaveBeenCalled();
     wrapper.unmount();
   });
@@ -95,7 +95,7 @@ describe('WorkspacePage', () => {
     await flushPromises();
 
     expect(selectActiveRole).toHaveBeenCalledWith('role-1');
-    expect(replace).toHaveBeenCalledWith('/docente/panel');
+    expect(replace).toHaveBeenCalledWith('/docente/mis-silabos');
     wrapper.unmount();
   });
 

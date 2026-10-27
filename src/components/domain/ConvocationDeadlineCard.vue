@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import { formatDateDisplay } from '@/lib/dateDisplay';
-import { ArrowRight, CalendarRange, Eye } from '@lucide/vue';
+import { CalendarRange, Eye } from '@lucide/vue';
 import { computed } from 'vue';
-import { RouterLink } from 'vue-router';
 import type { DashboardDeadline } from '@/api/dashboard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { paths } from '@/lib/routes';
 
 const props = defineProps<{
   deadline: DashboardDeadline;
-  role: 'coordinador' | 'docente';
+  audience: 'coordinador' | 'docente';
 }>();
 
 const slots = defineSlots<{ actions?: () => unknown }>();
@@ -83,12 +81,9 @@ const summary = computed(() => {
         <Progress :model-value="elapsed" class="h-2" :aria-label="`Avance del plazo: ${elapsed} %`" />
       </div>
     </CardContent>
-    <CardFooter v-if="role === 'docente' || deadline.convocation_id || slots.actions" class="flex flex-wrap gap-3">
-      <Button v-if="role === 'docente'" as-child class="max-sm:w-full">
-        <RouterLink :to="paths.teacher.syllabi"><ArrowRight data-icon="inline-start" aria-hidden="true" />Continuar mis sílabos</RouterLink>
-      </Button>
+    <CardFooter v-if="(audience !== 'docente' && deadline.convocation_id) || slots.actions" class="flex flex-wrap gap-3">
       <slot name="actions" />
-      <Button v-if="role !== 'docente' && deadline.convocation_id" type="button" variant="outline" class="max-sm:w-full" @click="emit('tracking')"><Eye data-icon="inline-start" aria-hidden="true" />Ver seguimiento</Button>
+      <Button v-if="audience !== 'docente' && deadline.convocation_id" type="button" variant="outline" class="max-sm:w-full" @click="emit('tracking')"><Eye data-icon="inline-start" aria-hidden="true" />Ver seguimiento</Button>
     </CardFooter>
   </Card>
 </template>

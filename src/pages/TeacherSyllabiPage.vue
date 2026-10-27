@@ -4,13 +4,17 @@ import { formatDateDisplay } from '@/lib/dateDisplay';
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
+import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
+import ConvocationDeadlineCard from '@/components/domain/ConvocationDeadlineCard.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { paths } from '@/lib/routes';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
-import { History, Inbox } from '@lucide/vue';
+import StatTile from '@/components/domain/StatTile.vue';
+import { CircleAlert, ClipboardCheck, FileStack, History, Inbox } from '@lucide/vue';
+import type { Component } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,15 +25,24 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 
 const router = useRouter();
 const result = ref<SyllabiResponse | null>(null);
+const summary = ref<Dashboard | null>(null);
 const query = ref('');
 const state = ref('all');
 const period = ref<string | null>(null);
 const error = ref<string | null>(null);
 
-const load = async (): Promise<void> => {
+const icons: Record<string, Component> = { pending: FileStack, correction_requested: CircleAlert, in_review: ClipboardCheck };
+
+const load = async (withSummary = false): Promise<void> => {
   error.value = null;
-  try { result.value = await getTeacherSyllabi({ q: query.value, state: state.value }); }
-  catch (reason) {
+  try {
+    const [syllabi, dashboard] = await Promise.all([
+      getTeacherSyllabi({ q: query.value, state: state.value }),
+      withSummary ? getDashboard().catch(() => null) : summary.value,
+    ]);
+    result.value = syllabi;
+    summary.value = dashboard;
+  } catch (reason) {
     if (reason instanceof ApiError && reason.status === 401) { await router.replace(paths.login); return; }
     error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar sus sílabos.';
   }
@@ -43,13 +56,17 @@ const clearFilters = (): void => {
   void load();
 };
 const openSyllabus = (id: string): void => { void router.push(paths.teacher.syllabus(id)); };
-onMounted(load);
+onMounted(() => { void load(true); });
 </script>
 
 <template>
   <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide">
     <template #actions><Button as-child variant="outline"><RouterLink :to="paths.teacher.history"><History data-icon="inline-start" aria-hidden="true" />Historial</RouterLink></Button></template>
-    <LoadErrorState v-if="error" :message="error" @retry="load" />
+    <LoadErrorState v-if="error" :message="error" @retry="load(true)" />
+    <div v-if="result && summary?.metrics.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
+      <StatTile v-for="metric in summary.metrics" :key="metric.key" :label="metric.label" :value="metric.value" :suffix="metric.suffix ?? undefined" :hint="metric.hint" :icon="icons[metric.key]" />
+    </div>
+    <ConvocationDeadlineCard v-if="result && summary?.deadline" :deadline="summary.deadline" audience="docente" />
     <Card v-if="result" class="py-3">
       <CardContent class="px-3">
         <form @submit.prevent="load()">

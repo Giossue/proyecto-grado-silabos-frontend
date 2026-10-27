@@ -83,7 +83,7 @@ describe('navegación por ámbito activo', () => {
     sessionState.replace(session('docente'));
     await router.push('/admin/usuarios');
 
-    expect(router.currentRoute.value.fullPath).toBe('/docente/panel');
+    expect(router.currentRoute.value.fullPath).toBe('/docente/mis-silabos');
   });
 
   it('no deja una ruta desconocida en blanco', async () => {
@@ -118,8 +118,8 @@ describe('navegación por ámbito activo', () => {
   it.each([
     ['administrador', '/coordinacion/malla', '/admin/panel'],
     ['coordinador', '/admin/usuarios', '/coordinacion/panel'],
-    ['docente', '/admin/plantilla', '/docente/panel'],
-    ['docente', '/biblioteca/revisiones', '/docente/panel'],
+    ['docente', '/admin/plantilla', '/docente/mis-silabos'],
+    ['docente', '/biblioteca/revisiones', '/docente/mis-silabos'],
     ['bibliotecario', '/coordinacion/revisiones', '/biblioteca/panel'],
   ] as const)('redirige una ruta de otro rol al panel de %s', async (code, target, expected) => {
     sessionState.replace(session(code));

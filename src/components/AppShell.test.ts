@@ -35,7 +35,6 @@ const mountShell = async () => {
     routes: [
       { path: '/panel', component: { template: '<div />' } },
       { path: '/admin/panel', component: { template: '<div />' } },
-      { path: '/docente/panel', component: { template: '<div />' } },
       { path: '/docente/mis-silabos', component: { template: '<div />' } },
       { path: '/notificaciones', component: { template: '<div />' } },
       { path: '/configuracion/seguridad', component: { template: '<div />' } },
@@ -121,7 +120,7 @@ describe('AppSidebarLayout', () => {
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Bibliotecario');
   });
 
-  it('muestra el Panel y Mis sílabos para docente', async () => {
+  it('muestra solo Mis sílabos para docente', async () => {
     sessionState.replace({
       ...administratorSession,
       active_role: { id: 'role-docente', code: 'docente', career_id: 'career-1', career_name: 'Software' },
@@ -130,7 +129,7 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
-    expect(sidebar.get('a[href="/docente/panel"]').text()).toContain('Panel');
+    expect(sidebar.findAll('[data-sidebar="content"] a').map((link) => link.text())).toEqual(['Mis sílabos']);
     expect(sidebar.get('a[href="/docente/mis-silabos"]').text()).toContain('Mis sílabos');
     expect(sidebar.text()).not.toContain('Historial');
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Software');

@@ -54,7 +54,7 @@ describe('authentication pages', () => {
     await flushPromises();
 
     expect(sessionState.current.value).toEqual(authenticatedSession);
-    expect(replace).toHaveBeenCalledWith('/docente/panel');
+    expect(replace).toHaveBeenCalledWith('/docente/mis-silabos');
     wrapper.unmount();
   });
 
@@ -71,7 +71,7 @@ describe('authentication pages', () => {
 
     expect(getSession).toHaveBeenCalledOnce();
     expect(sessionState.current.value).toEqual(authenticatedSession);
-    expect(replace).toHaveBeenCalledWith('/docente/panel');
+    expect(replace).toHaveBeenCalledWith('/docente/mis-silabos');
     wrapper.unmount();
   });
 });

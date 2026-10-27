@@ -9,10 +9,10 @@ describe('contrato de rutas', () => {
     );
   });
 
-  it('resuelve el panel y configuración del rol activo', () => {
+  it('resuelve el inicio y la configuración del rol activo', () => {
     expect(roleHome('administrador')).toBe(paths.admin.panel);
     expect(roleHome('coordinador')).toBe(paths.coordination.panel);
-    expect(roleHome('docente')).toBe(paths.teacher.panel);
+    expect(roleHome('docente')).toBe(paths.teacher.syllabi);
     expect(roleSetting('docente', 'security')).toBe(paths.teacher.security);
     expect(roleHome('bibliotecario')).toBe('/biblioteca/panel');
     expect(roleSetting('bibliotecario', 'profile')).toBe('/biblioteca/configuracion/perfil');
@@ -32,8 +32,8 @@ describe('contrato de rutas', () => {
     expect(roleDocuments(unknown, 'revision-1')).toBe(paths.roleSelection);
   });
 
-  it('envía cada rol a su panel al entrar', () => {
-    expect(roleEntry('docente')).toBe(paths.teacher.panel);
+  it('envía cada rol a su inicio al entrar: el docente, a sus sílabos', () => {
+    expect(roleEntry('docente')).toBe(paths.teacher.syllabi);
     expect(roleEntry('coordinador')).toBe(paths.coordination.panel);
     expect(roleEntry('bibliotecario')).toBe(paths.library.panel);
     expect(roleEntry(undefined)).toBe(paths.roleSelection);
@@ -45,7 +45,7 @@ describe('contrato de rutas', () => {
   });
 
   it('no conserva rutas en inglés ni alias retirados', () => {
-    const retired = ['/login', '/dashboard', '/settings', '/fuentes', '/seguridad', '/administracion', '/mis-silabos'];
+    const retired = ['/login', '/dashboard', '/settings', '/fuentes', '/seguridad', '/administracion', '/mis-silabos', '/docente/panel'];
     for (const route of routeRegistry) expect(retired.some((prefix) => route.path === prefix || route.path.startsWith(`${prefix}/`))).toBe(false);
   });
 
@@ -60,11 +60,6 @@ describe('contrato de rutas', () => {
       component: 'TeacherSyllabusDetailPage',
       states: ['resumen', 'edicion', 'ia', 'envio'],
       layout: 'syllabus-editor',
-      roles: ['docente'],
-      requiresAuth: true,
-    });
-    expect(routeRegistry.find((route) => route.name === 'teacher-panel')).toMatchObject({
-      component: 'DashboardPage',
       roles: ['docente'],
       requiresAuth: true,
     });

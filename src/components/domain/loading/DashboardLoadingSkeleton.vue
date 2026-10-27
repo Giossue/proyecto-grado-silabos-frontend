@@ -9,8 +9,8 @@ const props = withDefaults(defineProps<{ role?: RoleCode }>(), {
 });
 
 const metricCount = 3;
-const stepCount = computed(() => ({ administrador: 6, coordinador: 5, docente: 4, bibliotecario: 0 })[props.role]);
-const hasDeadline = computed(() => props.role === 'coordinador' || props.role === 'docente');
+const stepCount = computed(() => ({ administrador: 6, coordinador: 5, docente: 0, bibliotecario: 0 })[props.role]);
+const hasDeadline = computed(() => props.role === 'coordinador');
 </script>
 
 <template>
