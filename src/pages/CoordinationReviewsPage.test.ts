@@ -24,11 +24,7 @@ const reviews: ReviewsPage = {
 };
 
 const summary = (convocationId: string | null): Dashboard => ({
-  metrics: [
-    { key: 'progress', label: 'Avance del proceso', value: 0, suffix: '%', hint: '0 de 2 sílabos aprobados' },
-    { key: 'in_review', label: 'Por revisar', value: 1, suffix: null, hint: 'Enviados por los docentes y a la espera de su revisión' },
-    { key: 'not_started', label: 'Sílabos sin iniciar', value: 1, suffix: null, hint: 'Docentes que todavía no empiezan' },
-  ],
+  metrics: [],
   setup: null,
   deadline: { period: '2026-2027', starts_at: '2026-10-26', due_at: '2026-10-30', state: 'active', days_until_start: 0, days_until_due: 3, convocation_id: convocationId },
   coordination_convocation: { process_id: 'p1', period: '2026-2027', convocation_id: convocationId, can_open: convocationId === null, state: convocationId ? 'abierta' : null, process_open: true },
@@ -53,12 +49,11 @@ describe('CoordinationReviewsPage', () => {
     });
   });
 
-  it('reúne arriba los indicadores, Pausar y Puesta en marcha', async () => {
+  it('reúne arriba Pausar y Puesta en marcha, sin indicadores', async () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Por revisar');
-    expect(wrapper.text()).toContain('Sílabos sin iniciar');
+    expect(wrapper.text()).not.toContain('Avance del proceso');
     expect(wrapper.get('.actions').text()).toContain('Pausar convocatoria');
     expect(wrapper.get('.actions a').attributes('href')).toBe('/coordinacion/puesta-en-marcha');
     expect(wrapper.text()).toContain('Álgebra Lineal');
