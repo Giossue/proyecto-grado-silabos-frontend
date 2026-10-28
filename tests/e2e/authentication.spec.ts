@@ -50,7 +50,6 @@ test.describe('frontera distribuida de identidad', () => {
       'Facultades y carreras',
       'Plantilla',
       'Auditoría',
-      'Ayuda de pantallas',
     ]);
 
     await openSection(page, 'Usuarios y roles', 'Usuarios y roles');
@@ -76,7 +75,6 @@ test.describe('frontera distribuida de identidad', () => {
 
     await openSection(page, 'Facultades y carreras', 'Facultades');
     await openSection(page, 'Auditoría', 'Auditoría');
-    await openSection(page, 'Ayuda de pantallas', 'Ayuda de pantallas');
 
     await openSection(page, 'Convocatorias', 'Convocatorias');
     await expect(page.getByRole('columnheader', { name: 'Período' })).toBeVisible();

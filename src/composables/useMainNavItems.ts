@@ -1,6 +1,5 @@
 import {
     BookOpenCheck,
-    CircleHelp,
     Building2,
     CalendarRange,
     ClipboardCheck,
@@ -39,7 +38,6 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                       href: paths.admin.audit,
                       icon: ScrollText,
                   },
-                  { title: 'Ayuda de pantallas', href: paths.admin.help, icon: CircleHelp },
               ]
             : []),
         ...(activeRole.value?.code === 'coordinador'

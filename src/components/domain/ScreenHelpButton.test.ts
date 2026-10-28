@@ -12,7 +12,7 @@ vi.mock('@/api/screen-help', () => ({ listAvailableScreenHelp: vi.fn() }));
 
 enableAutoUnmount(afterEach);
 
-const help = { screen: '/admin/usuarios', title: 'Usuarios y roles', content: 'Primer párrafo.\n\nSegundo párrafo.', active: true, updated_at: '2026-10-10T00:00:00Z' };
+const help = { screen: '/admin/usuarios', title: 'Usuarios y roles', content: 'Primer párrafo.\n\nSegundo párrafo.' };
 const signIn = () => sessionState.replace({ user: { id: 'u1' }, active_role: { code: 'administrador' } } as never);
 const mountButton = () => mount({ components: { ScreenHelpButton }, template: '<main><ScreenHelpButton /></main>' }, { attachTo: document.body });
 

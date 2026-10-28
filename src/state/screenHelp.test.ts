@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/api/screen-help', () => ({ listAvailableScreenHelp: vi.fn() }));
 
-const help = { screen: '/admin/panel', title: 'Panel', content: 'Texto', active: true, updated_at: '2026-10-10T00:00:00Z' };
+const help = { screen: '/admin/panel', title: 'Panel', content: 'Texto' };
 const session = (id: string, code: string) => ({ user: { id }, active_role: { code } }) as never;
 
-describe('ayuda de pantallas en memoria', () => {
+describe('ayuda de las pantallas en memoria', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.resetModules();
