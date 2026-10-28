@@ -11,9 +11,9 @@ const login = async (page: Page, email: string): Promise<void> => {
   await page.getByRole('button', { name: 'Ingresar' }).click();
 };
 
-const expectPanel = async (page: Page, area: Area): Promise<void> => {
-  await expect(page).toHaveURL(new RegExp(`/${area}/panel$`));
-  await expect(page.getByRole('heading', { level: 1, name: 'Panel de trabajo' })).toBeVisible();
+const expectHome = async (page: Page, area: Area): Promise<void> => {
+  await expect(page).toHaveURL(new RegExp(`/${area}/convocatorias$`));
+  await expect(page.getByRole('heading', { level: 1, name: 'Convocatorias' })).toBeVisible();
 };
 
 const mainNavigation = (page: Page) =>
@@ -42,9 +42,8 @@ test.describe('frontera distribuida de identidad', () => {
   test('mantiene sesión, CSRF y navegación administrativa', async ({ page }) => {
     const serverErrors = captureServerErrors(page);
     await login(page, 'admin@silabos.test');
-    await expectPanel(page, 'admin');
+    await expectHome(page, 'admin');
     await expectNavigation(page, [
-      'Panel',
       'Convocatorias',
       'Usuarios y roles',
       'Facultades y carreras',

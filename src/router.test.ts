@@ -116,7 +116,7 @@ describe('navegación por ámbito activo', () => {
   });
 
   it.each([
-    ['administrador', '/coordinacion/malla', '/admin/panel'],
+    ['administrador', '/coordinacion/malla', '/admin/convocatorias'],
     ['coordinador', '/admin/usuarios', '/coordinacion/revisiones'],
     ['docente', '/admin/plantilla', '/docente/mis-silabos'],
     ['docente', '/biblioteca/revisiones', '/docente/mis-silabos'],

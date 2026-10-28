@@ -5,7 +5,6 @@ import {
     ClipboardCheck,
     FileStack,
     FolderOpen,
-    LayoutGrid,
     Library,
     ScrollText,
     UsersRound,
@@ -20,9 +19,6 @@ import type { NavItem } from '@/types';
 export function useMainNavItems(): ComputedRef<NavItem[]> {
     const activeRole = computed(() => sessionState.current.value?.active_role ?? null);
     const mainNavItems = computed<NavItem[]>(() => [
-        ...(activeRole.value?.code === 'administrador'
-            ? [{ title: 'Panel', href: paths.admin.panel, icon: LayoutGrid }]
-            : []),
         ...(activeRole.value?.code === 'administrador'
             ? [
                   { title: 'Convocatorias', href: paths.admin.convocations, icon: CalendarRange },

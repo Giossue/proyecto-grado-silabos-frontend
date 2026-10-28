@@ -10,7 +10,7 @@ describe('contrato de rutas', () => {
   });
 
   it('resuelve el inicio y la configuración del rol activo', () => {
-    expect(roleHome('administrador')).toBe(paths.admin.panel);
+    expect(roleHome('administrador')).toBe(paths.admin.convocations);
     expect(roleHome('coordinador')).toBe(paths.coordination.reviews);
     expect(roleHome('docente')).toBe(paths.teacher.syllabi);
     expect(roleSetting('docente', 'security')).toBe(paths.teacher.security);

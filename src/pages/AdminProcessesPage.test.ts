@@ -1,12 +1,13 @@
 import { flushPromises, mount } from '@vue/test-utils';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import AdminProcessesPage from './AdminProcessesPage.vue';
 
-const api = vi.hoisted(() => ({ getAcademicGovernance: vi.fn(), getProcesses: vi.fn(), getSession: vi.fn() }));
+const api = vi.hoisted(() => ({ getAcademicGovernance: vi.fn(), getProcesses: vi.fn(), getSession: vi.fn(), getDashboard: vi.fn() }));
 vi.mock('@/api/academic', async (importOriginal) => ({ ...(await importOriginal<object>()), getAcademicGovernance: api.getAcademicGovernance }));
 vi.mock('@/api/processes', async (importOriginal) => ({ ...(await importOriginal<object>()), getProcesses: api.getProcesses }));
 vi.mock('@/api/session', () => ({ getSession: api.getSession }));
-vi.mock('vue-router', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
+vi.mock('@/api/dashboard', () => ({ getDashboard: api.getDashboard }));
+vi.mock('vue-router', () => ({ useRouter: () => ({ replace: vi.fn() }), RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } }));
 vi.mock('@/state/session', () => ({ sessionState: { current: { value: { active_role: { code: 'administrador' } } } } }));
 
 const period = (id: string, code: string, process: { id: string; state: 'abierto' | 'pausado' | 'cerrado' } | null, lockReason: string | null = null) => ({
@@ -14,9 +15,10 @@ const period = (id: string, code: string, process: { id: string; state: 'abierto
 });
 const mountPage = () => mount(AdminProcessesPage, { attachTo: document.body, global: { stubs: {
   PageFrame: { props: ['title'], template: '<main><slot name="banner" /><h1>{{ title }}</h1><slot name="actions" /><slot /></main>' },
-  ConvocationPeriodSheet: true, ConvocationRowActions: true, RouterLink: { template: '<a><slot /></a>' },
+  ConvocationPeriodSheet: true, ConvocationRowActions: true,
 } } });
 
+beforeEach(() => { api.getDashboard.mockResolvedValue({ metrics: [], setup: null, deadline: null, coordination_convocation: null }); });
 afterEach(() => { document.body.innerHTML = ''; vi.clearAllMocks(); });
 
 describe('AdminProcessesPage', () => {
@@ -36,6 +38,19 @@ describe('AdminProcessesPage', () => {
     expect(rows[1].text()).toContain('Sin fechas');
     expect(wrapper.text()).toContain('Convocatoria en curso');
     expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('true');
+    wrapper.unmount();
+  });
+
+  it('muestra arriba los indicadores y el botón de puesta en marcha', async () => {
+    api.getSession.mockResolvedValue({ active_role: { code: 'administrador' } });
+    api.getAcademicGovernance.mockResolvedValue({ lock_reason: null, catalogs: { faculties: [], careers: [], periods: [] }, options: {} });
+    api.getProcesses.mockResolvedValue({ processes: [], template: null, periods: [], active_process: null });
+    api.getDashboard.mockResolvedValue({ metrics: [{ key: 'careers_without_convocation', label: 'Carreras sin convocar', value: 3, suffix: null, hint: 'Pista' }], setup: null, deadline: null, coordination_convocation: null });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Carreras sin convocar');
+    expect(wrapper.get('a[href="/admin/puesta-en-marcha"]').text()).toContain('Puesta en marcha');
     wrapper.unmount();
   });
 

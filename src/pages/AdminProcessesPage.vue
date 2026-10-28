@@ -10,9 +10,13 @@ export type ConvocationRow = PeriodRecord & { process: SyllabusProcess | null };
 import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue';
-import { useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import { getAcademicGovernance, type AcademicGovernance } from '@/api/academic';
 import { getProcesses, type Processes } from '@/api/processes';
+import { getDashboard, type Dashboard } from '@/api/dashboard';
+import { ListChecks } from '@lucide/vue';
+import MetricTiles from '@/components/domain/MetricTiles.vue';
+import { Button } from '@/components/ui/button';
 import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
@@ -37,6 +41,7 @@ import { toast } from '@/lib/toast';
 const router = useRouter();
 const governance = ref<AcademicGovernance | null>(null);
 const processData = ref<Processes | null>(null);
+const summary = ref<Dashboard | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 const selected = ref<ConvocationRow | null>(null);
@@ -71,7 +76,7 @@ const load = async (): Promise<void> => {
   try {
     const session = await getSession();
     if (session.active_role?.code !== 'administrador') { await router.replace(paths.dashboard); return; }
-    [governance.value, processData.value] = await Promise.all([getAcademicGovernance(), getProcesses()]);
+    [governance.value, processData.value, summary.value] = await Promise.all([getAcademicGovernance(), getProcesses(), getDashboard().catch(() => summary.value)]);
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las convocatorias.';
   } finally { loading.value = false; }
@@ -86,10 +91,12 @@ onMounted(load);
       <ProcessLockAlert banner title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra." hide-action />
     </template>
     <template #actions>
+      <Button as-child variant="outline"><RouterLink :to="paths.admin.setup"><ListChecks data-icon="inline-start" aria-hidden="true" />Puesta en marcha</RouterLink></Button>
       <ConvocationPeriodSheet v-if="loaded" :disabled="inProgress" @saved="changed" />
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :columns="4" :filters="1" :actions="false" />
+    <MetricTiles v-if="loaded && summary?.metrics.length" :metrics="summary.metrics" />
     <div v-if="loaded" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
       <ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar período" placeholder="Buscar por período">
         <template #filters>

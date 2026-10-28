@@ -30,7 +30,7 @@ test.describe('accesibilidad transversal de la SPA', () => {
     await loginAsAdministrator(page);
     await page.setViewportSize({ width: 360, height: 740 });
 
-    for (const path of ['/admin/panel', '/admin/usuarios', '/admin/auditoria', '/admin/plantilla']) {
+    for (const path of ['/admin/convocatorias', '/admin/puesta-en-marcha', '/admin/usuarios', '/admin/auditoria', '/admin/plantilla']) {
       await page.goto(path, { waitUntil: 'networkidle' });
       await expect(page.locator('main').first()).toBeVisible();
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);

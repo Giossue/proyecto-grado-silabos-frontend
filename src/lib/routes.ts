@@ -25,7 +25,7 @@ export const paths = {
     `/revisiones/${segment(revision)}/documentos`,
   admin: {
     root: '/admin',
-    panel: '/admin/panel',
+    setup: '/admin/puesta-en-marcha',
     users: '/admin/usuarios',
     academic: '/admin/estructura-academica',
     academicWithSection: (section: string): string =>
@@ -104,14 +104,14 @@ const areaPaths: Record<RoleArea, AreaPaths> = {
 };
 
 const areaHomes: Record<RoleArea, string> = {
-  admin: paths.admin.panel,
+  admin: paths.admin.convocations,
   coordination: paths.coordination.reviews,
   teacher: paths.teacher.syllabi,
   library: paths.library.reviews,
 };
 
 const areaDocuments: Record<RoleArea, (revision: string) => string> = {
-  admin: () => paths.admin.panel,
+  admin: () => paths.admin.convocations,
   coordination: paths.coordination.documents,
   teacher: paths.teacher.documents,
   library: paths.library.review,
@@ -184,13 +184,13 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'email-verification-required', path: paths.emailVerificationRequired, component: 'VerifyEmailPage', ...authenticated },
   { name: 'two-factor-challenge', path: paths.twoFactorChallenge, component: 'TwoFactorChallengePage', guest: true },
   { name: 'role-selection', path: paths.roleSelection, component: 'WorkspacePage', ...authenticated },
-  { name: 'dashboard', path: paths.dashboard, component: 'DashboardPage', shortcut: 'panel', ...authenticated },
+  { name: 'dashboard', path: paths.dashboard, component: 'WorkspacePage', shortcut: 'panel', ...authenticated },
   { name: 'notifications', path: paths.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...authenticated },
   { name: 'profile', path: paths.configuration.profile, component: 'ProfilePage', shortcut: 'profile', ...authenticated },
   { name: 'security', path: paths.configuration.security, component: 'SecurityPage', shortcut: 'security', ...authenticated },
   { name: 'documents', path: '/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...authenticated },
 
-  { name: 'admin-panel', path: paths.admin.panel, component: 'DashboardPage', breadcrumb: 'Panel', ...admin },
+  { name: 'admin-setup', path: paths.admin.setup, component: 'AdminSetupPage', breadcrumb: 'Puesta en marcha', ...admin },
   { name: 'admin-users', path: paths.admin.users, component: 'AdminUsersPage', breadcrumb: 'Usuarios y roles', ...admin },
   { name: 'admin-academic', path: paths.admin.academic, component: 'AcademicGovernancePage', breadcrumb: 'Facultades y carreras', ...admin },
   { name: 'admin-academic-section', path: '/admin/estructura-academica/:section', component: 'AcademicGovernancePage', breadcrumb: 'Facultades y carreras', ...admin },

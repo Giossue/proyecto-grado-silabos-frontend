@@ -36,7 +36,7 @@ const mountShell = async () => {
     history: createMemoryHistory(),
     routes: [
       { path: '/panel', component: { template: '<div />' } },
-      { path: '/admin/panel', component: { template: '<div />' } },
+      { path: '/admin/convocatorias', component: { template: '<div />' } },
       { path: '/docente/mis-silabos', component: { template: '<div />' } },
       { path: '/notificaciones', component: { template: '<div />' } },
       { path: '/configuracion/seguridad', component: { template: '<div />' } },
@@ -47,7 +47,7 @@ const mountShell = async () => {
       { path: '/administracion/auditoria', component: { template: '<div />' } },
     ],
   });
-  await router.push('/admin/panel');
+  await router.push('/admin/convocatorias');
   await router.isReady();
 
   const wrapper = mount(AppSidebarLayout, { attachTo: document.body, global: { plugins: [router] }, slots: { default: '<p>Contenido</p>' } });
@@ -92,10 +92,10 @@ describe('AppSidebarLayout', () => {
 
     expect(wrapper.text()).toContain('Usuarios');
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
-    expect(sidebar.text()).toContain('Panel');
+    expect(sidebar.text()).not.toContain('Panel');
     expect(sidebar.get('[data-sidebar="header"] img').attributes('src')).toContain('logo-ueb-horizontal');
-    expect(sidebar.get('a[href="/admin/panel"]').attributes('data-active')).toBe('true');
-    expect(sidebar.get('a[href="/admin/panel"]').attributes('aria-current')).toBe('page');
+    expect(sidebar.get('a[href="/admin/convocatorias"]').attributes('data-active')).toBe('true');
+    expect(sidebar.get('a[href="/admin/convocatorias"]').attributes('aria-current')).toBe('page');
     expect(sidebar.text()).not.toContain('Configuración');
     expect(sidebar.find('[aria-label="Rol y carrera activos"]').exists()).toBe(false);
     expect(sidebar.find('[aria-label="Menú de usuario"]').exists()).toBe(false);

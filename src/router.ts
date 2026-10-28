@@ -14,7 +14,7 @@ import {
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
 const CoordinationCareerProjectPage = () => import("@/pages/CoordinationCareerProjectPage.vue");
-const DashboardPage = () => import("@/pages/DashboardPage.vue");
+const AdminSetupPage = () => import("@/pages/AdminSetupPage.vue");
 const TeacherSyllabiPage = () => import("@/pages/TeacherSyllabiPage.vue");
 const TeacherHistoryPage = () => import("@/pages/TeacherHistoryPage.vue");
 const TeacherHistoryCareerPage = () => import("@/pages/TeacherHistoryCareerPage.vue");
@@ -65,13 +65,14 @@ export const router = createRouter({
     { path: "/", redirect: "/ingresar" },
     { path: "/rol", component: WorkspacePage, meta: { requiresAuth: true, layout: "workspace", title: "Seleccionar ámbito de trabajo" } },
 
-    { path: "/panel", component: DashboardPage, meta: { requiresAuth: true, shortcut: "panel", title: "Panel" } },
+    { path: "/panel", component: WorkspacePage, meta: { requiresAuth: true, shortcut: "panel", title: "Panel" } },
     { path: "/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, shortcut: "notifications", title: "Notificaciones" } },
     { path: "/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, shortcut: "profile", title: "Perfil" } },
     { path: "/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, shortcut: "security", title: "Seguridad" } },
     { path: "/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, shortcut: "documents", title: "Documentos" } },
 
-    { path: "/admin/panel", component: DashboardPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Panel" } },
+    { path: "/admin/panel", redirect: "/admin/convocatorias" },
+    { path: "/admin/puesta-en-marcha", component: AdminSetupPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Puesta en marcha" } },
     { path: "/admin/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Usuarios y roles" } },
     { path: "/admin/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Facultades y carreras" } },
     { path: "/admin/estructura-academica/:section", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Facultades y carreras" } },
