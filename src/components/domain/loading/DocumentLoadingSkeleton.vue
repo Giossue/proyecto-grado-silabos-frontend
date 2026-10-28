@@ -155,7 +155,6 @@ const reviewPanels = computed(() =>
     <div v-else-if="variant === 'template'" class="mx-auto flex w-full min-w-0 flex-col gap-4">
         <div data-skeleton="template-toolbar" class="mx-auto flex w-full max-w-[215.9mm] justify-end">
             <div class="flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
-                <Skeleton class="h-9 w-44" />
                 <Skeleton class="h-9 w-24" />
             </div>
         </div>
