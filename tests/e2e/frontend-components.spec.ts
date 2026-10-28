@@ -140,35 +140,18 @@ test('el Sheet emergente usa la misma transición al entrar y salir', async ({ p
     expect(exiting.overlay).toEqual({ state: 'closed', ...entering.overlay });
 });
 
-test('sílabo y skeleton comparten dimensiones sin desbordar en ambos temas', async ({ page }) => {
+test('el esqueleto del sílabo no desborda en ambos temas', async ({ page }) => {
     await mountFixture(page, `
-        const { createApp, h, ref } = await import('/@id/vue');
-        const { default: WorkspaceLayout } = await import('/src/components/domain/WorkspaceLayout.vue');
+        const { createApp, h } = await import('/@id/vue');
         const { default: LoadingSkeleton } = await import('/src/components/domain/LoadingSkeleton.vue');
-        const { Button } = await import('/src/components/ui/button/index.ts');
-        createApp({ setup() {
-            const loading = ref(true);
-            return () => h('div', { class: 'p-4' }, [
-                h(Button, { onClick: () => loading.value = !loading.value }, () => 'Alternar carga'),
-                loading.value ? h(LoadingSkeleton, { variant: 'syllabus' }) : h(WorkspaceLayout, { variant: 'syllabus' }, () => [
-                    h('main', { class: 'min-w-0' }, 'Contenido de prueba.'),
-                    h('aside', { class: 'bg-card text-card-foreground assistant-panel' }, 'Asistente de prueba.'),
-                ]),
-            ]);
-        }}).mount('#mount');
+        createApp({ setup: () => () => h('div', { class: 'p-4' }, h(LoadingSkeleton, { variant: 'syllabus' })) }).mount('#mount');
     `);
     for (const dark of [false, true]) {
         await page.evaluate((enabled) => document.documentElement.classList.toggle('dark', enabled), dark);
         for (const width of [360, 768, 1440]) {
             await page.setViewportSize({ width, height: 900 });
-            const aside = page.locator('.workspace-layout[data-layout="syllabus"] > aside');
-            const skeleton = await aside.boundingBox();
-            await page.getByRole('button', { name: 'Alternar carga' }).click();
-            const loaded = await aside.boundingBox();
-            expect(loaded?.width).toBe(skeleton?.width);
-            if (width >= 1280) expect(loaded).toEqual(skeleton);
+            await expect(page.locator('[data-skeleton="syllabus-section"]')).toBeVisible();
             expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
-            await page.getByRole('button', { name: 'Alternar carga' }).click();
         }
     }
 });

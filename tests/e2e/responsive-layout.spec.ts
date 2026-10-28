@@ -139,15 +139,15 @@ test('las tablas editables conservan una sola instancia de cada campo', async ({
             id: 'plan', label: 'Plan', template: weekTemplate, modelValue: value.value, 'onUpdate:modelValue': next => value.value = next,
         })) }).mount('#mount');
     `);
-    const cell = page.getByRole('textbox', { name: 'Plan, Semana 1, Contenido' });
+    const cell = page.getByRole('textbox', { name: 'Contenido, fila 1' });
     await expect(cell).toHaveCount(1);
     await cell.click();
     await page.keyboard.type('Contenido modificado');
     await page.setViewportSize({ width: 1440, height: 900 });
-    await expect(cell).toHaveText('Contenido modificado');
+    await expect(cell).toHaveValue('Contenido modificado');
     await page.setViewportSize({ width: 360, height: 900 });
     await expect(cell).toHaveCount(1);
-    await expect(cell).toHaveText('Contenido modificado');
+    await expect(cell).toHaveValue('Contenido modificado');
     await expectNoOverflow(page);
 });
 
@@ -345,7 +345,7 @@ test('el sílabo cargado conserva pestañas, matriz editable y asistente al camb
         } },
         '/teacher/syllabi/s1/ai-chat': { available: false, conversation: null, suggested_questions: [] },
     });
-    const cell = page.getByRole('textbox', { name: 'Planificación, Semana 1, Contenido' });
+    const cell = page.getByRole('textbox', { name: 'Contenido, fila 1' });
     await expect(cell).toBeVisible();
     for (const dark of [false, true]) {
         await page.evaluate(enabled => document.documentElement.classList.toggle('dark', enabled), dark);
@@ -353,7 +353,7 @@ test('el sílabo cargado conserva pestañas, matriz editable y asistente al camb
             await page.setViewportSize({ width, height: 900 });
             await expect(page.getByRole('tab')).toHaveCount(2);
             await expect(cell).toHaveCount(1);
-            await expect(cell).toHaveText('Contenido inicial');
+            await expect(cell).toHaveValue('Contenido inicial');
             // En anchos pequeños las acciones se agrupan en un menú de la pantalla.
             const grouped = page.getByRole('button', { name: /^Ver \d+ acciones de la pantalla$/ });
             await expectControlInside(page, await grouped.isVisible() ? 'Ver 2 acciones de la pantalla' : 'Enviar sílabo');

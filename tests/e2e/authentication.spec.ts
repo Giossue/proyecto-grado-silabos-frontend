@@ -148,7 +148,7 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page).toHaveURL(/\/docente\/mis-silabos$/);
     await expect(page.getByRole('heading', { level: 1, name: /^(Mis sílabos|Sílabos - Período .+)$/ })).toBeVisible();
     await expectNavigation(page, ['Mis sílabos']);
-    await expect(page.getByText('Sílabos por entregar')).toBeVisible();
+    await expect(page.getByText('Sílabos por entregar')).toHaveCount(0);
     await expect(
       page.getByRole('list', { name: 'Mis sílabos' }).or(page.getByText('No tiene sílabos asignados')),
     ).toBeVisible();

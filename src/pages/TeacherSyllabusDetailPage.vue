@@ -442,12 +442,12 @@ onBeforeUnmount(() => {
     <template #actions>
       <Button v-if="syllabus && showEditor && previewing" type="button" variant="outline" @click="previewing = false"><Pencil aria-hidden="true" />Editar</Button>
       <Button v-else-if="syllabus && showEditor" type="button" variant="outline" @click="previewing = true"><FileText aria-hidden="true" />Vista previa</Button>
-      <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
       <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== ''" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />Enviar sílabo</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || 'Enviar la revisión del sílabo' }}</TooltipContent></Tooltip></span>
     </template>
 
+    <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
     <LoadingSkeleton v-if="(!syllabus || canStart) && !error" variant="syllabus" />
 
