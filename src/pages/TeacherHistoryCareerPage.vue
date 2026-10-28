@@ -46,7 +46,7 @@ onMounted(load);
   <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera." size="wide">
     <template v-if="careerName" #meta><span class="text-sm font-semibold">{{ careerName }}</span></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading" variant="table-body" :columns="4" :rows="3" :actions="false" :pagination="false" />
+    <LoadingSkeleton v-else-if="loading" variant="table-body" :columns="4" :rows="3" :actions="false" :pagination="false" chip heading />
     <template v-else>
       <div v-for="group in groups" :key="group.period" class="flex flex-col gap-3">
         <h2 class="text-sm font-semibold">Período {{ group.period }}</h2>

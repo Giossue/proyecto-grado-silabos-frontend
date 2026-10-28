@@ -127,7 +127,7 @@ onMounted(() => void load());
 
         <div v-if="loading" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando autenticación de dos factores">
             <span class="sr-only">Cargando autenticación de dos factores…</span>
-            <div aria-hidden="true" class="flex flex-col gap-4"><div class="flex flex-col gap-2"><Skeleton class="h-4 w-full" /><Skeleton class="h-4 w-5/6" /></div><Skeleton class="h-9 w-32" /></div>
+            <div aria-hidden="true" class="flex flex-col items-start gap-4"><div class="flex w-full flex-col gap-1"><Skeleton class="h-4 w-full" /><Skeleton class="h-4 w-2/3" /></div><Skeleton class="h-9 w-31 max-w-full" /></div>
         </div>
 
         <div v-else-if="enabled === false" class="flex flex-col items-start justify-start gap-4">

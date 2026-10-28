@@ -75,7 +75,7 @@ const save = async (close: () => void) => {
       <form class="contents" @submit.prevent="save(close)">
         <FieldGroup>
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-          <LoadingSkeleton v-if="loading" variant="form" :rows="4" />
+          <LoadingSkeleton v-if="loading" variant="form" :rows="4" sidebar />
           <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos de Coordinación. Pídale a Administración que los agregue.</AlertDescription></Alert>
           <template v-else>
             <div class="flex flex-col gap-6 md:flex-row md:items-start">

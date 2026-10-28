@@ -77,7 +77,7 @@ onMounted(() => { void load(initialPage); });
 <template>
   <PageFrame title="Historial" description="Sílabos de períodos terminados, en solo lectura." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="4" :actions="false" chip />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="4" :actions="false" />
     <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
         <form @submit.prevent="load()">
           <FilterToolbar @clear="clearFilters">

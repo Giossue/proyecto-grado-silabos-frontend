@@ -20,8 +20,18 @@ withDefaults(
         data-skeleton="curriculum-canvas"
         class="curriculum-canvas relative h-(--curriculum-canvas-height) min-h-136 overflow-hidden rounded-md ring-1 ring-surface-ring bg-(--curriculum-canvas-background) shadow-surface"
     >
-        <div class="absolute inset-0 flex items-start justify-center p-4">
-            <Skeleton data-skeleton="curriculum-level" class="h-full w-full max-w-3xl" />
+        <div class="absolute inset-0 flex flex-col gap-4 overflow-hidden p-4">
+            <div v-for="level in 4" :key="level" data-skeleton="curriculum-level" class="flex h-40 shrink-0 overflow-hidden rounded-md bg-(--curriculum-lane) ring-1 ring-surface-ring">
+                <div class="flex w-20 shrink-0 flex-col items-center justify-center gap-1 border-r bg-(--curriculum-cycle-chrome) p-3">
+                    <Skeleton class="h-3 w-10" /><Skeleton class="h-5 w-6" />
+                </div>
+                <div class="flex min-w-0 flex-1 items-center gap-8 overflow-hidden p-4">
+                    <Skeleton v-for="subject in 4" :key="subject" data-skeleton="curriculum-subject" class="h-full w-68 shrink-0" />
+                </div>
+                <div v-for="total in 2" :key="total" class="hidden w-20 shrink-0 flex-col items-center justify-center gap-1 border-l bg-(--curriculum-cycle-chrome) p-3 sm:flex">
+                    <Skeleton class="h-3 w-12" /><Skeleton class="h-4 w-6" />
+                </div>
+            </div>
         </div>
         <div class="absolute top-3 right-3 hidden w-64 flex-col gap-3 rounded-md bg-card/90 p-3 shadow-surface ring-1 ring-surface-ring sm:flex">
             <div class="flex items-center justify-between"><Skeleton class="h-3 w-28" /><Skeleton class="size-5" /></div>

@@ -165,10 +165,10 @@ onMounted(load);
         <span class="sr-only">Consultando el estado de la firma…</span>
         <div aria-hidden="true" class="flex flex-col gap-4">
           <div class="flex items-start gap-2 rounded-md ring-1 ring-surface-ring p-3">
-            <Skeleton class="size-4 shrink-0" />
+            <Skeleton class="mt-0.5 size-4 shrink-0" />
             <div class="flex min-w-0 flex-1 flex-col gap-2"><Skeleton class="h-4 w-full" /><Skeleton class="h-4 w-3/4" /></div>
           </div>
-          <div class="flex flex-wrap gap-2"><Skeleton class="h-9 w-44" /><Skeleton class="h-9 w-32" /></div>
+          <Skeleton class="h-9 w-52 max-w-full" />
         </div>
       </div>
       <template v-if="status">

@@ -13,20 +13,18 @@ describe('DocumentLoadingSkeleton', () => {
         },
     );
 
-    it('ocupa el ancho del formulario sin columna del asistente, que es flotante', () => {
+    it('imita el editor: pestañas, una tarjeta con campos y el botón Siguiente debajo, sin ícono ni cabecera propia', () => {
         const wrapper = mount(DocumentLoadingSkeleton, { props: { variant: 'syllabus' } });
+        const card = wrapper.get('[data-skeleton="syllabus-section"]');
 
         expect(wrapper.find('.max-w-screen-2xl').exists()).toBe(true);
+        expect(wrapper.get('[data-skeleton="syllabus-tabs"]').findAll('[data-slot="skeleton"]').length).toBeGreaterThan(1);
+        expect(card.findAll('[data-skeleton="syllabus-field"]').length).toBeGreaterThan(0);
+        expect(card.find('[data-skeleton="syllabus-nav"]').exists()).toBe(false);
+        expect(wrapper.get('[data-skeleton="syllabus-nav"]').element.previousElementSibling).toBe(card.element);
         expect(wrapper.find('[data-skeleton="unit-assistant"]').exists()).toBe(false);
-        expect(wrapper.findAll('[data-skeleton="academic-context"]')).toHaveLength(1);
+        expect(wrapper.find('[data-skeleton="academic-context"]').exists()).toBe(false);
         expect(wrapper.find('[data-skeleton="syllabus-presentation"]').exists()).toBe(false);
-    });
-
-    it('presenta la cabecera institucional del sílabo de consulta', () => {
-        const wrapper = mount(DocumentLoadingSkeleton, { props: { variant: 'syllabus', readonly: true } });
-
-        expect(wrapper.find('[data-skeleton="syllabus-presentation"]').exists()).toBe(true);
-        expect(wrapper.find('.size-7').exists()).toBe(false);
     });
 
     it('limita biblioteca a bibliografía con aprobación, comentario e historial', () => {
@@ -45,6 +43,7 @@ describe('DocumentLoadingSkeleton', () => {
 
         expect(coordination.find('[data-skeleton="review-correction"]').exists()).toBe(true);
         expect(coordination.find('[data-skeleton="review-observations"]').exists()).toBe(false);
+        expect(coordination.find('[data-skeleton="review-heading"]').exists()).toBe(true);
     });
 
     it('representa las hojas vertical y horizontal del constructor vigente', () => {
@@ -58,6 +57,14 @@ describe('DocumentLoadingSkeleton', () => {
         expect(landscape.classes()).toContain('template-sheet--landscape');
         expect(wrapper.findAll('[data-skeleton="template-page"]')).toHaveLength(2);
         expect(wrapper.find('.sticky').exists()).toBe(false);
+        expect(wrapper.get('[data-skeleton="template-toolbar"]').element.nextElementSibling).toBe(pages.element);
+    });
+
+    it('compara las revisiones en un resumen y cambios con dos lados', () => {
+        const wrapper = mount(DocumentLoadingSkeleton, { props: { variant: 'comparison', rows: 2 } });
+
+        expect(wrapper.findAll('[data-skeleton="comparison-summary"]')).toHaveLength(1);
+        expect(wrapper.findAll('[data-skeleton="comparison-change"]')).toHaveLength(2);
     });
 
     it('presenta la exportación como avisos y una tabla adaptable con filas y paginación', () => {

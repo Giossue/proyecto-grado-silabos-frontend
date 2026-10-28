@@ -45,7 +45,7 @@ onMounted(() => { void load(); });
 <template>
   <PageFrame title="Ayuda de pantallas" description="Textos de ayuda que se ven en el botón flotante de cada pantalla." size="wide">
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && helps.length === 0" variant="table-body" :columns="3" :actions="false" />
+    <LoadingSkeleton v-else-if="loading && helps.length === 0" variant="table-body" :columns="3" :actions="false" :pagination="false" />
     <template v-else>
       <Table label="Ayuda de pantallas">
         <TableHeader><TableRow><TableHead>Pantalla</TableHead><TableHead>Rol</TableHead><TableHead class="text-center">Ayuda</TableHead></TableRow></TableHeader>

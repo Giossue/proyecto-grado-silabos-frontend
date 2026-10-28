@@ -12,7 +12,9 @@ const props = withDefaults(defineProps<{
     pagination?: boolean;
     actions?: boolean;
     selectable?: boolean;
-    chip?: boolean;
+    tabs?: number;
+    heading?: boolean;
+    widths?: string[];
     plainToolbar?: boolean;
     cellLines?: number | number[];
 }>(), {
@@ -23,7 +25,9 @@ const props = withDefaults(defineProps<{
     pagination: true,
     actions: true,
     selectable: false,
-    chip: false,
+    tabs: 0,
+    heading: false,
+    widths: undefined,
     plainToolbar: false,
     cellLines: 1,
 });
@@ -33,6 +37,7 @@ const dataColumns = computed(() => columnCount.value - (props.actions ? 1 : 0));
 const linesFor = (column: number): number =>
     Math.max(1, Array.isArray(props.cellLines) ? (props.cellLines[column - 1] ?? 1) : props.cellLines);
 const gridColumns = computed(() => {
+    if (props.widths?.length) return `${props.selectable ? '2.5rem ' : ''}${props.widths.join(' ')}`;
     const additional = dataColumns.value - 1;
     return `${props.selectable ? '2.5rem ' : ''}minmax(0, 2fr)${additional > 0 ? ` repeat(${additional}, minmax(0, 1fr))` : ''}${props.actions ? ' 3rem' : ''}`;
 });
@@ -44,7 +49,14 @@ const hasToolbar = computed(() => props.search || props.filters > 0);
 
 <template>
     <div class="flex min-w-0 flex-col gap-4">
-        <Skeleton v-if="chip" data-skeleton="table-chip" class="h-5 w-28 rounded-full" />
+        <div v-if="tabs > 0" data-skeleton="table-tabs" class="flex h-11 items-center gap-2">
+            <div v-for="tab in tabs" :key="tab" class="flex h-full items-center gap-2 px-4">
+                <Skeleton class="size-4" />
+                <Skeleton :class="cn('h-4', tab === 1 ? 'w-28' : 'w-20')" />
+            </div>
+        </div>
+
+        <div v-if="heading" data-skeleton="table-heading" class="-mb-1 flex h-5 items-center"><Skeleton class="h-4 w-28" /></div>
 
         <component :is="plainToolbar ? 'div' : Card" v-if="hasToolbar" data-skeleton="table-toolbar" :class="plainToolbar ? '' : 'py-3'">
             <component :is="plainToolbar ? 'div' : CardContent" :class="cn('flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end', !plainToolbar && 'px-3')">
@@ -105,7 +117,8 @@ const hasToolbar = computed(() => props.search || props.filters > 0);
             <Skeleton class="h-4 w-16" />
             <div class="flex items-center gap-1">
                 <Skeleton class="size-9 sm:w-24" />
-                <Skeleton class="h-5 w-32 sm:size-9" />
+                <Skeleton class="h-5 w-32 sm:hidden" />
+                <Skeleton v-for="page in 3" :key="page" class="hidden size-9 sm:block" />
                 <Skeleton class="size-9 sm:w-24" />
             </div>
         </div>

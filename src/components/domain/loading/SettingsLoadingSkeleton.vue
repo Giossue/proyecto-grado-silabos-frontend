@@ -24,7 +24,7 @@ withDefaults(defineProps<{
                 <div v-for="field in section === 'security' ? 3 : 2" :key="field" class="flex min-w-0 flex-col gap-2" data-skeleton="settings-field">
                     <Skeleton :class="cn('h-3.5 max-w-full', field === 3 ? 'w-40' : 'w-36')" />
                     <Skeleton :class="cn('h-9 w-full', (section === 'security' || !readonly) && 'mt-1')" />
-                    <Skeleton v-if="section === 'profile' && !readonly" :class="cn('h-5 max-w-full', field === 1 ? 'w-full' : 'w-96')" />
+                    <Skeleton v-if="section === 'profile' && !readonly" :class="cn('h-5 max-w-full', field === 1 ? 'w-72' : 'w-96')" />
                 </div>
 
                 <div v-if="section === 'profile' && readonly" class="flex min-w-0 flex-col gap-1" data-skeleton="settings-identity-help">

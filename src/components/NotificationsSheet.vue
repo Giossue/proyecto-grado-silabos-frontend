@@ -172,11 +172,14 @@ onMounted(refreshCount);
                 <div aria-live="polite">
                     <div v-if="loading && items.length === 0" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando notificaciones">
                         <span class="sr-only">Cargando notificaciones…</span>
-                        <div aria-hidden="true" class="flex flex-col divide-y">
-                            <div v-for="item in 3" :key="item" class="flex items-start gap-3 px-6 py-4">
-                                <Skeleton class="size-5 shrink-0 rounded-full" />
+                        <div aria-hidden="true" class="flex flex-col divide-y border-t">
+                            <div v-for="item in 4" :key="item" class="flex items-start gap-3 px-6 py-4">
+                                <Skeleton class="mt-0.5 size-5 shrink-0" />
                                 <div class="flex min-w-0 flex-1 flex-col gap-2">
-                                    <Skeleton class="h-4 w-3/4" />
+                                    <div class="flex items-center justify-between gap-3">
+                                        <Skeleton class="h-4 w-1/2" />
+                                        <Skeleton class="h-3 w-12 shrink-0" />
+                                    </div>
                                     <Skeleton class="h-4 w-full" />
                                 </div>
                             </div>

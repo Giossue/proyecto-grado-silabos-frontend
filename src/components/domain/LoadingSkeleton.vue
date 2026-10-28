@@ -47,6 +47,10 @@ const props = withDefaults(defineProps<{
     cellLines?: number | number[];
     selectable?: boolean;
     chip?: boolean;
+    tabs?: number;
+    heading?: boolean;
+    widths?: string[];
+    sidebar?: boolean;
     plainToolbar?: boolean;
     workspaceCount?: number;
     reviewStage?: 'coordination' | 'library';
@@ -64,6 +68,10 @@ const props = withDefaults(defineProps<{
     cellLines: 1,
     selectable: false,
     chip: false,
+    tabs: 0,
+    heading: false,
+    widths: undefined,
+    sidebar: false,
     plainToolbar: false,
     workspaceCount: 3,
     readonly: false,
@@ -79,7 +87,9 @@ const tableProps = computed(() => ({
     actions: props.actions,
     cellLines: props.cellLines,
     selectable: props.selectable,
-    chip: props.chip,
+    tabs: props.tabs,
+    heading: props.heading,
+    widths: props.widths,
     plainToolbar: props.plainToolbar,
 }));
 </script>
@@ -88,6 +98,8 @@ const tableProps = computed(() => ({
     <div class="flex w-full min-w-0 flex-col gap-6" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando contenido">
         <span class="sr-only">Cargando contenido…</span>
         <div aria-hidden="true" class="contents">
+            <Skeleton v-if="chip" data-skeleton="table-chip" class="h-5 w-28 rounded-full" />
+
             <MetricsLoadingSkeleton v-if="metrics" />
 
             <TableLoadingSkeleton v-if="variant === 'table-body'" v-bind="tableProps" />
@@ -102,7 +114,7 @@ const tableProps = computed(() => ({
                 <CardContent><TableLoadingSkeleton v-bind="tableProps" /></CardContent>
             </Card>
 
-            <div v-else-if="variant === 'syllabus-cards'" class="flex min-w-0 flex-col gap-4">
+            <div v-else-if="variant === 'syllabus-cards'" class="flex min-w-0 flex-col gap-6">
                 <Card data-skeleton="table-toolbar" class="py-3">
                     <CardContent class="flex flex-col gap-3 px-3 lg:flex-row lg:items-end">
                         <Skeleton class="h-9 w-full lg:min-w-64 lg:flex-1" />
@@ -129,7 +141,7 @@ const tableProps = computed(() => ({
                         <Skeleton class="h-9 w-full lg:min-w-64 lg:flex-1" />
                         <Skeleton v-if="filters > 0" class="h-9 w-full sm:hidden" />
                         <div v-if="filters > 0" class="hidden gap-3 sm:grid sm:grid-cols-2 lg:flex lg:items-end">
-                            <Skeleton v-for="filter in filters" :key="filter" class="h-9 w-full lg:w-48" />
+                            <Skeleton v-for="filter in filters" :key="filter" class="h-9 w-full lg:w-44" />
                         </div>
                     </CardContent>
                 </Card>
@@ -156,24 +168,23 @@ const tableProps = computed(() => ({
                 :variant="variant"
                 :rows="rows"
                 :review-stage="reviewStage"
-                :readonly="readonly"
             />
 
             <Card v-else-if="variant === 'notifications'">
                 <CardContent class="flex flex-col gap-3">
-                    <div v-for="notification in rows" :key="notification" class="flex flex-col gap-3 rounded-md ring-1 ring-surface-ring p-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div v-for="notification in rows" :key="notification" data-skeleton="notification" class="flex flex-col gap-3 rounded-md bg-muted/40 ring-1 ring-surface-ring p-4 sm:flex-row sm:items-start sm:justify-between">
                         <div class="flex min-w-0 flex-1 flex-col gap-2">
                             <div class="flex flex-wrap items-center gap-2">
                                 <Skeleton class="h-5 w-56 max-w-full" />
-                                <Skeleton v-if="notification === 1" class="h-5 w-12 rounded-full" />
+                                <Skeleton class="h-5 w-14 rounded-full" />
                             </div>
                             <Skeleton class="h-4 w-full" />
                             <Skeleton class="h-4 w-4/5" />
                             <Skeleton class="mt-1 h-3 w-48 max-w-full" />
                         </div>
-                        <div v-if="notification % 2 === 1" class="flex shrink-0 flex-wrap gap-2">
-                            <Skeleton class="h-8 w-24" />
-                            <Skeleton class="h-8 w-16" />
+                        <div class="flex shrink-0 flex-wrap gap-2">
+                            <Skeleton class="h-8 w-28" />
+                            <Skeleton class="h-8 w-20" />
                         </div>
                     </div>
                 </CardContent>
@@ -196,10 +207,18 @@ const tableProps = computed(() => ({
                 </div>
             </div>
 
-            <div v-else-if="variant === 'form'" class="flex flex-col gap-6">
-                <div v-for="row in rows" :key="row" class="flex flex-col gap-2">
-                    <Skeleton class="h-3.5 w-32" />
-                    <Skeleton class="h-9 w-full" />
+            <div v-else-if="variant === 'form'" :class="sidebar ? 'flex flex-col gap-6 md:flex-row md:items-start' : 'contents'">
+                <div v-if="sidebar" data-skeleton="form-sections" class="flex w-full shrink-0 flex-col gap-1 md:w-72">
+                    <div v-for="section in 4" :key="section" class="flex items-center border-l-2 px-3 py-2"><Skeleton class="h-5 w-3/4" /></div>
+                </div>
+                <div class="flex min-w-0 flex-1 flex-col gap-7">
+                    <div v-for="row in rows" :key="row" class="flex flex-col gap-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <Skeleton class="h-3.5 w-32" />
+                            <Skeleton v-if="sidebar" class="h-5 w-44 max-w-1/2" />
+                        </div>
+                        <Skeleton class="h-9 w-full" />
+                    </div>
                 </div>
             </div>
 

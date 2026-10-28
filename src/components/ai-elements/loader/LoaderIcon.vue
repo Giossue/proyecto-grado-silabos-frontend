@@ -15,8 +15,9 @@ withDefaults(defineProps<Props>(), {
         :style="{ color: 'currentcolor' }"
         viewBox="0 0 16 16"
         :width="size"
+        role="img"
+        aria-label="Cargando"
     >
-        <title>Loader</title>
         <g clip-path="url(#clip0_2393_1490)">
             <path d="M8 0V4" stroke="currentColor" stroke-width="1.5" />
             <path

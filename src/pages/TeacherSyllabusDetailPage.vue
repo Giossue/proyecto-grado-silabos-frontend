@@ -449,7 +449,7 @@ onBeforeUnmount(() => {
     </template>
 
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
-    <LoadingSkeleton v-if="(!syllabus || canStart) && !error" variant="syllabus" :readonly="Boolean(syllabus && !canEdit)" />
+    <LoadingSkeleton v-if="(!syllabus || canStart) && !error" variant="syllabus" />
 
     <template v-if="syllabus">
       <ProcessLockAlert v-if="editBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
@@ -465,7 +465,7 @@ onBeforeUnmount(() => {
 
           <Tabs v-if="showEditor && !previewing && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
             <TabsList class="h-auto w-full flex-wrap justify-start" aria-label="Secciones del sílabo">
-              <TabsTrigger v-for="section in visibleSections" :key="section.id" :value="section.id" class="h-10 max-w-64 flex-none px-4 data-[state=active]:font-semibold" :title="section.title"><span class="truncate">{{ section.title }}</span></TabsTrigger>
+              <Tooltip v-for="section in visibleSections" :key="section.id"><TooltipTrigger as-child><TabsTrigger :value="section.id" class="h-10 max-w-64 flex-none px-4 data-[state=active]:font-semibold"><span class="truncate">{{ section.title }}</span></TabsTrigger></TooltipTrigger><TooltipContent>{{ section.title }}</TooltipContent></Tooltip>
             </TabsList>
           </Tabs>
           <template v-if="showEditor && !previewing">

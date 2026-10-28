@@ -76,7 +76,7 @@ onMounted(() => { void load(1, true); });
       <ConvocationActions v-if="summary?.coordination_convocation" :convocation="summary.coordination_convocation" @changed="changed" />
       <Button as-child variant="outline"><RouterLink :to="paths.coordination.setup"><ListChecks data-icon="inline-start" aria-hidden="true" />Puesta en marcha</RouterLink></Button>
     </template>
-    <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :cell-lines="[2, 1, 1, 2]" :actions="false" />
+    <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :cell-lines="[2, 1, 1, 2]" :actions="false" :tabs="2" />
     <Tabs v-if="data" v-model="tab" class="gap-4">
       <TabsList class="h-11 justify-start" aria-label="Vistas de revisión">
         <TabsTrigger value="cola" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><Inbox aria-hidden="true" />Cola de revisión</TabsTrigger>

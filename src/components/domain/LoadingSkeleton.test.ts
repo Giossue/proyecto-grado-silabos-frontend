@@ -94,11 +94,49 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.get('[data-skeleton="table-row"]').element.children).toHaveLength(4);
   });
 
-  it.each([['syllabus-cards', 'syllabus-card'], ['table', 'table-row']] as const)('anticipa los indicadores sobre la lista %s cuando la pantalla los tiene', (variant, item) => {
-    const wrapper = mount(LoadingSkeleton, { props: { variant, rows: 2, metrics: true } });
+  it('anticipa los indicadores y el chip de período sobre la tabla solo cuando la pantalla los tiene', () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'table', rows: 2, metrics: true, chip: true } });
 
     expect(wrapper.get('[data-skeleton="metrics"]').findAll('[data-slot="card"]')).toHaveLength(3);
-    expect(wrapper.findAll(`[data-skeleton="${item}"]`)).toHaveLength(2);
-    expect(mount(LoadingSkeleton, { props: { variant } }).find('[data-skeleton="metrics"]').exists()).toBe(false);
+    expect(wrapper.find('[data-skeleton="table-chip"]').exists()).toBe(true);
+    expect(wrapper.findAll('[data-skeleton="table-row"]')).toHaveLength(2);
+
+    const plain = mount(LoadingSkeleton, { props: { variant: 'table' } });
+
+    expect(plain.find('[data-skeleton="metrics"]').exists()).toBe(false);
+    expect(plain.find('[data-skeleton="table-chip"]').exists()).toBe(false);
+  });
+
+  it('dibuja la barra de pestañas, el título de grupo y la paginación solo cuando se piden', async () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'table', tabs: 2, heading: true, pagination: false } });
+
+    expect(wrapper.get('[data-skeleton="table-tabs"]').element.children).toHaveLength(2);
+    expect(wrapper.find('[data-skeleton="table-heading"]').exists()).toBe(true);
+    expect(wrapper.find('[data-skeleton="table-pagination"]').exists()).toBe(false);
+
+    await wrapper.setProps({ tabs: 0, heading: false, pagination: true });
+
+    expect(wrapper.find('[data-skeleton="table-tabs"]').exists()).toBe(false);
+    expect(wrapper.find('[data-skeleton="table-heading"]').exists()).toBe(false);
+    expect(wrapper.find('[data-skeleton="table-pagination"]').exists()).toBe(true);
+  });
+
+  it('respeta los anchos de columna indicados', () => {
+    const widths = ['minmax(0, 1fr)', 'minmax(0, 2fr)', '5rem'];
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'catalog', columns: 3, actions: false, widths } });
+
+    expect((wrapper.get('[data-skeleton="table-row"]').element as HTMLElement).style.gridTemplateColumns).toContain('5rem');
+  });
+
+  it('muestra las tarjetas de sílabo sin indicadores', () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'syllabus-cards', rows: 2 } });
+
+    expect(wrapper.findAll('[data-skeleton="syllabus-card"]')).toHaveLength(2);
+    expect(wrapper.find('[data-skeleton="metrics"]').exists()).toBe(false);
+  });
+
+  it('anticipa la barra lateral de secciones del formulario cuando se pide', () => {
+    expect(mount(LoadingSkeleton, { props: { variant: 'form', rows: 2 } }).find('[data-skeleton="form-sections"]').exists()).toBe(false);
+    expect(mount(LoadingSkeleton, { props: { variant: 'form', rows: 2, sidebar: true } }).find('[data-skeleton="form-sections"]').exists()).toBe(true);
   });
 });

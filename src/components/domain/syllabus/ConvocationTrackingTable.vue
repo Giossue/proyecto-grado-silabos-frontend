@@ -45,7 +45,7 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
 
 <template>
   <LoadErrorState v-if="error" :message="error" @retry="load" />
-  <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :actions="false" :cell-lines="[1, 2, 1]" />
+  <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" :actions="false" :cell-lines="[2, 2, 1]" />
   <div v-else-if="data" class="flex flex-col gap-4">
     <Card class="py-3"><CardContent class="px-3"><ClientFilterBar
       :filter="syllabusFilter"
