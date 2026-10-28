@@ -1,14 +1,26 @@
 <script setup lang="ts">
 import { RefreshCw } from '@lucide/vue';
 import { useRegisterSW } from 'virtual:pwa-register/vue';
+import { onBeforeUnmount } from 'vue';
 import { Button } from '@/components/ui/button';
 
-const HOUR = 60 * 60 * 1000;
+const CHECK_EVERY = 5 * 60 * 1000;
+let timer: ReturnType<typeof setInterval> | undefined;
+let onVisible: (() => void) | undefined;
 
+/** Busca la versión nueva cada pocos minutos y al volver a la pestaña, para que el aviso llegue casi a la vez a todos. */
 const { needRefresh, updateServiceWorker } = useRegisterSW({
   onRegisteredSW: (_url, registration) => {
-    if (registration) setInterval(() => { void registration.update(); }, HOUR);
+    if (!registration) return;
+    const check = (): void => { if (navigator.onLine) void registration.update(); };
+    timer = setInterval(check, CHECK_EVERY);
+    onVisible = (): void => { if (document.visibilityState === 'visible') check(); };
+    document.addEventListener('visibilitychange', onVisible);
   },
+});
+onBeforeUnmount(() => {
+  clearInterval(timer);
+  if (onVisible) document.removeEventListener('visibilitychange', onVisible);
 });
 </script>
 
