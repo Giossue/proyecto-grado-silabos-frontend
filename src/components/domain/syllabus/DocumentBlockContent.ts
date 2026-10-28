@@ -155,7 +155,7 @@ export default defineComponent({
                     onClick: () => write(path, [...listOf(path), emptyValue(schema.items, props.props)]),
                 }, () => [h(Plus, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), `Agregar ${schema.title ?? 'fila'}`]);
             });
-            return h('div', { class: 'flex flex-col gap-1' }, [h('div', { class: 'overflow-x-auto' }, rendered), ...buttons]);
+            return h('div', { class: 'flex flex-col gap-1' }, [h('div', { class: '-m-1 overflow-x-auto p-1' }, rendered), ...buttons]);
         };
 
         const fillOptions: RenderOptions = {
