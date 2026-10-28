@@ -41,9 +41,9 @@ watch(() => route.fullPath, () => {
     <Sidebar collapsible="icon" variant="sidebar">
         <SidebarHeader>
             <div
-                class="flex h-16 items-center p-2 transition-[padding] duration-200 ease-linear group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
+                class="flex min-h-16 items-center p-2 transition-[padding] duration-200 ease-linear group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:min-h-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
             >
-                <img :src="logo" width="600" height="164" decoding="async" alt="Universidad Estatal de Bolívar" class="h-11 w-auto group-data-[collapsible=icon]:hidden" />
+                <img :src="logo" width="600" height="164" decoding="async" alt="Universidad Estatal de Bolívar" class="h-auto w-full group-data-[collapsible=icon]:hidden" />
                 <img :src="logoIcon" width="36" height="37" decoding="async" alt="Universidad Estatal de Bolívar" class="hidden size-7 object-contain group-data-[collapsible=icon]:block" />
             </div>
         </SidebarHeader>
