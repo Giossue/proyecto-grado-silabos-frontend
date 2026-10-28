@@ -100,7 +100,7 @@ onMounted(load);
     </template>
     <template #actions>
       <SetupDialog v-if="summary?.setup" :setup="summary.setup" :routes="setupRoutes" start-key="process" />
-      <Tooltip v-if="loaded && !setupReady"><TooltipTrigger as-child><span class="inline-flex" tabindex="0"><ConvocationPeriodSheet disabled @saved="changed" /></span></TooltipTrigger><TooltipContent>Complete la puesta en marcha para abrir una convocatoria</TooltipContent></Tooltip>
+      <Tooltip v-if="loaded && !setupReady"><TooltipTrigger as-child><span class="inline-flex" tabindex="0"><ConvocationPeriodSheet disabled @saved="changed" /></span></TooltipTrigger><TooltipContent>Complete «Antes de empezar» para abrir una convocatoria</TooltipContent></Tooltip>
       <ConvocationPeriodSheet v-else-if="loaded" :disabled="inProgress" @saved="changed" />
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />

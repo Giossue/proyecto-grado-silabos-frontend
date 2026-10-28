@@ -19,7 +19,7 @@ const done = computed(() => steps.value.filter((step) => step.done).length);
 <template>
   <Dialog>
     <DialogTrigger as-child>
-      <Button type="button" variant="outline"><ListChecks data-icon="inline-start" aria-hidden="true" />Puesta en marcha</Button>
+      <Button type="button" variant="outline"><ListChecks data-icon="inline-start" aria-hidden="true" />Antes de empezar</Button>
     </DialogTrigger>
     <DialogContent class="sm:max-w-xl">
       <DialogHeader>

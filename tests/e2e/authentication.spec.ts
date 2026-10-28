@@ -114,7 +114,7 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page).toHaveURL(/\/coordinacion\/revisiones$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Revisión' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Cola de revisión' })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Puesta en marcha' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Antes de empezar' })).toBeVisible();
     await expectNavigation(page, [
       'Revisión',
       'Materias y asignaciones',
@@ -133,8 +133,8 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByRole('button', { name: /Editar malla|Comprobando/ })).toBeVisible();
 
     await openSection(page, 'Revisión', 'Revisión');
-    await page.getByRole('button', { name: 'Puesta en marcha' }).click();
-    await expect(page.getByRole('dialog', { name: 'Puesta en marcha de la carrera' })).toBeVisible();
+    await page.getByRole('button', { name: 'Antes de empezar' }).click();
+    await expect(page.getByRole('dialog', { name: 'Antes de empezar' })).toBeVisible();
     await page.keyboard.press('Escape');
 
     await page.goto('/admin/convocatorias');

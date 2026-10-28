@@ -44,14 +44,14 @@ describe('AdminProcessesPage', () => {
     wrapper.unmount();
   });
 
-  it('muestra arriba los indicadores y el botón de puesta en marcha', async () => {
+  it('muestra arriba los indicadores y el botón «Antes de empezar»', async () => {
     api.getSession.mockResolvedValue({ active_role: { code: 'administrador' } });
     api.getAcademicGovernance.mockResolvedValue({ lock_reason: null, catalogs: { faculties: [], careers: [], periods: [] }, options: {} });
     api.getProcesses.mockResolvedValue({ processes: [], template: null, periods: [], active_process: null });
     const step = (key: string, done: boolean) => ({ key, label: `Paso ${key}`, hint: `Pista ${key}`, done, action: null });
     api.getDashboard.mockResolvedValue({
       metrics: [{ key: 'careers_without_convocation', label: 'Carreras sin convocar', value: 3, suffix: null, hint: 'Pista' }],
-      setup: { title: 'Puesta en marcha de la institución', intro: '', done: 1, total: 6, steps: [step('faculties', true), step('careers', false), step('accounts', false), step('coordinators', false), step('template', false), step('process', false)] },
+      setup: { title: 'Antes de empezar', intro: '', done: 1, total: 6, steps: [step('faculties', true), step('careers', false), step('accounts', false), step('coordinators', false), step('template', false), step('process', false)] },
       deadline: null, coordination_convocation: null,
     });
     const wrapper = mountPage();
@@ -59,7 +59,7 @@ describe('AdminProcessesPage', () => {
 
     expect(wrapper.text()).toContain('Carreras sin convocar');
     expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('true');
-    const trigger = wrapper.findAll('button').find((button) => button.text().includes('Puesta en marcha'))!;
+    const trigger = wrapper.findAll('button').find((button) => button.text().includes('Antes de empezar'))!;
     await trigger.trigger('click');
     await flushPromises();
 
