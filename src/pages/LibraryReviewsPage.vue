@@ -20,7 +20,7 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { LIBRARY_STATE_LABELS, libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
+import { LIBRARY_STATE_FILTERS, libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
 import { rememberLibraryFaculty, savedLibraryFaculty } from '@/lib/libraryFaculty';
 
@@ -37,7 +37,7 @@ const filters = reactive({
   faculty: queryText(route.query.faculty) || savedLibraryFaculty() || 'all',
 });
 const initialPage = Number(queryText(route.query.page)) || 1;
-const stateOptions = Object.entries(LIBRARY_STATE_LABELS).map(([value, label]) => ({ value, label }));
+const stateOptions = Object.entries(LIBRARY_STATE_FILTERS).map(([value, label]) => ({ value, label }));
 const periods = computed(() => [...new Set((data.value?.reviews.data ?? []).map((item) => item.period))]);
 
 const syncUrl = (page: number): void => {

@@ -2,7 +2,10 @@ import { api } from '@/api/client';
 import type { SnapshotSection } from '@/api/reviews';
 import type { PaginationMeta } from '@/types/pagination';
 
-export type LibraryReviewState = 'pendiente' | 'por_firmar' | 'firmado' | 'comentado' | 'anulado';
+export type LibraryReviewState = 'pendiente' | 'por_firmar' | 'atendido';
+
+// Cómo terminó un envío atendido.
+export type LibraryReviewOutcome = 'firmado' | 'devuelto' | 'reemplazado';
 
 export type LibraryReviewItem = {
   revision_id: string;
@@ -17,6 +20,7 @@ export type LibraryReviewItem = {
   sent_at: string;
   sent_by: string;
   state: LibraryReviewState;
+  outcome: LibraryReviewOutcome | null;
 };
 
 export type LibraryComment = {

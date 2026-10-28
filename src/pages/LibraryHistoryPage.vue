@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { rememberLibraryFaculty, savedLibraryFaculty } from '@/lib/libraryFaculty';
-import { LIBRARY_STATE_LABELS, libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
+import { LIBRARY_STATE_FILTERS, libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
 
 const route = useRoute();
@@ -33,7 +33,7 @@ const filters = reactive({
   who: route.query.mine === '1' ? 'mine' : 'all',
 });
 const initialPage = Number(queryText(route.query.page)) || 1;
-const stateOptions = Object.entries(LIBRARY_STATE_LABELS).map(([value, label]) => ({ value, label }));
+const stateOptions = Object.entries(LIBRARY_STATE_FILTERS).map(([value, label]) => ({ value, label }));
 
 const syncUrl = (page: number): void => {
   const query: Record<string, string> = {};

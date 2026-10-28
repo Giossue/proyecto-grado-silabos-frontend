@@ -80,6 +80,7 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByRole('columnheader', { name: 'Período' })).toBeVisible();
 
     await openSection(page, 'Plantilla', 'Plantilla de sílabo');
+    await page.getByRole('button', { name: 'Editar', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Opciones avanzadas' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Menú de usuario' }).click();
@@ -165,7 +166,7 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page).toHaveURL(/\/biblioteca\/revisiones$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Revisiones de biblioteca' })).toBeVisible();
     await expectNavigation(page, ['Revisiones de biblioteca']);
-    await expect(page.getByText('Por verificar')).toBeVisible();
+    await expect(page.getByText('Por revisar', { exact: true }).first()).toBeVisible();
 
     await page.goto('/admin/usuarios');
     await expect(page).toHaveURL(/\/biblioteca\/revisiones$/);

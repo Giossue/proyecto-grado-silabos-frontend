@@ -34,7 +34,8 @@ const page = (): LibraryReviewsPage => ({
       revision_number: 2,
       sent_at: '2026-09-28T10:00:00-05:00',
       sent_by: 'Docente Demo',
-      state: 'comentado',
+      state: 'atendido',
+      outcome: 'devuelto',
     }],
     current_page: 1,
     last_page: 1,
@@ -53,10 +54,9 @@ describe('LibraryReviewsPage', () => {
     vi.mocked(getDashboard).mockReset();
     vi.mocked(getDashboard).mockResolvedValue({
       metrics: [
-        { key: 'library_pending', label: 'Por verificar', value: 2, suffix: null, hint: 'Aprobados por coordinación; falta la bibliografía' },
+        { key: 'library_pending', label: 'Por revisar', value: 2, suffix: null, hint: 'Aprobados por coordinación; falta la bibliografía' },
         { key: 'library_to_sign', label: 'Por firmar', value: 1, suffix: null, hint: 'Su firma va después de docente y coordinación' },
-        { key: 'library_commented', label: 'Con comentario', value: 0, suffix: null, hint: 'Devueltos al docente desde biblioteca' },
-        { key: 'library_signed', label: 'Firmados', value: 4, suffix: null, hint: 'Sílabos con la firma de biblioteca' },
+        { key: 'library_handled', label: 'Atendidos', value: 4, suffix: null, hint: 'Firmados, devueltos al docente o reemplazados por una revisión nueva' },
       ],
       setup: null,
       deadline: { period: '2026-2027', starts_at: '2026-10-01', due_at: '2026-11-15', state: 'active', days_until_start: 0, days_until_due: 19, convocation_id: null },
@@ -69,9 +69,9 @@ describe('LibraryReviewsPage', () => {
     const wrapper = mount(LibraryReviewsPageView);
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Por verificar');
+    expect(wrapper.text()).toContain('Por revisar');
     expect(wrapper.text()).toContain('Por firmar');
-    expect(wrapper.text()).not.toContain('Firmados');
+    expect(wrapper.text()).toContain('Atendidos');
 
     await wrapper.get('form').trigger('submit');
     await flushPromises();
@@ -96,7 +96,7 @@ describe('LibraryReviewsPage', () => {
     expect(row.text()).not.toContain('A, B');
     expect(wrapper.text()).toContain('Período ');
     expect(row.text()).not.toContain('N.º');
-    expect(row.text()).toContain('Con comentario');
+    expect(row.text()).toContain('Atendido');
     wrapper.unmount();
   });
 

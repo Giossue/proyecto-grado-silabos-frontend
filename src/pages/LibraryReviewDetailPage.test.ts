@@ -32,6 +32,7 @@ const detail = (overrides: Partial<LibraryReviewDetail> = {}): LibraryReviewDeta
   sent_at: '2026-09-28T10:00:00-05:00',
   sent_by: 'Docente Demo',
   state: 'pendiente',
+  outcome: null,
   can_comment: true,
   can_verify: true,
   verified_at: null,
@@ -148,7 +149,8 @@ describe('LibraryReviewDetailPage', () => {
     vi.mocked(getLibraryReview)
       .mockResolvedValueOnce({ review: detail() })
       .mockResolvedValueOnce({ review: detail({
-        state: 'comentado',
+        state: 'atendido',
+        outcome: 'devuelto',
         can_comment: false,
         can_verify: false,
         comments: [{ comment: 'No está disponible la 10.ª edición.', commented_at: '2026-09-29T09:00:00-05:00', commented_by: 'Biblioteca Demo', revision_number: 2 }],
@@ -174,7 +176,8 @@ describe('LibraryReviewDetailPage', () => {
       reasons: ['libro_no_disponible', 'codigo_incorrecto'],
     });
     expect(toastSuccess).toHaveBeenCalledWith('Comentario enviado al docente.');
-    expect(wrapper.text()).toContain('Con comentario');
+    expect(wrapper.text()).toContain('Atendido');
+    expect(wrapper.text()).toContain('Comentario enviado al docente');
     expect(wrapper.text()).toContain('Biblioteca Demo');
     expect(wrapper.find('#library-comment-form').exists()).toBe(false);
     wrapper.unmount();

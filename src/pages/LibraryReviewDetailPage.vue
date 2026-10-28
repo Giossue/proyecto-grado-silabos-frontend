@@ -149,10 +149,10 @@ onMounted(load);
     </template>
 
     <Alert v-if="actionError" variant="destructive"><AlertTitle>No se pudo completar la acción</AlertTitle><AlertDescription>{{ actionError }}</AlertDescription></Alert>
-    <Alert v-if="review.state === 'firmado'"><BookCheck aria-hidden="true" /><AlertTitle>Bibliografía verificada</AlertTitle><AlertDescription>Biblioteca ya firmó este sílabo.</AlertDescription></Alert>
+    <Alert v-if="review.outcome === 'firmado'"><BookCheck aria-hidden="true" /><AlertTitle>Bibliografía verificada</AlertTitle><AlertDescription>Biblioteca ya firmó este sílabo.</AlertDescription></Alert>
     <Alert v-else-if="review.state === 'por_firmar'"><BookCheck aria-hidden="true" /><AlertTitle>Sílabo aprobado</AlertTitle><AlertDescription>Bibliografía aprobada<template v-if="review.verified_by"> por {{ review.verified_by }}</template><template v-if="review.verified_at"> el {{ formatDate(review.verified_at) }}</template>. Firme el PDF cuando docente y coordinación hayan firmado.</AlertDescription></Alert>
-    <Alert v-else-if="review.state === 'comentado'"><MessageSquareText aria-hidden="true" /><AlertTitle>Comentario enviado al docente</AlertTitle><AlertDescription>El docente corregirá el sílabo y lo reenviará. Volverá a esta bandeja como una nueva revisión.</AlertDescription></Alert>
-    <Alert v-else-if="review.state === 'anulado'"><CircleSlash aria-hidden="true" /><AlertTitle>Revisión reemplazada</AlertTitle><AlertDescription>Hay una revisión más reciente de este sílabo. Esta queda solo para consulta.</AlertDescription></Alert>
+    <Alert v-else-if="review.outcome === 'devuelto'"><MessageSquareText aria-hidden="true" /><AlertTitle>Comentario enviado al docente</AlertTitle><AlertDescription>El docente corregirá el sílabo y lo reenviará. Volverá a esta bandeja como una nueva revisión.</AlertDescription></Alert>
+    <Alert v-else-if="review.outcome === 'reemplazado'"><CircleSlash aria-hidden="true" /><AlertTitle>Revisión reemplazada</AlertTitle><AlertDescription>Hay una revisión más reciente de este sílabo. Esta queda solo para consulta.</AlertDescription></Alert>
 
     <WorkspaceLayout variant="review">
       <div class="flex min-w-0 flex-col gap-6">
@@ -173,7 +173,7 @@ onMounted(load);
           <CardContent><Button type="button" :disabled="verifying" @click="askVerify"><BookCheck data-icon="inline-start" aria-hidden="true" />Aprobar bibliografía</Button></CardContent>
         </Card>
 
-        <DocumentSignatureCard v-if="['por_firmar', 'firmado'].includes(review.state)" :key="review.revision_id" :revision-id="review.revision_id" :file-name="`silabo-${review.code}-revision-${review.revision_number}`" @changed="load" />
+        <DocumentSignatureCard v-if="review.state === 'por_firmar' || review.outcome === 'firmado'" :key="review.revision_id" :revision-id="review.revision_id" :file-name="`silabo-${review.code}-revision-${review.revision_number}`" @changed="load" />
 
         <Card v-if="review.can_comment">
           <CardHeader><CardTitle>Devolver al docente</CardTitle><CardDescription>Si hay algún problema con la bibliografía, marque los motivos. El sílabo vuelve al docente para que lo corrija y lo reenvíe.</CardDescription></CardHeader>
