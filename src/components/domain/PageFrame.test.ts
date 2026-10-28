@@ -34,6 +34,15 @@ describe('PageFrame', () => {
     expect(wrapper.find('header svg').exists()).toBe(false);
   });
 
+  it('centra los botones con el ícono y el título', () => {
+    const wrapper = mount(PageFrame, {
+      props: { title: 'Docentes', description: 'Docentes de su carrera.', icon: Users },
+      slots: { actions: '<button type="button">Historial</button>' },
+    });
+
+    expect(wrapper.get('header').classes()).toContain('sm:items-center');
+  });
+
   it('aplica la clase del encabezado para alinearlo con el contenido', () => {
     const wrapper = mount(PageFrame, { props: { title: 'Álgebra Lineal', description: 'Paralelo A', headerClass: 'syllabus-editor-header' } });
 

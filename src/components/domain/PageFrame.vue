@@ -110,7 +110,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
         "
     >
         <header
-            :class="cn('flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between', headerWidth && 'mx-auto', headerClass)"
+            :class="cn('flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between', headerWidth && 'mx-auto', headerClass)"
             :style="headerStyle"
         >
             <div class="flex min-w-0 flex-1 flex-col gap-2">

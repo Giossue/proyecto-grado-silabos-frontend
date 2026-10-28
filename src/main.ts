@@ -6,6 +6,7 @@ import { handleRoleRequired, handleUnauthorized } from '@/lib/unauthorized';
 import { initializeAccessibility } from '@/composables/useAccessibility';
 import { initializeTheme } from '@/composables/useAppearance';
 import { initializeDocumentPalette } from '@/lib/documentPalette';
+import { installNativeValidation } from '@/lib/nativeValidation';
 import { initializeInstallApp } from '@/state/installApp';
 import '@/state/screenHelp';
 import '@/styles.css';
@@ -16,6 +17,7 @@ installPageAnnouncements(router);
 initializeAccessibility();
 initializeDocumentPalette();
 initializeInstallApp();
+installNativeValidation();
 
 window.addEventListener('silabos:unauthorized', () => handleUnauthorized(router));
 window.addEventListener('silabos:role-required', () => handleRoleRequired(router));
