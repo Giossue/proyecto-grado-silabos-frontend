@@ -80,6 +80,7 @@ export type SyllabusDetail = {
   review_stage?: "biblioteca" | "coordinacion" | null;
   signatures?: SignatureSummary[];
   teacher_signature_required?: boolean;
+  teacher_formation_required?: boolean;
   review_comments?: Array<{
     stage: "biblioteca" | "coordinacion";
     comment: string;

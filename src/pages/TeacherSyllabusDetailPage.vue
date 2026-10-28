@@ -27,6 +27,8 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import SignatureDialog, { type StatementSigner } from '@/components/domain/syllabus/SignatureDialog.vue';
 import SignaturesNote from '@/components/domain/syllabus/SignaturesNote.vue';
 import ReviewCommentNotice from '@/components/domain/syllabus/ReviewCommentNotice.vue';
+import TeacherFormationDialog from '@/components/domain/identity/TeacherFormationDialog.vue';
+import { sessionState } from '@/state/session';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,7 +41,7 @@ import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocume
 import { attemptKey } from '@/lib/attemptKey';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
-import { ArrowLeft, ArrowRight, Bot, Copy, FileSignature, FileText, Library, Pencil, Send, X } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Bot, Copy, FileSignature, FileText, GraduationCap, Library, Pencil, Send, X } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
@@ -71,6 +73,7 @@ const conflict = ref(false);
 const processingAction = ref(false);
 const confirmSubmitOpen = ref(false);
 const signOpen = ref(false);
+const formationOpen = ref(false);
 const localBlockReason = ref<string | null>(null);
 const copySource = ref<{ id: string; parallel: string } | null>(null);
 const saveFailed = ref(false);
@@ -151,7 +154,10 @@ const blockIssue = computed((): string => {
 
   return '';
 });
+const formationEditable = computed(() => canEdit.value && syllabus.value?.teacher_formation_required === true);
+const formationMissing = computed(() => formationEditable.value && !sessionState.current.value?.user.formation?.trim());
 const submitHint = computed(() => {
+  if (formationMissing.value) return "Falta su formación y experiencia";
   if (emptyParts.value === 0 && blockIssue.value !== '') return blockIssue.value;
   if (emptyParts.value === 1) return "Falta 1 campo por completar";
   if (emptyParts.value > 1) return `Faltan ${emptyParts.value} campos por completar`;
@@ -316,6 +322,10 @@ const flushAutosave = async (): Promise<boolean> => {
   return !conflict.value && !hasUnsavedChanges();
 };
 
+const refreshAfterFormation = async (): Promise<void> => {
+  if (await flushAutosave()) await load();
+};
+
 const retrySave = async (): Promise<void> => {
   error.value = null;
   await flushAutosave();
@@ -465,9 +475,10 @@ onBeforeUnmount(() => {
       <Button v-if="syllabus && showEditor && previewing" type="button" variant="outline" @click="previewing = false"><Pencil aria-hidden="true" />Editar</Button>
       <Button v-else-if="syllabus && showEditor" type="button" variant="outline" @click="previewing = true"><FileText aria-hidden="true" />Vista previa</Button>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
+      <Button v-if="formationEditable && !formationMissing" type="button" variant="outline" @click="formationOpen = true"><GraduationCap aria-hidden="true" />Formación y experiencia</Button>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
       <Button v-if="syllabus?.state === 'aprobado' && syllabus.approved_revision_id" as-child variant="outline"><RouterLink :to="paths.teacher.documents(syllabus.approved_revision_id)">Ver PDF</RouterLink></Button>
-      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== ''" @click="askSubmit"><Spinner v-if="processingAction" /><FileSignature v-else-if="mustSign" aria-hidden="true" /><Send v-else aria-hidden="true" />{{ submitLabel }}</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || submitLabel }}</TooltipContent></Tooltip></span>
+      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== '' || formationMissing" @click="askSubmit"><Spinner v-if="processingAction" /><FileSignature v-else-if="mustSign" aria-hidden="true" /><Send v-else aria-hidden="true" />{{ submitLabel }}</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || submitLabel }}</TooltipContent></Tooltip></span>
     </template>
 
     <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
@@ -482,6 +493,7 @@ onBeforeUnmount(() => {
           <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
           <ProcessLockAlert v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
+          <Alert v-if="formationMissing" class="formation-missing"><GraduationCap aria-hidden="true" /><AlertTitle>Falta su formación y experiencia académica-investigativa</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>Va en la tabla de identificación del sílabo.</span><Button type="button" size="sm" @click="formationOpen = true">Completar</Button></AlertDescription></Alert>
           <ReviewCommentNotice v-if="reviewComments.length" :comments="reviewComments" :correction="syllabus.state === 'correccion_solicitada'" />
 
           <Tabs v-if="showEditor && !previewing && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
@@ -541,6 +553,7 @@ onBeforeUnmount(() => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <TeacherFormationDialog v-model:open="formationOpen" @saved="refreshAfterFormation" />
     <SignatureDialog v-model:open="signOpen" title="Firmar y enviar" :description="submitDescription" confirm-label="Firmar y enviar" :run="submit" />
     <Dialog :open="copySource !== null" @update:open="(open) => { if (!open) copySource = null; }">
       <DialogContent>

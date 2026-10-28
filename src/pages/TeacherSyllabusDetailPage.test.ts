@@ -16,6 +16,8 @@ import { ApiError } from "@/api/client";
 import { handleUnauthorized } from "@/lib/unauthorized";
 import { makeTestP12 } from "@/lib/signature/testCertificate";
 import { confirmSignatureDialog, fillSignatureDialog } from "@/test/signatureDialog";
+import { updateFormation } from "@/api/session";
+import { sessionState } from "@/state/session";
 
 const routeLeaveGuards: Array<() => Promise<boolean> | boolean> = [];
 
@@ -638,6 +640,40 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
     expect(document.body.textContent).toContain("Va directo a biblioteca");
     wrapper.unmount();
+  });
+
+  it("pide la formación y experiencia antes de enviar y la guarda desde el sílabo", async () => {
+    const teacherSession = (formation: string | null) => ({
+      user: { id: "u-1", name: "DOCENTE UNO", email: "docente@ueb.edu.ec", email_verified: true, can_edit_identity: false, formation },
+      active_role: { id: "r-1", code: "docente" as const, career_id: null, career_name: null },
+      available_roles: [],
+    });
+    sessionState.replace(teacherSession(null));
+    vi.mocked(updateFormation).mockResolvedValue(teacherSession("Magíster en Tecnología"));
+    const draft = syllabus("borrador");
+    draft.teacher_formation_required = true;
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Falta su formación y experiencia académica-investigativa");
+    expect(buttonNamed(wrapper, "Enviar")!.attributes("disabled")).toBeDefined();
+    await buttonNamed(wrapper, "Completar")!.trigger("click");
+    await flushPromises();
+    const textarea = document.body.querySelector<HTMLTextAreaElement>("#dialog-formation")!;
+    textarea.value = "Magíster en Tecnología";
+    textarea.dispatchEvent(new Event("input"));
+    await flushPromises();
+    document.body.querySelector<HTMLButtonElement>('[data-test="save-formation-button"]')!.click();
+    await flushPromises();
+
+    expect(updateFormation).toHaveBeenCalledWith("Magíster en Tecnología");
+    expect(getTeacherSyllabus).toHaveBeenCalledTimes(2);
+    expect(wrapper.text()).not.toContain("Falta su formación y experiencia académica-investigativa");
+    expect(buttonNamed(wrapper, "Enviar")!.attributes("disabled")).toBeUndefined();
+    expect(buttonNamed(wrapper, "Formación y experiencia")).toBeDefined();
+    wrapper.unmount();
+    sessionState.clear();
   });
 
   it("al primer envío firma la declaración y envía con la firma", async () => {
