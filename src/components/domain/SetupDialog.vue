@@ -39,7 +39,7 @@ const done = computed(() => steps.value.filter((step) => step.done).length);
             <p class="text-sm font-medium">{{ withoutEndPeriod(step.label) }}</p>
             <p v-if="!step.done" class="text-sm text-muted-foreground">{{ withoutEndPeriod(step.hint) }}</p>
           </div>
-          <Button v-if="routes[step.key]" as-child size="sm" :variant="step.done ? 'outline' : 'default'" class="shrink-0">
+          <Button v-if="routes[step.key]" as-child size="sm" variant="ghost" class="shrink-0">
             <RouterLink :to="routes[step.key]!">Ir<ArrowRight data-icon="inline-end" aria-hidden="true" /></RouterLink>
           </Button>
         </li>
