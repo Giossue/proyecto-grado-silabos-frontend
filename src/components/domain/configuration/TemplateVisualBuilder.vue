@@ -364,16 +364,6 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
     <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full justify-end" :style="{ maxWidth: toolbarWidth }">
       <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
-        <DropdownMenu>
-          <DropdownMenuTrigger as-child>
-            <Button type="button" variant="outline" :disabled="locked">Opciones avanzadas<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuGroup>
-              <DropdownMenuItem :disabled="locked" @select="jsonOpen = true">Editar JSON</DropdownMenuItem>
-            </DropdownMenuGroup>
-          </DropdownMenuContent>
-        </DropdownMenu>
         <Button type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
       </div>
       <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 flex-wrap items-center gap-1 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
@@ -393,6 +383,16 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         />
         <div class="ml-auto flex shrink-0 items-center gap-2 pl-2">
           <span class="sr-only" aria-live="polite"><template v-if="changed">Sin guardar</template></span>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <Button type="button" variant="outline" :disabled="busy || locked">Opciones avanzadas<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuGroup>
+                <DropdownMenuItem :disabled="locked" @select="jsonOpen = true">Editar JSON</DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Popover v-if="layoutControls.length">
             <PopoverTrigger as-child>
               <Button type="button" variant="outline" :disabled="busy || locked"><Ruler data-icon="inline-start" aria-hidden="true" />Diseño</Button>

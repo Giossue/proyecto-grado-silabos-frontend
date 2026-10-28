@@ -161,7 +161,11 @@ describe("AdminTemplatePage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const button = wrapper.findAll('button').find((item) => item.text().includes('Opciones avanzadas'))!;
+    expect(wrapper.findAll('button').some((item) => item.text().includes('Opciones avanzadas'))).toBe(false);
+    await wrapper.findAll('button').find((item) => item.text().includes('Editar'))!.trigger('click');
+    await flushPromises();
+
+    const button = wrapper.find('[data-template-ribbon]').findAll('button').find((item) => item.text().includes('Opciones avanzadas'))!;
     await button.trigger('keydown', { key: 'Enter' });
     await flushPromises();
     document.body.querySelector<HTMLElement>('[role="menuitem"]')!.click();
