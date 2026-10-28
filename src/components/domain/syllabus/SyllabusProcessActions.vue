@@ -50,7 +50,7 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
   },
   cerrar: {
     title: 'Cerrar la convocatoria',
-    description: 'Los sílabos del período quedan guardados solo para consulta: ya no se editan, envían ni revisan, y un cambio de docente no los borra. Los aprobados todavía pueden firmarse. Esta acción no se deshace.',
+    description: 'Los sílabos del período quedan guardados solo para consulta: ya no se editan, envían ni revisan, y un cambio de docente no los borra. Esta acción no se deshace.',
     label: 'Cerrar',
     icon: Lock,
     destructive: true,
