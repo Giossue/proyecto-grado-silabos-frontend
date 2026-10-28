@@ -87,7 +87,7 @@ watch(() => [props.sections, props.presentation], () => { void nextTick(paginate
             <ol class="flex flex-col gap-3">
               <li v-for="field in section.fields" :key="field.id" :data-field="field.id" class="min-w-0 px-2 py-1">
                 <div class="flex min-w-0 flex-col gap-1">
-                  <div v-if="field.label.trim()" data-field-label><h4 class="min-w-0 font-bold [overflow-wrap:anywhere]">{{ field.label }}</h4></div>
+                  <div v-if="field.label.trim() && field.label.trim().toLowerCase() !== section.title.trim().toLowerCase()" data-field-label><h4 class="min-w-0 font-bold [overflow-wrap:anywhere]">{{ field.label }}</h4></div>
                   <div data-field-body><FreeTextContent :value="field.document ?? field.value" empty-text="Sin completar" /></div>
                 </div>
               </li>
