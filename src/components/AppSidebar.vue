@@ -52,7 +52,7 @@ watch(() => route.fullPath, () => {
         </SidebarContent>
         <SidebarFooter>
             <NavFooter :items="footerNavItems" />
-            <SidebarMenu v-if="!installed">
+            <SidebarMenu v-if="isMobile && !installed">
                 <SidebarMenuItem>
                     <SidebarMenuButton data-test="install-app" tooltip="Instalar aplicación" @click="installOpen = true">
                         <Download aria-hidden="true" />

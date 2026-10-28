@@ -140,6 +140,21 @@ describe('AppSidebarLayout', () => {
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Bibliotecario');
   });
 
+  it('ofrece instalar la aplicación solo en móvil', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: true, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn() }));
+    sessionState.replace({
+      ...administratorSession,
+      active_role: { id: 'role-docente', code: 'docente', career_id: 'career-1', career_name: 'Software' },
+    });
+    const wrapper = await mountShell();
+    await flushPromises();
+    wrapper.get('[data-sidebar="trigger"]').trigger('click');
+    await flushPromises();
+
+    expect(document.body.querySelector('[data-test="install-app"]')?.textContent?.trim()).toBe('Instalar aplicación');
+    vi.unstubAllGlobals();
+  });
+
   it('muestra solo Mis sílabos para docente', async () => {
     sessionState.replace({
       ...administratorSession,
@@ -150,7 +165,7 @@ describe('AppSidebarLayout', () => {
 
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
     expect(sidebar.findAll('[data-sidebar="content"] a').map((link) => link.text())).toEqual(['Mis sílabos']);
-    expect(sidebar.get('[data-test="install-app"]').text()).toBe('Instalar aplicación');
+    expect(sidebar.find('[data-test="install-app"]').exists()).toBe(false);
     expect(sidebar.get('a[href="/docente/mis-silabos"]').text()).toContain('Mis sílabos');
     expect(sidebar.text()).not.toContain('Historial');
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Software');
