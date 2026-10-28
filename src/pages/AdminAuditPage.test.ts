@@ -18,7 +18,10 @@ vi.mock('@/api/operations', async (importOriginal) => ({
 
 const payload: AuditPayload = {
   filters: {},
-  action_options: [],
+  action_options: [{ value: 'usuario.desactivado', label: 'Cuenta desactivada' }],
+  period_options: [{ value: 'p1', label: 'Agosto-Diciembre 2026' }],
+  role_options: [{ value: 'docente', label: 'Docente' }],
+  career_options: [{ value: 'c1', label: 'Software' }],
   events: {
     data: [{
       id: 'event-1',
@@ -52,7 +55,7 @@ describe('AdminAuditPage', () => {
     vi.mocked(getAuditEvents).mockResolvedValue(payload);
   });
 
-  it('presenta un único registro resumido sin procesos, filtros ni detalles técnicos', async () => {
+  it('presenta un único registro resumido sin procesos ni detalles técnicos', async () => {
     const wrapper = mount(AdminAuditPage, { global: { stubs: { RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } } } });
     await flushPromises();
 
@@ -66,8 +69,19 @@ describe('AdminAuditPage', () => {
     expect(wrapper.text()).toContain('Ada Administradora');
     expect(wrapper.text()).not.toContain('Procesos');
     expect(wrapper.text()).not.toContain('Activo');
-    expect(wrapper.find('form').exists()).toBe(false);
     expect(wrapper.find('[role="tablist"]').exists()).toBe(false);
     expect(wrapper.find('[data-slot="badge"]').exists()).toBe(false);
+  });
+
+  it('filtra por período, rol, carrera, actividad y resultado, sin búsqueda de texto libre', async () => {
+    const wrapper = mount(AdminAuditPage, { global: { stubs: { RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } } } });
+    await flushPromises();
+
+    expect(wrapper.find('input[type="search"]').exists()).toBe(false);
+    expect(wrapper.findAll('[data-slot="select-trigger"]').map((trigger) => trigger.attributes('id'))).toEqual([
+      'audit-period', 'audit-role', 'audit-career', 'audit-action', 'audit-result',
+    ]);
+    expect(wrapper.find('td').classes()).not.toContain('text-xs');
+    expect(wrapper.find('td .text-xs').exists()).toBe(false);
   });
 });
