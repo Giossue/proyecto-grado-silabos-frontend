@@ -18,6 +18,7 @@ const sidebarNavItems = computed(() => [
     <PageFrame
         title="Configuración"
         description="Administre su perfil y seguridad."
+        size="wide"
     >
         <div class="flex min-w-0 flex-col gap-6">
             <nav class="flex h-11 items-center justify-start gap-2 border-b" aria-label="Configuración">
