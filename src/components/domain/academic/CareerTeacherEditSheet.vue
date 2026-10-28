@@ -18,7 +18,7 @@ const emit = defineEmits<{ saved: [message: string]; remove: []; resend: [] }>()
 const open = defineModel<boolean>('open', { default: false });
 const actions = computed<SheetAction[]>(() => [
     ...(props.teacher.pending_activation ? [{ key: 'resend', label: 'Reenviar invitación', icon: MailCheck, loading: props.resending }] : []),
-    { key: 'remove', label: 'Quitar de la carrera', icon: UserMinus, destructive: true, disabled: props.removeDisabled },
+    { key: 'remove', label: 'Quitar de la carrera', icon: UserMinus, destructive: true, disabled: props.removeDisabled, disabledReason: 'No se puede quitar mientras la convocatoria esté en curso' },
 ]);
 const select = (key: string): void => { if (key === 'resend') emit('resend'); else emit('remove'); };
 const processing = ref(false);
