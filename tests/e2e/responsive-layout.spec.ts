@@ -266,6 +266,7 @@ test('Biblioteca conserva su listado completo y abre la revisión por teclado en
     };
     const review = {
         ...item, can_comment: true, can_verify: true, verified_at: null, verified_by: null,
+        signing_statement: 'silabos-ueb|silabo:s1|accion:aprobacion_biblioteca|huella:abc', signatures: [],
         template_variables: {}, comments: [],
         comment_reasons: [{ code: 'ausente', label: 'El libro solicitado no se encuentra disponible en biblioteca.' }],
         sections: [{ key: 'bibliografia', title: 'Bibliografía', fields: [{
@@ -306,8 +307,13 @@ test('Biblioteca conserva su listado completo y abre la revisión por teclado en
         await page.evaluate(enabled => document.documentElement.classList.toggle('dark', enabled), dark);
         for (const width of [320, 360, 768, 1440, 720]) {
             await page.setViewportSize({ width, height: 900 });
-            await expectControlInside(page, 'Aprobar bibliografía');
-            await expectControlInside(page, 'Devolver al docente');
+            const grouped = page.getByRole('button', { name: /^Ver \d+ acciones de la pantalla$/ });
+            if (await grouped.isVisible()) {
+                await expectControlInside(page, 'Ver 2 acciones de la pantalla');
+            } else {
+                await expectControlInside(page, 'Firmar y aprobar');
+                await expectControlInside(page, 'Devolver al docente');
+            }
             await expectNoOverflow(page);
             if (width === 360) await page.screenshot({ path: test.info().outputPath(`biblioteca-${dark ? 'oscuro' : 'claro'}-360.png`), fullPage: true });
         }
@@ -335,7 +341,7 @@ test('el sílabo cargado conserva pestañas, matriz editable y asistente al camb
         createApp({ setup: () => () => h('main', { 'data-responsive-fixture': true }, h(TooltipProvider, () => h(RouterView))) }).use(router).mount('#mount');
     `, {
         '/teacher/syllabi/s1': { syllabus: {
-            id: 's1', subject: 'Ingeniería de Software', code: 'SW-001', convocation: '2026', period: '2026', state: 'borrador',
+            id: 's1', subject: 'Ingeniería de Software', code: 'SW-001', convocation: '2026', period: '2026', state: 'borrador', teacher_signature_required: true,
             version_bloqueo: 1, iniciado_en: '2026-10-01T12:00:00Z', parallels: ['A'], teachers: ['Docente'],
             presentation: { title: 'PROGRAMA DE ASIGNATURA (SÍLABO)', appearance: {}, logos: { institution: '', faculty: '' } },
             sections: [
@@ -356,7 +362,7 @@ test('el sílabo cargado conserva pestañas, matriz editable y asistente al camb
             await expect(cell).toHaveValue('Contenido inicial');
             // En anchos pequeños las acciones se agrupan en un menú de la pantalla.
             const grouped = page.getByRole('button', { name: /^Ver \d+ acciones de la pantalla$/ });
-            await expectControlInside(page, await grouped.isVisible() ? 'Ver 2 acciones de la pantalla' : 'Enviar sílabo');
+            await expectControlInside(page, await grouped.isVisible() ? 'Ver 2 acciones de la pantalla' : 'Firmar y enviar');
             await expectNoOverflow(page);
             if (width === 360) await page.screenshot({ path: test.info().outputPath(`silabo-${dark ? 'oscuro' : 'claro'}-360.png`), fullPage: true });
         }

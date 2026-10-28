@@ -5,9 +5,7 @@ export type SignatureErrorCode =
   | 'wrong_password'
   | 'no_key'
   | 'expired'
-  | 'not_yet_valid'
-  | 'unsupported_pdf'
-  | 'too_large';
+  | 'not_yet_valid';
 
 const messages: Record<SignatureErrorCode, string> = {
   invalid_file: 'El archivo no es un certificado de firma .p12 o .pfx válido.',
@@ -15,8 +13,6 @@ const messages: Record<SignatureErrorCode, string> = {
   no_key: 'El certificado no contiene la llave para firmar. Use el archivo .p12 que le entregó la entidad emisora.',
   expired: 'El certificado de firma está vencido. Renueve su firma electrónica.',
   not_yet_valid: 'El certificado de firma todavía no es válido.',
-  unsupported_pdf: 'El PDF no se puede firmar (está protegido o dañado). Vuelva a descargarlo.',
-  too_large: 'La firma generada no cabe en el documento. Informe a soporte.',
 };
 
 export class SignatureError extends Error {
@@ -44,7 +40,18 @@ const toBinary = (bytes: Uint8Array): string => {
 const attribute = (subject: forge.pki.Certificate['subject'], name: string): string =>
   String(subject.getField(name)?.value ?? '').trim();
 
+export type SignerMaterial = {
+  certificate: SignerCertificate;
+  key: forge.pki.rsa.PrivateKey;
+  x509: forge.pki.Certificate;
+  chain: forge.pki.Certificate[];
+};
+
 export function readCertificate(p12: Uint8Array, password: string, now: Date = new Date()): SignerCertificate {
+  return readSigner(p12, password, now).certificate;
+}
+
+export function readSigner(p12: Uint8Array, password: string, now: Date = new Date()): SignerMaterial {
   let asn1: forge.asn1.Asn1;
   try {
     asn1 = forge.asn1.fromDer(forge.util.createBuffer(toBinary(p12)), false);
@@ -62,9 +69,10 @@ export function readCertificate(p12: Uint8Array, password: string, now: Date = n
   const keys = store.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag })[forge.pki.oids.pkcs8ShroudedKeyBag] ?? [];
   const key = keys[0]?.key as forge.pki.rsa.PrivateKey | undefined;
   if (!key) throw new SignatureError(keys.length === 0 && password === '' ? 'wrong_password' : 'no_key');
-  const certificates = store.getBags({ bagType: forge.pki.oids.certBag })[forge.pki.oids.certBag] ?? [];
-  const certificate = certificates
+  const certificates = (store.getBags({ bagType: forge.pki.oids.certBag })[forge.pki.oids.certBag] ?? [])
     .map((bag) => bag.cert)
+    .filter((cert): cert is forge.pki.Certificate => Boolean(cert));
+  const certificate = certificates
     .find((cert): cert is forge.pki.Certificate => {
       const publicKey = cert?.publicKey as forge.pki.rsa.PublicKey | undefined;
       return Boolean(publicKey?.n && key.n.compareTo(publicKey.n) === 0 && key.e.compareTo(publicKey.e) === 0);
@@ -79,9 +87,14 @@ export function readCertificate(p12: Uint8Array, password: string, now: Date = n
   if (!holder) throw new SignatureError('invalid_file', 'El certificado no identifica a su titular.');
 
   return {
-    holder,
-    issuer: attribute(certificate.issuer, 'CN') || attribute(certificate.issuer, 'O'),
-    validFrom: notBefore,
-    validTo: notAfter,
+    certificate: {
+      holder,
+      issuer: attribute(certificate.issuer, 'CN') || attribute(certificate.issuer, 'O'),
+      validFrom: notBefore,
+      validTo: notAfter,
+    },
+    key,
+    x509: certificate,
+    chain: certificates.filter((cert) => cert !== certificate),
   };
 }

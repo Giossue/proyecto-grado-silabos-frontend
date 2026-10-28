@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import type { DocumentPresentation, SyllabusDetail } from '@/api/syllabi';
+import type { DocumentPresentation } from '@/api/syllabi';
+import type { DocumentField } from '@/types/configuration';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
 import { documentLayout, layoutStyle, sheetPixels } from '@/lib/documentLayout';
 import { cn } from '@/lib/utils';
 
-const props = defineProps<{ presentation: DocumentPresentation; sections: SyllabusDetail['sections'] }>();
+export type PreviewSection = {
+    id: string;
+    title: string;
+    orientation?: 'portrait' | 'landscape';
+    fields: Array<Pick<DocumentField, 'label' | 'value' | 'document'> & { id: string }>;
+};
+
+const props = defineProps<{ presentation: DocumentPresentation; sections: PreviewSection[] }>();
 
 const root = ref<HTMLElement | null>(null);
 const available = ref(0);
@@ -17,7 +25,7 @@ let frame = 0;
 const layout = computed(() => layoutStyle(props.presentation.document ? documentLayout(props.presentation.document) : props.presentation.appearance, props.presentation.document));
 const sheetPx = computed(() => sheetPixels(props.presentation.document));
 const sheets = computed(() => {
-    const groups: Array<{ landscape: boolean; items: SyllabusDetail['sections'] }> = [];
+    const groups: Array<{ landscape: boolean; items: PreviewSection[] }> = [];
     for (const section of props.sections) {
         const landscape = section.orientation === 'landscape';
         const last = groups[groups.length - 1];

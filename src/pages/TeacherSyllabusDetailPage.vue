@@ -10,6 +10,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
 import {
+  getTeacherSigningStatement,
   getTeacherSyllabus,
   saveTeacherField,
   startTeacherSyllabus,
@@ -23,7 +24,8 @@ import SyllabusUnitAssistant from '@/components/domain/ai/SyllabusUnitAssistant.
 import PageFrame from '@/components/domain/PageFrame.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
-import DocumentSignatureCard from '@/components/domain/syllabus/DocumentSignatureCard.vue';
+import SignatureDialog, { type StatementSigner } from '@/components/domain/syllabus/SignatureDialog.vue';
+import SignaturesNote from '@/components/domain/syllabus/SignaturesNote.vue';
 import ReviewCommentNotice from '@/components/domain/syllabus/ReviewCommentNotice.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -37,7 +39,7 @@ import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocume
 import { attemptKey } from '@/lib/attemptKey';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
-import { ArrowLeft, ArrowRight, Bot, Copy, FileText, Library, Pencil, Send, X } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Bot, Copy, FileSignature, FileText, Library, Pencil, Send, X } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
@@ -68,6 +70,7 @@ const validationBlockingErrors = ref<number | null>(null);
 const conflict = ref(false);
 const processingAction = ref(false);
 const confirmSubmitOpen = ref(false);
+const signOpen = ref(false);
 const localBlockReason = ref<string | null>(null);
 const copySource = ref<{ id: string; parallel: string } | null>(null);
 const saveFailed = ref(false);
@@ -98,8 +101,14 @@ const reviewComments = computed(() =>
   ),
 );
 const submitDescription = computed(() => syllabus.value?.state === 'correccion_solicitada' && reviewComments.value[0]?.stage === 'biblioteca'
-  ? 'Va directo a biblioteca, que revisa la bibliografía. Mientras lo revisan, no podrá hacer cambios.'
-  : 'Coordinación revisa primero; después biblioteca aprueba la bibliografía y el sílabo queda aprobado. Mientras lo revisan, no podrá hacer cambios.');
+  ? 'Va directo a biblioteca. Mientras lo revisan, no podrá editarlo.'
+  : 'Lo revisa coordinación y después biblioteca. Mientras lo revisan, no podrá editarlo.');
+const mustSign = computed(() => syllabus.value?.teacher_signature_required === true);
+const submitLabel = computed(() => (mustSign.value ? 'Firmar y enviar' : 'Enviar'));
+const askSubmit = (): void => {
+  if (mustSign.value) signOpen.value = true;
+  else confirmSubmitOpen.value = true;
+};
 const canStart = computed(() =>
   syllabus.value?.state === "sin_iniciar" && editBlockReason.value === null,
 );
@@ -325,24 +334,36 @@ const confirmSubmit = (): void => {
   void submit();
 };
 
+const isSignatureFailure = (reason: unknown): boolean =>
+  reason instanceof ApiError ? Object.keys(reason.errors).some((key) => key === 'signature' || key.startsWith('signature.')) : true;
+
 const submitKey = attemptKey();
-const submit = async (): Promise<void> => {
+const submit = async (sign: StatementSigner | null = null): Promise<void> => {
   if (!syllabus.value) return;
   try {
     processingAction.value = true;
     error.value = null;
-    if (!(await flushAutosave())) return;
+    if (!(await flushAutosave())) {
+      signOpen.value = false;
+      return;
+    }
+    const { id, version_bloqueo: version } = syllabus.value;
+    let signature = null;
+    if (sign) {
+      const statement = await getTeacherSigningStatement(id, version);
+      if (statement.required) signature = sign(statement.statement);
+    }
     syllabus.value = (
-      await submitTeacherSyllabus(
-        syllabus.value.id,
-        syllabus.value.version_bloqueo,
-        submitKey.use(`${syllabus.value.id}:${syllabus.value.version_bloqueo}`),
-      )
+      await submitTeacherSyllabus(id, version, submitKey.use(`${id}:${version}`), signature)
     ).syllabus;
     submitKey.reset();
+    signOpen.value = false;
     invalidateValidation();
     validationResults.value = [];
   } catch (reason) {
+    if (sign && isSignatureFailure(reason)) throw reason;
+    signOpen.value = false;
+    if (reason instanceof ApiError && reason.status === 409) conflict.value = true;
     if (reason instanceof ApiError && reason.status === 422 && reason.errors.validation) {
       try {
         await runValidation();
@@ -439,12 +460,14 @@ onBeforeUnmount(() => {
     <AppearanceToggle />
   </header>
   <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="!syllabus" header-class="syllabus-editor-header" hide-icon>
+    <template v-if="syllabus?.signatures?.length" #meta><SignaturesNote :signatures="syllabus.signatures" /></template>
     <template #actions>
       <Button v-if="syllabus && showEditor && previewing" type="button" variant="outline" @click="previewing = false"><Pencil aria-hidden="true" />Editar</Button>
       <Button v-else-if="syllabus && showEditor" type="button" variant="outline" @click="previewing = true"><FileText aria-hidden="true" />Vista previa</Button>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
-      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== ''" @click="confirmSubmitOpen = true"><Spinner v-if="processingAction" /><Send v-else aria-hidden="true" />Enviar sílabo</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || 'Enviar la revisión del sílabo' }}</TooltipContent></Tooltip></span>
+      <Button v-if="syllabus?.state === 'aprobado' && syllabus.approved_revision_id" as-child variant="outline"><RouterLink :to="paths.teacher.documents(syllabus.approved_revision_id)">Ver PDF</RouterLink></Button>
+      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== ''" @click="askSubmit"><Spinner v-if="processingAction" /><FileSignature v-else-if="mustSign" aria-hidden="true" /><Send v-else aria-hidden="true" />{{ submitLabel }}</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || submitLabel }}</TooltipContent></Tooltip></span>
     </template>
 
     <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
@@ -458,8 +481,6 @@ onBeforeUnmount(() => {
         <div class="mx-auto flex w-full max-w-screen-2xl min-w-0 flex-col gap-8" :class="{ 'pb-16': !pausedEdit }">
           <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
           <ProcessLockAlert v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
-
-          <DocumentSignatureCard v-if="syllabus.state === 'aprobado' && syllabus.approved_revision_id" :revision-id="syllabus.approved_revision_id" :file-name="`silabo-${syllabus.code}`" />
 
           <ReviewCommentNotice v-if="reviewComments.length" :comments="reviewComments" :correction="syllabus.state === 'correccion_solicitada'" />
 
@@ -516,10 +537,11 @@ onBeforeUnmount(() => {
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>
-          <Button type="button" :disabled="processingAction || conflict" @click="confirmSubmit"><Send data-icon="inline-start" aria-hidden="true" />Enviar a revisión</Button>
+          <Button type="button" :disabled="processingAction || conflict" @click="confirmSubmit"><Send data-icon="inline-start" aria-hidden="true" />Enviar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <SignatureDialog v-model:open="signOpen" title="Firmar y enviar" :description="submitDescription" confirm-label="Firmar y enviar" :run="submit" />
     <Dialog :open="copySource !== null" @update:open="(open) => { if (!open) copySource = null; }">
       <DialogContent>
         <DialogHeader>

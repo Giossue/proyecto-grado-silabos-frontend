@@ -4,6 +4,7 @@ import { api } from "@/api/client";
 import type { TemplateAppearance } from "@/api/template";
 import type { DocumentField } from "@/types/configuration";
 import type { AgentAvatarHint } from "@/components/domain/ai/avatar/types";
+import type { SignaturePayload, SignatureSummary } from "@/api/signatures";
 
 export type DocumentPresentation = {
   document?: DocumentStyle;
@@ -77,6 +78,8 @@ export type SyllabusDetail = {
     orientation: 'portrait' | 'landscape';
   }>;
   review_stage?: "biblioteca" | "coordinacion" | null;
+  signatures?: SignatureSummary[];
+  teacher_signature_required?: boolean;
   review_comments?: Array<{
     stage: "biblioteca" | "coordinacion";
     comment: string;
@@ -186,7 +189,17 @@ export const validateTeacherSyllabus = (syllabusId: string) =>
       }>;
     };
   }>(`/teacher/syllabi/${syllabusId}/validate`, { method: "POST" });
-export const submitTeacherSyllabus = (syllabusId: string, version: number, idempotencyKey: string = crypto.randomUUID()) =>
+export const getTeacherSigningStatement = (syllabusId: string, version: number) =>
+  api<{ statement: string; required: boolean }>(
+    `/teacher/syllabi/${syllabusId}/signing-statement`,
+    { method: "POST", body: JSON.stringify({ version_bloqueo: version }) },
+  );
+export const submitTeacherSyllabus = (
+  syllabusId: string,
+  version: number,
+  idempotencyKey: string = crypto.randomUUID(),
+  signature: SignaturePayload | null = null,
+) =>
   api<{ message: string; syllabus: SyllabusDetail }>(
     `/teacher/syllabi/${syllabusId}/submit`,
     {
@@ -194,6 +207,7 @@ export const submitTeacherSyllabus = (syllabusId: string, version: number, idemp
       body: JSON.stringify({
         version_bloqueo: version,
         idempotency_key: idempotencyKey,
+        ...(signature ? { signature } : {}),
       }),
     },
   );

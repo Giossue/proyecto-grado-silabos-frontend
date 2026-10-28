@@ -1,5 +1,6 @@
 import { api } from "@/api/client";
 import type { DocumentPresentation } from "@/api/syllabi";
+import type { SignaturePayload, SignatureSummary } from "@/api/signatures";
 import type { DocumentField, FieldResponsible } from "@/types/configuration";
 
 export type ReviewStage = "biblioteca" | "coordinacion";
@@ -50,6 +51,8 @@ export type ReviewDetail = {
   my_stage?: ReviewStage | null;
   can_decide?: boolean;
   can_delete?: boolean;
+  signing_statement?: string | null;
+  signatures?: SignatureSummary[];
   presentation: DocumentPresentation;
   revision: {
     id: string;
@@ -121,8 +124,11 @@ export const requestCorrection = (
     `/coordination/reviews/${revisionId}/request-correction`,
     { method: "POST", body: JSON.stringify(payload) },
   );
-export const approveReview = (revisionId: string) =>
-  api<{ message: string }>(`/coordination/reviews/${revisionId}/approve`, { method: "POST" });
+export const approveReview = (revisionId: string, signature: SignaturePayload) =>
+  api<{ message: string }>(`/coordination/reviews/${revisionId}/approve`, {
+    method: "POST",
+    body: JSON.stringify({ signature }),
+  });
 export const deleteSyllabus = (syllabusId: string) =>
   api<{ message: string }>(`/coordination/syllabi/${syllabusId}`, { method: "DELETE" });
 export const resetSyllabus = (syllabusId: string) =>

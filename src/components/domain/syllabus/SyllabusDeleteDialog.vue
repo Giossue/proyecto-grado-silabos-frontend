@@ -8,9 +8,9 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { FieldError } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 
-const props = defineProps<{ syllabusId: string; subject: string }>();
+const props = withDefaults(defineProps<{ syllabusId: string; subject: string; showTrigger?: boolean }>(), { showTrigger: true });
 const emit = defineEmits<{ deleted: [message: string] }>();
-const open = ref(false);
+const open = defineModel<boolean>('open', { default: false });
 const errors = ref<Record<string, string[]>>({});
 const processing = ref(false);
 const submit = async (): Promise<void> => {
@@ -23,5 +23,5 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-  <Dialog v-model:open="open"><DialogTrigger as-child><Button variant="destructive"><Trash2 data-icon="inline-start" aria-hidden="true" />Eliminar sílabo</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Eliminar «{{ subject }}»</DialogTitle><DialogDescription>Se elimina el sílabo aprobado con todo su historial: revisiones, aprobación, PDF y firmas. No se puede deshacer. El docente recibe aviso y empieza de cero con la malla y la plantilla actuales.</DialogDescription></DialogHeader><form class="flex flex-col gap-4" @submit.prevent="submit"><FieldError :errors="errors.syllabus" /><DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Eliminar definitivamente</Button></DialogFooter></form></DialogContent></Dialog>
+  <Dialog v-model:open="open"><DialogTrigger v-if="showTrigger" as-child><Button variant="destructive"><Trash2 data-icon="inline-start" aria-hidden="true" />Eliminar sílabo</Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Eliminar «{{ subject }}»</DialogTitle><DialogDescription>Se elimina el sílabo aprobado con todo su historial: revisiones, aprobación, PDF y firmas. No se puede deshacer. El docente recibe aviso y empieza de cero con la malla y la plantilla actuales.</DialogDescription></DialogHeader><form class="flex flex-col gap-4" @submit.prevent="submit"><FieldError :errors="errors.syllabus" /><DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" variant="destructive" :disabled="processing"><Spinner v-if="processing" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Eliminar definitivamente</Button></DialogFooter></form></DialogContent></Dialog>
 </template>

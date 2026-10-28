@@ -20,8 +20,10 @@ los botones ocultos solo ordenan la pantalla; no reemplazan la autorización del
 - **Docencia:** mis sílabos, editor con autoguardado, copia desde otro paralelo,
   asistente de IA e historial.
 - **Biblioteca:** revisiones de biblioteca y verificación de la bibliografía.
-- **Documentos y firmas:** Word y PDF del sílabo. La firma electrónica se hace en el
-  navegador con el archivo `.p12` o `.pfx` del usuario; solo se envía el PDF firmado.
+- **Documentos y firmas:** cada persona firma al decidir (docente al primer envío,
+  coordinación al enviar a biblioteca y biblioteca al aprobar). La firma se hace en el
+  navegador con el archivo `.p12` o `.pfx` del usuario; solo se envía la firma de la
+  declaración. El PDF del sílabo aprobado se ve y se descarga desde «Documentos».
 - **Comunes:** notificaciones, ayuda por pantalla y opciones de accesibilidad.
 
 ## Desarrollo
@@ -80,15 +82,6 @@ archivo:
 ```bash
 VITE_API_URL=http://127.0.0.1:8000 npx playwright test tests/e2e/accessibility.spec.ts
 ```
-
-## Prueba manual de firmas
-
-`scripts/signature-e2e.sh <pdf> [carpeta]` es una herramienta manual. Crea certificados
-`.p12` de prueba, firma el PDF con el mismo código del navegador (docente y luego
-coordinación) y verifica cada firma con el verificador PHP del backend. Necesita
-`openssl`, `php`, el backend como carpeta padre o en `../proyecto-grado-silabos-backend`
-(o indicado mediante `BACKEND_DIR`) y
-`pdfsig` para el informe final. `P12_LEGACY=1` crea archivos `.p12` con cifrado antiguo.
 
 ## Imagen de producción
 

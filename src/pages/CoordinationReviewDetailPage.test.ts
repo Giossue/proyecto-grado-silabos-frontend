@@ -12,7 +12,9 @@ import {
   type ReviewDetail,
 } from "@/api/reviews";
 import { getSession } from "@/api/session";
+import { makeTestP12 } from "@/lib/signature/testCertificate";
 import CoordinationReviewDetailPage from "@/pages/CoordinationReviewDetailPage.vue";
+import { confirmSignatureDialog, fillSignatureDialog } from "@/test/signatureDialog";
 
 vi.mock("vue-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import("vue-router")>()),
@@ -45,6 +47,8 @@ const detail = (decisionsAllowed = true): ReviewDetail => ({
   my_stage: "coordinacion",
   can_decide: decisionsAllowed,
   can_delete: false,
+  signing_statement: decisionsAllowed ? "silabos-ueb|silabo:syllabus-1|accion:aprobacion_coordinacion|huella:abc" : null,
+  signatures: [{ role: "docente", name: "Docente Demo", signed_at: "2026-09-16T10:00:00Z" }],
   presentation: {
     appearance: {
       font_family: "Arial",
@@ -103,16 +107,13 @@ const detail = (decisionsAllowed = true): ReviewDetail => ({
 
 const mountPage = () => mount(CoordinationReviewDetailPage, {
   attachTo: document.body,
-  global: {
-    stubs: {
-      RouterLink: { template: "<a><slot /></a>" },
-      SyllabusDocumentHeader: { template: "<div />" },
-      SyllabusIdentificationTable: { template: "<div />" },
-      SyllabusTableView: { template: "<div />" },
-      SnapshotValue: { template: "<div />" },
-    },
-  },
+  global: { stubs: { RouterLink: { template: "<a><slot /></a>" } } },
 });
+
+const headerButton = (wrapper: ReturnType<typeof mountPage>, name: string) =>
+  wrapper.findAll("header button").find((button) => button.text() === name || button.attributes("aria-label") === name);
+const dialogButton = (name: string) => [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')]
+  .find((item) => item.textContent?.includes(name));
 
 describe("CoordinationReviewDetailPage", () => {
   beforeEach(() => {
@@ -124,6 +125,7 @@ describe("CoordinationReviewDetailPage", () => {
       resetSyllabus,
     ]) vi.mocked(mock).mockReset();
     replace.mockReset();
+    document.body.innerHTML = "";
     vi.mocked(getSession).mockResolvedValue({
       user: {
         id: "coordinator-1",
@@ -148,38 +150,59 @@ describe("CoordinationReviewDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain("Convocatoria cerrada");
-    expect(wrapper.find("#correction-form").exists()).toBe(false);
-    expect(wrapper.text()).not.toContain("Aprobar revisión");
+    expect(headerButton(wrapper, "Solicitar corrección")).toBeUndefined();
+    expect(headerButton(wrapper, "Firmar y enviar a biblioteca")).toBeUndefined();
     wrapper.unmount();
   });
 
-  it("aprueba la revisión", async () => {
+  it("firma la declaración y envía a biblioteca", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
-    vi.mocked(approveReview).mockResolvedValue({ message: "Revisión aprobada." });
+    vi.mocked(approveReview).mockResolvedValue({ message: "Enviado a biblioteca." });
     const wrapper = mountPage();
     await flushPromises();
 
-    const approve = wrapper.findAll("button").find((button) => button.text().includes("Aprobar revisión"))!;
-    expect(approve.attributes("disabled")).toBeUndefined();
-    await approve.trigger("click");
+    expect(wrapper.text()).toContain("Firmado por Docente Demo (docente)");
+    await headerButton(wrapper, "Firmar y enviar a biblioteca")!.trigger("click");
     await flushPromises();
+    await fillSignatureDialog(makeTestP12("COORDINACION DEMO", "clave"), "clave");
+    await confirmSignatureDialog();
 
-    expect(approveReview).toHaveBeenCalledWith("revision-1");
+    expect(approveReview).toHaveBeenCalledWith("revision-1", {
+      statement: "silabos-ueb|silabo:syllabus-1|accion:aprobacion_coordinacion|huella:abc",
+      cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
+    });
+    expect(getReview).toHaveBeenCalledTimes(2);
     wrapper.unmount();
   });
 
-  it("solicita corrección con un comentario general, sin observaciones por campo", async () => {
+  it("muestra en el diálogo el error de firma del servidor", async () => {
+    vi.mocked(getReview).mockResolvedValue(detail());
+    vi.mocked(approveReview).mockRejectedValue(new ApiError("Datos inválidos.", 422, { signature: ["El certificado no es de una entidad de confianza."] }));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await headerButton(wrapper, "Firmar y enviar a biblioteca")!.trigger("click");
+    await flushPromises();
+    await fillSignatureDialog(makeTestP12("COORDINACION DEMO", "clave"), "clave");
+    await confirmSignatureDialog();
+
+    expect(document.querySelector('[role="dialog"]')!.textContent).toContain("El certificado no es de una entidad de confianza.");
+    wrapper.unmount();
+  });
+
+  it("solicita corrección con un comentario general", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
     vi.mocked(requestCorrection).mockResolvedValue({ message: "Corrección solicitada." });
     const wrapper = mountPage();
     await flushPromises();
 
-    const correctionForm = wrapper.get("#correction-form");
-    expect(correctionForm.find('[role="checkbox"]').exists()).toBe(false);
-    expect(wrapper.find('[aria-label="Nueva observación"]').exists()).toBe(false);
-    expect(wrapper.text()).not.toContain("Observaciones");
-    await correctionForm.get("textarea").setValue("Debe precisar el resultado observado.");
-    await correctionForm.trigger("submit");
+    await headerButton(wrapper, "Solicitar corrección")!.trigger("click");
+    await flushPromises();
+    const textarea = document.querySelector<HTMLTextAreaElement>("#correction-justification")!;
+    textarea.value = "Debe precisar el resultado observado.";
+    textarea.dispatchEvent(new Event("input"));
+    await flushPromises();
+    document.querySelector<HTMLFormElement>("#correction-form")!.dispatchEvent(new Event("submit", { cancelable: true }));
     await flushPromises();
 
     expect(requestCorrection).toHaveBeenCalledWith("revision-1", {
@@ -188,24 +211,34 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("elimina un sílabo aprobado con confirmación y vuelve a la cola", async () => {
+  it("elimina un sílabo aprobado desde «Más» con confirmación y vuelve a la cola", async () => {
     vi.mocked(getReview).mockResolvedValue({ ...detail(), can_delete: true });
     vi.mocked(deleteSyllabus).mockResolvedValue({ message: "Sílabo eliminado." });
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Eliminar sílabo aprobado");
-    expect(wrapper.text()).not.toContain("Reabrir");
-    await wrapper.findAll("button").find((button) => button.text() === "Eliminar sílabo")!.trigger("click");
+    await headerButton(wrapper, "Más")!.trigger("keydown", { key: "Enter" });
+    await flushPromises();
+    [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) => item.textContent?.includes("Eliminar sílabo"))!.click();
     await flushPromises();
     expect(deleteSyllabus).not.toHaveBeenCalled();
-    const confirm = [...document.body.querySelectorAll('[role="dialog"] button')]
-      .find((item) => item.textContent?.includes("Eliminar definitivamente")) as HTMLButtonElement;
-    confirm.click();
+    dialogButton("Eliminar definitivamente")!.click();
     await flushPromises();
 
     expect(deleteSyllabus).toHaveBeenCalledWith("syllabus-1");
     expect(replace).toHaveBeenCalled();
+    wrapper.unmount();
+  });
+
+  it("muestra el historial en una hoja", async () => {
+    vi.mocked(getReview).mockResolvedValue(detail());
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await headerButton(wrapper, "Historial")!.trigger("click");
+    await flushPromises();
+
+    expect(document.body.textContent).toContain("Revisión 1 (abierta)");
     wrapper.unmount();
   });
 
@@ -226,18 +259,18 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("pinta los documentos congelados y su responsable", async () => {
+  it("muestra el sílabo como el documento final", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
     const wrapper = mountPage();
     await flushPromises();
 
-    const text = wrapper.text();
-    expect(text).toContain("Contenido enviado");
-    expect(text).toContain("Contenido heredado");
-    expect(text).toContain("Carrera");
-    expect(wrapper.get(".free-text-table").text()).toContain("Semana 1");
-    expect(text).toContain("FACULTAD: Ciencias");
-    expect(text).toContain("Texto institucional");
+    const preview = wrapper.get('[aria-label="Vista previa del sílabo"]');
+    expect(preview.text()).toContain("PROGRAMA DE ASIGNATURA (SÍLABO)");
+    expect(preview.text()).toContain("Contenido enviado");
+    expect(preview.text()).toContain("Contenido heredado");
+    expect(preview.get(".free-text-table").text()).toContain("Semana 1");
+    expect(preview.text()).toContain("FACULTAD: Ciencias");
+    expect(preview.text()).toContain("Texto institucional");
     wrapper.unmount();
   });
 });

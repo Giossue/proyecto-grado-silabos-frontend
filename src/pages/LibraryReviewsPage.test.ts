@@ -55,7 +55,6 @@ describe('LibraryReviewsPage', () => {
     vi.mocked(getDashboard).mockResolvedValue({
       metrics: [
         { key: 'library_pending', label: 'Por revisar', value: 2, suffix: null, hint: 'Aprobados por coordinación; falta la bibliografía' },
-        { key: 'library_to_sign', label: 'Por firmar', value: 1, suffix: null, hint: 'Su firma va después de docente y coordinación' },
         { key: 'library_handled', label: 'Atendidos', value: 4, suffix: null, hint: 'Firmados, devueltos al docente o reemplazados por una revisión nueva' },
       ],
       setup: null,
@@ -70,7 +69,6 @@ describe('LibraryReviewsPage', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Por revisar');
-    expect(wrapper.text()).toContain('Por firmar');
     expect(wrapper.text()).toContain('Atendidos');
 
     await wrapper.get('form').trigger('submit');

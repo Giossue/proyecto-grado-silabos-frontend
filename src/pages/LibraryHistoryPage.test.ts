@@ -43,7 +43,7 @@ describe('LibraryHistoryPage', () => {
     expect(wrapper.findAll('thead th').map((header) => header.text())).toEqual(['Período', 'Carrera', 'Docente', 'Estado']);
     const row = wrapper.get('tbody tr');
     expect(row.text()).toContain('2025-2026');
-    expect(row.text()).toContain('Firmado');
+    expect(row.text()).toContain('Atendido');
     await row.trigger('click');
     expect(push).toHaveBeenCalledWith('/biblioteca/revisiones/revision-1');
     wrapper.unmount();

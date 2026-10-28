@@ -1,8 +1,9 @@
 import { api } from '@/api/client';
 import type { SnapshotSection } from '@/api/reviews';
+import type { SignaturePayload, SignatureSummary } from '@/api/signatures';
 import type { PaginationMeta } from '@/types/pagination';
 
-export type LibraryReviewState = 'pendiente' | 'por_firmar' | 'atendido';
+export type LibraryReviewState = 'pendiente' | 'atendido';
 
 // Cómo terminó un envío atendido.
 export type LibraryReviewOutcome = 'firmado' | 'devuelto' | 'reemplazado';
@@ -33,6 +34,8 @@ export type LibraryComment = {
 export type LibraryReviewDetail = LibraryReviewItem & {
   can_comment: boolean;
   can_verify: boolean;
+  signing_statement?: string | null;
+  signatures?: SignatureSummary[];
   verified_at: string | null;
   verified_by: string | null;
   template_variables: Record<string, string>;
@@ -78,5 +81,8 @@ export const commentLibraryReview = (revisionId: string, payload: { reasons: str
     body: JSON.stringify(payload),
   });
 
-export const verifyLibraryReview = (revisionId: string) =>
-  api<{ message: string }>(`/library/reviews/${revisionId}/verify`, { method: 'POST' });
+export const verifyLibraryReview = (revisionId: string, signature: SignaturePayload) =>
+  api<{ message: string }>(`/library/reviews/${revisionId}/verify`, {
+    method: 'POST',
+    body: JSON.stringify({ signature }),
+  });

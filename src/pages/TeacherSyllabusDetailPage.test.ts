@@ -10,10 +10,12 @@ import TeacherSyllabusDetailPage from "@/pages/TeacherSyllabusDetailPage.vue";
 import FreeTextEditor from "@/components/domain/syllabus/FreeTextEditor.vue";
 import SyllabusDocumentPreview from "@/components/domain/syllabus/SyllabusDocumentPreview.vue";
 import PageFrame from "@/components/domain/PageFrame.vue";
-import { copyTeacherSyllabus, getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField, startTeacherSyllabus } from "@/api/syllabi";
+import { copyTeacherSyllabus, getTeacherSigningStatement, getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField, startTeacherSyllabus } from "@/api/syllabi";
 import type { FieldResponsible } from "@/types/configuration";
 import { ApiError } from "@/api/client";
 import { handleUnauthorized } from "@/lib/unauthorized";
+import { makeTestP12 } from "@/lib/signature/testCertificate";
+import { confirmSignatureDialog, fillSignatureDialog } from "@/test/signatureDialog";
 
 const routeLeaveGuards: Array<() => Promise<boolean> | boolean> = [];
 
@@ -30,6 +32,7 @@ vi.mock("@/api/session", () => ({ getSession: vi.fn(), updateFormation: vi.fn() 
 vi.mock("@/api/syllabi", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/syllabi")>()),
   copyTeacherSyllabus: vi.fn(),
+  getTeacherSigningStatement: vi.fn(),
   getTeacherSyllabus: vi.fn(),
   saveTeacherField: vi.fn(),
   startTeacherSyllabus: vi.fn(),
@@ -121,6 +124,7 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.useRealTimers();
     vi.mocked(copyTeacherSyllabus).mockReset();
     vi.mocked(getTeacherSyllabus).mockReset();
+    vi.mocked(getTeacherSigningStatement).mockReset();
     vi.mocked(startTeacherSyllabus).mockReset();
     vi.mocked(saveTeacherField).mockReset();
     vi.mocked(submitTeacherSyllabus).mockReset();
@@ -214,7 +218,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.findAllComponents(FreeTextEditor)).toHaveLength(0);
     expect(wrapper.find("#field-field-1").exists()).toBe(false);
     expect(wrapper.find("#field-field-2").exists()).toBe(false);
-    expect(buttonNamed(wrapper, "Enviar sílabo")!.attributes("disabled")).toBeUndefined();
+    expect(buttonNamed(wrapper, "Enviar")!.attributes("disabled")).toBeUndefined();
   });
 
   it("no deja enviar mientras las horas de las unidades no sumen las de la asignatura", async () => {
@@ -228,7 +232,7 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: wrong });
     const first = mountPage();
     await flushPromises();
-    expect(buttonNamed(first, "Enviar sílabo")!.attributes("disabled")).toBeDefined();
+    expect(buttonNamed(first, "Enviar")!.attributes("disabled")).toBeDefined();
     first.unmount();
 
     const right = syllabus("borrador");
@@ -236,7 +240,7 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: right });
     const second = mountPage();
     await flushPromises();
-    expect(buttonNamed(second, "Enviar sílabo")!.attributes("disabled")).toBeUndefined();
+    expect(buttonNamed(second, "Enviar")!.attributes("disabled")).toBeUndefined();
     second.unmount();
   });
 
@@ -338,7 +342,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const send = buttonNamed(wrapper, "Enviar sílabo");
+    const send = buttonNamed(wrapper, "Enviar");
     expect(send).toBeDefined();
     expect(send!.attributes("disabled")).toBeDefined();
 
@@ -392,19 +396,20 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const send = buttonNamed(wrapper, "Enviar sílabo");
+    const send = buttonNamed(wrapper, "Enviar");
     expect(send).toBeDefined();
     await send!.trigger("click");
     await flushPromises();
 
     expect(submitTeacherSyllabus).not.toHaveBeenCalled();
     expect(document.body.textContent).toContain("¿Enviar a revisión?");
-    const confirm = Array.from(document.body.querySelectorAll("button")).find((button) => button.textContent?.includes("Enviar a revisión"));
+    const confirm = Array.from(document.body.querySelectorAll('[role="dialog"] button')).find((button) => button.textContent?.trim() === "Enviar") as HTMLButtonElement | undefined;
     expect(confirm).toBeDefined();
     confirm!.click();
     await flushPromises();
 
-    expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2, expect.any(String));
+    expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2, expect.any(String), null);
+    expect(getTeacherSigningStatement).not.toHaveBeenCalled();
     expect(wrapper.find(".submit-feedback").exists()).toBe(false);
     expect(buttonNamed(wrapper, "Ir a la primera")).toBeUndefined();
     expect(wrapper.get(".feedback.error").text()).toContain("Falta el dato institucional de créditos.");
@@ -476,7 +481,7 @@ describe("TeacherSyllabusDetailPage", () => {
 
     expect(wrapper.findComponent(FreeTextEditor).vm.$attrs.disabled).toBe(true);
     expect(wrapper.get(".edit-blocked").text()).toContain("La convocatoria está en pausa. Podrá seguir editando cuando se reanude.");
-    expect(buttonNamed(wrapper, "Enviar sílabo")).toBeUndefined();
+    expect(buttonNamed(wrapper, "Enviar")).toBeUndefined();
   });
 
   it("deja el campo pendiente tras un fallo y lo reenvía con Reintentar", async () => {
@@ -628,11 +633,67 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
     expect(notice.text().indexOf("La 10.ª edición no está disponible.")).toBeLessThan(notice.text().indexOf("Comentario anterior."));
     expect(buttonNamed(wrapper, "Reenviar bibliografía")).toBeUndefined();
-    expect(buttonNamed(wrapper, "Enviar sílabo")).toBeDefined();
-    await buttonNamed(wrapper, "Enviar sílabo")!.trigger("click");
+    expect(buttonNamed(wrapper, "Enviar")).toBeDefined();
+    await buttonNamed(wrapper, "Enviar")!.trigger("click");
     await flushPromises();
     expect(document.body.textContent).toContain("Va directo a biblioteca");
     wrapper.unmount();
   });
 
+  it("al primer envío firma la declaración y envía con la firma", async () => {
+    const draft = syllabus("borrador");
+    draft.teacher_signature_required = true;
+    const sent = syllabus("en_revision");
+    sent.signatures = [{ role: "docente", name: "Docente Demo", signed_at: "2026-09-16T10:00:00Z" }];
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+    vi.mocked(getTeacherSigningStatement).mockResolvedValue({ statement: "silabos-ueb|silabo:syllabus-1|accion:envio_docente|huella:abc", required: true });
+    vi.mocked(submitTeacherSyllabus).mockResolvedValue({ message: "Enviado.", syllabus: sent });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(buttonNamed(wrapper, "Enviar")).toBeUndefined();
+    await buttonNamed(wrapper, "Firmar y enviar")!.trigger("click");
+    await flushPromises();
+    await fillSignatureDialog(makeTestP12("DOCENTE DEMO", "clave"), "clave");
+    await confirmSignatureDialog();
+
+    expect(getTeacherSigningStatement).toHaveBeenCalledWith("syllabus-1", 2);
+    expect(submitTeacherSyllabus).toHaveBeenCalledWith("syllabus-1", 2, expect.any(String), {
+      statement: "silabos-ueb|silabo:syllabus-1|accion:envio_docente|huella:abc",
+      cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
+    });
+    expect(wrapper.text()).toContain("Firmado por Docente Demo (docente)");
+    wrapper.unmount();
+  });
+
+  it("muestra en el diálogo el error de firma del envío", async () => {
+    const draft = syllabus("borrador");
+    draft.teacher_signature_required = true;
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+    vi.mocked(getTeacherSigningStatement).mockResolvedValue({ statement: "silabos-ueb|silabo:syllabus-1|accion:envio_docente|huella:abc", required: true });
+    vi.mocked(submitTeacherSyllabus).mockRejectedValue(new ApiError("Datos inválidos.", 422, { signature: ["El certificado está vencido."] }));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await buttonNamed(wrapper, "Firmar y enviar")!.trigger("click");
+    await flushPromises();
+    await fillSignatureDialog(makeTestP12("DOCENTE DEMO", "clave"), "clave");
+    await confirmSignatureDialog();
+
+    expect(document.querySelector('[role="dialog"]')!.textContent).toContain("El certificado está vencido.");
+    expect(wrapper.find(".feedback.error").exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it("el sílabo aprobado se ve como documento con su PDF", async () => {
+    const approved = { ...syllabus("en_revision"), state: "aprobado" as const, approved_revision_id: "revision-9" };
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: approved });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.findComponent(SyllabusDocumentPreview).exists()).toBe(true);
+    expect(wrapper.text()).toContain("Ver PDF");
+    expect(buttonNamed(wrapper, "Firmar")).toBeUndefined();
+    wrapper.unmount();
+  });
 });

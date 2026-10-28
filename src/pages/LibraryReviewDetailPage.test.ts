@@ -2,7 +2,9 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/api/client';
 import { commentLibraryReview, getLibraryReview, verifyLibraryReview, type LibraryReviewDetail } from '@/api/library';
+import { makeTestP12 } from '@/lib/signature/testCertificate';
 import LibraryReviewDetailPage from '@/pages/LibraryReviewDetailPage.vue';
+import { confirmSignatureDialog, fillSignatureDialog } from '@/test/signatureDialog';
 
 const { toastSuccess } = vi.hoisted(() => ({ toastSuccess: vi.fn() }));
 
@@ -35,6 +37,8 @@ const detail = (overrides: Partial<LibraryReviewDetail> = {}): LibraryReviewDeta
   outcome: null,
   can_comment: true,
   can_verify: true,
+  signing_statement: 'silabos-ueb|silabo:syllabus-1|accion:aprobacion_biblioteca|huella:abc',
+  signatures: [],
   verified_at: null,
   verified_by: null,
   template_variables: {},
@@ -53,13 +57,20 @@ const detail = (overrides: Partial<LibraryReviewDetail> = {}): LibraryReviewDeta
 
 const mountPage = () => mount(LibraryReviewDetailPage, {
   attachTo: document.body,
-  global: {
-    stubs: {
-      RouterLink: { template: '<a><slot /></a>' },
-      DocumentSignatureCard: { props: ['revisionId'], template: '<div data-testid="signature-card">{{ revisionId }}</div>' },
-    },
-  },
+  global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
 });
+
+const headerButton = (wrapper: ReturnType<typeof mountPage>, name: string) =>
+  wrapper.findAll('header button').find((button) => button.text() === name);
+const openReturn = async (wrapper: ReturnType<typeof mountPage>): Promise<void> => {
+  await headerButton(wrapper, 'Devolver al docente')!.trigger('click');
+  await flushPromises();
+};
+const reasonBoxes = (): HTMLElement[] => [...document.querySelectorAll<HTMLElement>('#library-comment-form [role="checkbox"]')];
+const submitReturn = async (): Promise<void> => {
+  document.querySelector<HTMLFormElement>('#library-comment-form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+  await flushPromises();
+};
 
 describe('LibraryReviewDetailPage', () => {
   beforeEach(() => {
@@ -70,43 +81,46 @@ describe('LibraryReviewDetailPage', () => {
     document.body.innerHTML = '';
   });
 
-  it('aprueba la bibliografía con confirmación y luego muestra la firma', async () => {
-    vi.mocked(getLibraryReview)
-      .mockResolvedValueOnce({ review: detail() })
-      .mockResolvedValueOnce({ review: detail({ state: 'por_firmar', can_verify: false, can_comment: false, verified_at: '2026-09-29T10:00:00-05:00', verified_by: 'Biblioteca Demo' }) });
-    vi.mocked(verifyLibraryReview).mockResolvedValue({ message: 'Bibliografía aprobada.' });
-    const wrapper = mountPage();
-    await flushPromises();
-
-    expect(wrapper.find('[data-testid="signature-card"]').exists()).toBe(false);
-    await wrapper.findAll('button').find((item) => item.text().includes('Aprobar bibliografía'))!.trigger('click');
-    await flushPromises();
-    expect(verifyLibraryReview).not.toHaveBeenCalled();
-    const confirm = [...document.body.querySelectorAll('[role="dialog"] button')]
-      .find((item) => item.textContent?.includes('Aprobar bibliografía')) as HTMLButtonElement;
-    confirm.click();
-    await flushPromises();
-
-    expect(verifyLibraryReview).toHaveBeenCalledWith('revision-2');
-    expect(toastSuccess).toHaveBeenCalledWith('Bibliografía aprobada.');
-    expect(wrapper.text()).toContain('Por firmar');
-    expect(wrapper.get('[data-testid="signature-card"]').text()).toBe('revision-2');
-    wrapper.unmount();
-  });
-
-  it('muestra solo la bibliografía en lectura, sin firma mientras falta verificar', async () => {
+  it('muestra solo asignatura, carrera, docente y la bibliografía', async () => {
     vi.mocked(getLibraryReview).mockResolvedValue({ review: detail() });
     const wrapper = mountPage();
     await flushPromises();
 
     expect(getLibraryReview).toHaveBeenCalledWith('revision-2');
-    expect(wrapper.text()).toContain('Bibliografía básica');
-    expect(wrapper.text()).toContain('Sommerville, Ingeniería de software');
-    expect(wrapper.text()).toContain('Por revisar');
-    expect(wrapper.find('[data-testid="signature-card"]').exists()).toBe(false);
-    expect(wrapper.find('#library-comment-form').exists()).toBe(true);
-    expect(wrapper.find('#library-comment-form textarea').exists()).toBe(false);
-    expect(wrapper.find('#library-comment-form').text()).toContain('El libro no está disponible en biblioteca');
+    const text = wrapper.text();
+    expect(text).toContain('Arquitectura de Software');
+    expect(text).toContain('Software · Docente Demo');
+    expect(text).toContain('Bibliografía básica');
+    expect(text).toContain('Sommerville, Ingeniería de software');
+    expect(text).not.toContain('Revisión 2');
+    expect(text).not.toContain('Enviado por');
+    expect(text).not.toContain('Por revisar');
+    expect(headerButton(wrapper, 'Devolver al docente')).toBeDefined();
+    expect(headerButton(wrapper, 'Firmar y aprobar')).toBeDefined();
+    wrapper.unmount();
+  });
+
+  it('firma y aprueba la bibliografía', async () => {
+    vi.mocked(getLibraryReview)
+      .mockResolvedValueOnce({ review: detail() })
+      .mockResolvedValueOnce({ review: detail({ state: 'atendido', outcome: 'firmado', can_verify: false, can_comment: false, signing_statement: null }) });
+    vi.mocked(verifyLibraryReview).mockResolvedValue({ message: 'Sílabo aprobado.' });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await headerButton(wrapper, 'Firmar y aprobar')!.trigger('click');
+    await flushPromises();
+    expect(verifyLibraryReview).not.toHaveBeenCalled();
+    await fillSignatureDialog(makeTestP12('BIBLIOTECA DEMO', 'clave'), 'clave');
+    await confirmSignatureDialog();
+
+    expect(verifyLibraryReview).toHaveBeenCalledWith('revision-2', {
+      statement: 'silabos-ueb|silabo:syllabus-1|accion:aprobacion_biblioteca|huella:abc',
+      cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
+    });
+    expect(toastSuccess).toHaveBeenCalledWith('Sílabo aprobado.');
+    expect(wrapper.text()).toContain('Biblioteca firmó este sílabo.');
+    expect(headerButton(wrapper, 'Firmar y aprobar')).toBeUndefined();
     wrapper.unmount();
   });
 
@@ -121,22 +135,18 @@ describe('LibraryReviewDetailPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const boxes = wrapper.findAll('#library-comment-form [role="checkbox"]');
-    await boxes[0]!.trigger('click');
-    await boxes[1]!.trigger('click');
-    const textarea = wrapper.get('#library-other-reason');
-    await wrapper.get('#library-comment-form').trigger('submit');
+    await openReturn(wrapper);
+    for (const box of reasonBoxes()) box.click();
     await flushPromises();
-    expect(wrapper.text()).toContain('Escriba el otro motivo con al menos 5 caracteres.');
-    expect(document.body.textContent).not.toContain('¿Devolver el sílabo al docente?');
+    await submitReturn();
+    expect(document.body.textContent).toContain('Escriba el otro motivo (mínimo 5 caracteres).');
+    expect(commentLibraryReview).not.toHaveBeenCalled();
 
-    await textarea.setValue('Falta la 3.ª edición de Pressman.');
-    await wrapper.get('#library-comment-form').trigger('submit');
+    const textarea = document.querySelector<HTMLTextAreaElement>('#library-other-reason')!;
+    textarea.value = 'Falta la 3.ª edición de Pressman.';
+    textarea.dispatchEvent(new Event('input'));
     await flushPromises();
-    const confirm = [...document.body.querySelectorAll('[role="dialog"] button')]
-      .find((item) => item.textContent?.includes('Devolver al docente')) as HTMLButtonElement;
-    confirm.click();
-    await flushPromises();
+    await submitReturn();
 
     expect(commentLibraryReview).toHaveBeenCalledWith('revision-2', {
       reasons: ['libro_no_disponible', 'otro'],
@@ -145,54 +155,38 @@ describe('LibraryReviewDetailPage', () => {
     wrapper.unmount();
   });
 
-  it('pide confirmación antes de devolver el sílabo con los motivos marcados', async () => {
+  it('devuelve el sílabo con los motivos marcados', async () => {
     vi.mocked(getLibraryReview)
       .mockResolvedValueOnce({ review: detail() })
-      .mockResolvedValueOnce({ review: detail({
-        state: 'atendido',
-        outcome: 'devuelto',
-        can_comment: false,
-        can_verify: false,
-        comments: [{ comment: 'No está disponible la 10.ª edición.', commented_at: '2026-09-29T09:00:00-05:00', commented_by: 'Biblioteca Demo', revision_number: 2 }],
-      }) });
+      .mockResolvedValueOnce({ review: detail({ state: 'atendido', outcome: 'devuelto', can_comment: false, can_verify: false }) });
     vi.mocked(commentLibraryReview).mockResolvedValue({ message: 'Comentario enviado al docente.' });
     const wrapper = mountPage();
     await flushPromises();
 
-    const boxes = wrapper.findAll('#library-comment-form [role="checkbox"]');
-    await boxes[0]!.trigger('click');
-    await boxes[1]!.trigger('click');
-    await wrapper.get('#library-comment-form').trigger('submit');
+    await openReturn(wrapper);
+    for (const box of reasonBoxes()) box.click();
     await flushPromises();
-
-    expect(commentLibraryReview).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain('¿Devolver el sílabo al docente?');
-    const confirm = [...document.body.querySelectorAll('[role="dialog"] button')]
-      .find((item) => item.textContent?.includes('Devolver al docente')) as HTMLButtonElement;
-    confirm.click();
-    await flushPromises();
+    await submitReturn();
 
     expect(commentLibraryReview).toHaveBeenCalledWith('revision-2', {
       reasons: ['libro_no_disponible', 'codigo_incorrecto'],
     });
     expect(toastSuccess).toHaveBeenCalledWith('Comentario enviado al docente.');
-    expect(wrapper.text()).toContain('Atendido');
-    expect(wrapper.text()).toContain('Comentario enviado al docente');
-    expect(wrapper.text()).toContain('Biblioteca Demo');
-    expect(wrapper.find('#library-comment-form').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Devuelto al docente');
+    expect(headerButton(wrapper, 'Devolver al docente')).toBeUndefined();
     wrapper.unmount();
   });
 
-  it('no abre la confirmación sin motivos', async () => {
+  it('no devuelve sin motivos', async () => {
     vi.mocked(getLibraryReview).mockResolvedValue({ review: detail() });
     const wrapper = mountPage();
     await flushPromises();
 
-    await wrapper.get('#library-comment-form').trigger('submit');
-    await flushPromises();
+    await openReturn(wrapper);
+    await submitReturn();
 
-    expect(wrapper.text()).toContain('Elija al menos un motivo.');
-    expect(document.body.textContent).not.toContain('¿Devolver el sílabo al docente?');
+    expect(document.body.textContent).toContain('Elija al menos un motivo.');
+    expect(commentLibraryReview).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 
