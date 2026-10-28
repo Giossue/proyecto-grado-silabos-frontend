@@ -14,7 +14,6 @@ import {
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
 const CoordinationCareerProjectPage = () => import("@/pages/CoordinationCareerProjectPage.vue");
-const AdminSetupPage = () => import("@/pages/AdminSetupPage.vue");
 const TeacherSyllabiPage = () => import("@/pages/TeacherSyllabiPage.vue");
 const TeacherHistoryPage = () => import("@/pages/TeacherHistoryPage.vue");
 const TeacherHistoryCareerPage = () => import("@/pages/TeacherHistoryCareerPage.vue");
@@ -34,7 +33,6 @@ const AdminTemplatePage = () => import("@/pages/AdminTemplatePage.vue");
 const AdminAuditPage = () => import("@/pages/AdminAuditPage.vue");
 
 const CoordinationReviewsPage = () => import("@/pages/CoordinationReviewsPage.vue");
-const CoordinationSetupPage = () => import("@/pages/CoordinationSetupPage.vue");
 const CoordinationReviewDetailPage = () => import("@/pages/CoordinationReviewDetailPage.vue");
 const CoordinationReviewComparisonPage = () => import("@/pages/CoordinationReviewComparisonPage.vue");
 const CoordinationAcademicStructurePage = () => import("@/pages/CoordinationAcademicStructurePage.vue");
@@ -72,7 +70,7 @@ export const router = createRouter({
     { path: "/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, shortcut: "documents", title: "Documentos" } },
 
     { path: "/admin/panel", redirect: "/admin/convocatorias" },
-    { path: "/admin/puesta-en-marcha", component: AdminSetupPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Puesta en marcha" } },
+    { path: "/admin/puesta-en-marcha", redirect: "/admin/convocatorias" },
     { path: "/admin/usuarios", component: AdminUsersPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Usuarios y roles" } },
     { path: "/admin/estructura-academica", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Facultades y carreras" } },
     { path: "/admin/estructura-academica/:section", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Facultades y carreras" } },
@@ -83,7 +81,7 @@ export const router = createRouter({
     { path: "/admin/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Seguridad" } },
     { path: "/admin/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Notificaciones" } },
 
-    { path: "/coordinacion/puesta-en-marcha", component: CoordinationSetupPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Puesta en marcha" } },
+    { path: "/coordinacion/puesta-en-marcha", redirect: "/coordinacion/revisiones" },
     { path: "/coordinacion/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Notificaciones" } },
     { path: "/coordinacion/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Perfil" } },
     { path: "/coordinacion/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Seguridad" } },

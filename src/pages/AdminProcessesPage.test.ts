@@ -1,5 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent, h } from 'vue';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import AdminProcessesPage from './AdminProcessesPage.vue';
 
 const api = vi.hoisted(() => ({ getAcademicGovernance: vi.fn(), getProcesses: vi.fn(), getSession: vi.fn(), getDashboard: vi.fn() }));
@@ -13,7 +15,8 @@ vi.mock('@/state/session', () => ({ sessionState: { current: { value: { active_r
 const period = (id: string, code: string, process: { id: string; state: 'abierto' | 'pausado' | 'cerrado' } | null, lockReason: string | null = null) => ({
   id, code, starts_on: '2026-09-29', ends_on: '2027-03-01', teaching_weeks: 23, status: 'en_curso', status_label: 'En curso', institutional_process: process, lock_reason: lockReason,
 });
-const mountPage = () => mount(AdminProcessesPage, { attachTo: document.body, global: { stubs: {
+const WithTooltips = defineComponent({ setup: () => () => h(TooltipProvider, () => h(AdminProcessesPage)) });
+const mountPage = () => mount(WithTooltips, { attachTo: document.body, global: { stubs: {
   PageFrame: { props: ['title'], template: '<main><slot name="banner" /><h1>{{ title }}</h1><slot name="actions" /><slot /></main>' },
   ConvocationPeriodSheet: true, ConvocationRowActions: true,
 } } });
@@ -45,12 +48,27 @@ describe('AdminProcessesPage', () => {
     api.getSession.mockResolvedValue({ active_role: { code: 'administrador' } });
     api.getAcademicGovernance.mockResolvedValue({ lock_reason: null, catalogs: { faculties: [], careers: [], periods: [] }, options: {} });
     api.getProcesses.mockResolvedValue({ processes: [], template: null, periods: [], active_process: null });
-    api.getDashboard.mockResolvedValue({ metrics: [{ key: 'careers_without_convocation', label: 'Carreras sin convocar', value: 3, suffix: null, hint: 'Pista' }], setup: null, deadline: null, coordination_convocation: null });
+    const step = (key: string, done: boolean) => ({ key, label: `Paso ${key}`, hint: `Pista ${key}`, done, action: null });
+    api.getDashboard.mockResolvedValue({
+      metrics: [{ key: 'careers_without_convocation', label: 'Carreras sin convocar', value: 3, suffix: null, hint: 'Pista' }],
+      setup: { title: 'Puesta en marcha de la institución', intro: '', done: 1, total: 6, steps: [step('faculties', true), step('careers', false), step('accounts', false), step('coordinators', false), step('template', false), step('process', false)] },
+      deadline: null, coordination_convocation: null,
+    });
     const wrapper = mountPage();
     await flushPromises();
 
     expect(wrapper.text()).toContain('Carreras sin convocar');
-    expect(wrapper.get('a[href="/admin/puesta-en-marcha"]').text()).toContain('Puesta en marcha');
+    expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('true');
+    const trigger = wrapper.findAll('button').find((button) => button.text().includes('Puesta en marcha'))!;
+    await trigger.trigger('click');
+    await flushPromises();
+
+    const items = [...document.body.querySelectorAll('[role="dialog"] li')];
+    expect(items).toHaveLength(5);
+    expect(items[0]!.getAttribute('data-done')).toBe('true');
+    expect(items[0]!.querySelector('[aria-label="Completado"]')).not.toBeNull();
+    expect(items[1]!.querySelector('a')!.getAttribute('href')).toBe('/admin/estructura-academica?seccion=carrera');
+    expect(document.body.querySelector('[role="dialog"]')!.textContent).toContain('1 de 5');
     wrapper.unmount();
   });
 

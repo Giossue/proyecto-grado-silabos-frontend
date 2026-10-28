@@ -10,13 +10,13 @@ export type ConvocationRow = PeriodRecord & { process: SyllabusProcess | null };
 import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { getAcademicGovernance, type AcademicGovernance } from '@/api/academic';
 import { getProcesses, type Processes } from '@/api/processes';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
-import { ListChecks } from '@lucide/vue';
 import MetricTiles from '@/components/domain/MetricTiles.vue';
-import { Button } from '@/components/ui/button';
+import SetupDialog from '@/components/domain/SetupDialog.vue';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
@@ -42,6 +42,14 @@ const router = useRouter();
 const governance = ref<AcademicGovernance | null>(null);
 const processData = ref<Processes | null>(null);
 const summary = ref<Dashboard | null>(null);
+const setupRoutes: Record<string, string> = {
+  faculties: paths.admin.academic,
+  careers: paths.admin.academicWithSection('carrera'),
+  accounts: paths.admin.users,
+  coordinators: paths.admin.academicWithSection('carrera'),
+  template: paths.admin.template,
+};
+const setupReady = computed(() => (summary.value?.setup?.steps ?? []).every((step) => step.key === 'process' || step.done));
 const loading = ref(true);
 const error = ref<string | null>(null);
 const selected = ref<ConvocationRow | null>(null);
@@ -91,8 +99,9 @@ onMounted(load);
       <ProcessLockAlert banner title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra." hide-action />
     </template>
     <template #actions>
-      <Button as-child variant="outline"><RouterLink :to="paths.admin.setup"><ListChecks data-icon="inline-start" aria-hidden="true" />Puesta en marcha</RouterLink></Button>
-      <ConvocationPeriodSheet v-if="loaded" :disabled="inProgress" @saved="changed" />
+      <SetupDialog v-if="summary?.setup" :setup="summary.setup" :routes="setupRoutes" start-key="process" />
+      <Tooltip v-if="loaded && !setupReady"><TooltipTrigger as-child><span class="inline-flex" tabindex="0"><ConvocationPeriodSheet disabled @saved="changed" /></span></TooltipTrigger><TooltipContent>Complete la puesta en marcha para abrir una convocatoria</TooltipContent></Tooltip>
+      <ConvocationPeriodSheet v-else-if="loaded" :disabled="inProgress" @saved="changed" />
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :columns="4" :filters="1" :actions="false" />

@@ -2,9 +2,9 @@
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import { activateRow } from '@/lib/rowActivation';
 import { REVIEW_STATE_OPTIONS } from '@/lib/syllabusStates';
-import { ChartNoAxesColumn, Inbox, ListChecks } from '@lucide/vue';
+import { ChartNoAxesColumn, Inbox } from '@lucide/vue';
 import { computed, onMounted, reactive, ref } from 'vue';
-import { RouterLink, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getReviews, reviewStageLabel, type ReviewsPage } from '@/api/reviews';
@@ -15,8 +15,8 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import ConvocationActions from '@/components/domain/syllabus/ConvocationActions.vue';
+import SetupDialog from '@/components/domain/SetupDialog.vue';
 import ConvocationTrackingTable from '@/components/domain/syllabus/ConvocationTrackingTable.vue';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,13 @@ import { deadlineState } from '@/state/deadline';
 const router = useRouter();
 const data = ref<ReviewsPage | null>(null);
 const summary = ref<Dashboard | null>(null);
+const setupRoutes: Record<string, string> = {
+  curriculum: paths.coordination.curriculum,
+  scheduled_subjects: paths.coordination.scheduledSubjects,
+  parallels: paths.coordination.scheduledSubjects,
+  teachers: paths.coordination.teachers,
+};
+const openHint = computed(() => summary.value?.setup?.steps.find((step) => step.key === 'convocation')?.hint ?? '');
 const area = ref(reviewAreaPaths());
 const loading = ref(true);
 const tab = ref('cola');
@@ -73,8 +80,8 @@ onMounted(() => { void load(1, true); });
 <template>
   <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo." size="wide" :loading="!data">
     <template #actions>
-      <ConvocationActions v-if="summary?.coordination_convocation" :convocation="summary.coordination_convocation" @changed="changed" />
-      <Button as-child variant="outline"><RouterLink :to="paths.coordination.setup"><ListChecks data-icon="inline-start" aria-hidden="true" />Puesta en marcha</RouterLink></Button>
+      <SetupDialog v-if="summary?.setup" :setup="summary.setup" :routes="setupRoutes" start-key="convocation" />
+      <ConvocationActions v-if="summary?.coordination_convocation" :convocation="summary.coordination_convocation" :blocked-reason="openHint" @changed="changed" />
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :cell-lines="[2, 1, 1, 2]" :actions="false" :tabs="2" />
     <Tabs v-if="data" v-model="tab" class="gap-4">

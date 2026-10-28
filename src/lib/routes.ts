@@ -25,7 +25,6 @@ export const paths = {
     `/revisiones/${segment(revision)}/documentos`,
   admin: {
     root: '/admin',
-    setup: '/admin/puesta-en-marcha',
     users: '/admin/usuarios',
     academic: '/admin/estructura-academica',
     academicWithSection: (section: string): string =>
@@ -39,7 +38,6 @@ export const paths = {
   },
   coordination: {
     root: '/coordinacion',
-    setup: '/coordinacion/puesta-en-marcha',
     notifications: '/coordinacion/notificaciones',
     profile: '/coordinacion/configuracion/perfil',
     security: '/coordinacion/configuracion/seguridad',
@@ -190,7 +188,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'security', path: paths.configuration.security, component: 'SecurityPage', shortcut: 'security', ...authenticated },
   { name: 'documents', path: '/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...authenticated },
 
-  { name: 'admin-setup', path: paths.admin.setup, component: 'AdminSetupPage', breadcrumb: 'Puesta en marcha', ...admin },
   { name: 'admin-users', path: paths.admin.users, component: 'AdminUsersPage', breadcrumb: 'Usuarios y roles', ...admin },
   { name: 'admin-academic', path: paths.admin.academic, component: 'AcademicGovernancePage', breadcrumb: 'Facultades y carreras', ...admin },
   { name: 'admin-academic-section', path: '/admin/estructura-academica/:section', component: 'AcademicGovernancePage', breadcrumb: 'Facultades y carreras', ...admin },
@@ -201,7 +198,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'admin-security', path: paths.admin.security, component: 'SecurityPage', shortcut: 'security', ...admin },
   { name: 'admin-notifications', path: paths.admin.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...admin },
 
-  { name: 'coordination-setup', path: paths.coordination.setup, component: 'CoordinationSetupPage', breadcrumb: 'Puesta en marcha', ...coordinator },
   { name: 'coordination-notifications', path: paths.coordination.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...coordinator },
   { name: 'coordination-profile', path: paths.coordination.profile, component: 'ProfilePage', shortcut: 'profile', ...coordinator },
   { name: 'coordination-security', path: paths.coordination.security, component: 'SecurityPage', shortcut: 'security', ...coordinator },

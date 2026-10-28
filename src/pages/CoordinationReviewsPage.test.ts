@@ -1,5 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent, h } from 'vue';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import CoordinationReviewsPage from '@/pages/CoordinationReviewsPage.vue';
 import { getConvocation } from '@/api/convocations';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
@@ -25,12 +27,13 @@ const reviews: ReviewsPage = {
 
 const summary = (convocationId: string | null): Dashboard => ({
   metrics: [],
-  setup: null,
+  setup: { title: 'Puesta en marcha de la carrera', intro: '', done: 4, total: 5, steps: ['curriculum', 'scheduled_subjects', 'parallels', 'teachers', 'convocation'].map((key) => ({ key, label: key, hint: key === 'convocation' ? 'Complete la ficha de 2 materia(s) en Proyecto de carrera.' : '', done: key !== 'convocation', action: null })) },
   deadline: { period: '2026-2027', starts_at: '2026-10-26', due_at: '2026-10-30', state: 'active', days_until_start: 0, days_until_due: 3, convocation_id: convocationId },
   coordination_convocation: { process_id: 'p1', period: '2026-2027', convocation_id: convocationId, can_open: convocationId === null, state: convocationId ? 'abierta' : null, process_open: true },
 });
 
-const mountPage = () => mount(CoordinationReviewsPage, {
+const WithTooltips = defineComponent({ setup: () => () => h(TooltipProvider, () => h(CoordinationReviewsPage)) });
+const mountPage = () => mount(WithTooltips, {
   attachTo: document.body,
   global: { stubs: { PageFrame: { template: '<div><slot name="banner" /><div class="actions"><slot name="actions" /></div><slot /></div>' }, ConvocationOpeningDialog: true } },
 });
@@ -55,8 +58,18 @@ describe('CoordinationReviewsPage', () => {
 
     expect(wrapper.text()).not.toContain('Avance del proceso');
     expect(wrapper.get('.actions').text()).toContain('Pausar convocatoria');
-    expect(wrapper.get('.actions a').attributes('href')).toBe('/coordinacion/puesta-en-marcha');
+    expect(wrapper.get('.actions').text()).toContain('Puesta en marcha');
     expect(wrapper.text()).toContain('Álgebra Lineal');
+    wrapper.unmount();
+  });
+
+  it('sin todo listo, «Abrir convocatoria» queda deshabilitado y explica por qué', async () => {
+    vi.mocked(getDashboard).mockResolvedValue({ ...summary(null), coordination_convocation: { ...summary(null).coordination_convocation!, can_open: false } });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const open = wrapper.findAll('.actions button').find((button) => button.text().includes('Abrir convocatoria'))!;
+    expect(open.attributes('disabled')).toBeDefined();
     wrapper.unmount();
   });
 

@@ -132,8 +132,10 @@ test.describe('frontera distribuida de identidad', () => {
     await openSection(page, 'Malla', 'Malla');
     await expect(page.getByRole('button', { name: /Editar malla|Comprobando/ })).toBeVisible();
 
-    await page.goto('/coordinacion/puesta-en-marcha');
-    await expect(page.getByRole('heading', { level: 1, name: 'Puesta en marcha' })).toBeVisible();
+    await openSection(page, 'Revisión', 'Revisión');
+    await page.getByRole('button', { name: 'Puesta en marcha' }).click();
+    await expect(page.getByRole('dialog', { name: 'Puesta en marcha de la carrera' })).toBeVisible();
+    await page.keyboard.press('Escape');
 
     await page.goto('/admin/convocatorias');
     await expect(page).toHaveURL(/\/coordinacion\/revisiones$/);
