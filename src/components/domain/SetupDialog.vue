@@ -5,7 +5,7 @@ import { RouterLink } from 'vue-router';
 import type { SetupChecklist } from '@/api/dashboard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
 import { withoutEndPeriod } from '@/lib/text';
 
@@ -44,6 +44,7 @@ const done = computed(() => steps.value.filter((step) => step.done).length);
           </Button>
         </li>
       </ol>
+      <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose></DialogFooter>
     </DialogContent>
   </Dialog>
 </template>

@@ -69,6 +69,10 @@ describe('AdminProcessesPage', () => {
     expect(items[0]!.querySelector('[aria-label="Completado"]')).not.toBeNull();
     expect(items[1]!.querySelector('a')!.getAttribute('href')).toBe('/admin/estructura-academica?seccion=carrera');
     expect(document.body.querySelector('[role="dialog"]')!.textContent).toContain('1 de 5');
+    const close = [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find((button) => button.textContent?.trim() === 'Cerrar')!;
+    close.click();
+    await flushPromises();
+    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
     wrapper.unmount();
   });
 
