@@ -62,6 +62,28 @@ describe('FieldResponseEditor', () => {
         expect((emitted(wrapper).content![0]!.attrs!.value as { units: unknown[] }).units).toHaveLength(5);
     });
 
+    it('marca las unidades pendientes y los avances que faltan', () => {
+        const filled = units().map((unit, index) => index === 0 ? { ...unit, nombre: 'Matrices', resultado: 'Resuelve sistemas' } : index === 3 ? { ...unit, semanas: [] } : unit);
+        const wrapper = mountEditor(block('unidades'), block('unidades', { units: filled }));
+
+        const items = wrapper.findAll('[aria-label^="Unidad "]');
+        expect(items[0]!.find('[data-incomplete]').exists()).toBe(false);
+        expect(items[1]!.text()).toContain('Falta: nombre de la unidad, resultados de aprendizaje');
+        expect(items[3]!.text()).toContain('Falta: nombre de la unidad, resultados de aprendizaje, semanas');
+        expect(wrapper.findAll('[data-pending]').map((badge) => badge.text())).toContain('Nombres 1 de 4');
+    });
+
+    it('una unidad nueva arranca con las semanas mínimas de la plantilla', async () => {
+        const limited = structuredClone(definition) as unknown as TemplateDefinitionPayload;
+        const unitsSchema = limited.blocks.unidades!.value.units as unknown as { minItems: number; items: { properties: { semanas: { minItems: number } } } };
+        unitsSchema.items.properties.semanas.minItems = 2;
+        setTemplateRuntime(limited, { horas_docencia: '64', horas_practicas: '0', horas_autonomas: '0' });
+        const wrapper = mountEditor(block('unidades'), block('unidades', { units: units() }));
+
+        await wrapper.findAll('button').find((button) => button.text() === 'Agregar unidad')!.trigger('click');
+        expect((emitted(wrapper).content![0]!.attrs!.value as { units: Array<{ semanas: unknown[] }> }).units[4]!.semanas).toHaveLength(2);
+    });
+
     it('un campo de plantilla antigua que solo tiene bloques también se llena como formulario', () => {
         const wrapper = mount(FieldResponseEditor, { props: { id: 'campo', label: 'Unidades', template: null, modelValue: block('unidades', { units: units() }) } });
 

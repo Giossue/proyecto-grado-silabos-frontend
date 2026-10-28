@@ -6,6 +6,9 @@ import type { TemplatePayload } from '@/api/template';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
 import { emptyDocument, type FieldResponsible } from '@/types/configuration';
 import type { DocumentNode } from '@/lib/templateDocument';
+import { setTemplateRuntime } from '@/lib/blocks/runtime';
+import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
+import definition from '@/test/fixtures/template-definition.json';
 
 vi.mock('@/api/template');
 
@@ -285,5 +288,18 @@ describe('TemplateVisualBuilder', () => {
     expect(body().querySelectorAll('header img')).toHaveLength(2);
     expect(body().textContent).not.toContain('Editar título');
     expect(body().textContent).not.toContain('Cambiar logo');
+  });
+
+  // Va al final: deja cargada la definición oficial para el resto del archivo.
+  it('cambia cuántas unidades y semanas puede tener el docente y guarda solo lo que cambió', async () => {
+    setTemplateRuntime(definition as unknown as TemplateDefinitionPayload, {});
+    const wrapper = await mountBuilder();
+    expect(byText('button', 'Listas')).toBeTruthy();
+    const state = (wrapper.vm as unknown as { $: { setupState: { listsDraft: Array<{ label: string; min: number }>; setListLimit: (list: unknown, key: string, value: string) => void } } }).$.setupState;
+    expect(state.listsDraft.map((entry) => entry.label)).toEqual(['Unidades', 'Semanas por unidad']);
+    state.setListLimit(state.listsDraft[1], 'min', '1');
+    await flushPromises();
+    await save();
+    expect((saved() as unknown as { lists: unknown }).lists).toEqual([{ block: 'unidades', path: 'units.*.semanas', min: 1, max: 52, initial: 4 }]);
   });
 });

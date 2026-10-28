@@ -13,7 +13,7 @@ export const emptyValue = (schema: ValueSchema, props: Record<string, unknown>):
         case 'object':
             return Object.fromEntries(Object.entries(schema.properties).map(([key, field]) => [key, emptyValue(field, props)]));
         case 'array':
-            return [];
+            return Array.from({ length: schema.minItems }, () => emptyValue(schema.items, props));
     }
 };
 
@@ -26,7 +26,11 @@ const keep = (schema: ValueSchema, value: unknown, props: Record<string, unknown
         }
         return record;
     }
-    if (schema.type === 'array') return Array.isArray(value) ? value.map((item) => keep(schema.items, item, props)) : [];
+    if (schema.type === 'array') {
+        const items = Array.isArray(value) ? value.map((item) => keep(schema.items, item, props)) : [];
+        while (items.length < schema.minItems) items.push(emptyValue(schema.items, props));
+        return items;
+    }
     return value;
 };
 

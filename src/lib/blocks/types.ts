@@ -15,6 +15,7 @@ export type PropSchema = TextSchema;
 
 export const isChoice = (schema: ValueSchema | null | undefined): schema is ChoiceSchema => schema?.type === 'string' && Array.isArray(schema.oneOf);
 export const isText = (schema: ValueSchema | null | undefined): schema is TextSchema => schema?.type === 'string' && !Array.isArray(schema.oneOf);
+export const plural = (word: string): string => (/[aeiouáéíóú]$/i.test(word) ? `${word}s` : `${word}es`).toLowerCase();
 export const optionTitle = (schema: ChoiceSchema, value: unknown): string => schema.oneOf.find((option) => option.const === value)?.title ?? '';
 export const numberDigits = (schema: NumberSchema): { digits: number; decimals: number } => ({
     digits: String(Math.floor(schema.maximum)).length,

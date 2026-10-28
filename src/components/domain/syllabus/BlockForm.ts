@@ -12,7 +12,7 @@ import { holds } from '@/lib/blocks/condition';
 import { ruleFailures, ruleResults } from '@/lib/blocks/rules';
 import { blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
 import { Scope, type Path } from '@/lib/blocks/scope';
-import { guardNumber, isChoice, isText, numberDigits, numberText, type ChoiceSchema, type ListSchema, type NumberSchema, type ObjectSchema, type TextSchema, type ValueSchema } from '@/lib/blocks/types';
+import { guardNumber, isChoice, isText, numberDigits, numberText, plural, type ChoiceSchema, type ListSchema, type NumberSchema, type ObjectSchema, type TextSchema, type ValueSchema } from '@/lib/blocks/types';
 import { emptyValue, getAt, setAt, settle } from '@/lib/blocks/values';
 
 type Scalar = TextSchema | NumberSchema | ChoiceSchema;
@@ -174,6 +174,17 @@ export default defineComponent({
             const name = schema.title ?? 'elemento';
             const first = offset(path);
             const resizable = schema.minItems < schema.maxItems;
+            const missing = (itemPath: Path): string[] => {
+                if (schema.items.type !== 'object') return [];
+                return Object.entries(schema.items.properties).flatMap(([key, child]) => {
+                    const childPath = [...itemPath, key];
+                    if (!applies(child, childPath)) return [];
+                    const value = getAt(props.value, childPath);
+                    if (child.type === 'array') return Array.isArray(value) && value.length > 0 ? [] : [plural(child.title ?? key)];
+                    if (isText(child)) return typeof value === 'string' && value.trim() !== '' ? [] : [(child.title ?? key).toLowerCase()];
+                    return [];
+                });
+            };
             const subtitle = (itemPath: Path): string => {
                 if (schema.items.type !== 'object') return '';
                 const key = Object.entries(schema.items.properties).find(([, child]) => isText(child))?.[0];
@@ -185,13 +196,18 @@ export default defineComponent({
                     const itemPath = [...path, index];
                     const title = `${capitalize(name)} ${first + index + 1}`;
                     const detail = subtitle(itemPath);
+                    const pending = missing(itemPath);
                     const content = schema.items.type === 'object'
                         ? fields(Object.entries(schema.items.properties), itemPath, depth + 1)
                         : [node(schema.items, itemPath, title, depth + 1)];
                     return h(AccordionItem, { key: index, value: String(index), 'aria-label': title }, () => [
                         h(AccordionTrigger, { class: 'hover:no-underline' }, () => h('span', { class: 'flex min-w-0 flex-col gap-0.5' }, [
-                            h('span', { class: 'font-semibold' }, title),
+                            h('span', { class: 'flex flex-wrap items-center gap-2' }, [
+                                h('span', { class: 'font-semibold' }, title),
+                                pending.length > 0 ? h(Badge, { variant: 'warning', class: 'font-normal', 'data-incomplete': '' }, () => 'Pendiente') : null,
+                            ]),
                             detail ? h('span', { class: 'line-clamp-1 font-normal text-muted-foreground' }, detail) : null,
+                            pending.length > 0 ? h('span', { class: 'line-clamp-1 font-normal text-muted-foreground' }, `Falta: ${pending.join(', ')}`) : null,
                         ])),
                         h(AccordionContent, { class: 'flex flex-col gap-4' }, () => [
                             ...content,
@@ -214,7 +230,7 @@ export default defineComponent({
             const results = definition.value.rules.filter((rule) => rule.on === 'submit').flatMap((rule) => ruleResults(rule, props.value, variables.value).filter((result) => result.label !== null));
             if (results.length === 0) return null;
             return h('div', { 'data-block-summary': '', class: 'flex flex-wrap items-center gap-2', 'aria-live': 'polite' },
-                results.map((result) => h(Badge, { variant: 'outline', class: 'gap-1 font-normal' }, () => [
+                results.map((result) => h(Badge, { variant: result.ok ? 'outline' : 'warning', class: 'gap-1 font-normal', 'data-pending': result.ok ? undefined : '' }, () => [
                     result.ok ? h(Check, { 'aria-hidden': 'true' }) : null,
                     `${result.label} ${result.actual} de ${result.expected}`,
                 ])));
