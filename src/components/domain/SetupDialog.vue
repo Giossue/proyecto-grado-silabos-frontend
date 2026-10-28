@@ -31,8 +31,8 @@ const done = computed(() => steps.value.filter((step) => step.done).length);
         <span class="text-sm text-muted-foreground tabular-nums">{{ done }} de {{ steps.length }}</span>
       </div>
       <ol class="flex flex-col gap-2">
-        <li v-for="(step, index) in steps" :key="step.key" class="flex items-start gap-3 rounded-md p-2" :data-done="step.done">
-          <Badge size="step" :variant="step.done ? 'default' : 'outline'" class="mt-0.5">
+        <li v-for="(step, index) in steps" :key="step.key" class="flex items-center gap-3 rounded-md p-2" :data-done="step.done">
+          <Badge size="step" :variant="step.done ? 'default' : 'outline'" class="shrink-0">
             <Check v-if="step.done" aria-label="Completado" /><template v-else>{{ index + 1 }}</template>
           </Badge>
           <div class="min-w-0 flex-1">
