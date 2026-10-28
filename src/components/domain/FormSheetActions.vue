@@ -8,8 +8,9 @@ import { Spinner } from '@/components/ui/spinner';
 
 withDefaults(
     defineProps<{
-        label: string;
+        label?: string;
         close: () => void;
+        closeOnly?: boolean;
         processing?: boolean;
         icon?: Component;
         disabled?: boolean;
@@ -18,6 +19,8 @@ withDefaults(
         processing: false,
         icon: () => Check,
         disabled: false,
+        label: '',
+        closeOnly: false,
     },
 );
 </script>
@@ -28,9 +31,9 @@ withDefaults(
     >
         <Field orientation="horizontal" class="justify-end">
             <Button type="button" variant="outline" @click="close">
-                Cancelar
+                {{ closeOnly ? 'Cerrar' : 'Cancelar' }}
             </Button>
-            <Button type="submit" :disabled="processing || disabled">
+            <Button v-if="!closeOnly" type="submit" :disabled="processing || disabled">
                 <Spinner v-if="processing" data-icon="inline-start" />
                 <component
                     :is="icon"

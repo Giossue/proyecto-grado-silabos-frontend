@@ -203,4 +203,17 @@ describe('TeacherAssignmentsPanel', () => {
         expect(document.body.querySelector('[data-slot="tooltip-content"]')).toBeNull();
         wrapper.unmount();
     });
+
+    it('con la cuenta activa solo ofrece cerrar, sin guardar cambios', async () => {
+        const wrapper = mount(TeacherAssignmentsPanel, { props: { data }, attachTo: document.body });
+        const row = wrapper.findAll('tbody tr').find((item) => item.text().includes('Docente activo'))!;
+        await row.trigger('click');
+        await flushPromises();
+
+        const buttons = [...document.body.querySelectorAll('[data-slot="sheet-footer"] button, [role="dialog"] button')].map((button) => button.textContent?.trim());
+        expect(buttons).toContain('Cerrar');
+        expect(buttons).not.toContain('Guardar cambios');
+        expect(buttons).not.toContain('Cancelar');
+        wrapper.unmount();
+    });
 });
