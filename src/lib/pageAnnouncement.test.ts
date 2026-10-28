@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { nextTick } from 'vue';
 import { createMemoryHistory, createRouter } from 'vue-router';
-import { installPageAnnouncements } from '@/lib/pageAnnouncement';
+import { installPageAnnouncements, tabTitle } from '@/lib/pageAnnouncement';
 
 const Empty = { template: '<div />' };
 
@@ -13,23 +13,29 @@ describe('anuncio de página', () => {
     const router = createRouter({
       history: createMemoryHistory(),
       routes: [
-        { path: '/a', component: Empty, meta: { title: 'Panel' } },
-        { path: '/b', component: Empty, meta: { title: 'Auditoría' } },
-        { path: '/c', component: Empty },
+        { path: '/admin/auditoria', component: Empty, meta: { title: 'Auditoría' } },
+        { path: '/docente/mis-silabos', component: Empty, meta: { title: 'Mis sílabos' } },
+        { path: '/ingresar', component: Empty, meta: { title: 'Ingresar' } },
       ],
     });
     installPageAnnouncements(router);
 
-    await router.push('/a');
-    expect(document.title).toBe('Panel · Sílabos UEB');
+    await router.push('/admin/auditoria');
+    expect(document.title).toBe('Admin · Sílabos UEB');
     expect(document.activeElement).not.toBe(document.getElementById('contenido'));
 
-    await router.push('/b');
+    await router.push('/docente/mis-silabos');
     await nextTick();
-    expect(document.title).toBe('Auditoría · Sílabos UEB');
+    expect(document.title).toBe('Docente · Sílabos UEB');
     expect(document.activeElement).toBe(document.getElementById('contenido'));
 
-    await router.push('/c');
+    await router.push('/ingresar');
     expect(document.title).toBe('Sílabos UEB');
+  });
+
+  it('nombra el rol de cada área', () => {
+    expect(tabTitle('/coordinacion/revisiones/r1')).toBe('Coordinador · Sílabos UEB');
+    expect(tabTitle('/biblioteca/historial')).toBe('Biblioteca · Sílabos UEB');
+    expect(tabTitle('/rol')).toBe('Sílabos UEB');
   });
 });
