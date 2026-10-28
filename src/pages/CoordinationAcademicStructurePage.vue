@@ -203,7 +203,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
         title="Importar malla"
         kind="curriculum"
         template-name="plantilla-malla.xlsx"
-        :columns="[{ key: 'codigo', label: 'Código' }, { key: 'nombre', label: 'Materia' }, { key: 'ciclo', label: 'Ciclo' }, { key: 'unidad', label: 'Unidad' }]"
+        :columns="[{ key: 'codigo', label: 'Código' }, { key: 'nombre', label: 'Materia' }, { key: 'ciclo', label: 'Ciclo' }, { key: 'unidad', label: 'Unidad' }, { key: 'genera_silabo', label: 'Genera sílabo' }]"
         @imported="handleCurriculumChanged"
       />
       <Button
