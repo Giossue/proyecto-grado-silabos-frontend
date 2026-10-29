@@ -104,8 +104,8 @@ const reviewComments = computed(() =>
   ),
 );
 const submitDescription = computed(() => syllabus.value?.state === 'correccion_solicitada' && reviewComments.value[0]?.stage === 'biblioteca'
-  ? 'Va directo a biblioteca. Mientras lo revisan, no podrá editarlo.'
-  : 'Lo revisa coordinación y después biblioteca. Mientras lo revisan, no podrá editarlo.');
+  ? 'Pasa directo a biblioteca. No podrá editarlo mientras tanto.'
+  : 'Pasa a coordinación y luego a biblioteca. No podrá editarlo mientras tanto.');
 const mustSign = computed(() => syllabus.value?.teacher_signature_required === true);
 const submitLabel = computed(() => (mustSign.value ? 'Firmar y enviar' : 'Enviar'));
 const askSubmit = (): void => {
