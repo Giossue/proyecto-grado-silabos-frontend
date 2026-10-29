@@ -4,7 +4,7 @@ import { FileText, ImageIcon, Upload, X } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
 
-type FileKind = 'pdf' | 'png' | 'xlsx' | 'document';
+type FileKind = 'pdf' | 'png' | 'xlsx' | 'document' | 'certificate';
 
 const props = withDefaults(defineProps<{
   modelValue: File | null;
@@ -57,6 +57,18 @@ const copy = computed(() => props.kind === 'document' ? {
   chooseLabel: 'Cargar documentos PDF o Excel',
   removeLabel: 'Quitar documento',
   dropAnnouncement: 'Suelta los documentos para adjuntarlos.',
+} : props.kind === 'certificate' ? {
+  accept: '.p12,.pfx,application/x-pkcs12',
+  label: 'Firma',
+  invalid: 'Seleccione un archivo de firma (.p12 o .pfx).',
+  maxError: `El archivo no puede superar los ${formatLimit(props.maxBytes)}.`,
+  emptyTitle: 'Arrastra tu archivo de firma aquí',
+  selectedTitle: 'Firma seleccionada',
+  selectedDescription: 'Arrastra otro archivo o haz clic para reemplazarlo',
+  replaceLabel: 'Reemplazar archivo de firma seleccionado',
+  chooseLabel: 'Cargar archivo de firma',
+  removeLabel: 'Quitar archivo de firma',
+  dropAnnouncement: 'Suelta el archivo de firma para seleccionarlo.',
 } : props.kind === 'xlsx' ? {
   accept: '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   label: 'Excel',
@@ -103,6 +115,8 @@ const isValidFile = (file: File): boolean => {
   const name = file.name.toLowerCase();
   const isAccepted = props.kind === 'document'
     ? ['.pdf', '.xlsx', '.xls'].some((extension) => name.endsWith(extension))
+    : props.kind === 'certificate'
+    ? ['.p12', '.pfx'].some((extension) => name.endsWith(extension))
     : props.kind === 'png'
     ? name.endsWith('.png') || file.type === 'image/png'
     : props.kind === 'xlsx'

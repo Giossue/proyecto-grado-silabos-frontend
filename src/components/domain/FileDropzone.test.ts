@@ -26,6 +26,23 @@ describe('FileDropzone', () => {
     expect(wrapper.emitted('validation-error')?.[0]).toEqual([null]);
   });
 
+  it('acepta archivos de firma .p12 y .pfx y rechaza otros', async () => {
+    const wrapper = mount(FileDropzone, {
+      props: { modelValue: null, inputId: 'signature-certificate', kind: 'certificate' },
+    });
+
+    expect(wrapper.text()).toContain('Arrastra tu archivo de firma aquí');
+    expect(wrapper.get('input').attributes('accept')).toBe('.p12,.pfx,application/x-pkcs12');
+
+    const file = new File(['p12'], 'firma.p12');
+    await selectFile(wrapper, file);
+    expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([file]);
+
+    await selectFile(wrapper, new File(['pdf'], 'firma.pdf', { type: 'application/pdf' }));
+    expect(wrapper.emitted('update:modelValue')?.[1]).toEqual([null]);
+    expect(wrapper.emitted('validation-error')?.at(-1)).toEqual(['Seleccione un archivo de firma (.p12 o .pfx).']);
+  });
+
   it('rejects a non-PNG file in the PNG variant', async () => {
     const wrapper = mount(FileDropzone, {
       props: { modelValue: null, inputId: 'faculty-logo', kind: 'png' },

@@ -4,11 +4,11 @@ import { ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import type { SignaturePayload } from '@/api/signatures';
 import PasswordInput from '@/components/PasswordInput.vue';
+import FileDropzone from '@/components/domain/FileDropzone.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 
 export type StatementSigner = (statement: string) => SignaturePayload;
@@ -25,7 +25,6 @@ const certificate = ref<File | null>(null);
 const password = ref('');
 const working = ref(false);
 const errors = ref<{ certificate?: string; password?: string; general?: string }>({});
-const fileInput = ref<InstanceType<typeof Input> | null>(null);
 
 const CERTIFICATE_CODES = ['invalid_file', 'no_key', 'expired', 'not_yet_valid'];
 
@@ -34,12 +33,15 @@ watch(open, (value) => {
   certificate.value = null;
   password.value = '';
   errors.value = {};
-  fileInput.value?.clear();
 });
 
-const pickCertificate = (event: Event): void => {
-  certificate.value = (event.target as HTMLInputElement).files?.[0] ?? null;
+const pickCertificate = (file: File | null): void => {
+  certificate.value = file;
   errors.value = { ...errors.value, certificate: undefined };
+};
+
+const invalidCertificate = (message: string | null): void => {
+  if (message) errors.value = { ...errors.value, certificate: message };
 };
 
 const submit = async (): Promise<void> => {
@@ -86,7 +88,7 @@ const submit = async (): Promise<void> => {
       <form class="flex flex-col gap-4" data-testid="signature-form" @submit.prevent="submit">
         <Field :data-invalid="Boolean(errors.certificate)">
           <FieldLabel for="signature-certificate" required>Archivo de firma (.p12 o .pfx)</FieldLabel>
-          <Input id="signature-certificate" ref="fileInput" type="file" accept=".p12,.pfx,application/x-pkcs12" :aria-invalid="Boolean(errors.certificate)" @change="pickCertificate" />
+          <FileDropzone :model-value="certificate" input-id="signature-certificate" kind="certificate" :max-bytes="5 * 1024 * 1024" :disabled="working" :invalid="Boolean(errors.certificate)" @update:model-value="pickCertificate" @validation-error="invalidCertificate" />
           <FieldError v-if="errors.certificate" :errors="[errors.certificate]" />
         </Field>
         <Field :data-invalid="Boolean(errors.password)">
