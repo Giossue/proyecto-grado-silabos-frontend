@@ -150,7 +150,7 @@ const submit = async (): Promise<void> => {
                     </FieldSet>
                     </Transition>
                     </div>
-                    <SheetFooter class="absolute inset-x-0 bottom-0 border-t bg-card pb-(--safe-footer-inset)">
+                    <SheetFooter class="absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
                         <Field orientation="horizontal" class="justify-end">
                             <Button v-if="step === 1" type="button" variant="outline" @click="close">Cancelar</Button>
                             <Button v-else type="button" variant="outline" @click="goTo(1)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>

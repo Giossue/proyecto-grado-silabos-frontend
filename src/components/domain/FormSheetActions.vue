@@ -27,7 +27,7 @@ withDefaults(
 
 <template>
     <SheetFooter
-        class="absolute inset-x-0 bottom-0 border-t bg-card pb-(--safe-footer-inset)"
+        class="absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)"
     >
         <Field orientation="horizontal" class="justify-end">
             <Button type="button" variant="outline" @click="close">

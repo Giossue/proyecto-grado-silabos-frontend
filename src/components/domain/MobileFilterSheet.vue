@@ -121,13 +121,11 @@ onBeforeUnmount(() => {
             <slot />
         </div>
 
-        <Button
-            type="button"
-            class="mt-2 w-full shrink-0 sm:hidden"
-            @click="close"
-        >
-            <Check data-icon="inline-start" aria-hidden="true" />
-            Ver resultados
-        </Button>
+        <div class="-mx-4 shrink-0 border-t px-4 pt-4 sm:hidden">
+            <Button type="button" class="w-full" @click="close">
+                <Check data-icon="inline-start" aria-hidden="true" />
+                Ver resultados
+            </Button>
+        </div>
     </div>
 </template>

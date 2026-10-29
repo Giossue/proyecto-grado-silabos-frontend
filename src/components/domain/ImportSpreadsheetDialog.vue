@@ -7,7 +7,7 @@ import { downloadImportTemplate, sendImport, type ImportKind, type ImportResult 
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -79,11 +79,11 @@ const download = async (): Promise<void> => {
                                 </TableBody>
                             </Table>
                         </template>
-                        <div class="flex flex-wrap justify-end gap-2">
+                        <DialogFooter>
                             <Button type="button" variant="outline" :disabled="processing" @click="open = false">Cancelar</Button>
                             <Button v-if="result?.valid" type="button" variant="success" :disabled="processing" @click="run(true)"><Spinner v-if="processing" data-icon="inline-start" /><Upload v-else data-icon="inline-start" aria-hidden="true" />Importar</Button>
                             <Button v-else type="button" :disabled="!file || processing" @click="run(false)"><Spinner v-if="processing" data-icon="inline-start" />Revisar</Button>
-                        </div>
+                        </DialogFooter>
                     </div>
                 </div>
             </ScrollArea>

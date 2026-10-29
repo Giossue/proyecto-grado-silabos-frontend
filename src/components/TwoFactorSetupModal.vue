@@ -7,6 +7,7 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
+    DialogFooter,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
@@ -64,28 +65,28 @@ const qrImage = computed(() => `data:image/svg+xml;utf8,${encodeURIComponent(pro
                         <div v-if="!qrCodeSvg" class="size-full" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando código QR"><span class="sr-only">Cargando código QR…</span><Skeleton aria-hidden="true" class="size-full" /></div>
                         <img v-else :src="qrImage" alt="Código QR para su aplicación autenticadora" class="size-full object-contain">
                     </div>
-                    <div class="flex w-full items-center gap-2">
-                        <Button type="button" variant="outline" class="flex-1" @click="isOpen = false">Cancelar</Button>
-                        <Button type="button" class="flex-1" :disabled="!qrCodeSvg" @click="verification = true">
-                            <Check data-icon="inline-start" aria-hidden="true" />Continuar
-                        </Button>
-                    </div>
                 </template>
-                <form v-else class="flex w-full flex-col gap-4" @submit.prevent="submit">
+                <form v-else id="two-factor-verify-form" class="flex w-full flex-col gap-4" @submit.prevent="submit">
                     <div class="flex w-full flex-col items-center justify-center gap-3 py-2">
                         <Label for="otp" required>Código de autenticación</Label>
                         <InputOTP id="otp" v-model="code" :maxlength="6" :disabled="processing" aria-required="true">
                             <InputOTPGroup><InputOTPSlot v-for="index in 6" :key="index" :index="index - 1" /></InputOTPGroup>
                         </InputOTP>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <Button type="button" variant="outline" class="flex-1" :disabled="processing" @click="verification = false">Volver</Button>
-                        <Button type="submit" class="flex-1" :disabled="processing || code.length < 6">
-                            <Spinner v-if="processing" /><Check v-else data-icon="inline-start" aria-hidden="true" />Confirmar
-                        </Button>
-                    </div>
                 </form>
             </div>
+            <DialogFooter v-if="!verification">
+                <Button type="button" variant="outline" @click="isOpen = false">Cancelar</Button>
+                <Button type="button" :disabled="!qrCodeSvg" @click="verification = true">
+                    <Check data-icon="inline-start" aria-hidden="true" />Continuar
+                </Button>
+            </DialogFooter>
+            <DialogFooter v-else>
+                <Button type="button" variant="outline" :disabled="processing" @click="verification = false">Volver</Button>
+                <Button type="submit" form="two-factor-verify-form" :disabled="processing || code.length < 6">
+                    <Spinner v-if="processing" /><Check v-else data-icon="inline-start" aria-hidden="true" />Confirmar
+                </Button>
+            </DialogFooter>
         </DialogContent>
     </Dialog>
 </template>

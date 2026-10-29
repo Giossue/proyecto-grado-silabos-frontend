@@ -8,6 +8,7 @@ import FormDialog from "@/components/domain/FormDialog.vue";
 import TeacherSelect from "@/components/domain/academic/TeacherSelect.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { FieldGroup } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -245,7 +246,7 @@ watch(open, (value) => value && reset());
               </Table>
             </div>
           </section>
-          <div class="flex justify-end"><Button type="button" variant="outline" @click="close">Cerrar</Button></div>
+          <DialogFooter><Button type="button" variant="outline" @click="close">Cerrar</Button></DialogFooter>
         </FieldGroup>
       </div>
     </template>

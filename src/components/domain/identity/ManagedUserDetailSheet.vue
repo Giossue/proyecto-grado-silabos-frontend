@@ -145,7 +145,7 @@ const currentAssignments = computed(() =>
                 <SheetActions :actions="actions" :menu-label="`Acciones para ${props.user.nombre}`" @select="runAction" />
             </div>
 
-            <SheetFooter v-if="!editing" class="absolute inset-x-0 bottom-0 border-t bg-card pb-(--safe-footer-inset)">
+            <SheetFooter v-if="!editing" class="absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
                 <Field orientation="horizontal" class="justify-end">
                     <Button type="button" variant="outline" @click="open = false">Cerrar</Button>
                     <Button v-if="canEdit" type="button" @click="editing = true">
