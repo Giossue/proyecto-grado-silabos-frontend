@@ -251,7 +251,7 @@ describe("CoordinationReviewDetailPage", () => {
     expect(wrapper.text()).toContain("Reintentar");
 
     vi.mocked(getReview).mockResolvedValueOnce(detail());
-    await wrapper.get("button").trigger("click");
+    await wrapper.findAll("button").find((button) => button.text().includes("Reintentar"))!.trigger("click");
     await flushPromises();
 
     expect(getReview).toHaveBeenCalledTimes(2);

@@ -4,6 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { approveReview, getReview, requestCorrection, reviewStageLabel, type ReviewDetail } from '@/api/reviews';
+import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -106,8 +107,12 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame v-if="data && !loadError" :title="data.syllabus.subject" :description="`${data.syllabus.code} · ${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
-    <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="area.reviews"><ArrowLeft aria-hidden="true" />Volver a la cola</RouterLink></Button></template>
+  <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-surface backdrop-blur sm:px-5" aria-label="Herramientas de la revisión">
+    <Button variant="link" size="sm" class="h-auto px-0" as-child><RouterLink :to="area.reviews"><ArrowLeft aria-hidden="true" />Volver a la cola</RouterLink></Button>
+    <span class="flex-1" />
+    <AppearanceToggle />
+  </header>
+  <PageFrame v-if="data && !loadError" header-class="syllabus-editor-header" hide-icon :title="data.syllabus.subject" :description="`${data.syllabus.code} · ${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
     <template #meta>
       <SyllabusStateBadge :state="data.syllabus.state" />
       <span v-if="data.syllabus.state === 'en_revision' && stageLabel" class="text-sm text-muted-foreground">{{ stageLabel }}</span>
