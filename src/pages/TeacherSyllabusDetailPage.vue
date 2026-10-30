@@ -103,9 +103,6 @@ const reviewComments = computed(() =>
     (left, right) => new Date(right.commented_at).getTime() - new Date(left.commented_at).getTime(),
   ),
 );
-const submitDescription = computed(() => syllabus.value?.state === 'correccion_solicitada' && reviewComments.value[0]?.stage === 'biblioteca'
-  ? 'Pasa directo a biblioteca. No podrá editarlo mientras tanto.'
-  : 'Pasa a coordinación y luego a biblioteca. No podrá editarlo mientras tanto.');
 const mustSign = computed(() => syllabus.value?.teacher_signature_required === true);
 const submitLabel = computed(() => (mustSign.value ? 'Firmar y enviar' : 'Enviar'));
 const askSubmit = (): void => {
@@ -542,10 +539,9 @@ onBeforeUnmount(() => {
     </template>
 
     <Dialog v-model:open="confirmSubmitOpen">
-      <DialogContent>
+      <DialogContent :aria-describedby="undefined">
         <DialogHeader>
           <DialogTitle>¿Enviar a revisión?</DialogTitle>
-          <DialogDescription>{{ submitDescription }}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>

@@ -638,7 +638,8 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(buttonNamed(wrapper, "Enviar")).toBeDefined();
     await buttonNamed(wrapper, "Enviar")!.trigger("click");
     await flushPromises();
-    expect(document.body.textContent).toContain("Pasa directo a biblioteca");
+    expect(document.body.textContent).toContain("¿Enviar a revisión?");
+    expect(document.body.textContent).not.toContain("Pasa directo a biblioteca");
     wrapper.unmount();
   });
 
