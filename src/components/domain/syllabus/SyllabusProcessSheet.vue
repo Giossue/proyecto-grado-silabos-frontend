@@ -6,8 +6,12 @@ import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Spinner } from '@/components/ui/spinner';
+import { useCountdown } from '@/composables/useCountdown';
 import { useInstitutionToday } from '@/composables/useInstitutionDate';
 
 type AcademicPeriod = { id: string; codigo: string; starts_on?: string; ends_on?: string };
@@ -28,6 +32,8 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false); const errors = ref<Record<string, string[]>>({});
+const confirmOpen = ref(false);
+const openingCountdown = useCountdown(confirmOpen);
 const form = ref({ period_id: '', starts_at: '', due_at: '' });
 watch(open, (value) => {
   if (value) {
@@ -42,8 +48,12 @@ watch(open, (value) => {
 const todayIso = useInstitutionToday();
 const periodEnd = computed(() => props.period?.ends_on?.slice(0, 10));
 const dueMinimum = computed(() => (form.value.starts_at > todayIso.value ? form.value.starts_at : todayIso.value));
+const askConfirmation = (): void => {
+  if (!props.disabled) confirmOpen.value = true;
+};
 const submit = async (): Promise<void> => {
   if (props.disabled) return;
+  confirmOpen.value = false;
   processing.value = true;
   errors.value = {};
   try {
@@ -68,7 +78,7 @@ const submit = async (): Promise<void> => {
     :show-trigger="display !== 'menu'"
   >
     <template #default="{ close }">
-      <form @submit.prevent="submit">
+      <form @submit.prevent="askConfirmation">
         <FieldGroup>
           <Field v-if="errors.process" data-invalid><FieldError :errors="errors.process" /></Field>
           <Field v-if="period">
@@ -99,6 +109,18 @@ const submit = async (): Promise<void> => {
           <FormSheetActions :close="close" :processing="processing" :icon="CalendarPlus" label="Abrir convocatoria" />
         </FieldGroup>
       </form>
+      <Dialog v-model:open="confirmOpen">
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Abrir convocatoria</DialogTitle>
+            <DialogDescription>Una vez abierta, sus fechas no se pueden editar. Los docentes conservarán lo que escribieron en el período anterior, salvo que la plantilla haya cambiado: en ese caso empiezan de cero.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
+            <Button type="button" :disabled="processing || openingCountdown > 0" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><CalendarPlus v-else data-icon="inline-start" aria-hidden="true" />{{ openingCountdown > 0 ? `Abrir convocatoria (${openingCountdown})` : 'Abrir convocatoria' }}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </template>
   </FormSheet>
 </template>
