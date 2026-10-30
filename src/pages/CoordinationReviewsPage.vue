@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StatusBadge from '@/components/domain/StatusBadge.vue';
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import { activateRow } from '@/lib/rowActivation';
 import { REVIEW_STATE_OPTIONS } from '@/lib/syllabusStates';
@@ -7,7 +8,7 @@ import { computed, onMounted, reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
-import { getReviews, reviewStageLabel, type ReviewsPage } from '@/api/reviews';
+import { getReviews, type ReviewsPage } from '@/api/reviews';
 import { getSession } from '@/api/session';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -94,7 +95,7 @@ onMounted(() => { void load(1, true); });
           <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters"><template #search><Field><FieldLabel for="review-search" class="sr-only">Buscar por asignatura o código</FieldLabel><Input id="review-search" v-model="filters.search" type="search" placeholder="Buscar por asignatura o código" /></Field></template><template #filters><Field><FieldLabel for="review-state" class="sr-only">Estado</FieldLabel><Select v-model="filters.state" name="state"><SelectTrigger id="review-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="option in REVIEW_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent></Select></Field></template></FilterToolbar></form>
         </CardContent></Card>
         <Table label="Revisiones de coordinación"><TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Docente</TableHead><TableHead class="text-center">Revisión</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader><TableBody>
-          <TableRow v-for="item in data.syllabi.data" :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(area.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(area.review(item.revision_id))" @keydown.space.self.prevent="router.push(area.review(item.revision_id))"><TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }} · {{ item.period }}</div></TableCell><TableCell>{{ item.teachers.join(', ') }}</TableCell><TableCell class="text-center">N.º {{ item.revision_number }}</TableCell><TableCell class="text-center"><SyllabusStateBadge :state="item.state" /><div v-if="item.stage" class="text-sm text-muted-foreground">{{ reviewStageLabel(item.stage) }}</div></TableCell></TableRow>
+          <TableRow v-for="item in data.syllabi.data" :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(area.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(area.review(item.revision_id))" @keydown.space.self.prevent="router.push(area.review(item.revision_id))"><TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }} · {{ item.period }}</div></TableCell><TableCell>{{ item.teachers.join(', ') }}</TableCell><TableCell class="text-center">N.º {{ item.revision_number }}</TableCell><TableCell class="text-center"><StatusBadge v-if="item.state === 'en_revision' && item.stage === 'coordinacion'" label="Por revisar" tone="warning" /><StatusBadge v-else-if="item.state === 'en_revision' && item.stage === 'biblioteca'" label="En biblioteca" tone="info" /><SyllabusStateBadge v-else :state="item.state" /></TableCell></TableRow>
           <TableEmpty v-if="data.syllabi.data.length === 0" :colspan="4">No hay expedientes para los filtros seleccionados.</TableEmpty>
         </TableBody></Table>
         <TablePagination :meta="data.syllabi" label="Paginación de expedientes en revisión" @update:page="load" />
