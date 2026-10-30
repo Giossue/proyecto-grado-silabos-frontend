@@ -13,6 +13,7 @@ export type UseClientFilterReturn<T> = {
     values: Record<string, Ref<string>>;
     items: ComputedRef<T[]>;
     active: ComputedRef<boolean>;
+    criteria: ComputedRef<string>;
     clear: () => void;
 };
 
@@ -67,6 +68,13 @@ export function useClientFilter<T>(
             Object.values(values).some((value) => value.value !== 'all'),
     );
 
+    const criteria = computed(() =>
+        JSON.stringify([
+            search.value,
+            Object.values(values).map((value) => value.value),
+        ]),
+    );
+
     const clear = (): void => {
         search.value = '';
 
@@ -75,6 +83,6 @@ export function useClientFilter<T>(
         }
     };
 
-    return { search, values, items, active, clear };
+    return { search, values, items, active, criteria, clear };
 }
 

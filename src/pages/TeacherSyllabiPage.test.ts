@@ -7,6 +7,7 @@ import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: router.push, replace: vi.fn() }),
+  useRoute: () => ({ query: {} }),
   RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
 }));
 

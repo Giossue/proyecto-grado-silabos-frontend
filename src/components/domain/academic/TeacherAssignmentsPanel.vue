@@ -39,10 +39,10 @@ const rows = computed<TeacherRow[]>(() => props.data.careerTeachers.map((teacher
 const statusOf = (item: TeacherRow): string => item.pending_activation
   ? "Pendiente"
   : "Activa";
-const filter = useClientFilter(() => rows.value, (item) => [item.name, item.email, statusOf(item)], {
+const filter = useClientFilter(() => rows.value, (item) => [item.name, item.email], {
   estado: { matches: (item, value) => value === "pending" ? item.pending_activation : !item.pending_activation },
 });
-const { items, meta, setPage } = useClientPagination(() => filter.items.value);
+const { items, meta, setPage } = useClientPagination(() => filter.items.value, 20, filter.criteria);
 const editing = ref<TeacherRow | null>(null);
 const sheetOpen = ref(false);
 const openEditor = (item: TeacherRow): void => { editing.value = item; sheetOpen.value = true; };

@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { FilterX } from '@lucide/vue';
-import { onBeforeUnmount, ref } from 'vue';
+import { onBeforeUnmount } from 'vue';
 import MobileFilterSheet from '@/components/domain/MobileFilterSheet.vue';
 import { Button } from '@/components/ui/button';
 import { FieldGroup } from '@/components/ui/field';
 
-const props = withDefaults(defineProps<{ delay?: number }>(), { delay: 400 });
+const props = withDefaults(defineProps<{ delay?: number; active: boolean }>(), { delay: 400 });
 const emit = defineEmits<{ clear: [] }>();
 let timer: ReturnType<typeof setTimeout> | null = null;
-const active = ref(false);
 
 const cancel = (): void => {
   if (timer !== null) clearTimeout(timer);
@@ -18,20 +17,12 @@ const cancel = (): void => {
 const formFor = (target: EventTarget | null): HTMLFormElement | null =>
   (target as HTMLElement | null)?.closest('form') ?? null;
 
-const recount = (target: EventTarget | null): void => {
-  const form = formFor(target);
-  if (!form) return;
-  active.value = Array.from(form.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input, select'))
-    .some((field) => !['', 'all'].includes(field.value));
-};
-
 const submit = (target: EventTarget | null): void => {
   cancel();
   formFor(target)?.requestSubmit();
 };
 
 const onInput = (event: Event): void => {
-  recount(event.target);
   cancel();
   const target = event.target;
   timer = setTimeout(() => submit(target), props.delay);
@@ -39,14 +30,12 @@ const onInput = (event: Event): void => {
 
 const onChange = (event: Event): void => {
   const target = event.target as HTMLElement | null;
-  recount(target);
   if (target instanceof HTMLInputElement && !['checkbox', 'radio'].includes(target.type)) return;
   submit(target);
 };
 
 const clear = (): void => {
   cancel();
-  active.value = false;
   emit('clear');
 };
 

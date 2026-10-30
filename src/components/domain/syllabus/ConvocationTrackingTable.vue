@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { syllabusStateLabel } from '@/lib/syllabusStates';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
 
@@ -22,10 +23,10 @@ const error = ref<string | null>(null);
 
 const syllabusFilter = useClientFilter(
   () => data.value?.convocation.syllabi ?? [],
-  (item) => [item.subject, item.code, item.state],
+  (item) => [item.subject, item.code, syllabusStateLabel(item.state)],
   { estado: { matches: (item, value) => item.state === value } },
 );
-const { items: syllabusPage, meta: syllabusMeta, setPage: setSyllabusPage } = useClientPagination(() => syllabusFilter.items.value);
+const { items: syllabusPage, meta: syllabusMeta, setPage: setSyllabusPage } = useClientPagination(() => syllabusFilter.items.value, 20, syllabusFilter.criteria);
 
 const load = async (): Promise<void> => {
   loading.value = true;

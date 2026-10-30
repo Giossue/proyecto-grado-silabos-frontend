@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import StatusBadge from '@/components/domain/StatusBadge.vue';
 import { activateRow } from '@/lib/rowActivation';
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getLibraryHistory, type LibraryHistoryPage } from '@/api/library';
@@ -18,6 +18,7 @@ import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableR
 import { rememberLibraryFaculty, savedLibraryFaculty } from '@/lib/libraryFaculty';
 import { LIBRARY_STATE_FILTERS, libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
+import { latestRequest } from '@/lib/latestRequest';
 
 const route = useRoute();
 const router = useRouter();
@@ -32,6 +33,8 @@ const filters = reactive({
   period: queryText(route.query.period) || 'all',
   who: route.query.mine === '1' ? 'mine' : 'all',
 });
+const filtersActive = computed(() => filters.q !== '' || filters.state !== 'all' || filters.faculty !== 'all' || filters.period !== 'all' || filters.who !== 'all');
+const requests = latestRequest();
 const initialPage = Number(queryText(route.query.page)) || 1;
 const stateOptions = Object.entries(LIBRARY_STATE_FILTERS).map(([value, label]) => ({ value, label }));
 
@@ -47,13 +50,17 @@ const syncUrl = (page: number): void => {
 };
 
 const load = async (page = 1): Promise<void> => {
+  const ticket = requests.begin();
   loading.value = true;
   error.value = null;
   try {
-    data.value = await getLibraryHistory({ q: filters.q, state: filters.state, faculty: filters.faculty, period: filters.period, mine: filters.who === 'mine', page });
+    const response = await getLibraryHistory({ q: filters.q, state: filters.state, faculty: filters.faculty, period: filters.period, mine: filters.who === 'mine', page });
+    if (!requests.isCurrent(ticket)) return;
+    data.value = response;
     rememberLibraryFaculty(filters.faculty);
     syncUrl(page);
   } catch (reason) {
+    if (!requests.isCurrent(ticket)) return;
     if (reason instanceof ApiError && reason.status === 422 && (filters.faculty !== 'all' || filters.period !== 'all')) {
       Object.assign(filters, { faculty: 'all', period: 'all' });
       rememberLibraryFaculty(filters.faculty);
@@ -62,7 +69,7 @@ const load = async (page = 1): Promise<void> => {
     }
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el historial de biblioteca.';
   } finally {
-    loading.value = false;
+    if (requests.isCurrent(ticket)) loading.value = false;
   }
 };
 
@@ -80,11 +87,11 @@ onMounted(() => { void load(initialPage); });
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="4" :actions="false" />
     <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
         <form @submit.prevent="load()">
-          <FilterToolbar @clear="clearFilters">
+          <FilterToolbar :active="filtersActive" @clear="clearFilters">
             <template #search>
               <Field>
-                <FieldLabel for="library-history-search" class="sr-only">Buscar por asignatura o código</FieldLabel>
-                <Input id="library-history-search" v-model="filters.q" type="search" placeholder="Buscar por asignatura o código" />
+                <FieldLabel for="library-history-search" class="sr-only">Buscar por asignatura, código, carrera o docente</FieldLabel>
+                <Input id="library-history-search" v-model="filters.q" type="search" maxlength="120" placeholder="Buscar por asignatura, código, carrera o docente" />
               </Field>
             </template>
             <template #filters>

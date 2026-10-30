@@ -99,7 +99,7 @@ const {
     items: facultyPage,
     meta: facultyMeta,
     setPage: setFacultyPage,
-} = useClientPagination(() => facultyFilter.items.value);
+} = useClientPagination(() => facultyFilter.items.value, 20, facultyFilter.criteria);
 const careerFilter = useClientFilter(
     () => props.catalogs.careers,
     (item) => [item.name],
@@ -117,7 +117,7 @@ const {
     items: careerPage,
     meta: careerMeta,
     setPage: setCareerPage,
-} = useClientPagination(() => careerFilter.items.value);
+} = useClientPagination(() => careerFilter.items.value, 20, careerFilter.criteria);
 </script>
 
 <template>

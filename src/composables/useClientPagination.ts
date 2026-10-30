@@ -12,6 +12,7 @@ type ClientPagination<T> = {
 export function useClientPagination<T>(
     source: MaybeRefOrGetter<T[]>,
     requestedPageSize = 20,
+    resetOn?: MaybeRefOrGetter<unknown>,
 ): ClientPagination<T> {
     const pageSize = Math.max(1, requestedPageSize);
     const currentPage = ref(1);
@@ -25,6 +26,15 @@ export function useClientPagination<T>(
     };
 
     watch(lastPage, () => setPage(currentPage.value));
+
+    if (resetOn !== undefined) {
+        watch(
+            () => toValue(resetOn),
+            () => {
+                currentPage.value = 1;
+            },
+        );
+    }
 
     const items = computed(() => {
         const start = (currentPage.value - 1) * pageSize;

@@ -54,7 +54,7 @@ const shiftOptions = computed(() => [...new Map(periodRows.value.flatMap((item) 
   shiftKey(parallel.shift),
   { value: shiftKey(parallel.shift), label: shiftLabel(parallel.shift, props.data.options.shiftOptions) },
 ])).values()].sort((a, b) => a.label.localeCompare(b.label, "es")));
-const { items, meta, setPage } = useClientPagination(() => filter.items.value);
+const { items, meta, setPage } = useClientPagination(() => filter.items.value, 20, filter.criteria);
 const canPlan = (item: ScheduledRow): boolean => item.editable;
 const planningId = ref<string | null>(null);
 const planningOpen = ref(false);

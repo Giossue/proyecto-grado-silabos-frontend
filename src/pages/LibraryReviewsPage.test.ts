@@ -89,7 +89,7 @@ describe('LibraryReviewsPage', () => {
     expect(replace).toHaveBeenCalledWith({ query: { state: 'pendiente' } });
     const row = wrapper.findAll('tbody tr')[0]!;
     const headers = wrapper.findAll('thead th').map((header) => header.text());
-    expect(wrapper.get('#library-search').attributes('placeholder')).toBe('Buscar por asignatura o código');
+    expect(wrapper.get('#library-search').attributes('placeholder')).toBe('Buscar por asignatura, código, carrera o docente');
     expect(headers).toEqual(['Carrera', 'Docente', 'Estado']);
     expect(row.text()).not.toContain('SW-601');
     expect(row.text()).toContain('Software');

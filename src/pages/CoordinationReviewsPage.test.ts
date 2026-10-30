@@ -10,6 +10,7 @@ import { getSession } from '@/api/session';
 
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useRoute: () => ({ query: {} }),
   RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
 }));
 vi.mock('@/api/session', () => ({ getSession: vi.fn() }));

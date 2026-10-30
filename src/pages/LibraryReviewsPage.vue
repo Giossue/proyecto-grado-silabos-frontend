@@ -22,6 +22,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LIBRARY_STATE_FILTERS, libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
+import { latestRequest } from '@/lib/latestRequest';
 import { rememberLibraryFaculty, savedLibraryFaculty } from '@/lib/libraryFaculty';
 
 const route = useRoute();
@@ -36,6 +37,8 @@ const filters = reactive({
   state: queryText(route.query.state) || 'all',
   faculty: queryText(route.query.faculty) || savedLibraryFaculty() || 'all',
 });
+const filtersActive = computed(() => filters.q !== '' || filters.state !== 'all' || filters.faculty !== 'all');
+const requests = latestRequest();
 const initialPage = Number(queryText(route.query.page)) || 1;
 const stateOptions = Object.entries(LIBRARY_STATE_FILTERS).map(([value, label]) => ({ value, label }));
 const periods = computed(() => [...new Set((data.value?.reviews.data ?? []).map((item) => item.period))]);
@@ -50,6 +53,7 @@ const syncUrl = (page: number): void => {
 };
 
 const load = async (page = 1, withSummary = false): Promise<void> => {
+  const ticket = requests.begin();
   loading.value = true;
   error.value = null;
   try {
@@ -57,11 +61,13 @@ const load = async (page = 1, withSummary = false): Promise<void> => {
       getLibraryReviews({ q: filters.q, state: filters.state, faculty: filters.faculty, page }),
       withSummary ? getDashboard().catch(() => null) : summary.value,
     ]);
+    if (!requests.isCurrent(ticket)) return;
     data.value = reviews;
     summary.value = dashboard;
     rememberLibraryFaculty(filters.faculty);
     syncUrl(page);
   } catch (reason) {
+    if (!requests.isCurrent(ticket)) return;
     if (reason instanceof ApiError && reason.status === 422 && filters.faculty !== 'all') {
       filters.faculty = 'all';
       rememberLibraryFaculty(filters.faculty);
@@ -70,7 +76,7 @@ const load = async (page = 1, withSummary = false): Promise<void> => {
     }
     error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las revisiones de biblioteca.';
   } finally {
-    loading.value = false;
+    if (requests.isCurrent(ticket)) loading.value = false;
   }
 };
 
@@ -91,11 +97,11 @@ onMounted(() => { void load(initialPage, true); });
     <MetricTiles v-if="data && summary?.metrics.length" :metrics="summary.metrics" />
     <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
         <form @submit.prevent="load()">
-          <FilterToolbar @clear="clearFilters">
+          <FilterToolbar :active="filtersActive" @clear="clearFilters">
             <template #search>
               <Field>
-                <FieldLabel for="library-search" class="sr-only">Buscar por asignatura o código</FieldLabel>
-                <Input id="library-search" v-model="filters.q" type="search" placeholder="Buscar por asignatura o código" />
+                <FieldLabel for="library-search" class="sr-only">Buscar por asignatura, código, carrera o docente</FieldLabel>
+                <Input id="library-search" v-model="filters.q" type="search" maxlength="120" placeholder="Buscar por asignatura, código, carrera o docente" />
               </Field>
             </template>
             <template #filters>

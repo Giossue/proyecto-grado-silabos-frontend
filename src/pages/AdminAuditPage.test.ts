@@ -7,7 +7,7 @@ import AdminAuditPage from '@/pages/AdminAuditPage.vue';
 vi.mock('vue-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
   useRouter: () => ({ replace: vi.fn() }),
-  useRoute: () => ({ fullPath: '/admin/auditoria' }),
+  useRoute: () => ({ fullPath: '/admin/auditoria', query: {} }),
 }));
 
 vi.mock('@/api/session', () => ({ getSession: vi.fn() }));

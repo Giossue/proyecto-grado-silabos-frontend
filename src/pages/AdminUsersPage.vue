@@ -21,6 +21,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { activateRow } from '@/lib/rowActivation';
+import { latestRequest } from '@/lib/latestRequest';
+import { queryPage, queryText, syncFilters } from '@/lib/urlFilters';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -29,7 +31,9 @@ const route = useRoute();
 const currentUserId = ref<string | null>(null);
 const result = ref<ManagedUsersResponse | null>(null);
 const error = ref<string | null>(null); const loading = ref(true);
-const q = ref(typeof route.query.q === 'string' ? route.query.q : ''); const status = ref('all'); const role = ref('all'); const career = ref('all');
+const q = ref(queryText(route.query.q)); const status = ref(queryText(route.query.status) || 'all'); const role = ref(queryText(route.query.role) || 'all'); const career = ref(queryText(route.query.career) || 'all');
+const filtersActive = computed(() => q.value !== '' || status.value !== 'all' || role.value !== 'all' || career.value !== 'all');
+const requests = latestRequest();
 const statusTone = (user: ManagedUser): StatusTone => {
     if (!user.active) return 'neutral';
     return user.pending_activation ? 'warning' : 'success';
@@ -42,14 +46,19 @@ const statusOf = (user: ManagedUser): string => {
 const careerOf = (role: ManagedUser['roles'][number]): string =>
     role.code === 'administrador' ? '-' : (role.career_name ?? 'Todas las carreras');
 const load = async (page = 1): Promise<void> => {
+    const ticket = requests.begin();
     loading.value = true; error.value = null;
     try {
         const session = await getSession();
+        if (!requests.isCurrent(ticket)) return;
         if (session.active_role?.code !== 'administrador') { await router.replace(paths.dashboard); return; }
         currentUserId.value = session.user.id;
-        result.value = await getManagedUsers({ q: q.value, status: status.value, role: role.value, career: career.value, page });
-    } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los usuarios.'; }
-    finally { loading.value = false; }
+        const response = await getManagedUsers({ q: q.value, status: status.value, role: role.value, career: career.value, page });
+        if (!requests.isCurrent(ticket)) return;
+        result.value = response;
+        syncFilters(router, { q: q.value, status: status.value, role: role.value, career: career.value }, page);
+    } catch (reason) { if (requests.isCurrent(ticket)) error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los usuarios.'; }
+    finally { if (requests.isCurrent(ticket)) loading.value = false; }
 };
 const viewing = ref<ManagedUser | null>(null);
 const viewOpen = ref(false);
@@ -61,7 +70,7 @@ const resendOpen = dialogOpen('resend');
 const deleteOpen = dialogOpen('delete');
 const changed = async (notice: string): Promise<void> => { toast.success(notice); await load(); };
 const clearFilters = (): void => { q.value = ''; status.value = 'all'; role.value = 'all'; career.value = 'all'; void load(); };
-onMounted(load);
+onMounted(() => { void load(queryPage(route.query.page)); });
 </script>
 
 <template>
@@ -71,8 +80,8 @@ onMounted(load);
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="4" :filters="3" :actions="false" :cell-lines="[2, 1, 1, 1]" />
 
         <div v-if="result" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
-            <form @submit.prevent="load()"><FilterToolbar @clear="clearFilters">
-                <template #search><Field><FieldLabel for="users-search" class="sr-only">Buscar por nombre o correo</FieldLabel><Input id="users-search" v-model="q" type="search" placeholder="Buscar por nombre o correo" /></Field></template>
+            <form @submit.prevent="load()"><FilterToolbar :active="filtersActive" @clear="clearFilters">
+                <template #search><Field><FieldLabel for="users-search" class="sr-only">Buscar por nombre o correo</FieldLabel><Input id="users-search" v-model="q" type="search" maxlength="120" placeholder="Buscar por nombre o correo" /></Field></template>
                 <template #filters>
                     <Field><FieldLabel for="users-role" class="sr-only">Rol</FieldLabel><Select v-model="role" name="role"><SelectTrigger id="users-role"><SelectValue placeholder="Todos los roles" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los roles</SelectItem><SelectItem v-for="item in result.roles" :key="item.codigo" :value="item.codigo">{{ item.nombre }}</SelectItem></SelectGroup></SelectContent></Select></Field>
                     <Field><FieldLabel for="users-career" class="sr-only">Carrera</FieldLabel><Select v-model="career" name="career"><SelectTrigger id="users-career"><SelectValue placeholder="Todas las carreras" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todas las carreras</SelectItem><SelectItem v-for="item in result.careers" :key="item.id" :value="item.id">{{ item.nombre }}</SelectItem></SelectGroup></SelectContent></Select></Field>
