@@ -3,6 +3,7 @@ import { Menu } from '@lucide/vue';
 import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
 import logo from '@/assets/logo-ueb-horizontal.webp';
+import logoLight from '@/assets/logo-ueb-horizontal-claro.webp';
 import AccessibilityDialog from '@/components/AccessibilityDialog.vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import NavUser from '@/components/NavUser.vue';
@@ -31,7 +32,8 @@ const homeHref = computed(() => toUrl(navItems.value[0]?.href ?? '/panel'));
     >
         <div class="flex min-w-0 flex-1 items-center gap-2 max-sm:contents">
             <RouterLink v-if="!sidebar" :to="homeHref" class="flex items-center max-sm:hidden" aria-label="Ir al inicio">
-                <img :src="logo" width="600" height="164" decoding="async" alt="Universidad Estatal de Bolívar" class="h-9 w-auto" />
+                <img :src="logoLight" width="600" height="164" decoding="async" alt="Universidad Estatal de Bolívar" class="h-9 w-auto dark:hidden" />
+                <img :src="logo" width="600" height="164" decoding="async" alt="" aria-hidden="true" class="hidden h-9 w-auto dark:block" />
             </RouterLink>
             <SidebarTrigger v-if="sidebar" class="-ml-1 max-sm:hidden" />
             <Button v-if="sidebar" type="button" variant="ghost" class="h-12 min-w-16 flex-col gap-0.5 px-3 order-3 sm:hidden" aria-label="Abrir el menú" @click="toggleSidebar">
