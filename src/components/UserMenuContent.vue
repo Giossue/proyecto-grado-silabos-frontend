@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { LogOut, Moon, PersonStanding, Settings, Sun } from '@lucide/vue';
+import { Building2, Download, LogOut, Moon, PersonStanding, Settings, Sun } from '@lucide/vue';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import {
@@ -10,6 +10,9 @@ import {
 import UserInfo from '@/components/UserInfo.vue';
 import { logout } from '@/api/session';
 import { useAppearance } from '@/composables/useAppearance';
+import { useShowsSidebar } from '@/composables/useShowsSidebar';
+import { installAppState } from '@/state/installApp';
+import { installAppOpen, scopeSwitcherOpen } from '@/state/shellDialogs';
 import { accessibilityDialogOpen } from '@/state/accessibilityDialog';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
@@ -21,6 +24,9 @@ defineProps<{ user: User }>();
 const router = useRouter();
 const { appearance, updateAppearance } = useAppearance();
 const dark = computed(() => appearance.value === 'dark');
+const showsSidebar = useShowsSidebar();
+const canSwitchScope = computed(() => (sessionState.current.value?.available_roles.length ?? 0) > 1);
+const { installed } = installAppState;
 const settingsHref = computed(() => {
     const code = sessionState.current.value?.active_role?.code;
     return code ? roleSetting(code, 'profile') : null;
@@ -45,6 +51,14 @@ const handleLogout = async (): Promise<void> => {
             <Settings data-icon="inline-start" aria-hidden="true" />
             Configuración
         </RouterLink>
+    </DropdownMenuItem>
+    <DropdownMenuItem v-if="!showsSidebar && canSwitchScope" data-test="switch-scope" @select="scopeSwitcherOpen = true">
+        <Building2 data-icon="inline-start" aria-hidden="true" />
+        Cambiar carrera o rol
+    </DropdownMenuItem>
+    <DropdownMenuItem v-if="!showsSidebar && !installed" class="sm:hidden" data-test="install-app" @select="installAppOpen = true">
+        <Download data-icon="inline-start" aria-hidden="true" />
+        Instalar aplicación
     </DropdownMenuItem>
     <DropdownMenuItem class="sm:hidden" @select="updateAppearance(dark ? 'light' : 'dark')">
         <Sun v-if="dark" data-icon="inline-start" aria-hidden="true" />

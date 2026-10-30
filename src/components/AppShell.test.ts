@@ -123,7 +123,7 @@ describe('AppSidebarLayout', () => {
     expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
   });
 
-  it('muestra a Biblioteca solo su bandeja, sin carrera', async () => {
+  it('a Biblioteca no le muestra menú lateral y pone el logo en el encabezado', async () => {
     sessionState.replace({
       ...administratorSession,
       active_role: { id: 'role-bibliotecario', code: 'bibliotecario', career_id: null, career_name: null },
@@ -131,31 +131,25 @@ describe('AppSidebarLayout', () => {
     const wrapper = await mountShell();
     await flushPromises();
 
-    const sidebar = wrapper.find('[data-sidebar="sidebar"]');
-    expect(sidebar.findAll('[data-sidebar="content"] a').map((link) => link.text())).toEqual(['Revisiones de biblioteca']);
-    expect(sidebar.get('a[href="/biblioteca/revisiones"]').text()).toContain('Revisiones de biblioteca');
-    expect(sidebar.find('a[href="/biblioteca/configuracion/perfil"]').exists()).toBe(false);
-    expect(sidebar.text()).not.toContain('Mis sílabos');
-    expect(sidebar.text()).not.toContain('Usuarios y roles');
+    expect(wrapper.find('[data-sidebar="sidebar"]').exists()).toBe(false);
+    expect(wrapper.find('[data-sidebar="trigger"]').exists()).toBe(false);
+    expect(wrapper.get('header a[aria-label="Ir al inicio"]').attributes('href')).toBe('/biblioteca/revisiones');
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Bibliotecario');
   });
 
-  it('ofrece instalar la aplicación solo en móvil', async () => {
-    vi.stubGlobal('matchMedia', (query: string) => ({ matches: true, media: query, addEventListener: vi.fn(), removeEventListener: vi.fn(), addListener: vi.fn(), removeListener: vi.fn() }));
+  it('sin menú lateral ofrece instalar la aplicación desde el menú de usuario en móvil', async () => {
     sessionState.replace({
       ...administratorSession,
       active_role: { id: 'role-docente', code: 'docente', career_id: 'career-1', career_name: 'Software' },
     });
     const wrapper = await mountShell();
-    await flushPromises();
-    wrapper.get('[data-sidebar="trigger"]').trigger('click');
+    await wrapper.get('header [aria-label="Menú de usuario"]').trigger('click');
     await flushPromises();
 
     expect(document.body.querySelector('[data-test="install-app"]')?.textContent?.trim()).toBe('Instalar aplicación');
-    vi.unstubAllGlobals();
   });
 
-  it('muestra solo Mis sílabos para docente', async () => {
+  it('al docente no le muestra menú lateral y le deja cambiar de rol desde el menú de usuario', async () => {
     sessionState.replace({
       ...administratorSession,
       active_role: { id: 'role-docente', code: 'docente', career_id: 'career-1', career_name: 'Software' },
@@ -163,14 +157,16 @@ describe('AppSidebarLayout', () => {
     const wrapper = await mountShell();
     await flushPromises();
 
-    const sidebar = wrapper.find('[data-sidebar="sidebar"]');
-    expect(sidebar.findAll('[data-sidebar="content"] a').map((link) => link.text())).toEqual(['Mis sílabos']);
-    expect(sidebar.find('[data-test="install-app"]').exists()).toBe(false);
-    expect(sidebar.get('a[href="/docente/mis-silabos"]').text()).toContain('Mis sílabos');
-    expect(sidebar.text()).not.toContain('Historial');
-    expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Software');
+    expect(wrapper.find('[data-sidebar="sidebar"]').exists()).toBe(false);
+    expect(wrapper.get('header a[aria-label="Ir al inicio"]').attributes('href')).toBe('/docente/mis-silabos');
     expect(wrapper.find('header [role="progressbar"]').exists()).toBe(false);
-    expect(wrapper.find('[aria-label="Asistente curricular"]').exists()).toBe(false);
+
+    await wrapper.get('header [aria-label="Menú de usuario"]').trigger('click');
+    await flushPromises();
+    document.body.querySelector<HTMLElement>('[data-test="switch-scope"]')!.click();
+    await flushPromises();
+
+    expect(document.body.textContent).toContain('Software');
   });
 
   it('permite alternar el tema y conserva la preferencia', async () => {
