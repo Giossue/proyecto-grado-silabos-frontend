@@ -21,4 +21,5 @@ const Rendered = (rendered: { node: NonNullable<typeof document.value> }) => ren
 .free-text-content :deep(.free-text-table) { border-collapse: collapse; margin: 0.35em 0; width: 100%; }
 .free-text-content :deep(.free-text-table td),
 .free-text-content :deep(.free-text-table th) { border: 1px solid var(--document-table-border); padding: 0.25rem 0.5rem; vertical-align: top; }
+.dark .free-text-content:not(.template-sheet .free-text-content) :deep(.free-text-table :is(td, th)[style*='background']) { color: var(--document-editor-foreground); }
 </style>
