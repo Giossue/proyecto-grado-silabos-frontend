@@ -11,7 +11,7 @@ const statement = 'silabos-ueb|silabo:s1|accion:aprobacion_coordinacion|huella:a
 
 const mountDialog = (run: (sign: StatementSigner) => Promise<void>) => mount(SignatureDialog, {
   attachTo: document.body,
-  props: { open: true, title: 'Firmar y enviar a biblioteca', description: 'Biblioteca revisará la bibliografía.', confirmLabel: 'Firmar y enviar', run },
+  props: { open: true, title: 'Firmar y enviar a biblioteca', confirmLabel: 'Firmar y enviar', run },
 });
 
 const dialogText = (): string => document.querySelector('[role="dialog"]')?.textContent ?? '';

@@ -162,7 +162,7 @@ onMounted(load);
         </form>
       </DialogContent>
     </Dialog>
-    <SignatureDialog v-model:open="signOpen" title="Firmar y aprobar" description="El sílabo queda aprobado." confirm-label="Firmar y aprobar" :run="approve" />
+    <SignatureDialog v-model:open="signOpen" title="Firmar y aprobar" confirm-label="Firmar y aprobar" :run="approve" />
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
   <LoadingSkeleton v-else-if="loading" variant="review" review-stage="library" />

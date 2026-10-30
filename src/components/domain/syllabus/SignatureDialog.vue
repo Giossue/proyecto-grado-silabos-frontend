@@ -15,7 +15,6 @@ export type StatementSigner = (statement: string) => SignaturePayload;
 
 const props = defineProps<{
   title: string;
-  description: string;
   confirmLabel: string;
   run: (sign: StatementSigner) => Promise<void>;
 }>();
@@ -83,7 +82,7 @@ const submit = async (): Promise<void> => {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>{{ title }}</DialogTitle>
-        <DialogDescription>{{ description }}</DialogDescription>
+        <DialogDescription class="flex items-center gap-2 rounded-md bg-muted/50 p-3"><ShieldCheck class="size-4 shrink-0 text-success" aria-hidden="true" />Su firma está protegida: nada sale de su equipo.</DialogDescription>
       </DialogHeader>
       <form class="flex flex-col gap-4" data-testid="signature-form" @submit.prevent="submit">
         <Field :data-invalid="Boolean(errors.certificate)">
@@ -96,7 +95,6 @@ const submit = async (): Promise<void> => {
           <PasswordInput id="signature-password" v-model="password" autocomplete="off" :aria-invalid="Boolean(errors.password)" />
           <FieldError v-if="errors.password" :errors="[errors.password]" />
         </Field>
-        <p class="flex items-center gap-2 rounded-md bg-muted/50 p-3 text-sm text-muted-foreground"><ShieldCheck class="size-4 shrink-0 text-success" aria-hidden="true" />Su firma está protegida: nada sale de su equipo.</p>
         <Alert v-if="errors.general" variant="destructive" role="alert"><AlertDescription>{{ errors.general }}</AlertDescription></Alert>
         <DialogFooter>
           <DialogClose as-child><Button type="button" variant="outline" :disabled="working">Cancelar</Button></DialogClose>

@@ -159,7 +159,7 @@ onMounted(load);
         </form>
       </DialogContent>
     </Dialog>
-    <SignatureDialog v-model:open="signOpen" title="Firmar y enviar a biblioteca" description="Biblioteca revisará la bibliografía." confirm-label="Firmar y enviar" :run="approve" />
+    <SignatureDialog v-model:open="signOpen" title="Firmar y enviar a biblioteca" confirm-label="Firmar y enviar" :run="approve" />
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
   <LoadingSkeleton v-else-if="loading" variant="review" review-stage="coordination" />

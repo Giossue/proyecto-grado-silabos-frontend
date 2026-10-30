@@ -554,7 +554,7 @@ onBeforeUnmount(() => {
       </DialogContent>
     </Dialog>
     <TeacherFormationDialog v-model:open="formationOpen" @saved="refreshAfterFormation" />
-    <SignatureDialog v-model:open="signOpen" title="Firmar y enviar" :description="submitDescription" confirm-label="Firmar y enviar" :run="submit" />
+    <SignatureDialog v-model:open="signOpen" title="Firmar y enviar" confirm-label="Firmar y enviar" :run="submit" />
     <Dialog :open="copySource !== null" @update:open="(open) => { if (!open) copySource = null; }">
       <DialogContent>
         <DialogHeader>
