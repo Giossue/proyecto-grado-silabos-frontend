@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, LockKeyhole, MoreHorizontal, Undo2 } from '@lucide/vue';
+import { ArrowLeft, FileSignature, History, LockKeyhole, MoreHorizontal, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -11,7 +11,6 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import ReviewHistorySheet from '@/components/domain/syllabus/ReviewHistorySheet.vue';
 import SignatureDialog, { type StatementSigner } from '@/components/domain/syllabus/SignatureDialog.vue';
-import SignaturesNote from '@/components/domain/syllabus/SignaturesNote.vue';
 import SyllabusDeleteDialog from '@/components/domain/syllabus/SyllabusDeleteDialog.vue';
 import SyllabusDocumentPreview, { type PreviewSection } from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
 import SyllabusResetDialog from '@/components/domain/syllabus/SyllabusResetDialog.vue';
@@ -22,6 +21,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { reviewAreaPaths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -112,14 +112,15 @@ onMounted(load);
     <span class="flex-1" />
     <AppearanceToggle />
   </header>
-  <PageFrame v-if="data && !loadError" header-class="syllabus-editor-header" hide-icon :title="data.syllabus.subject" :description="`${data.syllabus.code} · ${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
+  <PageFrame v-if="data && !loadError" header-class="syllabus-editor-header" hide-icon :title="data.syllabus.subject" :description="`${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
     <template #meta>
       <SyllabusStateBadge :state="data.syllabus.state" />
-      <span v-if="data.syllabus.state === 'en_revision' && stageLabel" class="text-sm text-muted-foreground">{{ stageLabel }}</span>
-      <SignaturesNote :signatures="data.signatures" />
     </template>
     <template #actions>
-      <Button type="button" variant="outline" @click="historyOpen = true">Historial</Button>
+      <TooltipProvider><Tooltip>
+        <TooltipTrigger as-child><Button type="button" variant="outline" size="icon" aria-label="Historial" @click="historyOpen = true"><History aria-hidden="true" /></Button></TooltipTrigger>
+        <TooltipContent>Historial</TooltipContent>
+      </Tooltip></TooltipProvider>
       <Button v-if="approvedCurrent" as-child variant="outline"><RouterLink :to="area.documents(data.revision.id)">Ver PDF</RouterLink></Button>
       <DropdownMenu v-if="canReset || canDelete">
         <DropdownMenuTrigger as-child><Button type="button" variant="outline" size="icon" aria-label="Más"><MoreHorizontal aria-hidden="true" /></Button></DropdownMenuTrigger>
@@ -131,7 +132,7 @@ onMounted(load);
         </DropdownMenuContent>
       </DropdownMenu>
       <Button v-if="canReviewCurrent" type="button" variant="outline" @click="openCorrection">Solicitar corrección</Button>
-      <Button v-if="canSign" type="button" @click="signOpen = true">Firmar y enviar a biblioteca</Button>
+      <Button v-if="canSign" type="button" @click="signOpen = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y enviar a biblioteca</Button>
     </template>
 
     <Alert v-if="!data.decisions_allowed"><LockKeyhole aria-hidden="true" /><AlertTitle>Convocatoria cerrada</AlertTitle><AlertDescription>Solo consulta.</AlertDescription></Alert>
@@ -167,5 +168,5 @@ onMounted(load);
     <SignatureDialog v-model:open="signOpen" title="Firmar y enviar a biblioteca" confirm-label="Firmar y enviar" :run="approve" />
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-  <LoadingSkeleton v-else-if="loading" variant="review" review-stage="coordination" />
+  <PageFrame v-else-if="loading" title="" description="" loading header-class="syllabus-editor-header" hide-icon><LoadingSkeleton variant="preview" /></PageFrame>
 </template>

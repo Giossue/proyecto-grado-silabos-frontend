@@ -29,6 +29,7 @@ type LoadingVariant =
     | 'workspace'
     | 'syllabus'
     | 'review'
+    | 'preview'
     | 'documents'
     | 'source'
     | 'template'
@@ -164,7 +165,7 @@ const tableProps = computed(() => ({
             <AcademicLoadingSkeleton v-else-if="variant === 'academic-structure'" :mode="mode" :rows="rows" />
 
             <DocumentLoadingSkeleton
-                v-else-if="variant === 'syllabus' || variant === 'review' || variant === 'template' || variant === 'comparison' || variant === 'documents'"
+                v-else-if="variant === 'syllabus' || variant === 'review' || variant === 'preview' || variant === 'template' || variant === 'comparison' || variant === 'documents'"
                 :variant="variant"
                 :rows="rows"
                 :review-stage="reviewStage"

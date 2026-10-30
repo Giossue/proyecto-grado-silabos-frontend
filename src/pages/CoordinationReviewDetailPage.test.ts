@@ -161,7 +161,8 @@ describe("CoordinationReviewDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Firmado por Docente Demo (docente)");
+    expect(wrapper.text()).not.toContain("Firmado por Docente Demo (docente)");
+    expect(wrapper.text()).not.toContain("SW-601");
     await headerButton(wrapper, "Firmar y enviar a biblioteca")!.trigger("click");
     await flushPromises();
     await fillSignatureDialog(makeTestP12("COORDINACION DEMO", "clave"), "clave");

@@ -12,7 +12,7 @@ defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(
     defineProps<{
-        variant: 'syllabus' | 'review' | 'template' | 'comparison' | 'documents';
+        variant: 'syllabus' | 'review' | 'preview' | 'template' | 'comparison' | 'documents';
         rows?: number;
         reviewStage?: 'coordination' | 'library';
     }>(),
@@ -65,6 +65,28 @@ const reviewPanels = computed(() =>
             </div>
         </div>
     </template>
+
+    <div v-else-if="variant === 'preview'" data-skeleton="preview-sheet" class="min-w-0 overflow-x-auto py-4">
+        <div class="template-sheet relative">
+            <div class="flex flex-col gap-6">
+                <div class="flex items-center justify-between gap-4">
+                    <Skeleton class="h-12 w-56 max-w-full" />
+                    <Skeleton class="h-12 w-16" />
+                </div>
+                <Skeleton class="mx-auto h-6 w-80 max-w-full" />
+                <Skeleton class="h-5 w-56 max-w-full" />
+                <div class="grid grid-cols-4 gap-1">
+                    <Skeleton v-for="cell in 16" :key="cell" class="h-8" />
+                </div>
+                <Skeleton class="h-5 w-48 max-w-full" />
+                <div class="flex flex-col gap-2">
+                    <Skeleton class="h-4 w-full" />
+                    <Skeleton class="h-4 w-5/6" />
+                    <Skeleton class="h-4 w-2/3" />
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div v-else-if="variant === 'review'" class="flex min-w-0 flex-col gap-6 p-4 sm:p-6">
         <header class="flex min-w-0 flex-col gap-2" data-skeleton="review-heading">

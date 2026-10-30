@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, BookCheck, CircleSlash, MessageSquareText } from '@lucide/vue';
+import { ArrowLeft, BookCheck, CircleSlash, FileSignature, MessageSquareText } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -117,7 +117,7 @@ onMounted(load);
     <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="paths.library.reviews"><ArrowLeft aria-hidden="true" />Volver a revisiones</RouterLink></Button></template>
     <template #actions>
       <Button v-if="review.can_comment" type="button" variant="outline" @click="openReturn">Devolver al docente</Button>
-      <Button v-if="canSign" type="button" @click="signOpen = true">Firmar y aprobar</Button>
+      <Button v-if="canSign" type="button" @click="signOpen = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
     </template>
 
     <Alert v-if="review.outcome === 'firmado'"><BookCheck aria-hidden="true" /><AlertTitle>Aprobado</AlertTitle><AlertDescription>Biblioteca firmó este sílabo.</AlertDescription></Alert>
