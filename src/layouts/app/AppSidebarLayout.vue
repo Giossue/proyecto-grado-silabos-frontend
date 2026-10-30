@@ -52,9 +52,7 @@ const showsSidebar = useShowsSidebar();
             <AccessibilityDialog v-if="!editorOpen" floating />
         </AppContent>
     </AppShell>
-    <template v-if="!showsSidebar">
-        <WorkScopeSwitcherSheet v-model:open="scopeSwitcherOpen" />
-        <InstallAppDialog v-model:open="installAppOpen" />
-    </template>
+    <WorkScopeSwitcherSheet v-model:open="scopeSwitcherOpen" />
+    <InstallAppDialog v-if="!showsSidebar" v-model:open="installAppOpen" />
     <Toaster />
 </template>

@@ -52,7 +52,7 @@ const handleLogout = async (): Promise<void> => {
             Configuración
         </RouterLink>
     </DropdownMenuItem>
-    <DropdownMenuItem v-if="!showsSidebar && canSwitchScope" data-test="switch-scope" @select="scopeSwitcherOpen = true">
+    <DropdownMenuItem v-if="canSwitchScope" data-test="switch-scope" @select="scopeSwitcherOpen = true">
         <Building2 data-icon="inline-start" aria-hidden="true" />
         Cambiar carrera o rol
     </DropdownMenuItem>

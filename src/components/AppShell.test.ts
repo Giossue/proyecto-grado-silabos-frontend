@@ -194,7 +194,7 @@ describe('AppSidebarLayout', () => {
     expect(wrapper.find('[data-sidebar="trigger"]').exists()).toBe(true);
   });
 
-  it('expone el cambio de ámbito desde el menú lateral', async () => {
+  it('expone el cambio de ámbito desde el menú de usuario y no desde el menú lateral', async () => {
     const wrapper = await mountShell();
     const accountButton = wrapper.get('header [aria-label="Menú de usuario"]');
     await accountButton.trigger('click');
@@ -204,9 +204,9 @@ describe('AppSidebarLayout', () => {
     const logoutItem = document.body.querySelector<HTMLElement>('[data-test="logout-button"]');
     expect(logoutItem?.classList.contains('block')).toBe(false);
     expect(logoutItem?.classList.contains('flex')).toBe(true);
-    expect(Array.from(document.body.querySelectorAll('[data-slot="dropdown-menu-item"]')).some((item) => item.textContent?.includes('Cambiar carrera o rol'))).toBe(false);
+    expect(wrapper.find('[data-sidebar="sidebar"] [data-test="switch-scope"]').exists()).toBe(false);
 
-    await wrapper.get('[data-test="switch-scope"]').trigger('click');
+    document.body.querySelector<HTMLElement>('[data-test="switch-scope"]')!.click();
     await flushPromises();
 
     expect(document.body.textContent).toContain('Software');
