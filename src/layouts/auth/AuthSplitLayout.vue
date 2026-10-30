@@ -37,6 +37,7 @@ defineProps<{
                 :src="campusBanner"
                 alt="Campus de la Universidad Estatal de Bolívar"
                 class="absolute inset-0 size-full object-cover"
+                fetchpriority="high"
                 decoding="async"
             />
             <div class="absolute inset-0 bg-brand-surface/70" aria-hidden="true" />
