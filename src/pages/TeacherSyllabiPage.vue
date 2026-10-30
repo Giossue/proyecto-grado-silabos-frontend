@@ -9,7 +9,7 @@ import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { paths } from '@/lib/routes';
 import { latestRequest } from '@/lib/latestRequest';
-import { queryText, syncFilters } from '@/lib/urlFilters';
+import { queryPage, queryText, syncFilters } from '@/lib/urlFilters';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import { History, Inbox } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -30,14 +31,14 @@ const requests = latestRequest();
 const period = ref<string | null>(null);
 const error = ref<string | null>(null);
 
-const load = async (): Promise<void> => {
+const load = async (page = 1): Promise<void> => {
   const ticket = requests.begin();
   error.value = null;
   try {
-    const response = await getTeacherSyllabi({ q: query.value, state: state.value });
+    const response = await getTeacherSyllabi({ q: query.value, state: state.value, page });
     if (!requests.isCurrent(ticket)) return;
     result.value = response;
-    syncFilters(router, { q: query.value, state: state.value }, 1);
+    syncFilters(router, { q: query.value, state: state.value }, page);
   } catch (reason) {
     if (!requests.isCurrent(ticket)) return;
     if (reason instanceof ApiError && reason.status === 401) { await router.replace(paths.login); return; }
@@ -53,7 +54,7 @@ const clearFilters = (): void => {
 };
 const SENT_STATES = ['en_revision', 'aprobado'];
 const openSyllabus = (id: string, state: string): void => { void router.push({ path: paths.teacher.syllabus(id), state: { syllabusPreview: SENT_STATES.includes(state) } }); };
-onMounted(() => { void load(); });
+onMounted(() => { void load(queryPage(route.query.page)); });
 </script>
 
 <template>
@@ -99,5 +100,6 @@ onMounted(() => { void load(); });
         </Card>
       </li>
     </ul>
+    <TablePagination v-if="result && result.syllabi.data.length > 0" :meta="result.syllabi" label="Paginación de mis sílabos" @update:page="load" />
   </PageFrame>
 </template>

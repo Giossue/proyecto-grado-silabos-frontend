@@ -66,6 +66,15 @@ describe('TeacherSyllabiPage', () => {
     expect(wrapper.get('[aria-label="Mis sílabos"]').classes()).toContain('lg:grid-cols-3');
   });
 
+  it('muestra la paginación cuando hay más de una página', async () => {
+    vi.mocked(getTeacherSyllabi).mockResolvedValue({ ...syllabi, syllabi: { ...syllabi.syllabi, last_page: 2, total: 30, from: 1, to: 15 } });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('1–15 de 30');
+    expect(wrapper.find('[aria-label="Paginación de mis sílabos"]').exists()).toBe(true);
+  });
+
   it('vuelve a pedir los sílabos al filtrar', async () => {
     const wrapper = mountPage();
     await flushPromises();
