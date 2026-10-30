@@ -678,6 +678,17 @@ describe("TeacherSyllabusDetailPage", () => {
     sessionState.clear();
   });
 
+  it("mientras carga un sílabo enviado muestra la hoja del documento", async () => {
+    window.history.replaceState({ syllabusPreview: true }, "");
+    vi.mocked(getTeacherSyllabus).mockReturnValue(new Promise(() => undefined));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find('[data-skeleton="preview-sheet"]').exists()).toBe(true);
+    window.history.replaceState(null, "");
+    wrapper.unmount();
+  });
+
   it("al primer envío firma la declaración y envía con la firma", async () => {
     const draft = syllabus("borrador");
     draft.teacher_signature_required = true;

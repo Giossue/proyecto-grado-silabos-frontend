@@ -4,8 +4,9 @@ import TeacherSyllabiPage from '@/pages/TeacherSyllabiPage.vue';
 import { getDashboard } from '@/api/dashboard';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
 
+const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('vue-router', () => ({
-  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  useRouter: () => ({ push: router.push, replace: vi.fn() }),
   RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
 }));
 
@@ -37,6 +38,15 @@ describe('TeacherSyllabiPage', () => {
     expect(wrapper.text()).not.toContain('Sílabos por entregar');
     expect(wrapper.text()).not.toContain('Continuar mis sílabos');
     expect(wrapper.get('[aria-label="Mis sílabos"]').text()).toContain('Álgebra Lineal');
+  });
+
+  it('al abrir un sílabo enviado avisa que cargue como documento', async () => {
+    vi.mocked(getTeacherSyllabi).mockResolvedValue({ ...syllabi, syllabi: { ...syllabi.syllabi, data: [{ ...syllabi.syllabi.data[0]!, state: 'en_revision' }] } });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get('[aria-label="Abrir sílabo de Álgebra Lineal"]').trigger('click');
+    expect(router.push).toHaveBeenCalledWith({ path: '/docente/mis-silabos/s1', state: { syllabusPreview: true } });
   });
 
   it('la tarjeta no muestra el último guardado', async () => {

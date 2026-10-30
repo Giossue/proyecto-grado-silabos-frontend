@@ -41,7 +41,8 @@ const clearFilters = (): void => {
   state.value = 'all';
   void load();
 };
-const openSyllabus = (id: string): void => { void router.push(paths.teacher.syllabus(id)); };
+const SENT_STATES = ['en_revision', 'aprobado'];
+const openSyllabus = (id: string, state: string): void => { void router.push({ path: paths.teacher.syllabus(id), state: { syllabusPreview: SENT_STATES.includes(state) } }); };
 onMounted(() => { void load(); });
 </script>
 
@@ -74,9 +75,9 @@ onMounted(() => { void load(); });
           class="h-full cursor-pointer transition-colors hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-hidden"
           tabindex="0"
           :aria-label="`Abrir sílabo de ${syllabus.subject}`"
-          @click="openSyllabus(syllabus.id)"
-          @keydown.enter.self.prevent="openSyllabus(syllabus.id)"
-          @keydown.space.self.prevent="openSyllabus(syllabus.id)"
+          @click="openSyllabus(syllabus.id, syllabus.state)"
+          @keydown.enter.self.prevent="openSyllabus(syllabus.id, syllabus.state)"
+          @keydown.space.self.prevent="openSyllabus(syllabus.id, syllabus.state)"
         >
           <CardHeader>
             <CardTitle>{{ syllabus.subject }}</CardTitle>

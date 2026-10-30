@@ -106,6 +106,7 @@ const reviewComments = computed(() =>
 );
 const mustSign = computed(() => syllabus.value?.teacher_signature_required === true);
 const submitLabel = computed(() => (mustSign.value ? 'Firmar y enviar' : 'Enviar'));
+const previewHint = window.history.state?.syllabusPreview === true;
 const askSubmit = (): void => {
   if (mustSign.value) signOpen.value = true;
   else confirmSubmitOpen.value = true;
@@ -483,7 +484,7 @@ onBeforeUnmount(() => {
 
     <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
-    <LoadingSkeleton v-if="(!syllabus || canStart) && !error" variant="syllabus" />
+    <LoadingSkeleton v-if="(!syllabus || canStart) && !error" :variant="previewHint && !syllabus ? 'preview' : 'syllabus'" />
 
     <template v-if="syllabus">
       <ProcessLockAlert v-if="editBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />

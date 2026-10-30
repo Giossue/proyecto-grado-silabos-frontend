@@ -38,7 +38,7 @@ const load = async (): Promise<void> => {
   }
 };
 const formatSavedAt = (value: string | null): string => value ? formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin guardados';
-const open = (id: string): void => { void router.push(paths.teacher.syllabus(id)); };
+const open = (id: string): void => { void router.push({ path: paths.teacher.syllabus(id), state: { syllabusPreview: true } }); };
 onMounted(load);
 </script>
 
