@@ -8,6 +8,7 @@ import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
+import { toast } from "@/lib/toast";
 import { ApiError } from "@/api/client";
 import {
   getTeacherSigningStatement,
@@ -367,6 +368,8 @@ const submit = async (sign: StatementSigner | null = null): Promise<void> => {
     signOpen.value = false;
     invalidateValidation();
     validationResults.value = [];
+    toast.success("Sílabo enviado correctamente.");
+    await router.push(paths.teacher.syllabi);
   } catch (reason) {
     if (sign && isSignatureFailure(reason)) throw reason;
     signOpen.value = false;

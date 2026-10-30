@@ -20,10 +20,11 @@ import { updateFormation } from "@/api/session";
 import { sessionState } from "@/state/session";
 
 const routeLeaveGuards: Array<() => Promise<boolean> | boolean> = [];
+const router = vi.hoisted(() => ({ push: vi.fn() }));
 
 vi.mock("vue-router", () => ({
   useRoute: () => ({ params: { syllabus: "syllabus-1" }, fullPath: "/docente/silabos/syllabus-1" }),
-  useRouter: () => ({ replace: vi.fn() }),
+  useRouter: () => ({ replace: vi.fn(), push: router.push }),
   onBeforeRouteLeave: (guard: () => Promise<boolean> | boolean) => routeLeaveGuards.push(guard),
 }));
 
@@ -699,7 +700,7 @@ describe("TeacherSyllabusDetailPage", () => {
       statement: "silabos-ueb|silabo:syllabus-1|accion:envio_docente|huella:abc",
       cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
     });
-    expect(wrapper.text()).toContain("Firmado por Docente Demo (docente)");
+    expect(router.push).toHaveBeenCalledWith("/docente/mis-silabos");
     wrapper.unmount();
   });
 
