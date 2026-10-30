@@ -80,6 +80,7 @@ test.describe('frontera distribuida de identidad', () => {
 
     await openSection(page, 'Plantilla', 'Plantilla de sílabo');
     await page.getByRole('button', { name: 'Editar', exact: true }).click();
+    await page.getByRole('dialog', { name: 'Editar la plantilla' }).getByRole('button', { name: 'Continuar', exact: true }).click({ timeout: 10_000 });
     await expect(page.getByRole('button', { name: 'Opciones avanzadas' })).toBeVisible();
 
     await page.getByRole('button', { name: 'Menú de usuario' }).click();

@@ -5,7 +5,7 @@ const loginAsAdministrator = async (page: Page): Promise<void> => {
   await page.getByLabel('Correo institucional').fill('admin@silabos.test');
   await page.locator('input[type="password"]').fill('Demo-2026!');
   await page.getByRole('button', { name: 'Ingresar' }).click();
-  await expect(page).toHaveURL(/\/admin\/panel$/);
+  await expect(page).toHaveURL(/\/admin\/convocatorias$/);
 };
 
 test.describe('accesibilidad transversal de la SPA', () => {
