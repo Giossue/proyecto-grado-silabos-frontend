@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { FileText, ImageIcon, Upload, X } from '@lucide/vue';
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
 
 type FileKind = 'pdf' | 'png' | 'xlsx' | 'document' | 'certificate';
@@ -32,6 +32,7 @@ const emit = defineEmits<{
 }>();
 
 const input = ref<HTMLInputElement | null>(null);
+const root = ref<HTMLElement | null>(null);
 const isDragging = ref(false);
 const dragDepth = ref(0);
 const formatBytes = (bytes: number): string => {
@@ -51,9 +52,6 @@ const copy = computed(() => props.kind === 'document' ? {
   invalid: 'Seleccione archivos PDF o Excel.',
   maxError: `Cada archivo puede pesar hasta ${formatLimit(props.maxBytes)}.`,
   emptyTitle: 'Arrastra tus PDF o Excel aquí',
-  selectedTitle: 'Documento seleccionado',
-  selectedDescription: 'Arrastra otro archivo o haz clic para reemplazarlo',
-  replaceLabel: 'Reemplazar documento seleccionado',
   chooseLabel: 'Cargar documentos PDF o Excel',
   removeLabel: 'Quitar documento',
   dropAnnouncement: 'Suelta los documentos para adjuntarlos.',
@@ -63,9 +61,6 @@ const copy = computed(() => props.kind === 'document' ? {
   invalid: 'Seleccione un archivo de firma (.p12 o .pfx).',
   maxError: `El archivo no puede superar los ${formatLimit(props.maxBytes)}.`,
   emptyTitle: 'Arrastra tu archivo de firma aquí',
-  selectedTitle: 'Firma seleccionada',
-  selectedDescription: 'Arrastra otro archivo o haz clic para reemplazarlo',
-  replaceLabel: 'Reemplazar archivo de firma seleccionado',
   chooseLabel: 'Cargar archivo de firma',
   removeLabel: 'Quitar archivo de firma',
   dropAnnouncement: 'Suelta el archivo de firma para seleccionarlo.',
@@ -75,9 +70,6 @@ const copy = computed(() => props.kind === 'document' ? {
   invalid: 'Seleccione un archivo Excel (.xlsx).',
   maxError: `El archivo no puede superar los ${formatLimit(props.maxBytes)}.`,
   emptyTitle: 'Arrastra tu Excel aquí',
-  selectedTitle: 'Excel seleccionado',
-  selectedDescription: 'Arrastra otro archivo o haz clic para reemplazarlo',
-  replaceLabel: 'Reemplazar Excel seleccionado',
   chooseLabel: 'Cargar archivo Excel',
   removeLabel: 'Quitar Excel',
   dropAnnouncement: 'Suelta el Excel para seleccionarlo.',
@@ -87,9 +79,6 @@ const copy = computed(() => props.kind === 'document' ? {
   invalid: 'Seleccione un archivo PNG.',
   maxError: `El PNG no puede superar los ${formatLimit(props.maxBytes)}.`,
   emptyTitle: 'Arrastra tu PNG aquí',
-  selectedTitle: 'PNG seleccionado',
-  selectedDescription: 'Arrastra otro PNG o haz clic para reemplazarlo',
-  replaceLabel: 'Reemplazar PNG seleccionado',
   chooseLabel: 'Cargar archivo PNG',
   removeLabel: 'Quitar PNG',
   dropAnnouncement: 'Suelta el PNG para seleccionarlo.',
@@ -99,9 +88,6 @@ const copy = computed(() => props.kind === 'document' ? {
   invalid: 'Seleccione un archivo PDF.',
   maxError: `El PDF no puede superar los ${formatLimit(props.maxBytes)}.`,
   emptyTitle: 'Arrastra tu PDF aquí',
-  selectedTitle: 'PDF seleccionado',
-  selectedDescription: 'Arrastra otro PDF o haz clic para reemplazarlo',
-  replaceLabel: 'Reemplazar PDF seleccionado',
   chooseLabel: 'Cargar archivo PDF',
   removeLabel: 'Quitar PDF',
   dropAnnouncement: 'Suelta el PDF para seleccionarlo.',
@@ -141,6 +127,7 @@ const setFile = (file: File | null): void => {
   }
   emit('update:modelValue', file);
   emit('validation-error', null);
+  void nextTick(() => root.value?.querySelector<HTMLButtonElement>('[data-file-remove]')?.focus());
 };
 
 const setFiles = (files: File[]): void => {
@@ -159,6 +146,7 @@ const selectFile = (event: Event): void => {
 const clearFile = (): void => {
   if (props.disabled) return;
   setFile(null);
+  void nextTick(() => root.value?.querySelector<HTMLButtonElement>('[data-file-dropzone]')?.focus());
 };
 
 const handleDragEnter = (): void => {
@@ -185,7 +173,6 @@ const releasePreview = (): void => {
   if (previewUrl.value !== null) URL.revokeObjectURL(previewUrl.value);
   previewUrl.value = null;
 };
-const showsPreview = computed(() => props.kind === 'png' && props.modelValue !== null && !props.multiple);
 
 watch(() => props.modelValue, (file) => {
   if (file === null && input.value) input.value.value = '';
@@ -197,28 +184,23 @@ onBeforeUnmount(releasePreview);
 </script>
 
 <template>
-  <div class="flex flex-col gap-2">
-    <Button v-if="!showsPreview" type="button" variant="dropzone" size="dropzone"
+  <div ref="root" class="flex flex-col gap-2">
+    <Button v-if="!modelValue || multiple" type="button" variant="dropzone" size="dropzone" data-file-dropzone
       :data-dragging="isDragging" :aria-invalid="props.invalid"
       :disabled="props.disabled"
-      :aria-label="modelValue ? copy.replaceLabel : copy.chooseLabel"
+      :aria-label="copy.chooseLabel"
       @click="chooseFile"
       @dragenter.prevent="handleDragEnter"
       @dragover.prevent
       @dragleave.prevent="handleDragLeave"
       @drop="handleDrop"
     >
-      <div v-if="!modelValue" class="flex flex-col items-center gap-2 text-center">
+      <div class="flex flex-col items-center gap-2 text-center">
         <Upload class="size-8 text-muted-foreground" aria-hidden="true" />
         <div>
           <p class="font-medium">{{ copy.emptyTitle }}</p>
           <p class="text-sm text-muted-foreground">{{ multiple ? 'o haz clic para adjuntarlos' : 'o haz clic para seleccionarlo' }}</p>
         </div>
-      </div>
-      <div v-else class="flex flex-col items-center gap-1 text-center">
-        <Upload class="size-6 text-muted-foreground" aria-hidden="true" />
-        <p class="font-medium">{{ copy.selectedTitle }}</p>
-        <p class="text-sm text-muted-foreground">{{ copy.selectedDescription }}</p>
       </div>
     </Button>
     <input ref="input" :id="inputId" class="sr-only" type="file" :multiple="multiple" :accept="copy.accept" :disabled="props.disabled" :required="props.required && !modelValue" :aria-invalid="props.invalid" :aria-required="props.required" tabindex="-1" @click.stop @change="selectFile" />
@@ -229,7 +211,7 @@ onBeforeUnmount(releasePreview);
         <AttachmentDescription>{{ fileDescription }}</AttachmentDescription>
       </AttachmentContent>
       <AttachmentActions>
-        <AttachmentAction type="button" :aria-label="copy.removeLabel" :disabled="props.disabled" @click.stop="clearFile"><X aria-hidden="true" /></AttachmentAction>
+        <AttachmentAction type="button" data-file-remove :aria-label="copy.removeLabel" :disabled="props.disabled" @click.stop="clearFile"><X aria-hidden="true" /></AttachmentAction>
       </AttachmentActions>
     </Attachment>
   </div>

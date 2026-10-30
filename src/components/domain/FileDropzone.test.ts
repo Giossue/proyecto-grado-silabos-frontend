@@ -43,6 +43,21 @@ describe('FileDropzone', () => {
     expect(wrapper.emitted('validation-error')?.at(-1)).toEqual(['Seleccione un archivo de firma (.p12 o .pfx).']);
   });
 
+  it('oculta el recuadro cuando ya hay un archivo y lo muestra otra vez al quitarlo', async () => {
+    const file = new File(['p12'], 'firma.p12');
+    const wrapper = mount(FileDropzone, {
+      props: { modelValue: file, inputId: 'signature-certificate', kind: 'certificate' },
+    });
+
+    expect(wrapper.find('[data-file-dropzone]').exists()).toBe(false);
+    expect(wrapper.text()).toContain('firma.p12');
+
+    await wrapper.get('[data-file-remove]').trigger('click');
+    expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([null]);
+    await wrapper.setProps({ modelValue: null });
+    expect(wrapper.find('[data-file-dropzone]').exists()).toBe(true);
+  });
+
   it('rejects a non-PNG file in the PNG variant', async () => {
     const wrapper = mount(FileDropzone, {
       props: { modelValue: null, inputId: 'faculty-logo', kind: 'png' },
