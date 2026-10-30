@@ -7,6 +7,10 @@ import ConvocationPeriodSheet from '@/components/domain/syllabus/ConvocationPeri
 const api = vi.hoisted(() => ({ createAcademicRecord: vi.fn(), createProcess: vi.fn() }));
 vi.mock('@/api/academic', async (importOriginal) => ({ ...(await importOriginal<object>()), createAcademicRecord: api.createAcademicRecord }));
 vi.mock('@/api/processes', async (importOriginal) => ({ ...(await importOriginal<object>()), createProcess: api.createProcess }));
+vi.mock('@/composables/useCountdown', async () => {
+  const { ref } = await import('vue');
+  return { useCountdown: () => ref(0) };
+});
 
 afterEach(() => { document.body.innerHTML = ''; vi.clearAllMocks(); });
 

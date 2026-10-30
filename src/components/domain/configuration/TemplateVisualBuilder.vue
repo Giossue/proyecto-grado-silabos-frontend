@@ -26,6 +26,7 @@ import { plural, type ValueSchema } from '@/lib/blocks/types';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { useCountdown } from '@/composables/useCountdown';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { emptyDocument } from '@/types/configuration';
@@ -36,6 +37,8 @@ const emit = defineEmits<{ changed: []; dirty: [value: boolean] }>();
 
 const locked = computed(() => Boolean(props.processLock));
 const preview = ref(true);
+const editWarningOpen = ref(false);
+const editCountdown = useCountdown(editWarningOpen);
 const selectedField = ref<string | null>(null);
 const selectedSection = ref<string | null>(null);
 const activeEditor = shallowRef<Editor | null>(null);
@@ -200,6 +203,7 @@ const touched = (): void => {
     paginateSoon();
 };
 const startEditing = (): void => {
+    editWarningOpen.value = false;
     if (!awaitingReload.value) {
         draft.value = clone(props.template.sections);
         titleDraft.value = props.template.titleBlock.text;
@@ -398,7 +402,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
     <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full justify-end" :style="{ maxWidth: toolbarWidth }">
       <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
-        <Button type="button" :disabled="locked" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
+        <Button type="button" :disabled="locked" @click="editWarningOpen = true"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
       </div>
       <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 flex-wrap items-center gap-1 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" />
@@ -536,6 +540,19 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     </div>
 
     <TemplateJsonDialog v-model:open="jsonOpen" :template-id="template.id" :locked="locked" @imported="reloadAfterJson" />
+
+    <Dialog v-model:open="editWarningOpen">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar la plantilla</DialogTitle>
+          <DialogDescription>Si guarda cambios, los docentes empezarán sus sílabos desde cero: en el próximo período no conservarán lo que escribieron y, si hay una convocatoria en pausa, sus sílabos se rehacen al reanudarla.</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button type="button" variant="outline" @click="editWarningOpen = false">Cancelar</Button>
+          <Button type="button" :disabled="editCountdown > 0" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />{{ editCountdown > 0 ? `Continuar (${editCountdown})` : 'Continuar' }}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
     <Dialog :open="removal !== null" @update:open="(value: boolean) => { if (!value) removal = null }">
       <DialogContent>

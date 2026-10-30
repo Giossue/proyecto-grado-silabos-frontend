@@ -70,7 +70,7 @@ test('la confirmación compartida queda sobre la hoja abierta y restaura el foco
     `);
     const trigger = page.getByRole('button', { name: 'Guardar configuración' });
     await trigger.click();
-    const confirmation = page.getByRole('dialog', { name: 'Este cambio reemplaza los sílabos afectados' });
+    const confirmation = page.getByRole('dialog', { name: 'Este cambio afecta sílabos en curso' });
     await expect(confirmation).toBeVisible();
     const sheet = page.locator('[data-slot="sheet-content"]');
     const sheetLevel = await sheet.evaluate((element) => Number(getComputedStyle(element).zIndex));

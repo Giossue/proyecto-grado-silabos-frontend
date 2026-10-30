@@ -9,9 +9,11 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { useCountdown } from '@/composables/useCountdown';
 import { usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
 
 const { open, message, confirm, cancel } = usePurgeConfirmation();
+const remaining = useCountdown(open);
 </script>
 
 <template>
@@ -25,20 +27,16 @@ const { open, message, confirm, cancel } = usePurgeConfirmation();
     >
         <DialogContent layer="confirmation">
             <DialogHeader>
-                <DialogTitle>Este cambio reemplaza los sílabos afectados</DialogTitle>
-                <DialogDescription>
-                    {{ message }} Cada docente afectado recibirá un aviso de
-                    que su sílabo se generó de nuevo y perdió el contenido
-                    anterior.
-                </DialogDescription>
+                <DialogTitle>Este cambio afecta sílabos en curso</DialogTitle>
+                <DialogDescription>{{ message }}</DialogDescription>
             </DialogHeader>
             <DialogFooter>
                 <Button type="button" variant="outline" @click="cancel">
                     Cancelar
                 </Button>
-                <Button type="button" variant="destructive" @click="confirm">
+                <Button type="button" variant="destructive" :disabled="remaining > 0" @click="confirm">
                     <RotateCcw data-icon="inline-start" aria-hidden="true" />
-                    Guardar y rehacer los sílabos afectados
+                    {{ remaining > 0 ? `Guardar (${remaining})` : 'Guardar' }}
                 </Button>
             </DialogFooter>
         </DialogContent>

@@ -12,6 +12,10 @@ vi.mock("vue-router", async (importOriginal) => ({
 }));
 
 vi.mock("@/api/session", () => ({ getSession: vi.fn() }));
+vi.mock("@/composables/useCountdown", async () => {
+  const { ref } = await import("vue");
+  return { useCountdown: () => ref(0) };
+});
 
 vi.mock("@/api/template", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/template")>()),
@@ -64,6 +68,9 @@ describe("AdminTemplatePage", () => {
     const wrapper = mountPage();
     await flushPromises();
     await wrapper.findAll('button').find((button) => button.text() === 'Editar')!.trigger('click');
+    await flushPromises();
+    [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Continuar')!.click();
+    await flushPromises();
 
     expect(wrapper.get<HTMLTextAreaElement>('[data-section="section-1"] [aria-label="Sección Descripción de la asignatura"]').element.value).toBe('Descripción de la asignatura');
     expect(wrapper.get<HTMLTextAreaElement>('[data-field="field-1"] [data-field-label] textarea').element.value).toBe('Descripción');
@@ -163,6 +170,8 @@ describe("AdminTemplatePage", () => {
 
     expect(wrapper.findAll('button').some((item) => item.text().includes('Opciones avanzadas'))).toBe(false);
     await wrapper.findAll('button').find((item) => item.text().includes('Editar'))!.trigger('click');
+    await flushPromises();
+    [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Continuar')!.click();
     await flushPromises();
 
     const button = wrapper.find('[data-template-ribbon]').findAll('button').find((item) => item.text().includes('Opciones avanzadas'))!;

@@ -11,6 +11,10 @@ import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
 import definition from '@/test/fixtures/template-definition.json';
 
 vi.mock('@/api/template');
+vi.mock('@/composables/useCountdown', async () => {
+  const { ref } = await import('vue');
+  return { useCountdown: () => ref(0) };
+});
 
 type Template = NonNullable<TemplatePayload['template']>;
 const field = (id: string, label: string, quien_llena: FieldResponsible = 'docente') => ({ id, key: id, label, quien_llena, content: emptyDocument() });
@@ -28,7 +32,10 @@ const presets = [
 ];
 const mountBuilder = async (props: { processLock?: string | null } = {}) => {
   const wrapper = mount(TemplateVisualBuilder, { props: { template, presets, ...props }, attachTo: document.body });
-  if (!props.processLock) await click(byText('button', 'Editar'));
+  if (!props.processLock) {
+    await click(byText('button', 'Editar'));
+    await click(byText('button', 'Continuar'));
+  }
   return wrapper;
 };
 
@@ -91,7 +98,7 @@ describe('TemplateVisualBuilder', () => {
     const designed = { ...template, layout: { margin_cm: 1.5, title_font_size: 14, section_font_size: 11, body_font_size: 11 }, layoutOptions: options };
     const wrapper = mount(TemplateVisualBuilder, { props: { template: designed, presets }, attachTo: document.body });
     expect(body().querySelector<HTMLElement>('[data-sheet]')!.style.getPropertyValue('--document-margin')).toBe('1.5cm');
-    await click(byText('button', 'Editar'));
+    await click(byText('button', 'Editar')); await click(byText('button', 'Continuar'));
     expect(byText('button', 'Diseño')).toBeTruthy();
     const state = (wrapper.vm as unknown as { $: { setupState: { setLayout: (key: string, value: unknown) => void } } }).$.setupState;
     state.setLayout('margin_cm', '2.5');
@@ -262,7 +269,7 @@ describe('TemplateVisualBuilder', () => {
     mount(TemplateVisualBuilder, { props: { template, presets }, attachTo: document.body });
     expect(body().querySelector('[aria-label="Sección Uno"]')).toBeNull();
     expect(body().textContent).toContain('Uno');
-    await click(byText('button', 'Editar'));
+    await click(byText('button', 'Editar')); await click(byText('button', 'Continuar'));
     expect(body().querySelector('[aria-label="Sección Uno"]')).not.toBeNull();
     expect(byText('button', 'Guardar')).toBeTruthy();
     expect(byText('button', 'Cancelar')).toBeTruthy();
@@ -272,7 +279,7 @@ describe('TemplateVisualBuilder', () => {
     const table: DocumentNode = { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'FACULTAD: CIENCIAS' }] }] }] }] }] };
     const official: Template = { ...template, sections: [{ id: 's1', key: 'identificacion', title: 'Identificación Institucional', orientation: 'portrait', fields: [{ ...field('a', '', 'institucional'), content: table }] }] };
     const wrapper = mount(TemplateVisualBuilder, { props: { template: official }, attachTo: document.body });
-    await click(byText('button', 'Editar'));
+    await click(byText('button', 'Editar')); await click(byText('button', 'Continuar'));
     await vi.advanceTimersByTimeAsync(50);
     expect(body().querySelector('[data-field="a"] table')?.textContent).toContain('FACULTAD: CIENCIAS');
     expect(body().querySelector('[aria-label="Nombre del campo Campo sin nombre"]')).toBeNull();

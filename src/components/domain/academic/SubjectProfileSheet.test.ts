@@ -57,7 +57,7 @@ describe('SubjectProfileSheet', () => {
     expect(saveSubjectProfile).toHaveBeenCalledWith('subject-1', {
       f1: { type: 'doc', content: [] },
       f2: { type: 'doc', content: [] },
-    }, { f1: false, f2: false });
+    });
     expect(wrapper.emitted('saved')).toHaveLength(1);
   });
 
@@ -87,30 +87,24 @@ describe('SubjectProfileSheet', () => {
     expect(wrapper.find('[data-id="ficha-f2"]').exists()).toBe(true);
   });
 
-  it('deja que el docente edite un campo con el interruptor y no lo cuenta como pendiente', async () => {
+  it('marca como sin llenar todo campo vacío y no ofrece el interruptor del docente', async () => {
     vi.mocked(getSubjectProfile).mockResolvedValue({
       fields: [
         { id: 'f1', key: 'herramientas_tic', label: 'Herramientas TIC', section: 'Metodología', quien_llena: 'coordinacion', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
-        { id: 'f2', key: 'bibliografia', label: 'Bibliografía', section: 'Metodología', quien_llena: 'coordinacion', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
       ],
       values: {},
-      editable: { f2: true },
       complete: false,
     });
-    vi.mocked(saveSubjectProfile).mockResolvedValue({ fields: [], values: {}, complete: true });
+    vi.mocked(saveSubjectProfile).mockResolvedValue({ fields: [], values: {}, complete: false });
     const wrapper = mountSheet();
     await wrapper.setProps({ open: true });
     await flushPromises();
 
-    expect(wrapper.get('#ficha-docente-f2').attributes('data-state')).toBe('checked');
-    expect(wrapper.text()).toContain('Lo llena el docente');
-    await wrapper.get('#ficha-docente-f1').trigger('click');
-    await flushPromises();
-    expect(wrapper.text()).not.toContain('Sin llenar');
-
+    expect(wrapper.text()).toContain('Sin llenar');
+    expect(wrapper.text()).not.toContain('El docente puede editarlo');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
-    expect(saveSubjectProfile).toHaveBeenCalledWith('subject-1', expect.any(Object), { f1: true, f2: true });
+    expect(saveSubjectProfile).toHaveBeenCalledWith('subject-1', expect.any(Object));
   });
 
   it('explains that the template has no profile fields yet', async () => {

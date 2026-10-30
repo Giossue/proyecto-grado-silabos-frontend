@@ -121,7 +121,6 @@ export type SubjectProfileField = { id: string; key: string; label: string; sect
 export type SubjectProfile = {
   fields: SubjectProfileField[];
   values: Record<string, DocumentNode | null>;
-  editable?: Record<string, boolean>;
   complete: boolean;
   definition?: TemplateDefinitionPayload;
   variables?: Record<string, string>;
@@ -135,10 +134,10 @@ const rememberDefinition = (profile: SubjectProfile): SubjectProfile => {
 export const getSubjectProfile = (subjectId: string) =>
   api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`).then(rememberDefinition);
 
-export const saveSubjectProfile = (subjectId: string, values: Record<string, DocumentNode | null>, editable: Record<string, boolean> = {}) =>
+export const saveSubjectProfile = (subjectId: string, values: Record<string, DocumentNode | null>) =>
   withPurgeConfirmation((confirmPurge) => api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`, {
     method: "PUT",
-    body: jsonBody({ values, editable }, confirmPurge),
+    body: jsonBody({ values }, confirmPurge),
   }));
 
 export type TeacherAssignments = {

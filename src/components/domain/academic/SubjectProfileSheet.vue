@@ -9,7 +9,6 @@ import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEdito
 import { responseEmpty } from '@/lib/fieldResponses';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatusBadge from '@/components/domain/StatusBadge.vue';
 import type { DocumentNode } from '@/lib/templateDocument';
@@ -19,7 +18,6 @@ const emit = defineEmits<{ saved: [] }>();
 const open = defineModel<boolean>('open', { default: false });
 const fields = ref<SubjectProfileField[]>([]);
 const values = ref<Record<string, DocumentNode | null>>({});
-const editable = ref<Record<string, boolean>>({});
 const loading = ref(false);
 const saving = ref(false);
 const error = ref<string | null>(null);
@@ -32,8 +30,7 @@ const activeSection = computed<string>({
   set: (value) => { chosen.value = value; },
 });
 const isEmpty = (fieldId: string): boolean => responseEmpty(fields.value.find((field) => field.id === fieldId)?.template, values.value[fieldId]);
-const pending = (fieldId: string): boolean => isEmpty(fieldId) && !editable.value[fieldId];
-const sectionHasEmpty = (section: string): boolean => fields.value.some((field) => sectionOf(field) === section && pending(field.id));
+const sectionHasEmpty = (section: string): boolean => fields.value.some((field) => sectionOf(field) === section && isEmpty(field.id));
 const shownFields = computed(() => fields.value.filter((field) => sectionOf(field) === activeSection.value));
 const canSave = computed(() => !loading.value && !saving.value && !props.disabled && fields.value.length > 0);
 
@@ -45,7 +42,6 @@ watch(open, async (value) => {
     const profile = await getSubjectProfile(props.subjectId);
     fields.value = profile.fields;
     values.value = Object.fromEntries(profile.fields.map((field) => [field.id, profile.values[field.id] ?? field.content ?? null]));
-    editable.value = Object.fromEntries(profile.fields.map((field) => [field.id, profile.editable?.[field.id] === true]));
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo abrir la ficha.';
   } finally {
@@ -58,7 +54,7 @@ const save = async (close: () => void) => {
   saving.value = true;
   error.value = null;
   try {
-    await saveSubjectProfile(props.subjectId, values.value, editable.value);
+    await saveSubjectProfile(props.subjectId, values.value);
     emit('saved');
     close();
   } catch (reason) {
@@ -88,12 +84,7 @@ const save = async (close: () => void) => {
               <Field v-for="field in shownFields" :key="field.id">
                 <div class="flex flex-wrap items-center gap-2">
                   <FieldLabel :for="`ficha-${field.id}`" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || sectionOf(field) }}</FieldLabel>
-                  <StatusBadge v-if="pending(field.id)" label="Sin llenar" tone="warning" />
-                  <StatusBadge v-else-if="isEmpty(field.id)" label="Lo llena el docente" tone="info" />
-                  <span class="ml-auto flex items-center gap-2">
-                    <label :for="`ficha-docente-${field.id}`" class="text-sm text-muted-foreground">El docente puede editarlo</label>
-                    <Switch :id="`ficha-docente-${field.id}`" v-model="editable[field.id]" :disabled="disabled" />
-                  </span>
+                  <StatusBadge v-if="isEmpty(field.id)" label="Sin llenar" tone="warning" />
                 </div>
                 <FieldResponseEditor
                   :template="field.template"

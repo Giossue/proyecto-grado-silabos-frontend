@@ -12,6 +12,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { SheetFooter } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
+import { useCountdown } from '@/composables/useCountdown';
 import { useInstitutionToday } from '@/composables/useInstitutionDate';
 
 const props = withDefaults(defineProps<{ disabled?: boolean }>(), { disabled: false });
@@ -20,6 +21,7 @@ const open = defineModel<boolean>('open', { default: false });
 
 const processing = ref(false);
 const confirmOpen = ref(false);
+const openingCountdown = useCountdown(confirmOpen);
 const errors = ref<Record<string, string[]>>({});
 const form = ref({ starts_on: '', ends_on: '', teaching_weeks: '', starts_at: '', due_at: '' });
 const createdPeriodId = ref<string | null>(null);
@@ -168,11 +170,11 @@ const submit = async (): Promise<void> => {
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Abrir convocatoria</DialogTitle>
-                        <DialogDescription>Una vez abierta, el periodo y sus fechas no se pueden editar. Si necesita cambiar algo, deberá eliminar la convocatoria y abrir otra.</DialogDescription>
+                        <DialogDescription>Una vez abierta, el periodo y sus fechas no se pueden editar. Los docentes conservarán lo que escribieron en el período anterior, salvo que la plantilla haya cambiado: en ese caso empiezan de cero.</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
-                        <Button type="button" :disabled="processing" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><CalendarPlus v-else data-icon="inline-start" aria-hidden="true" />Abrir convocatoria</Button>
+                        <Button type="button" :disabled="processing || openingCountdown > 0" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><CalendarPlus v-else data-icon="inline-start" aria-hidden="true" />{{ openingCountdown > 0 ? `Abrir convocatoria (${openingCountdown})` : 'Abrir convocatoria' }}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
