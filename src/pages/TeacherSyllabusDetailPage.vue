@@ -22,12 +22,13 @@ import {
   type SyllabusField,
 } from "@/api/syllabi";
 import SyllabusUnitAssistant from '@/components/domain/ai/SyllabusUnitAssistant.vue';
+import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import SignatureDialog, { type StatementSigner } from '@/components/domain/syllabus/SignatureDialog.vue';
-import SignaturesNote from '@/components/domain/syllabus/SignaturesNote.vue';
 import ReviewCommentNotice from '@/components/domain/syllabus/ReviewCommentNotice.vue';
+import ReviewCommentsButton from '@/components/domain/syllabus/ReviewCommentsButton.vue';
 import TeacherFormationDialog from '@/components/domain/identity/TeacherFormationDialog.vue';
 import { sessionState } from '@/state/session';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -38,11 +39,13 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Spinner } from '@/components/ui/spinner';
 import FieldView from '@/components/domain/syllabus/FieldView.vue';
 import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
+import { openRevisionPdf } from '@/lib/openPdf';
+import { sheetPixels } from '@/lib/documentLayout';
 import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
 import { attemptKey } from '@/lib/attemptKey';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
-import { ArrowLeft, ArrowRight, Bot, Copy, FileSignature, FileText, GraduationCap, Library, Pencil, Send, X } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Bot, Copy, Eye, FileSignature, FileText, Pencil, Send, X } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
@@ -50,6 +53,13 @@ const route = useRoute();
 const router = useRouter();
 const syllabus = ref<SyllabusDetail | null>(null);
 const previewing = ref(false);
+const openingPdf = ref(false);
+const openPdf = async (revisionId: string): Promise<void> => {
+  openingPdf.value = true;
+  const failure = await openRevisionPdf(revisionId);
+  openingPdf.value = false;
+  if (failure) toast.error(failure);
+};
 const assistantOpen = ref(false);
 const assistantLoaded = ref(false);
 const toggleAssistant = (): void => {
@@ -74,7 +84,6 @@ const conflict = ref(false);
 const processingAction = ref(false);
 const confirmSubmitOpen = ref(false);
 const signOpen = ref(false);
-const formationOpen = ref(false);
 const localBlockReason = ref<string | null>(null);
 const copySource = ref<{ id: string; parallel: string } | null>(null);
 const saveFailed = ref(false);
@@ -97,8 +106,6 @@ const showEditor = computed(() => canEdit.value || pausedEdit.value);
 const allFields = computed(() => (syllabus.value?.sections ?? []).flatMap((section) => section.fields));
 const editableFieldIds = computed(() => new Set(allFields.value.map((field) => field.id)));
 const isTeacherField = (field: SyllabusField): boolean => field.quien_llena !== 'institucional' && field.teacher_editable === true;
-const REVIEW_STAGE_TEXT: Record<string, string> = { coordinacion: 'Coordinación revisa y decide.', biblioteca: 'Coordinación aprobó; biblioteca revisa la bibliografía.' };
-const reviewStageLabel = computed(() => REVIEW_STAGE_TEXT[syllabus.value?.review_stage ?? ''] ?? '');
 const reviewComments = computed(() =>
   [...(syllabus.value?.review_comments ?? [])].sort(
     (left, right) => new Date(right.commented_at).getTime() - new Date(left.commented_at).getTime(),
@@ -153,10 +160,8 @@ const blockIssue = computed((): string => {
 
   return '';
 });
-const formationEditable = computed(() => canEdit.value && syllabus.value?.teacher_formation_required === true);
-const formationMissing = computed(() => formationEditable.value && !sessionState.current.value?.user.formation?.trim());
+const formationMissing = computed(() => syllabus.value?.teacher_formation_required === true && !sessionState.current.value?.user.formation?.trim());
 const submitHint = computed(() => {
-  if (formationMissing.value) return "Falta su formación y experiencia";
   if (emptyParts.value === 0 && blockIssue.value !== '') return blockIssue.value;
   if (emptyParts.value === 1) return "Falta 1 campo por completar";
   if (emptyParts.value > 1) return `Faltan ${emptyParts.value} campos por completar`;
@@ -422,7 +427,8 @@ const copyFromSource = async (): Promise<void> => {
 
 
 const visibleSections = computed(() => (syllabus.value?.sections ?? []).filter((section) => section.fields.some(isTeacherField)));
-const pageDescription = computed(() => syllabus.value ? [syllabus.value.period, syllabus.value.parallels.length ? `Paralelo ${syllabus.value.parallels.join(', ')}` : ''].filter(Boolean).join(' · ') : '');
+const pageDescription = computed(() => syllabus.value?.period ?? '');
+const documentHeaderWidth = computed(() => syllabus.value && syllabus.value.state !== 'sin_iniciar' && (!showEditor.value || previewing.value) ? sheetPixels(syllabus.value.presentation.document).portrait : undefined);
 
 const chosenSectionId = ref<string | null>(null);
 const activeSectionId = computed<string>({
@@ -470,16 +476,18 @@ onBeforeUnmount(() => {
     <span class="flex-1" />
     <AppearanceToggle />
   </header>
-  <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="!syllabus" header-class="syllabus-editor-header" hide-icon>
-    <template v-if="syllabus?.signatures?.length" #meta><SignaturesNote :signatures="syllabus.signatures" /></template>
+  <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="!syllabus" header-class="syllabus-editor-header" :header-width="documentHeaderWidth" hide-icon>
+    <template v-if="syllabus" #title-badge><SyllabusStateBadge :state="syllabus.state" /></template>
     <template #actions>
-      <Button v-if="syllabus && showEditor && previewing" type="button" variant="outline" @click="previewing = false"><Pencil aria-hidden="true" />Editar</Button>
-      <Button v-else-if="syllabus && showEditor" type="button" variant="outline" @click="previewing = true"><FileText aria-hidden="true" />Vista previa</Button>
+      <ReviewCommentsButton v-if="syllabus?.state === 'correccion_solicitada' && reviewComments.length" :comments="reviewComments" />
+      <TooltipProvider v-if="syllabus && showEditor"><Tooltip><TooltipTrigger as-child>
+        <Button v-if="previewing" type="button" variant="ghost" size="icon" aria-label="Editar" @click="previewing = false"><Pencil aria-hidden="true" /></Button>
+        <Button v-else type="button" variant="ghost" size="icon" aria-label="Vista previa" @click="previewing = true"><Eye aria-hidden="true" /></Button>
+      </TooltipTrigger><TooltipContent>{{ previewing ? 'Editar' : 'Vista previa' }}</TooltipContent></Tooltip></TooltipProvider>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
-      <Button v-if="formationEditable && !formationMissing" type="button" variant="outline" @click="formationOpen = true"><GraduationCap aria-hidden="true" />Formación y experiencia</Button>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
-      <Button v-if="syllabus?.state === 'aprobado' && syllabus.approved_revision_id" as-child variant="outline"><RouterLink :to="paths.teacher.documents(syllabus.approved_revision_id)">Ver PDF</RouterLink></Button>
-      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== '' || formationMissing" @click="askSubmit"><Spinner v-if="processingAction" /><FileSignature v-else-if="mustSign" aria-hidden="true" /><Send v-else aria-hidden="true" />{{ submitLabel }}</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || submitLabel }}</TooltipContent></Tooltip></span>
+      <Button v-if="syllabus?.state === 'aprobado' && syllabus.approved_revision_id" type="button" :disabled="openingPdf" @click="openPdf(syllabus.approved_revision_id)"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" />Ver PDF</Button>
+      <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== ''" @click="askSubmit"><Spinner v-if="processingAction" /><FileSignature v-else-if="mustSign" aria-hidden="true" /><Send v-else aria-hidden="true" />{{ submitLabel }}</Button></span></TooltipTrigger><TooltipContent>{{ submitHint || submitLabel }}</TooltipContent></Tooltip></span>
     </template>
 
     <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
@@ -491,11 +499,10 @@ onBeforeUnmount(() => {
 
       <template v-if="syllabus.state !== 'sin_iniciar' || pausedEdit">
         <div class="mx-auto flex w-full max-w-screen-2xl min-w-0 flex-col gap-8" :class="{ 'pb-16': !pausedEdit }">
-          <Alert v-if="syllabus.state === 'en_revision' && reviewStageLabel" class="review-stage"><Library aria-hidden="true" /><AlertTitle>En revisión</AlertTitle><AlertDescription>{{ reviewStageLabel }}</AlertDescription></Alert>
           <ProcessLockAlert v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
 
-          <Alert v-if="formationMissing" class="formation-missing"><GraduationCap aria-hidden="true" /><AlertTitle>Falta su formación y experiencia académica-investigativa</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>Va en la tabla de identificación del sílabo.</span><Button type="button" size="sm" @click="formationOpen = true">Completar</Button></AlertDescription></Alert>
-          <ReviewCommentNotice v-if="reviewComments.length" :comments="reviewComments" :correction="syllabus.state === 'correccion_solicitada'" />
+
+          <ReviewCommentNotice v-if="syllabus.state === 'correccion_solicitada' && reviewComments.length" :comments="reviewComments" />
 
           <Tabs v-if="showEditor && !previewing && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
             <TabsList class="h-auto w-full flex-wrap justify-start" aria-label="Secciones del sílabo">
@@ -527,7 +534,7 @@ onBeforeUnmount(() => {
 
         </div>
 
-        <template v-if="!pausedEdit">
+        <template v-if="canEdit && !pausedEdit">
           <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-8rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de unidades">
             <SyllabusUnitAssistant
               :syllabus-id="syllabus.id"
@@ -553,7 +560,7 @@ onBeforeUnmount(() => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    <TeacherFormationDialog v-model:open="formationOpen" @saved="refreshAfterFormation" />
+    <TeacherFormationDialog :open="formationMissing" required @saved="refreshAfterFormation" />
     <SignatureDialog v-model:open="signOpen" title="Firmar y enviar" confirm-label="Firmar y enviar" :run="submit" />
     <Dialog :open="copySource !== null" @update:open="(open) => { if (!open) copySource = null; }">
       <DialogContent>

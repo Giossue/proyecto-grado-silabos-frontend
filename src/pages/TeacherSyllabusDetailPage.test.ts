@@ -103,7 +103,7 @@ const typeText = async (wrapper: ReturnType<typeof mountPage>, text: string, ind
 };
 
 const buttonNamed = (wrapper: ReturnType<typeof mountPage>, name: string) =>
-  wrapper.findAll("button").find((button) => button.text().includes(name));
+  wrapper.findAll("button").find((button) => button.text().includes(name) || button.attributes("aria-label") === name);
 
 const PageWithTooltips = defineComponent({ setup: () => () => h(TooltipProvider, () => h(TeacherSyllabusDetailPage)) });
 const mountPage = () => mount(PageWithTooltips, {
@@ -281,12 +281,15 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    const notice = wrapper.get(".review-comment");
-    expect(notice.text()).toContain("Coordinación pidió correcciones");
-    expect(notice.text()).toContain("Aclare el resultado.");
+    expect(wrapper.get(".review-comment").text()).toContain("Coordinación pidió correcciones");
+    expect(wrapper.get(".review-comment").text()).toContain("Aclare el resultado.");
+    await wrapper.get('button[aria-label="Comentarios"]').trigger("click");
+    await flushPromises();
+    expect(document.body.querySelector(".review-comments")!.textContent).toContain("Aclare el resultado.");
     expect(wrapper.text()).not.toContain("Está preparando una nueva revisión");
     expect(wrapper.getComponent(PageFrame).props("hideIcon")).toBe(true);
     expect(wrapper.text()).not.toContain("Guardar respuesta");
+    wrapper.unmount();
   });
 
   it("detiene el autoguardado y ofrece recarga ante un conflicto de versión", async () => {
@@ -627,14 +630,12 @@ describe("TeacherSyllabusDetailPage", () => {
     await openTab(wrapper, "Bibliografía");
     expect(wrapper.find("#input-field-2").exists()).toBe(true);
     expect(wrapper.find(".library-correction").exists()).toBe(false);
-    const notice = wrapper.get(".review-comment");
-    expect(notice.text()).toContain("Biblioteca pidió correcciones");
-    expect(notice.text()).toContain("La 10.ª edición no está disponible.");
-    expect(notice.text()).toContain("Comentarios anteriores (1)");
-    expect(notice.text()).not.toContain("Comentario anterior.");
-    await notice.get("button").trigger("click");
+    await wrapper.get('button[aria-label="Comentarios"]').trigger("click");
     await flushPromises();
-    expect(notice.text().indexOf("La 10.ª edición no está disponible.")).toBeLessThan(notice.text().indexOf("Comentario anterior."));
+    const list = document.body.querySelector(".review-comments")!;
+    expect(list.textContent).toContain("La 10.ª edición no está disponible.");
+    expect(list.textContent).toContain("Comentario anterior.");
+    expect(list.textContent!.indexOf("La 10.ª edición no está disponible.")).toBeLessThan(list.textContent!.indexOf("Comentario anterior."));
     expect(buttonNamed(wrapper, "Reenviar bibliografía")).toBeUndefined();
     expect(buttonNamed(wrapper, "Enviar")).toBeDefined();
     await buttonNamed(wrapper, "Enviar")!.trigger("click");
@@ -644,7 +645,7 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("pide la formación y experiencia antes de enviar y la guarda desde el sílabo", async () => {
+  it("sin formación y experiencia no deja entrar al sílabo: pide configurarla en un modal y la guarda", async () => {
     const teacherSession = (formation: string | null) => ({
       user: { id: "u-1", name: "DOCENTE UNO", email: "docente@ueb.edu.ec", email_verified: true, can_edit_identity: false, formation },
       active_role: { id: "r-1", code: "docente" as const, career_id: null, career_name: null },
@@ -658,10 +659,13 @@ describe("TeacherSyllabusDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Falta su formación y experiencia académica-investigativa");
-    expect(buttonNamed(wrapper, "Enviar")!.attributes("disabled")).toBeDefined();
-    await buttonNamed(wrapper, "Completar")!.trigger("click");
+    expect(document.body.textContent).toContain("Complete su formación y experiencia");
+    expect(document.body.querySelector('[data-test="leave-formation-button"]')).not.toBeNull();
+    expect(document.body.querySelector('[data-test="cancel-formation-button"]')).toBeNull();
+    expect(buttonNamed(wrapper, "Formación y experiencia")).toBeUndefined();
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
     await flushPromises();
+    expect(document.body.textContent).toContain("Complete su formación y experiencia");
     const textarea = document.body.querySelector<HTMLTextAreaElement>("#dialog-formation")!;
     textarea.value = "Magíster en Tecnología";
     textarea.dispatchEvent(new Event("input"));
@@ -671,9 +675,8 @@ describe("TeacherSyllabusDetailPage", () => {
 
     expect(updateFormation).toHaveBeenCalledWith("Magíster en Tecnología");
     expect(getTeacherSyllabus).toHaveBeenCalledTimes(2);
-    expect(wrapper.text()).not.toContain("Falta su formación y experiencia académica-investigativa");
+    expect(document.body.textContent).not.toContain("Complete su formación y experiencia");
     expect(buttonNamed(wrapper, "Enviar")!.attributes("disabled")).toBeUndefined();
-    expect(buttonNamed(wrapper, "Formación y experiencia")).toBeDefined();
     wrapper.unmount();
     sessionState.clear();
   });
@@ -741,7 +744,9 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.findComponent(SyllabusDocumentPreview).exists()).toBe(true);
-    expect(wrapper.text()).toContain("Ver PDF");
+    expect(buttonNamed(wrapper, "Ver PDF")).toBeDefined();
+    expect(buttonNamed(wrapper, "Asistente")).toBeUndefined();
+    expect(wrapper.find('a[href*="documentos"]').exists()).toBe(false);
     expect(buttonNamed(wrapper, "Firmar")).toBeUndefined();
     wrapper.unmount();
   });

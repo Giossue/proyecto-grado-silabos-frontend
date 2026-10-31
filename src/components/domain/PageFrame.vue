@@ -128,7 +128,11 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                         <component :is="headerIcon" class="size-5" />
                     </div>
                     <div class="flex min-w-0 flex-col gap-1">
-                        <h1 v-if="title" class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
+                        <div v-if="title && $slots['title-badge']" class="flex flex-wrap items-center gap-3">
+                            <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
+                            <slot name="title-badge" />
+                        </div>
+                        <h1 v-else-if="title" class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
                         <Skeleton v-else-if="loading" data-skeleton="page-title" class="h-8 w-72 max-w-full" />
                         <p v-if="description" class="max-w-3xl text-muted-foreground">
                             {{ withoutEndPeriod(description) }}
