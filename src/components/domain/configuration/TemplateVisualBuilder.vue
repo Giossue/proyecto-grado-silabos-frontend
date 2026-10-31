@@ -27,7 +27,7 @@ import { templateRuntime } from '@/lib/blocks/runtime';
 import { plural, type ValueSchema } from '@/lib/blocks/types';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCountdown } from '@/composables/useCountdown';
 import { toast } from '@/lib/toast';
 import { templateEditorState } from '@/state/templateEditor';
@@ -471,52 +471,73 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <div class="flex shrink-0 items-center gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger as-child>
-              <Button type="button" variant="ghost" size="icon-sm" aria-label="Opciones avanzadas" title="Opciones avanzadas" :disabled="busy || locked"><Settings2 aria-hidden="true" /></Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuGroup>
-                <DropdownMenuItem :disabled="locked" @select="jsonOpen = true">Editar JSON</DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Popover v-if="layoutControls.length">
-            <PopoverTrigger as-child>
-              <Button type="button" variant="ghost" size="icon-sm" aria-label="Diseño" title="Diseño" :disabled="busy || locked"><Ruler aria-hidden="true" /></Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" class="w-72">
-              <FieldGroup class="gap-4">
-                <p class="text-sm text-muted-foreground">Márgenes y tamaños del documento. La letra, los colores y la alineación son los institucionales.</p>
-                <Field v-for="control in layoutControls" :key="control.key">
-                  <FieldLabel :for="`template-layout-${control.key}`">{{ control.label }}</FieldLabel>
-                  <Select :model-value="String(layoutDraft[control.key])" @update:model-value="setLayout(control.key, $event)">
-                    <SelectTrigger :id="`template-layout-${control.key}`"><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectGroup><SelectItem v-for="option in control.options" :key="option.value" :value="String(option.value)">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
-                  </Select>
-                </Field>
-              </FieldGroup>
-            </PopoverContent>
-          </Popover>
-          <Popover v-if="listsDraft.length">
-            <PopoverTrigger as-child>
-              <Button type="button" variant="ghost" size="icon-sm" aria-label="Listas" title="Listas" :disabled="busy || locked"><ListTree aria-hidden="true" /></Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" class="w-80">
-              <FieldGroup class="gap-4">
-                <p class="text-sm text-muted-foreground">Cuántos elementos puede tener el docente.</p>
-                <FieldSet v-for="list in listsDraft" :key="`${list.block}-${list.path}`" class="gap-2">
-                  <FieldLegend variant="label">{{ list.label }}</FieldLegend>
-                  <div class="grid grid-cols-3 gap-2">
-                    <Field v-for="limit in LIMITS" :key="limit.key" class="gap-1">
-                      <FieldLabel :for="`template-list-${list.block}-${list.path}-${limit.key}`" class="text-xs font-normal">{{ limit.label }}</FieldLabel>
-                      <Input :id="`template-list-${list.block}-${list.path}-${limit.key}`" type="number" min="0" max="100" step="1" :model-value="list[limit.key]" @update:model-value="setListLimit(list, limit.key, $event)" />
-                    </Field>
-                  </div>
-                </FieldSet>
-              </FieldGroup>
-            </PopoverContent>
-          </Popover>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <span class="inline-flex">
+                <DropdownMenu>
+                  <DropdownMenuTrigger as-child>
+                    <Button type="button" variant="ghost" size="icon-sm" aria-label="Opciones avanzadas" :disabled="busy || locked"><Settings2 aria-hidden="true" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuGroup>
+                      <DropdownMenuItem :disabled="locked" @select="jsonOpen = true">Editar JSON</DropdownMenuItem>
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Opciones avanzadas</TooltipContent>
+          </Tooltip>
+          <Tooltip v-if="layoutControls.length">
+            <TooltipTrigger as-child>
+              <span class="inline-flex">
+                <Popover>
+                  <PopoverTrigger as-child>
+                    <Button type="button" variant="ghost" size="icon-sm" aria-label="Diseño" :disabled="busy || locked"><Ruler aria-hidden="true" /></Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" class="w-72">
+                    <FieldGroup class="gap-4">
+                      <p class="text-sm text-muted-foreground">Márgenes y tamaños del documento. La letra, los colores y la alineación son los institucionales.</p>
+                      <Field v-for="control in layoutControls" :key="control.key">
+                        <FieldLabel :for="`template-layout-${control.key}`">{{ control.label }}</FieldLabel>
+                        <Select :model-value="String(layoutDraft[control.key])" @update:model-value="setLayout(control.key, $event)">
+                          <SelectTrigger :id="`template-layout-${control.key}`"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectGroup><SelectItem v-for="option in control.options" :key="option.value" :value="String(option.value)">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
+                        </Select>
+                      </Field>
+                    </FieldGroup>
+                  </PopoverContent>
+                </Popover>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Diseño</TooltipContent>
+          </Tooltip>
+          <Tooltip v-if="listsDraft.length">
+            <TooltipTrigger as-child>
+              <span class="inline-flex">
+                <Popover>
+                  <PopoverTrigger as-child>
+                    <Button type="button" variant="ghost" size="icon-sm" aria-label="Listas" :disabled="busy || locked"><ListTree aria-hidden="true" /></Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" class="w-80">
+                    <FieldGroup class="gap-4">
+                      <p class="text-sm text-muted-foreground">Cuántos elementos puede tener el docente.</p>
+                      <FieldSet v-for="list in listsDraft" :key="`${list.block}-${list.path}`" class="gap-2">
+                        <FieldLegend variant="label">{{ list.label }}</FieldLegend>
+                        <div class="grid grid-cols-3 gap-2">
+                          <Field v-for="limit in LIMITS" :key="limit.key" class="gap-1">
+                            <FieldLabel :for="`template-list-${list.block}-${list.path}-${limit.key}`" class="text-xs font-normal">{{ limit.label }}</FieldLabel>
+                            <Input :id="`template-list-${list.block}-${list.path}-${limit.key}`" type="number" min="0" max="100" step="1" :model-value="list[limit.key]" @update:model-value="setListLimit(list, limit.key, $event)" />
+                          </Field>
+                        </div>
+                      </FieldSet>
+                    </FieldGroup>
+                  </PopoverContent>
+                </Popover>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>Listas</TooltipContent>
+          </Tooltip>
         </div>
         <div class="ml-auto flex shrink-0 items-center gap-2 pl-2">
           <span class="sr-only" aria-live="polite"><template v-if="changed">Sin guardar</template></span>
