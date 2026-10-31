@@ -547,9 +547,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
           <DialogTitle>Editar la plantilla</DialogTitle>
           <DialogDescription>Si guarda cambios:</DialogDescription>
           <ul class="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            <li>Los docentes empiezan sus sílabos desde cero</li>
-            <li>En el próximo período no conservan lo que escribieron</li>
-            <li>Si hay una convocatoria en pausa, sus sílabos se rehacen al reanudarla</li>
+            <li>Al reanudar una convocatoria en pausa, sus sílabos se rehacen desde cero</li>
+            <li>En el próximo período, los docentes no conservan lo que escribieron</li>
           </ul>
         </DialogHeader>
         <DialogFooter>
