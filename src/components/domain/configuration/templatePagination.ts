@@ -81,5 +81,5 @@ export const paginateSheet = (sheet: HTMLElement, landscape: boolean, document?:
     sheet.style.height = `${pages * stride - GAP}px`;
     sheet.style.backgroundColor = 'transparent';
     sheet.style.boxShadow = 'none';
-    sheet.style.backgroundImage = `repeating-linear-gradient(to bottom, var(--document-paper, var(--document-sheet-paper)) 0, var(--document-paper, var(--document-sheet-paper)) ${page}px, var(--background) ${page}px, var(--background) ${stride}px)`;
+    sheet.style.backgroundImage = `repeating-linear-gradient(to bottom, var(--document-paper, var(--document-sheet-paper)) 0, var(--document-paper, var(--document-sheet-paper)) ${page}px, transparent ${page}px, transparent ${stride}px)`;
 };
