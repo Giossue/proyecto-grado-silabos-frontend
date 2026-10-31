@@ -9,6 +9,7 @@ import InstallAppDialog from '@/components/InstallAppDialog.vue';
 import WorkScopeSwitcherSheet from '@/components/domain/identity/WorkScopeSwitcherSheet.vue';
 import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import ScreenHelpButton from '@/components/domain/ScreenHelpButton.vue';
+import SetupChecklist from '@/components/domain/SetupChecklist.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { breadcrumbsKey, pageTitleKey } from '@/composables/usePageBreadcrumbs';
 import { useShowsSidebar } from '@/composables/useShowsSidebar';
@@ -49,6 +50,7 @@ const showsSidebar = useShowsSidebar();
             <RoleDeadlineBanner v-if="!editorOpen" />
             <slot />
             <ScreenHelpButton v-if="!templateEditorOpen" :editor-mode="curriculumEditorOpen" />
+            <SetupChecklist v-if="!editorOpen" />
             <AccessibilityDialog v-if="!editorOpen" floating />
         </AppContent>
     </AppShell>

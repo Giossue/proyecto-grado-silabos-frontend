@@ -31,6 +31,7 @@
     "ai": "^7.0.102",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "driver.js": "^1.10.2",
     "embla-carousel-vue": "^8.6.0",
     "nanoid": "^6.0.1",
     "node-forge": "^1.4.2",

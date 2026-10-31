@@ -111,6 +111,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
         "
     >
         <header
+            data-tour="page-header"
             :class="cn('flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between', headerWidth && 'mx-auto', headerClass)"
             :style="headerStyle"
         >
@@ -153,6 +154,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
 
             <div
                 v-if="actionCount > 0"
+                data-tour="page-actions"
                 :class="
                     cn(
                         'flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end',

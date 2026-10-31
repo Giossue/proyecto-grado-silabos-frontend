@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, FileSignature, MessageSquareText } from '@lucide/vue';
+import { ArrowLeft, FileSignature, FileText, MessageSquareText } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -8,6 +8,7 @@ import EmptyState from '@/components/domain/EmptyState.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { goBack } from '@/lib/goBack';
+import { openRevisionPdf } from '@/lib/openPdf';
 import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
@@ -19,6 +20,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -37,6 +39,16 @@ const returnError = ref('');
 const sending = ref(false);
 const OTHER_REASON = 'otro';
 const otherSelected = computed(() => selectedReasons.value.includes(OTHER_REASON));
+const previousPage: unknown = window.history.state?.back;
+const fromHistory = typeof previousPage === 'string' && previousPage.split('?')[0] === paths.library.history;
+const openingPdf = ref(false);
+const openPdf = async (): Promise<void> => {
+  if (!review.value) return;
+  openingPdf.value = true;
+  const failure = await openRevisionPdf(review.value.revision_id);
+  openingPdf.value = false;
+  if (failure) toast.error(failure);
+};
 const canSign = computed(() => Boolean(review.value?.can_verify && review.value.signing_statement));
 const fields = computed(() => (review.value?.sections ?? []).flatMap((section) =>
   section.fields.map((field) => ({ ...field, title: field.label.trim() || section.title }))));
@@ -124,13 +136,21 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame v-if="review && !loadError" :title="review.subject" :description="`${review.career} · ${review.teachers.join(', ')}`" size="narrow">
-    <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.library.reviews)"><ArrowLeft aria-hidden="true" />Volver a revisiones</Button></template>
+  <PageFrame v-if="review && !loadError" :title="review.subject" :description="`${review.career} · ${review.teachers.join(', ')}`" hide-icon size="narrow">
+    <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, fromHistory ? paths.library.history : paths.library.reviews)"><ArrowLeft aria-hidden="true" />{{ fromHistory ? 'Volver al historial' : 'Volver a revisiones' }}</Button></template>
     <template v-if="outcomeBadge" #title-badge>
       <StatusBadge :label="outcomeBadge.label" :tone="outcomeBadge.tone" />
       <span v-if="review.outcome === 'reemplazado'" class="text-sm text-muted-foreground">Hay un envío más reciente · solo consulta</span>
     </template>
     <template #actions>
+      <TooltipProvider v-if="review.verified_at">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button>
+          </TooltipTrigger>
+          <TooltipContent>Ver PDF</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <Button v-if="review.can_comment" type="button" variant="outline" @click="openReturn">Devolver al docente</Button>
       <Button v-if="canSign" type="button" @click="signOpen = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
     </template>
@@ -147,7 +167,7 @@ onMounted(load);
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Devolver al docente</DialogTitle>
-          <DialogDescription>Marque los motivos. Al corregirlo, vuelve a biblioteca.</DialogDescription>
+          <DialogDescription>Marque los motivos para avisar al docente y que lo corrija.</DialogDescription>
         </DialogHeader>
         <form id="library-comment-form" class="flex flex-col gap-4" @submit.prevent="sendReturn">
           <Field :data-invalid="reasonErrors.length > 0">

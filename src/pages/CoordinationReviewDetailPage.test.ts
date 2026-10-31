@@ -281,7 +281,7 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("desde el segundo envío ofrece «Ver qué cambió» y resalta en el documento los campos que cambiaron", async () => {
+  it("desde la segunda versión «Comparar» muestra la anterior al lado, con los campos que cambiaron marcados", async () => {
     const second = detail();
     second.revision = { ...second.revision, id: "revision-2", number: 2 };
     second.history = [...second.history, { id: "revision-2", number: 2, submitted_at: "2026-09-20T10:00:00Z", submitted_by: "Docente Demo", approved_at: null }];
@@ -294,22 +294,22 @@ describe("CoordinationReviewDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.find('[data-change-mark]').exists()).toBe(false);
-    expect(wrapper.find('[aria-label="Ver qué cambió"]').exists()).toBe(true);
-    await headerButton(wrapper, "Resaltar cambios")!.trigger("click");
+    expect(wrapper.find('[aria-label="Versión anterior"]').exists()).toBe(false);
+    await headerButton(wrapper, "Comparar con la versión anterior")!.trigger("click");
     await flushPromises();
 
     expect(compareReviews).toHaveBeenCalledWith("revision-1", "revision-2");
-    const marked = wrapper.findAll('[data-changed]');
-    expect(marked).toHaveLength(1);
-    expect(marked[0]!.attributes("data-field")).toBe("objetivo");
-    expect(wrapper.find('[data-change-mark]').text()).toBe("Cambió");
+    expect(getReview).toHaveBeenCalledWith("revision-1");
+    expect(wrapper.find('[aria-label="Versión anterior"]').exists()).toBe(true);
+    expect(wrapper.find('[aria-label="Versión actual"]').exists()).toBe(true);
+    expect(wrapper.findAll('[data-changed]')).toHaveLength(2);
 
-    await headerButton(wrapper, "Resaltar cambios")!.trigger("click");
-    expect(wrapper.find('[data-change-mark]').exists()).toBe(false);
+    await headerButton(wrapper, "Comparar con la versión anterior")!.trigger("click");
+    expect(wrapper.find('[aria-label="Versión anterior"]').exists()).toBe(false);
     wrapper.unmount();
   });
 
-  it("con el sílabo devuelto al docente no ofrece resaltar ni comparar, porque no hay un envío nuevo que revisar", async () => {
+  it("con el sílabo devuelto al docente no ofrece comparar, porque no hay una versión nueva que revisar", async () => {
     const returned = detail();
     returned.syllabus = { ...returned.syllabus, state: "correccion_solicitada", stage: null as never };
     returned.revision = { ...returned.revision, id: "revision-2", number: 2 };
@@ -319,8 +319,7 @@ describe("CoordinationReviewDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.find('[aria-label="Historial"]').exists()).toBe(true);
-    expect(headerButton(wrapper, "Resaltar cambios")).toBeUndefined();
-    expect(wrapper.find('[aria-label="Ver qué cambió"]').exists()).toBe(false);
+    expect(headerButton(wrapper, "Comparar con la versión anterior")).toBeUndefined();
     wrapper.unmount();
   });
 
@@ -329,8 +328,7 @@ describe("CoordinationReviewDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.find('[aria-label="Ver qué cambió"]').exists()).toBe(false);
-    expect(headerButton(wrapper, "Resaltar cambios")).toBeUndefined();
+    expect(headerButton(wrapper, "Comparar con la versión anterior")).toBeUndefined();
     wrapper.unmount();
   });
 

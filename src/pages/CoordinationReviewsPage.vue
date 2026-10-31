@@ -14,15 +14,16 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import ConvocationActions from '@/components/domain/syllabus/ConvocationActions.vue';
-import SetupDialog from '@/components/domain/SetupDialog.vue';
 import ConvocationTrackingTable from '@/components/domain/syllabus/ConvocationTrackingTable.vue';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths, reviewAreaPaths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
+import { setupChecklistState } from '@/state/setupChecklist';
 import { latestRequest } from '@/lib/latestRequest';
 import { queryPage, queryText, syncFilters } from '@/lib/urlFilters';
 import { deadlineState } from '@/state/deadline';
@@ -31,12 +32,7 @@ const route = useRoute();
 const router = useRouter();
 const data = ref<ReviewsPage | null>(null);
 const summary = ref<Dashboard | null>(null);
-const setupRoutes: Record<string, string> = {
-  curriculum: paths.coordination.curriculum,
-  scheduled_subjects: paths.coordination.scheduledSubjects,
-  parallels: paths.coordination.scheduledSubjects,
-  teachers: paths.coordination.teachers,
-};
+watch(() => summary.value?.setup, (setup) => { if (setup !== undefined) setupChecklistState.update(setup); });
 const openHint = computed(() => summary.value?.setup?.steps.find((step) => step.key === 'convocation')?.hint ?? '');
 const area = ref(reviewAreaPaths());
 const loading = ref(true);
@@ -88,14 +84,22 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
 <template>
   <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo." size="wide" :loading="!data">
     <template #actions>
-      <SetupDialog v-if="summary?.setup" :setup="summary.setup" :routes="setupRoutes" start-key="convocation" />
       <ConvocationActions v-if="summary?.coordination_convocation" :convocation="summary.coordination_convocation" :blocked-reason="openHint" @changed="changed" />
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :cell-lines="[2, 1, 1, 2]" :actions="false" :tabs="2" />
     <Tabs v-if="data" v-model="tab" class="gap-4">
       <TabsList class="h-11 justify-start" aria-label="Vistas de revisión">
         <TabsTrigger value="cola" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><Inbox aria-hidden="true" />Cola de revisión</TabsTrigger>
-        <TabsTrigger value="seguimiento" :disabled="!convocationId" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><ChartNoAxesColumn aria-hidden="true" />Seguimiento</TabsTrigger>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <span class="flex-none [&_button]:pointer-events-none" :class="convocationId ? '[&_button]:pointer-events-auto' : ''" tabindex="-1">
+                <TabsTrigger value="seguimiento" :disabled="!convocationId" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><ChartNoAxesColumn aria-hidden="true" />Seguimiento</TabsTrigger>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent v-if="!convocationId">Disponible cuando abra la convocatoria de su carrera</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </TabsList>
       <TabsContent value="cola" class="flex flex-col gap-4">
         <Card class="py-3"><CardContent class="px-3">

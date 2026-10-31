@@ -867,3 +867,135 @@
     min-height: 2.25rem;
     padding: 0.375rem 0.5rem;
 }
+
+/* Checklist «Antes de empezar» y resaltado de Driver.js con los colores del sistema (claro y oscuro). */
+.driver-checklist.setup-checklist {
+    --driver-checklist-color: var(--primary);
+    --driver-popover-font-family: var(--font-sans, inherit);
+    color: var(--card-foreground);
+}
+.driver-checklist.setup-checklist {
+    --driver-checklist-offset-x: 1rem;
+    --driver-checklist-offset-y: 9rem;
+}
+@media (width <= 480px) {
+    .driver-checklist.setup-checklist {
+        --driver-checklist-offset-y: 5rem;
+    }
+}
+/* El botón es solo un check, rojo y con un latido suave mientras falten pasos; el texto queda para lectores de pantalla. */
+.setup-checklist .driver-checklist-launcher {
+    position: relative;
+    width: 3rem;
+    height: 3rem;
+    padding: 0;
+    justify-content: center;
+    border-radius: 9999px;
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: var(--primary-foreground);
+    box-shadow: var(--shadow-menu-value);
+}
+.setup-checklist .driver-checklist-launcher::before {
+    content: "";
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: currentColor;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6 9 17l-5-5'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.setup-checklist .driver-checklist-launcher > * {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+.setup-checklist.setup-pending .driver-checklist-launcher {
+    background-color: var(--destructive);
+    border-color: var(--destructive);
+    color: #fff;
+    animation: setup-pulse 2.4s ease-in-out infinite;
+}
+@keyframes setup-pulse {
+    0%, 100% { box-shadow: var(--shadow-menu-value), 0 0 0 0 color-mix(in srgb, var(--destructive) 45%, transparent); }
+    50% { box-shadow: var(--shadow-menu-value), 0 0 0 8px color-mix(in srgb, var(--destructive) 0%, transparent); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .setup-checklist.setup-pending .driver-checklist-launcher { animation: none; }
+}
+.setup-checklist .driver-checklist-panel {
+    background-color: var(--card);
+    border-color: var(--border);
+    box-shadow: var(--shadow-modal-value);
+}
+.setup-checklist :is(.driver-checklist-title, .driver-checklist-item-title) {
+    color: var(--card-foreground);
+}
+.setup-checklist :is(.driver-checklist-description, .driver-checklist-item-description, .driver-checklist-progress-text, .driver-checklist-close-btn),
+.setup-checklist .driver-checklist-item-done .driver-checklist-item-title {
+    color: var(--muted-foreground);
+}
+.setup-checklist .driver-checklist-item:has(button.driver-checklist-item-trigger:hover, a.driver-checklist-item-trigger:hover, button.driver-checklist-check + div.driver-checklist-item-trigger:hover, .driver-checklist-item-trigger:focus-visible) {
+    background-color: var(--accent);
+}
+/* Ayuda del botón con el mismo aspecto que el resto de ayudas; el texto nativo del navegador se quita por código. */
+.setup-checklist .driver-checklist-launcher::after {
+    content: attr(data-tip);
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 0.5rem);
+    transform: translateY(-50%);
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--radius-md);
+    background-color: var(--foreground);
+    color: var(--background);
+    font-size: 0.75rem;
+    line-height: 1rem;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease-out;
+}
+.setup-checklist .driver-checklist-launcher:is(:hover, :focus-visible)::after {
+    opacity: 1;
+}
+.setup-checklist .driver-checklist-progress-bar {
+    background-color: var(--border);
+}
+.setup-checklist .driver-checklist-check {
+    border-color: var(--input);
+}
+.driver-popover.setup-popover {
+    background-color: var(--card);
+    color: var(--card-foreground);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-modal-value);
+}
+.driver-popover.setup-popover .driver-popover-title {
+    font-size: 1rem;
+    font-weight: 600;
+}
+.driver-popover.setup-popover .driver-popover-description {
+    color: var(--muted-foreground);
+}
+.driver-popover.screen-tour {
+    max-width: 22rem;
+}
+.driver-popover.screen-tour .driver-popover-progress-text {
+    color: var(--muted-foreground);
+}
+.driver-popover.screen-tour :is(.driver-popover-footer-btn) {
+    background-color: var(--card);
+    color: var(--card-foreground);
+    border-color: var(--border);
+    text-shadow: none;
+}
+.driver-popover.screen-tour .driver-popover-next-btn {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+    border-color: var(--primary);
+}
+.driver-popover.setup-popover .driver-popover-arrow-side-right.driver-popover-arrow {
+    border-right-color: var(--card);
+}

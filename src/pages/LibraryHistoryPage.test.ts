@@ -22,7 +22,7 @@ const history = (): LibraryHistoryPage => ({
   reviews: {
     data: [{
       revision_id: 'revision-1', syllabus_id: 'syllabus-1', subject: 'Álgebra Lineal', code: 'SW-B1-002', career: 'Software', period: '2025-2026',
-      parallels: ['A'], teachers: ['Domenica Arias'], revision_number: 1, sent_at: '2025-11-02T10:00:00-05:00', sent_by: 'Domenica Arias', state: 'atendido', outcome: 'firmado',
+      parallels: ['A'], teachers: ['Domenica Arias'], revision_number: 1, sent_at: '2025-11-02T10:00:00-05:00', sent_by: 'Domenica Arias', signed_by: 'Bibliotecaria Demo', state: 'atendido', outcome: 'firmado',
     }],
     current_page: 1, last_page: 1, per_page: 20, from: 1, to: 1, total: 1,
   },
@@ -38,12 +38,12 @@ describe('LibraryHistoryPage', () => {
     const wrapper = mount(LibraryHistoryPageView, { attachTo: document.body });
     await flushPromises();
 
-    expect(getLibraryHistory).toHaveBeenCalledWith({ q: '', state: 'all', faculty: 'all', period: 'all', mine: true, page: 1 });
+    expect(getLibraryHistory).toHaveBeenCalledWith({ q: '', faculty: 'all', period: 'all', mine: true, page: 1 });
     expect(replace).toHaveBeenCalledWith({ query: { mine: '1' } });
-    expect(wrapper.findAll('thead th').map((header) => header.text())).toEqual(['Período', 'Carrera', 'Docente', 'Estado']);
+    expect(wrapper.findAll('thead th').map((header) => header.text())).toEqual(['Período', 'Carrera', 'Docente', 'Firmado por']);
     const row = wrapper.get('tbody tr');
     expect(row.text()).toContain('2025-2026');
-    expect(row.text()).toContain('Atendido');
+    expect(row.text()).toContain('Bibliotecaria Demo');
     await row.trigger('click');
     expect(push).toHaveBeenCalledWith('/biblioteca/revisiones/revision-1');
     wrapper.unmount();

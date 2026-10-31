@@ -6,7 +6,7 @@ import { makeTestP12 } from '@/lib/signature/testCertificate';
 import LibraryReviewDetailPage from '@/pages/LibraryReviewDetailPage.vue';
 import { confirmSignatureDialog, fillSignatureDialog } from '@/test/signatureDialog';
 
-const { toastSuccess } = vi.hoisted(() => ({ toastSuccess: vi.fn() }));
+const { toastSuccess, openRevisionPdf } = vi.hoisted(() => ({ toastSuccess: vi.fn(), openRevisionPdf: vi.fn() }));
 
 vi.mock('vue-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
@@ -19,6 +19,7 @@ vi.mock('@/api/library', async (importOriginal) => ({
   commentLibraryReview: vi.fn(),
   verifyLibraryReview: vi.fn(),
 }));
+vi.mock('@/lib/openPdf', () => ({ openRevisionPdf }));
 vi.mock('@/lib/toast', () => ({ toast: { success: toastSuccess, error: vi.fn(), info: vi.fn() } }));
 
 const detail = (overrides: Partial<LibraryReviewDetail> = {}): LibraryReviewDetail => ({
@@ -202,6 +203,39 @@ describe('LibraryReviewDetailPage', () => {
 
     expect(getLibraryReview).toHaveBeenCalledTimes(2);
     expect(wrapper.text()).toContain('Bibliografía básica');
+    wrapper.unmount();
+  });
+
+  it('con el sílabo aprobado ofrece el ícono «Ver PDF», también en el historial', async () => {
+    openRevisionPdf.mockResolvedValue(null);
+    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail({ state: 'atendido', outcome: 'firmado', verified_at: '2026-10-01T10:00:00Z', verified_by: 'Bibliotecario Demo', can_comment: false, can_verify: false, signing_statement: null }) });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get('button[aria-label="Ver PDF"]').trigger('click');
+
+    expect(openRevisionPdf).toHaveBeenCalledWith('revision-2');
+    wrapper.unmount();
+  });
+
+  it('sin aprobar no ofrece «Ver PDF»', async () => {
+    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail() });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find('button[aria-label="Ver PDF"]').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('si se llegó desde el historial, el enlace de arriba vuelve al historial', async () => {
+    window.history.replaceState({ back: '/biblioteca/historial?period=all' }, '');
+    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail() });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Volver al historial');
+    expect(wrapper.text()).not.toContain('Volver a revisiones');
+    window.history.replaceState(null, '');
     wrapper.unmount();
   });
 });

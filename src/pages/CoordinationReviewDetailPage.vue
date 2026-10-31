@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, FileSignature, FileText, GitCompareArrows, Highlighter, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
+import { ArrowLeft, FileSignature, FileText, GitCompareArrows, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -58,7 +58,7 @@ const statusNotes = computed(() => {
   if (!data.value) return [];
   const notes: string[] = [];
   if (!data.value.decisions_allowed) notes.push('Convocatoria cerrada · solo consulta');
-  if (!data.value.revision.is_current) notes.push(`Revisión ${data.value.revision.number} (anterior) · solo consulta`);
+  if (!data.value.revision.is_current) notes.push(`Versión ${data.value.revision.number} (anterior) · solo consulta`);
   if (data.value.syllabus.state === 'en_revision' && stageLabel.value) notes.push(stageLabel.value);
   if (data.value.correction_request?.stage === 'biblioteca') notes.push('Devuelto por biblioteca');
 
@@ -77,18 +77,22 @@ const previousRevision = computed(() => {
   return index > 0 ? data.value.history[index - 1]! : null;
 });
 const showChanges = computed(() => Boolean(previousRevision.value && data.value?.syllabus.state === 'en_revision' && data.value.revision.is_current));
-const highlightOn = ref(false);
+const comparing = ref(false);
 const changedFields = ref<ReadonlySet<string>>(new Set());
-const toggleHighlight = async (): Promise<void> => {
-  if (highlightOn.value) { highlightOn.value = false; return; }
+const previousDetail = ref<ReviewDetail | null>(null);
+const toggleCompare = async (): Promise<void> => {
+  if (comparing.value) { comparing.value = false; return; }
   if (!data.value || !previousRevision.value || !showChanges.value) return;
   try {
-    const result = await compareReviews(previousRevision.value.id, data.value.revision.id);
+    const [before, result] = await Promise.all([
+      getReview(previousRevision.value.id),
+      compareReviews(previousRevision.value.id, data.value.revision.id),
+    ]);
+    previousDetail.value = before;
     changedFields.value = new Set(result.comparison.changes.map((change) => `${change.section_key}.${change.field_key}`));
-    highlightOn.value = true;
-    if (result.comparison.changes.length === 0) toast.success('No hay cambios respecto al envío anterior.');
+    comparing.value = true;
   } catch (reason) {
-    toast.error(reason instanceof ApiError ? reason.message : 'No se pudo comparar con el envío anterior.');
+    toast.error(reason instanceof ApiError ? reason.message : 'No se pudo comparar con la versión anterior.');
   }
 };
 const openingPdf = ref(false);
@@ -101,12 +105,14 @@ const openPdf = async (revisionId: string): Promise<void> => {
 const stageLabel = computed(() => reviewStageLabel(data.value?.syllabus.stage));
 const canReset = computed(() => Boolean(data.value?.reset.allowed && data.value.revision.is_current));
 const approvedCurrent = computed(() => data.value?.history.find((item) => item.id === data.value?.revision.id && item.approved_at) ?? null);
-const previewSections = computed<PreviewSection[]>(() => (data.value?.revision.snapshot.sections ?? []).map((section) => ({
+const toPreview = (detail: ReviewDetail | null): PreviewSection[] => (detail?.revision.snapshot.sections ?? []).map((section) => ({
   id: section.key,
   title: section.title,
   orientation: section.orientation,
   fields: section.fields.map((field) => ({ ...field, id: field.id ?? field.key })),
-})));
+}));
+const previewSections = computed(() => toPreview(data.value));
+const previousSections = computed(() => toPreview(previousDetail.value));
 
 const changed = async (message: string): Promise<void> => {
   toast.success(message);
@@ -146,7 +152,7 @@ const approve = async (sign: StatementSigner): Promise<void> => {
   await changed(result.message);
 };
 
-watch(() => route.params.revision, (current, previous) => { if (current !== previous) { highlightOn.value = false; void load(); } });
+watch(() => route.params.revision, (current, previous) => { if (current !== previous) { comparing.value = false; void load(); } });
 onMounted(load);
 </script>
 
@@ -173,15 +179,9 @@ onMounted(load);
         <template v-if="showChanges && previousRevision">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button type="button" variant="ghost" size="icon" aria-label="Resaltar cambios" :aria-pressed="highlightOn" :class="highlightOn ? 'bg-accent text-accent-foreground' : ''" @click="toggleHighlight"><Highlighter aria-hidden="true" /></Button>
+            <Button type="button" variant="ghost" size="icon" aria-label="Comparar con la versión anterior" :aria-pressed="comparing" :class="comparing ? 'bg-accent text-accent-foreground' : ''" @click="toggleCompare"><GitCompareArrows aria-hidden="true" /></Button>
           </TooltipTrigger>
-          <TooltipContent>{{ highlightOn ? 'Quitar el resaltado' : 'Resaltar lo que cambió' }}</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <Button as-child type="button" variant="ghost" size="icon" aria-label="Ver qué cambió"><RouterLink :to="area.comparison(previousRevision.id, data.revision.id)"><GitCompareArrows aria-hidden="true" /></RouterLink></Button>
-          </TooltipTrigger>
-          <TooltipContent>Ver qué cambió</TooltipContent>
+          <TooltipContent>{{ comparing ? 'Cerrar la comparación' : 'Comparar con la versión anterior' }}</TooltipContent>
         </Tooltip>
         </template>
       </TooltipProvider>
@@ -201,7 +201,25 @@ onMounted(load);
       <ReviewCommentNotice :comments="correctionComments" />
     </div>
 
-    <SyllabusDocumentPreview :presentation="data.presentation" :sections="previewSections" :changed="highlightOn ? changedFields : undefined" />
+    <Transition
+      mode="out-in"
+      enter-active-class="transition duration-200 ease-out motion-reduce:transition-none"
+      leave-active-class="transition duration-150 ease-in motion-reduce:transition-none"
+      enter-from-class="translate-y-2 opacity-0"
+      leave-to-class="translate-y-2 opacity-0"
+    >
+    <div v-if="comparing && previousDetail" key="compare" class="mx-auto grid w-full grid-cols-2 items-start gap-6" :style="{ maxWidth: `${sheetWidth * 2 + 24}px` }">
+      <section class="flex min-w-0 flex-col gap-2" aria-label="Versión anterior">
+        <h2 class="text-sm font-medium text-muted-foreground">Versión {{ previousDetail.revision.number }} · anterior</h2>
+        <SyllabusDocumentPreview :presentation="previousDetail.presentation" :sections="previousSections" :changed="changedFields" />
+      </section>
+      <section class="flex min-w-0 flex-col gap-2" aria-label="Versión actual">
+        <h2 class="text-sm font-medium text-muted-foreground">Versión {{ data.revision.number }} · actual</h2>
+        <SyllabusDocumentPreview :presentation="data.presentation" :sections="previewSections" :changed="changedFields" />
+      </section>
+    </div>
+    <SyllabusDocumentPreview v-else key="single" :presentation="data.presentation" :sections="previewSections" />
+    </Transition>
 
     <SyllabusRestartDialog v-if="canReset" v-model:open="restartOpen" :syllabus-id="data.syllabus.id" :subject="data.syllabus.subject" :impact="data.reset" @saved="restarted" />
 

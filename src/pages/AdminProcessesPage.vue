@@ -9,13 +9,12 @@ export type ConvocationRow = PeriodRecord & { process: SyllabusProcess | null };
 <script setup lang="ts">
 import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
-import { computed, nextTick, onMounted, ref, useTemplateRef } from 'vue';
+import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { getAcademicGovernance, type AcademicGovernance } from '@/api/academic';
 import { getProcesses, type Processes } from '@/api/processes';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
 import MetricTiles from '@/components/domain/MetricTiles.vue';
-import SetupDialog from '@/components/domain/SetupDialog.vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
@@ -37,18 +36,13 @@ import { useClientPagination } from '@/composables/useClientPagination';
 import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
+import { setupChecklistState } from '@/state/setupChecklist';
 
 const router = useRouter();
 const governance = ref<AcademicGovernance | null>(null);
 const processData = ref<Processes | null>(null);
 const summary = ref<Dashboard | null>(null);
-const setupRoutes: Record<string, string> = {
-  faculties: paths.admin.academic,
-  careers: paths.admin.academicWithSection('carrera'),
-  accounts: paths.admin.users,
-  coordinators: paths.admin.academicWithSection('carrera'),
-  template: paths.admin.template,
-};
+watch(() => summary.value?.setup, (setup) => { if (setup !== undefined) setupChecklistState.update(setup); });
 const setupReady = computed(() => (summary.value?.setup?.steps ?? []).every((step) => step.key === 'process' || step.done));
 const loading = ref(true);
 const error = ref<string | null>(null);
@@ -99,7 +93,6 @@ onMounted(load);
       <ProcessLockAlert banner title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra." hide-action />
     </template>
     <template #actions>
-      <SetupDialog v-if="summary?.setup" :setup="summary.setup" :routes="setupRoutes" start-key="process" />
       <Tooltip v-if="loaded && !setupReady"><TooltipTrigger as-child><span class="inline-flex" tabindex="0"><ConvocationPeriodSheet disabled @saved="changed" /></span></TooltipTrigger><TooltipContent>Complete «Antes de empezar» para abrir una convocatoria</TooltipContent></Tooltip>
       <ConvocationPeriodSheet v-else-if="loaded" :disabled="inProgress" @saved="changed" />
     </template>

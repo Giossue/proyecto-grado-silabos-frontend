@@ -11,5 +11,5 @@ watch(() => route.path, () => { void deadlineState.refresh(); });
 </script>
 
 <template>
-  <DeadlineBanner v-if="deadline && audience" :deadline="deadline" :audience="audience" />
+  <DeadlineBanner v-if="deadline && audience" data-tour="deadline" :deadline="deadline" :audience="audience" />
 </template>

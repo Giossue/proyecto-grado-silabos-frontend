@@ -20,6 +20,7 @@ export type LibraryReviewItem = {
   revision_number: number;
   sent_at: string;
   sent_by: string;
+  signed_by?: string | null;
   state: LibraryReviewState;
   outcome: LibraryReviewOutcome | null;
 };

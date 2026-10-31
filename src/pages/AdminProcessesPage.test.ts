@@ -44,7 +44,7 @@ describe('AdminProcessesPage', () => {
     wrapper.unmount();
   });
 
-  it('muestra arriba los indicadores y el botón «Antes de empezar»', async () => {
+  it('muestra arriba los indicadores y deja «Nueva convocatoria» deshabilitada', async () => {
     api.getSession.mockResolvedValue({ active_role: { code: 'administrador' } });
     api.getAcademicGovernance.mockResolvedValue({ lock_reason: null, catalogs: { faculties: [], careers: [], periods: [] }, options: {} });
     api.getProcesses.mockResolvedValue({ processes: [], template: null, periods: [], active_process: null });
@@ -59,21 +59,6 @@ describe('AdminProcessesPage', () => {
 
     expect(wrapper.text()).toContain('Carreras sin convocar');
     expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('true');
-    const trigger = wrapper.get('button[aria-label="Antes de empezar"]');
-    await trigger.trigger('click');
-    await flushPromises();
-
-    const items = [...document.body.querySelectorAll('[role="dialog"] li')];
-    expect(items).toHaveLength(5);
-    expect(items[0]!.getAttribute('data-done')).toBe('true');
-    expect(items[0]!.querySelector('[aria-label="Completado"]')).not.toBeNull();
-    expect(items[1]!.querySelector('a')!.getAttribute('href')).toBe('/admin/estructura-academica?seccion=carrera');
-    expect(document.body.querySelector('[role="dialog"]')!.textContent).toContain('1 de 5');
-    const close = [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find((button) => button.textContent?.trim() === 'Cerrar')!;
-    close.click();
-    await flushPromises();
-    expect(document.body.querySelector('[role="dialog"]')).toBeNull();
-    wrapper.unmount();
   });
 
   it('con todo finalizado permite abrir una nueva convocatoria', async () => {

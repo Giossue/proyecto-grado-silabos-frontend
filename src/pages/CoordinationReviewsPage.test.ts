@@ -55,13 +55,12 @@ describe('CoordinationReviewsPage', () => {
     });
   });
 
-  it('reúne arriba Pausar y Antes de empezar, sin indicadores', async () => {
+  it('reúne arriba Pausar y las demás acciones, sin indicadores', async () => {
     const wrapper = mountPage();
     await flushPromises();
 
     expect(wrapper.text()).not.toContain('Avance del proceso');
     expect(wrapper.get('.actions').text()).toContain('Pausar convocatoria');
-    expect(wrapper.find('.actions [aria-label="Antes de empezar"]').exists()).toBe(true);
     expect(wrapper.text()).toContain('Álgebra Lineal');
     expect(wrapper.text()).toContain('27 oct 2026');
     expect(wrapper.text()).not.toContain('Por revisar');
