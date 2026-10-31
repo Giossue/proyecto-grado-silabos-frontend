@@ -205,7 +205,7 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
     expect(wrapper.get('#field-field-1').text()).toContain('Carrera');
     expect(wrapper.findAllComponents(FreeTextEditor).map((editor) => editor.attributes('id'))).toEqual(['input-field-2', 'input-field-3']);
-    expect(wrapper.get('#field-field-3').text()).toContain('Viene de la ficha; puede ajustarlo.');
+    expect(wrapper.get('#field-field-3').text()).toContain('Viene de la ficha; puede ajustarlo');
     wrapper.unmount();
   });
 

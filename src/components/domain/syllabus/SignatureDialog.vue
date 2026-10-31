@@ -82,7 +82,7 @@ const submit = async (): Promise<void> => {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>{{ title }}</DialogTitle>
-        <DialogDescription class="flex items-center gap-2 rounded-md bg-muted/50 p-3"><ShieldCheck class="size-4 shrink-0 text-success" aria-hidden="true" />Su firma está protegida: nada sale de su equipo.</DialogDescription>
+        <DialogDescription class="flex items-center gap-2 rounded-md bg-muted/50 p-3"><ShieldCheck class="size-4 shrink-0 text-success" aria-hidden="true" />Su firma está protegida: nada sale de su equipo</DialogDescription>
       </DialogHeader>
       <form class="flex flex-col gap-4" data-testid="signature-form" @submit.prevent="submit">
         <Field :data-invalid="Boolean(errors.certificate)">
