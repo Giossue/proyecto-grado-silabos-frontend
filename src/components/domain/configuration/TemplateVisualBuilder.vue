@@ -418,10 +418,10 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
 
     <div :class="cn('pointer-events-none sticky z-20 mx-auto flex w-full justify-end', preview ? 'top-[calc(var(--app-header-height)+0.5rem)]' : 'top-16')" :style="{ maxWidth: toolbarWidth }">
-      <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
+      <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <Button type="button" :disabled="locked" @click="editWarningOpen = true"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
       </div>
-      <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 flex-wrap items-center gap-1 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
+      <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 flex-wrap items-center gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <TemplateSelectionTools
