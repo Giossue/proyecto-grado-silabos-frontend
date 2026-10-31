@@ -27,7 +27,7 @@ import { templateRuntime } from '@/lib/blocks/runtime';
 import { plural, type ValueSchema } from '@/lib/blocks/types';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { useCountdown } from '@/composables/useCountdown';
 import { toast } from '@/lib/toast';
 import { templateEditorState } from '@/state/templateEditor';
@@ -472,14 +472,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <div class="flex shrink-0 items-center gap-1">
           <DropdownMenu>
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <DropdownMenuTrigger as-child>
-                  <Button type="button" variant="ghost" size="icon-sm" aria-label="Opciones avanzadas" :disabled="busy || locked"><Settings2 aria-hidden="true" /></Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent>Opciones avanzadas</TooltipContent>
-            </Tooltip>
+            <DropdownMenuTrigger as-child>
+              <Button type="button" variant="ghost" size="icon-sm" aria-label="Opciones avanzadas" title="Opciones avanzadas" :disabled="busy || locked"><Settings2 aria-hidden="true" /></Button>
+            </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuGroup>
                 <DropdownMenuItem :disabled="locked" @select="jsonOpen = true">Editar JSON</DropdownMenuItem>
@@ -487,14 +482,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
             </DropdownMenuContent>
           </DropdownMenu>
           <Popover v-if="layoutControls.length">
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <PopoverTrigger as-child>
-                  <Button type="button" variant="ghost" size="icon-sm" aria-label="Diseño" :disabled="busy || locked"><Ruler aria-hidden="true" /></Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent>Diseño</TooltipContent>
-            </Tooltip>
+            <PopoverTrigger as-child>
+              <Button type="button" variant="ghost" size="icon-sm" aria-label="Diseño" title="Diseño" :disabled="busy || locked"><Ruler aria-hidden="true" /></Button>
+            </PopoverTrigger>
             <PopoverContent align="end" class="w-72">
               <FieldGroup class="gap-4">
                 <p class="text-sm text-muted-foreground">Márgenes y tamaños del documento. La letra, los colores y la alineación son los institucionales.</p>
@@ -509,14 +499,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
             </PopoverContent>
           </Popover>
           <Popover v-if="listsDraft.length">
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <PopoverTrigger as-child>
-                  <Button type="button" variant="ghost" size="icon-sm" aria-label="Listas" :disabled="busy || locked"><ListTree aria-hidden="true" /></Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent>Listas</TooltipContent>
-            </Tooltip>
+            <PopoverTrigger as-child>
+              <Button type="button" variant="ghost" size="icon-sm" aria-label="Listas" title="Listas" :disabled="busy || locked"><ListTree aria-hidden="true" /></Button>
+            </PopoverTrigger>
             <PopoverContent align="end" class="w-80">
               <FieldGroup class="gap-4">
                 <p class="text-sm text-muted-foreground">Cuántos elementos puede tener el docente.</p>
