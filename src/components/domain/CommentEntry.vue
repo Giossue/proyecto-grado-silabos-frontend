@@ -14,7 +14,7 @@ defineProps<{
 <template>
     <Card class="gap-3 rounded-md py-3">
         <CardHeader class="flex flex-row flex-wrap items-center gap-2 px-4">
-            <Badge variant="outline">Revisión {{ revision }}</Badge>
+            <Badge variant="outline">Versión {{ revision }}</Badge>
             <slot name="badges" />
         </CardHeader>
         <CardContent class="px-4 text-sm whitespace-pre-wrap">{{ content }}</CardContent>

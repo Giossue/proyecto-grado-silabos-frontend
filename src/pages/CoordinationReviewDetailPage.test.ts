@@ -5,6 +5,7 @@ const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 import { ApiError } from "@/api/client";
 import {
   approveReview,
+  compareReviews,
   getReview,
   requestCorrection,
   resetSyllabus,
@@ -25,6 +26,7 @@ vi.mock("@/api/session", () => ({ getSession: vi.fn() }));
 vi.mock("@/api/reviews", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/reviews")>()),
   approveReview: vi.fn(),
+  compareReviews: vi.fn(),
   getReview: vi.fn(),
   requestCorrection: vi.fn(),
   resetSyllabus: vi.fn(),
@@ -97,6 +99,7 @@ const detail = (decisionsAllowed = true): ReviewDetail => ({
     submitted_by: "Docente Demo",
     approved_at: null,
   }],
+  timeline: [{ kind: "enviado", at: "2026-09-16T10:00:00Z", revision_id: "revision-1", revision_number: 1, by: "Docente Demo", comment: null, previous_id: null }],
   correction_request: null,
   decisions_allowed: decisionsAllowed,
   reset: { allowed: false },
@@ -116,6 +119,7 @@ describe("CoordinationReviewDetailPage", () => {
   beforeEach(() => {
     for (const mock of [
       approveReview,
+      compareReviews,
       getReview,
       requestCorrection,
       resetSyllabus,
@@ -236,7 +240,7 @@ describe("CoordinationReviewDetailPage", () => {
 
     await headerButton(wrapper, "Más")!.trigger("keydown", { key: "Enter" });
     await flushPromises();
-    expect(document.body.querySelectorAll('[role="menuitem"]')).toHaveLength(2);
+    expect(document.body.querySelectorAll('[role="menuitem"]')).toHaveLength(1);
     expect([...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].some((item) => item.textContent?.includes("Eliminar"))).toBe(false);
     [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) => item.textContent?.includes("Reiniciar sílabo"))!.click();
     await flushPromises();
@@ -268,19 +272,65 @@ describe("CoordinationReviewDetailPage", () => {
     vi.useRealTimers();
   });
 
-  it("muestra el historial en una hoja", async () => {
+  it("el historial lleva a su propia pantalla de versiones", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(headerButton(wrapper, "Historial")).toBeUndefined();
-    await headerButton(wrapper, "Más")!.trigger("keydown", { key: "Enter" });
-    await flushPromises();
-    [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) => item.textContent?.includes("Historial"))!.click();
+    expect(wrapper.find('[aria-label="Historial"]').exists()).toBe(true);
+    wrapper.unmount();
+  });
+
+  it("desde el segundo envío ofrece «Ver qué cambió» y resalta en el documento los campos que cambiaron", async () => {
+    const second = detail();
+    second.revision = { ...second.revision, id: "revision-2", number: 2 };
+    second.history = [...second.history, { id: "revision-2", number: 2, submitted_at: "2026-09-20T10:00:00Z", submitted_by: "Docente Demo", approved_at: null }];
+    vi.mocked(getReview).mockResolvedValue(second);
+    vi.mocked(compareReviews).mockResolvedValue({
+      syllabus: { id: "syllabus-1", subject: "Arquitectura de Software", code: "SW-601", period: "2026-2027" },
+      comparison: { before_revision: 1, after_revision: 2, changed_fields: 1, changes: [{ section_key: "descripcion", section_title: "Descripción", field_key: "objetivo", label: "Objetivo general", quien_llena: "docente", change: "modified", before: null, after: null }] },
+    } as never);
+    const wrapper = mountPage();
     await flushPromises();
 
-    expect(document.body.textContent).toContain("Revisión 1 (actual)");
-    expect(document.body.textContent).toContain("Primera revisión: no hay una anterior con qué comparar.");
+    expect(wrapper.find('[data-change-mark]').exists()).toBe(false);
+    expect(wrapper.find('[aria-label="Ver qué cambió"]').exists()).toBe(true);
+    await headerButton(wrapper, "Resaltar cambios")!.trigger("click");
+    await flushPromises();
+
+    expect(compareReviews).toHaveBeenCalledWith("revision-1", "revision-2");
+    const marked = wrapper.findAll('[data-changed]');
+    expect(marked).toHaveLength(1);
+    expect(marked[0]!.attributes("data-field")).toBe("objetivo");
+    expect(wrapper.find('[data-change-mark]').text()).toBe("Cambió");
+
+    await headerButton(wrapper, "Resaltar cambios")!.trigger("click");
+    expect(wrapper.find('[data-change-mark]').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it("con el sílabo devuelto al docente no ofrece resaltar ni comparar, porque no hay un envío nuevo que revisar", async () => {
+    const returned = detail();
+    returned.syllabus = { ...returned.syllabus, state: "correccion_solicitada", stage: null as never };
+    returned.revision = { ...returned.revision, id: "revision-2", number: 2 };
+    returned.history = [...returned.history, { id: "revision-2", number: 2, submitted_at: "2026-09-20T10:00:00Z", submitted_by: "Docente Demo", approved_at: null }];
+    vi.mocked(getReview).mockResolvedValue(returned);
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find('[aria-label="Historial"]').exists()).toBe(true);
+    expect(headerButton(wrapper, "Resaltar cambios")).toBeUndefined();
+    expect(wrapper.find('[aria-label="Ver qué cambió"]').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it("con un solo envío no ofrece comparar", async () => {
+    vi.mocked(getReview).mockResolvedValue(detail());
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find('[aria-label="Ver qué cambió"]').exists()).toBe(false);
+    expect(headerButton(wrapper, "Resaltar cambios")).toBeUndefined();
     wrapper.unmount();
   });
 

@@ -1,25 +1,25 @@
 <script setup lang="ts">
-import { ArrowLeft, FileSignature, FileText, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
+import { ArrowLeft, FileSignature, FileText, GitCompareArrows, Highlighter, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
-import { approveReview, getReview, requestCorrection, reviewStageLabel, type ReviewDetail } from '@/api/reviews';
+import { approveReview, compareReviews, getReview, requestCorrection, reviewStageLabel, type ReviewDetail } from '@/api/reviews';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
-import ReviewHistorySheet from '@/components/domain/syllabus/ReviewHistorySheet.vue';
 import SignatureDialog, { type StatementSigner } from '@/components/domain/syllabus/SignatureDialog.vue';
 import ReviewCommentNotice from '@/components/domain/syllabus/ReviewCommentNotice.vue';
 import SyllabusDocumentPreview, { type PreviewSection } from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
 import SyllabusRestartDialog from '@/components/domain/syllabus/SyllabusRestartDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { goBack } from '@/lib/goBack';
 import { sheetPixels } from '@/lib/documentLayout';
 import { openRevisionPdf } from '@/lib/openPdf';
@@ -32,7 +32,6 @@ const area = reviewAreaPaths();
 const data = ref<ReviewDetail | null>(null);
 const loading = ref(true);
 const loadError = ref('');
-const historyOpen = ref(false);
 const correctionOpen = ref(false);
 const signOpen = ref(false);
 const restartOpen = ref(false);
@@ -71,6 +70,27 @@ const correctionComments = computed(() => {
 
   return [{ stage: request.stage ?? 'coordinacion', comment: request.justification, commented_at: request.requested_at, commented_by: request.requested_by ?? '', revision_number: data.value.revision.number }];
 });
+const previousRevision = computed(() => {
+  if (!data.value) return null;
+  const index = data.value.history.findIndex((item) => item.id === data.value?.revision.id);
+
+  return index > 0 ? data.value.history[index - 1]! : null;
+});
+const showChanges = computed(() => Boolean(previousRevision.value && data.value?.syllabus.state === 'en_revision' && data.value.revision.is_current));
+const highlightOn = ref(false);
+const changedFields = ref<ReadonlySet<string>>(new Set());
+const toggleHighlight = async (): Promise<void> => {
+  if (highlightOn.value) { highlightOn.value = false; return; }
+  if (!data.value || !previousRevision.value || !showChanges.value) return;
+  try {
+    const result = await compareReviews(previousRevision.value.id, data.value.revision.id);
+    changedFields.value = new Set(result.comparison.changes.map((change) => `${change.section_key}.${change.field_key}`));
+    highlightOn.value = true;
+    if (result.comparison.changes.length === 0) toast.success('No hay cambios respecto al envío anterior.');
+  } catch (reason) {
+    toast.error(reason instanceof ApiError ? reason.message : 'No se pudo comparar con el envío anterior.');
+  }
+};
 const openingPdf = ref(false);
 const openPdf = async (revisionId: string): Promise<void> => {
   openingPdf.value = true;
@@ -126,7 +146,7 @@ const approve = async (sign: StatementSigner): Promise<void> => {
   await changed(result.message);
 };
 
-watch(() => route.params.revision, (current, previous) => { if (current !== previous) void load(); });
+watch(() => route.params.revision, (current, previous) => { if (current !== previous) { highlightOn.value = false; void load(); } });
 onMounted(load);
 </script>
 
@@ -137,24 +157,40 @@ onMounted(load);
     <AppearanceToggle />
   </header>
   <PageFrame v-if="data && !loadError" header-class="syllabus-editor-header" :header-width="sheetWidth" hide-icon :title="data.syllabus.subject" :description="`${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
-    <template #title-badge>
+    <template #status>
       <SyllabusStateBadge :state="data.syllabus.state" />
       <span v-for="note in statusNotes" :key="note" class="text-sm text-muted-foreground">{{ note }}</span>
     </template>
     <template #actions>
       <Button v-if="approvedCurrent" type="button" :disabled="openingPdf" @click="openPdf(data.revision.id)"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" />Ver PDF</Button>
-      <DropdownMenu>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button as-child type="button" variant="ghost" size="icon" aria-label="Historial"><RouterLink :to="area.history(data.revision.id)"><History aria-hidden="true" /></RouterLink></Button>
+          </TooltipTrigger>
+          <TooltipContent>Historial</TooltipContent>
+        </Tooltip>
+        <template v-if="showChanges && previousRevision">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button type="button" variant="ghost" size="icon" aria-label="Resaltar cambios" :aria-pressed="highlightOn" :class="highlightOn ? 'bg-accent text-accent-foreground' : ''" @click="toggleHighlight"><Highlighter aria-hidden="true" /></Button>
+          </TooltipTrigger>
+          <TooltipContent>{{ highlightOn ? 'Quitar el resaltado' : 'Resaltar lo que cambió' }}</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button as-child type="button" variant="ghost" size="icon" aria-label="Ver qué cambió"><RouterLink :to="area.comparison(previousRevision.id, data.revision.id)"><GitCompareArrows aria-hidden="true" /></RouterLink></Button>
+          </TooltipTrigger>
+          <TooltipContent>Ver qué cambió</TooltipContent>
+        </Tooltip>
+        </template>
+      </TooltipProvider>
+      <DropdownMenu v-if="canReset">
         <DropdownMenuTrigger as-child><Button type="button" variant="ghost" size="icon" aria-label="Más"><MoreHorizontal aria-hidden="true" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
-            <DropdownMenuItem @select="historyOpen = true"><History data-icon="inline-start" aria-hidden="true" />Historial</DropdownMenuItem>
+            <DropdownMenuItem variant="destructive" @select="restartOpen = true"><RotateCcw data-icon="inline-start" aria-hidden="true" />Reiniciar sílabo</DropdownMenuItem>
           </DropdownMenuGroup>
-          <template v-if="canReset">
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem variant="destructive" @select="restartOpen = true"><RotateCcw data-icon="inline-start" aria-hidden="true" />Reiniciar sílabo</DropdownMenuItem>
-            </DropdownMenuGroup>
-          </template>
         </DropdownMenuContent>
       </DropdownMenu>
       <Button v-if="canReviewCurrent" type="button" variant="outline" @click="openCorrection">Solicitar corrección</Button>
@@ -165,9 +201,8 @@ onMounted(load);
       <ReviewCommentNotice :comments="correctionComments" />
     </div>
 
-    <SyllabusDocumentPreview :presentation="data.presentation" :sections="previewSections" />
+    <SyllabusDocumentPreview :presentation="data.presentation" :sections="previewSections" :changed="highlightOn ? changedFields : undefined" />
 
-    <ReviewHistorySheet v-model:open="historyOpen" :history="data.history" :current-id="data.revision.id" />
     <SyllabusRestartDialog v-if="canReset" v-model:open="restartOpen" :syllabus-id="data.syllabus.id" :subject="data.syllabus.subject" :impact="data.reset" @saved="restarted" />
 
     <Dialog v-model:open="correctionOpen">

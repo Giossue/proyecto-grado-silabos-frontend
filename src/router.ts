@@ -33,6 +33,7 @@ const AdminTemplatePage = () => import("@/pages/AdminTemplatePage.vue");
 const AdminAuditPage = () => import("@/pages/AdminAuditPage.vue");
 
 const CoordinationReviewsPage = () => import("@/pages/CoordinationReviewsPage.vue");
+const CoordinationReviewHistoryPage = () => import("@/pages/CoordinationReviewHistoryPage.vue");
 const CoordinationReviewDetailPage = () => import("@/pages/CoordinationReviewDetailPage.vue");
 const CoordinationReviewComparisonPage = () => import("@/pages/CoordinationReviewComparisonPage.vue");
 const CoordinationAcademicStructurePage = () => import("@/pages/CoordinationAcademicStructurePage.vue");
@@ -88,6 +89,7 @@ export const router = createRouter({
 
     { path: "/coordinacion/revisiones", component: CoordinationReviewsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Revisión" } },
     { path: "/coordinacion/revisiones/:revision", component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión", layout: "syllabus-editor" } },
+    { path: "/coordinacion/revisiones/:revision/historial", component: CoordinationReviewHistoryPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Historial de versiones", layout: "syllabus-editor" } },
     { path: "/coordinacion/revisiones/:before/comparar/:after", component: CoordinationReviewComparisonPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Comparar revisiones", layout: "syllabus-editor" } },
     { path: "/coordinacion/proyecto-carrera", component: CoordinationCareerProjectPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Proyecto de carrera" } },
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },

@@ -75,12 +75,22 @@ export type ReviewDetail = {
     approved_at: string | null;
     approved_by?: string | null;
   }>;
+  timeline: ReviewTimelineEvent[];
   correction_request: { justification: string | null; requested_at: string; stage?: ReviewStage; requested_by?: string | null } | null;
   decisions_allowed: boolean;
   reset: { allowed: boolean; erases_history?: boolean; revisions?: number; signatures?: number; has_pdf?: boolean };
 };
+export type ReviewTimelineEvent = {
+  kind: "enviado" | "coordinacion_aprobo" | "correccion" | "devuelto_biblioteca" | "aprobado";
+  at: string;
+  revision_id: string;
+  revision_number: number;
+  by: string | null;
+  comment: string | null;
+  previous_id: string | null;
+};
 export type ReviewComparison = {
-  syllabus: { id: string; subject: string; code: string; period: string; current_revision_id?: string | null };
+  syllabus: { id: string; subject: string; code: string; period: string; current_revision_id?: string | null; revisions?: Array<{ id: string; number: number; submitted_at: string }> };
   comparison: {
     before_revision: number;
     after_revision: number;

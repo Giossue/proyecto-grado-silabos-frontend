@@ -50,7 +50,7 @@ watch(open, (value) => { if (value) stage.value = latestStage.value; });
               <p class="truncate font-medium">{{ item.commented_by }}</p>
               <p class="text-xs text-muted-foreground">{{ STAGE_NAME[item.stage] }} · {{ formatDateDisplay(item.commented_at) }}</p>
             </div>
-            <span class="text-xs font-medium text-muted-foreground tabular-nums">Envío {{ item.revision_number }}</span>
+            <span class="text-xs font-medium text-muted-foreground tabular-nums">Versión {{ item.revision_number }}</span>
           </div>
           <p class="break-words whitespace-pre-wrap">{{ item.comment }}</p>
         </li>

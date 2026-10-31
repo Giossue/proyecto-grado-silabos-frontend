@@ -11,10 +11,11 @@ export type PreviewSection = {
     id: string;
     title: string;
     orientation?: 'portrait' | 'landscape';
-    fields: Array<Pick<DocumentField, 'label' | 'value' | 'document'> & { id: string }>;
+    fields: Array<Pick<DocumentField, 'label' | 'value' | 'document'> & { id: string; key?: string }>;
 };
 
-const props = defineProps<{ presentation: DocumentPresentation; sections: PreviewSection[] }>();
+const props = defineProps<{ presentation: DocumentPresentation; sections: PreviewSection[]; changed?: ReadonlySet<string> }>();
+const isChanged = (sectionId: string, field: PreviewSection['fields'][number]): boolean => props.changed?.has(`${sectionId}.${field.key ?? field.id}`) === true;
 
 const root = ref<HTMLElement | null>(null);
 const available = ref(0);
@@ -67,7 +68,7 @@ onBeforeUnmount(() => {
     resizeObserver?.disconnect();
     cancelAnimationFrame(frame);
 });
-watch(() => [props.sections, props.presentation], () => { void nextTick(paginate); }, { deep: true });
+watch(() => [props.sections, props.presentation, props.changed], () => { void nextTick(paginate); }, { deep: true });
 </script>
 
 <template>
@@ -85,7 +86,8 @@ watch(() => [props.sections, props.presentation], () => { void nextTick(paginate
           <section v-for="section in sheet.items" :key="section.id" class="flex min-w-0 flex-col gap-3" :data-section="section.id">
             <h3 class="font-bold" data-section-title>{{ section.title }}</h3>
             <ol class="flex flex-col gap-3">
-              <li v-for="field in section.fields" :key="field.id" :data-field="field.id" class="min-w-0 px-2 py-1">
+              <li v-for="field in section.fields" :key="field.id" :data-field="field.id" :data-changed="isChanged(section.id, field) || undefined" :class="cn('relative min-w-0 px-2 py-1', isChanged(section.id, field) && 'rounded-md bg-warning/10 ring-2 ring-warning/60')">
+                <span v-if="isChanged(section.id, field)" class="absolute -top-2.5 right-2 rounded-full bg-warning px-2 py-0.5 text-xs font-medium text-warning-foreground" data-change-mark>Cambió</span>
                 <div class="flex min-w-0 flex-col gap-1">
                   <div v-if="field.label.trim() && field.label.trim().toLowerCase() !== section.title.trim().toLowerCase()" data-field-label><h4 class="min-w-0 font-bold [overflow-wrap:anywhere]">{{ field.label }}</h4></div>
                   <div data-field-body><FreeTextContent :value="field.document ?? field.value" empty-text="Sin completar" /></div>

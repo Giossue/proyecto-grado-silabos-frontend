@@ -44,6 +44,7 @@ export const paths = {
 
     reviews: '/coordinacion/revisiones',
     review: (revision: string): string => `/coordinacion/revisiones/${segment(revision)}`,
+    history: (revision: string): string => `/coordinacion/revisiones/${segment(revision)}/historial`,
     comparison: (before: string, after: string): string =>
       `/coordinacion/revisiones/${segment(before)}/comparar/${segment(after)}`,
     academic: '/coordinacion/estructura-academica',
@@ -204,6 +205,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
 
   { name: 'coordination-reviews', path: paths.coordination.reviews, component: 'CoordinationReviewsPage', breadcrumb: 'Revisión', ...coordinator },
   { name: 'coordination-review', path: '/coordinacion/revisiones/:revision', component: 'CoordinationReviewDetailPage', breadcrumb: 'Detalle de revisión', layout: 'syllabus-editor', ...coordinator },
+  { name: 'coordination-history', path: '/coordinacion/revisiones/:revision/historial', component: 'CoordinationReviewHistoryPage', breadcrumb: 'Historial de versiones', layout: 'syllabus-editor', ...coordinator },
   { name: 'coordination-comparison', path: '/coordinacion/revisiones/:before/comparar/:after', component: 'CoordinationReviewComparisonPage', breadcrumb: 'Comparar revisiones', layout: 'syllabus-editor', ...coordinator },
   { name: 'coordination-curriculum', path: paths.coordination.curriculum, component: 'CoordinationAcademicStructurePage', states: ['curriculum'], breadcrumb: 'Malla', ...coordinator },
   { name: 'coordination-career-project', path: paths.coordination.careerProject, component: 'CoordinationCareerProjectPage', breadcrumb: 'Proyecto de carrera', ...coordinator },
