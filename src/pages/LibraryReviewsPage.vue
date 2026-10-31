@@ -15,6 +15,7 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -90,7 +91,7 @@ onMounted(() => { void load(initialPage, true); });
 
 <template>
   <PageFrame title="Revisiones de biblioteca" description="Bibliografía de los sílabos enviados." size="wide" :loading="!data">
-    <template #actions><Button as-child variant="outline"><RouterLink :to="paths.library.history"><History data-icon="inline-start" aria-hidden="true" />Historial</RouterLink></Button></template>
+    <template #actions><TooltipProvider><Tooltip><TooltipTrigger as-child><Button as-child variant="ghost" size="icon"><RouterLink :to="paths.library.history" aria-label="Historial"><History aria-hidden="true" /></RouterLink></Button></TooltipTrigger><TooltipContent>Historial</TooltipContent></Tooltip></TooltipProvider></template>
     <template v-if="periods.length > 0" #meta><Badge v-for="period in periods" :key="period" variant="secondary">Período {{ period }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="2" :actions="false" chip metrics />

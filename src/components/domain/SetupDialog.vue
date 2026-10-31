@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Progress } from '@/components/ui/progress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { withoutEndPeriod } from '@/lib/text';
 
 /** Pasos de configuración previos a abrir la convocatoria; el paso `startKey` es el botón de la pantalla y no se lista. */
@@ -18,9 +19,16 @@ const done = computed(() => steps.value.filter((step) => step.done).length);
 
 <template>
   <Dialog>
-    <DialogTrigger as-child>
-      <Button type="button" variant="outline"><ListChecks data-icon="inline-start" aria-hidden="true" />Antes de empezar</Button>
-    </DialogTrigger>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <DialogTrigger as-child>
+            <Button type="button" variant="ghost" size="icon" aria-label="Antes de empezar"><ListChecks aria-hidden="true" /></Button>
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent>Antes de empezar</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
     <DialogContent class="sm:max-w-xl">
       <DialogHeader>
         <DialogTitle>{{ setup.title }}</DialogTitle>

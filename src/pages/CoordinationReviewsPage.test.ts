@@ -59,7 +59,7 @@ describe('CoordinationReviewsPage', () => {
 
     expect(wrapper.text()).not.toContain('Avance del proceso');
     expect(wrapper.get('.actions').text()).toContain('Pausar convocatoria');
-    expect(wrapper.get('.actions').text()).toContain('Antes de empezar');
+    expect(wrapper.find('.actions [aria-label="Antes de empezar"]').exists()).toBe(true);
     expect(wrapper.text()).toContain('Álgebra Lineal');
     expect(wrapper.text()).toContain('Por revisar');
     expect(wrapper.text()).not.toContain('En coordinación');

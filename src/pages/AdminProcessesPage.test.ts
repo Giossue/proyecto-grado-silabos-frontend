@@ -59,7 +59,7 @@ describe('AdminProcessesPage', () => {
 
     expect(wrapper.text()).toContain('Carreras sin convocar');
     expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('true');
-    const trigger = wrapper.findAll('button').find((button) => button.text().includes('Antes de empezar'))!;
+    const trigger = wrapper.get('button[aria-label="Antes de empezar"]');
     await trigger.trigger('click');
     await flushPromises();
 

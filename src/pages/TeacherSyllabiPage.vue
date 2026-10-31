@@ -13,6 +13,7 @@ import { queryPage, queryText, syncFilters } from '@/lib/urlFilters';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import { History, Inbox } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -59,7 +60,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
 
 <template>
   <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide" :loading="!result">
-    <template #actions><Button as-child variant="outline"><RouterLink :to="paths.teacher.history"><History data-icon="inline-start" aria-hidden="true" />Historial</RouterLink></Button></template>
+    <template #actions><TooltipProvider><Tooltip><TooltipTrigger as-child><Button as-child variant="ghost" size="icon"><RouterLink :to="paths.teacher.history" aria-label="Historial"><History aria-hidden="true" /></RouterLink></Button></TooltipTrigger><TooltipContent>Historial</TooltipContent></Tooltip></TooltipProvider></template>
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
     <Card v-if="result" class="py-3">
       <CardContent class="px-3">
