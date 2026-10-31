@@ -119,7 +119,7 @@ describe('LibraryReviewDetailPage', () => {
       cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
     });
     expect(toastSuccess).toHaveBeenCalledWith('Sílabo aprobado.');
-    expect(wrapper.text()).toContain('Biblioteca firmó este sílabo.');
+    expect(wrapper.text()).toContain('Aprobado');
     expect(headerButton(wrapper, 'Firmar y aprobar')).toBeUndefined();
     wrapper.unmount();
   });

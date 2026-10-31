@@ -28,7 +28,7 @@ const homeHref = computed(() => toUrl(navItems.value[0]?.href ?? '/panel'));
 
 <template>
     <header
-        class="sticky top-0 z-30 flex h-(--app-header-height) shrink-0 items-center gap-2 border-b border-border bg-card px-4 pt-[env(safe-area-inset-top)] transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--app-header-compact-height) max-sm:fixed max-sm:inset-x-0 max-sm:top-auto max-sm:bottom-0 max-sm:h-(--mobile-nav-height) max-sm:justify-around max-sm:border-t max-sm:border-b-0 max-sm:pt-0 max-sm:pb-[env(safe-area-inset-bottom)] max-sm:shadow-menu"
+        class="sticky top-0 z-30 flex h-(--app-header-height) shrink-0 items-center gap-2 border-border bg-card px-4 pt-[env(safe-area-inset-top)] transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--app-header-compact-height) max-sm:fixed max-sm:inset-x-0 max-sm:top-auto max-sm:bottom-0 max-sm:h-(--mobile-nav-height) max-sm:justify-around max-sm:border-t max-sm:border-b-0 max-sm:pt-0 max-sm:pb-[env(safe-area-inset-bottom)] max-sm:shadow-menu"
     >
         <div class="flex min-w-0 flex-1 items-center gap-2 max-sm:contents">
             <RouterLink v-if="!sidebar" :to="homeHref" class="flex items-center max-sm:hidden" aria-label="Ir al inicio">

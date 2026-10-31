@@ -3,6 +3,7 @@ import { CalendarClock } from '@lucide/vue';
 import { computed } from 'vue';
 import type { DashboardDeadline } from '@/api/dashboard';
 import { formatDateDisplay } from '@/lib/dateDisplay';
+import { cn } from '@/lib/utils';
 
 type Audience = 'docente' | 'coordinador' | 'bibliotecario';
 
@@ -16,13 +17,21 @@ const tasks: Record<Audience, { task: string; upcoming: string; until: (due: str
 
 const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'long', timeZone: 'UTC' });
 
+const overdue = computed(() => props.deadline.state === 'overdue');
+
+const overdueNotice: Record<Audience, (due: string) => { headline: string; detail: string }> = {
+  docente: (due) => ({ headline: 'Venció el plazo para enviar sus sílabos a revisión', detail: `Era hasta el ${due}. Pida una prórroga a Administración.` }),
+  coordinador: (due) => ({ headline: 'Venció el plazo de entrega de los sílabos', detail: `Era hasta el ${due}. Solo puede revisar lo ya enviado.` }),
+  bibliotecario: (due) => ({ headline: 'Venció el plazo de entrega de los sílabos', detail: `Era hasta el ${due}. Solo puede revisar lo ya enviado.` }),
+};
+
 const notice = computed((): { headline: string; detail: string | null } => {
   const { state, days_until_start: toStart, days_until_due: toDue } = props.deadline;
   const { task, upcoming, until } = tasks[props.audience];
   const due = formatDate(props.deadline.due_at);
   if (state === 'paused') return { headline: 'La convocatoria está pausada', detail: null };
   if (state === 'closed') return { headline: 'La convocatoria está cerrada', detail: null };
-  if (state === 'overdue') return { headline: `Venció el plazo para ${task}`, detail: `Era hasta el ${due}.` };
+  if (state === 'overdue') return overdueNotice[props.audience](due);
   if (state === 'upcoming') {
     const when = toStart === 0 ? 'hoy' : toStart === 1 ? 'mañana' : `en ${toStart} días`;
     return { headline: `${upcoming} ${when}`, detail: until(due) };
@@ -33,9 +42,9 @@ const notice = computed((): { headline: string; detail: string | null } => {
 </script>
 
 <template>
-  <div role="status" class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-notice-border bg-notice px-4 py-2.5 text-sm text-notice-foreground sm:px-6">
-    <CalendarClock class="size-4 shrink-0 text-warning" aria-hidden="true" />
+  <div role="status" :class="cn('flex flex-wrap items-center gap-x-3 gap-y-1 border-y px-4 py-2.5 text-sm sm:px-6', overdue ? 'border-destructive/30 bg-destructive/10 text-destructive' : 'border-notice-border bg-notice text-notice-foreground')">
+    <CalendarClock :class="cn('size-4 shrink-0', overdue ? 'text-destructive' : 'text-warning')" aria-hidden="true" />
     <span class="font-medium">{{ notice.headline }}</span>
-    <span v-if="notice.detail" class="text-notice-foreground/80">{{ notice.detail }}</span>
+    <span v-if="notice.detail" :class="overdue ? '' : 'text-notice-foreground/80'">{{ notice.detail }}</span>
   </div>
 </template>

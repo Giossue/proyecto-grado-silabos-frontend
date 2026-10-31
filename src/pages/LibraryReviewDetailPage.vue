@@ -1,16 +1,18 @@
 <script setup lang="ts">
-import { ArrowLeft, BookCheck, CircleSlash, FileSignature, MessageSquareText } from '@lucide/vue';
+import { ArrowLeft, FileSignature, MessageSquareText } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { commentLibraryReview, getLibraryReview, verifyLibraryReview, type LibraryReviewDetail } from '@/api/library';
 import EmptyState from '@/components/domain/EmptyState.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
+import { goBack } from '@/lib/goBack';
+import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
 import SignatureDialog, { type StatementSigner } from '@/components/domain/syllabus/SignatureDialog.vue';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -21,6 +23,7 @@ import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
 const route = useRoute();
+const router = useRouter();
 const review = ref<LibraryReviewDetail | null>(null);
 const loading = ref(true);
 const loadError = ref('');
@@ -108,21 +111,29 @@ const approve = async (sign: StatementSigner): Promise<void> => {
   await load();
 };
 
+const outcomeBadge = computed((): { label: string; tone: StatusTone } | null => {
+  if (review.value?.outcome === 'firmado') return { label: 'Aprobado', tone: 'success' };
+  if (review.value?.outcome === 'devuelto') return { label: 'Devuelto al docente', tone: 'danger' };
+  if (review.value?.outcome === 'reemplazado') return { label: 'Reemplazado', tone: 'neutral' };
+
+  return null;
+});
+
 watch(() => route.params.revision, (current, previous) => { if (current !== previous) void load(); });
 onMounted(load);
 </script>
 
 <template>
   <PageFrame v-if="review && !loadError" :title="review.subject" :description="`${review.career} · ${review.teachers.join(', ')}`" size="narrow">
-    <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="paths.library.reviews"><ArrowLeft aria-hidden="true" />Volver a revisiones</RouterLink></Button></template>
+    <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.library.reviews)"><ArrowLeft aria-hidden="true" />Volver a revisiones</Button></template>
+    <template v-if="outcomeBadge" #title-badge>
+      <StatusBadge :label="outcomeBadge.label" :tone="outcomeBadge.tone" />
+      <span v-if="review.outcome === 'reemplazado'" class="text-sm text-muted-foreground">Hay un envío más reciente · solo consulta</span>
+    </template>
     <template #actions>
       <Button v-if="review.can_comment" type="button" variant="outline" @click="openReturn">Devolver al docente</Button>
       <Button v-if="canSign" type="button" @click="signOpen = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
     </template>
-
-    <Alert v-if="review.outcome === 'firmado'"><BookCheck aria-hidden="true" /><AlertTitle>Aprobado</AlertTitle><AlertDescription>Biblioteca firmó este sílabo.</AlertDescription></Alert>
-    <Alert v-else-if="review.outcome === 'devuelto'"><MessageSquareText aria-hidden="true" /><AlertTitle>Devuelto al docente</AlertTitle><AlertDescription>Volverá a esta bandeja cuando lo corrija.</AlertDescription></Alert>
-    <Alert v-else-if="review.outcome === 'reemplazado'"><CircleSlash aria-hidden="true" /><AlertTitle>Hay un envío más reciente</AlertTitle><AlertDescription>Este queda solo para consulta.</AlertDescription></Alert>
 
     <article v-if="fields.length" class="flex flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring" aria-label="Bibliografía">
       <section v-for="field in fields" :key="field.key" class="flex min-w-0 flex-col gap-2">

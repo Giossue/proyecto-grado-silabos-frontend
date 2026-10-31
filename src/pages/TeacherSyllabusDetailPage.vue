@@ -39,6 +39,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Spinner } from '@/components/ui/spinner';
 import FieldView from '@/components/domain/syllabus/FieldView.vue';
 import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
+import { goBack } from '@/lib/goBack';
 import { openRevisionPdf } from '@/lib/openPdf';
 import { sheetPixels } from '@/lib/documentLayout';
 import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
@@ -472,7 +473,7 @@ onBeforeUnmount(() => {
 
 <template>
   <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-surface backdrop-blur sm:px-5" aria-label="Herramientas del sílabo">
-    <Button variant="link" size="sm" class="h-auto px-0" as-child><RouterLink :to="paths.teacher.syllabi"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</RouterLink></Button>
+    <Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.teacher.syllabi)"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</Button>
     <span class="flex-1" />
     <AppearanceToggle />
   </header>

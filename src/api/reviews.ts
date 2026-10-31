@@ -20,7 +20,7 @@ export type ReviewQueueItem = {
   submitted_at: string;
 };
 export type ReviewsPage = {
-  filters: { state: string; search: string };
+  filters: { search: string };
   syllabi: {
     data: ReviewQueueItem[];
     current_page: number;
@@ -50,7 +50,6 @@ export type ReviewDetail = {
   };
   my_stage?: ReviewStage | null;
   can_decide?: boolean;
-  can_delete?: boolean;
   signing_statement?: string | null;
   signatures?: SignatureSummary[];
   presentation: DocumentPresentation;
@@ -71,19 +70,17 @@ export type ReviewDetail = {
     number: number;
     submitted_at: string;
     submitted_by: string;
-    library_verified_at?: string | null;
-    library_verified_by?: string | null;
     coordination_reviewed_at?: string | null;
     coordination_reviewed_by?: string | null;
     approved_at: string | null;
     approved_by?: string | null;
   }>;
-  correction_request: { justification: string; requested_at: string; stage?: ReviewStage; requested_by?: string } | null;
+  correction_request: { justification: string | null; requested_at: string; stage?: ReviewStage; requested_by?: string | null } | null;
   decisions_allowed: boolean;
-  reset: { allowed: boolean };
+  reset: { allowed: boolean; erases_history?: boolean; revisions?: number; signatures?: number; has_pdf?: boolean };
 };
 export type ReviewComparison = {
-  syllabus: { id: string; subject: string; code: string; period: string };
+  syllabus: { id: string; subject: string; code: string; period: string; current_revision_id?: string | null };
   comparison: {
     before_revision: number;
     after_revision: number;
@@ -102,10 +99,9 @@ export type ReviewComparison = {
 };
 
 export const getReviews = (
-  filters: { state?: string; search?: string; page?: number } = {},
+  filters: { search?: string; page?: number } = {},
 ) => {
   const query = new URLSearchParams();
-  if (filters.state) query.set("state", filters.state);
   if (filters.search) query.set("search", filters.search);
   if (filters.page && filters.page > 1) query.set("page", String(filters.page));
   return api<ReviewsPage>(
@@ -129,7 +125,5 @@ export const approveReview = (revisionId: string, signature: SignaturePayload) =
     method: "POST",
     body: JSON.stringify({ signature }),
   });
-export const deleteSyllabus = (syllabusId: string) =>
-  api<{ message: string }>(`/coordination/syllabi/${syllabusId}`, { method: "DELETE" });
-export const resetSyllabus = (syllabusId: string) =>
-  api<{ message: string }>(`/coordination/syllabi/${syllabusId}/reset`, { method: "POST" });
+export const resetSyllabus = (syllabusId: string, reason: string) =>
+  api<{ message: string }>(`/coordination/syllabi/${syllabusId}/reset`, { method: "POST", body: JSON.stringify({ reason }) });

@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { attemptKey } from '@/lib/attemptKey';
 import { formatDateDisplay } from '@/lib/dateDisplay';
+import { openPdfWindow } from '@/lib/openPdf';
 import { paths } from '@/lib/routes';
 
 const route = useRoute();
@@ -67,7 +68,7 @@ const fetchPdf = async (): Promise<string | null> => {
 };
 
 const view = async (): Promise<void> => {
-  const tab = window.open('', '_blank');
+  const tab = openPdfWindow();
   const url = await fetchPdf();
   if (!url) { tab?.close(); return; }
   if (tab) tab.location.href = url;

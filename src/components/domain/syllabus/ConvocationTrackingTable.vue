@@ -2,6 +2,7 @@
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import { SYLLABUS_STATE_OPTIONS } from '@/lib/syllabusStates';
 import { ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getConvocation, type ConvocationDetail } from '@/api/convocations';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
@@ -12,11 +13,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { reviewStageLabel } from '@/api/reviews';
+import { activateRow } from '@/lib/rowActivation';
+import { reviewAreaPaths } from '@/lib/routes';
 import { syllabusStateLabel } from '@/lib/syllabusStates';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
 
 const props = defineProps<{ convocationId: string }>();
+const router = useRouter();
+const area = reviewAreaPaths();
+const open = (revisionId: string): void => { void router.push(area.review(revisionId)); };
 const data = ref<ConvocationDetail | null>(null);
 const loading = ref(false);
 const error = ref<string | null>(null);
@@ -84,7 +91,7 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
         <TableEmpty v-if="syllabusPage.length === 0" :colspan="3">
           {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros.' : 'Los expedientes aparecerán después de abrir la convocatoria.' }}
         </TableEmpty>
-        <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id">
+        <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id" :class="syllabus.revision_id ? 'cursor-pointer' : ''" :tabindex="syllabus.revision_id ? 0 : undefined" :aria-label="syllabus.revision_id ? `Abrir revisión de ${syllabus.subject}` : undefined" @click="syllabus.revision_id && activateRow($event, () => open(syllabus.revision_id!))" @keydown.enter.self.prevent="syllabus.revision_id && open(syllabus.revision_id)" @keydown.space.self.prevent="syllabus.revision_id && open(syllabus.revision_id)">
           <TableCell>
             <div>{{ syllabus.subject }}</div>
             <div class="text-sm text-muted-foreground">{{ syllabus.code }}</div>
@@ -93,7 +100,7 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
             <div>{{ syllabus.parallels.length === 1 ? 'Paralelo' : 'Paralelos' }} {{ syllabus.parallels.join(', ') }}</div>
             <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
           </TableCell>
-          <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /></TableCell>
+          <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /><div v-if="syllabus.state === 'en_revision' && syllabus.stage" class="mt-1 text-xs text-muted-foreground">{{ reviewStageLabel(syllabus.stage) }}</div><div v-else-if="syllabus.state === 'correccion_solicitada' && syllabus.returned_by" class="mt-1 text-xs text-muted-foreground">Devuelto por {{ syllabus.returned_by === 'biblioteca' ? 'biblioteca' : 'coordinación' }}</div></TableCell>
         </TableRow>
       </TableBody>
     </Table>

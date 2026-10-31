@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import StatusBadge from '@/components/domain/StatusBadge.vue';
-import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
+import { formatDateDisplay } from '@/lib/dateDisplay';
 import { activateRow } from '@/lib/rowActivation';
-import { REVIEW_STATE_OPTIONS } from '@/lib/syllabusStates';
 import { ChartNoAxesColumn, Inbox } from '@lucide/vue';
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
@@ -21,7 +19,6 @@ import ConvocationTrackingTable from '@/components/domain/syllabus/ConvocationTr
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { paths, reviewAreaPaths } from '@/lib/routes';
@@ -43,9 +40,9 @@ const setupRoutes: Record<string, string> = {
 const openHint = computed(() => summary.value?.setup?.steps.find((step) => step.key === 'convocation')?.hint ?? '');
 const area = ref(reviewAreaPaths());
 const loading = ref(true);
-const tab = ref('cola');
-const filters = reactive({ search: queryText(route.query.search), state: queryText(route.query.state) || 'all' });
-const filtersActive = computed(() => filters.search !== '' || filters.state !== 'all');
+const tab = ref(queryText(route.query.tab) === 'seguimiento' ? 'seguimiento' : 'cola');
+const filters = reactive({ search: queryText(route.query.search) });
+const filtersActive = computed(() => filters.search !== '');
 const requests = latestRequest();
 const error = ref<string | null>(null);
 const convocationId = computed(() => summary.value?.coordination_convocation?.convocation_id ?? null);
@@ -63,19 +60,19 @@ const load = async (page = 1, withSummary = false): Promise<void> => {
     }
     area.value = reviewAreaPaths();
     const [reviews, dashboard] = await Promise.all([
-      getReviews({ search: filters.search, state: filters.state === 'all' ? '' : filters.state, page }),
+      getReviews({ search: filters.search, page }),
       withSummary ? getDashboard().catch(() => null) : summary.value,
     ]);
     if (!requests.isCurrent(ticket)) return;
     data.value = reviews;
     summary.value = dashboard;
-    syncFilters(router, { search: filters.search, state: filters.state }, page);
+    syncFilters(router, { search: filters.search, tab: tab.value === 'seguimiento' ? 'seguimiento' : '' }, page);
   } catch (reason) {
     if (requests.isCurrent(ticket)) error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la cola de revisión.';
   } finally { if (requests.isCurrent(ticket)) loading.value = false; }
 };
 const clearFilters = (): void => {
-  Object.assign(filters, { search: '', state: 'all' });
+  Object.assign(filters, { search: '' });
   void load();
 };
 const changed = async (message: string): Promise<void> => {
@@ -85,6 +82,7 @@ const changed = async (message: string): Promise<void> => {
 };
 
 onMounted(() => { void load(queryPage(route.query.page), true); });
+watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: value === 'seguimiento' ? 'seguimiento' : undefined } }); });
 </script>
 
 <template>
@@ -101,11 +99,11 @@ onMounted(() => { void load(queryPage(route.query.page), true); });
       </TabsList>
       <TabsContent value="cola" class="flex flex-col gap-4">
         <Card class="py-3"><CardContent class="px-3">
-          <form @submit.prevent="load()"><FilterToolbar :active="filtersActive" @clear="clearFilters"><template #search><Field><FieldLabel for="review-search" class="sr-only">Buscar por asignatura o código</FieldLabel><Input id="review-search" v-model="filters.search" type="search" maxlength="120" placeholder="Buscar por asignatura o código" /></Field></template><template #filters><Field><FieldLabel for="review-state" class="sr-only">Estado</FieldLabel><Select v-model="filters.state" name="state"><SelectTrigger id="review-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="option in REVIEW_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectGroup></SelectContent></Select></Field></template></FilterToolbar></form>
+          <form @submit.prevent="load()"><FilterToolbar :active="filtersActive" @clear="clearFilters"><template #search><Field><FieldLabel for="review-search" class="sr-only">Buscar por asignatura o código</FieldLabel><Input id="review-search" v-model="filters.search" type="search" maxlength="120" placeholder="Buscar por asignatura o código" /></Field></template></FilterToolbar></form>
         </CardContent></Card>
-        <Table label="Revisiones de coordinación"><TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Docente</TableHead><TableHead class="text-center">Revisión</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader><TableBody>
-          <TableRow v-for="item in data.syllabi.data" :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(area.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(area.review(item.revision_id))" @keydown.space.self.prevent="router.push(area.review(item.revision_id))"><TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }} · {{ item.period }}</div></TableCell><TableCell>{{ item.teachers.join(', ') }}</TableCell><TableCell class="text-center">N.º {{ item.revision_number }}</TableCell><TableCell class="text-center"><StatusBadge v-if="item.state === 'en_revision' && item.stage === 'coordinacion'" label="Por revisar" tone="warning" /><StatusBadge v-else-if="item.state === 'en_revision' && item.stage === 'biblioteca'" label="En biblioteca" tone="info" /><SyllabusStateBadge v-else :state="item.state" /></TableCell></TableRow>
-          <TableEmpty v-if="data.syllabi.data.length === 0" :colspan="4">No hay expedientes para los filtros seleccionados.</TableEmpty>
+        <Table label="Revisiones de coordinación"><TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Docente</TableHead><TableHead class="text-center">Revisión</TableHead><TableHead class="text-center">Enviado</TableHead></TableRow></TableHeader><TableBody>
+          <TableRow v-for="item in data.syllabi.data" :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(area.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(area.review(item.revision_id))" @keydown.space.self.prevent="router.push(area.review(item.revision_id))"><TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }} · {{ item.period }}</div></TableCell><TableCell>{{ item.teachers.join(', ') }}</TableCell><TableCell class="text-center">N.º {{ item.revision_number }}</TableCell><TableCell class="text-center">{{ item.submitted_at ? formatDateDisplay(item.submitted_at, { dateStyle: 'medium' }) : '—' }}</TableCell></TableRow>
+          <TableEmpty v-if="data.syllabi.data.length === 0" :colspan="4">No hay sílabos por revisar.</TableEmpty>
         </TableBody></Table>
         <TablePagination :meta="data.syllabi" label="Paginación de expedientes en revisión" @update:page="load" />
       </TabsContent>

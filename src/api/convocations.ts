@@ -13,7 +13,7 @@ export type ConvocationDetail = {
     start_date: string | null;
     draft_deadline: string | null;
     counts: { total: number; not_started: number; draft: number; in_review: number; approved: number };
-    syllabi: Array<{ id: string; subject: string; code: string; state: string; iniciado_en: string | null; parallels: string[]; teachers: string[] }>;
+    syllabi: Array<{ id: string; subject: string; code: string; state: string; stage?: string | null; revision_id?: string | null; returned_by?: string | null; iniciado_en: string | null; parallels: string[]; teachers: string[] }>;
   };
 };
 

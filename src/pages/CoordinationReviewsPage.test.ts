@@ -8,9 +8,10 @@ import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getReviews, type ReviewsPage } from '@/api/reviews';
 import { getSession } from '@/api/session';
 
+const { query } = vi.hoisted(() => ({ query: {} as Record<string, string> }));
 vi.mock('vue-router', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
-  useRoute: () => ({ query: {} }),
+  useRoute: () => ({ query }),
   RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
 }));
 vi.mock('@/api/session', () => ({ getSession: vi.fn() }));
@@ -19,7 +20,7 @@ vi.mock('@/api/reviews', async (importOriginal) => ({ ...(await importOriginal<t
 vi.mock('@/api/convocations', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/api/convocations')>()), getConvocation: vi.fn() }));
 
 const reviews: ReviewsPage = {
-  filters: { state: '', search: '' },
+  filters: { search: '' },
   syllabi: {
     data: [{ id: 's1', revision_id: 'r1', revision_number: 1, subject: 'Álgebra Lineal', code: 'SW-B1-002', period: '2026-2027', state: 'en_revision', stage: 'coordinacion', teachers: ['Domenica Arias'], submitted_at: '2026-10-27T10:00:00Z' }],
     current_page: 1, last_page: 1, per_page: 20, from: 1, to: 1, total: 1,
@@ -41,6 +42,7 @@ const mountPage = () => mount(WithTooltips, {
 
 describe('CoordinationReviewsPage', () => {
   beforeEach(() => {
+    for (const key of Object.keys(query)) delete query[key];
     vi.mocked(getSession).mockResolvedValue({ active_role: { code: 'coordinador' } } as Awaited<ReturnType<typeof getSession>>);
     vi.mocked(getReviews).mockResolvedValue(reviews);
     vi.mocked(getDashboard).mockResolvedValue(summary('c1'));
@@ -61,8 +63,19 @@ describe('CoordinationReviewsPage', () => {
     expect(wrapper.get('.actions').text()).toContain('Pausar convocatoria');
     expect(wrapper.find('.actions [aria-label="Antes de empezar"]').exists()).toBe(true);
     expect(wrapper.text()).toContain('Álgebra Lineal');
-    expect(wrapper.text()).toContain('Por revisar');
-    expect(wrapper.text()).not.toContain('En coordinación');
+    expect(wrapper.text()).toContain('27 oct 2026');
+    expect(wrapper.text()).not.toContain('Por revisar');
+    expect(wrapper.find('#review-state').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Todos los estados');
+    wrapper.unmount();
+  });
+
+  it('abre en la pestaña que dice la dirección, para que «Volver» regrese a Seguimiento', async () => {
+    query.tab = 'seguimiento';
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.get('[role="tab"][data-state="active"]').text()).toContain('Seguimiento');
     wrapper.unmount();
   });
 

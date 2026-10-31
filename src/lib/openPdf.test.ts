@@ -22,6 +22,7 @@ describe('openRevisionPdf', () => {
     vi.mocked(getDocuments).mockResolvedValue({ artifacts: [artifact('viejo', 'completado', '2026-10-01T00:00:00Z'), artifact('nuevo', 'completado', '2026-10-02T00:00:00Z'), artifact('fallido', 'fallido', '2026-10-03T00:00:00Z')] } as never);
 
     expect(await openRevisionPdf('rev-1')).toBeNull();
+    expect(window.open).toHaveBeenCalledWith('', 'silabos-pdf', expect.stringContaining('popup=yes'));
     expect(downloadDocument).toHaveBeenCalledWith('nuevo');
     expect(tab.location.href).toBe('blob:pdf');
   });

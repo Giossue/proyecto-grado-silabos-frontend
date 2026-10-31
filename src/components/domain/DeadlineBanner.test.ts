@@ -44,6 +44,17 @@ describe('DeadlineBanner', () => {
     expect(text({ state: 'upcoming', days_until_start: 3 }, 'bibliotecario').text()).toBe('La elaboración de los sílabos inicia en 3 díasDeben quedar revisados y firmados hasta el 28 de septiembre de 2026.');
   });
 
+  it('con el plazo vencido sale en rojo y dice a cada rol qué le queda', () => {
+    const teacher = text({ state: 'overdue' });
+    expect(teacher.get('[role="status"]').classes()).toContain('bg-destructive/10');
+    expect(teacher.get('[role="status"]').classes()).not.toContain('bg-notice');
+    expect(teacher.text()).toBe('Venció el plazo para enviar sus sílabos a revisiónEra hasta el 28 de septiembre de 2026. Pida una prórroga a Administración.');
+    for (const audience of ['coordinador', 'bibliotecario'] as const) {
+      expect(text({ state: 'overdue' }, audience).text()).toBe('Venció el plazo de entrega de los sílabosEra hasta el 28 de septiembre de 2026. Solo puede revisar lo ya enviado.');
+    }
+    expect(text({}).get('[role="status"]').classes()).toContain('bg-notice');
+  });
+
   it.each(['paused', 'closed'] as const)('en %s solo avisa el estado, sin conteo', (state) => {
     expect(text({ state, days_until_due: 0 }).text()).toBe(state === 'paused' ? 'La convocatoria está pausada' : 'La convocatoria está cerrada');
   });

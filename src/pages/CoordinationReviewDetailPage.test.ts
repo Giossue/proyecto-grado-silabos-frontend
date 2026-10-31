@@ -5,7 +5,6 @@ const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
 import { ApiError } from "@/api/client";
 import {
   approveReview,
-  deleteSyllabus,
   getReview,
   requestCorrection,
   resetSyllabus,
@@ -26,7 +25,6 @@ vi.mock("@/api/session", () => ({ getSession: vi.fn() }));
 vi.mock("@/api/reviews", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/reviews")>()),
   approveReview: vi.fn(),
-  deleteSyllabus: vi.fn(),
   getReview: vi.fn(),
   requestCorrection: vi.fn(),
   resetSyllabus: vi.fn(),
@@ -46,7 +44,6 @@ const detail = (decisionsAllowed = true): ReviewDetail => ({
   },
   my_stage: "coordinacion",
   can_decide: decisionsAllowed,
-  can_delete: false,
   signing_statement: decisionsAllowed ? "silabos-ueb|silabo:syllabus-1|accion:aprobacion_coordinacion|huella:abc" : null,
   signatures: [{ role: "docente", name: "Docente Demo", signed_at: "2026-09-16T10:00:00Z" }],
   presentation: {
@@ -119,7 +116,6 @@ describe("CoordinationReviewDetailPage", () => {
   beforeEach(() => {
     for (const mock of [
       approveReview,
-      deleteSyllabus,
       getReview,
       requestCorrection,
       resetSyllabus,
@@ -152,6 +148,25 @@ describe("CoordinationReviewDetailPage", () => {
     expect(wrapper.text()).toContain("Convocatoria cerrada");
     expect(headerButton(wrapper, "Solicitar corrección")).toBeUndefined();
     expect(headerButton(wrapper, "Firmar y enviar a biblioteca")).toBeUndefined();
+    wrapper.unmount();
+  });
+
+  it("de una devolución de biblioteca solo dice quién devolvió, sin su comentario", async () => {
+    vi.mocked(getReview).mockResolvedValue({ ...detail(), correction_request: { justification: null, requested_at: "2026-10-30T10:00:00Z", stage: "biblioteca", requested_by: null } });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Devuelto por biblioteca");
+    expect(wrapper.find(".review-comment").exists()).toBe(false);
+    wrapper.unmount();
+  });
+
+  it("de una corrección de coordinación muestra el comentario en una tarjeta", async () => {
+    vi.mocked(getReview).mockResolvedValue({ ...detail(), correction_request: { justification: "Revise la unidad 2.", requested_at: "2026-10-30T10:00:00Z", stage: "coordinacion", requested_by: "Coordinadora Demo" } });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.get(".review-comment").text()).toContain("Revise la unidad 2.");
     wrapper.unmount();
   });
 
@@ -212,23 +227,45 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("elimina un sílabo aprobado desde «Más» con confirmación y vuelve a la cola", async () => {
-    vi.mocked(getReview).mockResolvedValue({ ...detail(), can_delete: true });
-    vi.mocked(deleteSyllabus).mockResolvedValue({ message: "Sílabo eliminado." });
+  it("reinicia un sílabo aprobado desde «Más»: motivo, nombre de la materia, cuenta regresiva y vuelve a la cola", async () => {
+    vi.useFakeTimers();
+    vi.mocked(getReview).mockResolvedValue({ ...detail(), reset: { allowed: true, erases_history: true, revisions: 2, signatures: 3, has_pdf: true } });
+    vi.mocked(resetSyllabus).mockResolvedValue({ message: "Sílabo reiniciado." });
     const wrapper = mountPage();
     await flushPromises();
 
     await headerButton(wrapper, "Más")!.trigger("keydown", { key: "Enter" });
     await flushPromises();
-    [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) => item.textContent?.includes("Eliminar sílabo"))!.click();
-    await flushPromises();
-    expect(deleteSyllabus).not.toHaveBeenCalled();
-    dialogButton("Eliminar definitivamente")!.click();
+    expect(document.body.querySelectorAll('[role="menuitem"]')).toHaveLength(2);
+    expect([...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].some((item) => item.textContent?.includes("Eliminar"))).toBe(false);
+    [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) => item.textContent?.includes("Reiniciar sílabo"))!.click();
     await flushPromises();
 
-    expect(deleteSyllabus).toHaveBeenCalledWith("syllabus-1");
+    expect(document.body.textContent).toContain("3 firma(s)");
+    expect(document.body.textContent).toContain("2 revisión(es), la aprobación y el PDF");
+    const confirm = () => dialogButton("Reiniciar")!;
+    const type = (selector: string, value: string) => {
+      const input = document.body.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector)!;
+      input.value = value;
+      input.dispatchEvent(new Event("input"));
+    };
+    expect(confirm().textContent).toContain("(5)");
+    type("#restart-reason", "Error en la ficha de la materia.");
+    type("#restart-name", "Álgebra");
+    await flushPromises();
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(confirm().disabled).toBe(true);
+
+    type("#restart-name", "Arquitectura de Software");
+    await flushPromises();
+    expect(confirm().disabled).toBe(false);
+    confirm().click();
+    await flushPromises();
+
+    expect(resetSyllabus).toHaveBeenCalledWith("syllabus-1", "Error en la ficha de la materia.");
     expect(replace).toHaveBeenCalled();
     wrapper.unmount();
+    vi.useRealTimers();
   });
 
   it("muestra el historial en una hoja", async () => {
@@ -236,10 +273,14 @@ describe("CoordinationReviewDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    await headerButton(wrapper, "Historial")!.trigger("click");
+    expect(headerButton(wrapper, "Historial")).toBeUndefined();
+    await headerButton(wrapper, "Más")!.trigger("keydown", { key: "Enter" });
+    await flushPromises();
+    [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) => item.textContent?.includes("Historial"))!.click();
     await flushPromises();
 
-    expect(document.body.textContent).toContain("Revisión 1 (abierta)");
+    expect(document.body.textContent).toContain("Revisión 1 (actual)");
+    expect(document.body.textContent).toContain("Primera revisión: no hay una anterior con qué comparar.");
     wrapper.unmount();
   });
 

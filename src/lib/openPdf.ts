@@ -1,8 +1,17 @@
 import { ApiError } from '@/api/client';
 import { downloadDocument, getDocuments } from '@/api/documents';
 
+export const openPdfWindow = (): Window | null => {
+  const width = Math.min(1100, Math.round(window.screen.availWidth * 0.8));
+  const height = Math.min(900, Math.round(window.screen.availHeight * 0.85));
+  const left = Math.round((window.screen.availWidth - width) / 2);
+  const top = Math.round((window.screen.availHeight - height) / 2);
+
+  return window.open('', 'silabos-pdf', `popup=yes,width=${width},height=${height},left=${left},top=${top}`);
+};
+
 export const openRevisionPdf = async (revisionId: string): Promise<string | null> => {
-  const tab = window.open('', '_blank');
+  const tab = openPdfWindow();
   try {
     const { artifacts } = await getDocuments(revisionId);
     const latest = [...artifacts]
