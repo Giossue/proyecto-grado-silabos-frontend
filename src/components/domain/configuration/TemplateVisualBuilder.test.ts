@@ -9,6 +9,7 @@ import type { DocumentNode } from '@/lib/templateDocument';
 import { setTemplateRuntime } from '@/lib/blocks/runtime';
 import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
 import definition from '@/test/fixtures/template-definition.json';
+import { templateEditorState } from '@/state/templateEditor';
 
 vi.mock('@/api/template');
 vi.mock('@/composables/useCountdown', async () => {
@@ -273,6 +274,15 @@ describe('TemplateVisualBuilder', () => {
     expect(body().querySelector('[aria-label="Sección Uno"]')).not.toBeNull();
     expect(byText('button', 'Guardar')).toBeTruthy();
     expect(byText('button', 'Cancelar')).toBeTruthy();
+  });
+
+  it('al editar pide la pantalla completa y la suelta al cancelar', async () => {
+    mount(TemplateVisualBuilder, { props: { template, presets }, attachTo: document.body });
+    expect(templateEditorState.open.value).toBe(false);
+    await click(byText('button', 'Editar')); await click(byText('button', 'Continuar'));
+    expect(templateEditorState.open.value).toBe(true);
+    await click(byText('button', 'Cancelar'));
+    expect(templateEditorState.open.value).toBe(false);
   });
 
   it('dibuja la tabla de identificación sin subtitular los campos sin nombre', async () => {

@@ -28,6 +28,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useCountdown } from '@/composables/useCountdown';
 import { toast } from '@/lib/toast';
+import { templateEditorState } from '@/state/templateEditor';
 import { cn } from '@/lib/utils';
 import { emptyDocument } from '@/types/configuration';
 
@@ -37,6 +38,7 @@ const emit = defineEmits<{ changed: []; dirty: [value: boolean] }>();
 
 const locked = computed(() => Boolean(props.processLock));
 const preview = ref(true);
+watch(preview, (value) => templateEditorState.setOpen(!value), { immediate: true });
 const editWarningOpen = ref(false);
 const editCountdown = useCountdown(editWarningOpen);
 const selectedField = ref<string | null>(null);
@@ -98,6 +100,7 @@ onMounted(() => {
     void document.fonts?.ready.then(paginate);
 });
 onBeforeUnmount(() => {
+    templateEditorState.setOpen(false);
     document.removeEventListener('pointerdown', clearSelectionOutside);
     document.removeEventListener('keydown', saveWithKeyboard);
     resizeObserver?.disconnect();
@@ -400,7 +403,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
 
-    <div class="pointer-events-none sticky top-[calc(var(--app-header-height)+0.5rem)] z-20 mx-auto flex w-full justify-end" :style="{ maxWidth: toolbarWidth }">
+    <div :class="cn('pointer-events-none sticky z-20 mx-auto flex w-full justify-end', preview ? 'top-[calc(var(--app-header-height)+0.5rem)]' : 'top-2')" :style="{ maxWidth: toolbarWidth }">
       <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
         <Button type="button" :disabled="locked" @click="editWarningOpen = true"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
       </div>
