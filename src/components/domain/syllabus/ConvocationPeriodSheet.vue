@@ -7,7 +7,6 @@ import { createProcess } from '@/api/processes';
 import DatePicker from '@/components/DatePicker.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { SheetFooter } from '@/components/ui/sheet';
@@ -23,7 +22,7 @@ const processing = ref(false);
 const confirmOpen = ref(false);
 const openingCountdown = useCountdown(confirmOpen);
 const errors = ref<Record<string, string[]>>({});
-const form = ref({ starts_on: '', ends_on: '', teaching_weeks: '', starts_at: '', due_at: '' });
+const form = ref({ starts_on: '', ends_on: '', starts_at: '', due_at: '' });
 const createdPeriodId = ref<string | null>(null);
 
 const todayIso = useInstitutionToday();
@@ -47,7 +46,7 @@ const periodCreated = computed(() => createdPeriodId.value !== null);
 
 watch(open, (value) => {
     if (value) {
-        form.value = { starts_on: '', ends_on: '', teaching_weeks: '', starts_at: '', due_at: '' };
+        form.value = { starts_on: '', ends_on: '', starts_at: '', due_at: '' };
         errors.value = {};
         createdPeriodId.value = null;
         confirmOpen.value = false;
@@ -77,7 +76,6 @@ const submit = async (): Promise<void> => {
             const period = await createAcademicRecord('periodo', {
                 starts_on: form.value.starts_on,
                 ends_on: form.value.ends_on,
-                ...(form.value.teaching_weeks ? { teaching_weeks: Number(form.value.teaching_weeks) } : {}),
             });
             periodId = period.id ?? null;
             message = period.message;
@@ -127,12 +125,7 @@ const submit = async (): Promise<void> => {
                                 <FieldError :errors="errors.ends_on" />
                             </Field>
                         </div>
-                        <Field :data-invalid="Boolean(errors.teaching_weeks)">
-                            <FieldLabel for="convocation-period-weeks">Semanas de clase</FieldLabel>
-                            <Input id="convocation-period-weeks" v-model="form.teaching_weeks" type="number" min="1" :max="calendarWeeks ?? 52" step="1" :placeholder="calendarWeeks ? String(calendarWeeks) : ''" :disabled="periodCreated" :aria-invalid="Boolean(errors.teaching_weeks)" />
-                            <FieldDescription>{{ calendarWeeks ? `Si la deja vacía, se usan las ${calendarWeeks} semanas entre las fechas.` : 'Si la deja vacía, se cuentan con las fechas.' }}</FieldDescription>
-                            <FieldError :errors="errors.teaching_weeks" />
-                        </Field>
+                        <p v-if="calendarWeeks" class="text-sm text-muted-foreground">Serían {{ calendarWeeks }} {{ calendarWeeks === 1 ? 'semana' : 'semanas' }} de clase entre las fechas.</p>
                     </FieldSet>
                     <FieldSet v-else key="syllabus">
                         <FieldLegend>Elaboración de sílabos</FieldLegend>

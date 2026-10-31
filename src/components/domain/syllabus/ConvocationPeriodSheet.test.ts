@@ -90,7 +90,7 @@ describe('ConvocationPeriodSheet', () => {
     wrapper.unmount();
   });
 
-  it('sugiere las semanas entre las fechas y envía las semanas de clase corregidas', async () => {
+  it('muestra las semanas entre las fechas sin permitir editarlas', async () => {
     api.createAcademicRecord.mockResolvedValue({ message: 'Registro institucional creado.', id: 'p1' });
     api.createProcess.mockResolvedValue({ message: 'Convocatoria institucional abierta.' });
     const wrapper = await mountSheet();
@@ -98,15 +98,12 @@ describe('ConvocationPeriodSheet', () => {
     starts.vm.$emit('update:modelValue', '2026-10-05');
     ends.vm.$emit('update:modelValue', '2027-02-26');
     await flushPromises();
-    const weeks = document.querySelector<HTMLInputElement>('#convocation-period-weeks')!;
-    expect(weeks.placeholder).toBe('21');
-    weeks.value = '16';
-    weeks.dispatchEvent(new Event('input'));
-    await flushPromises();
+    expect(document.querySelector('#convocation-period-weeks')).toBeNull();
+    expect(document.body.textContent).toContain('Serían 21 semanas de clase entre las fechas.');
     await fillSteps(wrapper);
     await confirmSubmit();
 
-    expect(api.createAcademicRecord).toHaveBeenLastCalledWith('periodo', { starts_on: '2026-10-05', ends_on: '2027-02-26', teaching_weeks: 16 });
+    expect(api.createAcademicRecord).toHaveBeenLastCalledWith('periodo', { starts_on: '2026-10-05', ends_on: '2027-02-26' });
     wrapper.unmount();
   });
 });
