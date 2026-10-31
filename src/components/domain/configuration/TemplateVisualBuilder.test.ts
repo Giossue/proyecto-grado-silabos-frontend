@@ -124,7 +124,8 @@ describe('TemplateVisualBuilder', () => {
     await typeInto('Nombre del campo Primero', 'Cambiado');
     expect(body().textContent).toContain('Sin guardar');
     expect(wrapper.emitted('dirty')!.at(-1)).toEqual([true]);
-    await click(byText('button', 'Volver a la vista'));
+    (wrapper.vm as unknown as { leave: () => void }).leave();
+    await flushPromises();
     await click(byText('button', 'Volver y descartar cambios'));
     expect(wrapper.emitted('dirty')!.at(-1)).toEqual([false]);
   });
@@ -148,9 +149,10 @@ describe('TemplateVisualBuilder', () => {
   });
 
   it('volver pide confirmar, descarta los cambios y vuelve a la vista', async () => {
-    await mountBuilder();
+    const wrapper = await mountBuilder();
     await typeInto('Nombre del campo Primero', 'Cambiado');
-    await click(byText('button', 'Volver a la vista'));
+    (wrapper.vm as unknown as { leave: () => void }).leave();
+    await flushPromises();
     expect(body().textContent).toContain('Hay cambios sin guardar');
     await click(byText('button', 'Volver y descartar cambios'));
     expect(templateApi.importTemplateJson).not.toHaveBeenCalled();
@@ -276,16 +278,17 @@ describe('TemplateVisualBuilder', () => {
     await click(byText('button', 'Editar')); await click(byText('button', 'Continuar'));
     expect(body().querySelector('[aria-label="Sección Uno"]')).not.toBeNull();
     expect(byText('button', 'Guardar')).toBeTruthy();
-    expect(byText('button', 'Volver a la vista')).toBeTruthy();
     expect(byText('button', 'Cancelar')).toBeFalsy();
   });
 
   it('al editar pide la pantalla completa y la suelta al volver', async () => {
-    mount(TemplateVisualBuilder, { props: { template, presets }, attachTo: document.body });
+    const wrapper = mount(TemplateVisualBuilder, { props: { template, presets }, attachTo: document.body });
     expect(templateEditorState.open.value).toBe(false);
     await click(byText('button', 'Editar')); await click(byText('button', 'Continuar'));
     expect(templateEditorState.open.value).toBe(true);
-    await click(byText('button', 'Volver a la vista'));
+    expect(wrapper.emitted('editing')!.at(-1)).toEqual([true]);
+    (wrapper.vm as unknown as { leave: () => void }).leave();
+    await flushPromises();
     expect(templateEditorState.open.value).toBe(false);
   });
 

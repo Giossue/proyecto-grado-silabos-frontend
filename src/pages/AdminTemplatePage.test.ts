@@ -79,6 +79,21 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.find('[data-sheet], .template-sheet').exists()).toBe(true);
   });
 
+  it("al editar muestra el encabezado con «Volver a la vista» y al volver lo quita", async () => {
+    const wrapper = mountPage();
+    await flushPromises();
+    expect(wrapper.find('header[aria-label="Herramientas de la plantilla"]').exists()).toBe(false);
+    await wrapper.findAll('button').find((button) => button.text() === 'Editar')!.trigger('click');
+    await flushPromises();
+    [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Continuar')!.click();
+    await flushPromises();
+
+    const back = wrapper.findAll('header[aria-label="Herramientas de la plantilla"] button').find((button) => button.text() === 'Volver a la vista')!;
+    await back.trigger('click');
+    await flushPromises();
+    expect(wrapper.find('header[aria-label="Herramientas de la plantilla"]').exists()).toBe(false);
+  });
+
   it("no tiene pestañas ni «Personalizar plantilla» y conserva los logos fijos", async () => {
     const wrapper = mountPage();
     await flushPromises();
