@@ -4,6 +4,7 @@ import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { getSession } from "@/api/session";
 import { createTemplate, getTemplate, getTemplateJson, type TemplatePayload } from "@/api/template";
+import { applyTemplateAssistantProposal, discardTemplateAssistantProposal, getTemplateAssistant, getTemplateAssistantProposal } from "@/api/templateAssistant";
 
 vi.mock("vue-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
@@ -12,6 +13,19 @@ vi.mock("vue-router", async (importOriginal) => ({
 }));
 
 vi.mock("@/api/session", () => ({ getSession: vi.fn() }));
+vi.mock("@/api/templateAssistant", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/api/templateAssistant")>()),
+  getTemplateAssistant: vi.fn(),
+  sendTemplateAssistantMessage: vi.fn(),
+  clearTemplateAssistant: vi.fn(),
+  getTemplateAssistantProposal: vi.fn(),
+  applyTemplateAssistantProposal: vi.fn(),
+  discardTemplateAssistantProposal: vi.fn(),
+}));
+vi.mock("@/components/domain/ai/avatar/useAvatarController", async () => {
+  const { ref } = await import("vue");
+  return { useAvatarController: () => ({ state: ref({}), applyAgentHint: vi.fn() }) };
+});
 vi.mock("@/composables/useCountdown", async () => {
   const { ref } = await import("vue");
   return { useCountdown: () => ref(0) };
@@ -62,6 +76,65 @@ describe("AdminTemplatePage", () => {
     });
     vi.mocked(getTemplate).mockReset();
     vi.mocked(getTemplate).mockResolvedValue(payload);
+    vi.mocked(getTemplateAssistant).mockResolvedValue({
+      available: true, locked: false, suggestions: [],
+      messages: [{ id: 'a-1', role: 'asistente', status: 'completado', result: 'propuesta', content: 'Propongo Competencias.', error: null, created_at: '2026-10-31T10:00:00Z', proposal: { id: 'p-1', status: 'pendiente', changes: ['Nuevo campo «Competencias» en «Descripción de la asignatura».'] } }],
+    });
+    vi.mocked(getTemplateAssistantProposal).mockResolvedValue({
+      id: 'p-1', status: 'pendiente', changes: ['Nuevo campo «Competencias» en «Descripción de la asignatura».'],
+      changed: { sections: [], fields: ['competencias'] },
+      sections: [{ key: 'descripcion', title: 'Descripción de la asignatura', orientation: 'portrait', fields: [
+        { key: 'descripcion', label: 'Descripción', quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
+        { key: 'competencias', label: 'Competencias', quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
+      ] }],
+    });
+    vi.mocked(applyTemplateAssistantProposal).mockResolvedValue({ message: 'Propuesta aplicada a la plantilla.' });
+    vi.mocked(discardTemplateAssistantProposal).mockResolvedValue({ message: 'Propuesta descartada.' });
+  });
+
+  const openProposal = async (wrapper: ReturnType<typeof mountPage>) => {
+    await flushPromises();
+    await wrapper.findAll('button').find((button) => button.text() === 'Asistente')!.trigger('click');
+    await flushPromises();
+    await wrapper.get('[data-proposal] button').trigger('click');
+    await flushPromises();
+  };
+
+  it("muestra la propuesta del asistente en la hoja con los cambios marcados y la aplica tras confirmar", async () => {
+    const wrapper = mountPage();
+    await openProposal(wrapper);
+
+    expect(getTemplateAssistantProposal).toHaveBeenCalledWith('p-1');
+    const changed = wrapper.findAll('[data-changed]');
+    expect(changed).toHaveLength(1);
+    expect(changed[0]!.text()).toContain('Competencias');
+    expect(changed[0]!.text()).toContain('Cambió');
+    expect(wrapper.find('[data-proposal-bar]').text()).toContain('Propuesta del asistente');
+    expect(wrapper.findAll('button').some((button) => button.text() === 'Editar')).toBe(false);
+
+    await wrapper.get('[data-proposal-bar]').findAll('button').find((button) => button.text() === 'Aplicar')!.trigger('click');
+    await flushPromises();
+    expect(document.body.textContent).toContain('Al reanudar una convocatoria en pausa, sus sílabos se rehacen desde cero');
+    [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find((button) => button.textContent?.trim() === 'Aplicar')!.click();
+    await flushPromises();
+
+    expect(applyTemplateAssistantProposal).toHaveBeenCalledWith('p-1');
+    expect(getTemplate).toHaveBeenCalledTimes(2);
+    expect(wrapper.find('[data-proposal-bar]').exists()).toBe(false);
+    expect(wrapper.find('[data-changed]').exists()).toBe(false);
+  });
+
+  it("descarta la propuesta y vuelve a la plantilla", async () => {
+    const wrapper = mountPage();
+    await openProposal(wrapper);
+
+    await wrapper.get('[data-proposal-bar]').findAll('button').find((button) => button.text() === 'Descartar')!.trigger('click');
+    await flushPromises();
+
+    expect(discardTemplateAssistantProposal).toHaveBeenCalledWith('p-1');
+    expect(applyTemplateAssistantProposal).not.toHaveBeenCalled();
+    expect(wrapper.find('[data-proposal-bar]').exists()).toBe(false);
+    expect(wrapper.findAll('button').some((button) => button.text() === 'Editar')).toBe(true);
   });
 
   it("lista las secciones con sus campos, incluso el que no tiene nombre", async () => {

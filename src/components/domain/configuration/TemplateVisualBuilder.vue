@@ -4,6 +4,7 @@ import { ImageUp, ListTree, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from 
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
+import type { TemplateProposalPreview } from '@/api/templateAssistant';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import TemplateJsonDialog from '@/components/domain/configuration/TemplateJsonDialog.vue';
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
@@ -34,7 +35,7 @@ import { cn } from '@/lib/utils';
 import { emptyDocument } from '@/types/configuration';
 
 
-const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; variables?: TemplatePayload['variables']; presets?: TemplatePayload['presets'] }>();
+const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; variables?: TemplatePayload['variables']; presets?: TemplatePayload['presets']; proposal?: TemplateProposalPreview | null }>();
 const emit = defineEmits<{ changed: []; dirty: [value: boolean]; editing: [value: boolean] }>();
 
 const locked = computed(() => Boolean(props.processLock));
@@ -126,7 +127,13 @@ const reloadAfterJson = (): void => {
     toast.success('Plantilla actualizada desde el JSON');
     emit('changed');
 };
-const source = computed<TemplateSectionPayload[]>(() => preview.value && !awaitingReload.value ? props.template.sections : draft.value);
+const source = computed<TemplateSectionPayload[]>(() => {
+    if (preview.value && props.proposal) return props.proposal.sections;
+
+    return preview.value && !awaitingReload.value ? props.template.sections : draft.value;
+});
+const proposedSection = (section: TemplateSectionPayload): boolean => preview.value && props.proposal?.changedSections.includes(section.key) === true;
+const proposedField = (field: TemplateField): boolean => preview.value && props.proposal?.changedFields.includes(field.key) === true;
 const dirty = ref(false);
 const titleDraft = ref('');
 const layoutDraft = ref<DocumentLayout>(layoutOf(props.template.layout));
@@ -292,7 +299,7 @@ watch(() => props.template, () => {
     awaitingReload.value = false;
     draft.value = [];
 });
-watch([() => props.template, preview], () => { void nextTick(paginate); }, { deep: true });
+watch([() => props.template, preview, () => props.proposal], () => { void nextTick(paginate); }, { deep: true });
 const usedSectionKeys = computed(() => source.value.map((section) => section.key));
 const usedFieldKeys = computed(() => sections.value.flatMap((entry) => entry.fields.map((field) => field.key)));
 
@@ -418,7 +425,10 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
 
     <div :class="cn('pointer-events-none sticky z-20 mx-auto flex w-full justify-end', preview ? 'top-[calc(var(--app-header-height)+0.5rem)]' : 'top-16')" :style="{ maxWidth: toolbarWidth }">
-      <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
+      <div v-if="preview && proposal" data-proposal-bar class="pointer-events-auto flex flex-wrap items-center gap-2 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
+        <slot name="proposal-actions" />
+      </div>
+      <div v-else-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <Button type="button" :disabled="locked" @click="editWarningOpen = true"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
       </div>
       <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 flex-wrap items-center gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
@@ -530,7 +540,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <template v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id">
       <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 scroll-mt-36 flex-col gap-3">
         <TemplateInsertPoint v-if="!preview && !locked && (sectionIndex === 0 || (sections[sectionIndex - 1]?.fields.length ?? 0) === 0)" :disabled="locked || busy" :actions="[{ key: 'section', label: 'Nueva sección' }]" position="top" gap="section" @insert="addSection(sectionIndex)" />
-        <h3 v-if="preview" class="font-bold" data-section-title>{{ section.title }}</h3>
+        <h3 v-if="preview" :class="cn('font-bold', proposedSection(section) && 'relative rounded-md bg-warning/10 px-2 py-1 ring-2 ring-warning/60')" :data-changed="proposedSection(section) || undefined" data-section-title>{{ section.title }}<span v-if="proposedSection(section)" class="absolute -top-2.5 right-2 rounded-full bg-warning px-2 py-0.5 font-sans text-xs font-medium text-warning-foreground" data-change-mark>Cambió</span></h3>
         <div v-else data-section-heading data-section-title :class="cn('rounded-sm font-bold outline-offset-2', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')" @focusin="selectSection(section.id)">
           <TemplateInlineText
             :ref="(element) => setTitleRef(element, section.id)"
@@ -544,7 +554,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
         <ol class="flex flex-col gap-3">
           <template v-for="(field, fieldIndex) in fields" :key="field.id">
-          <li :data-field="field.id" :data-field-responsible="field.quien_llena" :class="cn('relative min-w-0 rounded-sm px-2 py-1', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-transparent hover:outline-primary/40'])">
+          <li :data-field="field.id" :data-field-responsible="field.quien_llena" :data-changed="proposedField(field) || undefined" :class="cn('relative min-w-0 rounded-sm px-2 py-1', proposedField(field) && 'rounded-md bg-warning/10 ring-2 ring-warning/60', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-transparent hover:outline-primary/40'])">
+            <span v-if="proposedField(field)" class="absolute -top-2.5 right-2 z-10 rounded-full bg-warning px-2 py-0.5 font-sans text-xs font-medium text-warning-foreground" data-change-mark>Cambió</span>
             <TemplateInsertPoint v-if="!preview && !locked" :disabled="busy" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="top" gap="field" @insert="addField(section.id, fieldIndex)" />
             <TemplateInsertPoint v-if="!preview && !locked && fieldIndex === fields.length - 1" :disabled="busy" :actions="[{ key: 'section', label: 'Nueva sección' }, { key: 'field', label: 'Agregar campo' }]" position="bottom" gap="field" @insert="insertAfterLastField($event, section.id, sectionIndex)" />
             <TemplateFieldContent v-if="preview" :field="field" :variables="variables" preview />
