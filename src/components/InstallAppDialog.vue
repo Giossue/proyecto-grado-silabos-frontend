@@ -33,13 +33,13 @@ const install = async (): Promise<void> => {
         <DialogDescription>Úselo como una aplicación en su celular o computadora.</DialogDescription>
       </DialogHeader>
       <ol v-if="!canPrompt && platform === 'ios'" class="flex list-decimal flex-col gap-2 pl-5 text-sm">
-        <li>Abra el sistema en Safari.</li>
-        <li>Pulse Compartir <Share class="inline size-4 align-text-bottom" aria-label="Compartir" />.</li>
-        <li>Elija «Agregar a pantalla de inicio».</li>
+        <li>Abra el sistema en Safari</li>
+        <li>Pulse Compartir <Share class="inline size-4 align-text-bottom" aria-label="Compartir" /></li>
+        <li>Elija «Agregar a pantalla de inicio»</li>
       </ol>
       <ul v-else-if="!canPrompt" class="flex list-disc flex-col gap-2 pl-5 text-sm">
-        <li>Chrome o Edge: menú ⋮ → «Instalar».</li>
-        <li>Safari en Mac: Archivo → «Agregar al Dock».</li>
+        <li>Chrome o Edge: menú ⋮ → «Instalar»</li>
+        <li>Safari en Mac: Archivo → «Agregar al Dock»</li>
       </ul>
       <DialogFooter>
         <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>

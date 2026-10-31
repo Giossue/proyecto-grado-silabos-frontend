@@ -61,7 +61,7 @@ const submit = async (): Promise<void> => {
       </DialogHeader>
       <ul class="flex list-disc flex-col gap-1 pl-5 text-sm">
         <li v-for="item in losses" :key="item">{{ item }}</li>
-        <li v-if="!impact.erases_history" class="list-none text-muted-foreground">Las revisiones enviadas se conservan como historial.</li>
+        <li v-if="!impact.erases_history" class="list-none text-muted-foreground">Las revisiones enviadas se conservan como historial</li>
       </ul>
       <form class="flex flex-col gap-4" @submit.prevent="submit">
         <Field :data-invalid="Boolean(errors.reason)">

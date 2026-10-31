@@ -134,9 +134,9 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
 
                 <template v-else>
                   <ol class="flex list-decimal flex-col gap-2 pl-5 text-sm">
-                    <li>Descargue el Excel con las materias y campos actuales de su carrera.</li>
-                    <li>Complete las celdas de contenido. Conserve los nombres de las hojas, los campos y las materias.</li>
-                    <li>Cargue el archivo y revise la vista previa. Las celdas vacías no cambian la ficha actual.</li>
+                    <li>Descargue el Excel con las materias y campos actuales de su carrera</li>
+                    <li>Complete las celdas de contenido. Conserve los nombres de las hojas, los campos y las materias</li>
+                    <li>Cargue el archivo y revise la vista previa. Las celdas vacías no cambian la ficha actual</li>
                   </ol>
                   <div><Button type="button" variant="outline" :disabled="busy" @click="download"><Spinner v-if="downloading" data-icon="inline-start" />Descargar plantilla Excel</Button></div>
                   <FieldGroup>

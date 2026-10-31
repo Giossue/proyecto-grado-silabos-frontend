@@ -163,9 +163,9 @@ const submit = async (): Promise<void> => {
                         <DialogTitle>Abrir convocatoria</DialogTitle>
                         <DialogDescription>Al abrirla:</DialogDescription>
                         <ul class="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                            <li>El periodo y sus fechas ya no se pueden editar.</li>
-                            <li>Los docentes conservan lo que escribieron en el período anterior.</li>
-                            <li>Si la plantilla cambió, empiezan de cero.</li>
+                            <li>El periodo y sus fechas ya no se pueden editar</li>
+                            <li>Los docentes conservan lo que escribieron en el período anterior</li>
+                            <li>Si la plantilla cambió, empiezan de cero</li>
                         </ul>
                     </DialogHeader>
                     <DialogFooter>
