@@ -61,6 +61,7 @@ const load = async ({ silent = false }: { silent?: boolean } = {}): Promise<void
 };
 
 const unsaved = ref(false);
+const editing = ref(false);
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
 const warnBeforeUnload = (event: BeforeUnloadEvent): void => {
     if (!unsaved.value) return;
@@ -109,6 +110,7 @@ onBeforeUnmount(() => {
         description="El formato del sílabo: secciones y campos."
         size="wide"
         :header-width="SHEET_WIDTH"
+        :header-class="editing ? 'hidden' : undefined"
     >
         <template v-if="payload?.templateChangedDuringPause || payload?.processLock" #banner>
             <ProcessLockAlert v-if="payload?.templateChangedDuringPause" banner :icon="RotateCcw" title="Plantilla modificada durante la pausa" message="Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero." hide-action />
@@ -118,7 +120,7 @@ onBeforeUnmount(() => {
             <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
         </div>
 
-        <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" @dirty="unsaved = $event" />
+        <TemplateVisualBuilder :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" @dirty="unsaved = $event" @editing="editing = $event" />
         <UnsavedChangesDialog :open="discardOpen" title="Hay cambios sin guardar" description="Los cambios de la plantilla no se guardaron. Si sale, los perderá" discard-label="Salir y descartar cambios" @continue="decideDiscard(false)" @discard="decideDiscard(true)" @update:open="(value) => { if (!value) decideDiscard(false); }" />
     </PageFrame>
 </template>

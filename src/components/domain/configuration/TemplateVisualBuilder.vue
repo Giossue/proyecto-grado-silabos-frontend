@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/core';
-import { ChevronDown, ImageUp, ListOrdered, Pencil, Plus, Ruler, Save, Trash2 } from '@lucide/vue';
+import { ArrowLeft, ChevronDown, ImageUp, ListOrdered, Pencil, Plus, Ruler, Save, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
@@ -13,6 +13,8 @@ import TemplateInlineText from '@/components/domain/configuration/TemplateInline
 import TemplateSelectionTools, { type TemplateSelection } from '@/components/domain/configuration/TemplateSelectionTools.vue';
 import TemplateSheetField from '@/components/domain/configuration/TemplateSheetField.vue';
 import { apiMessage, uniqueKey } from '@/components/domain/configuration/templateStructure';
+import AppearanceToggle from '@/components/AppearanceToggle.vue';
+import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -34,11 +36,15 @@ import { emptyDocument } from '@/types/configuration';
 
 
 const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; variables?: TemplatePayload['variables']; presets?: TemplatePayload['presets'] }>();
-const emit = defineEmits<{ changed: []; dirty: [value: boolean] }>();
+const emit = defineEmits<{ changed: []; dirty: [value: boolean]; editing: [value: boolean] }>();
 
 const locked = computed(() => Boolean(props.processLock));
 const preview = ref(true);
-watch(preview, (value) => templateEditorState.setOpen(!value), { immediate: true });
+const leaveOpen = ref(false);
+watch(preview, (value) => {
+    templateEditorState.setOpen(!value);
+    emit('editing', !value);
+}, { immediate: true });
 const editWarningOpen = ref(false);
 const editCountdown = useCountdown(editWarningOpen);
 const selectedField = ref<string | null>(null);
@@ -225,6 +231,14 @@ const cancelEditing = (): void => {
     selectedSection.value = null;
     activeEditor.value = null;
 };
+const leave = (): void => {
+    if (changed.value) leaveOpen.value = true;
+    else cancelEditing();
+};
+const discardAndLeave = (): void => {
+    leaveOpen.value = false;
+    cancelEditing();
+};
 const save = async (): Promise<void> => {
     if (busy.value) return;
     busy.value = true;
@@ -403,7 +417,13 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
 
-    <div :class="cn('pointer-events-none sticky z-20 mx-auto flex w-full justify-end', preview ? 'top-[calc(var(--app-header-height)+0.5rem)]' : 'top-2')" :style="{ maxWidth: toolbarWidth }">
+    <header v-if="!preview" class="sticky top-0 z-30 -mx-4 -mt-4 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-surface backdrop-blur sm:-mx-6 sm:-mt-6 sm:px-5" aria-label="Herramientas del editor de plantilla">
+      <Button type="button" variant="link" size="sm" class="h-auto px-0" :disabled="busy" @click="leave"><ArrowLeft aria-hidden="true" />Volver a la vista</Button>
+      <span class="hidden min-w-0 flex-1 truncate text-center text-sm font-medium sm:block">Plantilla de sílabo</span>
+      <AppearanceToggle class="ml-auto sm:ml-0" />
+    </header>
+
+    <div :class="cn('pointer-events-none sticky z-20 mx-auto flex w-full justify-end', preview ? 'top-[calc(var(--app-header-height)+0.5rem)]' : 'top-16')" :style="{ maxWidth: toolbarWidth }">
       <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-background/95 p-1.5 shadow-menu">
         <Button type="button" :disabled="locked" @click="editWarningOpen = true"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
       </div>
@@ -470,7 +490,6 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
               </FieldGroup>
             </PopoverContent>
           </Popover>
-          <Button type="button" variant="outline" :disabled="busy" @click="cancelEditing">Cancelar</Button>
           <Button type="button" class="relative" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar<span v-if="changed" data-unsaved class="absolute -right-1 -top-1 size-2.5 rounded-full bg-warning ring-2 ring-background" aria-hidden="true" /></Button>
         </div>
       </div>
@@ -541,6 +560,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
     </article>
     </div>
+
+    <UnsavedChangesDialog :open="leaveOpen" title="Hay cambios sin guardar" description="Los cambios de la plantilla no se guardaron. Si vuelve, los perderá" discard-label="Volver y descartar cambios" @continue="leaveOpen = false" @discard="discardAndLeave" @update:open="leaveOpen = $event" />
 
     <TemplateJsonDialog v-model:open="jsonOpen" :template-id="template.id" :locked="locked" @imported="reloadAfterJson" />
 

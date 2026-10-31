@@ -124,7 +124,8 @@ describe('TemplateVisualBuilder', () => {
     await typeInto('Nombre del campo Primero', 'Cambiado');
     expect(body().textContent).toContain('Sin guardar');
     expect(wrapper.emitted('dirty')!.at(-1)).toEqual([true]);
-    await click(byText('button', 'Cancelar'));
+    await click(byText('button', 'Volver a la vista'));
+    await click(byText('button', 'Volver y descartar cambios'));
     expect(wrapper.emitted('dirty')!.at(-1)).toEqual([false]);
   });
 
@@ -146,10 +147,12 @@ describe('TemplateVisualBuilder', () => {
     expect(templateApi.importTemplateJson).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ title: 'SÍLABO UEB' }));
   });
 
-  it('cancelar descarta los cambios y vuelve a la vista', async () => {
+  it('volver pide confirmar, descarta los cambios y vuelve a la vista', async () => {
     await mountBuilder();
     await typeInto('Nombre del campo Primero', 'Cambiado');
-    await click(byText('button', 'Cancelar'));
+    await click(byText('button', 'Volver a la vista'));
+    expect(body().textContent).toContain('Hay cambios sin guardar');
+    await click(byText('button', 'Volver y descartar cambios'));
     expect(templateApi.importTemplateJson).not.toHaveBeenCalled();
     expect(byText('button', 'Editar')).toBeTruthy();
     expect(body().textContent).not.toContain('Cambiado');
@@ -273,15 +276,16 @@ describe('TemplateVisualBuilder', () => {
     await click(byText('button', 'Editar')); await click(byText('button', 'Continuar'));
     expect(body().querySelector('[aria-label="Sección Uno"]')).not.toBeNull();
     expect(byText('button', 'Guardar')).toBeTruthy();
-    expect(byText('button', 'Cancelar')).toBeTruthy();
+    expect(byText('button', 'Volver a la vista')).toBeTruthy();
+    expect(byText('button', 'Cancelar')).toBeFalsy();
   });
 
-  it('al editar pide la pantalla completa y la suelta al cancelar', async () => {
+  it('al editar pide la pantalla completa y la suelta al volver', async () => {
     mount(TemplateVisualBuilder, { props: { template, presets }, attachTo: document.body });
     expect(templateEditorState.open.value).toBe(false);
     await click(byText('button', 'Editar')); await click(byText('button', 'Continuar'));
     expect(templateEditorState.open.value).toBe(true);
-    await click(byText('button', 'Cancelar'));
+    await click(byText('button', 'Volver a la vista'));
     expect(templateEditorState.open.value).toBe(false);
   });
 
