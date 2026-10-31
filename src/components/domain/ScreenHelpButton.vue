@@ -79,7 +79,7 @@ onBeforeUnmount(stop);
           )"
           aria-label="Ayuda de esta pantalla"
           @click="start"
-  >
+        >
           <CircleHelp aria-hidden="true" />
         </Button>
       </TooltipTrigger>

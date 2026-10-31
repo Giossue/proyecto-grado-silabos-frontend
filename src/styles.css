@@ -875,8 +875,14 @@
     color: var(--card-foreground);
 }
 .driver-checklist.setup-checklist {
+    /* Al nivel de los otros botones flotantes (z-40): por debajo de modales y paneles. */
+    z-index: 40;
     --driver-checklist-offset-x: 1rem;
     --driver-checklist-offset-y: 9rem;
+}
+/* Driver oculta el checklist durante cualquier guía; aquí se queda a la vista, bajo el oscurecido, para poder señalarlo. */
+.driver-active .driver-checklist.setup-checklist {
+    display: flex;
 }
 @media (width <= 480px) {
     .driver-checklist.setup-checklist {
