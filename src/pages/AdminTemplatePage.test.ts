@@ -4,7 +4,7 @@ import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { getSession } from "@/api/session";
 import { createTemplate, getTemplate, getTemplateJson, type TemplatePayload } from "@/api/template";
-import { applyTemplateAssistantProposal, discardTemplateAssistantProposal, getTemplateAssistant, getTemplateAssistantProposal } from "@/api/templateAssistant";
+import { applyTemplateAssistantProposal, discardTemplateAssistantProposal, getTemplateAssistant, getTemplateAssistantProposal, sendTemplateAssistantMessage } from "@/api/templateAssistant";
 
 vi.mock("vue-router", async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
@@ -76,65 +76,75 @@ describe("AdminTemplatePage", () => {
     });
     vi.mocked(getTemplate).mockReset();
     vi.mocked(getTemplate).mockResolvedValue(payload);
-    vi.mocked(getTemplateAssistant).mockResolvedValue({
-      available: true, locked: false, suggestions: [],
-      messages: [{ id: 'a-1', role: 'asistente', status: 'completado', result: 'propuesta', content: 'Propongo Competencias.', error: null, created_at: '2026-10-31T10:00:00Z', proposal: { id: 'p-1', status: 'pendiente', changes: ['Nuevo campo «Competencias» en «Descripción de la asignatura».'] } }],
-    });
-    vi.mocked(getTemplateAssistantProposal).mockResolvedValue({
-      id: 'p-1', status: 'pendiente', changes: ['Nuevo campo «Competencias» en «Descripción de la asignatura».'],
-      changed: { sections: [], fields: ['competencias'] },
-      sections: [{ key: 'descripcion', title: 'Descripción de la asignatura', orientation: 'portrait', fields: [
-        { key: 'descripcion', label: 'Descripción', quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
-        { key: 'competencias', label: 'Competencias', quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
-      ] }],
-    });
-    vi.mocked(applyTemplateAssistantProposal).mockResolvedValue({ message: 'Propuesta aplicada a la plantilla.' });
+    vi.mocked(getTemplateAssistant).mockResolvedValue({ available: true, locked: false, suggestions: [], messages: [] });
+    vi.mocked(sendTemplateAssistantMessage).mockResolvedValue({ message: 'El pedido quedó registrado.', assistant_message_id: 'a-1' });
+    vi.mocked(applyTemplateAssistantProposal).mockResolvedValue({ message: 'Propuesta aplicada en el editor.' });
     vi.mocked(discardTemplateAssistantProposal).mockResolvedValue({ message: 'Propuesta descartada.' });
   });
 
-  const openProposal = async (wrapper: ReturnType<typeof mountPage>) => {
+  const proposal = (version: string) => ({
+    id: 'p-1', status: 'pendiente' as const, draft_version: version, changes: ['Nuevo campo «Competencias» en «Descripción de la asignatura».'],
+    changed: { sections: [], fields: ['competencias'] },
+    sections: [{ key: 'descripcion', title: 'Descripción de la asignatura', orientation: 'portrait' as const, fields: [
+      { key: 'descripcion', label: 'Descripción', quien_llena: 'docente' as const, content: { type: 'doc' as const, content: [{ type: 'paragraph' }] } },
+      { key: 'sin_nombre', label: '', quien_llena: 'docente' as const, content: { type: 'doc' as const, content: [{ type: 'paragraph' }] } },
+      { key: 'competencias', label: 'Competencias', quien_llena: 'docente' as const, content: { type: 'doc' as const, content: [{ type: 'paragraph' }] } },
+    ] }],
+  });
+
+  const askAssistant = async (wrapper: ReturnType<typeof mountPage>): Promise<string> => {
+    await flushPromises();
+    expect(wrapper.findAll('button').some((button) => button.text() === 'Asistente')).toBe(false);
+    await wrapper.findAll('button').find((button) => button.text() === 'Editar')!.trigger('click');
+    await flushPromises();
+    [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Continuar')!.click();
     await flushPromises();
     await wrapper.findAll('button').find((button) => button.text() === 'Asistente')!.trigger('click');
     await flushPromises();
-    await wrapper.get('[data-proposal] button').trigger('click');
+    await wrapper.get('#template-assistant-message').setValue('Agrega Competencias');
+    await wrapper.get('#template-assistant-message').element.closest('form')!.dispatchEvent(new Event('submit'));
     await flushPromises();
+    const sent = vi.mocked(sendTemplateAssistantMessage).mock.calls[0]![1];
+    expect(sent.sections.map((section) => section.key)).toEqual(['descripcion']);
+    return sent.version;
   };
 
-  it("muestra la propuesta del asistente en la hoja con los cambios marcados y la aplica tras confirmar", async () => {
+  it("solo al editar ofrece el asistente, que pone la propuesta en el editor sin guardarla", async () => {
+    vi.mocked(getTemplateAssistant).mockImplementation(async () => {
+      const version = vi.mocked(sendTemplateAssistantMessage).mock.calls[0]?.[1].version;
+      return { available: true, locked: false, suggestions: [], messages: version ? [{ id: 'a-1', role: 'asistente', status: 'completado', result: 'propuesta', content: 'Propongo Competencias.', error: null, created_at: '2026-10-31T10:00:00Z', proposal: { id: 'p-1', status: 'pendiente', changes: proposal(version).changes, draft_version: version } }] : [] };
+    });
     const wrapper = mountPage();
-    await openProposal(wrapper);
+    const version = await askAssistant(wrapper);
+    vi.mocked(getTemplateAssistantProposal).mockResolvedValue(proposal(version));
 
-    expect(getTemplateAssistantProposal).toHaveBeenCalledWith('p-1');
-    const changed = wrapper.findAll('[data-changed]');
-    expect(changed).toHaveLength(1);
-    expect(changed[0]!.text()).toContain('Competencias');
-    expect(changed[0]!.text()).toContain('Cambió');
-    expect(wrapper.find('[data-proposal-bar]').text()).toContain('Propuesta del asistente');
-    expect(wrapper.findAll('button').some((button) => button.text() === 'Editar')).toBe(false);
-
-    await wrapper.get('[data-proposal-bar]').findAll('button').find((button) => button.text() === 'Aplicar')!.trigger('click');
-    await flushPromises();
-    expect(document.body.textContent).toContain('Al reanudar una convocatoria en pausa, sus sílabos se rehacen desde cero');
-    [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find((button) => button.textContent?.trim() === 'Aplicar')!.click();
+    await wrapper.get('[data-proposal]').findAll('button').find((button) => button.text() === 'Aplicar')!.trigger('click');
     await flushPromises();
 
     expect(applyTemplateAssistantProposal).toHaveBeenCalledWith('p-1');
-    expect(getTemplate).toHaveBeenCalledTimes(2);
-    expect(wrapper.find('[data-proposal-bar]').exists()).toBe(false);
-    expect(wrapper.find('[data-changed]').exists()).toBe(false);
+    const changed = wrapper.findAll('[data-changed]');
+    expect(changed).toHaveLength(1);
+    expect(changed[0]!.text()).toContain('Cambió');
+    expect(changed[0]!.attributes('data-field')).toBeDefined();
+    expect(wrapper.get<HTMLTextAreaElement>(`[data-field="${changed[0]!.attributes('data-field')}"] [data-field-label] textarea`).element.value).toBe('Competencias');
+    expect(getTemplate).toHaveBeenCalledTimes(1);
+    expect(wrapper.find('[aria-label="Cinta de edición de la plantilla"] [data-unsaved]').exists()).toBe(true);
   });
 
-  it("descarta la propuesta y vuelve a la plantilla", async () => {
+  it("no aplica una propuesta si el borrador cambió después del pedido", async () => {
+    vi.mocked(getTemplateAssistant).mockImplementation(async () => {
+      const version = vi.mocked(sendTemplateAssistantMessage).mock.calls[0]?.[1].version;
+      return { available: true, locked: false, suggestions: [], messages: version ? [{ id: 'a-1', role: 'asistente', status: 'completado', result: 'propuesta', content: 'Listo.', error: null, created_at: '2026-10-31T10:00:00Z', proposal: { id: 'p-1', status: 'pendiente', changes: ['Uno.'], draft_version: version } }] : [] };
+    });
+    vi.mocked(getTemplateAssistantProposal).mockResolvedValue(proposal('otra:1'));
     const wrapper = mountPage();
-    await openProposal(wrapper);
+    await askAssistant(wrapper);
 
-    await wrapper.get('[data-proposal-bar]').findAll('button').find((button) => button.text() === 'Descartar')!.trigger('click');
+    await wrapper.get('[data-proposal]').findAll('button').find((button) => button.text() === 'Aplicar')!.trigger('click');
     await flushPromises();
 
-    expect(discardTemplateAssistantProposal).toHaveBeenCalledWith('p-1');
     expect(applyTemplateAssistantProposal).not.toHaveBeenCalled();
-    expect(wrapper.find('[data-proposal-bar]').exists()).toBe(false);
-    expect(wrapper.findAll('button').some((button) => button.text() === 'Editar')).toBe(true);
+    expect(wrapper.find('[data-changed]').exists()).toBe(false);
   });
 
   it("lista las secciones con sus campos, incluso el que no tiene nombre", async () => {

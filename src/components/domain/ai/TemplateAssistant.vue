@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Eye, MessageSquarePlus, Send } from '@lucide/vue';
+import { Check, MessageSquarePlus, Send, Trash2 } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
-import { clearTemplateAssistant, getTemplateAssistant, sendTemplateAssistantMessage, type TemplateAssistantChat, type TemplateProposalStatus } from '@/api/templateAssistant';
+import { clearTemplateAssistant, getTemplateAssistant, sendTemplateAssistantMessage, type TemplateAssistantChat, type TemplateAssistantDraft, type TemplateAssistantMessage, type TemplateProposalStatus } from '@/api/templateAssistant';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
 import { Message, MessageContent } from '@/components/ai-elements/message';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -21,13 +21,13 @@ import { renderChatMarkdown } from '@/components/domain/ai/chatMarkdown';
 import { attemptKey } from '@/lib/attemptKey';
 import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 
-const props = defineProps<{ refresh: number; viewing: string | null }>();
-const emit = defineEmits<{ view: [proposalId: string] }>();
+const props = defineProps<{ refresh: number; draftVersion: string; snapshot: () => TemplateAssistantDraft; busy: string | null }>();
+const emit = defineEmits<{ apply: [proposalId: string]; discard: [proposalId: string] }>();
 
 const STATUS_LABELS: Record<Exclude<TemplateProposalStatus, 'pendiente'>, string> = {
     aplicada: 'Aplicada',
     descartada: 'Descartada',
-    vencida: 'Vencida: la plantilla cambió',
+    vencida: 'Vencida: el borrador cambió',
     reemplazada: 'Reemplazada por otra propuesta',
 };
 
@@ -47,6 +47,8 @@ const avatar = useAvatarController({ userEngaged: engaged, awaitingModel: waitin
 const canSend = computed(() => chat.value?.available === true && !loading.value && !waiting.value && message.value.trim().length > 0 && message.value.trim().length <= VALIDATION_LIMITS.longText);
 const canRestart = computed(() => !waiting.value && messages.value.length > 0);
 const messageKey = attemptKey();
+const proposalStatus = (proposal: NonNullable<TemplateAssistantMessage['proposal']>): TemplateProposalStatus =>
+    proposal.status === 'pendiente' && proposal.draft_version !== props.draftVersion ? 'vencida' : proposal.status;
 
 const stop = (): void => {
     if (timer) clearTimeout(timer);
@@ -77,7 +79,7 @@ const send = async (): Promise<void> => {
     error.value = null;
     try {
         const text = message.value.trim();
-        await sendTemplateAssistantMessage(text, messageKey.use(text));
+        await sendTemplateAssistantMessage(text, props.snapshot(), messageKey.use(text));
         messageKey.reset();
         if (request !== generation) return;
         message.value = '';
@@ -147,10 +149,11 @@ onBeforeUnmount(() => {
                             <ul class="list-disc space-y-1 pl-5 text-muted-foreground">
                                 <li v-for="change in item.proposal.changes" :key="change">{{ change.replace(/\.$/, '') }}</li>
                             </ul>
-                            <Button v-if="item.proposal.status === 'pendiente'" type="button" size="sm" :variant="viewing === item.proposal.id ? 'secondary' : 'default'" class="self-start" :disabled="viewing === item.proposal.id" @click="emit('view', item.proposal.id)">
-                                <Eye data-icon="inline-start" aria-hidden="true" />{{ viewing === item.proposal.id ? 'En la hoja' : 'Ver en la hoja' }}
-                            </Button>
-                            <Badge v-else variant="secondary" class="self-start">{{ STATUS_LABELS[item.proposal.status] }}</Badge>
+                            <div v-if="proposalStatus(item.proposal) === 'pendiente'" class="flex flex-wrap gap-2">
+                                <Button type="button" size="sm" :disabled="busy !== null" @click="emit('apply', item.proposal.id)"><Spinner v-if="busy === item.proposal.id" data-icon="inline-start" /><Check v-else data-icon="inline-start" aria-hidden="true" />Aplicar</Button>
+                                <Button type="button" size="sm" variant="outline" :disabled="busy !== null" @click="emit('discard', item.proposal.id)"><Trash2 data-icon="inline-start" aria-hidden="true" />Descartar</Button>
+                            </div>
+                            <Badge v-else variant="secondary" class="self-start">{{ STATUS_LABELS[proposalStatus(item.proposal) as Exclude<TemplateProposalStatus, 'pendiente'>] }}</Badge>
                         </div>
                     </MessageContent>
                 </Message>
@@ -166,7 +169,7 @@ onBeforeUnmount(() => {
                         <InputGroupTextarea id="template-assistant-message" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" class="w-full min-w-0" :disabled="!chat?.available || waiting" placeholder="¿Qué cambio quiere en la plantilla?" @focus="engaged = true" @blur="engaged = false" />
                         <InputGroupAddon align="block-end" class="justify-end"><Button type="submit" size="sm" :disabled="!canSend"><Spinner v-if="waiting" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar</Button></InputGroupAddon>
                     </InputGroup>
-                    <FieldDescription>Nada cambia hasta que aplique la propuesta</FieldDescription>
+                    <FieldDescription>Los cambios aplicados se guardan con «Guardar»</FieldDescription>
                 </Field>
             </form>
         </CardContent>

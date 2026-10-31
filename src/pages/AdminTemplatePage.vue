@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
-import { ArrowLeft, Bot, Check, RotateCcw, Trash2, X } from '@lucide/vue';
+import { ArrowLeft, Bot, RotateCcw, X } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { createTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
-import { applyTemplateAssistantProposal, discardTemplateAssistantProposal, getTemplateAssistantProposal, proposalPreview, type TemplateProposalPreview } from '@/api/templateAssistant';
+import { applyTemplateAssistantProposal, discardTemplateAssistantProposal, getTemplateAssistantProposal } from '@/api/templateAssistant';
 import TemplateAssistant from '@/components/domain/ai/TemplateAssistant.vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
@@ -17,9 +17,6 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Spinner } from '@/components/ui/spinner';
-import { useCountdown } from '@/composables/useCountdown';
 import { toast } from '@/lib/toast';
 import { paths } from '@/lib/routes';
 
@@ -86,59 +83,43 @@ const reloadFromMutation = (): void => {
 const assistantOpen = ref(false);
 const assistantLoaded = ref(false);
 const assistantRefresh = ref(0);
-const proposal = ref<TemplateProposalPreview | null>(null);
-const deciding = ref<'apply' | 'discard' | null>(null);
-const applyOpen = ref(false);
-const applyCountdown = useCountdown(applyOpen);
+const deciding = ref<string | null>(null);
+const draftVersion = computed(() => builder.value?.draftVersion ?? '');
+const draftSnapshot = () => builder.value?.snapshot() ?? { sections: [], version: '' };
 const apiFailure = (reason: unknown, fallback: string): string => reason instanceof ApiError ? (Object.values(reason.errors).flat()[0] ?? reason.message) : fallback;
 const toggleAssistant = (): void => {
     assistantLoaded.value = true;
     assistantOpen.value = !assistantOpen.value;
 };
-const viewProposal = async (id: string): Promise<void> => {
-    actionError.value = null;
+const applyProposal = async (id: string): Promise<void> => {
+    if (deciding.value) return;
+    deciding.value = id;
     try {
-        proposal.value = proposalPreview(await getTemplateAssistantProposal(id));
+        const proposal = await getTemplateAssistantProposal(id);
+        if (proposal.draft_version !== draftVersion.value) {
+            toast.error('El borrador cambió. Pida la propuesta de nuevo');
+            return;
+        }
+        await applyTemplateAssistantProposal(id);
+        builder.value?.applyProposal(proposal);
+        toast.success('Cambios aplicados. Guárdelos con «Guardar»');
     } catch (reason) {
-        actionError.value = apiFailure(reason, 'No se pudo abrir la propuesta');
-    }
-};
-const closeProposal = (): void => {
-    proposal.value = null;
-};
-const decided = async (message: string): Promise<void> => {
-    proposal.value = null;
-    assistantRefresh.value += 1;
-    await load({ silent: true });
-    toast.success(message);
-};
-const applyProposal = async (): Promise<void> => {
-    if (!proposal.value || deciding.value) return;
-    deciding.value = 'apply';
-    actionError.value = null;
-    try {
-        await applyTemplateAssistantProposal(proposal.value.id);
-        applyOpen.value = false;
-        await decided('Propuesta aplicada');
-    } catch (reason) {
-        applyOpen.value = false;
-        actionError.value = apiFailure(reason, 'No se pudo aplicar la propuesta');
+        toast.error(apiFailure(reason, 'No se pudo aplicar la propuesta'));
+    } finally {
+        deciding.value = null;
         assistantRefresh.value += 1;
-    } finally {
-        deciding.value = null;
     }
 };
-const discardProposal = async (): Promise<void> => {
-    if (!proposal.value || deciding.value) return;
-    deciding.value = 'discard';
-    actionError.value = null;
+const discardProposal = async (id: string): Promise<void> => {
+    if (deciding.value) return;
+    deciding.value = id;
     try {
-        await discardTemplateAssistantProposal(proposal.value.id);
-        await decided('Propuesta descartada');
+        await discardTemplateAssistantProposal(id);
     } catch (reason) {
-        actionError.value = apiFailure(reason, 'No se pudo descartar la propuesta');
+        toast.error(apiFailure(reason, 'No se pudo descartar la propuesta'));
     } finally {
         deciding.value = null;
+        assistantRefresh.value += 1;
     }
 };
 
@@ -192,39 +173,15 @@ onBeforeUnmount(() => {
             <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
         </div>
 
-        <TemplateVisualBuilder ref="builder" :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" :proposal="proposal" @changed="reloadFromMutation" @dirty="unsaved = $event" @editing="editing = $event">
-            <template #proposal-actions>
-                <span class="px-2 text-sm font-medium">Propuesta del asistente</span>
-                <Button type="button" variant="ghost" :disabled="deciding !== null" @click="closeProposal"><X data-icon="inline-start" aria-hidden="true" />Cerrar</Button>
-                <Button type="button" variant="outline" :disabled="deciding !== null" @click="discardProposal"><Spinner v-if="deciding === 'discard'" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Descartar</Button>
-                <Button type="button" :disabled="deciding !== null || Boolean(payload?.processLock)" @click="applyOpen = true"><Check data-icon="inline-start" aria-hidden="true" />Aplicar</Button>
-            </template>
-        </TemplateVisualBuilder>
-        <template v-if="!editing">
-            <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-20 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-8rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:bottom-[calc(var(--mobile-nav-height)+5rem)] max-sm:h-auto max-sm:w-auto" aria-label="Asistente de plantilla">
-                <TemplateAssistant :refresh="assistantRefresh" :viewing="proposal?.id ?? null" @view="viewProposal" />
+        <TemplateVisualBuilder ref="builder" :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" @dirty="unsaved = $event" @editing="editing = $event" />
+        <template v-if="editing">
+            <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-8rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de plantilla">
+                <TemplateAssistant :refresh="assistantRefresh" :draft-version="draftVersion" :snapshot="draftSnapshot" :busy="deciding" @apply="applyProposal" @discard="discardProposal" />
             </aside>
-            <Button type="button" class="fixed right-20 bottom-4 z-40 h-12 rounded-full px-5 shadow-menu max-sm:right-4 max-sm:bottom-[calc(var(--mobile-nav-height)+1rem)]" :aria-expanded="assistantOpen" @click="toggleAssistant">
+            <Button type="button" class="fixed right-6 bottom-6 z-40 h-12 rounded-full px-5 shadow-menu" :aria-expanded="assistantOpen" @click="toggleAssistant">
                 <X v-if="assistantOpen" data-icon="inline-start" aria-hidden="true" /><Bot v-else data-icon="inline-start" aria-hidden="true" />{{ assistantOpen ? 'Cerrar asistente' : 'Asistente' }}
             </Button>
         </template>
-        <Dialog v-model:open="applyOpen">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Aplicar la propuesta</DialogTitle>
-                    <DialogDescription>Al aplicarla:</DialogDescription>
-                    <ul class="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-                        <li>La plantilla cambia como indica la propuesta</li>
-                        <li>Al reanudar una convocatoria en pausa, sus sílabos se rehacen desde cero</li>
-                        <li>En el próximo período, los docentes no conservan lo que escribieron</li>
-                    </ul>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button type="button" variant="outline" @click="applyOpen = false">Cancelar</Button>
-                    <Button type="button" :disabled="applyCountdown > 0 || deciding !== null" @click="applyProposal"><Spinner v-if="deciding === 'apply'" data-icon="inline-start" /><Check v-else data-icon="inline-start" aria-hidden="true" />{{ applyCountdown > 0 ? `Aplicar (${applyCountdown})` : 'Aplicar' }}</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
         <UnsavedChangesDialog :open="discardOpen" title="Hay cambios sin guardar" description="Los cambios de la plantilla no se guardaron. Si sale, los perderá" discard-label="Salir y descartar cambios" @continue="decideDiscard(false)" @discard="decideDiscard(true)" @update:open="(value) => { if (!value) decideDiscard(false); }" />
     </PageFrame>
 </template>
