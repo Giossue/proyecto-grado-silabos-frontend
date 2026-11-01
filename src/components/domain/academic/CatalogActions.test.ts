@@ -33,6 +33,14 @@ describe('CatalogActions', () => {
     expect(wrapper.emitted('changed')?.[0]).toEqual(['Registro desactivado sin borrar su historial.']);
   });
 
+  it('una facultad con carreras activas tiene Desactivar deshabilitado y dice por qué', async () => {
+    await open({ entity: 'facultad', recordName: 'Ingeniería', active: true, deactivateBlockedReason: 'No se puede desactivar: tiene 2 carreras activas' });
+
+    const deactivate = document.body.querySelector('button[aria-label="Desactivar facultad"]') as HTMLButtonElement;
+    expect(deactivate.disabled).toBe(true);
+    expect(document.body.textContent).toContain('No se puede desactivar: tiene 2 carreras activas');
+  });
+
   it('una carrera activa muestra desactivar, sin coordinador, eliminar ni menú', async () => {
     await open({ entity: 'carrera' });
 

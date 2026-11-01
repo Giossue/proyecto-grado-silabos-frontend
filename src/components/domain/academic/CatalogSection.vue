@@ -74,6 +74,12 @@ const facultyNames = computed(
 const facultyName = (facultyId: string): string =>
     facultyNames.value.get(facultyId) ?? 'Facultad no disponible';
 
+const facultyDeactivateBlock = (facultyId: string): string | null => {
+    const count = props.catalogs.careers.filter((career) => career.faculty_id === facultyId && career.active).length;
+
+    return count === 0 ? null : `No se puede desactivar: tiene ${count} ${count === 1 ? 'carrera activa' : 'carreras activas'}`;
+};
+
 const facultyFilter = useClientFilter(
     () => props.catalogs.faculties,
     (item) => [item.nombre],
@@ -184,6 +190,7 @@ const {
                                 :campus-options="options.campusOptions" :modality-options="options.modalityOptions"
                                 :logo-url="faculty.logo_url"
                                 :faculties="catalogs.faculties"
+                                :deactivate-blocked-reason="facultyDeactivateBlock(faculty.id)"
                                 @changed="emit('changed', $event)"
                             />
                         </TableCell>

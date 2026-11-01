@@ -19,7 +19,7 @@ const props = defineProps<{
     campus?: string | null; campusOptions: Array<{ value: string; label: string }>; catalogLibraries?: string[];
     startsOn?: string | null; endsOn?: string | null;
     institutionalProcess?: { id: string; state: 'abierto' | 'pausado' | 'cerrado' } | null;
-    faculties: CatalogRecord[]; lockReason?: string | null;
+    faculties: CatalogRecord[]; lockReason?: string | null; deactivateBlockedReason?: string | null;
 }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const editOpen = ref(false);
@@ -32,7 +32,7 @@ const sheetActions = computed<SheetAction[]>(() => {
     const list: SheetAction[] = [];
     if (props.entity === 'periodo' && !props.institutionalProcess) list.push({ key: 'process', label: 'Abrir convocatoria', icon: CalendarPlus });
     // Facultades y carreras no se eliminan: se desactivan y conservan su historial.
-    if (statusEntity.value) list.push(props.active ? { key: 'status', label: `Desactivar ${noun.value}`, icon: PowerOff } : { key: 'status', label: `Reactivar ${noun.value}`, icon: Power });
+    if (statusEntity.value) list.push(props.active ? { key: 'status', label: `Desactivar ${noun.value}`, icon: PowerOff, destructive: true, disabled: Boolean(props.deactivateBlockedReason), disabledReason: props.deactivateBlockedReason ?? undefined } : { key: 'status', label: `Reactivar ${noun.value}`, icon: Power });
     if (props.entity === 'periodo') list.push({ key: 'delete', label: 'Eliminar', icon: Trash2, destructive: true });
 
     return list;
