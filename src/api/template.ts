@@ -13,7 +13,7 @@ export type TemplateSectionPayload = { id: string; key: string; title: string; o
 export type TemplatePayload = { processLock: string | null; processLockDetail?: LockDetail | null; templateChangedDuringPause?: boolean; variables?: TemplateVariable[]; presets?: TemplatePreset[]; definition?: TemplateDefinitionPayload; template: null | { id: string; name: string; description: string | null; titleBlock: { text: string }; layout?: DocumentLayout; layoutOptions?: DocumentLayoutOptions; sections: TemplateSectionPayload[] }; logos?: { institution: string; faculty: string; institution_size: { width: number; height: number }; faculty_size: { width: number; height: number } } };
 export type TemplatePreset = { key: string; field_key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode };
 export const getTemplate = () => api<TemplatePayload>('/admin/template').then((payload) => {
-    setTemplateRuntime(payload.definition, Object.fromEntries((payload.variables ?? []).map((variable) => [variable.key, variable.sample])));
+    setTemplateRuntime(payload.definition, Object.fromEntries((payload.variables ?? []).map((variable) => [variable.key, ''])));
 
     return payload;
 });

@@ -6,10 +6,13 @@ import { responsibleLabel } from '@/types/configuration';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 
 const props = defineProps<{ field: TemplateField; preview?: boolean; variables?: TemplateVariable[] }>();
-const sample = (node: DocumentNode): DocumentNode => node.type === 'variable'
-    ? { type: 'text', text: props.variables?.find((item) => item.key === node.attrs?.id)?.[props.preview ? 'sample' : 'label'] || 'Dato del sistema' }
-    : { ...node, ...(node.content ? { content: node.content.map(sample) } : {}) };
-const content = computed(() => sample(props.field.content));
+const shown = (node: DocumentNode): DocumentNode[] => {
+    if (node.type !== 'variable') return [{ ...node, ...(node.content ? { content: node.content.flatMap(shown) } : {}) }];
+    if (props.preview) return [];
+
+    return [{ type: 'text', text: props.variables?.find((item) => item.key === node.attrs?.id)?.label || 'Dato del sistema' }];
+};
+const content = computed(() => shown(props.field.content)[0] ?? props.field.content);
 </script>
 
 <template>
