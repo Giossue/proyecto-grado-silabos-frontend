@@ -191,6 +191,7 @@ const {
                                 :record-name="faculty.nombre"
                                 :active="faculty.activo"
                                 :campus="faculty.campus"
+                                :catalog-libraries="faculty.catalog_libraries ?? []"
                                 :campus-options="options.campusOptions" :modality-options="options.modalityOptions"
                                 :logo-url="faculty.logo_url"
                                 :faculties="catalogs.faculties"

@@ -27,6 +27,7 @@ export type CatalogRecord = {
   activo: boolean;
   logo_url?: string | null;
   campus?: string | null;
+  catalog_libraries?: string[];
 };
 
 export type GovernanceCatalogEntity = "facultad" | "carrera" | "periodo";

@@ -1,10 +1,12 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { getLocalTimeZone, today } from '@internationalized/date';
 import { nextTick } from 'vue';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import DatePicker from '@/components/DatePicker.vue';
 import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
 import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
+
+vi.mock('@/api/libraryCatalog', () => ({ getCatalogLibraries: vi.fn().mockResolvedValue([]) }));
 
 const options = {
   faculties: [],

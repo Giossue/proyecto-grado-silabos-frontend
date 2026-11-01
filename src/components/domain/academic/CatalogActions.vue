@@ -17,7 +17,7 @@ const props = defineProps<{
     entity: GovernanceCatalogEntity; recordId: string; logoUrl?: string | null; recordName: string;
     recordCode?: string | null; active?: boolean; facultyId?: string | null; modality?: string | null;
     modalityOptions: Array<{ value: string; label: string }>;
-    campus?: string | null; campusOptions: Array<{ value: string; label: string }>;
+    campus?: string | null; campusOptions: Array<{ value: string; label: string }>; catalogLibraries?: string[];
     startsOn?: string | null; endsOn?: string | null;
     institutionalProcess?: { id: string; state: 'abierto' | 'pausado' | 'cerrado' } | null;
     faculties: CatalogRecord[]; coordinator?: { id: string; name: string } | null;
@@ -76,7 +76,7 @@ const remove = async (): Promise<void> => {
     <div class="contents">
         <CoordinatorReplacementSheet v-if="entity === 'carrera'" :key="`coordinator-${recordId}`" v-model:open="coordinatorOpen" :career-id="recordId" :career-name="recordName" :coordinator="coordinator ?? null" :users="coordinatorUsers ?? []" @saved="emit('changed', $event)" />
         <SyllabusProcessSheet v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName, starts_on: startsOn ?? undefined, ends_on: endsOn ?? undefined }" display="menu" trigger-label="Abrir convocatoria" @saved="emit('changed', $event)" />
-        <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" :actions="sheetActions" @action="runAction" @saved="emit('changed', $event)" />
+        <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :catalog-libraries="catalogLibraries ?? []" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" :actions="sheetActions" @action="runAction" @saved="emit('changed', $event)" />
 
         <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar registro institucional</DialogTitle><DialogDescription>Se eliminará «{{ recordName }}». La operación se rechazará si tiene carreras, materias programadas, procesos u otro historial relacionado.</DialogDescription></DialogHeader>
             <FeedbackAlert v-if="error" :message="error" />

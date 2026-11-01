@@ -17,3 +17,8 @@ export type CatalogResults = { data: CatalogBook[]; meta: PaginationMeta };
 
 export const searchLibraryCatalog = (field: CatalogSearchField, q: string, page = 1) =>
     api<CatalogResults>(`/teacher/library-catalog/search?${new URLSearchParams({ field, q, page: String(page) })}`);
+
+export type CatalogLibrary = { id: string; name: string };
+
+export const getCatalogLibraries = () =>
+    api<{ data: CatalogLibrary[] }>('/admin/library-catalog/libraries').then((payload) => payload.data);
