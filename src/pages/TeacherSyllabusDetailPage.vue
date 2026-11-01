@@ -578,7 +578,7 @@ onBeforeUnmount(() => {
         </div>
 
         <template v-if="canEdit && !pausedEdit">
-          <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-8rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de unidades">
+          <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-7rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de unidades">
             <SyllabusUnitAssistant
               :syllabus-id="syllabus.id"
               :enabled="canEdit && !conflict"

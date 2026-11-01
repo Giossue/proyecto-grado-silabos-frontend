@@ -175,7 +175,7 @@ onBeforeUnmount(() => {
 
         <TemplateVisualBuilder ref="builder" :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" @dirty="unsaved = $event" @editing="editing = $event" />
         <template v-if="editing">
-            <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-8rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de plantilla">
+            <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-7rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de plantilla">
                 <TemplateAssistant :refresh="assistantRefresh" :draft-version="draftVersion" :snapshot="draftSnapshot" :busy="deciding" @apply="applyProposal" @discard="discardProposal" />
             </aside>
             <Button type="button" class="fixed right-6 bottom-6 z-40 h-12 rounded-full px-5 shadow-menu" :aria-expanded="assistantOpen" @click="toggleAssistant">
