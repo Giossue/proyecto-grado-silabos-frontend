@@ -184,9 +184,6 @@ watch(open, (value) => value && reset());
             <AlertDescription>{{ error }}</AlertDescription>
           </Alert>
           <section class="flex flex-col gap-2">
-            <div class="flex items-center justify-end gap-2">
-              <Button type="button" size="sm" variant="outline" :disabled="adding || rowBusy" @click="startAdd"><Plus aria-hidden="true" /> Agregar paralelo</Button>
-            </div>
             <Alert v-if="rowError" variant="destructive"><AlertDescription>{{ rowError }}</AlertDescription></Alert>
             <div class="overflow-hidden rounded-md ring-1 ring-surface-ring">
               <Table label="Paralelos de la materia">
@@ -244,6 +241,7 @@ watch(open, (value) => value && reset());
                 </TableBody>
               </Table>
             </div>
+            <Button type="button" size="sm" variant="outline" class="self-start" :disabled="adding || rowBusy" @click="startAdd"><Plus aria-hidden="true" /> Agregar paralelo</Button>
           </section>
           <DialogFooter><Button type="button" variant="outline" @click="close">Cerrar</Button></DialogFooter>
         </FieldGroup>
