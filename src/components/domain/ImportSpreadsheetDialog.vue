@@ -53,7 +53,7 @@ const download = async (): Promise<void> => {
 <template>
     <Dialog v-model:open="open">
         <DialogTrigger as-child><Button type="button" variant="success"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></DialogTrigger>
-        <DialogContent :aria-describedby="undefined" class="max-h-screen flex flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+        <DialogContent :aria-describedby="undefined" :class="['max-h-screen flex flex-col gap-0 overflow-hidden p-0', result ? 'sm:max-w-3xl' : 'sm:max-w-md']">
             <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
                 <div class="grid gap-4 p-6">
                     <DialogHeader><DialogTitle>{{ title }}</DialogTitle></DialogHeader>
