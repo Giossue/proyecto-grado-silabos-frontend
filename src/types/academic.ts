@@ -25,6 +25,7 @@ export type CatalogRecord = {
   id: string;
   nombre: string;
   activo: boolean;
+  deactivate_block?: string | null;
   logo_url?: string | null;
   campus?: string | null;
   catalog_libraries?: string[];
@@ -54,6 +55,7 @@ export type AcademicStructureProps = {
       code: string;
       name: string;
       active: boolean;
+      deactivate_block?: string | null;
     }[];
     periods: {
       id: string;
