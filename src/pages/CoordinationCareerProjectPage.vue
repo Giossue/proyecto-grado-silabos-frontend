@@ -106,7 +106,7 @@ onMounted(() => { void load(); });
             <Badge :variant="completeCount(group.list) === group.list.length ? 'success' : 'warning'" :aria-label="`${completeCount(group.list)} de ${group.list.length} fichas completas`">{{ completeCount(group.list) }}/{{ group.list.length }}</Badge>
             <ChevronDown class="size-4 transition-transform group-data-[state=open]/cycle:rotate-180" aria-hidden="true" />
           </CollapsibleTrigger>
-          <CollapsibleContent class="border-t p-3">
+          <CollapsibleContent class="border-t bg-muted/60 p-3">
             <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" :aria-label="group.cycle === 'Sin ciclo' ? 'Materias sin ciclo' : `Materias del ciclo ${group.cycle}`">
               <li v-for="subject in group.list" :key="subject.id">
                 <Card
