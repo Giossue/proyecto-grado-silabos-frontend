@@ -203,9 +203,31 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     const wrapper = mountPage();
     await flushPromises();
-    expect(wrapper.get('#field-field-1').text()).toContain('Carrera');
+    expect(wrapper.get('#field-field-1').element.closest('[data-slot="accordion-item"]')!.textContent).toContain('Carrera');
     expect(wrapper.findAllComponents(FreeTextEditor).map((editor) => editor.attributes('id'))).toEqual(['input-field-2', 'input-field-3']);
     expect(wrapper.get('#field-field-3').text()).toContain('Viene de la ficha; puede ajustarlo');
+    wrapper.unmount();
+  });
+
+  it('cada campo es un acordeón que arranca abierto y se cierra y se vuelve a abrir', async () => {
+    const detail = syllabus('borrador', 'docente');
+    detail.sections[0]!.fields.push(field('field-2', 'docente', { label: 'Bibliografía' }));
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    const wrapper = mountPage();
+    await flushPromises();
+    const items = () => wrapper.findAll('[data-slot="accordion-item"]');
+    const state = (index: number): string | undefined => items()[index]!.attributes('data-state');
+
+    expect(items()).toHaveLength(2);
+    expect([state(0), state(1)]).toEqual(['open', 'open']);
+
+    await items()[1]!.get('[data-slot="accordion-trigger"]').trigger('click');
+    await flushPromises();
+    expect([state(0), state(1)]).toEqual(['open', 'closed']);
+
+    await items()[1]!.get('[data-slot="accordion-trigger"]').trigger('click');
+    await flushPromises();
+    expect(state(1)).toBe('open');
     wrapper.unmount();
   });
 

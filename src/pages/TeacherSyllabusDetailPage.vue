@@ -6,7 +6,7 @@ import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { onBeforeRouteLeave, useRoute, useRouter } from "vue-router";
 import { toast } from "@/lib/toast";
 import { ApiError } from "@/api/client";
@@ -31,7 +31,10 @@ import ReviewCommentNotice from '@/components/domain/syllabus/ReviewCommentNotic
 import ReviewCommentsButton from '@/components/domain/syllabus/ReviewCommentsButton.vue';
 import TeacherFormationDialog from '@/components/domain/identity/TeacherFormationDialog.vue';
 import { sessionState } from '@/state/session';
+import { responsibleLabel } from '@/types/configuration';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -169,6 +172,10 @@ const submitHint = computed(() => {
   return "";
 });
 const goToPart = async (fieldId: string | null): Promise<void> => {
+  if (fieldId && collapsedFields.value.has(fieldId)) {
+    collapsedFields.value = new Set([...collapsedFields.value].filter((id) => id !== fieldId));
+    await nextTick();
+  }
   const owner = fieldId ? visibleSections.value.find((section) => section.fields.some((field) => field.id === fieldId)) : null;
   if (owner && canEdit.value) {
     activeSectionId.value = owner.id;
@@ -179,12 +186,27 @@ const goToPart = async (fieldId: string | null): Promise<void> => {
   target.scrollIntoView({ behavior: "smooth", block: "center" });
   target.querySelector<HTMLElement>("input, textarea, button, [contenteditable='true']")?.focus({ preventScroll: true });
 };
+// Cada campo es un acordeón que arranca abierto; se guardan solo los que el docente cerró.
+const collapsedFields = ref<Set<string>>(new Set());
+const openFields = (section: { fields: Array<{ id: string }> }): string[] => section.fields.map((field) => field.id).filter((id) => !collapsedFields.value.has(id));
+const setOpenFields = (section: { fields: Array<{ id: string }> }, open: string[]): void => {
+  const next = new Set(collapsedFields.value);
+  for (const { id } of section.fields) {
+    if (open.includes(id)) next.delete(id); else next.add(id);
+  }
+  collapsedFields.value = next;
+};
+const fieldTitle = (field: { label: string }, section: { title: string }): string => field.label.trim() || section.title;
 const clearFieldValidation = (fieldId: string): void => {
   if (validationResults.value.some((result) => result.field_id === fieldId)) {
     validationResults.value = validationResults.value.filter((result) => result.field_id !== fieldId);
   }
 };
 const hasUnsavedChanges = (): boolean => dirtyFields.size > 0;
+watch(validationResults, (results) => {
+  const failing = new Set(results.map((result) => result.field_id));
+  if ([...collapsedFields.value].some((id) => failing.has(id))) collapsedFields.value = new Set([...collapsedFields.value].filter((id) => !failing.has(id)));
+});
 const copySources = computed(() =>
   canEdit.value && syllabus.value?.state === "borrador" ? syllabus.value.copy_sources ?? [] : [],
 );
@@ -514,15 +536,26 @@ onBeforeUnmount(() => {
             <section v-for="section in shownSections" :id="`section-${section.id}`" :key="section.id" class="teacher-form flex scroll-mt-6 flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
               <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
               <FieldGroup>
-                <template v-for="field in section.fields" :key="field.id">
-                  <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                    <FieldLabel :for="`input-${field.id}`" required :class="{ 'sr-only': !field.label.trim() || field.label.trim() === section.title }">{{ field.label.trim() || section.title }}</FieldLabel>
-                    <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene de la ficha; puede ajustarlo.</FieldDescription>
-                    <FieldResponseEditor required :template="field.template" :label="field.label.trim() || section.title" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
-                  </Field>
-                  <FieldView v-else :id="`field-${field.id}`" :field="field" />
-                  <FieldError :errors="visibleValidationMessages(field.id)" />
-                </template>
+                <Accordion type="multiple" class="rounded-lg px-4 ring-1 ring-surface-ring" :model-value="openFields(section)" @update:model-value="setOpenFields(section, $event as string[])">
+                  <AccordionItem v-for="field in section.fields" :key="field.id" :value="field.id">
+                    <AccordionTrigger class="items-center hover:no-underline">
+                      <span class="flex flex-wrap items-center gap-2">
+                        <span class="text-base font-semibold">{{ fieldTitle(field, section) }}</span>
+                        <span v-if="isTeacherField(field)" class="text-destructive" aria-hidden="true">*</span>
+                        <Badge v-else variant="outline" class="font-normal">{{ responsibleLabel(field.quien_llena) }}</Badge>
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent class="flex flex-col gap-3">
+                      <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
+                        <FieldLabel :for="`input-${field.id}`" required class="sr-only">{{ fieldTitle(field, section) }}</FieldLabel>
+                        <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene de la ficha; puede ajustarlo.</FieldDescription>
+                        <FieldResponseEditor required :template="field.template" :label="fieldTitle(field, section)" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
+                      </Field>
+                      <FieldView v-else :id="`field-${field.id}`" :field="field" bare />
+                      <FieldError :errors="visibleValidationMessages(field.id)" />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </FieldGroup>
             </section>
             <nav v-if="previousSection || nextSection" class="-mt-4 flex items-center justify-between gap-2" aria-label="Secciones anterior y siguiente">
