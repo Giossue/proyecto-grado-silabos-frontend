@@ -22,6 +22,20 @@ describe('AccessibilityDialog', () => {
     expect(document.documentElement.dataset.textSize).toBe('130');
   });
 
+  it('Restablecer está desactivado mientras no haya cambios', async () => {
+    localStorage.clear();
+    initializeAccessibility();
+    const wrapper = mount(AccessibilityDialog, { attachTo: document.body });
+    await wrapper.get('[aria-label="Accesibilidad"]').trigger('click');
+    await nextTick();
+    const reset = (): HTMLButtonElement => [...document.body.querySelectorAll('button')].find((item) => item.textContent?.trim() === 'Restablecer') as HTMLButtonElement;
+
+    expect(reset().disabled).toBe(true);
+    ([...document.body.querySelectorAll('[role="radio"]')].find((item) => item.textContent?.includes('Grande')) as HTMLElement).click();
+    await nextTick();
+    expect(reset().disabled).toBe(false);
+  });
+
   it('el botón flotante mide lo mismo que el de ayuda', () => {
     const wrapper = mount(AccessibilityDialog, { props: { floating: true } });
 

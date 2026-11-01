@@ -6,7 +6,7 @@ import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useAccessibility, type TextSize } from '@/composables/useAccessibility';
+import { defaultSettings, useAccessibility, type TextSize } from '@/composables/useAccessibility';
 import { accessibilityDialogOpen } from '@/state/accessibilityDialog';
 
 const props = defineProps<{ floating?: boolean; remote?: boolean }>();
@@ -29,6 +29,11 @@ const toggles = [
     { key: 'underlineLinks', label: 'Subrayar enlaces', hint: 'Los enlaces se distinguen sin depender del color.' },
     { key: 'wideSpacing', label: 'Texto más espaciado', hint: 'Más espacio entre líneas, letras y palabras.' },
 ] as const;
+const isDefault = computed(() => {
+  const defaults = defaultSettings();
+
+  return (Object.keys(defaults) as (keyof typeof defaults)[]).every((key) => settings.value[key] === defaults[key]);
+});
 const setSize = (value: string): void => { settings.value.textSize = value as TextSize; };
 </script>
 
@@ -64,7 +69,7 @@ const setSize = (value: string): void => { settings.value.textSize = value as Te
         <DialogClose as-child>
           <Button type="button" variant="outline">Cerrar</Button>
         </DialogClose>
-        <Button type="button" @click="reset"><RotateCcw data-icon="inline-start" aria-hidden="true" />Restablecer</Button>
+        <Button type="button" :disabled="isDefault" @click="reset"><RotateCcw data-icon="inline-start" aria-hidden="true" />Restablecer</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
