@@ -4,7 +4,7 @@ import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, ChevronDown, It
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { DOCUMENT_CELL_COLORS } from '@/lib/documentPalette';
+import { DOCUMENT_CELL_COLORS, paintCell } from '@/lib/documentPalette';
 import { cn } from '@/lib/utils';
 
 const props = defineProps<{ editor: Editor | null; disabled?: boolean }>();
@@ -66,7 +66,7 @@ const tableActions = [
         <DropdownMenuSub>
           <DropdownMenuSubTrigger :disabled="!inTable">Fondo de celda</DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
-            <DropdownMenuItem v-for="color in DOCUMENT_CELL_COLORS" :key="color.value ?? 'none'" @select="run((chain) => chain.setCellAttribute('backgroundColor', color.value ?? null))">{{ color.label }}</DropdownMenuItem>
+            <DropdownMenuItem v-for="color in DOCUMENT_CELL_COLORS" :key="color.value ?? 'none'" @select="run((chain) => paintCell(chain, color))">{{ color.label }}</DropdownMenuItem>
           </DropdownMenuSubContent>
         </DropdownMenuSub>
         <DropdownMenuSeparator />

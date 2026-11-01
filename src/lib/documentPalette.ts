@@ -9,6 +9,7 @@ export const DOCUMENT_COLORS = Object.freeze({
     red: '#C00000',
     green: '#548235',
     lightBlue: '#DBE5F1',
+    headerBlue: '#C3D4EA',
     tableHeader: '#4F81BD',
     tableHeaderText: '#365F91',
     total: '#B8CCE4',
@@ -34,9 +35,12 @@ export const initializeDocumentPalette = (): void => {
 };
 
 export const DOCUMENT_CELL_COLORS = [
-    { label: 'Sin fondo', value: null },
-    { label: 'Blanco', value: DOCUMENT_COLORS.paper },
-    { label: 'Azul claro', value: DOCUMENT_COLORS.lightBlue },
-    { label: 'Azul institucional', value: DOCUMENT_COLORS.tableHeader },
-    { label: 'Gris claro', value: DOCUMENT_COLORS.lightGray },
+    { label: 'Sin fondo', value: null, text: null, bold: null },
+    { label: 'Celeste', value: DOCUMENT_COLORS.headerBlue, text: null, bold: true },
+    { label: 'Azul institucional', value: DOCUMENT_COLORS.tableHeader, text: DOCUMENT_COLORS.paper, bold: true },
 ] as const;
+
+export type DocumentCellColor = (typeof DOCUMENT_CELL_COLORS)[number];
+
+export const paintCell = <T extends { setCellAttribute: (name: string, value: unknown) => T }>(chain: T, color: DocumentCellColor): T =>
+    chain.setCellAttribute('backgroundColor', color.value).setCellAttribute('textColor', color.text).setCellAttribute('bold', color.bold);

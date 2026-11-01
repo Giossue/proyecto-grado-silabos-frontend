@@ -14,7 +14,7 @@ import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import { emptyDocument } from '@/types/configuration';
 
 const PageSpacers = Extension.create({ name: 'pageSpacers', addProseMirrorPlugins: () => [pageSpacersPlugin()] });
-import { DOCUMENT_CELL_COLORS } from '@/lib/documentPalette';
+import { DOCUMENT_CELL_COLORS, paintCell } from '@/lib/documentPalette';
 
 const props = withDefaults(defineProps<{
     id: string;
@@ -143,7 +143,7 @@ defineExpose({ editor });
             <Button type="button" variant="ghost" size="sm" aria-label="Fondo de celda" :disabled="disabled">Fondo<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem v-for="color in DOCUMENT_CELL_COLORS" :key="color.value ?? 'none'" @select="editor?.chain().focus().setCellAttribute('backgroundColor', color.value ?? null).run()">{{ color.label }}</DropdownMenuItem>
+            <DropdownMenuItem v-for="color in DOCUMENT_CELL_COLORS" :key="color.value ?? 'none'" @select="editor && paintCell(editor.chain().focus(), color).run()">{{ color.label }}</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().deleteTable().run()">Quitar tabla</Button>
