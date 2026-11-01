@@ -536,7 +536,7 @@ onBeforeUnmount(() => {
             <section v-for="section in shownSections" :id="`section-${section.id}`" :key="section.id" class="teacher-form flex scroll-mt-6 flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
               <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
               <FieldGroup>
-                <Accordion type="multiple" class="rounded-lg px-4 ring-1 ring-surface-ring" :model-value="openFields(section)" @update:model-value="setOpenFields(section, $event as string[])">
+                <Accordion type="multiple" :model-value="openFields(section)" @update:model-value="setOpenFields(section, $event as string[])">
                   <AccordionItem v-for="field in section.fields" :key="field.id" :value="field.id">
                     <AccordionTrigger class="items-center hover:no-underline">
                       <span class="flex flex-wrap items-center gap-2">
