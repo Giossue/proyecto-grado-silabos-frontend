@@ -69,6 +69,7 @@ export const closeOtherDeviceSessions = (currentPassword: string) =>
     method: 'DELETE', body: JSON.stringify({ current_password: currentPassword }),
   });
 export const logout = () => api<void>('/authentication/logout', { method: 'POST' });
+export const leaveActiveRole = () => api<Session>('/active-role', { method: 'DELETE' });
 export const selectActiveRole = (roleAssignmentId: string) =>
   api<Session>('/active-role', { method: 'PUT', body: JSON.stringify({ role_assignment_id: roleAssignmentId }) });
 export const updatePassword = (password: string, passwordConfirmation: string, currentPassword?: string) =>

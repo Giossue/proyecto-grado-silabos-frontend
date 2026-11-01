@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, provide, ref } from 'vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
-import AppLogo from '@/components/AppLogo.vue';
+import logo from '@/assets/logo-ueb-horizontal.webp';
+import logoLight from '@/assets/logo-ueb-horizontal-claro.webp';
 import NotificationsSheet from '@/components/NotificationsSheet.vue';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -37,7 +38,8 @@ const user = computed<User>(() => ({
             class="sticky top-0 z-30 flex h-(--app-header-height) shrink-0 items-center gap-3 border-b border-sidebar-border/70 bg-background px-4 pt-[env(safe-area-inset-top)] md:px-6"
         >
             <div class="flex items-center gap-2">
-                <AppLogo />
+                <img :src="logoLight" width="600" height="164" decoding="async" alt="Universidad Estatal de Bolívar" class="h-12 w-auto dark:hidden" />
+                <img :src="logo" width="600" height="164" decoding="async" alt="" aria-hidden="true" class="hidden h-12 w-auto dark:block" />
             </div>
             <div class="ml-auto flex items-center gap-2">
                 <NotificationsSheet />

@@ -5,9 +5,10 @@ import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.vue';
 import { curriculumEditorState } from '@/state/curriculumEditor';
 import { sessionState } from '@/state/session';
 
-const { getDeadline, getNotifications, logout, selectActiveRole } = vi.hoisted(() => ({
+const { getDeadline, getNotifications, leaveActiveRole, logout, selectActiveRole } = vi.hoisted(() => ({
   getDeadline: vi.fn(),
   getNotifications: vi.fn(),
+  leaveActiveRole: vi.fn(),
   logout: vi.fn(),
   selectActiveRole: vi.fn(),
 }));
@@ -16,6 +17,7 @@ vi.mock('@/api/notifications', () => ({ getNotifications }));
 vi.mock('@/api/dashboard', () => ({ getDeadline }));
 vi.mock('@/api/session', async (importOriginal) => ({
   ...await importOriginal<typeof import('@/api/session')>(),
+  leaveActiveRole,
   logout,
   selectActiveRole,
 }));
@@ -36,6 +38,7 @@ const mountShell = async () => {
     history: createMemoryHistory(),
     routes: [
       { path: '/panel', component: { template: '<div />' } },
+      { path: '/rol', component: { template: '<div />' } },
       { path: '/admin/convocatorias', component: { template: '<div />' } },
       { path: '/docente/mis-silabos', component: { template: '<div />' } },
       { path: '/notificaciones', component: { template: '<div />' } },
@@ -163,10 +166,13 @@ describe('AppSidebarLayout', () => {
 
     await wrapper.get('header [aria-label="Menú de usuario"]').trigger('click');
     await flushPromises();
+    leaveActiveRole.mockResolvedValue({ ...administratorSession, active_role: null });
     document.body.querySelector<HTMLElement>('[data-test="switch-scope"]')!.click();
     await flushPromises();
 
-    expect(document.body.textContent).toContain('Software');
+    expect(leaveActiveRole).toHaveBeenCalled();
+    expect(wrapper.vm.$router.currentRoute.value.path).toBe('/rol');
+    expect(sessionState.current.value?.active_role).toBeNull();
   });
 
   it('permite alternar el tema y conserva la preferencia', async () => {
@@ -206,16 +212,21 @@ describe('AppSidebarLayout', () => {
     expect(logoutItem?.classList.contains('flex')).toBe(true);
     expect(wrapper.find('[data-sidebar="sidebar"] [data-test="switch-scope"]').exists()).toBe(false);
 
+    leaveActiveRole.mockResolvedValue({ ...administratorSession, active_role: null });
     document.body.querySelector<HTMLElement>('[data-test="switch-scope"]')!.click();
     await flushPromises();
 
-    expect(document.body.textContent).toContain('Software');
+    expect(wrapper.vm.$router.currentRoute.value.path).toBe('/rol');
   });
 
   it('no presenta Administración cuando todavía no hay un rol activo', async () => {
     sessionState.replace({ ...administratorSession, active_role: null });
     const wrapper = await mountShell();
     await flushPromises();
+
+    await wrapper.get('header [aria-label="Menú de usuario"]').trigger('click');
+    await flushPromises();
+    expect(document.body.querySelector('[data-test="switch-scope"]')).toBeNull();
 
     const accountButton = wrapper.get('header [aria-label="Menú de usuario"]');
     expect(accountButton.text()).not.toContain('Administrador');

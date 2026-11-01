@@ -6,14 +6,13 @@ import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
 import InstallAppDialog from '@/components/InstallAppDialog.vue';
-import WorkScopeSwitcherSheet from '@/components/domain/identity/WorkScopeSwitcherSheet.vue';
 import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import ScreenHelpButton from '@/components/domain/ScreenHelpButton.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
 import { Toaster } from '@/components/ui/sonner';
 import { breadcrumbsKey, pageTitleKey } from '@/composables/usePageBreadcrumbs';
 import { useShowsSidebar } from '@/composables/useShowsSidebar';
-import { installAppOpen, scopeSwitcherOpen } from '@/state/shellDialogs';
+import { installAppOpen } from '@/state/shellDialogs';
 import { templateEditorState } from '@/state/templateEditor';
 import { curriculumEditorState } from '@/state/curriculumEditor';
 import type { BreadcrumbItem } from '@/types';
@@ -54,7 +53,6 @@ const showsSidebar = useShowsSidebar();
             <AccessibilityDialog v-if="!editorOpen" floating />
         </AppContent>
     </AppShell>
-    <WorkScopeSwitcherSheet v-model:open="scopeSwitcherOpen" />
     <InstallAppDialog v-if="!showsSidebar" v-model:open="installAppOpen" />
     <Toaster />
 </template>

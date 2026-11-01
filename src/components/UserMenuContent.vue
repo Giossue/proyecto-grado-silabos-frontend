@@ -8,11 +8,11 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import UserInfo from '@/components/UserInfo.vue';
-import { logout } from '@/api/session';
+import { leaveActiveRole, logout } from '@/api/session';
 import { useAppearance } from '@/composables/useAppearance';
 import { useShowsSidebar } from '@/composables/useShowsSidebar';
 import { installAppState } from '@/state/installApp';
-import { installAppOpen, scopeSwitcherOpen } from '@/state/shellDialogs';
+import { installAppOpen } from '@/state/shellDialogs';
 import { accessibilityDialogOpen } from '@/state/accessibilityDialog';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
@@ -25,12 +25,16 @@ const router = useRouter();
 const { appearance, updateAppearance } = useAppearance();
 const dark = computed(() => appearance.value === 'dark');
 const showsSidebar = useShowsSidebar();
-const canSwitchScope = computed(() => (sessionState.current.value?.available_roles.length ?? 0) > 1);
+const canSwitchScope = computed(() => sessionState.current.value?.active_role != null && (sessionState.current.value?.available_roles.length ?? 0) > 1);
 const { installed } = installAppState;
 const settingsHref = computed(() => {
     const code = sessionState.current.value?.active_role?.code;
     return code ? roleSetting(code, 'profile') : null;
 });
+const switchScope = async (): Promise<void> => {
+    sessionState.replace(await leaveActiveRole());
+    await router.push(paths.roleSelection);
+};
 const handleLogout = async (): Promise<void> => {
     await logout();
     sessionState.clear();
@@ -52,7 +56,7 @@ const handleLogout = async (): Promise<void> => {
             Configuración
         </RouterLink>
     </DropdownMenuItem>
-    <DropdownMenuItem v-if="canSwitchScope" data-test="switch-scope" @select="scopeSwitcherOpen = true">
+    <DropdownMenuItem v-if="canSwitchScope" data-test="switch-scope" @select="switchScope">
         <Building2 data-icon="inline-start" aria-hidden="true" />
         Cambiar carrera o rol
     </DropdownMenuItem>
