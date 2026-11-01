@@ -18,7 +18,7 @@ const setProps = (next: Record<string, unknown>): void => props.updateAttributes
 </script>
 
 <template>
-  <NodeViewWrapper as="div" data-block :data-kind="attrs.kind" contenteditable="false" :class="['document-block', selected ? 'outline outline-2 outline-offset-2 outline-primary' : '']">
+  <NodeViewWrapper as="div" data-block :data-kind="attrs.kind" contenteditable="false" class="document-block">
     <DocumentBlockContent :kind="attrs.kind" :props="attrs.props" :value="attrs.value" :mode="mode" @update:value="setValue" @update:props="setProps" />
   </NodeViewWrapper>
 </template>
