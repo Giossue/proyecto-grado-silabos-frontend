@@ -55,13 +55,13 @@ describe('carga de Configuración', () => {
     });
 
     it('libera el formulario de contraseña cuando falla el segundo factor sin inventar su estado', async () => {
-        vi.mocked(getTwoFactorStatus).mockRejectedValue(new ApiError('No se pudo consultar la protección.', 503));
+        vi.mocked(getTwoFactorStatus).mockRejectedValue(new ApiError('No se pudo consultar la protección', 503));
         const wrapper = mount(SecurityPage);
         await flushPromises();
 
         expect(wrapper.find('[data-settings-section="security"]').exists()).toBe(false);
         expect(wrapper.get('#current_password').isVisible()).toBe(true);
-        expect(wrapper.text()).toContain('No se pudo consultar la protección.');
+        expect(wrapper.text()).toContain('No se pudo consultar la protección');
         expect(wrapper.findAll('button').some((button) => /Activar 2FA|Desactivar 2FA/.test(button.text()))).toBe(false);
     });
 

@@ -128,7 +128,7 @@ const currentAssignments = computed(() =>
                     <section class="flex flex-col gap-2">
                         <h3 class="text-sm font-semibold">Roles vigentes</h3>
                         <p v-if="currentAssignments.length === 0" class="text-sm">
-                            Sin rol vigente: la cuenta no accede a ningún módulo.
+                            Sin rol vigente: la cuenta no accede a ningún módulo
                         </p>
                         <ul v-else class="flex flex-col gap-4 text-sm">
                             <li v-for="assignment in currentAssignments" :key="assignment.id" class="flex flex-col gap-0.5 border-l-2 border-primary/40 pl-3">

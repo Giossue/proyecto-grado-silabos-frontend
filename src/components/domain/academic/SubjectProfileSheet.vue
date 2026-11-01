@@ -43,7 +43,7 @@ watch(open, async (value) => {
     fields.value = profile.fields;
     values.value = Object.fromEntries(profile.fields.map((field) => [field.id, profile.values[field.id] ?? field.content ?? null]));
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo abrir el proyecto de carrera.';
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo abrir el proyecto de carrera';
   } finally {
     loading.value = false;
   }
@@ -58,7 +58,7 @@ const save = async (close: () => void) => {
     emit('saved');
     close();
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo guardar el proyecto de carrera.';
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo guardar el proyecto de carrera';
   } finally {
     saving.value = false;
   }
@@ -72,7 +72,7 @@ const save = async (close: () => void) => {
         <FieldGroup>
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
           <LoadingSkeleton v-if="loading" variant="form" :rows="4" sidebar />
-          <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos de Coordinación. Pídale a Administración que los agregue.</AlertDescription></Alert>
+          <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos de Coordinación. Pídale a Administración que los agregue</AlertDescription></Alert>
           <template v-else>
             <div class="flex flex-col gap-6 md:min-h-96 md:flex-row md:items-start">
               <Tabs v-if="sections.length > 1" v-model="activeSection" orientation="vertical" class="w-full shrink-0 md:w-72">

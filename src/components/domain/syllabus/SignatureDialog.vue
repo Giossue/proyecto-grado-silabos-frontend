@@ -45,8 +45,8 @@ const invalidCertificate = (message: string | null): void => {
 
 const submit = async (): Promise<void> => {
   errors.value = {};
-  if (!certificate.value) { errors.value = { certificate: 'Elija su archivo .p12 o .pfx.' }; return; }
-  if (!password.value) { errors.value = { password: 'Escriba la clave de su firma.' }; return; }
+  if (!certificate.value) { errors.value = { certificate: 'Elija su archivo .p12 o .pfx' }; return; }
+  if (!password.value) { errors.value = { password: 'Escriba la clave de su firma' }; return; }
   working.value = true;
   try {
     const [{ signStatement }, { readCertificate, SignatureError }] = await Promise.all([
@@ -65,10 +65,10 @@ const submit = async (): Promise<void> => {
         else if (CERTIFICATE_CODES.includes(reason.code)) errors.value = { certificate: reason.message };
         else errors.value = { general: reason.message };
       } else if (reason instanceof ApiError) {
-        const signatureError = Object.entries(reason.errors).find(([key]) => key === 'signature' || key.startsWith('signature.'))?.[1][0];
+        const signatureError = Object.entries(reason.errors).find(([key]) => key === 'signature' || key.startsWith('signature'))?.[1][0];
         errors.value = { general: signatureError ?? reason.message };
       } else {
-        errors.value = { general: 'No se pudo firmar. Intente de nuevo.' };
+        errors.value = { general: 'No se pudo firmar. Intente de nuevo' };
       }
     }
   } finally {

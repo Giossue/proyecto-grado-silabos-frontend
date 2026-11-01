@@ -42,7 +42,7 @@ const load = async (): Promise<void> => {
   try {
     data.value = await getConvocation(props.convocationId);
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el seguimiento de la convocatoria.';
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el seguimiento de la convocatoria';
   } finally {
     loading.value = false;
   }
@@ -89,7 +89,7 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
       </TableHeader>
       <TableBody>
         <TableEmpty v-if="syllabusPage.length === 0" :colspan="3">
-          {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros.' : 'Los expedientes aparecerán después de abrir la convocatoria.' }}
+          {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros' : 'Los expedientes aparecerán después de abrir la convocatoria' }}
         </TableEmpty>
         <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id" :class="syllabus.revision_id ? 'cursor-pointer' : ''" :tabindex="syllabus.revision_id ? 0 : undefined" :aria-label="syllabus.revision_id ? `Abrir revisión de ${syllabus.subject}` : undefined" @click="syllabus.revision_id && activateRow($event, () => open(syllabus.revision_id!))" @keydown.enter.self.prevent="syllabus.revision_id && open(syllabus.revision_id)" @keydown.space.self.prevent="syllabus.revision_id && open(syllabus.revision_id)">
           <TableCell>

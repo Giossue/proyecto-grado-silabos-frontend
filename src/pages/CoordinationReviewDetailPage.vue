@@ -45,7 +45,7 @@ const load = async (): Promise<void> => {
   try {
     data.value = await getReview(String(route.params.revision));
   } catch (failure) {
-    loadError.value = failure instanceof ApiError ? failure.message : 'No se pudo cargar la revisión.';
+    loadError.value = failure instanceof ApiError ? failure.message : 'No se pudo cargar la revisión';
   } finally {
     loading.value = false;
   }
@@ -92,7 +92,7 @@ const toggleCompare = async (): Promise<void> => {
     changedFields.value = new Set(result.comparison.changes.map((change) => `${change.section_key}.${change.field_key}`));
     comparing.value = true;
   } catch (reason) {
-    toast.error(reason instanceof ApiError ? reason.message : 'No se pudo comparar con la versión anterior.');
+    toast.error(reason instanceof ApiError ? reason.message : 'No se pudo comparar con la versión anterior');
   }
 };
 const openingPdf = ref(false);
@@ -139,7 +139,7 @@ const submitCorrection = async (): Promise<void> => {
     await changed(result.message);
   } catch (failure) {
     const fieldErrors = failure instanceof ApiError ? [...(failure.errors.justification ?? []), ...(failure.errors.revision ?? [])] : [];
-    correctionErrors.value = fieldErrors.length ? fieldErrors : [failure instanceof ApiError ? failure.message : 'No se pudo solicitar la corrección.'];
+    correctionErrors.value = fieldErrors.length ? fieldErrors : [failure instanceof ApiError ? failure.message : 'No se pudo solicitar la corrección'];
   } finally {
     correcting.value = false;
   }
@@ -227,12 +227,12 @@ onMounted(load);
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Solicitar corrección</DialogTitle>
-          <DialogDescription>El sílabo vuelve al docente con su comentario.</DialogDescription>
+          <DialogDescription>El sílabo vuelve al docente con su comentario</DialogDescription>
         </DialogHeader>
         <form id="correction-form" class="flex flex-col gap-4" @submit.prevent="submitCorrection">
           <Field :data-invalid="correctionErrors.length > 0">
             <FieldLabel for="correction-justification" required>Comentario para el docente</FieldLabel>
-            <Textarea id="correction-justification" v-model="correctionJustification" rows="4" required placeholder="Ej. Revise los resultados de aprendizaje de la unidad 2." />
+            <Textarea id="correction-justification" v-model="correctionJustification" rows="4" required placeholder="Ej. Revise los resultados de aprendizaje de la unidad 2" />
             <FieldError :errors="correctionErrors" />
           </Field>
           <DialogFooter>

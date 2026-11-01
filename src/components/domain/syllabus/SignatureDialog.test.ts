@@ -48,7 +48,7 @@ describe('SignatureDialog', () => {
     await flushPromises();
 
     await confirmSignatureDialog();
-    expect(dialogText()).toContain('Elija su archivo .p12 o .pfx.');
+    expect(dialogText()).toContain('Elija su archivo .p12 o .pfx');
     expect(run).not.toHaveBeenCalled();
     wrapper.unmount();
   });
@@ -61,7 +61,7 @@ describe('SignatureDialog', () => {
     await fillSignatureDialog(p12, 'otra');
     await confirmSignatureDialog();
 
-    expect(dialogText()).toContain('La clave del certificado es incorrecta.');
+    expect(dialogText()).toContain('La clave del certificado es incorrecta');
     expect(run).not.toHaveBeenCalled();
     wrapper.unmount();
   });
@@ -69,7 +69,7 @@ describe('SignatureDialog', () => {
   it('muestra el error de firma del servidor y queda abierto', async () => {
     const run = vi.fn(async (sign: StatementSigner) => {
       sign(statement);
-      throw new ApiError('Datos inválidos.', 422, { signature: ['El titular del certificado no coincide con su cuenta.'] });
+      throw new ApiError('Datos inválidos', 422, { signature: ['El titular del certificado no coincide con su cuenta'] });
     });
     const wrapper = mountDialog(run);
     await flushPromises();
@@ -77,7 +77,7 @@ describe('SignatureDialog', () => {
     await fillSignatureDialog(p12, 'clave');
     await confirmSignatureDialog();
 
-    expect(dialogText()).toContain('El titular del certificado no coincide con su cuenta.');
+    expect(dialogText()).toContain('El titular del certificado no coincide con su cuenta');
     expect(wrapper.emitted('update:open')).toBeUndefined();
     wrapper.unmount();
   });

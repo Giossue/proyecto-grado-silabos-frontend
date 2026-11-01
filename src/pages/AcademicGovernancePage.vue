@@ -44,7 +44,7 @@ const selectTab = (value: string | number): void => {
 };
 const sectionContent = computed(() => ({
     facultad: { title: 'Facultades', description: 'Las facultades de la universidad' },
-    carrera: { title: 'Carreras', description: 'Las carreras y a qué facultad pertenece cada una.' },
+    carrera: { title: 'Carreras', description: 'Las carreras y a qué facultad pertenece cada una' },
 })[entity.value]);
 const createLabel = computed(() => entity.value === 'facultad' ? 'Crear facultad' : 'Crear carrera');
 const openCreationSheet = (): void => {
@@ -60,7 +60,7 @@ const load = async (): Promise<void> => {
         if (periodRoute.value) { await router.replace(paths.admin.convocations); return; }
         data.value = await getAcademicGovernance();
     } catch (reason) {
-        error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las facultades y carreras.';
+        error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las facultades y carreras';
     } finally { loading.value = false; }
 };
 const changed = async (notice: string): Promise<void> => { toast.success(notice); await load(); };

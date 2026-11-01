@@ -40,7 +40,7 @@ const load = async (): Promise<void> => {
         enabled.value = status.enabled;
         confirmationRequired.value = status.confirmation_required;
     } catch (reason) {
-        error.value = messageOf(reason, 'No se pudo consultar el segundo factor.');
+        error.value = messageOf(reason, 'No se pudo consultar el segundo factor');
     } finally {
         loading.value = false;
         emit('loading', false);
@@ -56,7 +56,7 @@ const enable = async (password: string): Promise<void> => {
         qrCodeSvg.value = status.qr_code_svg;
         showSetupModal.value = true;
     } catch (reason) {
-        error.value = messageOf(reason, 'No se pudo iniciar la configuración.');
+        error.value = messageOf(reason, 'No se pudo iniciar la configuración');
     } finally {
         processing.value = false;
     }
@@ -72,7 +72,7 @@ const confirm = async (code: string): Promise<void> => {
         recoveryCodes.value = status.recovery_codes;
         showSetupModal.value = false;
     } catch (reason) {
-        error.value = messageOf(reason, 'El código no es válido.');
+        error.value = messageOf(reason, 'El código no es válido');
     } finally {
         processing.value = false;
     }
@@ -87,7 +87,7 @@ const disable = async (password: string): Promise<void> => {
         confirmationRequired.value = status.confirmation_required;
         recoveryCodes.value = [];
     } catch (reason) {
-        error.value = messageOf(reason, 'No se pudo desactivar el segundo factor.');
+        error.value = messageOf(reason, 'No se pudo desactivar el segundo factor');
     } finally {
         processing.value = false;
     }
@@ -99,7 +99,7 @@ const regenerate = async (password: string): Promise<void> => {
     try {
         recoveryCodes.value = (await regenerateRecoveryCodes(password)).recovery_codes;
     } catch (reason) {
-        error.value = messageOf(reason, 'No se pudieron regenerar los códigos.');
+        error.value = messageOf(reason, 'No se pudieron regenerar los códigos');
     } finally {
         processing.value = false;
     }
@@ -132,7 +132,7 @@ onMounted(() => void load());
 
         <div v-else-if="enabled === false" class="flex flex-col items-start justify-start gap-4">
             <p class="text-sm text-muted-foreground">
-                Al activarla, el inicio de sesión solicitará un código seguro generado por una aplicación TOTP en su dispositivo.
+                Al activarla, el inicio de sesión solicitará un código seguro generado por una aplicación TOTP en su dispositivo
             </p>
             <Button type="button" :disabled="processing" @click="pendingAction = 'enable'">
                 <Spinner v-if="processing" data-icon="inline-start" />
@@ -143,7 +143,7 @@ onMounted(() => void load());
 
         <div v-else-if="enabled" class="flex flex-col items-start justify-start gap-4">
             <p class="text-sm text-muted-foreground">
-                El inicio de sesión solicitará un código temporal generado por la aplicación TOTP de su dispositivo.
+                El inicio de sesión solicitará un código temporal generado por la aplicación TOTP de su dispositivo
             </p>
             <Button variant="destructive" type="button" :disabled="processing" @click="pendingAction = 'disable'">
                 <Spinner v-if="processing" data-icon="inline-start" /><ShieldOff v-else data-icon="inline-start" aria-hidden="true" />Desactivar 2FA
@@ -154,7 +154,7 @@ onMounted(() => void load());
         <PasswordConfirmDialog
             v-model:open="confirmOpen"
             :title="pendingAction === 'disable' ? 'Desactivar la verificación en dos pasos' : 'Activar la verificación en dos pasos'"
-            description="Por seguridad, confirme su contraseña actual para continuar."
+            description="Por seguridad, confirme su contraseña actual para continuar"
             :confirm-label="pendingAction === 'disable' ? 'Desactivar 2FA' : 'Continuar'"
             :destructive="pendingAction === 'disable'"
             @confirm="confirmPassword"

@@ -25,7 +25,7 @@ const loadError = ref<string | null>(null);
 const actionError = ref<string | null>(null);
 const selectingRoleId = ref<string | null>(null);
 
-const selectionDescription = 'Seleccione la carrera con la que trabajará en esta sesión.';
+const selectionDescription = 'Seleccione la carrera con la que trabajará en esta sesión';
 
 const roleDescription = (role: ActiveRole): string => {
     if (role.code === 'docente') return `Docencia en ${role.career_name ?? 'la carrera asignada'}`;
@@ -61,7 +61,7 @@ const load = async (): Promise<void> => {
             await router.replace(paths.login);
             return;
         }
-        loadError.value = 'No se pudo cargar su sesión.';
+        loadError.value = 'No se pudo cargar su sesión';
     } finally {
         loading.value = false;
     }
@@ -77,7 +77,7 @@ const selectRole = async (roleAssignmentId: string): Promise<void> => {
     } catch (reason) {
         actionError.value = reason instanceof ApiError
             ? reason.message
-            : 'No se pudo seleccionar el ámbito de trabajo.';
+            : 'No se pudo seleccionar el ámbito de trabajo';
     } finally {
         selectingRoleId.value = null;
     }
@@ -98,7 +98,7 @@ onMounted(load);
         <Alert v-if="session.available_roles.length === 0">
             <AlertTitle>No tiene asignaciones vigentes</AlertTitle>
             <AlertDescription>
-                Contáctese con el coordinador de la carrera.
+                Contáctese con el coordinador de la carrera
             </AlertDescription>
         </Alert>
 

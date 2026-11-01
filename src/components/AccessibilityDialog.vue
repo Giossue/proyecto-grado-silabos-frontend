@@ -24,10 +24,10 @@ const sizes = [
     { value: '150', label: 'Máximo' },
 ];
 const toggles = [
-    { key: 'highContrast', label: 'Alto contraste', hint: 'Colores más marcados y foco más visible.' },
-    { key: 'noMotion', label: 'Sin animaciones', hint: 'Quita transiciones y movimientos.' },
-    { key: 'underlineLinks', label: 'Subrayar enlaces', hint: 'Los enlaces se distinguen sin depender del color.' },
-    { key: 'wideSpacing', label: 'Texto más espaciado', hint: 'Más espacio entre líneas, letras y palabras.' },
+    { key: 'highContrast', label: 'Alto contraste', hint: 'Colores más marcados y foco más visible' },
+    { key: 'noMotion', label: 'Sin animaciones', hint: 'Quita transiciones y movimientos' },
+    { key: 'underlineLinks', label: 'Subrayar enlaces', hint: 'Los enlaces se distinguen sin depender del color' },
+    { key: 'wideSpacing', label: 'Texto más espaciado', hint: 'Más espacio entre líneas, letras y palabras' },
 ] as const;
 const isDefault = computed(() => {
   const defaults = defaultSettings();

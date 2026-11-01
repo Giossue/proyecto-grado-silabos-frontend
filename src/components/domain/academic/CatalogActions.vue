@@ -55,14 +55,14 @@ const changeStatus = async (): Promise<void> => {
         const result = await setAcademicRecordStatus(props.entity, props.recordId, !props.active);
         statusOpen.value = false;
         emit('changed', result.message);
-    } catch (reason) { error.value = reason instanceof ApiError ? reason.message : `No se pudo cambiar el estado de la ${noun.value}.`; }
+    } catch (reason) { error.value = reason instanceof ApiError ? reason.message : `No se pudo cambiar el estado de la ${noun.value}`; }
     finally { changingStatus.value = false; }
 };
 const error = ref<string | null>(null);
 const statusDescription = computed(() => {
-    if (props.entity === 'facultad') return props.active ? `«${props.recordName}» no se podrá elegir para carreras nuevas. Su historial se conserva y podrá reactivarla después.` : `«${props.recordName}» volverá a estar disponible.`;
+    if (props.entity === 'facultad') return props.active ? `«${props.recordName}» no se podrá elegir para carreras nuevas. Su historial se conserva y podrá reactivarla después` : `«${props.recordName}» volverá a estar disponible`;
 
-    return props.active ? `«${props.recordName}» dejará de participar en nuevas convocatorias. Su historial se conserva y podrá reactivarla después.` : `«${props.recordName}» volverá a participar en las próximas convocatorias.`;
+    return props.active ? `«${props.recordName}» dejará de participar en nuevas convocatorias. Su historial se conserva y podrá reactivarla después` : `«${props.recordName}» volverá a participar en las próximas convocatorias`;
 });
 const remove = async (): Promise<void> => {
     deleting.value = true; error.value = null;
@@ -70,7 +70,7 @@ const remove = async (): Promise<void> => {
         const result = await deleteAcademicRecord(props.entity, props.recordId);
         deleteOpen.value = false;
         emit('changed', result.message);
-    } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo eliminar el registro.'; }
+    } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo eliminar el registro'; }
     finally { deleting.value = false; }
 };
 </script>
@@ -80,7 +80,7 @@ const remove = async (): Promise<void> => {
         <SyllabusProcessSheet v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName, starts_on: startsOn ?? undefined, ends_on: endsOn ?? undefined }" display="menu" trigger-label="Abrir convocatoria" @saved="emit('changed', $event)" />
         <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :catalog-libraries="catalogLibraries ?? []" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" :actions="sheetActions" @action="runAction" @saved="emit('changed', $event)" />
 
-        <Dialog v-if="entity === 'periodo'" v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar período</DialogTitle><DialogDescription>Se eliminará «{{ recordName }}». Se rechazará si ya tiene una convocatoria.</DialogDescription></DialogHeader>
+        <Dialog v-if="entity === 'periodo'" v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar período</DialogTitle><DialogDescription>Se eliminará «{{ recordName }}». Se rechazará si ya tiene una convocatoria</DialogDescription></DialogHeader>
             <FeedbackAlert v-if="error" :message="error" />
             <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" variant="destructive" :disabled="deleting" @click="remove"><Spinner v-if="deleting" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Eliminar registro</Button></DialogFooter>
         </DialogContent></Dialog>

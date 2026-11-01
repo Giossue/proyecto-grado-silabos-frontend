@@ -59,7 +59,7 @@ const load = async (): Promise<void> => {
   try {
     review.value = (await getLibraryReview(String(route.params.revision))).review;
   } catch (failure) {
-    loadError.value = failure instanceof ApiError ? failure.message : 'No se pudo cargar la bibliografía.';
+    loadError.value = failure instanceof ApiError ? failure.message : 'No se pudo cargar la bibliografía';
   } finally {
     loading.value = false;
   }
@@ -84,11 +84,11 @@ const sendReturn = async (): Promise<void> => {
   otherErrors.value = [];
   returnError.value = '';
   if (selectedReasons.value.length === 0) {
-    reasonErrors.value = ['Elija al menos un motivo.'];
+    reasonErrors.value = ['Elija al menos un motivo'];
     return;
   }
   if (otherSelected.value && otherReason.value.trim().length < 5) {
-    otherErrors.value = ['Escriba el otro motivo (mínimo 5 caracteres).'];
+    otherErrors.value = ['Escriba el otro motivo (mínimo 5 caracteres)'];
     return;
   }
   sending.value = true;
@@ -108,7 +108,7 @@ const sendReturn = async (): Promise<void> => {
       otherErrors.value = failure.errors.other ?? [];
       returnError.value = failure.message;
     } else {
-      returnError.value = 'No se pudo devolver el sílabo.';
+      returnError.value = 'No se pudo devolver el sílabo';
     }
   } finally {
     sending.value = false;
@@ -161,13 +161,13 @@ onMounted(load);
         <FreeTextContent :value="field.document ?? field.value" empty-text="Sin completar" />
       </section>
     </article>
-    <EmptyState v-else title="Este sílabo no tiene bibliografía." />
+    <EmptyState v-else title="Este sílabo no tiene bibliografía" />
 
     <Dialog v-model:open="returnOpen">
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Devolver al docente</DialogTitle>
-          <DialogDescription>Marque los motivos para avisar al docente y que lo corrija.</DialogDescription>
+          <DialogDescription>Marque los motivos para avisar al docente y que lo corrija</DialogDescription>
         </DialogHeader>
         <form id="library-comment-form" class="flex flex-col gap-4" @submit.prevent="sendReturn">
           <Field :data-invalid="reasonErrors.length > 0">
@@ -182,7 +182,7 @@ onMounted(load);
           </Field>
           <Field v-if="otherSelected" :data-invalid="otherErrors.length > 0">
             <FieldLabel for="library-other-reason" required>Otro motivo</FieldLabel>
-            <Textarea id="library-other-reason" v-model="otherReason" rows="3" maxlength="1000" placeholder="Ej. Falta la edición 2020 del libro de Pressman." />
+            <Textarea id="library-other-reason" v-model="otherReason" rows="3" maxlength="1000" placeholder="Ej. Falta la edición 2020 del libro de Pressman" />
             <FieldError :errors="otherErrors" />
           </Field>
           <Alert v-if="returnError" variant="destructive" role="alert"><AlertDescription>{{ returnError }}</AlertDescription></Alert>

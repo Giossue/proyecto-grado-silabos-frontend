@@ -88,12 +88,12 @@ const logoValidationError = (message: string | null): void => {
 const submit = async (confirmPurge = false): Promise<void> => {
     errors.value = {};
     if (props.entity === 'facultad' && !currentLogo.value && !logo.value) {
-        errors.value = { logo: ['El logo de la facultad es obligatorio.'] };
+        errors.value = { logo: ['El logo de la facultad es obligatorio'] };
         tab.value = 'datos';
         return;
     }
     if (props.entity === 'facultad' && koha.value !== null && chosenLibraries.value.length === 0) {
-        errors.value = { catalog_libraries: ['Marque al menos una biblioteca.'] };
+        errors.value = { catalog_libraries: ['Marque al menos una biblioteca'] };
         tab.value = 'bibliotecas';
         return;
     }
@@ -137,7 +137,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
                     <TabsContent value="datos" class="flex flex-col gap-7">
                       <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
                       <Field :data-invalid="Boolean(errors.campus)"><FieldLabel :for="`edit-campus-${recordId}`" required>Campus</FieldLabel><Select v-model="form.campus" required><SelectTrigger :id="`edit-campus-${recordId}`"><SelectValue placeholder="Seleccione el campus de la facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in campusOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.campus" /></Field>
-                      <Field :data-invalid="Boolean(errors.logo)"><FieldLabel :for="`edit-faculty-logo-${recordId}`" required>Logo de la facultad (PNG sin fondo)</FieldLabel><div v-if="currentLogo" class="flex items-center gap-3"><img :src="logoUrl ?? ''" alt="Logo actual de la facultad" class="h-24 min-w-0 flex-1 rounded-md border bg-background object-contain p-2"><Button type="button" variant="outline" size="icon-sm" aria-label="Quitar logo" :disabled="processing" @click="removeLogo = true"><X aria-hidden="true" /></Button></div><FileDropzone v-else v-model="logo" :input-id="`edit-faculty-logo-${recordId}`" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" required @validation-error="logoValidationError" /><FieldDescription v-if="!currentLogo">Medida recomendada: 600 × 180 px. Use una imagen con fondo transparente.</FieldDescription><FieldError :errors="errors.logo" /></Field>
+                      <Field :data-invalid="Boolean(errors.logo)"><FieldLabel :for="`edit-faculty-logo-${recordId}`" required>Logo de la facultad (PNG sin fondo)</FieldLabel><div v-if="currentLogo" class="flex items-center gap-3"><img :src="logoUrl ?? ''" alt="Logo actual de la facultad" class="h-24 min-w-0 flex-1 rounded-md border bg-background object-contain p-2"><Button type="button" variant="outline" size="icon-sm" aria-label="Quitar logo" :disabled="processing" @click="removeLogo = true"><X aria-hidden="true" /></Button></div><FileDropzone v-else v-model="logo" :input-id="`edit-faculty-logo-${recordId}`" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" required @validation-error="logoValidationError" /><FieldDescription v-if="!currentLogo">Medida recomendada: 600 × 180 px. Use una imagen con fondo transparente</FieldDescription><FieldError :errors="errors.logo" /></Field>
                     </TabsContent>
                     <TabsContent value="bibliotecas">
                         <FacultyLibraryChecks v-model="chosenLibraries" :libraries="koha" :error="kohaError" :saved="catalogLibraries" :id-prefix="`edit-library-${recordId}`" :invalid="errors.catalog_libraries" />

@@ -29,7 +29,7 @@ const submit = async (): Promise<void> => {
       errors.value = reason.errors;
       error.value = reason.message;
     } else {
-      error.value = 'No se pudo solicitar el restablecimiento.';
+      error.value = 'No se pudo solicitar el restablecimiento';
     }
   } finally {
     pending.value = false;
@@ -42,7 +42,7 @@ const submit = async (): Promise<void> => {
     <div class="flex flex-col gap-6">
       <div v-if="sentMessage" class="flex flex-col gap-4" role="status" data-test="password-recovery-sent">
         <FeedbackAlert variant="default" title="Solicitud enviada" :message="sentMessage" />
-        <p class="text-sm text-muted-foreground">Revise su bandeja de entrada y la carpeta de correo no deseado. El enlace tiene una vigencia limitada.</p>
+        <p class="text-sm text-muted-foreground">Revise su bandeja de entrada y la carpeta de correo no deseado. El enlace tiene una vigencia limitada</p>
       </div>
       <form v-else @submit.prevent="submit">
         <div class="grid gap-2">

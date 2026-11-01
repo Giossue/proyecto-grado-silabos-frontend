@@ -21,13 +21,13 @@ export const useTeacherFormation = () => {
         error.value = undefined;
         try {
             sessionState.replace(await updateFormation(formation.value));
-            toast.success('Formación y experiencia guardadas.');
+            toast.success('Formación y experiencia guardadas');
 
             return true;
         } catch (reason) {
             error.value = reason instanceof ApiError
                 ? reason.errors.formacion_experiencia?.[0] ?? reason.message
-                : 'No se pudo guardar la formación y experiencia.';
+                : 'No se pudo guardar la formación y experiencia';
             toast.error(error.value);
 
             return false;

@@ -48,8 +48,8 @@ describe('libros del catálogo en un bloque', () => {
     });
 
     it('el aviso de la búsqueda es el del servidor o uno genérico', () => {
-        expect(catalogErrorMessage(new ApiError('El catálogo de la biblioteca no está disponible.', 503))).toBe('El catálogo de la biblioteca no está disponible.');
-        expect(catalogErrorMessage(new ApiError('Datos inválidos.', 422, { q: ['El texto a buscar es demasiado corto.'] }))).toBe('El texto a buscar es demasiado corto.');
-        expect(catalogErrorMessage(new Error('red'))).toBe('No se pudo buscar en la biblioteca.');
+        expect(catalogErrorMessage(new ApiError('El catálogo de la biblioteca no está disponible', 503))).toBe('El catálogo de la biblioteca no está disponible');
+        expect(catalogErrorMessage(new ApiError('Datos inválidos', 422, { q: ['El texto a buscar es demasiado corto'] }))).toBe('El texto a buscar es demasiado corto');
+        expect(catalogErrorMessage(new Error('red'))).toBe('No se pudo buscar en la biblioteca');
     });
 });

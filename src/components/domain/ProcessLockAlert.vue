@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutFinalPeriod } from '@/lib/utils';
 import { Lock } from '@lucide/vue';
 import { computed, type Component } from 'vue';
 import type { LockDetail } from '@/api/locks';
@@ -20,20 +21,20 @@ const headline = computed(() => {
     return props.lock?.period ? `Edición bloqueada · Convocatoria ${props.lock.period}` : 'Edición bloqueada';
 });
 const summary = computed(() => {
-    if (props.message) return props.message;
+    if (props.message) return withoutFinalPeriod(props.message);
 
     return isAdministrator.value
-        ? 'Pause el proceso para editar.'
-        : 'Pause la convocatoria de su carrera para editar.';
+        ? 'Pause el proceso para editar'
+        : 'Pause la convocatoria de su carrera para editar';
 });
 const deadline = computed(() => props.lock?.delivery_on ? formatDateDisplay(props.lock.delivery_on, { dateStyle: 'long' }) : null);
 const reason = computed(() => {
     if (props.message || !props.lock) return null;
     const open = deadline.value ? `abierta, con entrega hasta el ${deadline.value}` : 'abierta';
     if (props.lock.scope === 'process') {
-        return `Hay una convocatoria ${open}. Mientras siga abierta, la plantilla no se modifica. Si la pausa y cambia algo, al reanudar se pedirá confirmación: todos los sílabos de este período se borran y empiezan desde cero, incluso los aprobados. Los de períodos anteriores no se tocan.`;
+        return `Hay una convocatoria ${open}. Mientras siga abierta, la plantilla no se modifica. Si la pausa y cambia algo, al reanudar se pedirá confirmación: todos los sílabos de este período se borran y empiezan desde cero, incluso los aprobados. Los de períodos anteriores no se tocan`;
     }
-    const consequence = 'Al corregir se pedirá confirmación: los sílabos en curso que no están aprobados se rehacen.';
+    const consequence = 'Al corregir se pedirá confirmación: los sílabos en curso que no están aprobados se rehacen';
     const institutional = props.lock.institutional_pause
         ? 'Administración pausó la convocatoria institucional, pero la de su carrera sigue abierta. '
         : '';

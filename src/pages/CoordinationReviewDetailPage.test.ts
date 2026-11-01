@@ -166,17 +166,17 @@ describe("CoordinationReviewDetailPage", () => {
   });
 
   it("de una corrección de coordinación muestra el comentario en una tarjeta", async () => {
-    vi.mocked(getReview).mockResolvedValue({ ...detail(), correction_request: { justification: "Revise la unidad 2.", requested_at: "2026-10-30T10:00:00Z", stage: "coordinacion", requested_by: "Coordinadora Demo" } });
+    vi.mocked(getReview).mockResolvedValue({ ...detail(), correction_request: { justification: "Revise la unidad 2", requested_at: "2026-10-30T10:00:00Z", stage: "coordinacion", requested_by: "Coordinadora Demo" } });
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.get(".review-comment").text()).toContain("Revise la unidad 2.");
+    expect(wrapper.get(".review-comment").text()).toContain("Revise la unidad 2");
     wrapper.unmount();
   });
 
   it("firma la declaración y envía a biblioteca", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
-    vi.mocked(approveReview).mockResolvedValue({ message: "Enviado a biblioteca." });
+    vi.mocked(approveReview).mockResolvedValue({ message: "Enviado a biblioteca" });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -197,7 +197,7 @@ describe("CoordinationReviewDetailPage", () => {
 
   it("muestra en el diálogo el error de firma del servidor", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
-    vi.mocked(approveReview).mockRejectedValue(new ApiError("Datos inválidos.", 422, { signature: ["El certificado no es de una entidad de confianza."] }));
+    vi.mocked(approveReview).mockRejectedValue(new ApiError("Datos inválidos", 422, { signature: ["El certificado no es de una entidad de confianza"] }));
     const wrapper = mountPage();
     await flushPromises();
 
@@ -206,27 +206,27 @@ describe("CoordinationReviewDetailPage", () => {
     await fillSignatureDialog(makeTestP12("COORDINACION DEMO", "clave"), "clave");
     await confirmSignatureDialog();
 
-    expect(document.querySelector('[role="dialog"]')!.textContent).toContain("El certificado no es de una entidad de confianza.");
+    expect(document.querySelector('[role="dialog"]')!.textContent).toContain("El certificado no es de una entidad de confianza");
     wrapper.unmount();
   });
 
   it("solicita corrección con un comentario general", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
-    vi.mocked(requestCorrection).mockResolvedValue({ message: "Corrección solicitada." });
+    vi.mocked(requestCorrection).mockResolvedValue({ message: "Corrección solicitada" });
     const wrapper = mountPage();
     await flushPromises();
 
     await headerButton(wrapper, "Solicitar corrección")!.trigger("click");
     await flushPromises();
     const textarea = document.querySelector<HTMLTextAreaElement>("#correction-justification")!;
-    textarea.value = "Debe precisar el resultado observado.";
+    textarea.value = "Debe precisar el resultado observado";
     textarea.dispatchEvent(new Event("input"));
     await flushPromises();
     document.querySelector<HTMLFormElement>("#correction-form")!.dispatchEvent(new Event("submit", { cancelable: true }));
     await flushPromises();
 
     expect(requestCorrection).toHaveBeenCalledWith("revision-1", {
-      justification: "Debe precisar el resultado observado.",
+      justification: "Debe precisar el resultado observado",
     });
     wrapper.unmount();
   });
@@ -234,7 +234,7 @@ describe("CoordinationReviewDetailPage", () => {
   it("reinicia un sílabo aprobado desde «Más»: motivo, nombre de la materia, cuenta regresiva y vuelve a la cola", async () => {
     vi.useFakeTimers();
     vi.mocked(getReview).mockResolvedValue({ ...detail(), reset: { allowed: true, erases_history: true, revisions: 2, signatures: 3, has_pdf: true } });
-    vi.mocked(resetSyllabus).mockResolvedValue({ message: "Sílabo reiniciado." });
+    vi.mocked(resetSyllabus).mockResolvedValue({ message: "Sílabo reiniciado" });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -254,7 +254,7 @@ describe("CoordinationReviewDetailPage", () => {
       input.dispatchEvent(new Event("input"));
     };
     expect(confirm().textContent).toContain("(5)");
-    type("#restart-reason", "Error en la ficha de la materia.");
+    type("#restart-reason", "Error en la ficha de la materia");
     type("#restart-name", "Álgebra");
     await flushPromises();
     await vi.advanceTimersByTimeAsync(5000);
@@ -266,7 +266,7 @@ describe("CoordinationReviewDetailPage", () => {
     confirm().click();
     await flushPromises();
 
-    expect(resetSyllabus).toHaveBeenCalledWith("syllabus-1", "Error en la ficha de la materia.");
+    expect(resetSyllabus).toHaveBeenCalledWith("syllabus-1", "Error en la ficha de la materia");
     expect(replace).toHaveBeenCalled();
     wrapper.unmount();
     vi.useRealTimers();
@@ -333,11 +333,11 @@ describe("CoordinationReviewDetailPage", () => {
   });
 
   it("distingue un fallo inicial de carga y permite reintentar", async () => {
-    vi.mocked(getReview).mockRejectedValueOnce(new ApiError("Revisión no disponible.", 503));
+    vi.mocked(getReview).mockRejectedValueOnce(new ApiError("Revisión no disponible", 503));
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Revisión no disponible.");
+    expect(wrapper.text()).toContain("Revisión no disponible");
     expect(wrapper.text()).toContain("Reintentar");
 
     vi.mocked(getReview).mockResolvedValueOnce(detail());

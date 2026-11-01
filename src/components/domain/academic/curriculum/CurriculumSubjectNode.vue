@@ -71,7 +71,7 @@ const deleteSubject = async (): Promise<void> => {
     deleteError.value =
       reason instanceof ApiError
         ? reason.message
-        : "No se pudo eliminar la materia.";
+        : "No se pudo eliminar la materia";
   } finally {
     deleting.value = false;
   }
@@ -248,7 +248,7 @@ const totalFields = computed(
           <DialogDescription>
             Se eliminará «{{ data.subject.name }}» junto con sus relaciones
             académicas. Esta acción solo se completará si la materia no tiene
-            programaciones ni sílabos relacionados.
+            programaciones ni sílabos relacionados
           </DialogDescription>
         </DialogHeader>
 

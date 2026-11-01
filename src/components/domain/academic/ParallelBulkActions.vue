@@ -59,7 +59,7 @@ const run = async (steps: Array<() => Promise<unknown>>, done: string, nothing: 
       await step();
     } catch (reason) {
       failures++;
-      firstError ||= reason instanceof ApiError ? reason.message : 'No se pudo completar el cambio.';
+      firstError ||= reason instanceof ApiError ? reason.message : 'No se pudo completar el cambio';
     }
   }
   busy.value = false;
@@ -67,7 +67,7 @@ const run = async (steps: Array<() => Promise<unknown>>, done: string, nothing: 
     emit('changed', done);
   } else {
     emit('failed', `${steps.length - failures} de ${steps.length} cambios aplicados. ${firstError}`);
-    emit('changed', 'Se aplicaron los cambios posibles.');
+    emit('changed', 'Se aplicaron los cambios posibles');
   }
   emit('clear');
 };
@@ -81,7 +81,7 @@ const openAdd = (): void => {
 const addParallel = async (): Promise<void> => {
   if (busy.value) return;
   if (!addShift.value || !addTeacher.value) {
-    addError.value = 'Elija la jornada y el docente de los nuevos paralelos.';
+    addError.value = 'Elija la jornada y el docente de los nuevos paralelos';
     return;
   }
   const shift = addShift.value;
@@ -89,16 +89,16 @@ const addParallel = async (): Promise<void> => {
   addOpen.value = false;
   await run(
     props.items.map((item) => () => createParallels({ subject_id: item.subject_id, codes: [nextParallelCode(item.parallels)], shift, user_id: userId })),
-    `Paralelo agregado a ${props.items.length} ${props.items.length === 1 ? 'materia' : 'materias'}.`,
-    'No hay materias seleccionadas.',
+    `Paralelo agregado a ${props.items.length} ${props.items.length === 1 ? 'materia' : 'materias'}`,
+    'No hay materias seleccionadas',
   );
 };
 const setShift = (shift: string) => run(
   props.items.flatMap((item) => chosen(item)
     .filter((parallel) => parallel.editable !== false && parallel.shift !== shift)
     .map((parallel) => () => updateParallel(parallel.id, { code: parallel.code, shift }))),
-  'Jornada actualizada en los paralelos seleccionados.',
-  'Los paralelos seleccionados ya tenían esa jornada.',
+  'Jornada actualizada en los paralelos seleccionados',
+  'Los paralelos seleccionados ya tenían esa jornada',
 );
 const setTeacher = (userId: string) => run(
   props.items.flatMap((item) => chosen(item)
@@ -108,8 +108,8 @@ const setTeacher = (userId: string) => run(
       if (current) await deleteCareerRecord('asignacion_docente', current.id);
       if (userId !== NO_TEACHER) await createCareerRecord('asignacion_docente', { user_id: userId, parallel_id: parallel.id });
     })),
-  userId === NO_TEACHER ? 'Docente retirado de los paralelos seleccionados.' : 'Docente asignado a los paralelos seleccionados.',
-  'Los paralelos seleccionados ya tenían ese docente.',
+  userId === NO_TEACHER ? 'Docente retirado de los paralelos seleccionados' : 'Docente asignado a los paralelos seleccionados',
+  'Los paralelos seleccionados ya tenían ese docente',
 );
 </script>
 

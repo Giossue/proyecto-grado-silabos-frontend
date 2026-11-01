@@ -12,7 +12,7 @@ export const useCatalogLibraries = () => {
         try {
             libraries.value = await getCatalogLibraries();
         } catch (reason) {
-            error.value = reason instanceof ApiError ? reason.message : 'No se pudo consultar la lista de bibliotecas.';
+            error.value = reason instanceof ApiError ? reason.message : 'No se pudo consultar la lista de bibliotecas';
         }
     };
 

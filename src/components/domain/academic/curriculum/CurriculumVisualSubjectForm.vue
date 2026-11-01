@@ -96,7 +96,7 @@ const submit = async (event: Event): Promise<void> => {
       );
       errors.value.record ??= reason.message;
     } else {
-      errors.value.record = "No se pudo guardar la materia.";
+      errors.value.record = "No se pudo guardar la materia";
     }
   } finally {
     processing.value = false;

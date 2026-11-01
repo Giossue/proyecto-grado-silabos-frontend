@@ -40,4 +40,4 @@ export const addCatalogBook = (definition: BlockDefinition, value: Record<string
 /** Texto para el docente cuando falla la búsqueda: el aviso del servidor o uno genérico. */
 export const catalogErrorMessage = (reason: unknown): string => reason instanceof ApiError
     ? (Object.values(reason.errors).flat()[0] ?? reason.message)
-    : 'No se pudo buscar en la biblioteca.';
+    : 'No se pudo buscar en la biblioteca';

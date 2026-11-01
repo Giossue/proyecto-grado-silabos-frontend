@@ -99,7 +99,7 @@ describe('ConvocationPeriodSheet', () => {
     ends.vm.$emit('update:modelValue', '2027-02-26');
     await flushPromises();
     expect(document.querySelector('#convocation-period-weeks')).toBeNull();
-    expect(document.body.textContent).toContain('Serían 21 semanas de clase entre las fechas.');
+    expect(document.body.textContent).toContain('Serían 21 semanas de clase entre las fechas');
     await fillSteps(wrapper);
     await confirmSubmit();
 

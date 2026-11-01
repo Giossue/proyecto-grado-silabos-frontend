@@ -20,11 +20,11 @@ const confirm = async (): Promise<void> => {
     try {
         const result = await updateManagedUser(props.user.id, { nombre: props.user.nombre, correo_electronico: props.user.correo_electronico, active: !props.user.active });
         open.value = false; emit('changed', result.message);
-    } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo cambiar el acceso.'; }
+    } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo cambiar el acceso'; }
     finally { processing.value = false; }
 };
 </script>
 
 <template>
-    <Dialog v-model:open="open"><DialogContent><DialogHeader><DialogTitle>{{ user.active ? 'Deshabilitar acceso' : 'Habilitar acceso' }}</DialogTitle><DialogDescription>{{ (user.active ? `${user.nombre} no podrá ingresar al sistema.` : `${user.nombre} podrá volver a ingresar al sistema.`) + (user.active && coordinatedCareers.length > 0 ? ` Dejará de coordinar ${coordinatedCareers.join(', ')}; nombre a otra persona desde Carreras.` : '') }}</DialogDescription></DialogHeader><FeedbackAlert v-if="error" :message="error" /><DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" :variant="user.active ? 'destructive' : 'default'" :disabled="processing" @click="confirm"><Spinner v-if="processing" /><Ban v-else-if="user.active" /><CircleCheck v-else />{{ user.active ? 'Deshabilitar' : 'Habilitar' }}</Button></DialogFooter></DialogContent></Dialog>
+    <Dialog v-model:open="open"><DialogContent><DialogHeader><DialogTitle>{{ user.active ? 'Deshabilitar acceso' : 'Habilitar acceso' }}</DialogTitle><DialogDescription>{{ (user.active ? `${user.nombre} no podrá ingresar al sistema` : `${user.nombre} podrá volver a ingresar al sistema`) + (user.active && coordinatedCareers.length > 0 ? ` Dejará de coordinar ${coordinatedCareers.join(', ')}; nombre a otra persona desde Carreras` : '') }}</DialogDescription></DialogHeader><FeedbackAlert v-if="error" :message="error" /><DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" :variant="user.active ? 'destructive' : 'default'" :disabled="processing" @click="confirm"><Spinner v-if="processing" /><Ban v-else-if="user.active" /><CircleCheck v-else />{{ user.active ? 'Deshabilitar' : 'Habilitar' }}</Button></DialogFooter></DialogContent></Dialog>
 </template>

@@ -68,7 +68,7 @@ describe('SyllabusUnitAssistant', () => {
   });
 
   it('espera el autoguardado y preserva la consulta cuando falla el envío', async () => {
-    vi.mocked(sendAiChatMessage).mockRejectedValueOnce(new ApiError('El servicio no está disponible.', 503));
+    vi.mocked(sendAiChatMessage).mockRejectedValueOnce(new ApiError('El servicio no está disponible', 503));
     const wrapper = render();
     await flushPromises();
     await wrapper.get('textarea').setValue('Propón actividades.');
@@ -79,7 +79,7 @@ describe('SyllabusUnitAssistant', () => {
     await wrapper.setProps({ saving: false });
     await wrapper.get('form').trigger('submit');
     await flushPromises();
-    expect(wrapper.text()).toContain('El servicio no está disponible.');
+    expect(wrapper.text()).toContain('El servicio no está disponible');
     expect(wrapper.get<HTMLTextAreaElement>('textarea').element.value).toBe('Propón actividades.');
     expect(wrapper.get('button[type="submit"]').attributes('disabled')).toBeUndefined();
   });

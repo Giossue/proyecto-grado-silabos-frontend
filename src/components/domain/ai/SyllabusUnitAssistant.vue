@@ -44,7 +44,7 @@ const restart = async (): Promise<void> => {
     if (!canRestart.value) return;
     error.value = null;
     try { await clearAiChat(props.syllabusId); await load(); }
-    catch (reason) { error.value = reason instanceof ApiError ? (Object.values(reason.errors).flat()[0] ?? reason.message) : 'No se pudo iniciar un nuevo chat.'; }
+    catch (reason) { error.value = reason instanceof ApiError ? (Object.values(reason.errors).flat()[0] ?? reason.message) : 'No se pudo iniciar un nuevo chat'; }
 };
 const stop = () => { if (timer) clearTimeout(timer); timer = null; };
 const load = async (): Promise<void> => {
@@ -58,7 +58,7 @@ const load = async (): Promise<void> => {
         chat.value = result;
         if (pending.value) timer = setTimeout(() => { void load(); }, 2500);
     } catch (reason) {
-        if (request === generation) error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la conversación.';
+        if (request === generation) error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la conversación';
     } finally { if (request === generation) loading.value = false; }
 };
 const messageKey = attemptKey();
@@ -76,7 +76,7 @@ const send = async (): Promise<void> => {
         message.value = '';
         await load();
     } catch (reason) {
-        if (request === generation) error.value = reason instanceof ApiError ? reason.message : 'No se pudo enviar la consulta. Puedes volver a intentarlo.';
+        if (request === generation) error.value = reason instanceof ApiError ? reason.message : 'No se pudo enviar la consulta. Puedes volver a intentarlo';
     } finally { if (request === generation) sending.value = false; }
 };
 const ChatMarkdown = (props: { text: string }) => renderChatMarkdown(props.text);
@@ -117,7 +117,7 @@ onBeforeUnmount(() => { generation += 1; stop(); });
                         </EmptyContent>
                     </Empty>
                 </div>
-                <Alert v-else-if="chat && !chat.available"><AlertDescription>El asistente no está disponible en este momento. Puedes continuar elaborando tu sílabo.</AlertDescription></Alert>
+                <Alert v-else-if="chat && !chat.available"><AlertDescription>El asistente no está disponible en este momento. Puedes continuar elaborando tu sílabo</AlertDescription></Alert>
                 <Empty v-if="chat && !messages.length"><EmptyHeader><EmptyMedia><RobotAvatar v-bind="avatar.state.value" class="h-28 w-36" /></EmptyMedia><EmptyTitle>Comienza una conversación</EmptyTitle></EmptyHeader>
                     <EmptyContent v-if="chat.available && chat.suggested_questions.length">
                         <Button v-for="question in chat.suggested_questions" :key="question" type="button" variant="outline" class="h-auto whitespace-normal text-left" :disabled="!enabled || saving || waiting" @click="message = question">{{ question }}</Button>
@@ -129,7 +129,7 @@ onBeforeUnmount(() => { generation += 1; stop(); });
                         <div v-if="item.content && item.role === 'asistente'" class="flex flex-col gap-2 break-words"><ChatMarkdown :text="item.content" /></div>
                         <p v-else-if="item.content" class="whitespace-pre-wrap break-words">{{ item.content }}</p>
                         <p v-if="['pendiente', 'en_ejecucion'].includes(item.status)" role="status" class="flex items-center gap-2 text-sm text-muted-foreground"><Spinner />Preparando una propuesta…</p>
-                        <Alert v-if="item.status === 'fallido'" variant="destructive"><AlertDescription>{{ item.error ?? 'No se pudo generar una respuesta. Envía la consulta otra vez.' }}</AlertDescription></Alert>
+                        <Alert v-if="item.status === 'fallido'" variant="destructive"><AlertDescription>{{ item.error ?? 'No se pudo generar una respuesta. Envía la consulta otra vez' }}</AlertDescription></Alert>
                         <EvidenceDisclosure v-for="citation in item.citations" :key="citation.id" :label="citation.label" :excerpt="citation.excerpt" />
                     </MessageContent>
                 </Message>
@@ -145,9 +145,9 @@ onBeforeUnmount(() => { generation += 1; stop(); });
                         <Textarea :id="`unit-assistant-${syllabusId}`" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" class="min-w-0 flex-1" :disabled="!enabled || !chat?.available || waiting" placeholder="Escribe la unidad o el tema…" @focus="engaged = true" @blur="engaged = false" />
                         <Button type="submit" size="icon" aria-label="Enviar" :disabled="!canSend"><Spinner v-if="waiting" /><Send v-else aria-hidden="true" /></Button>
                     </div>
-                    <FieldDescription v-if="outOfMessages">Llegó al límite de {{ limits?.messages_max }} preguntas al asistente para este sílabo.</FieldDescription>
-                    <FieldDescription v-else-if="saving">Espera a que se guarden los cambios del sílabo antes de consultar.</FieldDescription>
-                    <FieldDescription v-else-if="!enabled">La generación está disponible mientras puedes editar este sílabo.</FieldDescription>
+                    <FieldDescription v-if="outOfMessages">Llegó al límite de {{ limits?.messages_max }} preguntas al asistente para este sílabo</FieldDescription>
+                    <FieldDescription v-else-if="saving">Espera a que se guarden los cambios del sílabo antes de consultar</FieldDescription>
+                    <FieldDescription v-else-if="!enabled">La generación está disponible mientras puedes editar este sílabo</FieldDescription>
                 </Field>
             </form>
         </CardContent>

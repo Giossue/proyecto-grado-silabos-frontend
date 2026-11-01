@@ -48,7 +48,7 @@ const load = async (): Promise<void> => {
     data.value = await getReview(String(route.params.revision));
     await markChanges();
   } catch (failure) {
-    loadError.value = failure instanceof ApiError ? failure.message : 'No se pudo cargar el historial.';
+    loadError.value = failure instanceof ApiError ? failure.message : 'No se pudo cargar el historial';
   } finally {
     loading.value = false;
   }
@@ -119,7 +119,7 @@ async function markChanges(): Promise<void> {
     const result = await compareReviews(previous.value.id, data.value.revision.id);
     changedFields.value = new Set(result.comparison.changes.map((change) => `${change.section_key}.${change.field_key}`));
   } catch (reason) {
-    toast.error(reason instanceof ApiError ? reason.message : 'No se pudieron destacar los cambios.');
+    toast.error(reason instanceof ApiError ? reason.message : 'No se pudieron destacar los cambios');
   }
 }
 

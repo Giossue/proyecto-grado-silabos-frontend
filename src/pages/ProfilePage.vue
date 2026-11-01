@@ -42,7 +42,7 @@ const submit = async (): Promise<void> => {
     try {
         const session = await updateProfile(name.value, email.value);
         sessionState.replace(session);
-        toast.success('Perfil actualizado.');
+        toast.success('Perfil actualizado');
     } catch (reason) {
         if (reason instanceof ApiError) {
             errors.value = Object.fromEntries(
@@ -50,7 +50,7 @@ const submit = async (): Promise<void> => {
             );
             if (Object.keys(errors.value).length === 0) errors.value.request = reason.message;
         } else {
-            errors.value.request = 'No se pudo actualizar el perfil.';
+            errors.value.request = 'No se pudo actualizar el perfil';
         }
     } finally {
         processing.value = false;
@@ -64,7 +64,7 @@ const resendVerification = async (): Promise<void> => {
         const response = await resendEmailVerification();
         toast.success(response.message);
     } catch (reason) {
-        errors.value.request = reason instanceof ApiError ? reason.message : 'No se pudo reenviar la verificación.';
+        errors.value.request = reason instanceof ApiError ? reason.message : 'No se pudo reenviar la verificación';
     } finally {
         resending.value = false;
     }
@@ -98,7 +98,7 @@ const resendVerification = async (): Promise<void> => {
                         :aria-describedby="errors.nombre ? 'name-error' : undefined"
                     />
                     <p class="text-sm text-muted-foreground">
-                        Primero los nombres y luego los apellidos.
+                        Primero los nombres y luego los apellidos
                     </p>
                     <InputError id="name-error" class="mt-2" :message="errors.nombre" />
                 </div>
@@ -119,7 +119,7 @@ const resendVerification = async (): Promise<void> => {
                         :disabled="user.email_verified"
                     />
                     <p v-if="user.email_verified" class="text-sm text-muted-foreground">
-                        La cuenta ya fue activada: su correo no se puede cambiar.
+                        La cuenta ya fue activada: su correo no se puede cambiar
                     </p>
                     <InputError id="email-error" class="mt-2" :message="errors.correo_electronico" />
                 </div>
@@ -128,7 +128,7 @@ const resendVerification = async (): Promise<void> => {
                     <p class="-mt-4 text-sm text-muted-foreground">
                         Su correo electrónico no está verificado.
                         <TextLink as="button" :tabindex="0" :disabled="resending" @click="resendVerification">
-                            Reenviar el correo de verificación.
+                            Reenviar el correo de verificación
                         </TextLink>
                     </p>
                 </div>
@@ -152,7 +152,7 @@ const resendVerification = async (): Promise<void> => {
                     <Input id="readonly-email" type="email" :model-value="user?.email" placeholder="Ej. maria.perez@ueb.edu.ec" disabled aria-describedby="identity-help" />
                 </div>
                 <p id="identity-help" class="text-sm text-muted-foreground">
-                    Si necesita corregir su nombre o correo, solicite el cambio a Administración.
+                    Si necesita corregir su nombre o correo, solicite el cambio a Administración
                 </p>
             </div>
 

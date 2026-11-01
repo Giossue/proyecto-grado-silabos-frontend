@@ -43,7 +43,7 @@ const load = async (page = 1): Promise<void> => {
   } catch (reason) {
     if (!requests.isCurrent(ticket)) return;
     if (reason instanceof ApiError && reason.status === 401) { await router.replace(paths.login); return; }
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar sus sílabos.';
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar sus sílabos';
   }
 };
 const periods = computed(() => [...new Set((result.value?.syllabi.data ?? []).map((syllabus) => syllabus.period))]);
@@ -59,7 +59,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
 </script>
 
 <template>
-  <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta." size="wide" :loading="!result">
+  <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta" size="wide" :loading="!result">
     <template #actions><TooltipProvider><Tooltip><TooltipTrigger as-child><Button as-child variant="ghost" size="icon"><RouterLink :to="paths.teacher.history" aria-label="Historial"><History aria-hidden="true" /></RouterLink></Button></TooltipTrigger><TooltipContent>Historial</TooltipContent></Tooltip></TooltipProvider></template>
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
     <Card v-if="result" class="py-3">
@@ -77,7 +77,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
       <Empty class="gap-3 border-0 p-6 md:p-10">
         <EmptyHeader class="gap-3">
           <EmptyMedia class="text-muted-foreground [&_svg]:size-6"><Inbox aria-hidden="true" /></EmptyMedia>
-          <EmptyTitle class="text-sm text-muted-foreground">{{ result.filters.q || result.filters.state ? 'Ningún sílabo coincide con la búsqueda.' : 'No tiene sílabos asignados' }}</EmptyTitle>
+          <EmptyTitle class="text-sm text-muted-foreground">{{ result.filters.q || result.filters.state ? 'Ningún sílabo coincide con la búsqueda' : 'No tiene sílabos asignados' }}</EmptyTitle>
         </EmptyHeader>
       </Empty>
     </Card>

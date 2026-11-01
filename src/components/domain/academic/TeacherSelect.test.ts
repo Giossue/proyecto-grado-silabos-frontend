@@ -55,7 +55,7 @@ describe('TeacherSelect', () => {
     await filter('inexistente');
 
     expect(options()).toHaveLength(0);
-    expect(document.body.querySelector('[role="status"]')?.textContent).toContain('No se encontraron docentes.');
+    expect(document.body.querySelector('[role="status"]')?.textContent).toContain('No se encontraron docentes');
     await filter('');
     expect(options()).toHaveLength(2);
     expect(document.body.querySelector('[role="status"]')).toBeNull();

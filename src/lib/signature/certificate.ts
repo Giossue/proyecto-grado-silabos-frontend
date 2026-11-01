@@ -8,11 +8,11 @@ export type SignatureErrorCode =
   | 'not_yet_valid';
 
 const messages: Record<SignatureErrorCode, string> = {
-  invalid_file: 'El archivo no es un certificado de firma .p12 o .pfx válido.',
-  wrong_password: 'La clave del certificado es incorrecta.',
-  no_key: 'El certificado no contiene la llave para firmar. Use el archivo .p12 que le entregó la entidad emisora.',
-  expired: 'El certificado de firma está vencido. Renueve su firma electrónica.',
-  not_yet_valid: 'El certificado de firma todavía no es válido.',
+  invalid_file: 'El archivo no es un certificado de firma .p12 o .pfx válido',
+  wrong_password: 'La clave del certificado es incorrecta',
+  no_key: 'El certificado no contiene la llave para firmar. Use el archivo .p12 que le entregó la entidad emisora',
+  expired: 'El certificado de firma está vencido. Renueve su firma electrónica',
+  not_yet_valid: 'El certificado de firma todavía no es válido',
 };
 
 export class SignatureError extends Error {
@@ -84,7 +84,7 @@ export function readSigner(p12: Uint8Array, password: string, now: Date = new Da
   if (notBefore.getTime() > now.getTime()) throw new SignatureError('not_yet_valid');
 
   const holder = attribute(certificate.subject, 'CN') || attribute(certificate.subject, 'O');
-  if (!holder) throw new SignatureError('invalid_file', 'El certificado no identifica a su titular.');
+  if (!holder) throw new SignatureError('invalid_file', 'El certificado no identifica a su titular');
 
   return {
     certificate: {

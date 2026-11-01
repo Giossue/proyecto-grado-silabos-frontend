@@ -81,7 +81,7 @@ describe('ScheduledSubjectsTab', () => {
         expect(wrapper.text()).toContain('Cálculo');
 
         await selects[0].vm.$emit('update:modelValue', '3');
-        expect(wrapper.text()).toContain('No hay materias que coincidan con los filtros.');
+        expect(wrapper.text()).toContain('No hay materias que coincidan con los filtros');
     });
 
     it('no tiene columna de acciones: un clic en la fila abre Paralelos y docentes', async () => {

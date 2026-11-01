@@ -26,7 +26,7 @@ const pending = ref(false);
 
 const submit = async (): Promise<void> => {
     if (!token.value) {
-        error.value = 'El enlace de activación está incompleto.';
+        error.value = 'El enlace de activación está incompleto';
         return;
     }
     pending.value = true;
@@ -45,7 +45,7 @@ const submit = async (): Promise<void> => {
             errors.value = reason.errors;
             error.value = reason.message;
         } else {
-            error.value = 'No se pudo activar la cuenta.';
+            error.value = 'No se pudo activar la cuenta';
         }
     } finally {
         pending.value = false;
@@ -54,7 +54,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <AuthSimpleLayout title="Activar cuenta" description="Verifique su correo y defina una contraseña para ingresar al sistema.">
+    <AuthSimpleLayout title="Activar cuenta" description="Verifique su correo y defina una contraseña para ingresar al sistema">
         <form class="flex flex-col gap-6" @submit.prevent="submit">
             <div class="grid gap-2">
                 <Label for="activation-password" required>Contraseña</Label>

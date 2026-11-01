@@ -114,7 +114,7 @@ describe('Nueva facultad · paso de bibliotecas', () => {
         await flushPromises();
 
         expect(createAcademicRecord).not.toHaveBeenCalled();
-        expect(body().textContent).toContain('Marque al menos una biblioteca.');
+        expect(body().textContent).toContain('Marque al menos una biblioteca');
         wrapper.unmount();
     });
 

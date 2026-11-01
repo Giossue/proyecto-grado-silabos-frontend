@@ -17,7 +17,7 @@ const install = async (): Promise<void> => {
   try {
     if (await installAppState.install()) {
       open.value = false;
-      toast.success('Sílabos UEB quedó instalado.');
+      toast.success('Sílabos UEB quedó instalado');
     }
   } finally {
     installing.value = false;
@@ -30,7 +30,7 @@ const install = async (): Promise<void> => {
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
         <DialogTitle>Instalar Sílabos UEB</DialogTitle>
-        <DialogDescription>Úselo como una aplicación en su celular o computadora.</DialogDescription>
+        <DialogDescription>Úselo como una aplicación en su celular o computadora</DialogDescription>
       </DialogHeader>
       <ol v-if="!canPrompt && platform === 'ios'" class="flex list-decimal flex-col gap-2 pl-5 text-sm">
         <li>Abra el sistema en Safari</li>

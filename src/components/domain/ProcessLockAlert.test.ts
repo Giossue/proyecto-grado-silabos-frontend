@@ -23,7 +23,7 @@ describe('ProcessLockAlert', () => {
     });
 
     expect(wrapper.text()).toContain('Edición bloqueada · Convocatoria 2026-I');
-    expect(wrapper.text()).toContain('Pause la convocatoria de su carrera para editar.');
+    expect(wrapper.text()).toContain('Pause la convocatoria de su carrera para editar');
     expect(wrapper.get('a').text()).toBe('Ir a Revisión');
     expect(wrapper.get('a').attributes('href')).toBe(paths.coordination.reviews);
   });
@@ -35,7 +35,7 @@ describe('ProcessLockAlert', () => {
       global: { stubs },
     });
 
-    expect(wrapper.text()).toContain('Pause el proceso para editar.');
+    expect(wrapper.text()).toContain('Pause el proceso para editar');
     expect(wrapper.get('a').attributes('href')).toBe(paths.admin.convocations);
   });
 
@@ -53,10 +53,10 @@ describe('ProcessLockAlert', () => {
   });
 
   it('sirve también para avisos propios sin acción ni detalle', () => {
-    const wrapper = mount(ProcessLockAlert, { props: { title: 'Edición no disponible', message: 'La convocatoria está en pausa.', hideAction: true }, global: { stubs } });
+    const wrapper = mount(ProcessLockAlert, { props: { title: 'Edición no disponible', message: 'La convocatoria está en pausa', hideAction: true }, global: { stubs } });
 
     expect(wrapper.text()).toContain('Edición no disponible');
-    expect(wrapper.text()).toContain('La convocatoria está en pausa.');
+    expect(wrapper.text()).toContain('La convocatoria está en pausa');
     expect(wrapper.find('a').exists()).toBe(false);
     expect(wrapper.text()).not.toContain('¿Por qué?');
   });

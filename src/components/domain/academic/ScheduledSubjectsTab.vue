@@ -98,7 +98,7 @@ watch(() => props.data.scheduledSubjects, (rows) => {
   selectedParallels.value = selectedParallels.value.filter((id) => rows.some((item) => item.parallels.some((parallel) => parallel.id === id)));
   selectedBare.value = selectedBare.value.filter((id) => rows.some((item) => item.subject_id === id));
 });
-const emptyMessage = computed(() => filter.active.value ? "No hay materias que coincidan con los filtros." : "No hay materias en la malla.");
+const emptyMessage = computed(() => filter.active.value ? "No hay materias que coincidan con los filtros" : "No hay materias en la malla");
 </script>
 
 <template>

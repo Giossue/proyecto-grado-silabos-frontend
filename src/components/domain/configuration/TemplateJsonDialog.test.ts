@@ -60,12 +60,12 @@ describe('TemplateJsonDialog', () => {
   });
 
   it('muestra cada error del servidor con su camino y no cierra', async () => {
-    vi.mocked(templateApi.importTemplateJson).mockRejectedValue(new ApiError('Datos inválidos.', 422, { 'sections.0.fields.1.key': ['La clave está repetida.'], 'sections.2.orientation': ['No válida.'] }));
+    vi.mocked(templateApi.importTemplateJson).mockRejectedValue(new ApiError('Datos inválidos', 422, { 'sections.0.fields.1.key': ['La clave está repetida'], 'sections.2.orientation': ['No válida'] }));
     const wrapper = await mountDialog();
     apply().click();
     await flushPromises();
-    expect(document.body.textContent).toContain('sections.0.fields.1.key: La clave está repetida.');
-    expect(document.body.textContent).toContain('sections.2.orientation: No válida.');
+    expect(document.body.textContent).toContain('sections.0.fields.1.key: La clave está repetida');
+    expect(document.body.textContent).toContain('sections.2.orientation: No válida');
     expect(document.body.textContent).toContain('no se cambió nada');
     expect(wrapper.emitted('imported')).toBeUndefined();
   });

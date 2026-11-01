@@ -209,7 +209,7 @@ describe("AdminTemplatePage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero.');
+    expect(wrapper.text()).toContain('Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero');
   });
 
   it("sincroniza una mutación sin desmontar el constructor", async () => {

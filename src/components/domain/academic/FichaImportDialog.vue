@@ -41,7 +41,7 @@ const run = async (action: () => Promise<unknown>, fallback: string): Promise<bo
 };
 const download = async (): Promise<void> => {
   downloading.value = true;
-  try { await run(downloadFichaWorkbook, 'No se pudo descargar la plantilla.'); }
+  try { await run(downloadFichaWorkbook, 'No se pudo descargar la plantilla'); }
   finally { downloading.value = false; }
 };
 const analyze = async (): Promise<void> => {
@@ -51,7 +51,7 @@ const analyze = async (): Promise<void> => {
     chosen.value = new Set(current.value.subjects.filter((subject) => subject.state === 'lista').map((subject) => subject.subject_id));
     excluded.value = {};
     expanded.value = new Set();
-  }, 'No se pudo leer el Excel.');
+  }, 'No se pudo leer el Excel');
 };
 const discard = (): void => { reset(); };
 const excluded = ref<Record<string, string[]>>({});
@@ -73,7 +73,7 @@ const selectedSubjects = computed(() => proposed.value.filter((subject) => chose
 const apply = async (): Promise<void> => {
   if (!current.value || !file.value) return;
   const count = selectedSubjects.value.length;
-  if (await run(() => applyFichaWorkbook(file.value!, current.value!, selectedSubjects.value, chosenFields()), 'No se pudo aplicar el proyecto de carrera.')) { open.value = false; emit('applied', `Proyecto de carrera aplicado a ${count} materias.`); }
+  if (await run(() => applyFichaWorkbook(file.value!, current.value!, selectedSubjects.value, chosenFields()), 'No se pudo aplicar el proyecto de carrera')) { open.value = false; emit('applied', `Proyecto de carrera aplicado a ${count} materias`); }
 };
 const expanded = ref<Set<string>>(new Set());
 const toggleExpanded = (id: string): void => { const next = new Set(expanded.value); if (!next.delete(id)) next.add(id); expanded.value = next; };
@@ -91,9 +91,9 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
               </DialogHeader>
               <div class="flex flex-col gap-4">
                 <FeedbackAlert v-if="error" :message="error" />
-                <p class="text-sm text-muted-foreground">Al cerrar o recargar, deberá volver a subir el Excel para revisarlo.</p>
+                <p class="text-sm text-muted-foreground">Al cerrar o recargar, deberá volver a subir el Excel para revisarlo</p>
                 <template v-if="ready">
-                  <p class="text-sm">Vista previa del Excel para {{ proposed.length }} de {{ current?.subjects.length }} materias. Revise el contenido antes de aplicar. Los campos vacíos conservan sus valores actuales.</p>
+                  <p class="text-sm">Vista previa del Excel para {{ proposed.length }} de {{ current?.subjects.length }} materias. Revise el contenido antes de aplicar. Los campos vacíos conservan sus valores actuales</p>
                   <ScrollArea class="[&>[data-slot=scroll-area-viewport]]:max-h-96">
                       <ul class="flex flex-col gap-2">
                         <li v-for="subject in current?.subjects" :key="subject.subject_id" class="rounded-md ring-1 ring-surface-ring p-3">
@@ -122,7 +122,7 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                                 </div>
                                 <div v-if="expanded.has(subject.subject_id) && missing(subject).length" class="mt-3 flex flex-col gap-2">
                                   <p class="font-medium">Campos pendientes</p>
-                                  <ul class="flex flex-col gap-2"><li v-for="field in missing(subject)" :key="field.key"><span class="font-medium">{{ field.label }}</span><p class="text-muted-foreground">Sin contenido en el archivo. Este campo no se cambiará.</p></li></ul>
+                                  <ul class="flex flex-col gap-2"><li v-for="field in missing(subject)" :key="field.key"><span class="font-medium">{{ field.label }}</span><p class="text-muted-foreground">Sin contenido en el archivo. Este campo no se cambiará</p></li></ul>
                                 </div>
                               </div>
                             </div>

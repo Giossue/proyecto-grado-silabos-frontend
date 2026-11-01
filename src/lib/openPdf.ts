@@ -19,7 +19,7 @@ export const openRevisionPdf = async (revisionId: string): Promise<string | null
       .sort((left, right) => new Date(right.requested_at).getTime() - new Date(left.requested_at).getTime())[0];
     if (!latest) {
       tab?.close();
-      return 'El PDF aún no está listo.';
+      return 'El PDF aún no está listo';
     }
     const url = URL.createObjectURL(await downloadDocument(latest.id));
     if (tab) tab.location.href = url;
@@ -30,6 +30,6 @@ export const openRevisionPdf = async (revisionId: string): Promise<string | null
   } catch (reason) {
     tab?.close();
 
-    return reason instanceof ApiError ? reason.message : 'No se pudo abrir el PDF.';
+    return reason instanceof ApiError ? reason.message : 'No se pudo abrir el PDF';
   }
 };

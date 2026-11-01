@@ -38,7 +38,7 @@ const submit = async (): Promise<void> => {
     trigger-label="Prorrogar plazo"
     :show-trigger="display !== 'menu'"
     title="Prorrogar el plazo de entrega"
-    description="Mueve la fecha límite de entrega hacia adelante para todas las convocatorias."
+    description="Mueve la fecha límite de entrega hacia adelante para todas las convocatorias"
   >
     <template #trigger><Button variant="outline">Prorrogar plazo</Button></template>
     <template #default="{ close }">
@@ -47,7 +47,7 @@ const submit = async (): Promise<void> => {
           <Field :data-invalid="Boolean(errors.due_at)">
             <FieldLabel for="extension-due" required>Nueva fecha límite de entrega</FieldLabel>
             <DatePicker id="extension-due" v-model="form.due_at" required :aria-invalid="Boolean(errors.due_at)" />
-            <p class="text-sm text-muted-foreground">Debe ser posterior a la fecha límite vigente.</p>
+            <p class="text-sm text-muted-foreground">Debe ser posterior a la fecha límite vigente</p>
             <FieldError :errors="[...(errors.due_at ?? []), ...(errors.process ?? [])]" />
           </Field>
           <FormSheetActions :close="close" :processing="processing" :icon="CalendarClock" label="Prorrogar entrega" />

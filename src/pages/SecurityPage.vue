@@ -35,7 +35,7 @@ const submit = async (): Promise<void> => {
         currentPassword.value = '';
         password.value = '';
         passwordConfirmation.value = '';
-        toast.success('Contraseña actualizada.');
+        toast.success('Contraseña actualizada');
     } catch (reason) {
         if (reason instanceof ApiError) {
             errors.value = Object.fromEntries(
@@ -43,7 +43,7 @@ const submit = async (): Promise<void> => {
             );
             if (Object.keys(errors.value).length === 0) errors.value.request = reason.message;
         } else {
-            errors.value.request = 'No se pudo actualizar la contraseña.';
+            errors.value.request = 'No se pudo actualizar la contraseña';
         }
     } finally {
         processing.value = false;

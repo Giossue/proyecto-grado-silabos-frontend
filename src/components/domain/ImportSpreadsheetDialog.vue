@@ -35,18 +35,18 @@ const run = async (confirm: boolean): Promise<void> => {
         result.value = await sendImport(props.kind, file.value, confirm, props.extra);
         if (confirm && result.value.valid) {
             open.value = false;
-            emit('imported', `${result.value.created} registros importados.`);
+            emit('imported', `${result.value.created} registros importados`);
         }
     } catch (reason) {
         result.value = null;
-        error.value = reason instanceof ApiError ? Object.values(reason.errors).flat()[0] ?? reason.message : 'No se pudo procesar el archivo.';
+        error.value = reason instanceof ApiError ? Object.values(reason.errors).flat()[0] ?? reason.message : 'No se pudo procesar el archivo';
     } finally { processing.value = false; }
 };
 const reset = (): void => { result.value = null; };
 const invalidFile = (message: string | null): void => { error.value = message; };
 const download = async (): Promise<void> => {
     try { await downloadImportTemplate(props.kind, props.templateName); }
-    catch { error.value = 'No se pudo descargar la plantilla.'; }
+    catch { error.value = 'No se pudo descargar la plantilla'; }
 };
 </script>
 
@@ -66,8 +66,8 @@ const download = async (): Promise<void> => {
                         </div>
                         <FeedbackAlert v-if="error" :message="error" />
                         <template v-if="result">
-                            <p v-if="result.valid" class="text-sm">Todas las filas son válidas ({{ result.rows.length }}). Confirme para importarlas.</p>
-                            <p v-else class="text-sm text-destructive">{{ failedRows }} fila(s) con errores. Corrija el archivo y vuelva a subirlo; no se importó nada.</p>
+                            <p v-if="result.valid" class="text-sm">Todas las filas son válidas ({{ result.rows.length }}). Confirme para importarlas</p>
+                            <p v-else class="text-sm text-destructive">{{ failedRows }} fila(s) con errores. Corrija el archivo y vuelva a subirlo; no se importó nada</p>
                             <Table label="Vista previa de la importación">
                                 <TableHeader><TableRow><TableHead>Fila</TableHead><TableHead v-for="column in columns" :key="column.key">{{ column.label }}</TableHead><TableHead>Resultado</TableHead></TableRow></TableHeader>
                                 <TableBody>

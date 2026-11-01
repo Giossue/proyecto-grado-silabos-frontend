@@ -92,19 +92,19 @@ const saveEdit = async () => {
   if (!id || !parallel) return;
   const editable = parallel.editable !== false;
   if (editable && (!editCode.value.trim() || !editShift.value)) {
-    rowError.value = "Escriba el código y elija la jornada del paralelo.";
+    rowError.value = "Escriba el código y elija la jornada del paralelo";
     return;
   }
   await runRowAction(async () => {
-    let result: { message: string } = { message: "Sin cambios." };
+    let result: { message: string } = { message: "Sin cambios" };
     if (editable && (editCode.value.trim() !== parallel.code || editShift.value !== (parallel.shift || defaultShift.value))) {
       result = await updateParallel(id, { code: editCode.value.trim(), shift: editShift.value });
     }
     if (teacherEditable(id) && editTeacher.value !== teacherOf(id)) result = await replaceTeacher(id, editTeacher.value);
     return result;
-  }, "No se pudo actualizar el paralelo.");
+  }, "No se pudo actualizar el paralelo");
 };
-const removeParallel = (id: string) => runRowAction(() => deleteParallel(id), "No se pudo eliminar el paralelo.");
+const removeParallel = (id: string) => runRowAction(() => deleteParallel(id), "No se pudo eliminar el paralelo");
 const NO_TEACHER = "none";
 const assignmentOf = (parallelId: string) => (props.assignments ?? []).find((item) => item.parallel_id === parallelId && item.active) ?? null;
 const teacherOf = (parallelId: string) => assignmentOf(parallelId)?.user_id ?? NO_TEACHER;
@@ -123,12 +123,12 @@ const showActions = computed(() => editingId.value !== null
   || props.parallels.some((parallel) => canEditRow(parallel) || canRemoveTeacher(parallel.id) || canDeleteParallel(parallel)));
 const replaceTeacher = async (parallelId: string, value: string): Promise<{ message: string }> => {
   const current = assignmentOf(parallelId);
-  let result: { message: string } = { message: "Docente retirado del paralelo." };
+  let result: { message: string } = { message: "Docente retirado del paralelo" };
   if (current) result = await deleteCareerRecord("asignacion_docente", current.id);
   if (value !== NO_TEACHER) result = await createCareerRecord("asignacion_docente", { user_id: value, parallel_id: parallelId });
   return result;
 };
-const removeTeacher = (parallelId: string) => runRowAction(() => replaceTeacher(parallelId, NO_TEACHER), "No se pudo quitar el docente del paralelo.");
+const removeTeacher = (parallelId: string) => runRowAction(() => replaceTeacher(parallelId, NO_TEACHER), "No se pudo quitar el docente del paralelo");
 const newTeacher = ref("");
 const startAdd = () => {
   newTeacher.value = "";
@@ -145,7 +145,7 @@ const cancelAdd = () => {
 const submit = async () => {
   if (saving.value) return;
   if (!code.value.trim() || !shift.value || !newTeacher.value) {
-    error.value = "Escriba el código y elija la jornada y el docente del paralelo.";
+    error.value = "Escriba el código y elija la jornada y el docente del paralelo";
     return;
   }
   saving.value = true;
@@ -160,7 +160,7 @@ const submit = async () => {
     emit("saved", result.message);
     reset();
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : "No se pudo crear el paralelo.";
+    error.value = reason instanceof ApiError ? reason.message : "No se pudo crear el paralelo";
   } finally {
     saving.value = false;
   }

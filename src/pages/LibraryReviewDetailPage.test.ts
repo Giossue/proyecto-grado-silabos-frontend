@@ -46,7 +46,7 @@ const detail = (overrides: Partial<LibraryReviewDetail> = {}): LibraryReviewDeta
   sections: [{
     key: 'bibliografia',
     title: 'Bibliografía',
-    fields: [{ key: 'basica', label: 'Bibliografía básica', quien_llena: 'docente', value: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Sommerville, Ingeniería de software, 10.ª ed.' }] }] } }],
+    fields: [{ key: 'basica', label: 'Bibliografía básica', quien_llena: 'docente', value: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Sommerville, Ingeniería de software, 10.ª ed' }] }] } }],
   }],
   comments: [],
   comment_reasons: [
@@ -105,7 +105,7 @@ describe('LibraryReviewDetailPage', () => {
     vi.mocked(getLibraryReview)
       .mockResolvedValueOnce({ review: detail() })
       .mockResolvedValueOnce({ review: detail({ state: 'atendido', outcome: 'firmado', can_verify: false, can_comment: false, signing_statement: null }) });
-    vi.mocked(verifyLibraryReview).mockResolvedValue({ message: 'Sílabo aprobado.' });
+    vi.mocked(verifyLibraryReview).mockResolvedValue({ message: 'Sílabo aprobado' });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -119,7 +119,7 @@ describe('LibraryReviewDetailPage', () => {
       statement: 'silabos-ueb|silabo:syllabus-1|accion:aprobacion_biblioteca|huella:abc',
       cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
     });
-    expect(toastSuccess).toHaveBeenCalledWith('Sílabo aprobado.');
+    expect(toastSuccess).toHaveBeenCalledWith('Sílabo aprobado');
     expect(wrapper.text()).toContain('Aprobado');
     expect(headerButton(wrapper, 'Firmar y aprobar')).toBeUndefined();
     wrapper.unmount();
@@ -132,7 +132,7 @@ describe('LibraryReviewDetailPage', () => {
         { code: 'otro', label: 'Otro motivo' },
       ],
     }) });
-    vi.mocked(commentLibraryReview).mockResolvedValue({ message: 'Comentario enviado al docente.' });
+    vi.mocked(commentLibraryReview).mockResolvedValue({ message: 'Comentario enviado al docente' });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -140,18 +140,18 @@ describe('LibraryReviewDetailPage', () => {
     for (const box of reasonBoxes()) box.click();
     await flushPromises();
     await submitReturn();
-    expect(document.body.textContent).toContain('Escriba el otro motivo (mínimo 5 caracteres).');
+    expect(document.body.textContent).toContain('Escriba el otro motivo (mínimo 5 caracteres)');
     expect(commentLibraryReview).not.toHaveBeenCalled();
 
     const textarea = document.querySelector<HTMLTextAreaElement>('#library-other-reason')!;
-    textarea.value = 'Falta la 3.ª edición de Pressman.';
+    textarea.value = 'Falta la 3.ª edición de Pressman';
     textarea.dispatchEvent(new Event('input'));
     await flushPromises();
     await submitReturn();
 
     expect(commentLibraryReview).toHaveBeenCalledWith('revision-2', {
       reasons: ['libro_no_disponible', 'otro'],
-      other: 'Falta la 3.ª edición de Pressman.',
+      other: 'Falta la 3.ª edición de Pressman',
     });
     wrapper.unmount();
   });
@@ -160,7 +160,7 @@ describe('LibraryReviewDetailPage', () => {
     vi.mocked(getLibraryReview)
       .mockResolvedValueOnce({ review: detail() })
       .mockResolvedValueOnce({ review: detail({ state: 'atendido', outcome: 'devuelto', can_comment: false, can_verify: false }) });
-    vi.mocked(commentLibraryReview).mockResolvedValue({ message: 'Comentario enviado al docente.' });
+    vi.mocked(commentLibraryReview).mockResolvedValue({ message: 'Comentario enviado al docente' });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -172,7 +172,7 @@ describe('LibraryReviewDetailPage', () => {
     expect(commentLibraryReview).toHaveBeenCalledWith('revision-2', {
       reasons: ['libro_no_disponible', 'codigo_incorrecto'],
     });
-    expect(toastSuccess).toHaveBeenCalledWith('Comentario enviado al docente.');
+    expect(toastSuccess).toHaveBeenCalledWith('Comentario enviado al docente');
     expect(wrapper.text()).toContain('Devuelto al docente');
     expect(headerButton(wrapper, 'Devolver al docente')).toBeUndefined();
     wrapper.unmount();
@@ -186,17 +186,17 @@ describe('LibraryReviewDetailPage', () => {
     await openReturn(wrapper);
     await submitReturn();
 
-    expect(document.body.textContent).toContain('Elija al menos un motivo.');
+    expect(document.body.textContent).toContain('Elija al menos un motivo');
     expect(commentLibraryReview).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 
   it('distingue un fallo inicial de carga y permite reintentar', async () => {
-    vi.mocked(getLibraryReview).mockRejectedValueOnce(new ApiError('Revisión no disponible.', 503));
+    vi.mocked(getLibraryReview).mockRejectedValueOnce(new ApiError('Revisión no disponible', 503));
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Revisión no disponible.');
+    expect(wrapper.text()).toContain('Revisión no disponible');
     vi.mocked(getLibraryReview).mockResolvedValueOnce({ review: detail() });
     await wrapper.get('button').trigger('click');
     await flushPromises();

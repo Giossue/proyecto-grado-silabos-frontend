@@ -51,7 +51,7 @@ const load = async ({ silent = false }: { silent?: boolean } = {}): Promise<void
     } catch (reason) {
         const message = reason instanceof ApiError
             ? reason.message
-            : 'No se pudo cargar la plantilla.';
+            : 'No se pudo cargar la plantilla';
 
         if (silent) {
             actionError.value = message;
@@ -143,7 +143,7 @@ onBeforeUnmount(() => {
     <PageFrame
         v-if="loading"
         title="Plantilla de sílabo"
-        description="El formato del sílabo: secciones y campos."
+        description="El formato del sílabo: secciones y campos"
         size="wide"
         :header-width="SHEET_WIDTH"
     >
@@ -153,7 +153,7 @@ onBeforeUnmount(() => {
     <PageFrame
         v-else-if="loadError"
         title="Plantilla de sílabo"
-        description="Hoja base de la plantilla institucional."
+        description="Hoja base de la plantilla institucional"
     >
         <LoadErrorState :message="loadError" @retry="load" />
     </PageFrame>
@@ -161,12 +161,12 @@ onBeforeUnmount(() => {
     <PageFrame
         v-else-if="template"
         title="Plantilla de sílabo"
-        description="El formato del sílabo: secciones y campos."
+        description="El formato del sílabo: secciones y campos"
         size="wide"
         :header-width="SHEET_WIDTH"
     >
         <template v-if="payload?.templateChangedDuringPause || payload?.processLock" #banner>
-            <ProcessLockAlert v-if="payload?.templateChangedDuringPause" banner :icon="RotateCcw" title="Plantilla modificada durante la pausa" message="Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero." hide-action />
+            <ProcessLockAlert v-if="payload?.templateChangedDuringPause" banner :icon="RotateCcw" title="Plantilla modificada durante la pausa" message="Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero" hide-action />
             <ProcessLockAlert v-if="payload?.processLock" banner :lock="payload.processLockDetail" />
         </template>
         <div class="mx-auto flex flex-col gap-4 empty:hidden" :style="{ width: `${SHEET_WIDTH}px`, maxWidth: '100%' }">

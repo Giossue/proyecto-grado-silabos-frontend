@@ -65,7 +65,7 @@ const load = async (page = 1): Promise<void> => {
       await load(page);
       return;
     }
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el historial de biblioteca.';
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el historial de biblioteca';
   } finally {
     if (requests.isCurrent(ticket)) loading.value = false;
   }
@@ -80,7 +80,7 @@ onMounted(() => { void load(initialPage); });
 </script>
 
 <template>
-  <PageFrame title="Historial" description="Sílabos de períodos terminados, en solo lectura." size="wide">
+  <PageFrame title="Historial" description="Sílabos de períodos terminados, en solo lectura" size="wide">
     <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.library.reviews)"><ArrowLeft aria-hidden="true" />Volver a revisiones</Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="4" :actions="false" />
@@ -149,7 +149,7 @@ onMounted(() => { void load(initialPage); });
               <TableCell>{{ item.teachers.join(', ') }}</TableCell>
               <TableCell>{{ item.signed_by ?? '—' }}</TableCell>
             </TableRow>
-            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="4">{{ filters.who === 'mine' ? 'No hay sílabos revisados por usted con estos filtros.' : 'No hay sílabos de períodos terminados con estos filtros.' }}</TableEmpty>
+            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="4">{{ filters.who === 'mine' ? 'No hay sílabos revisados por usted con estos filtros' : 'No hay sílabos de períodos terminados con estos filtros' }}</TableEmpty>
           </TableBody>
         </Table>
         <TablePagination :meta="data.reviews" label="Paginación del historial de biblioteca" @update:page="load" />

@@ -20,8 +20,8 @@ const processing = ref(false);
 const error = ref<string | null>(null);
 const openingOpen = ref(false);
 const dialogs: Record<Transition, { title: string; description: string; label: string }> = {
-  pausar: { title: 'Pausar la convocatoria', description: 'Los docentes de su carrera no podrán editar ni enviar hasta que la reanude; sus borradores se conservan. Durante la pausa puede corregir la malla y los datos curriculares; la revisión de lo enviado continúa.', label: 'Pausar' },
-  reanudar: { title: 'Reanudar la convocatoria', description: 'Los docentes vuelven a trabajar, los paralelos creados durante la pausa reciben su sílabo y la malla y los datos curriculares de la carrera quedan protegidos de nuevo.', label: 'Reanudar' },
+  pausar: { title: 'Pausar la convocatoria', description: 'Los docentes de su carrera no podrán editar ni enviar hasta que la reanude; sus borradores se conservan. Durante la pausa puede corregir la malla y los datos curriculares; la revisión de lo enviado continúa', label: 'Pausar' },
+  reanudar: { title: 'Reanudar la convocatoria', description: 'Los docentes vuelven a trabajar, los paralelos creados durante la pausa reciben su sílabo y la malla y los datos curriculares de la carrera quedan protegidos de nuevo', label: 'Reanudar' },
 };
 const select = (value: Transition): void => {
   pending.value = value;
@@ -37,7 +37,7 @@ const submit = async (): Promise<void> => {
     pending.value = null;
     emit('changed', result.message);
   } catch (failure) {
-    error.value = failure instanceof ApiError ? failure.message : 'No se pudo cambiar la convocatoria.';
+    error.value = failure instanceof ApiError ? failure.message : 'No se pudo cambiar la convocatoria';
   } finally { processing.value = false; }
 };
 const opened = (message: string): void => emit('changed', message);

@@ -27,7 +27,7 @@ const submit = async (close: () => void) => {
     emit("saved", result.message);
     close();
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : "No se pudo asignar el docente.";
+    error.value = reason instanceof ApiError ? reason.message : "No se pudo asignar el docente";
   } finally { saving.value = false; }
 };
 watch(open, (value) => value && reset());

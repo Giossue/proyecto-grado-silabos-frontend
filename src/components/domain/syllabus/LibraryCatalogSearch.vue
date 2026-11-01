@@ -75,7 +75,7 @@ const pick = (book: CatalogBook): void => {
         <DialogContent class="flex max-h-(--overlay-max-height) flex-col gap-3 overflow-hidden sm:max-w-6xl">
             <DialogHeader>
                 <DialogTitle>Buscar en la biblioteca</DialogTitle>
-                <DialogDescription>Elija un libro para agregarlo a la tabla.</DialogDescription>
+                <DialogDescription>Elija un libro para agregarlo a la tabla</DialogDescription>
             </DialogHeader>
             <form class="flex flex-wrap gap-2" @submit.prevent="search">
                 <NativeSelect v-model="field" aria-label="Buscar por">

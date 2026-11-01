@@ -35,7 +35,7 @@ const verifySignedLink = async (): Promise<void> => {
     } catch (reason) {
         error.value = reason instanceof ApiError
             ? reason.message
-            : 'No se pudo verificar el correo.';
+            : 'No se pudo verificar el correo';
     } finally {
         processing.value = false;
     }
@@ -49,7 +49,7 @@ const resend = async (): Promise<void> => {
     } catch (reason) {
         error.value = reason instanceof ApiError
             ? reason.message
-            : 'No se pudo reenviar el correo de verificación.';
+            : 'No se pudo reenviar el correo de verificación';
     } finally {
         processing.value = false;
     }
@@ -71,8 +71,8 @@ onMounted(() => {
     <AuthSimpleLayout
         title="Verificación de correo"
         :description="verifiesSignedLink
-            ? 'Confirmamos la dirección institucional asociada a su cuenta.'
-            : 'Verifique su correo mediante el enlace que acabamos de enviarle.'"
+            ? 'Confirmamos la dirección institucional asociada a su cuenta'
+            : 'Verifique su correo mediante el enlace que acabamos de enviarle'"
     >
         <template v-if="verifiesSignedLink">
             <div class="flex flex-col gap-5 text-center">

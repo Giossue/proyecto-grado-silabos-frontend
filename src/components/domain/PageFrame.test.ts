@@ -22,7 +22,7 @@ describe('PageFrame', () => {
 
   it('centra el ícono entre el título y la descripción', () => {
     const wrapper = mount(PageFrame, {
-      props: { title: 'Docentes', description: 'Docentes de su carrera.', icon: Users },
+      props: { title: 'Docentes', description: 'Docentes de su carrera', icon: Users },
     });
 
     expect(wrapper.get('h1').element.closest('.gap-3')?.classList).toContain('items-center');
@@ -36,7 +36,7 @@ describe('PageFrame', () => {
 
   it('centra los botones con el ícono y el título', () => {
     const wrapper = mount(PageFrame, {
-      props: { title: 'Docentes', description: 'Docentes de su carrera.', icon: Users },
+      props: { title: 'Docentes', description: 'Docentes de su carrera', icon: Users },
       slots: { actions: '<button type="button">Historial</button>' },
     });
 

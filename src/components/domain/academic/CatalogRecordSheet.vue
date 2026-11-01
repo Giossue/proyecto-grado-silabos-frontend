@@ -83,7 +83,7 @@ const submit = async (): Promise<void> => {
     if (props.disabled) return;
     errors.value = {};
     if (props.entity === 'facultad' && !logo.value) {
-        errors.value = { logo: ['El logo de la facultad es obligatorio.'] };
+        errors.value = { logo: ['El logo de la facultad es obligatorio'] };
         return;
     }
     if (props.entity === 'facultad' && step.value === 1) {
@@ -91,7 +91,7 @@ const submit = async (): Promise<void> => {
         return;
     }
     if (props.entity === 'facultad' && koha.value !== null && chosenLibraries.value.length === 0) {
-        errors.value = { catalog_libraries: ['Marque al menos una biblioteca.'] };
+        errors.value = { catalog_libraries: ['Marque al menos una biblioteca'] };
         return;
     }
     processing.value = true;
@@ -133,7 +133,7 @@ const submit = async (): Promise<void> => {
                         <Field :data-invalid="Boolean(errors.logo)">
                             <FieldLabel for="faculty-logo" required>Logo de la facultad (PNG sin fondo)</FieldLabel>
                             <FileDropzone v-model="logo" input-id="faculty-logo" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" required @validation-error="logoValidationError" />
-                            <FieldDescription>Obligatorio. Medida recomendada: 600 × 180 px. Use una imagen con fondo transparente.</FieldDescription>
+                            <FieldDescription>Obligatorio. Medida recomendada: 600 × 180 px. Use una imagen con fondo transparente</FieldDescription>
                             <FieldError :errors="errors.logo" />
                         </Field>
                         </FieldGroup>
@@ -155,7 +155,7 @@ const submit = async (): Promise<void> => {
                         <Field :data-invalid="Boolean(errors.cycle_count)"><FieldLabel for="catalog-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="catalog-cycle-count" v-model="form.cycle_count" type="number" min="1" :max="VALIDATION_LIMITS.cycleCount" step="1" required /><FieldError :errors="errors.cycle_count" /></Field>
                     </div>
                     <div v-if="entity === 'periodo'" class="grid grid-cols-2 items-start gap-4">
-                        <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" :min-value="minimumPeriodDate" :aria-invalid="Boolean(errors.starts_on)" required /><FieldDescription>Debe ser hoy o una fecha posterior.</FieldDescription><FieldError :errors="errors.starts_on" /></Field>
+                        <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" :min-value="minimumPeriodDate" :aria-invalid="Boolean(errors.starts_on)" required /><FieldDescription>Debe ser hoy o una fecha posterior</FieldDescription><FieldError :errors="errors.starts_on" /></Field>
                         <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel for="catalog-ends-on" required>Fecha de fin</FieldLabel><DatePicker id="catalog-ends-on" v-model="form.ends_on" :min-value="minimumPeriodEndDate" :aria-invalid="Boolean(errors.ends_on)" required /><FieldError :errors="errors.ends_on" /></Field>
                     </div>
                     <SheetFooter v-if="entity === 'facultad'" class="absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">

@@ -26,7 +26,7 @@ const pending = ref(false);
 
 const submit = async (): Promise<void> => {
   if (!email.value || !token.value) {
-    error.value = 'El enlace de recuperación está incompleto.';
+    error.value = 'El enlace de recuperación está incompleto';
     return;
   }
   pending.value = true;
@@ -42,7 +42,7 @@ const submit = async (): Promise<void> => {
       errors.value = reason.errors;
       error.value = reason.message;
     } else {
-      error.value = 'No se pudo restablecer la contraseña.';
+      error.value = 'No se pudo restablecer la contraseña';
     }
   } finally {
     pending.value = false;

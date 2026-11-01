@@ -64,7 +64,7 @@ const load = async (page = 1, withSummary = false): Promise<void> => {
     summary.value = dashboard;
     syncFilters(router, { search: filters.search, tab: tab.value === 'seguimiento' ? 'seguimiento' : '' }, page);
   } catch (reason) {
-    if (requests.isCurrent(ticket)) error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la cola de revisión.';
+    if (requests.isCurrent(ticket)) error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar la cola de revisión';
   } finally { if (requests.isCurrent(ticket)) loading.value = false; }
 };
 const clearFilters = (): void => {
@@ -82,7 +82,7 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
 </script>
 
 <template>
-  <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo." size="wide" :loading="!data">
+  <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo" size="wide" :loading="!data">
     <template #actions>
       <ConvocationActions v-if="summary?.coordination_convocation" :convocation="summary.coordination_convocation" :blocked-reason="openHint" @changed="changed" />
     </template>
@@ -107,7 +107,7 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
         </CardContent></Card>
         <Table label="Revisiones de coordinación"><TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Docente</TableHead><TableHead class="text-center">Revisión</TableHead><TableHead class="text-center">Enviado</TableHead></TableRow></TableHeader><TableBody>
           <TableRow v-for="item in data.syllabi.data" :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(area.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(area.review(item.revision_id))" @keydown.space.self.prevent="router.push(area.review(item.revision_id))"><TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }} · {{ item.period }}</div></TableCell><TableCell>{{ item.teachers.join(', ') }}</TableCell><TableCell class="text-center">N.º {{ item.revision_number }}</TableCell><TableCell class="text-center">{{ item.submitted_at ? formatDateDisplay(item.submitted_at, { dateStyle: 'medium' }) : '—' }}</TableCell></TableRow>
-          <TableEmpty v-if="data.syllabi.data.length === 0" :colspan="4">No hay sílabos por revisar.</TableEmpty>
+          <TableEmpty v-if="data.syllabi.data.length === 0" :colspan="4">No hay sílabos por revisar</TableEmpty>
         </TableBody></Table>
         <TablePagination :meta="data.syllabi" label="Paginación de expedientes en revisión" @update:page="load" />
       </TabsContent>

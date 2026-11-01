@@ -365,7 +365,7 @@ const moveSubject = async (subjectId: string, delta: -1 | 1): Promise<void> => {
     const result = await updateSubjectLayout(props.curriculum.id, { subject_id: subjectId, cycle: subject.cycle, position: index });
     emit("changed", result.message);
   } catch (reason) {
-    toast.error(reason instanceof ApiError ? reason.message : "No se pudo mover la materia.");
+    toast.error(reason instanceof ApiError ? reason.message : "No se pudo mover la materia");
   } finally {
     savingLayout.value = false;
   }
@@ -476,7 +476,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     toast.error(
       reason instanceof ApiError
         ? reason.message
-        : "No se pudo mover la materia.",
+        : "No se pudo mover la materia",
     );
   } finally {
     savingLayout.value = false;

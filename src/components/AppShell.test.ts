@@ -63,7 +63,7 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     const banner = wrapper.get('[role="status"]');
-    expect(banner.text()).toBe('Quedan 3 días para recibir y revisar los sílabos de su carreraHasta el 30 de octubre de 2026.');
+    expect(banner.text()).toBe('Quedan 3 días para recibir y revisar los sílabos de su carreraHasta el 30 de octubre de 2026');
     expect(banner.element.compareDocumentPosition(wrapper.get('header').element) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
     expect(getDeadline).toHaveBeenCalledTimes(1);
 

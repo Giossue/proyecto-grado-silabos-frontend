@@ -30,7 +30,7 @@ describe('openRevisionPdf', () => {
   it('avisa y cierra la pestaña si el PDF todavía no está listo', async () => {
     vi.mocked(getDocuments).mockResolvedValue({ artifacts: [artifact('a', 'pendiente', '2026-10-01T00:00:00Z')] } as never);
 
-    expect(await openRevisionPdf('rev-1')).toBe('El PDF aún no está listo.');
+    expect(await openRevisionPdf('rev-1')).toBe('El PDF aún no está listo');
     expect(tab.close).toHaveBeenCalled();
     expect(downloadDocument).not.toHaveBeenCalled();
   });

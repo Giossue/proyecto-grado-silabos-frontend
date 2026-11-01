@@ -158,7 +158,7 @@ const {
                         v-if="facultyPage.length === 0"
                         :colspan="3"
                     >
-                        {{ facultyFilter.active.value ? 'Ninguna facultad coincide con los filtros.' : 'No existen facultades registradas.' }}
+                        {{ facultyFilter.active.value ? 'Ninguna facultad coincide con los filtros' : 'No existen facultades registradas' }}
                     </TableEmpty>
                     <TableRow
                         v-for="faculty in facultyPage"
@@ -276,7 +276,7 @@ const {
                         v-if="careerPage.length === 0"
                         :colspan="4"
                     >
-                        {{ careerFilter.active.value ? 'Ninguna carrera coincide con los filtros.' : 'No existen carreras registradas.' }}
+                        {{ careerFilter.active.value ? 'Ninguna carrera coincide con los filtros' : 'No existen carreras registradas' }}
                     </TableEmpty>
                     <TableRow
                         v-for="career in careerPage"

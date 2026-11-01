@@ -7,13 +7,13 @@ const isControl = (target: EventTarget | null): target is Control =>
 
 const messageFor = (control: Control): string => {
     const { validity } = control;
-    if (validity.valueMissing) return 'Complete este campo.';
-    if (validity.typeMismatch) return control instanceof HTMLInputElement && control.type === 'email' ? 'Ingrese un correo válido.' : 'El formato no es válido.';
-    if (validity.patternMismatch) return 'El formato no es válido.';
-    if (validity.tooShort) return `Use al menos ${control.getAttribute('minlength')} caracteres.`;
-    if (validity.rangeUnderflow) return `El valor mínimo es ${control.getAttribute('min')}.`;
-    if (validity.rangeOverflow) return `El valor máximo es ${control.getAttribute('max')}.`;
-    return 'Revise este campo.';
+    if (validity.valueMissing) return 'Complete este campo';
+    if (validity.typeMismatch) return control instanceof HTMLInputElement && control.type === 'email' ? 'Ingrese un correo válido' : 'El formato no es válido';
+    if (validity.patternMismatch) return 'El formato no es válido';
+    if (validity.tooShort) return `Use al menos ${control.getAttribute('minlength')} caracteres`;
+    if (validity.rangeUnderflow) return `El valor mínimo es ${control.getAttribute('min')}`;
+    if (validity.rangeOverflow) return `El valor máximo es ${control.getAttribute('max')}`;
+    return 'Revise este campo';
 };
 
 // El mensaje va debajo del campo; si el campo está envuelto (ojo de contraseña, buscador), debajo del envoltorio.

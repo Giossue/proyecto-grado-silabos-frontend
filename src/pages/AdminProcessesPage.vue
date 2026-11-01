@@ -80,7 +80,7 @@ const load = async (): Promise<void> => {
     if (session.active_role?.code !== 'administrador') { await router.replace(paths.dashboard); return; }
     [governance.value, processData.value, summary.value] = await Promise.all([getAcademicGovernance(), getProcesses(), getDashboard().catch(() => summary.value)]);
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las convocatorias.';
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar las convocatorias';
   } finally { loading.value = false; }
 };
 const changed = async (notice: string): Promise<void> => { toast.success(notice); await load(); };
@@ -88,9 +88,9 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Convocatorias" description="Periodos lectivos y sus fechas de clases y de elaboración de sílabos." size="wide" :loading="!loaded">
+  <PageFrame title="Convocatorias" description="Periodos lectivos y sus fechas de clases y de elaboración de sílabos" size="wide" :loading="!loaded">
     <template v-if="loaded && inProgress" #banner>
-      <ProcessLockAlert banner title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra." hide-action />
+      <ProcessLockAlert banner title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra" hide-action />
     </template>
     <template #actions>
       <Tooltip v-if="loaded && !setupReady"><TooltipTrigger as-child><span class="inline-flex" tabindex="0"><ConvocationPeriodSheet disabled @saved="changed" /></span></TooltipTrigger><TooltipContent>Complete «Antes de empezar» para abrir una convocatoria</TooltipContent></Tooltip>
@@ -113,7 +113,7 @@ onMounted(load);
       <Table label="Convocatorias" data-cards="true">
         <TableHeader><TableRow><TableHead>Período</TableHead><TableHead>Clases</TableHead><TableHead>Elaboración de sílabos</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader>
         <TableBody>
-          <TableEmpty v-if="page.length === 0" :colspan="4">{{ filter.active.value ? 'Ningún período coincide con los filtros.' : 'No hay periodos registrados. Cree el primero con «Nueva convocatoria».' }}</TableEmpty>
+          <TableEmpty v-if="page.length === 0" :colspan="4">{{ filter.active.value ? 'Ningún período coincide con los filtros' : 'No hay periodos registrados. Cree el primero con «Nueva convocatoria»' }}</TableEmpty>
           <TableRow v-for="row in page" v-else :key="row.id" class="cursor-pointer" tabindex="0" :aria-label="`Opciones de ${row.code}`" @click="activateRow($event, () => select(row))" @keydown.enter.self.prevent="select(row)" @keydown.space.self.prevent="select(row)">
             <TableCell>{{ row.code }}</TableCell>
             <TableCell><time :datetime="row.starts_on">{{ formatDate(row.starts_on) }}</time> → <time :datetime="row.ends_on">{{ formatDate(row.ends_on) }}</time></TableCell>

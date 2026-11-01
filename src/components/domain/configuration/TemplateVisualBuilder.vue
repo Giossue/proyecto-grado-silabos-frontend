@@ -578,7 +578,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <DialogContent class="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>Diseño</DialogTitle>
-          <DialogDescription>Márgenes y tamaños del documento. La letra, los colores y la alineación son los institucionales.</DialogDescription>
+          <DialogDescription>Márgenes y tamaños del documento. La letra, los colores y la alineación son los institucionales</DialogDescription>
         </DialogHeader>
         <FieldGroup class="gap-4">
           <Field v-for="control in layoutControls" :key="control.key">
@@ -596,7 +596,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Listas</DialogTitle>
-          <DialogDescription>Cuántos elementos puede tener el docente. «Empieza con» es cuántos ya aparecen al abrir el sílabo.</DialogDescription>
+          <DialogDescription>Cuántos elementos puede tener el docente. «Empieza con» es cuántos ya aparecen al abrir el sílabo</DialogDescription>
         </DialogHeader>
         <FieldGroup class="gap-4">
           <FieldSet v-for="list in listsDraft" :key="`${list.block}-${list.path}`" class="gap-2">
@@ -636,8 +636,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         <DialogHeader>
           <DialogTitle>{{ removal?.kind === 'section' ? 'Eliminar sección' : 'Eliminar campo' }}</DialogTitle>
           <DialogDescription>
-            {{ removal?.kind === 'section' ? `Se quitará «${removal?.name}» con sus ${removal?.count} campos de la plantilla.` : `Se quitará «${removal?.name}» de la plantilla.` }}
-            Se aplica al guardar la plantilla.
+            {{ removal?.kind === 'section' ? `Se quitará «${removal?.name}» con sus ${removal?.count} campos de la plantilla` : `Se quitará «${removal?.name}» de la plantilla` }}
+            Se aplica al guardar la plantilla
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

@@ -57,7 +57,7 @@ const load = async (page = 1): Promise<void> => {
         if (!requests.isCurrent(ticket)) return;
         result.value = response;
         syncFilters(router, { q: q.value, status: status.value, role: role.value, career: career.value }, page);
-    } catch (reason) { if (requests.isCurrent(ticket)) error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los usuarios.'; }
+    } catch (reason) { if (requests.isCurrent(ticket)) error.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar los usuarios'; }
     finally { if (requests.isCurrent(ticket)) loading.value = false; }
 };
 const viewing = ref<ManagedUser | null>(null);
@@ -74,7 +74,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
 </script>
 
 <template>
-    <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca." size="wide" :loading="!result">
+    <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca" size="wide" :loading="!result">
         <template #actions><template v-if="result"><ImportSpreadsheetDialog title="Importar cuentas" kind="users" template-name="plantilla-usuarios.xlsx" :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }, { key: 'rol', label: 'Rol' }, { key: 'carrera', label: 'Carrera' }]" @imported="changed" /><ManagedUserSheet :roles="result.roles" :careers="result.careers" @saved="changed" /></template></template>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="4" :filters="3" :actions="false" :cell-lines="[2, 1, 1, 1]" />
@@ -90,7 +90,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
             </FilterToolbar></form></CardContent></Card>
 
             <Table label="Usuarios y roles"><TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Roles</TableHead><TableHead>Carrera</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader><TableBody>
-                <TableEmpty v-if="result.users.data.length === 0" :colspan="4">No se encontraron cuentas con estos filtros.</TableEmpty>
+                <TableEmpty v-if="result.users.data.length === 0" :colspan="4">No se encontraron cuentas con estos filtros</TableEmpty>
                 <TableRow v-for="user in result.users.data" v-else :key="user.id" class="cursor-pointer" tabindex="0" :aria-label="`Ver ${user.nombre}`" @click="activateRow($event, () => openUser(user))" @keydown.enter.self.prevent="openUser(user)" @keydown.space.self.prevent="openUser(user)">
                     <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span></div></TableCell>
                     <TableCell class="h-px py-0"><ul v-if="user.roles.length" class="-mx-2 flex h-full min-h-11 flex-col"><li v-for="(item, index) in user.roles" :key="index" class="flex min-h-9 flex-1 items-center border-border px-2 not-first:border-t">{{ item.name }}</li></ul><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span></TableCell>

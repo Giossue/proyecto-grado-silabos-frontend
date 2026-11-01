@@ -42,7 +42,7 @@ const submit = async (): Promise<void> => {
     await router.replace(consumeIntendedRoute() ?? roleEntry(result.active_role?.code));
   } catch (reason) {
     if (reason instanceof ApiError) { errors.value = reason.errors; error.value = reason.message; }
-    else { error.value = 'No se pudo iniciar sesión.'; }
+    else { error.value = 'No se pudo iniciar sesión'; }
   } finally { processing.value = false; }
 };
 </script>

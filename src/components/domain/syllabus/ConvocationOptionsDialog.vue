@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutFinalPeriod } from '@/lib/utils';
 import { CalendarClock, CalendarPlus, Lock, Pause, Play, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
 import type { SheetAction } from '@/components/domain/SheetActions.vue';
@@ -57,7 +58,7 @@ const run = (key: string): void => {
                         <component :is="action.icon" data-icon="inline-start" aria-hidden="true" />
                         {{ action.label }}
                     </Button>
-                    <p v-if="action.disabled && action.disabledReason" :id="`option-reason-${action.key}`" class="text-sm text-muted-foreground">{{ action.disabledReason }}</p>
+                    <p v-if="action.disabled && action.disabledReason" :id="`option-reason-${action.key}`" class="text-sm text-muted-foreground">{{ withoutFinalPeriod(action.disabledReason) }}</p>
                 </li>
             </ul>
             <DialogFooter>

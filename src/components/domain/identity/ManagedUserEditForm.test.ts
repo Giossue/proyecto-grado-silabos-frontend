@@ -14,20 +14,20 @@ describe('ManagedUserEditForm', () => {
   afterEach(() => { document.body.innerHTML = ''; update.mockReset(); });
 
   it('si la carrera ya tiene coordinador pide confirmar y reenvía con el reemplazo', async () => {
-    update.mockImplementationOnce(async () => { throw new ApiError('La carrera ya tiene como coordinador a JUAN.', 422, { replace_coordinator: ['La carrera ya tiene como coordinador a JUAN.'] }); });
-    update.mockImplementationOnce(async () => ({ message: 'Cuenta actualizada.' }));
+    update.mockImplementationOnce(async () => { throw new ApiError('La carrera ya tiene como coordinador a JUAN', 422, { replace_coordinator: ['La carrera ya tiene como coordinador a JUAN'] }); });
+    update.mockImplementationOnce(async () => ({ message: 'Cuenta actualizada' }));
     const wrapper = mount(ManagedUserEditForm, { attachTo: document.body, props: { user, roles, careers: [{ id: 'c1', nombre: 'Software' }] } });
     (wrapper.vm as unknown as { form: { role_code: string; career_id: string } }).form = { ...(wrapper.vm as unknown as { form: { nombre: string; correo_electronico: string } }).form, role_code: 'coordinador', career_id: 'c1' };
     await flushPromises();
 
     await wrapper.get('form').trigger('submit');
     await flushPromises();
-    expect(document.body.textContent).toContain('La carrera ya tiene como coordinador a JUAN.');
+    expect(document.body.textContent).toContain('La carrera ya tiene como coordinador a JUAN');
 
     ([...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Reemplazar') as HTMLButtonElement).click();
     await flushPromises();
 
     expect(update).toHaveBeenLastCalledWith('u1', expect.objectContaining({ role_code: 'coordinador', career_id: 'c1', replace_coordinator: true }));
-    expect(wrapper.emitted('saved')).toEqual([['Cuenta actualizada.']]);
+    expect(wrapper.emitted('saved')).toEqual([['Cuenta actualizada']]);
   });
 });

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { withoutFinalPeriod } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
 import EmptyState from '@/components/domain/EmptyState.vue';
@@ -61,7 +62,7 @@ const load = async (): Promise<void> => {
         items.value = result.notifications.data.slice(0, PREVIEW_LIMIT);
         unreadCount.value = result.unread_count;
     } catch {
-        error.value = 'No se pudieron cargar las notificaciones.';
+        error.value = 'No se pudieron cargar las notificaciones';
     } finally {
         loading.value = false;
     }
@@ -91,7 +92,7 @@ const readAll = async (): Promise<void> => {
     try {
         await markAllNotificationsRead();
     } catch {
-        error.value = 'No se pudieron marcar las notificaciones como leídas.';
+        error.value = 'No se pudieron marcar las notificaciones como leídas';
         return;
     }
     await load();
@@ -186,7 +187,7 @@ onMounted(refreshCount);
                         </div>
                     </div>
                     <FeedbackAlert v-else-if="error" :message="error" class="mx-6" />
-                    <EmptyState v-else-if="items.length === 0" :title="status === 'unread' ? 'No tiene notificaciones sin leer en este período.' : 'No tiene notificaciones en este período.'" />
+                    <EmptyState v-else-if="items.length === 0" :title="status === 'unread' ? 'No tiene notificaciones sin leer en este período' : 'No tiene notificaciones en este período'" />
                     <ul v-else class="flex flex-col divide-y border-t">
                         <li v-for="notification in items" :key="notification.id">
                             <Button
@@ -204,7 +205,7 @@ onMounted(refreshCount);
                                             <span v-if="notification.leido_en === null" class="size-2 rounded-full bg-brand-accent" aria-label="Sin leer" />
                                         </span>
                                     </span>
-                                    <span class="mt-1 block text-sm text-muted-foreground">{{ notification.mensaje }}</span>
+                                    <span class="mt-1 block text-sm text-muted-foreground">{{ withoutFinalPeriod(notification.mensaje) }}</span>
                                     <span v-if="notification.context" class="mt-1 block text-xs text-muted-foreground">{{ notification.context }}</span>
                                 </span>
                             </Button>

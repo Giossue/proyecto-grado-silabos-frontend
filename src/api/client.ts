@@ -1,3 +1,5 @@
+import { withoutFinalPeriod } from '@/lib/utils';
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -5,7 +7,8 @@ export class ApiError extends Error {
     readonly errors: Record<string, string[]> = {},
     readonly payload: Record<string, unknown> = {},
   ) {
-    super(message);
+    super(withoutFinalPeriod(message));
+    this.errors = Object.fromEntries(Object.entries(errors).map(([field, messages]) => [field, messages.map(withoutFinalPeriod)]));
   }
 }
 
@@ -15,7 +18,7 @@ const baseUrl = (
   (import.meta.env.DEV ? 'http://localhost:8000' : '')
 ).replace(/\/$/, '');
 
-if (!baseUrl) throw new Error('Falta configurar la URL pública de la API.');
+if (!baseUrl) throw new Error('Falta configurar la URL pública de la API');
 
 const readCookie = (name: string): string | null => {
   const prefix = `${name}=`;
@@ -31,7 +34,7 @@ export async function initializeCsrfProtection(): Promise<void> {
   });
 
   if (!response.ok) {
-    throw new ApiError('No se pudo preparar la sesión segura.', response.status);
+    throw new ApiError('No se pudo preparar la sesión segura', response.status);
   }
 }
 
@@ -41,7 +44,7 @@ const notifyUnauthorized = (): void => {
   window.dispatchEvent(new CustomEvent('silabos:unauthorized'));
 };
 
-const ROLE_REQUIRED_MESSAGE = 'Seleccione un rol vigente.';
+const ROLE_REQUIRED_MESSAGE = 'Seleccione un rol vigente';
 
 const notifyRoleRequired = (): void => {
   window.dispatchEvent(new CustomEvent('silabos:role-required'));
@@ -91,7 +94,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (response.status === 409 && payload.message === ROLE_REQUIRED_MESSAGE) notifyRoleRequired();
 
   if (!response.ok) {
-    throw new ApiError(payload.message ?? 'No se pudo completar la solicitud.', response.status, payload.errors, payload);
+    throw new ApiError(payload.message ?? 'No se pudo completar la solicitud', response.status, payload.errors, payload);
   }
 
   return payload as T;
@@ -107,7 +110,7 @@ export async function apiBlob(path: string): Promise<Blob> {
 
   if (!response.ok) {
     const payload = (await response.json().catch(() => ({}))) as { message?: string; errors?: Record<string, string[]> };
-    throw new ApiError(payload.message ?? 'No se pudo descargar el archivo.', response.status, payload.errors ?? {});
+    throw new ApiError(payload.message ?? 'No se pudo descargar el archivo', response.status, payload.errors ?? {});
   }
 
   return response.blob();

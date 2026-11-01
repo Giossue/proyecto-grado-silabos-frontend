@@ -10,9 +10,9 @@ type Audience = 'docente' | 'coordinador' | 'bibliotecario';
 const props = defineProps<{ deadline: DashboardDeadline; audience: Audience }>();
 
 const tasks: Record<Audience, { task: string; upcoming: string; until: (due: string) => string }> = {
-  docente: { task: 'enviar sus sílabos a revisión', upcoming: 'La elaboración de sus sílabos inicia', until: (due) => `Podrá enviarlos a revisión hasta el ${due}.` },
-  coordinador: { task: 'recibir y revisar los sílabos de su carrera', upcoming: 'La elaboración de los sílabos inicia', until: (due) => `Los docentes podrán enviarlos hasta el ${due}.` },
-  bibliotecario: { task: 'revisar y firmar los sílabos', upcoming: 'La elaboración de los sílabos inicia', until: (due) => `Deben quedar revisados y firmados hasta el ${due}.` },
+  docente: { task: 'enviar sus sílabos a revisión', upcoming: 'La elaboración de sus sílabos inicia', until: (due) => `Podrá enviarlos a revisión hasta el ${due}` },
+  coordinador: { task: 'recibir y revisar los sílabos de su carrera', upcoming: 'La elaboración de los sílabos inicia', until: (due) => `Los docentes podrán enviarlos hasta el ${due}` },
+  bibliotecario: { task: 'revisar y firmar los sílabos', upcoming: 'La elaboración de los sílabos inicia', until: (due) => `Deben quedar revisados y firmados hasta el ${due}` },
 };
 
 const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'long', timeZone: 'UTC' });
@@ -20,9 +20,9 @@ const formatDate = (value: string): string => formatDateDisplay(value, { dateSty
 const overdue = computed(() => props.deadline.state === 'overdue');
 
 const overdueNotice: Record<Audience, (due: string) => { headline: string; detail: string }> = {
-  docente: (due) => ({ headline: 'Venció el plazo para enviar sus sílabos a revisión', detail: `Era hasta el ${due}. Pida una prórroga a Administración.` }),
-  coordinador: (due) => ({ headline: 'Venció el plazo de entrega de los sílabos', detail: `Era hasta el ${due}. Solo puede revisar lo ya enviado.` }),
-  bibliotecario: (due) => ({ headline: 'Venció el plazo de entrega de los sílabos', detail: `Era hasta el ${due}. Solo puede revisar lo ya enviado.` }),
+  docente: (due) => ({ headline: 'Venció el plazo para enviar sus sílabos a revisión', detail: `Era hasta el ${due}. Pida una prórroga a Administración` }),
+  coordinador: (due) => ({ headline: 'Venció el plazo de entrega de los sílabos', detail: `Era hasta el ${due}. Solo puede revisar lo ya enviado` }),
+  bibliotecario: (due) => ({ headline: 'Venció el plazo de entrega de los sílabos', detail: `Era hasta el ${due}. Solo puede revisar lo ya enviado` }),
 };
 
 const notice = computed((): { headline: string; detail: string | null } => {
@@ -37,7 +37,7 @@ const notice = computed((): { headline: string; detail: string | null } => {
     return { headline: `${upcoming} ${when}`, detail: until(due) };
   }
   if (toDue === 0) return { headline: `Hoy es el último día para ${task}`, detail: null };
-  return { headline: `${toDue === 1 ? 'Queda 1 día' : `Quedan ${toDue} días`} para ${task}`, detail: `Hasta el ${due}.` };
+  return { headline: `${toDue === 1 ? 'Queda 1 día' : `Quedan ${toDue} días`} para ${task}`, detail: `Hasta el ${due}` };
 });
 </script>
 

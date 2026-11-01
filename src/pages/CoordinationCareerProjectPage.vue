@@ -42,7 +42,7 @@ const load = async (): Promise<void> => {
         }
         data.value = await getScheduledSubjects();
     } catch (reason) {
-        loadError.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el proyecto de carrera.';
+        loadError.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el proyecto de carrera';
     } finally {
         loading.value = false;
     }
@@ -68,7 +68,7 @@ const open = (subject: Subject): void => {
     selected.value = subject;
     profileOpen.value = true;
 };
-const saved = async (message = 'Proyecto de carrera guardado.'): Promise<void> => {
+const saved = async (message = 'Proyecto de carrera guardado'): Promise<void> => {
     toast.success(message);
     await load();
 };
@@ -77,7 +77,7 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos." size="wide" :loading="!data">
+  <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos" size="wide" :loading="!data">
     <template v-if="data?.career.lock_reason" #banner><ProcessLockAlert banner :lock="data.career.lock" /></template>
     <template #actions><FichaImportDialog :disabled="Boolean(data?.career.lock_reason)" @applied="saved" /></template>
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
@@ -99,7 +99,7 @@ onMounted(() => { void load(); });
       </ClientFilterBar>
       </CardContent></Card>
       <div class="flex flex-col gap-2">
-        <p v-if="!groups.length" class="py-6 text-center text-sm text-muted-foreground">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda.' : 'La malla todavía no tiene materias.' }}</p>
+        <p v-if="!groups.length" class="py-6 text-center text-sm text-muted-foreground">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda' : 'La malla todavía no tiene materias' }}</p>
         <Collapsible v-for="group in groups" :key="`${group.cycle}-${filter.active.value}`" :default-open="filter.active.value" class="group/cycle rounded-md ring-1 ring-surface-ring bg-card">
           <CollapsibleTrigger class="flex w-full items-center gap-2 px-4 py-3 text-left font-semibold">
             <span class="flex-1">{{ group.cycle === 'Sin ciclo' ? group.cycle : `Ciclo ${group.cycle}` }}</span>

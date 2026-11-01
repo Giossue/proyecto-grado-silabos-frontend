@@ -12,7 +12,7 @@ import { PURGE_CANCELLED_MESSAGE, getSubjectProfile, saveSubjectProfile, updateC
 import { usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
 
 const purgeError = () => new ApiError('purga', 422, {
-  purge_required: ['Este cambio reemplazará 1 sílabo.'],
+  purge_required: ['Este cambio reemplazará 1 sílabo'],
   purge_count: ['1'],
 });
 
@@ -25,7 +25,7 @@ describe('career academics API purge confirmation', () => {
 
     const result = updateCurriculumConfiguration('career-1', { cycle_count: 9 });
     await vi.waitFor(() => expect(dialog.open.value).toBe(true));
-    expect(dialog.message.value).toBe('Este cambio reemplazará 1 sílabo.');
+    expect(dialog.message.value).toBe('Este cambio reemplazará 1 sílabo');
     await dialog.confirm();
 
     await expect(result).resolves.toEqual({ message: 'ok' });

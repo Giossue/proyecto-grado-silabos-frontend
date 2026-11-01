@@ -35,13 +35,13 @@ describe('ManageTwoFactor', () => {
   });
 
   it('no presenta una cuenta como desprotegida si falla la consulta inicial', async () => {
-    vi.mocked(getTwoFactorStatus).mockRejectedValue(new ApiError('No se pudo consultar la protección.', 503));
+    vi.mocked(getTwoFactorStatus).mockRejectedValue(new ApiError('No se pudo consultar la protección', 503));
     const wrapper = mount(ManageTwoFactor);
     await flushPromises();
 
     expect(wrapper.find('[aria-busy="true"]').exists()).toBe(false);
     expect(wrapper.emitted('loading')).toEqual([[true], [false]]);
-    expect(wrapper.text()).toContain('No se pudo consultar la protección.');
+    expect(wrapper.text()).toContain('No se pudo consultar la protección');
     expect(wrapper.findAll('button').some((button) => /Activar 2FA|Desactivar 2FA/.test(button.text()))).toBe(false);
   });
 

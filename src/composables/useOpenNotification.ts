@@ -16,13 +16,13 @@ export function useOpenNotification() {
             notification.leido_en ??= new Date().toISOString();
             if (result.role_changed) await sessionState.load(true);
             if (!result.path) {
-                toast.info(result.message ?? 'Este aviso no tiene una pantalla asociada.');
+                toast.info(result.message ?? 'Este aviso no tiene una pantalla asociada');
                 return false;
             }
             await router.push(result.path);
             return true;
         } catch {
-            toast.error('No se pudo abrir la notificación.');
+            toast.error('No se pudo abrir la notificación');
             return false;
         } finally {
             openingId.value = null;

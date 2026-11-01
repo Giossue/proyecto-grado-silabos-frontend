@@ -64,7 +64,7 @@ const removeFromCareer = async (): Promise<void> => {
     removing.value = null;
     emit("changed", result.message);
   } catch (reason) {
-    removeError.value = reason instanceof ApiError ? reason.message : "No se pudo quitar al docente de la carrera.";
+    removeError.value = reason instanceof ApiError ? reason.message : "No se pudo quitar al docente de la carrera";
   } finally {
     removeProcessing.value = false;
   }
@@ -77,7 +77,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
     sheetOpen.value = false;
     emit("changed", result.message);
   } catch (reason) {
-    resendError.value = reason instanceof ApiError ? reason.message : "No se pudo reenviar la invitación.";
+    resendError.value = reason instanceof ApiError ? reason.message : "No se pudo reenviar la invitación";
   } finally {
     resendingId.value = null;
   }
@@ -92,7 +92,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
     <FeedbackAlert v-if="resendError" :message="resendError" />
     <Table label="Docentes de la carrera"><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader>
       <TableBody>
-        <TableEmpty v-if="!items.length" :colspan="3">{{ filter.active.value ? "Ningún docente coincide con la búsqueda." : "No existen docentes en esta carrera." }}</TableEmpty>
+        <TableEmpty v-if="!items.length" :colspan="3">{{ filter.active.value ? "Ningún docente coincide con la búsqueda" : "No existen docentes en esta carrera" }}</TableEmpty>
         <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="activateRow($event, () => openEditor(item))" @keydown.enter.self.prevent="openEditor(item)" @keydown.space.self.prevent="openEditor(item)">
           <TableCell>{{ item.name }}</TableCell>
           <TableCell>{{ item.email }}</TableCell>
@@ -106,7 +106,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Quitar a {{ removing?.name }} de la carrera</DialogTitle>
-          <DialogDescription>Deja de ser docente de esta carrera y sus paralelos quedan sin docente. Los sílabos se conservan; quien se asigne después empieza desde cero. Su cuenta y sus otros roles no cambian.</DialogDescription>
+          <DialogDescription>Deja de ser docente de esta carrera y sus paralelos quedan sin docente. Los sílabos se conservan; quien se asigne después empieza desde cero. Su cuenta y sus otros roles no cambian</DialogDescription>
         </DialogHeader>
         <FeedbackAlert v-if="removeError" :message="removeError" />
         <DialogFooter>

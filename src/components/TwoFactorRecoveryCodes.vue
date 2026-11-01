@@ -31,7 +31,7 @@ const regenerate = (): void => {
     <Card class="w-full">
         <CardHeader>
             <CardTitle class="flex gap-3"><LockKeyhole class="size-4" />Códigos de recuperación 2FA</CardTitle>
-            <CardDescription>Permiten recuperar el acceso si pierde el dispositivo 2FA. Guárdelos en un gestor de contraseñas seguro.</CardDescription>
+            <CardDescription>Permiten recuperar el acceso si pierde el dispositivo 2FA. Guárdelos en un gestor de contraseñas seguro</CardDescription>
         </CardHeader>
         <CardContent class="flex flex-col gap-4">
             <Button class="w-fit" @click="toggle">
@@ -40,7 +40,7 @@ const regenerate = (): void => {
             </Button>
             <div v-if="visible" ref="section" class="flex flex-col gap-4">
                 <div class="grid gap-1 rounded-md bg-muted p-4 font-mono text-sm">
-                    <div v-if="codes.length === 0" class="text-muted-foreground">Genere códigos nuevos para mostrarlos aquí.</div>
+                    <div v-if="codes.length === 0" class="text-muted-foreground">Genere códigos nuevos para mostrarlos aquí</div>
                     <div v-for="code in codes" v-else :key="code">{{ code }}</div>
                 </div>
                 <form class="grid gap-3" @submit.prevent="regenerate">

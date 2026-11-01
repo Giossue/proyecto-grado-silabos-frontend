@@ -42,7 +42,7 @@ const submit = async (): Promise<void> => {
       warnings.value = Object.values(reason.errors).flat();
       error.value = warnings.value.length > 1 ? 'Todavía no puede abrir la convocatoria:' : (warnings.value[0] ?? reason.message);
     } else {
-      error.value = 'No se pudo abrir la convocatoria.';
+      error.value = 'No se pudo abrir la convocatoria';
     }
   } finally {
     processing.value = false;

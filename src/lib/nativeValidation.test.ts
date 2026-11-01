@@ -29,9 +29,9 @@ describe('installNativeValidation', () => {
     const email = document.querySelector<HTMLInputElement>('#email')!;
     const clave = document.querySelector<HTMLInputElement>('#clave')!;
     expect(email.getAttribute('aria-invalid')).toBe('true');
-    expect(email.nextElementSibling?.textContent).toBe('Complete este campo.');
+    expect(email.nextElementSibling?.textContent).toBe('Complete este campo');
     expect(email.nextElementSibling?.getAttribute('role')).toBe('alert');
-    expect(clave.parentElement?.nextElementSibling?.textContent).toBe('Complete este campo.');
+    expect(clave.parentElement?.nextElementSibling?.textContent).toBe('Complete este campo');
     expect(document.activeElement).toBe(email);
   });
 
@@ -41,7 +41,7 @@ describe('installNativeValidation', () => {
     submit();
     await Promise.resolve();
 
-    expect(email.nextElementSibling?.textContent).toBe('Ingrese un correo válido.');
+    expect(email.nextElementSibling?.textContent).toBe('Ingrese un correo válido');
     email.value = 'ana@ueb.edu.ec';
     email.dispatchEvent(new Event('input', { bubbles: true }));
 

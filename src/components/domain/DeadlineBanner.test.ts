@@ -19,7 +19,7 @@ describe('DeadlineBanner', () => {
   it('dice para qué son los días y hasta cuándo, sin barra ni botones', () => {
     const wrapper = text({});
 
-    expect(wrapper.get('[role="status"]').text()).toBe('Quedan 2 días para enviar sus sílabos a revisiónHasta el 28 de septiembre de 2026.');
+    expect(wrapper.get('[role="status"]').text()).toBe('Quedan 2 días para enviar sus sílabos a revisiónHasta el 28 de septiembre de 2026');
     expect(wrapper.find('[role="progressbar"], button, a').exists()).toBe(false);
   });
 
@@ -34,23 +34,23 @@ describe('DeadlineBanner', () => {
   });
 
   it.each([
-    ['coordinador', 'Quedan 2 días para recibir y revisar los sílabos de su carreraHasta el 28 de septiembre de 2026.'],
-    ['bibliotecario', 'Quedan 2 días para revisar y firmar los sílabosHasta el 28 de septiembre de 2026.'],
+    ['coordinador', 'Quedan 2 días para recibir y revisar los sílabos de su carreraHasta el 28 de septiembre de 2026'],
+    ['bibliotecario', 'Quedan 2 días para revisar y firmar los sílabosHasta el 28 de septiembre de 2026'],
   ] as const)('dice a %s qué le toca hacer antes del plazo', (audience, notice) => {
     expect(text({}, audience).text()).toBe(notice);
   });
 
   it('avisa a Biblioteca, antes de empezar, hasta cuándo deben quedar firmados', () => {
-    expect(text({ state: 'upcoming', days_until_start: 3 }, 'bibliotecario').text()).toBe('La elaboración de los sílabos inicia en 3 díasDeben quedar revisados y firmados hasta el 28 de septiembre de 2026.');
+    expect(text({ state: 'upcoming', days_until_start: 3 }, 'bibliotecario').text()).toBe('La elaboración de los sílabos inicia en 3 díasDeben quedar revisados y firmados hasta el 28 de septiembre de 2026');
   });
 
   it('con el plazo vencido sale en rojo y dice a cada rol qué le queda', () => {
     const teacher = text({ state: 'overdue' });
     expect(teacher.get('[role="status"]').classes()).toContain('bg-destructive/10');
     expect(teacher.get('[role="status"]').classes()).not.toContain('bg-notice');
-    expect(teacher.text()).toBe('Venció el plazo para enviar sus sílabos a revisiónEra hasta el 28 de septiembre de 2026. Pida una prórroga a Administración.');
+    expect(teacher.text()).toBe('Venció el plazo para enviar sus sílabos a revisiónEra hasta el 28 de septiembre de 2026. Pida una prórroga a Administración');
     for (const audience of ['coordinador', 'bibliotecario'] as const) {
-      expect(text({ state: 'overdue' }, audience).text()).toBe('Venció el plazo de entrega de los sílabosEra hasta el 28 de septiembre de 2026. Solo puede revisar lo ya enviado.');
+      expect(text({ state: 'overdue' }, audience).text()).toBe('Venció el plazo de entrega de los sílabosEra hasta el 28 de septiembre de 2026. Solo puede revisar lo ya enviado');
     }
     expect(text({}).get('[role="status"]').classes()).toContain('bg-notice');
   });

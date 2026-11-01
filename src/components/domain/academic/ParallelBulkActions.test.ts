@@ -54,7 +54,7 @@ describe('ParallelBulkActions', () => {
 
         expect(api.createParallels).toHaveBeenCalledWith({ subject_id: 's1', codes: ['B'], shift: 'matutina', user_id: 't1' });
         expect(api.createParallels).toHaveBeenCalledWith({ subject_id: 's2', codes: ['A'], shift: 'matutina', user_id: 't1' });
-        expect(wrapper.emitted('changed')?.[0]).toEqual(['Paralelo agregado a 2 materias.']);
+        expect(wrapper.emitted('changed')?.[0]).toEqual(['Paralelo agregado a 2 materias']);
         expect(wrapper.emitted('clear')).toHaveLength(1);
         wrapper.unmount();
     });
@@ -68,7 +68,7 @@ describe('ParallelBulkActions', () => {
 
         expect(api.createParallels).not.toHaveBeenCalled();
         expect(wrapper.emitted('clear')).toBeUndefined();
-        expect(document.body.textContent).toContain('Elija la jornada y el docente de los nuevos paralelos.');
+        expect(document.body.textContent).toContain('Elija la jornada y el docente de los nuevos paralelos');
         wrapper.unmount();
     });
 

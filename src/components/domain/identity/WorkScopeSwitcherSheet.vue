@@ -54,7 +54,7 @@ const select = async (roleAssignmentId: string): Promise<void> => {
     open.value = false;
     await router.push(roleEntry(session.active_role?.code));
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cambiar el ámbito de trabajo.';
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cambiar el ámbito de trabajo';
   } finally {
     pendingRoleId.value = null;
   }

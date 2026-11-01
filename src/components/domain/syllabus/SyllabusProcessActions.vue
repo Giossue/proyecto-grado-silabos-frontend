@@ -38,19 +38,19 @@ const deleteError = ref<string | null>(null);
 const dialogs: Record<Transition, { title: string; description: string; label: string; icon: Component; destructive?: boolean }> = {
   pausar: {
     title: 'Pausar la convocatoria',
-    description: 'Se detienen los envíos y la edición docente en todas las carreras hasta que la reanude.',
+    description: 'Se detienen los envíos y la edición docente en todas las carreras hasta que la reanude',
     label: 'Pausar',
     icon: Pause,
   },
   reanudar: {
     title: 'Reanudar la convocatoria',
-    description: 'Los envíos vuelven a admitirse y la plantilla vuelve a quedar protegida.',
+    description: 'Los envíos vuelven a admitirse y la plantilla vuelve a quedar protegida',
     label: 'Reanudar',
     icon: Play,
   },
   cerrar: {
     title: 'Cerrar la convocatoria',
-    description: 'Los sílabos del período quedan guardados solo para consulta: ya no se editan, envían ni revisan, y un cambio de docente no los borra. Esta acción no se deshace.',
+    description: 'Los sílabos del período quedan guardados solo para consulta: ya no se editan, envían ni revisan, y un cambio de docente no los borra. Esta acción no se deshace',
     label: 'Cerrar',
     icon: Lock,
     destructive: true,
@@ -78,7 +78,7 @@ const confirm = async (): Promise<void> => {
       }
       return;
     }
-    error.value = cause instanceof ApiError ? cause.message : 'No se pudo cambiar el estado del proceso.';
+    error.value = cause instanceof ApiError ? cause.message : 'No se pudo cambiar el estado del proceso';
   } finally {
     processing.value = false;
   }
@@ -115,7 +115,7 @@ const remove = async (): Promise<void> => {
   } catch (cause) {
     deleteError.value = cause instanceof ApiError
       ? (cause.errors.process?.[0] ?? cause.message)
-      : 'No se pudo eliminar la convocatoria institucional.';
+      : 'No se pudo eliminar la convocatoria institucional';
   } finally {
     deleting.value = false;
   }
@@ -139,7 +139,7 @@ const remove = async (): Promise<void> => {
       <DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader>
       <form class="flex flex-col gap-4" @submit.prevent="confirm">
         <template v-if="templateImpact">
-          <p>El administrador cambió la plantilla durante la pausa. Al reanudar se rehacen desde cero todos los sílabos de este período y se elimina su historial.</p>
+          <p>El administrador cambió la plantilla durante la pausa. Al reanudar se rehacen desde cero todos los sílabos de este período y se elimina su historial</p>
           <table class="w-full text-sm">
             <caption class="sr-only">Cantidad de sílabos que se rehacen, por estado</caption>
             <tbody>
@@ -159,7 +159,7 @@ const remove = async (): Promise<void> => {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Eliminar convocatoria institucional</DialogTitle>
-        <DialogDescription>La convocatoria se borra de verdad, con las de cada carrera y los sílabos que estén en borrador. Solo se permite si ningún docente ha enviado su sílabo: si ya hay sílabos enviados, ciérrala para conservarla como historial. El período queda libre para abrir otra convocatoria. Esta acción no se puede deshacer.</DialogDescription>
+        <DialogDescription>La convocatoria se borra de verdad, con las de cada carrera y los sílabos que estén en borrador. Solo se permite si ningún docente ha enviado su sílabo: si ya hay sílabos enviados, ciérrala para conservarla como historial. El período queda libre para abrir otra convocatoria. Esta acción no se puede deshacer</DialogDescription>
       </DialogHeader>
       <Alert v-if="deleteError" variant="destructive"><AlertDescription>{{ deleteError }}</AlertDescription></Alert>
       <DialogFooter>

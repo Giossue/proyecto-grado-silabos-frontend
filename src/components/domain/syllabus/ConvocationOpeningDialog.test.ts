@@ -42,7 +42,7 @@ describe('ConvocationOpeningDialog', () => {
   });
 
   it('muestra el impedimento informado por el servidor y permite intentarlo otra vez', async () => {
-    vi.mocked(createConvocation).mockRejectedValueOnce(new ApiError('La plantilla institucional está incompleta.', 422));
+    vi.mocked(createConvocation).mockRejectedValueOnce(new ApiError('La plantilla institucional está incompleta', 422));
     const wrapper = mount(ConvocationOpeningDialog, {
       attachTo: document.body,
       props: { open: true, processId: 'process-1', period: '2026-2027' },
@@ -54,7 +54,7 @@ describe('ConvocationOpeningDialog', () => {
     expect(submit?.disabled).toBe(false);
     submit?.click();
     await flushPromises();
-    expect(document.body.textContent).toContain('La plantilla institucional está incompleta.');
+    expect(document.body.textContent).toContain('La plantilla institucional está incompleta');
     expect(wrapper.emitted('opened')).toBeUndefined();
     expect(submit?.disabled).toBe(false);
     wrapper.unmount();

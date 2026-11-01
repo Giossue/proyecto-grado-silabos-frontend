@@ -45,7 +45,7 @@ const remove = (requirement: CurriculumRequirement): void => {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            <TableEmpty v-if="requirements.length === 0" :colspan="editable ? 4 : 3">La malla todavía no tiene relaciones.</TableEmpty>
+                            <TableEmpty v-if="requirements.length === 0" :colspan="editable ? 4 : 3">La malla todavía no tiene relaciones</TableEmpty>
                             <TableRow v-for="requirement in requirements" v-else :key="requirement.id">
                                 <TableCell>{{ subjectName(requirement.requirement_id) }}</TableCell>
                                 <TableCell>{{ subjectName(requirement.subject_id) }}</TableCell>

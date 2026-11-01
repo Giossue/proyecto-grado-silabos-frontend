@@ -37,7 +37,7 @@ const load = async (): Promise<void> => {
   } catch (reason) {
     if (reason instanceof ApiError && reason.status === 401) { await router.replace(paths.login); return; }
     if (reason instanceof ApiError && reason.status === 404) { await router.replace(paths.teacher.history); return; }
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el historial de la carrera.';
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo cargar el historial de la carrera';
   }
 };
 const formatSavedAt = (value: string | null): string => value ? formatDateDisplay(value, { dateStyle: 'medium', timeStyle: 'short' }) : 'Sin guardados';
@@ -46,7 +46,7 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera." size="wide">
+  <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera" size="wide">
     <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.teacher.history)"><ArrowLeft aria-hidden="true" />Volver al historial</Button></template>
     <template v-if="careerName" #meta><span class="text-sm font-semibold">{{ careerName }}</span></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />

@@ -92,12 +92,12 @@ const signOpen = ref(false);
 const localBlockReason = ref<string | null>(null);
 const copySource = ref<{ id: string; parallel: string } | null>(null);
 const saveFailed = ref(false);
-const PAUSED_MESSAGE = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude.";
+const PAUSED_MESSAGE = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude";
 
 const editBlockReason = computed<string | null>(() =>
   localBlockReason.value ??
   (syllabus.value?.editable === false
-    ? syllabus.value.edit_block_reason ?? "El sílabo no admite cambios en este momento."
+    ? syllabus.value.edit_block_reason ?? "El sílabo no admite cambios en este momento"
     : null),
 );
 const canEdit = computed(() =>
@@ -232,7 +232,7 @@ const load = async (): Promise<void> => {
       await router.replace(paths.teacher.syllabi);
       return;
     }
-    error.value = reason instanceof ApiError ? reason.message : "No se pudo cargar el sílabo.";
+    error.value = reason instanceof ApiError ? reason.message : "No se pudo cargar el sílabo";
   }
 };
 
@@ -250,7 +250,7 @@ const start = async (): Promise<void> => {
     error.value =
       reason instanceof ApiError
         ? reason.message
-        : "No se pudo iniciar el borrador.";
+        : "No se pudo iniciar el borrador";
   } finally {
     starting.value = false;
   }
@@ -265,13 +265,13 @@ const handleSaveFailure = (reason: unknown): void => {
   saveFailed.value = true;
   if (reason instanceof ApiError && (reason.status === 401 || reason.status === 419)) {
     handleUnauthorized(router);
-    error.value = "Su sesión caducó. Inicie sesión de nuevo para guardar los cambios pendientes.";
+    error.value = "Su sesión caducó. Inicie sesión de nuevo para guardar los cambios pendientes";
     return;
   }
   if (reason instanceof ApiError && reason.status === 409) {
     conflict.value = true;
     error.value =
-      "El borrador cambió en otra sesión. Recárguelo antes de continuar para evitar sobrescribir cambios.";
+      "El borrador cambió en otra sesión. Recárguelo antes de continuar para evitar sobrescribir cambios";
     return;
   }
   if (reason instanceof ApiError && reason.status === 403) {
@@ -281,7 +281,7 @@ const handleSaveFailure = (reason: unknown): void => {
   error.value =
     reason instanceof ApiError
       ? reason.message
-      : "No se pudo guardar el cambio.";
+      : "No se pudo guardar el cambio";
 };
 
 const queueSave = (markPending: () => void, operation: () => Promise<void>): void => {
@@ -381,7 +381,7 @@ const confirmSubmit = (): void => {
 };
 
 const isSignatureFailure = (reason: unknown): boolean =>
-  reason instanceof ApiError ? Object.keys(reason.errors).some((key) => key === 'signature' || key.startsWith('signature.')) : true;
+  reason instanceof ApiError ? Object.keys(reason.errors).some((key) => key === 'signature' || key.startsWith('signature')) : true;
 
 const submitKey = attemptKey();
 const submit = async (sign: StatementSigner | null = null): Promise<void> => {
@@ -406,7 +406,7 @@ const submit = async (sign: StatementSigner | null = null): Promise<void> => {
     signOpen.value = false;
     invalidateValidation();
     validationResults.value = [];
-    toast.success("Sílabo enviado correctamente.");
+    toast.success("Sílabo enviado correctamente");
     await router.push(paths.teacher.syllabi);
   } catch (reason) {
     if (sign && isSignatureFailure(reason)) throw reason;
@@ -426,7 +426,7 @@ const submit = async (sign: StatementSigner | null = null): Promise<void> => {
       localBlockReason.value = PAUSED_MESSAGE;
       return;
     }
-    error.value = reason instanceof ApiError ? reason.message : "No se pudo enviar el sílabo.";
+    error.value = reason instanceof ApiError ? reason.message : "No se pudo enviar el sílabo";
   } finally {
     processingAction.value = false;
   }
@@ -451,7 +451,7 @@ const copyFromSource = async (): Promise<void> => {
       localBlockReason.value = PAUSED_MESSAGE;
       return;
     }
-    error.value = reason instanceof ApiError ? reason.message : "No se pudo copiar el sílabo.";
+    error.value = reason instanceof ApiError ? reason.message : "No se pudo copiar el sílabo";
   } finally {
     processingAction.value = false;
   }
@@ -521,7 +521,7 @@ onBeforeUnmount(() => {
       <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== ''" @click="askSubmit"><Spinner v-if="processingAction" /><FileSignature v-else-if="mustSign" aria-hidden="true" /><Send v-else aria-hidden="true" />{{ submitLabel }}</Button></span></TooltipTrigger><TooltipContent>{{ withoutFinalPeriod(submitHint || submitLabel) }}</TooltipContent></Tooltip></span>
     </template>
 
-    <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron.' : '' }}</span>
+    <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron' : '' }}</span>
     <Alert v-if="error" class="feedback error" variant="destructive"><AlertTitle>No se pudo continuar</AlertTitle><AlertDescription class="flex flex-wrap items-center justify-between gap-3"><span>{{ error }}</span><Button v-if="conflict" type="button" variant="outline" @click="load">Recargar borrador</Button></AlertDescription></Alert>
     <LoadingSkeleton v-if="(!syllabus || canStart) && !error" :variant="previewHint && !syllabus ? 'preview' : 'syllabus'" />
 
@@ -557,7 +557,7 @@ onBeforeUnmount(() => {
                     <AccordionContent class="flex flex-col gap-3 px-1 pt-1">
                       <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                         <FieldLabel :for="`input-${field.id}`" required class="sr-only">{{ fieldTitle(field, section) }}</FieldLabel>
-                        <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene del proyecto de carrera; puede ajustarlo.</FieldDescription>
+                        <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene del proyecto de carrera; puede ajustarlo</FieldDescription>
                         <FieldResponseEditor required :template="field.template" :label="fieldTitle(field, section)" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
                       </Field>
                       <FieldView v-else :id="`field-${field.id}`" :field="field" bare />
@@ -609,7 +609,7 @@ onBeforeUnmount(() => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Copiar desde el paralelo {{ copySource?.parallel }}?</DialogTitle>
-          <DialogDescription>Todo lo que escribió en este sílabo se reemplazará por lo del paralelo {{ copySource?.parallel }}. Cada paralelo se envía y se firma por separado.</DialogDescription>
+          <DialogDescription>Todo lo que escribió en este sílabo se reemplazará por lo del paralelo {{ copySource?.parallel }}. Cada paralelo se envía y se firma por separado</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="copySource = null">Cancelar</Button>
@@ -618,5 +618,5 @@ onBeforeUnmount(() => {
       </DialogContent>
     </Dialog>
   </PageFrame>
-  <UnsavedChangesDialog :open="discardOpen" title="Hay cambios sin guardar" description="No se pudieron guardar los últimos cambios. Si sale, perderá esos cambios." discard-label="Salir y descartar cambios" @continue="decideDiscard(false)" @discard="decideDiscard(true)" @update:open="(open) => { if (!open) decideDiscard(false); }" />
+  <UnsavedChangesDialog :open="discardOpen" title="Hay cambios sin guardar" description="No se pudieron guardar los últimos cambios. Si sale, perderá esos cambios" discard-label="Salir y descartar cambios" @continue="decideDiscard(false)" @discard="decideDiscard(true)" @update:open="(open) => { if (!open) decideDiscard(false); }" />
 </template>

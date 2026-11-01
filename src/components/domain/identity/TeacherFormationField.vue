@@ -20,7 +20,7 @@ const model = defineModel<string>({ required: true });
             placeholder="Ej. Ingeniero en Sistemas, Magíster en…; cátedras impartidas…; proyectos de investigación…"
         />
         <p v-if="!hideHint" class="text-sm text-muted-foreground">
-            La escribe una sola vez: todos sus sílabos la copian. Si la cambia, se actualizan los sílabos que aún no ha enviado.
+            La escribe una sola vez: todos sus sílabos la copian. Si la cambia, se actualizan los sílabos que aún no ha enviado
         </p>
         <InputError :id="`${props.id}-error`" :message="error" />
     </div>

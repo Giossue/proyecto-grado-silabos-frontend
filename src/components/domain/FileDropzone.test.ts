@@ -40,7 +40,7 @@ describe('FileDropzone', () => {
 
     await selectFile(wrapper, new File(['pdf'], 'firma.pdf', { type: 'application/pdf' }));
     expect(wrapper.emitted('update:modelValue')?.[1]).toEqual([null]);
-    expect(wrapper.emitted('validation-error')?.at(-1)).toEqual(['Seleccione un archivo de firma (.p12 o .pfx).']);
+    expect(wrapper.emitted('validation-error')?.at(-1)).toEqual(['Seleccione un archivo de firma (.p12 o .pfx)']);
   });
 
   it('oculta el recuadro cuando ya hay un archivo y lo muestra otra vez al quitarlo', async () => {
@@ -66,7 +66,7 @@ describe('FileDropzone', () => {
     await selectFile(wrapper, new File(['pdf'], 'facultad.pdf', { type: 'application/pdf' }));
 
     expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([null]);
-    expect(wrapper.emitted('validation-error')?.[0]).toEqual(['Seleccione un archivo PNG.']);
+    expect(wrapper.emitted('validation-error')?.[0]).toEqual(['Seleccione un archivo PNG']);
   });
 
   it('acepta varios PDF juntos sin sustituir el modelo de un archivo de otros formularios', async () => {

@@ -55,7 +55,7 @@ const createRequirement = async (type: 'prerrequisito' | 'correquisito'): Promis
         });
         emit('changed', result.message);
     } catch (reason) {
-        toast.error(reason instanceof ApiError ? reason.message : 'No se pudo crear la relación.');
+        toast.error(reason instanceof ApiError ? reason.message : 'No se pudo crear la relación');
     } finally {
         savingRequirement.value = false;
         pendingConnection.value = null;
@@ -67,7 +67,7 @@ watch(pendingConnection, (pending) => {
     const requirementCycle = props.subjectCycle(pending.sourceId);
     const subjectCycle = props.subjectCycle(pending.targetId);
     if (requirementCycle === null || subjectCycle === null || requirementCycle > subjectCycle) {
-        toast.error('Una materia solo puede requerir otra de un ciclo anterior (prerrequisito) o del mismo ciclo (correquisito).');
+        toast.error('Una materia solo puede requerir otra de un ciclo anterior (prerrequisito) o del mismo ciclo (correquisito)');
         pendingConnection.value = null;
         return;
     }
@@ -84,10 +84,10 @@ const deleteRequirement = async (): Promise<void> => {
     deletingRequirement.value = true;
     try {
         const result = await deleteSubjectRequirement(props.curriculumId, requirement.id);
-        toast.success('Relación académica eliminada.');
+        toast.success('Relación académica eliminada');
         emit('changed', result.message);
     } catch (reason) {
-        toast.error(reason instanceof ApiError ? reason.message : 'No se pudo eliminar la relación.');
+        toast.error(reason instanceof ApiError ? reason.message : 'No se pudo eliminar la relación');
     } finally {
         deletingRequirement.value = false;
         selectedRequirement.value = null;
@@ -121,7 +121,7 @@ const deleteRequirement = async (): Promise<void> => {
                     }}» → «{{
                         subjectName(selectedRequirement?.subject_id)
                     }}». Si la relación se creó por error, puede
-                    eliminarla; las materias no se modifican.
+                    eliminarla; las materias no se modifican
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter>

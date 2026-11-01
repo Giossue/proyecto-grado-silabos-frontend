@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
-/** Los tooltips no llevan punto final. */
+/** Ningún texto de la interfaz lleva punto final. */
 export const withoutFinalPeriod = (text: string): string => text.replace(/\.\s*$/, '');
 
 export type NavigableHref = string | { url: string };

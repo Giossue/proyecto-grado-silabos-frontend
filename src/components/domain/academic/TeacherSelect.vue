@@ -36,7 +36,7 @@ const select = (value: string): void => {
       <Command :model-value="model">
         <CommandInput placeholder="Buscar por nombre" aria-label="Buscar docente por nombre" />
         <CommandList :id="listId" :aria-label="label">
-          <CommandEmpty role="status">No se encontraron docentes.</CommandEmpty>
+          <CommandEmpty role="status">No se encontraron docentes</CommandEmpty>
           <CommandGroup>
             <CommandItem v-for="teacher in teachers" :key="teacher.id" :value="teacher.id" @select="select(teacher.id)">
               {{ teacher.name }}

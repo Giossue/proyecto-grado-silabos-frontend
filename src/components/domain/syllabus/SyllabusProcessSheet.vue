@@ -74,7 +74,7 @@ const submit = async (): Promise<void> => {
     :disabled="props.disabled"
     :trigger-label="triggerLabel"
     title="Abrir convocatoria institucional"
-    :description="period ? `Elija las fechas de elaboración del período ${period.codigo}.` : 'Fechas de inicio y entrega de los sílabos para todas las carreras.'"
+    :description="period ? `Elija las fechas de elaboración del período ${period.codigo}` : 'Fechas de inicio y entrega de los sílabos para todas las carreras'"
     :show-trigger="display !== 'menu'"
   >
     <template #default="{ close }">
@@ -84,7 +84,7 @@ const submit = async (): Promise<void> => {
           <Field v-if="period">
             <FieldLabel>Periodo académico</FieldLabel>
             <div class="rounded-md ring-1 ring-surface-ring bg-muted/30 px-3 py-2 text-sm">{{ period.codigo }}</div>
-            <p class="text-sm text-muted-foreground">Se fija desde el período seleccionado y no se vuelve a elegir aquí.</p>
+            <p class="text-sm text-muted-foreground">Se fija desde el período seleccionado y no se vuelve a elegir aquí</p>
           </Field>
           <Field v-else :data-invalid="Boolean(errors.period_id)">
             <FieldLabel for="process-period" required>Periodo académico</FieldLabel>
@@ -97,13 +97,13 @@ const submit = async (): Promise<void> => {
           <Field :data-invalid="Boolean(errors.starts_at)">
             <FieldLabel for="process-starts" required>Inicio de la elaboración</FieldLabel>
             <DatePicker id="process-starts" v-model="form.starts_at" :min-value="todayIso" :max-value="periodEnd" required :aria-invalid="Boolean(errors.starts_at)" />
-            <p class="text-sm text-muted-foreground">Elija cuándo comienza la elaboración; no se copia el inicio de clases.</p>
+            <p class="text-sm text-muted-foreground">Elija cuándo comienza la elaboración; no se copia el inicio de clases</p>
             <FieldError :errors="errors.starts_at" />
           </Field>
           <Field :data-invalid="Boolean(errors.due_at)">
             <FieldLabel for="process-due" required>Fecha límite de entrega</FieldLabel>
             <DatePicker id="process-due" v-model="form.due_at" :min-value="dueMinimum" :max-value="periodEnd" required :aria-invalid="Boolean(errors.due_at)" />
-            <p class="text-sm text-muted-foreground">Esta fecha se heredará en la convocatoria de cada carrera.</p>
+            <p class="text-sm text-muted-foreground">Esta fecha se heredará en la convocatoria de cada carrera</p>
             <FieldError :errors="errors.due_at" />
           </Field>
           <FormSheetActions :close="close" :processing="processing" :icon="CalendarPlus" label="Abrir convocatoria" />
@@ -113,7 +113,7 @@ const submit = async (): Promise<void> => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Abrir convocatoria</DialogTitle>
-            <DialogDescription>Una vez abierta, sus fechas no se pueden editar. Los docentes conservarán lo que escribieron en el período anterior, salvo que la plantilla haya cambiado: en ese caso empiezan de cero.</DialogDescription>
+            <DialogDescription>Una vez abierta, sus fechas no se pueden editar. Los docentes conservarán lo que escribieron en el período anterior, salvo que la plantilla haya cambiado: en ese caso empiezan de cero</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>

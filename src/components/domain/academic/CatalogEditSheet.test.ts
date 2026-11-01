@@ -148,7 +148,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
     await save();
 
     expect(updateAcademicRecord).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain('Marque al menos una biblioteca.');
+    expect(document.body.textContent).toContain('Marque al menos una biblioteca');
     wrapper.unmount();
   });
 

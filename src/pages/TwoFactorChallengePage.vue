@@ -24,12 +24,12 @@ const pending = ref(false);
 const content = computed(() => showRecoveryInput.value
   ? {
       title: 'Código de recuperación',
-      description: 'Confirme el acceso con uno de sus códigos de recuperación.',
+      description: 'Confirme el acceso con uno de sus códigos de recuperación',
       buttonText: 'usar un código de autenticación',
     }
   : {
       title: 'Código de autenticación',
-      description: 'Ingrese el código proporcionado por su aplicación de autenticación.',
+      description: 'Ingrese el código proporcionado por su aplicación de autenticación',
       buttonText: 'usar un código de recuperación',
     });
 
@@ -56,7 +56,7 @@ const submit = async (): Promise<void> => {
       errors.value = reason.errors;
       error.value = reason.message;
     } else {
-      error.value = 'No se pudo verificar el código.';
+      error.value = 'No se pudo verificar el código';
     }
   } finally {
     pending.value = false;

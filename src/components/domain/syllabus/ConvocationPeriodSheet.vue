@@ -71,7 +71,7 @@ const submit = async (): Promise<void> => {
     errors.value = {};
     try {
         let periodId = createdPeriodId.value;
-        let message = 'Periodo académico creado.';
+        let message = 'Periodo académico creado';
         if (!periodId) {
             const period = await createAcademicRecord('periodo', {
                 starts_on: form.value.starts_on,
@@ -110,7 +110,7 @@ const submit = async (): Promise<void> => {
                     <Transition :name="forward ? 'step-next' : 'step-back'" mode="out-in">
                     <FieldSet v-if="step === 1" key="period">
                         <FieldLegend>Periodo lectivo</FieldLegend>
-                        <FieldDescription>{{ periodCreated ? 'El periodo ya quedó creado; solo falta abrir la convocatoria.' : 'Fechas de inicio y fin de clases; la etiqueta se genera con el rango de meses y año.' }}</FieldDescription>
+                        <FieldDescription>{{ periodCreated ? 'El periodo ya quedó creado; solo falta abrir la convocatoria' : 'Fechas de inicio y fin de clases; la etiqueta se genera con el rango de meses y año' }}</FieldDescription>
                         <div class="grid grid-cols-2 items-start gap-4">
                             <Field :data-invalid="Boolean(errors.starts_on)">
                                 <FieldLabel for="convocation-period-starts" required>Inicio de clases</FieldLabel>
@@ -123,11 +123,11 @@ const submit = async (): Promise<void> => {
                                 <FieldError :errors="errors.ends_on" />
                             </Field>
                         </div>
-                        <p v-if="calendarWeeks" class="text-sm text-muted-foreground">Serían {{ calendarWeeks }} {{ calendarWeeks === 1 ? 'semana' : 'semanas' }} de clase entre las fechas.</p>
+                        <p v-if="calendarWeeks" class="text-sm text-muted-foreground">Serían {{ calendarWeeks }} {{ calendarWeeks === 1 ? 'semana' : 'semanas' }} de clase entre las fechas</p>
                     </FieldSet>
                     <FieldSet v-else key="syllabus">
                         <FieldLegend>Elaboración de sílabos</FieldLegend>
-                        <FieldDescription>{{ periodCreated ? 'El periodo ya quedó creado; solo falta abrir la convocatoria.' : 'Elija cuándo empieza la elaboración y hasta cuándo se entrega.' }}</FieldDescription>
+                        <FieldDescription>{{ periodCreated ? 'El periodo ya quedó creado; solo falta abrir la convocatoria' : 'Elija cuándo empieza la elaboración y hasta cuándo se entrega' }}</FieldDescription>
                         <div class="grid grid-cols-2 items-start gap-4">
                             <Field :data-invalid="Boolean(errors.starts_at)">
                                 <FieldLabel for="convocation-starts" required>Inicio de la elaboración</FieldLabel>

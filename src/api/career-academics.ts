@@ -5,7 +5,7 @@ import type { DocumentNode } from '@/lib/templateDocument';
 import { api, ApiError } from "@/api/client";
 import { requestPurgeConfirmation } from "@/composables/usePurgeConfirmation";
 
-export const PURGE_CANCELLED_MESSAGE = "Cambio cancelado. No se guardó nada.";
+export const PURGE_CANCELLED_MESSAGE = "Cambio cancelado. No se guardó nada";
 
 export function withPurgeConfirmation<T>(
   send: (confirmPurge: boolean) => Promise<T>,

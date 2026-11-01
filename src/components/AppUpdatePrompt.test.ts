@@ -21,7 +21,7 @@ describe('AppUpdatePrompt', () => {
 
     needRefresh.value = true;
     await wrapper.vm.$nextTick();
-    expect(wrapper.text()).toContain('Hay una versión nueva del sistema.');
+    expect(wrapper.text()).toContain('Hay una versión nueva del sistema');
     expect(updateServiceWorker).not.toHaveBeenCalled();
 
     expect(wrapper.findAll('button').map((button) => button.text())).toEqual(['Actualizar']);

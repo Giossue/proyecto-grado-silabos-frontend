@@ -327,7 +327,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const draft = syllabus("correccion_solicitada");
     draft.review_comments = [{
       stage: "coordinacion",
-      comment: "Aclare el resultado.",
+      comment: "Aclare el resultado",
       commented_at: "2026-09-29T09:00:00-05:00",
       commented_by: "Coordinación Demo",
       revision_number: 1,
@@ -337,10 +337,10 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.get(".review-comment").text()).toContain("Coordinación pidió correcciones");
-    expect(wrapper.get(".review-comment").text()).toContain("Aclare el resultado.");
+    expect(wrapper.get(".review-comment").text()).toContain("Aclare el resultado");
     await wrapper.get('button[aria-label="Comentarios"]').trigger("click");
     await flushPromises();
-    expect(document.body.querySelector(".review-comments")!.textContent).toContain("Aclare el resultado.");
+    expect(document.body.querySelector(".review-comments")!.textContent).toContain("Aclare el resultado");
     expect(wrapper.text()).not.toContain("Está preparando una nueva revisión");
     expect(wrapper.getComponent(PageFrame).props("hideIcon")).toBe(true);
     expect(wrapper.text()).not.toContain("Guardar respuesta");
@@ -351,7 +351,7 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.useFakeTimers();
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
     vi.mocked(saveTeacherField).mockRejectedValue(
-      new ApiError("El borrador cambió.", 409),
+      new ApiError("El borrador cambió", 409),
     );
     const wrapper = mountPage();
     await flushPromises();
@@ -370,7 +370,7 @@ describe("TeacherSyllabusDetailPage", () => {
       id: "section-review",
       key: "revision",
       title: "Revisión y aprobación",
-      description: "Complete los campos aplicables.",
+      description: "Complete los campos aplicables",
       orientation: "portrait",
       fields: [field("review-field", "institucional", { key: "firmas", label: "Firmas", value: doc("Firma del coordinador") })],
     });
@@ -382,7 +382,7 @@ describe("TeacherSyllabusDetailPage", () => {
         field_id: "field-1",
         code: "campo_obligatorio_faltante",
         severity: "error",
-        message: "«Descripción de la asignatura» está vacío. Complétalo antes de enviar.",
+        message: "«Descripción de la asignatura» está vacío. Complétalo antes de enviar",
       }],
     };
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
@@ -421,7 +421,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const copied = syllabus("borrador");
     copied.version_bloqueo = 3;
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
-    vi.mocked(copyTeacherSyllabus).mockResolvedValue({ message: "Contenido copiado.", syllabus: copied });
+    vi.mocked(copyTeacherSyllabus).mockResolvedValue({ message: "Contenido copiado", syllabus: copied });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -440,17 +440,17 @@ describe("TeacherSyllabusDetailPage", () => {
   it("permite enviar sin validar antes y marca los errores bloqueantes que devuelve el servidor", async () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
     vi.mocked(submitTeacherSyllabus).mockRejectedValue(
-      new ApiError("Corrija los errores.", 422, { validation: ["Corrija los errores determinísticos antes de enviar."] }),
+      new ApiError("Corrija los errores", 422, { validation: ["Corrija los errores determinísticos antes de enviar"] }),
     );
     vi.mocked(validateTeacherSyllabus).mockResolvedValue({
-      message: "Validación completada.",
+      message: "Validación completada",
       validation: {
         version_bloqueo: 2,
         blocking_errors: 2,
         warnings: 0,
         results: [
-          { field_id: "field-1", code: "campo_obligatorio_faltante", severity: "error", message: "Completa «Contenido»." },
-          { field_id: "master-1", code: "dato_maestro_faltante", severity: "error", message: "Falta el dato institucional de créditos." },
+          { field_id: "field-1", code: "campo_obligatorio_faltante", severity: "error", message: "Completa «Contenido»" },
+          { field_id: "master-1", code: "dato_maestro_faltante", severity: "error", message: "Falta el dato institucional de créditos" },
         ],
       },
     });
@@ -473,8 +473,8 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(getTeacherSigningStatement).not.toHaveBeenCalled();
     expect(wrapper.find(".submit-feedback").exists()).toBe(false);
     expect(buttonNamed(wrapper, "Ir a la primera")).toBeUndefined();
-    expect(wrapper.get(".feedback.error").text()).toContain("Falta el dato institucional de créditos.");
-    expect(wrapper.get(".feedback.error").text()).not.toContain("Completa «Contenido».");
+    expect(wrapper.get(".feedback.error").text()).toContain("Falta el dato institucional de créditos");
+    expect(wrapper.get(".feedback.error").text()).not.toContain("Completa «Contenido»");
     expect(wrapper.text()).not.toContain("Pulse cada una");
     expect(wrapper.get("#field-field-1").attributes("data-invalid")).toBe("true");
 
@@ -503,7 +503,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const pending = syllabus("borrador");
     pending.state = "sin_iniciar" as SyllabusDetail["state"];
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: pending });
-    vi.mocked(startTeacherSyllabus).mockResolvedValue({ message: "Borrador iniciado.", syllabus: syllabus("borrador") });
+    vi.mocked(startTeacherSyllabus).mockResolvedValue({ message: "Borrador iniciado", syllabus: syllabus("borrador") });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -520,7 +520,7 @@ describe("TeacherSyllabusDetailPage", () => {
     const draft = syllabus("borrador");
     draft.state = "sin_iniciar" as SyllabusDetail["state"];
     draft.editable = false;
-    draft.edit_block_reason = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude.";
+    draft.edit_block_reason = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude";
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
     const wrapper = mountPage();
     await flushPromises();
@@ -532,7 +532,7 @@ describe("TeacherSyllabusDetailPage", () => {
   it("queda sin poder editar, con el mismo aspecto, si un guardado es rechazado por pausa", async () => {
     vi.useFakeTimers();
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
-    vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("This action is unauthorized.", 403));
+    vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("This action is unauthorized", 403));
     const wrapper = mountPage();
     await flushPromises();
 
@@ -541,7 +541,7 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(wrapper.findComponent(FreeTextEditor).vm.$attrs.disabled).toBe(true);
-    expect(wrapper.get(".edit-blocked").text()).toContain("La convocatoria está en pausa. Podrá seguir editando cuando se reanude.");
+    expect(wrapper.get(".edit-blocked").text()).toContain("La convocatoria está en pausa. Podrá seguir editando cuando se reanude");
     expect(buttonNamed(wrapper, "Enviar")).toBeUndefined();
   });
 
@@ -549,7 +549,7 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.useFakeTimers();
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
     vi.mocked(saveTeacherField)
-      .mockRejectedValueOnce(new ApiError("Error temporal.", 500))
+      .mockRejectedValueOnce(new ApiError("Error temporal", 500))
       .mockResolvedValueOnce({ version_bloqueo: 3, guardado_en: null, document: doc("") });
     const wrapper = mountPage();
     await flushPromises();
@@ -570,7 +570,7 @@ describe("TeacherSyllabusDetailPage", () => {
   it("lleva al inicio de sesión si un guardado falla por sesión caducada", async () => {
     vi.useFakeTimers();
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
-    vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("CSRF token mismatch.", 419));
+    vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("CSRF token mismatch", 419));
     const wrapper = mountPage();
     await flushPromises();
 
@@ -607,7 +607,7 @@ describe("TeacherSyllabusDetailPage", () => {
   ])("pide confirmación al fallar el guardado y permite decidir: $button", async ({ button, allowed }) => {
     vi.useFakeTimers();
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
-    vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("Error temporal.", 500));
+    vi.mocked(saveTeacherField).mockRejectedValue(new ApiError("Error temporal", 500));
     const wrapper = mountPage();
     await flushPromises();
 
@@ -673,8 +673,8 @@ describe("TeacherSyllabusDetailPage", () => {
       fields: [field("field-2", "docente", { key: "bibliografia_basica", label: "Bibliografía básica" })],
     });
     detail.review_comments = [
-      { stage: "biblioteca", comment: "Comentario anterior.", commented_at: "2026-09-20T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 1 },
-      { stage: "biblioteca", comment: "La 10.ª edición no está disponible.", commented_at: "2026-09-29T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 2 },
+      { stage: "biblioteca", comment: "Comentario anterior", commented_at: "2026-09-20T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 1 },
+      { stage: "biblioteca", comment: "La 10.ª edición no está disponible", commented_at: "2026-09-29T09:00:00-05:00", commented_by: "Biblioteca Demo", revision_number: 2 },
     ];
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     const wrapper = mountPage();
@@ -688,9 +688,9 @@ describe("TeacherSyllabusDetailPage", () => {
     await wrapper.get('button[aria-label="Comentarios"]').trigger("click");
     await flushPromises();
     const list = document.body.querySelector(".review-comments")!;
-    expect(list.textContent).toContain("La 10.ª edición no está disponible.");
-    expect(list.textContent).toContain("Comentario anterior.");
-    expect(list.textContent!.indexOf("La 10.ª edición no está disponible.")).toBeLessThan(list.textContent!.indexOf("Comentario anterior."));
+    expect(list.textContent).toContain("La 10.ª edición no está disponible");
+    expect(list.textContent).toContain("Comentario anterior");
+    expect(list.textContent!.indexOf("La 10.ª edición no está disponible")).toBeLessThan(list.textContent!.indexOf("Comentario anterior"));
     expect(buttonNamed(wrapper, "Reenviar bibliografía")).toBeUndefined();
     expect(buttonNamed(wrapper, "Enviar")).toBeDefined();
     await buttonNamed(wrapper, "Enviar")!.trigger("click");
@@ -754,7 +754,7 @@ describe("TeacherSyllabusDetailPage", () => {
     sent.signatures = [{ role: "docente", name: "Docente Demo", signed_at: "2026-09-16T10:00:00Z" }];
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
     vi.mocked(getTeacherSigningStatement).mockResolvedValue({ statement: "silabos-ueb|silabo:syllabus-1|accion:envio_docente|huella:abc", required: true });
-    vi.mocked(submitTeacherSyllabus).mockResolvedValue({ message: "Enviado.", syllabus: sent });
+    vi.mocked(submitTeacherSyllabus).mockResolvedValue({ message: "Enviado", syllabus: sent });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -778,7 +778,7 @@ describe("TeacherSyllabusDetailPage", () => {
     draft.teacher_signature_required = true;
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
     vi.mocked(getTeacherSigningStatement).mockResolvedValue({ statement: "silabos-ueb|silabo:syllabus-1|accion:envio_docente|huella:abc", required: true });
-    vi.mocked(submitTeacherSyllabus).mockRejectedValue(new ApiError("Datos inválidos.", 422, { signature: ["El certificado está vencido."] }));
+    vi.mocked(submitTeacherSyllabus).mockRejectedValue(new ApiError("Datos inválidos", 422, { signature: ["El certificado está vencido"] }));
     const wrapper = mountPage();
     await flushPromises();
 
@@ -787,7 +787,7 @@ describe("TeacherSyllabusDetailPage", () => {
     await fillSignatureDialog(makeTestP12("DOCENTE DEMO", "clave"), "clave");
     await confirmSignatureDialog();
 
-    expect(document.querySelector('[role="dialog"]')!.textContent).toContain("El certificado está vencido.");
+    expect(document.querySelector('[role="dialog"]')!.textContent).toContain("El certificado está vencido");
     expect(wrapper.find(".feedback.error").exists()).toBe(false);
     wrapper.unmount();
   });

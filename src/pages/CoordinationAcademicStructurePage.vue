@@ -39,9 +39,9 @@ const pageTitle = computed(() => ({
   teachers: 'Docentes',
 })[props.mode]);
 const pageDescription = computed(() => ({
-  curriculum: 'Malla curricular de su carrera.',
-  schedule: 'Materias, paralelos y docentes de su carrera.',
-  teachers: 'Docentes de su carrera.',
+  curriculum: 'Malla curricular de su carrera',
+  schedule: 'Materias, paralelos y docentes de su carrera',
+  teachers: 'Docentes de su carrera',
 })[props.mode]);
 const curriculum = ref<Curriculum | null>(null);
 const schedule = ref<ScheduledSubjects | null>(null);
@@ -96,7 +96,7 @@ const load = async () => {
     loadError.value =
       reason instanceof ApiError
         ? reason.message
-        : "No se pudo cargar la estructura académica.";
+        : "No se pudo cargar la estructura académica";
   } finally {
     loading.value = false;
   }
@@ -106,7 +106,7 @@ const reloadSchedule = async () => {
     actionError.value = null;
     schedule.value = await getScheduledSubjects();
   } catch (reason) {
-    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo actualizar la programación académica.";
+    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo actualizar la programación académica";
   }
 };
 const handleScheduleChanged = async (notice: string) => {
@@ -118,7 +118,7 @@ const reloadAssignments = async () => {
     actionError.value = null;
     assignments.value = await getTeacherAssignments();
   } catch (reason) {
-    actionError.value = reason instanceof ApiError ? reason.message : "No se pudieron actualizar las asignaciones docentes.";
+    actionError.value = reason instanceof ApiError ? reason.message : "No se pudieron actualizar las asignaciones docentes";
   }
 };
 const handleAssignmentChanged = async (notice: string) => {
@@ -132,7 +132,7 @@ const reloadCurriculum = async () => {
     actionError.value = null;
     curriculum.value = await getCurriculum(careerId);
   } catch (reason) {
-    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo actualizar la malla.";
+    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo actualizar la malla";
   }
 };
 const handleCurriculumChanged = async (notice: string) => {
@@ -149,7 +149,7 @@ const openCurriculumEditor = async () => {
     curriculum.value = current;
     editingCurriculum.value = current.curriculum.editable && !current.curriculum.lock_reason;
   } catch (reason) {
-    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo comprobar si la malla puede editarse.";
+    actionError.value = reason instanceof ApiError ? reason.message : "No se pudo comprobar si la malla puede editarse";
   } finally {
     openingEditor.value = false;
   }

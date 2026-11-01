@@ -30,7 +30,7 @@ const load = async (): Promise<void> => {
     try {
         text.value = JSON.stringify(await getTemplateJson(props.templateId), null, 2);
     } catch (reason) {
-        failure.value = reason instanceof ApiError ? reason.message : 'No se pudo leer la plantilla.';
+        failure.value = reason instanceof ApiError ? reason.message : 'No se pudo leer la plantilla';
     } finally {
         loading.value = false;
     }
@@ -44,7 +44,7 @@ const apply = async (): Promise<void> => {
     try {
         parsed = JSON.parse(text.value);
     } catch (reason) {
-        failure.value = `El JSON no es válido: ${reason instanceof Error ? reason.message : 'error de sintaxis'}.`;
+        failure.value = `El JSON no es válido: ${reason instanceof Error ? reason.message : 'error de sintaxis'}`;
         return;
     }
     saving.value = true;
@@ -55,9 +55,9 @@ const apply = async (): Promise<void> => {
     } catch (reason) {
         if (reason instanceof ApiError) {
             problems.value = Object.entries(reason.errors).flatMap(([path, messages]) => messages.map((message) => `${path}: ${message}`));
-            failure.value = problems.value.length === 0 ? reason.message : 'La plantilla tiene errores y no se cambió nada.';
+            failure.value = problems.value.length === 0 ? reason.message : 'La plantilla tiene errores y no se cambió nada';
         } else {
-            failure.value = 'No se pudo importar la plantilla.';
+            failure.value = 'No se pudo importar la plantilla';
         }
     } finally {
         saving.value = false;

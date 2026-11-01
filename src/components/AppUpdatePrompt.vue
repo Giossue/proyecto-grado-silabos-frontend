@@ -26,7 +26,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div v-if="needRefresh" role="status" class="fixed right-4 bottom-4 z-50 flex max-w-sm flex-wrap items-center gap-3 rounded-md bg-card px-4 py-3 text-sm text-card-foreground shadow-menu ring-1 ring-surface-ring max-sm:left-4 max-sm:bottom-[calc(var(--mobile-nav-height)+1rem)]">
-    <span class="flex-1">Hay una versión nueva del sistema.</span>
+    <span class="flex-1">Hay una versión nueva del sistema</span>
     <Button type="button" size="sm" @click="updateServiceWorker(true)"><RefreshCw data-icon="inline-start" aria-hidden="true" />Actualizar</Button>
   </div>
 </template>
