@@ -90,14 +90,14 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
     wrapper.unmount();
   });
 
-  it('sin bibliotecas guardadas muestra todas marcadas, y guardar sin tocarlas no cambia nada', async () => {
+  it('sin bibliotecas guardadas muestra todas marcadas, y sin tocarlas no se puede guardar', async () => {
     const wrapper = mountSheet();
     await flushPromises();
     await tab('Bibliotecas');
 
     expect(['LAGUACOTO', 'MATRIZ', 'SAN MIGUEL'].map(isChecked)).toEqual([true, true, true]);
-    await save();
-    expect(sentLibraries()).toBeNull();
+    expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
+    expect(updateAcademicRecord).not.toHaveBeenCalled();
     wrapper.unmount();
   });
 

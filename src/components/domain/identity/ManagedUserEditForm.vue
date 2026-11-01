@@ -28,6 +28,7 @@ const assignableRoles = computed(() => props.user.roles.some((role) => role.code
 const reset = (): void => { form.value = { nombre: props.user.nombre, correo_electronico: props.user.correo_electronico, role_code: '', career_id: '' }; errors.value = {}; };
 reset();
 watch(() => props.user.id, reset);
+const unchanged = computed(() => form.value.nombre === props.user.nombre && form.value.correo_electronico === props.user.correo_electronico && !form.value.role_code);
 const removing = ref<ManagedUser['roles'][number] | null>(null);
 const removeProcessing = ref(false); const removeError = ref<string | null>(null);
 const removeRole = async (): Promise<void> => {
@@ -60,7 +61,7 @@ const submit = async (replaceCoordinator = false): Promise<void> => {
             <Field v-if="user.roles.length > 1"><FieldLabel>Roles vigentes</FieldLabel><ul class="flex flex-col gap-2"><li v-for="role in user.roles" :key="role.id" class="flex items-center justify-between gap-2 text-sm"><span>{{ role.name }}<span v-if="role.career_name" class="text-muted-foreground"> · {{ role.career_name }}</span></span><Button type="button" variant="ghost" size="sm" :aria-label="`Quitar el rol ${role.name}${role.career_name ? ' de ' + role.career_name : ''}`" @click="removing = role; removeError = null"><Trash2 aria-hidden="true" />Quitar</Button></li></ul></Field>
             <Field v-if="assignableRoles.length > 0" :data-invalid="Boolean(errors.role_code)"><FieldLabel :for="`managed-edit-role-${user.id}`">Agregar otro rol (opcional)</FieldLabel><Select v-model="form.role_code"><SelectTrigger :id="`managed-edit-role-${user.id}`"><SelectValue placeholder="No agregar otro rol" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="role in assignableRoles" :key="role.codigo" :value="role.codigo">{{ role.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.role_code" /></Field>
             <Field v-if="roleNeedsCareer(form.role_code)" :data-invalid="Boolean(errors.career_id)"><FieldLabel :for="`managed-edit-career-${user.id}`" required>Carrera</FieldLabel><Select v-model="form.career_id" required><SelectTrigger :id="`managed-edit-career-${user.id}`"><SelectValue placeholder="Seleccione" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="career in careers" :key="career.id" :value="career.id">{{ career.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.career_id" /></Field>
-            <FormSheetActions :close="() => emit('cancel')" :processing="processing" :icon="Check" label="Guardar cambios" />
+            <FormSheetActions :close="() => emit('cancel')" :processing="processing" :disabled="unchanged" :icon="Check" label="Guardar cambios" />
     </FieldGroup></form>
     <Dialog :open="removing !== null" @update:open="(value: boolean) => { if (!value) removing = null; }"><DialogContent><DialogHeader><DialogTitle>Quitar rol</DialogTitle><DialogDescription>{{ user.nombre }} deja de ser {{ removing?.name }}{{ removing?.career_name ? ` de ${removing.career_name}` : '' }}. Su cuenta y sus otros roles no cambian y el rol queda en el historial. Si es docente, sus paralelos quedan sin docente.</DialogDescription></DialogHeader>
         <FeedbackAlert v-if="removeError" :message="removeError" />

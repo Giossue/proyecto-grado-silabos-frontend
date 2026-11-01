@@ -68,6 +68,17 @@ const reset = (): void => {
     if (props.entity === 'facultad') void loadLibraries();
 };
 watch(open, (value) => { if (value) reset(); }, { immediate: true });
+/** Sin cambios respecto a lo guardado: no hay nada que enviar. */
+const unchanged = computed(() => {
+    const initial: Record<string, string> = {
+        nombre: props.recordName, code: props.recordCode ?? '', faculty_id: props.facultyId ?? '',
+        campus: props.campus ?? '', modality: props.modality ?? '', starts_on: props.startsOn ?? '', ends_on: props.endsOn ?? '',
+    };
+
+    return Object.entries(initial).every(([key, value]) => form.value[key as keyof typeof form.value] === value)
+        && logo.value === null && !removeLogo.value
+        && (props.entity !== 'facultad' || (chosenLibraries.value.length > 0 && librariesToSave() === null));
+});
 const logoValidationError = (message: string | null): void => {
     const nextErrors = { ...errors.value };
     if (message) nextErrors.logo = [message];
@@ -140,7 +151,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
                     <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel :for="`edit-starts-on-${recordId}`" required>Fecha de inicio</FieldLabel><DatePicker :id="`edit-starts-on-${recordId}`" v-model="form.starts_on" required /><FieldError :errors="errors.starts_on" /></Field>
                     <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required /><FieldError :errors="errors.ends_on" /></Field>
                 </div>
-                <FormSheetActions :close="close" :processing="processing" :icon="Check" label="Guardar cambios" />
+                <FormSheetActions :close="close" :processing="processing" :disabled="unchanged" :icon="Check" label="Guardar cambios" />
             </FieldGroup></form>
         </template>
     </FormSheet>

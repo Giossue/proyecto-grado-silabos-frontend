@@ -26,6 +26,7 @@ const errors = ref<Record<string, string[]>>({});
 const form = ref({ nombre: '', correo_electronico: '' });
 const reset = (): void => { form.value = { nombre: props.teacher.name, correo_electronico: props.teacher.email }; errors.value = {}; };
 watch(open, (value) => { if (value) reset(); }, { immediate: true });
+const unchanged = computed(() => form.value.nombre === props.teacher.name && form.value.correo_electronico === props.teacher.email);
 const submit = async (): Promise<void> => {
     processing.value = true;
     errors.value = {};
@@ -49,7 +50,7 @@ const submit = async (): Promise<void> => {
         <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
             <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`career-teacher-name-${teacher.id}`" required>Nombre completo</FieldLabel><Input :id="`career-teacher-name-${teacher.id}`" v-model="form.nombre" required :disabled="!teacher.pending_activation" /><FieldError :errors="errors.nombre" /></Field>
             <Field :data-invalid="Boolean(errors.correo_electronico)"><FieldLabel :for="`career-teacher-email-${teacher.id}`" required>Correo institucional</FieldLabel><Input :id="`career-teacher-email-${teacher.id}`" v-model="form.correo_electronico" type="email" required :disabled="!teacher.pending_activation" /><FieldDescription v-if="teacher.pending_activation">Al cambiar el correo, la invitación anterior deja de servir y se envía una nueva al correo corregido.</FieldDescription><FieldError :errors="errors.correo_electronico" /></Field>
-            <FormSheetActions :close="close" :processing="processing" :icon="Check" label="Guardar cambios" :close-only="!teacher.pending_activation" />
+            <FormSheetActions :close="close" :processing="processing" :disabled="unchanged" :icon="Check" label="Guardar cambios" :close-only="!teacher.pending_activation" />
         </FieldGroup></form></template>
     </FormSheet>
 </template>
