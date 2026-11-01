@@ -171,7 +171,7 @@ describe('bloques definidos en la plantilla', () => {
             buttonWith('Agregar').click();
             await flushPromises();
 
-            expect(booksOf(last(wrapper))).toEqual([{ autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: '' }]);
+            expect(booksOf(last(wrapper))).toEqual([{ autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: '658.404 S2411p' }]);
         });
 
         it('Administración la ve sin el buscador', async () => {
