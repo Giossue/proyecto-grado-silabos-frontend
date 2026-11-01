@@ -14,7 +14,7 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>();
         <DialogContent>
             <DialogHeader>
                 <DialogTitle>Reemplazar coordinador</DialogTitle>
-                <DialogDescription>{{ message }} Al confirmar, deja de coordinarla y la nueva persona la coordina desde ahora. Los sílabos en curso no cambian.</DialogDescription>
+                <DialogDescription>{{ message }} Al confirmar, deja de coordinarla. Lo que aprobó en la convocatoria en curso vuelve a revisión para que lo firme el nuevo coordinador.</DialogDescription>
             </DialogHeader>
             <DialogFooter>
                 <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
