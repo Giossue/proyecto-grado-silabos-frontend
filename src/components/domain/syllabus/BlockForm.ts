@@ -160,7 +160,6 @@ export default defineComponent({
             return h('div', { class: 'flex min-w-0 flex-col gap-3' }, [
                 h(Table, { label: capitalize(name), cards: false }, () => [
                     h(TableHeader, {}, () => h(TableRow, {}, () => [
-                        h(TableHead, { class: 'w-16' }, () => capitalize(name)),
                         ...columns.map(([key, column]) => h(TableHead, { class: column.type === 'number' ? 'w-20 text-center' : 'min-w-48 whitespace-normal' }, () => column.title ?? key)),
                         resizable ? h(TableHead, { class: clearable ? 'w-20' : 'w-10' }, () => h('span', { class: 'sr-only' }, 'Acciones')) : null,
                     ])),
@@ -168,7 +167,6 @@ export default defineComponent({
                         const itemPath = [...path, index];
                         const rowName = `${name} ${first + index + 1}`;
                         return h(TableRow, { key: index }, () => [
-                            h(TableCell, { class: 'align-top font-medium' }, () => String(first + index + 1)),
                             ...columns.map(([key, column]) => h(TableCell, { class: 'align-top' }, () => applies(column, [...itemPath, key]) ? input(column, [...itemPath, key], `${column.title ?? key}, ${rowName}`, true) : null)),
                             resizable ? h(TableCell, { class: 'align-top' }, () => clearable
                                 ? h('div', { class: 'flex' }, [clearButton(schema, path, index, rowName), removeButton(schema, path, index, rowName)])
