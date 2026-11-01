@@ -147,7 +147,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.findComponent(FreeTextEditor).exists()).toBe(false);
   });
 
-  it("«Vista previa» muestra la hoja en la pantalla y «Editar» vuelve al formulario", async () => {
+  it("«Vista previa» muestra la hoja, queda presionado y al pulsarlo otra vez vuelve al formulario", async () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador", "docente") });
     const wrapper = mountPage();
     await flushPromises();
@@ -158,8 +158,10 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.findComponent(SyllabusDocumentPreview).exists()).toBe(true);
     expect(wrapper.find("#field-field-1").exists()).toBe(false);
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+    expect(buttonNamed(wrapper, "Vista previa")!.attributes("aria-pressed")).toBe("true");
 
-    await buttonNamed(wrapper, "Editar")!.trigger("click");
+    await buttonNamed(wrapper, "Vista previa")!.trigger("click");
+    expect(buttonNamed(wrapper, "Vista previa")!.attributes("aria-pressed")).toBe("false");
     expect(wrapper.findComponent(SyllabusDocumentPreview).exists()).toBe(false);
     expect(wrapper.find("#field-field-1").exists()).toBe(true);
     wrapper.unmount();

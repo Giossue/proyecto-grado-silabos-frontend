@@ -50,7 +50,7 @@ import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocume
 import { attemptKey } from '@/lib/attemptKey';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
-import { ArrowLeft, ArrowRight, Bot, Copy, Eye, FileSignature, FileText, Pencil, Send, X } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Bot, Copy, Eye, FileSignature, FileText, Send, X } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
@@ -460,7 +460,7 @@ const copyFromSource = async (): Promise<void> => {
 
 const visibleSections = computed(() => (syllabus.value?.sections ?? []).filter((section) => section.fields.some(isTeacherField)));
 const pageDescription = computed(() => syllabus.value?.period ?? '');
-const documentHeaderWidth = computed(() => syllabus.value && syllabus.value.state !== 'sin_iniciar' && (!showEditor.value || previewing.value) ? sheetPixels(syllabus.value.presentation.document).portrait : undefined);
+const documentHeaderWidth = computed(() => syllabus.value && syllabus.value.state !== 'sin_iniciar' && !showEditor.value ? sheetPixels(syllabus.value.presentation.document).portrait : undefined);
 
 const chosenSectionId = ref<string | null>(null);
 const activeSectionId = computed<string>({
@@ -513,9 +513,8 @@ onBeforeUnmount(() => {
     <template #actions>
       <ReviewCommentsButton v-if="syllabus?.state === 'correccion_solicitada' && reviewComments.length" :comments="reviewComments" />
       <TooltipProvider v-if="syllabus && showEditor"><Tooltip><TooltipTrigger as-child>
-        <Button v-if="previewing" type="button" variant="ghost" size="icon" aria-label="Editar" @click="previewing = false"><Pencil aria-hidden="true" /></Button>
-        <Button v-else type="button" variant="ghost" size="icon" aria-label="Vista previa" @click="openPreview"><Eye aria-hidden="true" /></Button>
-      </TooltipTrigger><TooltipContent>{{ previewing ? 'Editar' : 'Vista previa' }}</TooltipContent></Tooltip></TooltipProvider>
+        <Button type="button" :variant="previewing ? 'secondary' : 'ghost'" size="icon" aria-label="Vista previa" :aria-pressed="previewing" @click="previewing ? (previewing = false) : openPreview()"><Eye aria-hidden="true" /></Button>
+      </TooltipTrigger><TooltipContent>Vista previa</TooltipContent></Tooltip></TooltipProvider>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
       <Button v-if="syllabus?.state === 'aprobado' && syllabus.approved_revision_id" type="button" :disabled="openingPdf" @click="openPdf(syllabus.approved_revision_id)"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" />Ver PDF</Button>
