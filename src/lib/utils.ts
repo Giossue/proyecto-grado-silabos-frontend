@@ -6,6 +6,9 @@ export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+/** Los tooltips no llevan punto final. */
+export const withoutFinalPeriod = (text: string): string => text.replace(/\.\s*$/, '');
+
 export type NavigableHref = string | { url: string };
 
 export function toUrl(href: NavigableHref) {

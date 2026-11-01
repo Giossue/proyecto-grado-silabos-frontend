@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { withoutFinalPeriod } from '@/lib/utils';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
 
 type Transition = 'pausar' | 'reanudar';
@@ -43,7 +44,7 @@ const opened = (message: string): void => emit('changed', message);
 </script>
 
 <template>
-  <Tooltip v-if="convocation.convocation_id === null && !convocation.can_open && blockedReason"><TooltipTrigger as-child><span class="inline-flex" tabindex="0"><Button type="button" disabled><Play data-icon="inline-start" aria-hidden="true" />Abrir convocatoria</Button></span></TooltipTrigger><TooltipContent>{{ blockedReason }}</TooltipContent></Tooltip>
+  <Tooltip v-if="convocation.convocation_id === null && !convocation.can_open && blockedReason"><TooltipTrigger as-child><span class="inline-flex" tabindex="0"><Button type="button" disabled><Play data-icon="inline-start" aria-hidden="true" />Abrir convocatoria</Button></span></TooltipTrigger><TooltipContent>{{ withoutFinalPeriod(blockedReason) }}</TooltipContent></Tooltip>
   <Button v-else-if="convocation.convocation_id === null" type="button" :disabled="!convocation.can_open" @click="openingOpen = true"><Play data-icon="inline-start" aria-hidden="true" />Abrir convocatoria</Button>
   <Button v-else-if="convocation.state === 'abierta'" type="button" variant="outline" @click="select('pausar')"><Pause data-icon="inline-start" aria-hidden="true" />Pausar convocatoria</Button>
   <Button v-else-if="convocation.state === 'pausada'" type="button" :disabled="!convocation.process_open" @click="select('reanudar')"><Play data-icon="inline-start" aria-hidden="true" />Reanudar convocatoria</Button>

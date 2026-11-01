@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+import { cn, withoutFinalPeriod } from '@/lib/utils';
 
 export type SheetAction = {
     key: string;
@@ -43,7 +43,7 @@ const emit = defineEmits<{ select: [key: string] }>();
                         </Button>
                     </span>
                 </TooltipTrigger>
-                <TooltipContent>{{ action.disabled && action.disabledReason ? action.disabledReason : action.label }}</TooltipContent>
+                <TooltipContent>{{ action.disabled && action.disabledReason ? withoutFinalPeriod(action.disabledReason) : action.label }}</TooltipContent>
             </Tooltip>
         </TooltipProvider>
         <span v-if="action.disabled && action.disabledReason" :id="`sheet-action-reason-${action.key}`" class="sr-only">{{ action.disabledReason }}</span>

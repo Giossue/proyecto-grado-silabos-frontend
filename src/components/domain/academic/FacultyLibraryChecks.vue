@@ -31,7 +31,7 @@ const toggle = (code: string, checked: boolean | 'indeterminate'): void => {
                     <TooltipTrigger as-child>
                         <Button type="button" variant="ghost" size="icon-sm" class="size-6" aria-label="Qué significa esto"><Info aria-hidden="true" /></Button>
                     </TooltipTrigger>
-                    <TooltipContent class="max-w-64">Aplica solo a los libros físicos. Los digitales no dependen de esto y cualquier docente puede agregarlos.</TooltipContent>
+                    <TooltipContent class="max-w-64">Aplica solo a los libros físicos. Los digitales no dependen de esto y cualquier docente puede agregarlos</TooltipContent>
                 </Tooltip>
             </TooltipProvider>
         </FieldLegend>
