@@ -321,7 +321,7 @@ describe('TemplateVisualBuilder', () => {
     const wrapper = await mountBuilder();
     expect(byLabel('Listas')).toBeTruthy();
     const state = (wrapper.vm as unknown as { $: { setupState: { listsDraft: Array<{ label: string; min: number }>; setListLimit: (list: unknown, key: string, value: string) => void } } }).$.setupState;
-    expect(state.listsDraft.map((entry) => entry.label)).toEqual(['Unidades', 'Semanas por unidad']);
+    expect(state.listsDraft.map((entry) => entry.label)).toEqual(['Unidades', 'Semanas por unidad', 'Libros']);
     state.setListLimit(state.listsDraft[1], 'min', '1');
     await flushPromises();
     await save();

@@ -48,6 +48,7 @@ export type BlockDefinition = {
     value: Record<string, ValueSchema>;
     rules: BlockRule[];
     layout: DocumentNode[];
+    catalog?: { list: string; map: Record<string, string> };
 };
 
 export type DocumentStyle = {
