@@ -154,6 +154,7 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.findComponent(SyllabusDocumentPreview).exists()).toBe(false);
 
     await buttonNamed(wrapper, "Vista previa")!.trigger("click");
+    await flushPromises();
     expect(wrapper.findComponent(SyllabusDocumentPreview).exists()).toBe(true);
     expect(wrapper.find("#field-field-1").exists()).toBe(false);
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
@@ -164,12 +165,29 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
+  it("«Vista previa» guarda lo pendiente y muestra lo último que se escribió", async () => {
+    const detail = syllabus("borrador", "docente");
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null, document: doc("Texto nuevo") });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    wrapper.findComponent(FreeTextEditor).vm.$emit("update:modelValue", doc("Texto nuevo"));
+    await buttonNamed(wrapper, "Vista previa")!.trigger("click");
+    await flushPromises();
+
+    expect(saveTeacherField).toHaveBeenCalledWith("syllabus-1", "field-1", 2, doc("Texto nuevo"));
+    const sections = wrapper.findComponent(SyllabusDocumentPreview).props("sections") as Array<{ fields: Array<{ document?: unknown }> }>;
+    expect(sections[0]!.fields[0]!.document).toEqual(doc("Texto nuevo"));
+    wrapper.unmount();
+  });
+
   it("el campo de texto se escribe con su editor y se guarda como documento", async () => {
     vi.useFakeTimers();
     const detail = syllabus("borrador", "docente");
     detail.sections[0]!.fields[0]!.value = null;
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
-    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null, document: doc("") });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -186,7 +204,7 @@ describe("TeacherSyllabusDetailPage", () => {
   it('guarda tablas libres y totales escritos sin calcularlos', async () => {
     vi.useFakeTimers();
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus('borrador') });
-    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null, document: doc("") });
     const wrapper = mountPage();
     await flushPromises();
     const document = { type: 'doc', content: [{ type: 'table', content: ['Semana adicional', '999'].map((text) => ({ type: 'tableRow', content: [{ type: 'tableCell', content: [{ type: 'paragraph', content: [{ type: 'text', text }] }] }] })) }] };
@@ -228,6 +246,19 @@ describe("TeacherSyllabusDetailPage", () => {
     await items()[1]!.get('[data-slot="accordion-trigger"]').trigger('click');
     await flushPromises();
     expect(state(1)).toBe('open');
+    wrapper.unmount();
+  });
+
+  it('un campo sin nombre en la plantilla se muestra sin título, sin repetir el de la sección', async () => {
+    const detail = syllabus('borrador', 'docente');
+    detail.sections[0]!.fields = [field('field-1', 'docente', { label: '' })];
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const item = wrapper.get('[data-slot="accordion-item"]');
+    expect(item.find('[data-slot="accordion-trigger"]').exists()).toBe(false);
+    expect(item.attributes('data-state')).toBe('open');
     wrapper.unmount();
   });
 
@@ -517,7 +548,7 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
     vi.mocked(saveTeacherField)
       .mockRejectedValueOnce(new ApiError("Error temporal.", 500))
-      .mockResolvedValueOnce({ version_bloqueo: 3, guardado_en: null });
+      .mockResolvedValueOnce({ version_bloqueo: 3, guardado_en: null, document: doc("") });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -552,7 +583,7 @@ describe("TeacherSyllabusDetailPage", () => {
   it("guarda lo pendiente al salir de la página en lugar de descartarlo", async () => {
     vi.useFakeTimers();
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
-    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null, document: doc("") });
     const wrapper = mountPage();
     await flushPromises();
 

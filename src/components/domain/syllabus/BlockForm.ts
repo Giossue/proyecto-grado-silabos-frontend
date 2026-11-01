@@ -59,6 +59,8 @@ export default defineComponent({
             const disabled = props.disabled;
             const text = typeof current === 'string' || typeof current === 'number' ? String(current) : '';
             const ariaLabel = inCell ? label : undefined;
+            // Dentro de la tabla las líneas de la celda ya hacen de borde del campo.
+            const flat = inCell ? 'border-transparent bg-transparent shadow-none' : undefined;
             if (isChoice(schema)) {
                 return h(ChoiceGroup, {
                     modelValue: typeof current === 'string' ? current : undefined,
@@ -73,14 +75,14 @@ export default defineComponent({
                 return h(Input, {
                     id, modelValue: text, disabled, inputmode: 'decimal', 'aria-label': ariaLabel,
                     maxlength: digits + (decimals > 0 ? decimals + 1 : 0),
-                    class: inCell ? 'w-20 text-center' : undefined,
+                    class: inCell ? `w-20 text-center ${flat}` : undefined,
                     onBeforeinput: (event: InputEvent) => guardNumber(event, schema),
                     'onUpdate:modelValue': (value: string | number) => write(path, numberText(String(value), schema)),
                 });
             }
             return h(schema.multiline ? Textarea : Input, {
                 id, modelValue: text, disabled, maxlength: schema.maxLength, 'aria-label': ariaLabel,
-                class: schema.multiline ? 'min-h-9' : undefined,
+                class: [schema.multiline ? 'min-h-9' : undefined, flat],
                 'onUpdate:modelValue': (value: string | number) => write(path, String(value)),
             });
         };
@@ -204,7 +206,7 @@ export default defineComponent({
                 return typeof value === 'string' ? value.trim() : '';
             };
             return h('div', { class: 'flex flex-col gap-4' }, [
-                h(Accordion, { type: 'multiple', defaultValue: items.length > 0 ? ['0'] : [], class: 'rounded-lg px-4 ring-1 ring-surface-ring' }, () => items.map((_, index) => {
+                h(Accordion, { type: 'multiple', defaultValue: items.length > 0 ? ['0'] : [], class: 'rounded-lg px-3 ring-1 ring-surface-ring' }, () => items.map((_, index) => {
                     const itemPath = [...path, index];
                     const title = `${capitalize(name)} ${first + index + 1}`;
                     const detail = subtitle(itemPath);
@@ -213,12 +215,12 @@ export default defineComponent({
                         ? fields(Object.entries(schema.items.properties), itemPath, depth + 1)
                         : [node(schema.items, itemPath, title, depth + 1)];
                     return h(AccordionItem, { key: index, value: String(index), 'aria-label': title }, () => [
-                        h(AccordionTrigger, { class: 'hover:no-underline' }, () => h('span', { class: 'flex min-w-0 flex-col gap-0.5' }, [
+                        h(AccordionTrigger, { class: 'px-1 hover:no-underline' }, () => h('span', { class: 'flex min-w-0 flex-col gap-0.5' }, [
                             h('span', { class: 'font-semibold' }, title),
                             detail ? h('span', { class: 'line-clamp-1 font-normal text-muted-foreground' }, detail) : null,
                             pending.length > 0 ? h('span', { class: 'line-clamp-1 font-normal text-muted-foreground' }, `Falta: ${pending.join(', ')}`) : null,
                         ])),
-                        h(AccordionContent, { class: 'flex flex-col gap-4' }, () => [
+                        h(AccordionContent, { class: 'flex flex-col gap-4 px-1 pt-1' }, () => [
                             ...content,
                             resizable ? h('div', { class: 'flex justify-end' }, [removeButton(schema, path, index, `${name} ${first + index + 1}`)]) : null,
                         ]),

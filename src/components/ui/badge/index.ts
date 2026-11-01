@@ -24,7 +24,7 @@ export const badgeVariants = cva(
         danger:
           "border-destructive/30 bg-destructive/10 text-destructive",
         outline:
-          "border-input text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+          "border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
       },
     },
     defaultVariants: {

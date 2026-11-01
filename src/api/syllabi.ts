@@ -1,5 +1,6 @@
 import { setTemplateRuntime } from "@/lib/blocks/runtime";
 import type { DocumentStyle, TemplateDefinitionPayload } from "@/lib/blocks/types";
+import type { DocumentNode } from "@/lib/templateDocument";
 import { api } from "@/api/client";
 import type { TemplateAppearance } from "@/api/template";
 import type { DocumentField } from "@/types/configuration";
@@ -159,7 +160,7 @@ export const saveTeacherField = (
   version: number,
   value: unknown,
 ) =>
-  api<{ version_bloqueo: number; guardado_en: string | null }>(
+  api<{ version_bloqueo: number; guardado_en: string | null; document: DocumentNode }>(
     `/teacher/syllabi/${syllabusId}/fields/${fieldId}`,
     {
       method: "PATCH",

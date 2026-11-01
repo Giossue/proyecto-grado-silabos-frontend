@@ -314,6 +314,8 @@ const saveField = (field: SyllabusField): void => {
         field.value,
       );
       syllabus.value.version_bloqueo = saved.version_bloqueo;
+      // La vista previa usa el campo resuelto por el servidor; si no hubo cambios después, se actualiza.
+      if (!dirtyFields.has(field.id)) field.document = saved.document;
       invalidateValidation();
       if (!hasUnsavedChanges()) saveFailed.value = false;
     } finally {
@@ -347,6 +349,12 @@ const flushAutosave = async (): Promise<boolean> => {
   if (!hasUnsavedChanges()) saveFailed.value = false;
 
   return !conflict.value && !hasUnsavedChanges();
+};
+
+// Antes de mostrar la hoja se guarda lo pendiente, para que muestre lo último que escribió el docente.
+const openPreview = async (): Promise<void> => {
+  await flushAutosave();
+  previewing.value = true;
 };
 
 const refreshAfterFormation = async (): Promise<void> => {
@@ -505,7 +513,7 @@ onBeforeUnmount(() => {
       <ReviewCommentsButton v-if="syllabus?.state === 'correccion_solicitada' && reviewComments.length" :comments="reviewComments" />
       <TooltipProvider v-if="syllabus && showEditor"><Tooltip><TooltipTrigger as-child>
         <Button v-if="previewing" type="button" variant="ghost" size="icon" aria-label="Editar" @click="previewing = false"><Pencil aria-hidden="true" /></Button>
-        <Button v-else type="button" variant="ghost" size="icon" aria-label="Vista previa" @click="previewing = true"><Eye aria-hidden="true" /></Button>
+        <Button v-else type="button" variant="ghost" size="icon" aria-label="Vista previa" @click="openPreview"><Eye aria-hidden="true" /></Button>
       </TooltipTrigger><TooltipContent>{{ previewing ? 'Editar' : 'Vista previa' }}</TooltipContent></Tooltip></TooltipProvider>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
@@ -536,16 +544,17 @@ onBeforeUnmount(() => {
             <section v-for="section in shownSections" :id="`section-${section.id}`" :key="section.id" class="teacher-form flex scroll-mt-6 flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
               <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
               <FieldGroup>
-                <Accordion type="multiple" :model-value="openFields(section)" @update:model-value="setOpenFields(section, $event as string[])">
+                <Accordion type="multiple" class="-mx-1" :model-value="openFields(section)" @update:model-value="setOpenFields(section, $event as string[])">
                   <AccordionItem v-for="field in section.fields" :key="field.id" :value="field.id">
-                    <AccordionTrigger class="items-center hover:no-underline">
+                    <!-- Un campo sin nombre en la plantilla se muestra sin título, igual que en la plantilla. -->
+                    <AccordionTrigger v-if="field.label.trim()" class="items-center px-1 hover:no-underline">
                       <span class="flex flex-wrap items-center gap-2">
                         <span class="text-base font-semibold">{{ fieldTitle(field, section) }}</span>
                         <span v-if="isTeacherField(field)" class="text-destructive" aria-hidden="true">*</span>
                         <Badge v-else variant="outline" class="font-normal">{{ responsibleLabel(field.quien_llena) }}</Badge>
                       </span>
                     </AccordionTrigger>
-                    <AccordionContent class="flex flex-col gap-3">
+                    <AccordionContent class="flex flex-col gap-3 px-1 pt-1">
                       <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                         <FieldLabel :for="`input-${field.id}`" required class="sr-only">{{ fieldTitle(field, section) }}</FieldLabel>
                         <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene de la ficha; puede ajustarlo.</FieldDescription>

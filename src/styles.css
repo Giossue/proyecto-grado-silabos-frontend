@@ -784,7 +784,8 @@
         --document-table-header-color: var(--foreground);
     }
 
-    .teacher-form table {
+    /* Las tablas del sistema ya traen su borde en el contenedor: no se les pone otro. */
+    .teacher-form table:not([data-slot='table']) {
         width: 100%;
         border-collapse: separate;
         border-spacing: 0;
@@ -815,6 +816,11 @@
 
     .teacher-form tr > :last-child { border-right: 0 !important; }
     .teacher-form tr:last-child > * { border-bottom: 0 !important; }
+}
+
+/* Dentro de la tarjeta blanca del formulario el contorno de la tabla usa el borde estándar, que sí se ve. */
+.teacher-form [data-slot='table-container'] {
+    --tw-ring-color: var(--border);
 }
 
 /* Ficha y sílabo: tablas con espacios de respuesta (ADR-0012). En pantallas angostas

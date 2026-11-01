@@ -62,7 +62,7 @@ export default defineComponent({
             return h(Field, { key: id }, () => [
                 visibleLabel ? h(FieldLabel, { for: id }, () => label) : null,
                 h(Textarea, {
-                    id, modelValue: text, disabled: props.disabled, class: 'min-h-9',
+                    id, modelValue: text, disabled: props.disabled, class: visibleLabel ? 'min-h-9' : 'min-h-9 border-transparent bg-transparent shadow-none',
                     'aria-label': visibleLabel ? undefined : label,
                     'onUpdate:modelValue': (value: string | number) => write(String(value)),
                 }),

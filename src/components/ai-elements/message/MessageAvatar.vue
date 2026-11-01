@@ -16,7 +16,7 @@ const fallbackText = computed(() => props.name?.slice(0, 2) ?? 'ME');
 
 <template>
     <Avatar
-        class="size-8 ring-1 ring-border"
+        class="size-8 ring-1 ring-surface-ring"
         :class="[props.class]"
         v-bind="$attrs"
     >
