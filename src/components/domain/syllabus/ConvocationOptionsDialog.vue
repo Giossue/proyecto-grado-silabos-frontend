@@ -44,12 +44,12 @@ const run = (key: string): void => {
             <DialogHeader>
                 <DialogTitle>Convocatoria {{ row.code }}</DialogTitle>
             </DialogHeader>
-            <ul class="flex flex-col gap-2" aria-label="Opciones de la convocatoria">
+            <ul class="grid grid-cols-2 items-start gap-2" aria-label="Opciones de la convocatoria">
                 <li v-for="action in actions" :key="action.key" class="flex flex-col gap-1">
                     <Button
                         type="button"
                         :variant="action.destructive ? 'destructive' : 'outline'"
-                        class="w-fit"
+                        class="w-full"
                         :disabled="action.disabled"
                         :aria-describedby="action.disabled && action.disabledReason ? `option-reason-${action.key}` : undefined"
                         @click="run(action.key)"
