@@ -11,6 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
+import { ArrowLeft } from '@lucide/vue';
+import { Button } from '@/components/ui/button';
+import { goBack } from '@/lib/goBack';
 
 const route = useRoute();
 const router = useRouter();
@@ -44,6 +47,7 @@ onMounted(load);
 
 <template>
   <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera." size="wide">
+    <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.teacher.history)"><ArrowLeft aria-hidden="true" />Volver al historial</Button></template>
     <template v-if="careerName" #meta><span class="text-sm font-semibold">{{ careerName }}</span></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading" variant="table-body" :columns="4" :rows="3" :actions="false" :pagination="false" chip heading />

@@ -9,6 +9,9 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
+import { ArrowLeft } from '@lucide/vue';
+import { Button } from '@/components/ui/button';
+import { goBack } from '@/lib/goBack';
 
 const router = useRouter();
 const careers = ref<HistoryCareer[] | null>(null);
@@ -29,6 +32,7 @@ onMounted(load);
 
 <template>
   <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera." size="wide">
+    <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.teacher.syllabi)"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading" variant="table-body" :columns="2" :actions="false" :pagination="false" />
     <template v-else-if="careers">
