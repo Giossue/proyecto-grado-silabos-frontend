@@ -49,7 +49,7 @@ const run = (key: string): void => {
                     <Button
                         type="button"
                         :variant="action.destructive ? 'destructive' : 'outline'"
-                        class="w-full justify-start"
+                        class="w-fit"
                         :disabled="action.disabled"
                         :aria-describedby="action.disabled && action.disabledReason ? `option-reason-${action.key}` : undefined"
                         @click="run(action.key)"
