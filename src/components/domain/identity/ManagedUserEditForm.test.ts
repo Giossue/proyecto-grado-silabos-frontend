@@ -1,0 +1,33 @@
+import { flushPromises, mount } from '@vue/test-utils';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { updateManagedUser, type ManagedUser } from '@/api/admin-users';
+import { ApiError } from '@/api/client';
+import ManagedUserEditForm from '@/components/domain/identity/ManagedUserEditForm.vue';
+
+vi.mock('@/api/admin-users', () => ({ updateManagedUser: vi.fn(), removeManagedUserRole: vi.fn() }));
+const update = vi.mocked(updateManagedUser);
+
+const user: ManagedUser = { id: 'u1', nombre: 'ANA PÉREZ', correo_electronico: 'ana@ueb.edu.ec', active: true, pending_activation: false, two_factor_enabled: false, roles: [{ id: 'r1', code: 'docente', name: 'Docente', career_name: 'Software' }], careers: ['Software'], assignments: [] };
+const roles = [{ codigo: 'docente', nombre: 'Docente' }, { codigo: 'coordinador', nombre: 'Coordinador' }];
+
+describe('ManagedUserEditForm', () => {
+  afterEach(() => { document.body.innerHTML = ''; update.mockReset(); });
+
+  it('si la carrera ya tiene coordinador pide confirmar y reenvía con el reemplazo', async () => {
+    update.mockImplementationOnce(async () => { throw new ApiError('La carrera ya tiene como coordinador a JUAN.', 422, { replace_coordinator: ['La carrera ya tiene como coordinador a JUAN.'] }); });
+    update.mockImplementationOnce(async () => ({ message: 'Cuenta actualizada.' }));
+    const wrapper = mount(ManagedUserEditForm, { attachTo: document.body, props: { user, roles, careers: [{ id: 'c1', nombre: 'Software' }] } });
+    (wrapper.vm as unknown as { form: { role_code: string; career_id: string } }).form = { ...(wrapper.vm as unknown as { form: { nombre: string; correo_electronico: string } }).form, role_code: 'coordinador', career_id: 'c1' };
+    await flushPromises();
+
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+    expect(document.body.textContent).toContain('La carrera ya tiene como coordinador a JUAN.');
+
+    ([...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Reemplazar') as HTMLButtonElement).click();
+    await flushPromises();
+
+    expect(update).toHaveBeenLastCalledWith('u1', expect.objectContaining({ role_code: 'coordinador', career_id: 'c1', replace_coordinator: true }));
+    expect(wrapper.emitted('saved')).toEqual([['Cuenta actualizada.']]);
+  });
+});

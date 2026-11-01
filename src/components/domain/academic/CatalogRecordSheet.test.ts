@@ -17,7 +17,6 @@ const options = {
   activeSubjects: [],
   scheduledSubjects: [],
   parallels: [],
-  coordinatorUsers: [],
   teacherUsers: [],
 };
 

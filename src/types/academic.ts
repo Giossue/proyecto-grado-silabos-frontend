@@ -146,7 +146,6 @@ export type AcademicStructureProps = {
     activeSubjects: Option[];
     scheduledSubjects: Option[];
     parallels: Option[];
-    coordinatorUsers: Option[];
     teacherUsers: Option[];
   };
 };

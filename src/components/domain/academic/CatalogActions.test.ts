@@ -33,11 +33,11 @@ describe('CatalogActions', () => {
     expect(wrapper.emitted('changed')?.[0]).toEqual(['Registro desactivado sin borrar su historial.']);
   });
 
-  it('una carrera activa muestra coordinador y desactivar, sin eliminar ni menú', async () => {
-    await open({ entity: 'carrera', coordinator: null, coordinatorUsers: [] });
+  it('una carrera activa muestra desactivar, sin coordinador, eliminar ni menú', async () => {
+    await open({ entity: 'carrera' });
 
     expect(document.body.querySelector('button[aria-label="Acciones para Software"]')).toBeNull();
-    expect(document.body.querySelector('button[aria-label="Asignar coordinador"]')).not.toBeNull();
+    expect(document.body.querySelector('button[aria-label$="coordinador"]')).toBeNull();
     expect(document.body.querySelector('button[aria-label="Desactivar carrera"]')).not.toBeNull();
     expect(document.body.querySelector('button[aria-label="Eliminar"]')).toBeNull();
   });
@@ -56,7 +56,7 @@ describe('CatalogActions', () => {
   });
 
   it('una carrera se desactiva con confirmación y una inactiva ofrece Reactivar', async () => {
-    const wrapper = await open({ entity: 'carrera', coordinator: null, coordinatorUsers: [] });
+    const wrapper = await open({ entity: 'carrera' });
 
     (document.body.querySelector('button[aria-label="Desactivar carrera"]') as HTMLButtonElement).click();
     await flushPromises();
@@ -70,6 +70,5 @@ describe('CatalogActions', () => {
 
     await open({ entity: 'carrera', active: false });
     expect(document.body.querySelector('button[aria-label="Reactivar carrera"]')).not.toBeNull();
-    expect(document.body.querySelector('button[aria-label="Asignar coordinador"]')).toBeNull();
   });
 });

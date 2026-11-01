@@ -1,17 +1,16 @@
 <script setup lang="ts">
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { CalendarPlus, Power, PowerOff, Trash2, UserRoundCog } from '@lucide/vue';
+import { CalendarPlus, Power, PowerOff, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { deleteAcademicRecord, setAcademicRecordStatus } from '@/api/academic';
 import { ApiError } from '@/api/client';
 import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
 import type { SheetAction } from '@/components/domain/SheetActions.vue';
-import CoordinatorReplacementSheet from '@/components/domain/academic/CoordinatorReplacementSheet.vue';
 import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
-import type { CatalogRecord, GovernanceCatalogEntity, Option } from '@/types/academic';
+import type { CatalogRecord, GovernanceCatalogEntity } from '@/types/academic';
 
 const props = defineProps<{
     entity: GovernanceCatalogEntity; recordId: string; logoUrl?: string | null; recordName: string;
@@ -20,8 +19,7 @@ const props = defineProps<{
     campus?: string | null; campusOptions: Array<{ value: string; label: string }>; catalogLibraries?: string[];
     startsOn?: string | null; endsOn?: string | null;
     institutionalProcess?: { id: string; state: 'abierto' | 'pausado' | 'cerrado' } | null;
-    faculties: CatalogRecord[]; coordinator?: { id: string; name: string } | null;
-    coordinatorUsers?: Option[]; lockReason?: string | null;
+    faculties: CatalogRecord[]; lockReason?: string | null;
 }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const editOpen = ref(false);
@@ -33,7 +31,6 @@ const sheetActions = computed<SheetAction[]>(() => {
     if (props.lockReason) return [];
     const list: SheetAction[] = [];
     if (props.entity === 'periodo' && !props.institutionalProcess) list.push({ key: 'process', label: 'Abrir convocatoria', icon: CalendarPlus });
-    if (props.entity === 'carrera' && props.active) list.push({ key: 'coordinator', label: props.coordinator ? 'Reemplazar coordinador' : 'Asignar coordinador', icon: UserRoundCog });
     // Facultades y carreras no se eliminan: se desactivan y conservan su historial.
     if (statusEntity.value) list.push(props.active ? { key: 'status', label: `Desactivar ${noun.value}`, icon: PowerOff } : { key: 'status', label: `Reactivar ${noun.value}`, icon: Power });
     if (props.entity === 'periodo') list.push({ key: 'delete', label: 'Eliminar', icon: Trash2, destructive: true });
@@ -43,11 +40,9 @@ const sheetActions = computed<SheetAction[]>(() => {
 const runAction = (key: string): void => {
     editOpen.value = false;
     if (key === 'process') processOpen.value = true;
-    if (key === 'coordinator') coordinatorOpen.value = true;
     if (key === 'delete') deleteOpen.value = true;
     if (key === 'status') { error.value = null; statusOpen.value = true; }
 };
-const coordinatorOpen = ref(false);
 const processOpen = ref(false);
 const deleteOpen = ref(false);
 const deleting = ref(false);
@@ -82,7 +77,6 @@ const remove = async (): Promise<void> => {
 
 <template>
     <div class="contents">
-        <CoordinatorReplacementSheet v-if="entity === 'carrera'" :key="`coordinator-${recordId}`" v-model:open="coordinatorOpen" :career-id="recordId" :career-name="recordName" :coordinator="coordinator ?? null" :users="coordinatorUsers ?? []" @saved="emit('changed', $event)" />
         <SyllabusProcessSheet v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName, starts_on: startsOn ?? undefined, ends_on: endsOn ?? undefined }" display="menu" trigger-label="Abrir convocatoria" @saved="emit('changed', $event)" />
         <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :catalog-libraries="catalogLibraries ?? []" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" :actions="sheetActions" @action="runAction" @saved="emit('changed', $event)" />
 

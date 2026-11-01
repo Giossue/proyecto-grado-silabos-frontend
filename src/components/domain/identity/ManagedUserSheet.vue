@@ -6,6 +6,7 @@ import { createCareerTeacher } from '@/api/career-academics';
 import { ApiError } from '@/api/client';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import CoordinatorReplacementConfirm from '@/components/domain/identity/CoordinatorReplacementConfirm.vue';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -32,21 +33,26 @@ const nameParts = [
 const setPart = (key: (typeof nameParts)[number]['key'], value: string | number): void => { form.value[key] = String(value).normalize('NFC').toLocaleUpperCase('es-EC'); };
 const reset = (): void => { form.value = emptyForm(); errors.value = {}; };
 watch(open, (value) => { if (value) reset(); });
-const submit = async (): Promise<void> => {
+const replacement = ref<string | null>(null);
+const submit = async (replaceCoordinator = false): Promise<void> => {
     processing.value = true; errors.value = {};
     try {
         const result = props.teacherCareer
             ? await createCareerTeacher({ primer_nombre: form.value.primer_nombre, segundo_nombre: form.value.segundo_nombre, primer_apellido: form.value.primer_apellido, segundo_apellido: form.value.segundo_apellido, correo_electronico: form.value.correo_electronico })
-            : await createManagedUser({ primer_nombre: form.value.primer_nombre, segundo_nombre: form.value.segundo_nombre, primer_apellido: form.value.primer_apellido, segundo_apellido: form.value.segundo_apellido, correo_electronico: form.value.correo_electronico, role_code: form.value.role_code, career_id: roleNeedsCareer(form.value.role_code) ? form.value.career_id : null });
-        open.value = false; emit('saved', result.message);
-    } catch (reason) { errors.value = reason instanceof ApiError ? reason.errors : {}; }
+            : await createManagedUser({ primer_nombre: form.value.primer_nombre, segundo_nombre: form.value.segundo_nombre, primer_apellido: form.value.primer_apellido, segundo_apellido: form.value.segundo_apellido, correo_electronico: form.value.correo_electronico, role_code: form.value.role_code, career_id: roleNeedsCareer(form.value.role_code) ? form.value.career_id : null, ...(replaceCoordinator ? { replace_coordinator: true } : {}) });
+        replacement.value = null; open.value = false; emit('saved', result.message);
+    } catch (reason) {
+        const failed = reason instanceof ApiError ? reason.errors : {};
+        replacement.value = failed.replace_coordinator?.[0] ?? null;
+        if (replacement.value === null) errors.value = failed;
+    }
     finally { processing.value = false; }
 };
 </script>
 
 <template>
     <FormSheet v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? undefined : 'Crear cuenta institucional'" :show-trigger="showTrigger">
-        <template #default="{ close }"><form @submit.prevent="submit"><FieldGroup>
+        <template #default="{ close }"><form @submit.prevent="submit()"><FieldGroup>
             <div class="grid grid-cols-2 items-start gap-4">
                 <Field v-for="part in nameParts" :key="part.key" :data-invalid="Boolean(errors[part.key])"><FieldLabel :for="`managed-user-${part.key}`" required>{{ part.label }}</FieldLabel><Input :id="`managed-user-${part.key}`" :model-value="form[part.key]" lang="es" autocapitalize="characters" :placeholder="part.placeholder" required @update:model-value="setPart(part.key, $event)" /><FieldError :errors="errors[part.key]" /></Field>
             </div>
@@ -56,4 +62,5 @@ const submit = async (): Promise<void> => {
             <FormSheetActions :close="close" :processing="processing" :icon="UserPlus" :label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" />
         </FieldGroup></form></template>
     </FormSheet>
+    <CoordinatorReplacementConfirm :message="replacement" :processing="processing" @confirm="submit(true)" @cancel="replacement = null" />
 </template>

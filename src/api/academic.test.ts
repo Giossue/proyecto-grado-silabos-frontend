@@ -6,7 +6,6 @@ vi.mock('@/api/client', () => ({ api }));
 
 import {
   deleteAcademicRecord,
-  replaceCareerCoordinator,
   setAcademicRecordStatus,
   updateAcademicRecord,
 } from '@/api/academic';
@@ -31,17 +30,6 @@ describe('academic API', () => {
     });
     expect(api).toHaveBeenNthCalledWith(3, '/admin/academic/periodo/period-1', {
       method: 'DELETE',
-    });
-  });
-
-  it('uses the dedicated coordinator replacement endpoint', async () => {
-    api.mockResolvedValue({ message: 'ok' });
-
-    await replaceCareerCoordinator('career-1', 'user-2');
-
-    expect(api).toHaveBeenCalledWith('/admin/academic/careers/career-1/coordinator', {
-      method: 'POST',
-      body: JSON.stringify({ incoming_user_id: 'user-2' }),
     });
   });
 });

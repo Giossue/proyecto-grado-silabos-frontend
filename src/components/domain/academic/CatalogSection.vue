@@ -301,8 +301,6 @@ const {
                                 :modality="career.modality"
                                 :faculties="catalogs.faculties"
                                 :campus-options="options.campusOptions" :modality-options="options.modalityOptions"
-                                :coordinator="career.coordinator"
-                                :coordinator-users="options.coordinatorUsers"
                                 @changed="emit('changed', $event)"
                             />
                         </TableCell>
