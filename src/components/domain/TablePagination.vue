@@ -27,7 +27,7 @@ const changePage = (page: number): void => {
 
 <template>
   <div class="-mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-    <p class="text-sm text-muted-foreground" aria-live="polite">
+    <p class="text-pagination text-muted-foreground" aria-live="polite">
       {{ meta.from ?? 0 }}–{{ meta.to ?? 0 }} de {{ meta.total }}
     </p>
     <Pagination
@@ -41,11 +41,11 @@ const changePage = (page: number): void => {
       @update:page="changePage"
     >
       <PaginationContent v-slot="{ items }" class="flex-wrap">
-        <PaginationPrevious aria-label="Página anterior" class="h-8">
-          <ChevronLeft aria-hidden="true" />
+        <PaginationPrevious aria-label="Página anterior" class="h-7.5 text-pagination">
+          <ChevronLeft class="size-3.75" aria-hidden="true" />
           <span class="hidden sm:inline">Anterior</span>
         </PaginationPrevious>
-        <span class="px-2 text-sm sm:hidden">Página {{ meta.current_page }} de {{ meta.last_page }}</span>
+        <span class="px-2 text-pagination sm:hidden">Página {{ meta.current_page }} de {{ meta.last_page }}</span>
         <template v-for="(item, index) in items" :key="index">
           <PaginationItem
             v-if="item.type === 'page'"
@@ -53,15 +53,15 @@ const changePage = (page: number): void => {
             :is-active="item.value === meta.current_page"
             :aria-current="item.value === meta.current_page ? 'page' : undefined"
             :aria-label="`Ir a la página ${item.value}`"
-            class="hidden size-8 sm:inline-flex"
+            class="hidden size-7.5 text-pagination sm:inline-flex"
           >
             {{ item.value }}
           </PaginationItem>
-          <PaginationEllipsis v-else class="hidden size-8 sm:flex" />
+          <PaginationEllipsis v-else class="hidden size-7.5 sm:flex [&_svg]:size-3.75" />
         </template>
-        <PaginationNext aria-label="Página siguiente" class="h-8">
+        <PaginationNext aria-label="Página siguiente" class="h-7.5 text-pagination">
           <span class="hidden sm:inline">Siguiente</span>
-          <ChevronRight aria-hidden="true" />
+          <ChevronRight class="size-3.75" aria-hidden="true" />
         </PaginationNext>
       </PaginationContent>
     </Pagination>
