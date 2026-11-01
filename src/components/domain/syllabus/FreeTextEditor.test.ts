@@ -28,6 +28,20 @@ describe('Editor de documentos compartido', () => {
         expect(wrapper.find('[aria-label="Insertar dato del sistema"]').exists()).toBe(true);
     });
 
+    it('guarda el color del texto elegido y lo conserva al volver a abrir', async () => {
+        const wrapper = mountEditor(doc('Unidad No.'));
+        await flushPromises();
+        editorOf(wrapper).chain().selectAll().setColor('#365F91').run();
+        await flushPromises();
+        const value = wrapper.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
+        const text = nodesOfType(value, 'text')[0]!;
+        expect(text.marks).toEqual([{ type: 'textStyle', attrs: expect.objectContaining({ color: '#365F91' }) }]);
+
+        const reopened = mountEditor(value);
+        await flushPromises();
+        expect(reopened.get('[role="textbox"] span[style]').attributes('style')).toContain('color');
+    });
+
     it('el texto del docente queda siempre a la izquierda, aunque venga alineado', async () => {
         const justified: DocumentNode = { type: 'doc', content: [{ type: 'paragraph', attrs: { textAlign: 'justify' }, content: [{ type: 'text', text: 'Justificado' }] }] };
         const wrapper = mountEditor(justified);

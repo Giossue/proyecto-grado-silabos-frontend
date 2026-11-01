@@ -2,6 +2,7 @@
 import { Table, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
+import { Color, TextStyle } from '@tiptap/extension-text-style';
 import { Extension, type Editor } from '@tiptap/core';
 import { EditorContent, useEditor } from '@tiptap/vue-3';
 import { Bold, Braces, ChevronDown, Italic, Underline, List, ListOrdered, Plus, Table2 } from '@lucide/vue';
@@ -77,6 +78,7 @@ const editor = useEditor({
     extensions: [
         StarterKit.configure({ document: false, heading: false, blockquote: false, code: false, codeBlock: false, horizontalRule: false, link: false, strike: false, ...(props.bare ? { trailingNode: false } : {}) }),
         ...(props.align ? [TextAlign.configure({ types: ['paragraph'], alignments: ['left', 'center', 'right', 'justify'] })] : []),
+        TextStyle, Color,
         Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
         DocumentWithBlocks,
         PageSpacers,

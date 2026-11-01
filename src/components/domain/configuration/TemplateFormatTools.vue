@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { ChainedCommands, Editor } from '@tiptap/core';
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Bold, ChevronDown, Italic, List, ListOrdered, Table2, Underline } from '@lucide/vue';
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Baseline, Bold, ChevronDown, Italic, List, ListOrdered, Table2, Underline } from '@lucide/vue';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { DOCUMENT_CELL_COLORS, paintCell } from '@/lib/documentPalette';
+import { DOCUMENT_CELL_COLORS, DOCUMENT_TEXT_COLORS, paintCell } from '@/lib/documentPalette';
 import { cn } from '@/lib/utils';
 
 const props = defineProps<{ editor: Editor | null; disabled?: boolean }>();
@@ -50,6 +50,14 @@ const tableActions = [
 <template>
   <div class="flex shrink-0 items-center gap-0.5" role="group" aria-label="Formato del texto">
     <Button v-for="mark in marks" :key="mark.name" type="button" variant="ghost" size="icon-sm" :aria-label="mark.label" :aria-pressed="active(mark.name)" :disabled="!ready" :class="cn(active(mark.name) && 'bg-accent text-accent-foreground')" @mousedown.prevent @click="run(mark.toggle)"><component :is="mark.icon" aria-hidden="true" /></Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger as-child>
+        <Button type="button" variant="ghost" size="icon-sm" aria-label="Color del texto" :disabled="!ready" @mousedown.prevent><Baseline aria-hidden="true" /></Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" @close-auto-focus="returnFocus">
+        <DropdownMenuItem v-for="color in DOCUMENT_TEXT_COLORS" :key="color.value" @select="run((chain) => chain.setColor(color.value))"><span class="size-3 shrink-0 rounded-full ring-1 ring-border" :style="{ backgroundColor: color.value }" aria-hidden="true" />{{ color.label }}</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
     <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
     <Button v-for="alignment in alignments" :key="alignment.value" type="button" variant="ghost" size="icon-sm" :aria-label="alignment.label" :aria-pressed="active('paragraph', { textAlign: alignment.value })" :disabled="!ready" :class="cn(active('paragraph', { textAlign: alignment.value }) && 'bg-accent text-accent-foreground')" @mousedown.prevent @click="run((chain) => chain.setTextAlign(alignment.value))"><component :is="alignment.icon" aria-hidden="true" /></Button>
     <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />

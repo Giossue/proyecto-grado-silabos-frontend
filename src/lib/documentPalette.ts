@@ -40,6 +40,12 @@ export const DOCUMENT_CELL_COLORS = [
     { label: 'Azul institucional', value: DOCUMENT_COLORS.tableHeader, text: DOCUMENT_COLORS.paper, bold: true },
 ] as const;
 
+export const DOCUMENT_TEXT_COLORS = [
+    { label: 'Negro', value: DOCUMENT_COLORS.text },
+    { label: 'Azul', value: DOCUMENT_COLORS.tableHeaderText },
+    { label: 'Blanco', value: DOCUMENT_COLORS.paper },
+] as const;
+
 export type DocumentCellColor = (typeof DOCUMENT_CELL_COLORS)[number];
 
 export const paintCell = <T extends { setCellAttribute: (name: string, value: unknown) => T }>(chain: T, color: DocumentCellColor): T =>
