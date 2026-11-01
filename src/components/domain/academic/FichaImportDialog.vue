@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Check, FileSpreadsheet, FileUp } from '@lucide/vue';
+import { Check, Download, FileSpreadsheet, FileUp } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { applyFichaWorkbook, previewFichaWorkbook, downloadFichaWorkbook, type FichaWorkbookPreview, type FichaWorkbookSubject } from '@/api/ficha-imports';
@@ -138,7 +138,7 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                     <li>Complete las celdas de contenido. Conserve los nombres de las hojas, los campos y las materias</li>
                     <li>Cargue el archivo y revise la vista previa. Las celdas vacías no cambian el proyecto de carrera actual</li>
                   </ol>
-                  <div><Button type="button" variant="outline" :disabled="busy" @click="download"><Spinner v-if="downloading" data-icon="inline-start" />Descargar plantilla Excel</Button></div>
+                  <div><Button type="button" variant="outline" :disabled="busy" @click="download"><Spinner v-if="downloading" data-icon="inline-start" /><Download v-else data-icon="inline-start" aria-hidden="true" />Descargar plantilla Excel</Button></div>
                   <FieldGroup>
                     <Field>
                       <FieldLabel for="ficha-import-files">Excel completado (.xlsx)</FieldLabel>
