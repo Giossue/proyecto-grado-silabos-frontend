@@ -214,7 +214,7 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
-  it('Carrera es de solo lectura salvo que la ficha permita editarlo', async () => {
+  it('Carrera es de solo lectura salvo que el proyecto de carrera permita editarlo', async () => {
     const detail = syllabus('borrador', 'coordinacion');
     detail.sections[0]!.fields.push(field('field-2', 'docente', { label: 'Bibliografía' }));
     detail.sections[0]!.fields.push(field('field-3', 'coordinacion', { label: 'Herramientas TIC', teacher_editable: true }));
@@ -223,7 +223,7 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
     expect(wrapper.get('#field-field-1').element.closest('[data-slot="accordion-item"]')!.textContent).toContain('Carrera');
     expect(wrapper.findAllComponents(FreeTextEditor).map((editor) => editor.attributes('id'))).toEqual(['input-field-2', 'input-field-3']);
-    expect(wrapper.get('#field-field-3').text()).toContain('Viene de la ficha; puede ajustarlo');
+    expect(wrapper.get('#field-field-3').text()).toContain('Viene del proyecto de carrera; puede ajustarlo');
     wrapper.unmount();
   });
 

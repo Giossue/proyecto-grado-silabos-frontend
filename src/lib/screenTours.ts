@@ -39,7 +39,7 @@ export const screenTours: Record<string, TourStep[]> = {
   '/admin/usuarios': [
     step(ACTIONS, 'Crear cuentas', 'Cree una cuenta o importe varias desde Excel. Cada persona recibe una invitación por correo.', 'left'),
     step(FILTERS, 'Buscar y filtrar', 'Busque por nombre o correo, o filtre por rol y estado.', 'bottom'),
-    step(TABLE, 'Cuentas', 'Pulse una fila para ver la ficha. El «+1» junto al rol indica que la persona tiene otros roles.', 'top'),
+    step(TABLE, 'Cuentas', 'Pulse una fila para ver el detalle. El «+1» junto al rol indica que la persona tiene otros roles.', 'top'),
   ],
   '/admin/plantilla': [
     step(ACTIONS, 'Plantilla', 'Edite el formato único del sílabo o cargue el formato oficial. Con una convocatoria abierta está bloqueada: pause la convocatoria para cambiarla.', 'left'),
@@ -66,8 +66,8 @@ export const screenTours: Record<string, TourStep[]> = {
     step(TABLE, 'Docentes', 'Sus cuentas y los paralelos que dictan en el período. Desde el menú de la fila los corrige o los retira de la carrera.', 'top'),
   ],
   '/coordinacion/proyecto-carrera': [
-    step(ACTIONS, 'Importar desde Excel', 'Descargue la plantilla de su carrera, complétela y cárguela para llenar varias fichas a la vez.', 'left'),
-    step(TABLE, 'Fichas de materias', 'Pulse una materia para editar su ficha: lo que el docente recibe ya escrito.', 'top'),
+    step(ACTIONS, 'Importar desde Excel', 'Descargue la plantilla de su carrera, complétela y cárguela para llenar varias materias a la vez.', 'left'),
+    step(TABLE, 'Proyecto de carrera por materia', 'Pulse una materia para editar su proyecto de carrera: lo que el docente recibe ya escrito.', 'top'),
   ],
   '/coordinacion/malla': [
     step(ACTIONS, 'Editar malla', 'Modifique ciclos, materias y relaciones. «Relaciones» las lista en una tabla.', 'left'),

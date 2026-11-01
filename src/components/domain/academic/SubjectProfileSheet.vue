@@ -43,7 +43,7 @@ watch(open, async (value) => {
     fields.value = profile.fields;
     values.value = Object.fromEntries(profile.fields.map((field) => [field.id, profile.values[field.id] ?? field.content ?? null]));
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo abrir la ficha.';
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo abrir el proyecto de carrera.';
   } finally {
     loading.value = false;
   }
@@ -58,7 +58,7 @@ const save = async (close: () => void) => {
     emit('saved');
     close();
   } catch (reason) {
-    error.value = reason instanceof ApiError ? reason.message : 'No se pudo guardar la ficha.';
+    error.value = reason instanceof ApiError ? reason.message : 'No se pudo guardar el proyecto de carrera.';
   } finally {
     saving.value = false;
   }
@@ -66,7 +66,7 @@ const save = async (close: () => void) => {
 </script>
 
 <template>
-  <FormDialog v-model:open="open" fit :show-trigger="false" :title="`Ficha de ${subjectName}`" trigger-label="Ficha">
+  <FormDialog v-model:open="open" fit :show-trigger="false" :title="`Proyecto de carrera de ${subjectName}`" trigger-label="Proyecto de carrera">
     <template #default="{ close }">
       <form class="contents" @submit.prevent="save(close)">
         <FieldGroup>
@@ -76,7 +76,7 @@ const save = async (close: () => void) => {
           <template v-else>
             <div class="flex flex-col gap-6 md:min-h-96 md:flex-row md:items-start">
               <Tabs v-if="sections.length > 1" v-model="activeSection" orientation="vertical" class="w-full shrink-0 md:w-72">
-                <TabsList class="h-auto w-full flex-col items-stretch justify-start gap-1" aria-label="Secciones de la ficha">
+                <TabsList class="h-auto w-full flex-col items-stretch justify-start gap-1" aria-label="Secciones del proyecto de carrera">
                   <TabsTrigger v-for="section in sections" :key="section" :value="section" class="h-auto flex-none justify-start whitespace-normal border-b-0 border-l-2 py-2 text-left">{{ section }}<span v-if="sectionHasEmpty(section)" class="ml-1 text-warning" aria-hidden="true">●</span><span v-if="sectionHasEmpty(section)" class="sr-only"> (con campos sin llenar)</span></TabsTrigger>
                 </TabsList>
               </Tabs>
@@ -98,7 +98,7 @@ const save = async (close: () => void) => {
               </fieldset>
             </div>
           </template>
-          <FormSheetActions :close="close" :processing="saving" :disabled="!canSave" label="Guardar ficha" />
+          <FormSheetActions :close="close" :processing="saving" :disabled="!canSave" label="Guardar proyecto de carrera" />
         </FieldGroup>
       </form>
     </template>

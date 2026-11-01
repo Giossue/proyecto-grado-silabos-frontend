@@ -557,7 +557,7 @@ onBeforeUnmount(() => {
                     <AccordionContent class="flex flex-col gap-3 px-1 pt-1">
                       <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
                         <FieldLabel :for="`input-${field.id}`" required class="sr-only">{{ fieldTitle(field, section) }}</FieldLabel>
-                        <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene de la ficha; puede ajustarlo.</FieldDescription>
+                        <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene del proyecto de carrera; puede ajustarlo.</FieldDescription>
                         <FieldResponseEditor required :template="field.template" :label="fieldTitle(field, section)" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
                       </Field>
                       <FieldView v-else :id="`field-${field.id}`" :field="field" bare />

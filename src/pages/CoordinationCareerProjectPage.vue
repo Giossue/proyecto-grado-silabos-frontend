@@ -68,7 +68,7 @@ const open = (subject: Subject): void => {
     selected.value = subject;
     profileOpen.value = true;
 };
-const saved = async (message = 'Ficha de asignatura guardada.'): Promise<void> => {
+const saved = async (message = 'Proyecto de carrera guardado.'): Promise<void> => {
     toast.success(message);
     await load();
 };
@@ -90,9 +90,9 @@ onMounted(() => { void load(); });
               <SelectContent><SelectGroup><SelectItem value="all">Todos los ciclos</SelectItem><SelectItem v-for="option in cycleOptions" :key="option" :value="option">{{ option }}</SelectItem></SelectGroup></SelectContent>
             </Select>
           </Field>
-          <Field><FieldLabel for="career-project-state" class="sr-only">Estado de la ficha</FieldLabel>
-            <Select v-model="filter.values.estado.value"><SelectTrigger id="career-project-state"><SelectValue placeholder="Todas las fichas" /></SelectTrigger>
-              <SelectContent><SelectGroup><SelectItem value="all">Todas las fichas</SelectItem><SelectItem value="complete">Completas</SelectItem><SelectItem value="incomplete">Incompletas</SelectItem></SelectGroup></SelectContent>
+          <Field><FieldLabel for="career-project-state" class="sr-only">Estado del proyecto de carrera</FieldLabel>
+            <Select v-model="filter.values.estado.value"><SelectTrigger id="career-project-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger>
+              <SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="complete">Completas</SelectItem><SelectItem value="incomplete">Incompletas</SelectItem></SelectGroup></SelectContent>
             </Select>
           </Field>
         </template>
@@ -103,7 +103,7 @@ onMounted(() => { void load(); });
         <Collapsible v-for="group in groups" :key="`${group.cycle}-${filter.active.value}`" :default-open="filter.active.value" class="group/cycle rounded-md ring-1 ring-surface-ring bg-card">
           <CollapsibleTrigger class="flex w-full items-center gap-2 px-4 py-3 text-left font-semibold">
             <span class="flex-1">{{ group.cycle === 'Sin ciclo' ? group.cycle : `Ciclo ${group.cycle}` }}</span>
-            <Badge :variant="completeCount(group.list) === group.list.length ? 'success' : 'warning'" :aria-label="`${completeCount(group.list)} de ${group.list.length} fichas completas`">{{ completeCount(group.list) }}/{{ group.list.length }}</Badge>
+            <Badge :variant="completeCount(group.list) === group.list.length ? 'success' : 'warning'" :aria-label="`${completeCount(group.list)} de ${group.list.length} asignaturas completas`">{{ completeCount(group.list) }}/{{ group.list.length }}</Badge>
             <ChevronDown class="size-4 transition-transform group-data-[state=open]/cycle:rotate-180" aria-hidden="true" />
           </CollapsibleTrigger>
           <CollapsibleContent class="border-t bg-muted/60 p-3">
@@ -112,7 +112,7 @@ onMounted(() => { void load(); });
                 <Card
                   class="h-full cursor-pointer transition-colors hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-hidden"
                   tabindex="0"
-                  :aria-label="`Abrir la ficha de ${subject.nombre}`"
+                  :aria-label="`Abrir el proyecto de carrera de ${subject.nombre}`"
                   @click="open(subject)"
                   @keydown.enter.self.prevent="open(subject)"
                   @keydown.space.self.prevent="open(subject)"

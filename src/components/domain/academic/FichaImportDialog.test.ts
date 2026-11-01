@@ -58,7 +58,7 @@ describe('FichaImportDialog', () => {
     expect(wrapper.emitted('applied')).toHaveLength(1);
   });
 
-  it('compara con la ficha actual y aplica solo los campos marcados', async () => {
+  it('compara con el proyecto de carrera actual y aplica solo los campos marcados', async () => {
     const replacing: FichaWorkbookPreview = { ...ready, fields: [{ key: 'descripcion', label: 'Descripción' }, { key: 'bibliografia', label: 'Bibliografía' }], subjects: [
       { subject_id: 's1', code: 'SW-1', name: 'Algoritmos', cycle: 1, state: 'lista', values: { descripcion: 'Texto propuesto', bibliografia: ['Libro nuevo'] }, replaces: true, current: { descripcion: 'Texto actual' } },
     ] };
@@ -66,7 +66,7 @@ describe('FichaImportDialog', () => {
     vi.mocked(applyFichaWorkbook).mockResolvedValue({ message: 'ok', applied: 1 });
     await openDialog();
 
-    button('Comparar con la ficha actual')!.click();
+    button('Comparar con el proyecto de carrera actual')!.click();
     await flushPromises();
     expect(document.body.textContent).toContain('Texto actual');
     expect(document.body.textContent).toContain('Texto propuesto');

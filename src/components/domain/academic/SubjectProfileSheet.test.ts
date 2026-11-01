@@ -15,7 +15,7 @@ const formSheet = defineComponent({
   template: '<div><slot :close="close" /></div>',
 });
 const passthrough = defineComponent({ template: '<div><slot /></div>' });
-const actions = defineComponent({ template: '<button type="submit">Guardar ficha</button>' });
+const actions = defineComponent({ template: '<button type="submit">Guardar proyecto de carrera</button>' });
 const editor = defineComponent({
   props: { id: String, label: String, modelValue: { type: Object, default: null }, disabled: Boolean },
   emits: ['update:modelValue'],

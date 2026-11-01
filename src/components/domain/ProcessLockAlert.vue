@@ -38,7 +38,7 @@ const reason = computed(() => {
         ? 'Administración pausó la convocatoria institucional, pero la de su carrera sigue abierta. '
         : '';
 
-    return `${institutional}La convocatoria de su carrera está ${open}. Pausarla permite corregir la malla y las fichas. ${consequence}`;
+    return `${institutional}La convocatoria de su carrera está ${open}. Pausarla permite corregir la malla y el proyecto de carrera. ${consequence}`;
 });
 </script>
 

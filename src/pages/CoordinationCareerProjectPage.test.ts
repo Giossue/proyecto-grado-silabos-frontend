@@ -29,7 +29,7 @@ describe('Proyecto de carrera', () => {
     document.body.innerHTML = '';
   });
 
-  it('muestra las materias de cada ciclo como tarjetas con el estado de su ficha', async () => {
+  it('muestra las materias de cada ciclo como tarjetas con el estado de su proyecto de carrera', async () => {
     const wrapper = mountPage();
     await flushPromises();
     for (const trigger of wrapper.findAll('[data-slot="collapsible-trigger"]')) await trigger.trigger('click');
@@ -43,16 +43,16 @@ describe('Proyecto de carrera', () => {
     wrapper.unmount();
   });
 
-  it('al pulsar una tarjeta, con el mouse o con el teclado, abre la ficha de esa materia', async () => {
+  it('al pulsar una tarjeta, con el mouse o con el teclado, abre el proyecto de carrera de esa materia', async () => {
     const wrapper = mountPage();
     await flushPromises();
     for (const trigger of wrapper.findAll('[data-slot="collapsible-trigger"]')) await trigger.trigger('click');
     await flushPromises();
 
-    await wrapper.get('[aria-label="Abrir la ficha de Matemática Discreta"]').trigger('click');
+    await wrapper.get('[aria-label="Abrir el proyecto de carrera de Matemática Discreta"]').trigger('click');
     expect(wrapper.findComponent(SubjectProfileSheet).props()).toMatchObject({ subjectId: 'm2', subjectName: 'Matemática Discreta' });
 
-    await wrapper.get('[aria-label="Abrir la ficha de Estructuras de Datos"]').trigger('keydown.enter');
+    await wrapper.get('[aria-label="Abrir el proyecto de carrera de Estructuras de Datos"]').trigger('keydown.enter');
     expect(wrapper.findComponent(SubjectProfileSheet).props()).toMatchObject({ subjectId: 'm3' });
     wrapper.unmount();
   });

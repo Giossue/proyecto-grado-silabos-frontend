@@ -73,7 +73,7 @@ const selectedSubjects = computed(() => proposed.value.filter((subject) => chose
 const apply = async (): Promise<void> => {
   if (!current.value || !file.value) return;
   const count = selectedSubjects.value.length;
-  if (await run(() => applyFichaWorkbook(file.value!, current.value!, selectedSubjects.value, chosenFields()), 'No se pudieron aplicar las fichas.')) { open.value = false; emit('applied', `Fichas aplicadas a ${count} materias.`); }
+  if (await run(() => applyFichaWorkbook(file.value!, current.value!, selectedSubjects.value, chosenFields()), 'No se pudo aplicar el proyecto de carrera.')) { open.value = false; emit('applied', `Proyecto de carrera aplicado a ${count} materias.`); }
 };
 const expanded = ref<Set<string>>(new Set());
 const toggleExpanded = (id: string): void => { const next = new Set(expanded.value); if (!next.delete(id)) next.add(id); expanded.value = next; };
@@ -98,12 +98,12 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                       <ul class="flex flex-col gap-2">
                         <li v-for="subject in current?.subjects" :key="subject.subject_id" class="rounded-md ring-1 ring-surface-ring p-3">
                           <div class="flex items-start gap-3">
-                            <Checkbox :id="`ficha-${subject.subject_id}`" :model-value="chosen.has(subject.subject_id)" :disabled="subject.state !== 'lista' || busy" :aria-label="`Aplicar la ficha de ${subject.name}`" @update:model-value="toggle(subject.subject_id, $event === true)" />
+                            <Checkbox :id="`ficha-${subject.subject_id}`" :model-value="chosen.has(subject.subject_id)" :disabled="subject.state !== 'lista' || busy" :aria-label="`Aplicar el proyecto de carrera de ${subject.name}`" @update:model-value="toggle(subject.subject_id, $event === true)" />
                             <div class="flex min-w-0 flex-1 flex-col gap-1">
                               <FieldLabel :for="`ficha-${subject.subject_id}`" class="font-medium">{{ subject.name }}<span class="font-normal text-muted-foreground"> · {{ subject.code }}</span></FieldLabel>
                               <p class="text-sm text-muted-foreground">{{ stateText(subject) }}<template v-if="subject.state === 'lista' && subject.replaces"> · actualiza solo los campos que aplique</template></p>
                               <div class="text-sm">
-                                <Button type="button" variant="link" size="sm" class="h-auto px-0" :aria-expanded="expanded.has(subject.subject_id)" @click="toggleExpanded(subject.subject_id)">{{ expanded.has(subject.subject_id) ? 'Ocultar la comparación' : (subject.replaces ? 'Comparar con la ficha actual' : 'Revisar campos') }}</Button>
+                                <Button type="button" variant="link" size="sm" class="h-auto px-0" :aria-expanded="expanded.has(subject.subject_id)" @click="toggleExpanded(subject.subject_id)">{{ expanded.has(subject.subject_id) ? 'Ocultar la comparación' : (subject.replaces ? 'Comparar con el proyecto de carrera actual' : 'Revisar campos') }}</Button>
                                 <div v-for="(value, key) in expanded.has(subject.subject_id) ? subject.values : {}" :key="key" class="mt-3 rounded-md ring-1 ring-surface-ring p-2">
                                   <div class="flex items-center gap-2">
                                     <Checkbox :id="`ficha-${subject.subject_id}-${key}`" :model-value="fieldChosen(subject.subject_id, String(key))" :disabled="!chosen.has(subject.subject_id) || busy" @update:model-value="toggleField(subject.subject_id, String(key), $event === true)" />
@@ -136,7 +136,7 @@ const toggle = (id: string, value: boolean): void => { const next = new Set(chos
                   <ol class="flex list-decimal flex-col gap-2 pl-5 text-sm">
                     <li>Descargue el Excel con las materias y campos actuales de su carrera</li>
                     <li>Complete las celdas de contenido. Conserve los nombres de las hojas, los campos y las materias</li>
-                    <li>Cargue el archivo y revise la vista previa. Las celdas vacías no cambian la ficha actual</li>
+                    <li>Cargue el archivo y revise la vista previa. Las celdas vacías no cambian el proyecto de carrera actual</li>
                   </ol>
                   <div><Button type="button" variant="outline" :disabled="busy" @click="download"><Spinner v-if="downloading" data-icon="inline-start" />Descargar plantilla Excel</Button></div>
                   <FieldGroup>
