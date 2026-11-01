@@ -15,7 +15,7 @@ los botones ocultos solo ordenan la pantalla; no reemplazan la autorización del
   auditoría. Los textos del botón «Ayuda de esta pantalla» vienen fijos del backend.
 - **Coordinación:** revisión con apertura y seguimiento de la convocatoria, revisión de
   sílabos (detalle y comparación de revisiones), materias y asignaciones, docentes, malla
-  y proyecto de carrera. En el proyecto de carrera se llena la ficha de cada materia, se
+  y proyecto de carrera. En el proyecto de carrera se llenan los campos de cada materia, se
   puede importar desde un documento y se marca por campo si «El docente puede editarlo».
 - **Docencia:** mis sílabos, editor con autoguardado, copia desde otro paralelo,
   asistente de IA e historial.
