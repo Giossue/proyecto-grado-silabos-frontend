@@ -1,10 +1,14 @@
 import { flushPromises, mount } from '@vue/test-utils';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { searchLibraryCatalog } from '@/api/libraryCatalog';
 import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
 import { setTemplateRuntime } from '@/lib/blocks/runtime';
 import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
 import type { DocumentNode } from '@/lib/templateDocument';
 import definition from '@/test/fixtures/template-definition.json';
+import { catalogResults } from '@/test/libraryCatalog';
+
+vi.mock('@/api/libraryCatalog');
 
 const block = (kind: string, value: Record<string, unknown> = {}): DocumentNode => ({ type: 'doc', content: [{ type: 'documentBlock', attrs: { kind, props: {}, value } }] });
 const week = () => ({ contenidos: '', acd_h: '', ape_h: '', aa_h: '', acd: '', ape: '', aa: '', evaluacion: '' });
@@ -62,15 +66,16 @@ describe('FieldResponseEditor', () => {
         expect((emitted(wrapper).content![0]!.attrs!.value as { units: unknown[] }).units).toHaveLength(5);
     });
 
-    it('marca las unidades pendientes y los avances que faltan', () => {
+    it('dice qué falta en cada unidad, sin badges ni contadores', () => {
         const filled = units().map((unit, index) => index === 0 ? { ...unit, nombre: 'Matrices', resultado: 'Resuelve sistemas' } : index === 3 ? { ...unit, semanas: [] } : unit);
         const wrapper = mountEditor(block('unidades'), block('unidades', { units: filled }));
 
         const items = wrapper.findAll('[aria-label^="Unidad "]');
-        expect(items[0]!.find('[data-incomplete]').exists()).toBe(false);
+        expect(items[0]!.text()).not.toContain('Falta');
         expect(items[1]!.text()).toContain('Falta: nombre de la unidad, resultados de aprendizaje');
         expect(items[3]!.text()).toContain('Falta: nombre de la unidad, resultados de aprendizaje, semanas');
-        expect(wrapper.findAll('[data-pending]').map((badge) => badge.text())).toContain('Nombres 1 de 4');
+        expect(wrapper.text()).not.toContain('Pendiente');
+        expect(wrapper.find('[data-block-summary]').exists()).toBe(false);
     });
 
     it('una unidad nueva arranca con las semanas mínimas de la plantilla', async () => {
@@ -89,7 +94,7 @@ describe('FieldResponseEditor', () => {
 
         expect(wrapper.find('[role="textbox"]').exists()).toBe(false);
         expect(wrapper.text()).toContain('Unidad 1');
-        expect(wrapper.find('[data-block-summary]').classes()).not.toContain('sticky');
+        expect(wrapper.find('[data-block-summary]').exists()).toBe(false);
     });
 
     it('los datos de discapacidad aparecen solo si responde Sí y llevan asterisco de obligatorio', async () => {
@@ -124,5 +129,66 @@ describe('FieldResponseEditor', () => {
 
         expect(['#campo-0-2-0', '#campo-0-2-1', '#campo-0-2-2', '#campo-0-2-3'].map((id) => wrapper.get(id).attributes('aria-label')))
             .toEqual(['Resultado de la asignatura, fila 1', 'Alta, fila 1', 'Baja, fila 1', 'Resultado de la carrera, fila 1']);
+    });
+
+    describe('bibliografía con el catálogo de la biblioteca', () => {
+        const empty = { autor: '', titulo: '', anio: '', ciudad: '', editorial: '', isbn: '', codigo: '' };
+        const found = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p' };
+        const wrappers: Array<ReturnType<typeof mountEditor>> = [];
+        const mountBibliography = (disabled = false) => {
+            const wrapper = mount(FieldResponseEditor, { props: { id: 'campo', label: 'Campo', template: block('bibliografia'), modelValue: block('bibliografia', { libros: [empty] }), disabled }, attachTo: document.body });
+            wrappers.push(wrapper);
+
+            return wrapper;
+        };
+        const buttonWith = (text: string): HTMLButtonElement | undefined => [...document.body.querySelectorAll('button')].find((item) => item.textContent?.trim() === text);
+        afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
+
+        it('ofrece «Buscar en la biblioteca» y llena la fila con el libro elegido', async () => {
+            vi.mocked(searchLibraryCatalog).mockResolvedValue(catalogResults([found]));
+            const wrapper = mountBibliography();
+            await flushPromises();
+
+            buttonWith('Buscar en la biblioteca')!.click();
+            await flushPromises();
+            const input = document.body.querySelector<HTMLInputElement>('[aria-label="Texto a buscar"]')!;
+            input.value = 'Sapag';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            await flushPromises();
+            document.body.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            await flushPromises();
+            buttonWith('Agregar')!.click();
+            await flushPromises();
+
+            const attrs = emitted(wrapper).content![0]!.attrs as unknown as { value: { libros: Array<Record<string, string>> } };
+            expect(attrs.value.libros).toEqual([{ autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: '658.404 S2411p' }]);
+        });
+
+        it('«Limpiar» vacía la fila sin quitarla, y con una sola fila el botón de borrar no se puede usar', async () => {
+            const filled = { autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: '658.404 S2411p' };
+            const wrapper = mount(FieldResponseEditor, { props: { id: 'campo', label: 'Campo', template: block('bibliografia'), modelValue: block('bibliografia', { libros: [filled] }) }, attachTo: document.body });
+            wrappers.push(wrapper);
+            await flushPromises();
+
+            expect(document.body.querySelector<HTMLButtonElement>('[aria-label="Quitar libro 1"]')!.disabled).toBe(true);
+            document.body.querySelector<HTMLButtonElement>('[aria-label="Limpiar libro 1"]')!.click();
+            await flushPromises();
+
+            const attrs = emitted(wrapper).content![0]!.attrs as unknown as { value: { libros: Array<Record<string, string>> } };
+            expect(attrs.value.libros).toEqual([{ autor: '', titulo: '', anio: '', ciudad: '', editorial: '', isbn: '', codigo: '' }]);
+        });
+
+        it('«Limpiar» no se puede usar en una fila vacía', async () => {
+            mountBibliography();
+            await flushPromises();
+            expect(document.body.querySelector<HTMLButtonElement>('[aria-label="Limpiar libro 1"]')!.disabled).toBe(true);
+        });
+
+        it('con el sílabo bloqueado no se puede buscar', async () => {
+            mountBibliography(true);
+            await flushPromises();
+
+            expect(buttonWith('Buscar en la biblioteca')!.disabled).toBe(true);
+        });
     });
 });

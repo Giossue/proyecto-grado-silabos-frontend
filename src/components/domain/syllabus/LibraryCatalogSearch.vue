@@ -4,12 +4,14 @@ import { ref, watch } from 'vue';
 import { searchLibraryCatalog, type CatalogBook, type CatalogSearchField } from '@/api/libraryCatalog';
 import { catalogErrorMessage } from '@/lib/blocks/catalog';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Spinner } from '@/components/ui/spinner';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { PaginationMeta } from '@/types/pagination';
 
 const props = defineProps<{ disabled?: boolean }>();
 const emit = defineEmits<{ pick: [book: CatalogBook] }>();
@@ -17,6 +19,8 @@ const open = ref(false);
 const field = ref<CatalogSearchField>('any');
 const text = ref('');
 const results = ref<CatalogBook[] | null>(null);
+const meta = ref<PaginationMeta | null>(null);
+const searched = ref<{ field: CatalogSearchField; text: string } | null>(null);
 const added = ref<Set<string>>(new Set());
 const busy = ref(false);
 const error = ref<string | null>(null);
@@ -25,28 +29,39 @@ watch(open, (isOpen) => {
     if (isOpen) return;
     text.value = '';
     results.value = null;
+    meta.value = null;
+    searched.value = null;
     added.value = new Set();
     error.value = null;
 });
 
-const search = async (): Promise<void> => {
-    if (text.value.trim().length < 2 || busy.value) return;
+const load = async (query: { field: CatalogSearchField; text: string }, page: number): Promise<void> => {
     busy.value = true;
     error.value = null;
     try {
-        results.value = await searchLibraryCatalog(field.value, text.value.trim());
+        const found = await searchLibraryCatalog(query.field, query.text, page);
+        results.value = found.data;
+        meta.value = found.meta;
+        searched.value = query;
     } catch (reason) {
         results.value = null;
+        meta.value = null;
         error.value = catalogErrorMessage(reason);
     } finally {
         busy.value = false;
     }
 };
+const search = async (): Promise<void> => {
+    if (text.value.trim().length < 2 || busy.value) return;
+    await load({ field: field.value, text: text.value.trim() }, 1);
+};
+const goTo = async (page: number): Promise<void> => {
+    if (searched.value && !busy.value) await load(searched.value, page);
+};
 const pick = (book: CatalogBook): void => {
     emit('pick', book);
     added.value = new Set(added.value).add(book.id);
 };
-const details = (book: CatalogBook): string => [book.author, book.year, book.publisher, book.isbn && `ISBN ${book.isbn}`].filter(Boolean).join(' · ');
 </script>
 
 <template>
@@ -57,7 +72,7 @@ const details = (book: CatalogBook): string => [book.author, book.year, book.pub
                 Buscar en la biblioteca
             </Button>
         </DialogTrigger>
-        <DialogContent class="flex max-h-(--overlay-max-height) flex-col gap-3 overflow-hidden sm:max-w-2xl">
+        <DialogContent class="flex max-h-(--overlay-max-height) flex-col gap-3 overflow-hidden sm:max-w-6xl">
             <DialogHeader>
                 <DialogTitle>Buscar en la biblioteca</DialogTitle>
                 <DialogDescription>Elija un libro para agregarlo a la tabla.</DialogDescription>
@@ -76,20 +91,43 @@ const details = (book: CatalogBook): string => [book.author, book.year, book.pub
                 </Button>
             </form>
             <FeedbackAlert v-if="error" :message="error" />
-            <p v-else-if="results !== null && results.length === 0" class="text-sm text-muted-foreground">No hay resultados.</p>
-            <ScrollArea v-if="results !== null && results.length > 0" class="min-h-0 flex-1">
-                <ul class="flex flex-col gap-2 pr-3">
-                    <li v-for="book in results" :key="book.id" class="flex items-start justify-between gap-3 rounded-md border p-2">
-                        <div class="min-w-0">
-                            <p class="font-medium">{{ book.title }}</p>
-                            <p class="text-sm text-muted-foreground">{{ details(book) }}</p>
-                        </div>
-                        <Button type="button" size="sm" :variant="added.has(book.id) ? 'outline' : 'default'" :disabled="added.has(book.id)" @click="pick(book)">
-                            {{ added.has(book.id) ? 'Agregado' : 'Agregar' }}
-                        </Button>
-                    </li>
-                </ul>
-            </ScrollArea>
+            <div v-else-if="results !== null" class="min-h-0 flex-1 overflow-y-auto">
+                <Table label="Libros de la biblioteca" :cards="false">
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Autor</TableHead>
+                            <TableHead>Título</TableHead>
+                            <TableHead class="text-center">Año</TableHead>
+                            <TableHead>Ciudad</TableHead>
+                            <TableHead>Editorial</TableHead>
+                            <TableHead>ISBN</TableHead>
+                            <TableHead>Código</TableHead>
+                            <TableHead class="w-24"><span class="sr-only">Agregar</span></TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        <TableEmpty v-if="results.length === 0" :colspan="8">No hay resultados</TableEmpty>
+                        <TableRow v-for="book in results" v-else :key="book.id">
+                            <TableCell class="whitespace-normal">{{ book.author }}</TableCell>
+                            <TableCell class="whitespace-normal font-medium">{{ book.title }}</TableCell>
+                            <TableCell class="text-center">{{ book.year }}</TableCell>
+                            <TableCell class="whitespace-normal">{{ book.place }}</TableCell>
+                            <TableCell class="whitespace-normal">{{ book.publisher }}</TableCell>
+                            <TableCell>{{ book.isbn }}</TableCell>
+                            <TableCell class="whitespace-normal">{{ book.call_number }}</TableCell>
+                            <TableCell>
+                                <Button type="button" size="sm" :variant="added.has(book.id) ? 'outline' : 'default'" :disabled="added.has(book.id)" :aria-label="`Agregar ${book.title}`" @click="pick(book)">
+                                    {{ added.has(book.id) ? 'Agregado' : 'Agregar' }}
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
+            <TablePagination v-if="meta && meta.total > 0 && !error" class="shrink-0" :meta="meta" label="Paginación de los libros" @update:page="goTo" />
+            <DialogFooter class="shrink-0">
+                <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
+            </DialogFooter>
         </DialogContent>
     </Dialog>
 </template>

@@ -1,15 +1,17 @@
-import { Check, Plus, Trash2 } from '@lucide/vue';
+import { Eraser, Plus, Trash2 } from '@lucide/vue';
 import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vue';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
+import LibraryCatalogSearch from '@/components/domain/syllabus/LibraryCatalogSearch.vue';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import type { CatalogBook } from '@/api/libraryCatalog';
+import { addCatalogBook, canAddCatalogBook } from '@/lib/blocks/catalog';
 import { holds } from '@/lib/blocks/condition';
-import { ruleFailures, ruleResults } from '@/lib/blocks/rules';
+import { ruleFailures } from '@/lib/blocks/rules';
 import { blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
 import { Scope, type Path } from '@/lib/blocks/scope';
 import { guardNumber, isChoice, isText, numberDigits, numberText, plural, type ChoiceSchema, type ListSchema, type NumberSchema, type ObjectSchema, type TextSchema, type ValueSchema } from '@/lib/blocks/types';
@@ -134,6 +136,14 @@ export default defineComponent({
             onClick: () => write(path, listOf(path).filter((__, position) => position !== index)),
         }, () => h(Trash2, { 'aria-hidden': 'true' }));
 
+        const isBlank = (row: unknown): boolean => isRecord(row) && Object.values(row).every((cell) => String(cell ?? '').trim() === '');
+
+        const clearButton = (schema: ListSchema, path: Path, index: number, name: string): VNodeChild => h(Button, {
+            type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || isBlank(listOf(path)[index]),
+            'aria-label': `Limpiar ${name}`,
+            onClick: () => write([...path, index], emptyValue(schema.items, props.props)),
+        }, () => h(Eraser, { 'aria-hidden': 'true' }));
+
         const addButton = (schema: ListSchema, path: Path, name: string): VNodeChild => h(Button, {
             type: 'button', variant: 'outline', size: 'sm', class: 'w-fit', disabled: !canAdd(path, schema),
             onClick: () => write(path, [...listOf(path), emptyValue(schema.items, props.props)]),
@@ -144,13 +154,15 @@ export default defineComponent({
             const name = schema.title ?? 'elemento';
             const first = offset(path);
             const resizable = schema.minItems < schema.maxItems;
+            // La lista de libros del catálogo se puede vaciar fila por fila; con una sola fila no se puede borrar.
+            const clearable = path.length === 1 && definition.value?.catalog?.list === path[0];
             const columns = Object.entries(rows.properties) as Array<[string, Scalar]>;
             return h('div', { class: 'flex min-w-0 flex-col gap-3' }, [
                 h(Table, { label: capitalize(name), cards: false }, () => [
                     h(TableHeader, {}, () => h(TableRow, {}, () => [
                         h(TableHead, { class: 'w-16' }, () => capitalize(name)),
                         ...columns.map(([key, column]) => h(TableHead, { class: column.type === 'number' ? 'w-20 text-center' : 'min-w-48 whitespace-normal' }, () => column.title ?? key)),
-                        resizable ? h(TableHead, { class: 'w-10' }, () => h('span', { class: 'sr-only' }, 'Acciones')) : null,
+                        resizable ? h(TableHead, { class: clearable ? 'w-20' : 'w-10' }, () => h('span', { class: 'sr-only' }, 'Acciones')) : null,
                     ])),
                     h(TableBody, {}, () => items.map((_, index) => {
                         const itemPath = [...path, index];
@@ -158,7 +170,9 @@ export default defineComponent({
                         return h(TableRow, { key: index }, () => [
                             h(TableCell, { class: 'align-top font-medium' }, () => String(first + index + 1)),
                             ...columns.map(([key, column]) => h(TableCell, { class: 'align-top' }, () => applies(column, [...itemPath, key]) ? input(column, [...itemPath, key], `${column.title ?? key}, ${rowName}`, true) : null)),
-                            resizable ? h(TableCell, { class: 'align-top' }, () => removeButton(schema, path, index, rowName)) : null,
+                            resizable ? h(TableCell, { class: 'align-top' }, () => clearable
+                                ? h('div', { class: 'flex' }, [clearButton(schema, path, index, rowName), removeButton(schema, path, index, rowName)])
+                                : removeButton(schema, path, index, rowName)) : null,
                         ]);
                     })),
                 ]),
@@ -202,10 +216,7 @@ export default defineComponent({
                         : [node(schema.items, itemPath, title, depth + 1)];
                     return h(AccordionItem, { key: index, value: String(index), 'aria-label': title }, () => [
                         h(AccordionTrigger, { class: 'hover:no-underline' }, () => h('span', { class: 'flex min-w-0 flex-col gap-0.5' }, [
-                            h('span', { class: 'flex flex-wrap items-center gap-2' }, [
-                                h('span', { class: 'font-semibold' }, title),
-                                pending.length > 0 ? h(Badge, { variant: 'warning', class: 'font-normal', 'data-incomplete': '' }, () => 'Pendiente') : null,
-                            ]),
+                            h('span', { class: 'font-semibold' }, title),
                             detail ? h('span', { class: 'line-clamp-1 font-normal text-muted-foreground' }, detail) : null,
                             pending.length > 0 ? h('span', { class: 'line-clamp-1 font-normal text-muted-foreground' }, `Falta: ${pending.join(', ')}`) : null,
                         ])),
@@ -225,21 +236,18 @@ export default defineComponent({
             return control(schema, path, label);
         }
 
-        const summary = (): VNodeChild => {
-            if (!definition.value) return null;
-            const results = definition.value.rules.filter((rule) => rule.on === 'submit').flatMap((rule) => ruleResults(rule, props.value, variables.value).filter((result) => result.label !== null));
-            if (results.length === 0) return null;
-            return h('div', { 'data-block-summary': '', class: 'flex flex-wrap items-center gap-2', 'aria-live': 'polite' },
-                results.map((result) => h(Badge, { variant: result.ok ? 'outline' : 'warning', class: 'gap-1 font-normal', 'data-pending': result.ok ? undefined : '' }, () => [
-                    result.ok ? h(Check, { 'aria-hidden': 'true' }) : null,
-                    `${result.label} ${result.actual} de ${result.expected}`,
-                ])));
-        };
-
         return () => {
             const block = definition.value;
             if (!block) return h('p', { class: 'text-muted-foreground' }, 'Bloque sin definición en la plantilla');
-            return h('div', { id: props.id, class: 'flex flex-col gap-4' }, [summary(), ...fields(Object.entries(block.value), [], 0)]);
+            const search = block.catalog ? h(LibraryCatalogSearch, {
+                disabled: props.disabled || !canAddCatalogBook(block, props.value),
+                onPick: (book: CatalogBook) => {
+                    const next = addCatalogBook(block, props.value, book, props.props);
+                    if (next) change(next);
+                },
+            }) : null;
+
+            return h('div', { id: props.id, class: 'flex flex-col gap-4' }, [search, ...fields(Object.entries(block.value), [], 0)]);
         };
     },
 });

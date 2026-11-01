@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { searchLibraryCatalog, type CatalogBook } from '@/api/libraryCatalog';
 import LibraryCatalogSearch from '@/components/domain/syllabus/LibraryCatalogSearch.vue';
+import { catalogResults } from '@/test/libraryCatalog';
 
 vi.mock('@/api/libraryCatalog');
 const search = vi.mocked(searchLibraryCatalog);
@@ -32,7 +33,7 @@ describe('búsqueda en la biblioteca', () => {
     afterEach(() => { try { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); } catch (e) { console.log('UNMOUNT-ERR>>', (e as Error).stack); } document.body.innerHTML = ''; });
 
     it('busca por el campo elegido y entrega el libro que se agrega', async () => {
-        search.mockResolvedValue([book]);
+        search.mockResolvedValue(catalogResults([book]));
         const wrapper = await open();
         const select = body().querySelector<HTMLSelectElement>('[aria-label="Buscar por"]')!;
         select.value = 'author';
@@ -41,9 +42,10 @@ describe('búsqueda en la biblioteca', () => {
 
         await searchFor('Sapag');
 
-        expect(search).toHaveBeenCalledWith('author', 'Sapag');
+        expect(search).toHaveBeenCalledWith('author', 'Sapag', 1);
         expect(body().textContent).toContain('Proyectos de inversión');
-        expect(body().textContent).toContain('ISBN 9789563431063');
+        expect([...body().querySelectorAll('th')].map((item) => item.textContent?.trim())).toEqual(['Autor', 'Título', 'Año', 'Ciudad', 'Editorial', 'ISBN', 'Código', 'Agregar']);
+        expect([...body().querySelectorAll('tbody td')].map((item) => item.textContent?.trim()).slice(0, 7)).toEqual(['Sapag Chain, Nassir', 'Proyectos de inversión', '2011', 'Santiago de Chile', 'Pearson Educación', '9789563431063', '658.404 S2411p']);
         buttonWith('Agregar').click();
         await flushPromises();
         expect(wrapper.emitted('pick')).toEqual([[book]]);
@@ -51,12 +53,12 @@ describe('búsqueda en la biblioteca', () => {
     });
 
     it('avisa cuando no hay resultados', async () => {
-        search.mockResolvedValue([]);
+        search.mockResolvedValue(catalogResults([]));
         await open();
 
         await searchFor('nada');
 
-        expect(body().textContent).toContain('No hay resultados.');
+        expect(body().querySelector('tbody')!.textContent).toContain('No hay resultados');
     });
 
     it('no busca con menos de dos letras', async () => {
@@ -73,5 +75,67 @@ describe('búsqueda en la biblioteca', () => {
         wrappers.push(wrapper);
 
         expect(buttonWith('Buscar en la biblioteca').disabled).toBe(true);
+    });
+
+    it('se cierra con el botón Cerrar y la próxima vez abre limpio', async () => {
+        search.mockResolvedValue(catalogResults([book]));
+        await open();
+        await searchFor('Sapag');
+        expect(body().textContent).toContain('Proyectos de inversión');
+
+        buttonWith('Cerrar').click();
+        await flushPromises();
+        expect(buttonWith('Cerrar')).toBeUndefined();
+
+        buttonWith('Buscar en la biblioteca').click();
+        await flushPromises();
+        expect(body().querySelector<HTMLInputElement>('[aria-label="Texto a buscar"]')!.value).toBe('');
+        expect(body().querySelector('table')).toBeNull();
+    });
+
+    describe('páginas', () => {
+        const pageButton = (label: string): HTMLButtonElement => body().querySelector<HTMLButtonElement>(`[aria-label="${label}"]`)!;
+
+        it('con más de 20 libros muestra la paginación y pide la página elegida con la misma búsqueda', async () => {
+            search.mockResolvedValue(catalogResults(Array.from({ length: 20 }, (_, index) => ({ ...book, id: String(index) })), 45));
+            await open();
+            await searchFor('Sapag');
+            expect(body().textContent).toContain('1–20 de 45');
+
+            search.mockResolvedValue(catalogResults([{ ...book, id: '99', title: 'Libro de la página 3' }], 45, 3));
+            pageButton('Ir a la página 3').click();
+            await flushPromises();
+
+            expect(search).toHaveBeenLastCalledWith('any', 'Sapag', 3);
+            expect(body().textContent).toContain('Libro de la página 3');
+            expect(body().textContent).toContain('41–41 de 45');
+        });
+
+        it('sigue con la búsqueda que se hizo aunque se cambie el texto sin buscar', async () => {
+            search.mockResolvedValue(catalogResults(Array.from({ length: 20 }, (_, index) => ({ ...book, id: String(index) })), 45));
+            await open();
+            await searchFor('Sapag');
+            const input = body().querySelector<HTMLInputElement>('[aria-label="Texto a buscar"]')!;
+            input.value = 'otra cosa';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            await flushPromises();
+
+            pageButton('Ir a la página 2').click();
+            await flushPromises();
+
+            expect(search).toHaveBeenLastCalledWith('any', 'Sapag', 2);
+        });
+
+        it('una búsqueda nueva vuelve a la página 1 y sin resultados no hay paginación', async () => {
+            search.mockResolvedValue(catalogResults(Array.from({ length: 20 }, (_, index) => ({ ...book, id: String(index) })), 45));
+            await open();
+            await searchFor('Sapag');
+            search.mockResolvedValue(catalogResults([]));
+
+            await searchFor('nada');
+
+            expect(search).toHaveBeenLastCalledWith('any', 'nada', 1);
+            expect(body().querySelector('[aria-label="Paginación de los libros"]')).toBeNull();
+        });
     });
 });

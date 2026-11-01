@@ -7,6 +7,7 @@ import { setTemplateRuntime } from '@/lib/blocks/runtime';
 import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
 import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 import definition from '@/test/fixtures/template-definition.json';
+import { catalogResults } from '@/test/libraryCatalog';
 
 vi.mock('@/api/libraryCatalog');
 
@@ -156,7 +157,7 @@ describe('bloques definidos en la plantilla', () => {
         });
 
         it('busca en la biblioteca y llena la fila vacía con el libro elegido', async () => {
-            vi.mocked(searchLibraryCatalog).mockResolvedValue([{ id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p' }]);
+            vi.mocked(searchLibraryCatalog).mockResolvedValue(catalogResults([{ id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p' }]));
             const wrapper = mountEditor(bibliography());
             await flushPromises();
 

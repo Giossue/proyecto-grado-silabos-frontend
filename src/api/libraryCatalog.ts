@@ -1,4 +1,5 @@
 import { api } from '@/api/client';
+import type { PaginationMeta } from '@/types/pagination';
 
 export type CatalogSearchField = 'any' | 'title' | 'author' | 'isbn';
 export type CatalogBook = {
@@ -12,5 +13,7 @@ export type CatalogBook = {
     call_number: string;
 };
 
-export const searchLibraryCatalog = (field: CatalogSearchField, q: string) =>
-    api<{ data: CatalogBook[] }>(`/teacher/library-catalog/search?${new URLSearchParams({ field, q })}`).then((payload) => payload.data);
+export type CatalogResults = { data: CatalogBook[]; meta: PaginationMeta };
+
+export const searchLibraryCatalog = (field: CatalogSearchField, q: string, page = 1) =>
+    api<CatalogResults>(`/teacher/library-catalog/search?${new URLSearchParams({ field, q, page: String(page) })}`);
