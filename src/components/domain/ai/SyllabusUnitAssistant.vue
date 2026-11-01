@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
-import { InputGroup, InputGroupAddon, InputGroupTextarea } from '@/components/ui/input-group';
+import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
@@ -141,10 +141,10 @@ onBeforeUnmount(() => { generation += 1; stop(); });
             <form @submit.prevent="send">
                 <Field>
                     <FieldLabel :for="`unit-assistant-${syllabusId}`" class="sr-only">Consulta sobre una unidad</FieldLabel>
-                    <InputGroup>
-                        <InputGroupTextarea :id="`unit-assistant-${syllabusId}`" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" class="w-full min-w-0" :disabled="!enabled || !chat?.available || waiting" placeholder="Escribe la unidad o el tema…" @focus="engaged = true" @blur="engaged = false" />
-                        <InputGroupAddon align="block-end" class="justify-end"><Button type="submit" size="sm" :disabled="!canSend"><Spinner v-if="waiting" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar</Button></InputGroupAddon>
-                    </InputGroup>
+                    <div class="flex items-end gap-2">
+                        <Textarea :id="`unit-assistant-${syllabusId}`" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" class="min-w-0 flex-1" :disabled="!enabled || !chat?.available || waiting" placeholder="Escribe la unidad o el tema…" @focus="engaged = true" @blur="engaged = false" />
+                        <Button type="submit" size="icon" aria-label="Enviar" :disabled="!canSend"><Spinner v-if="waiting" /><Send v-else aria-hidden="true" /></Button>
+                    </div>
                     <FieldDescription v-if="outOfMessages">Llegó al límite de {{ limits?.messages_max }} preguntas al asistente para este sílabo.</FieldDescription>
                     <FieldDescription v-else-if="saving">Espera a que se guarden los cambios del sílabo antes de consultar.</FieldDescription>
                     <FieldDescription v-else-if="!enabled">La generación está disponible mientras puedes editar este sílabo.</FieldDescription>

@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
-import { InputGroup, InputGroupAddon, InputGroupTextarea } from '@/components/ui/input-group';
+import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
@@ -165,10 +165,10 @@ onBeforeUnmount(() => {
             <form @submit.prevent="send">
                 <Field>
                     <FieldLabel for="template-assistant-message" class="sr-only">Pedido al asistente</FieldLabel>
-                    <InputGroup>
-                        <InputGroupTextarea id="template-assistant-message" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" class="w-full min-w-0" :disabled="!chat?.available || waiting" placeholder="¿Qué cambio quiere en la plantilla?" @focus="engaged = true" @blur="engaged = false" />
-                        <InputGroupAddon align="block-end" class="justify-end"><Button type="submit" size="sm" :disabled="!canSend"><Spinner v-if="waiting" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar</Button></InputGroupAddon>
-                    </InputGroup>
+                    <div class="flex items-end gap-2">
+                        <Textarea id="template-assistant-message" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" class="min-w-0 flex-1" :disabled="!chat?.available || waiting" placeholder="¿Qué cambio quiere en la plantilla?" @focus="engaged = true" @blur="engaged = false" />
+                        <Button type="submit" size="icon" aria-label="Enviar" :disabled="!canSend"><Spinner v-if="waiting" /><Send v-else aria-hidden="true" /></Button>
+                    </div>
                     <FieldDescription>Los cambios aplicados se guardan con «Guardar»</FieldDescription>
                 </Field>
             </form>
