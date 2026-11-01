@@ -1,0 +1,77 @@
+import { flushPromises, mount } from '@vue/test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { searchLibraryCatalog, type CatalogBook } from '@/api/libraryCatalog';
+import LibraryCatalogSearch from '@/components/domain/syllabus/LibraryCatalogSearch.vue';
+
+vi.mock('@/api/libraryCatalog');
+const search = vi.mocked(searchLibraryCatalog);
+
+const book: CatalogBook = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p' };
+const wrappers: Array<ReturnType<typeof mount>> = [];
+const body = (): HTMLElement => document.body;
+const buttonWith = (text: string): HTMLButtonElement => [...body().querySelectorAll('button')].find((item) => item.textContent?.includes(text)) as HTMLButtonElement;
+const open = async (disabled = false) => {
+    const wrapper = mount(LibraryCatalogSearch, { props: { disabled }, attachTo: document.body });
+    wrappers.push(wrapper);
+    buttonWith('Buscar en la biblioteca').click();
+    await flushPromises();
+
+    return wrapper;
+};
+const searchFor = async (text: string): Promise<void> => {
+    const input = body().querySelector<HTMLInputElement>('[aria-label="Texto a buscar"]')!;
+    input.value = text;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushPromises();
+    body().querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await flushPromises();
+};
+
+describe('búsqueda en la biblioteca', () => {
+    beforeEach(() => search.mockReset());
+    afterEach(() => { try { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); } catch (e) { console.log('UNMOUNT-ERR>>', (e as Error).stack); } document.body.innerHTML = ''; });
+
+    it('busca por el campo elegido y entrega el libro que se agrega', async () => {
+        search.mockResolvedValue([book]);
+        const wrapper = await open();
+        const select = body().querySelector<HTMLSelectElement>('[aria-label="Buscar por"]')!;
+        select.value = 'author';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        await flushPromises();
+
+        await searchFor('Sapag');
+
+        expect(search).toHaveBeenCalledWith('author', 'Sapag');
+        expect(body().textContent).toContain('Proyectos de inversión');
+        expect(body().textContent).toContain('ISBN 9789563431063');
+        buttonWith('Agregar').click();
+        await flushPromises();
+        expect(wrapper.emitted('pick')).toEqual([[book]]);
+        expect(buttonWith('Agregado').disabled).toBe(true);
+    });
+
+    it('avisa cuando no hay resultados', async () => {
+        search.mockResolvedValue([]);
+        await open();
+
+        await searchFor('nada');
+
+        expect(body().textContent).toContain('No hay resultados.');
+    });
+
+    it('no busca con menos de dos letras', async () => {
+        await open();
+
+        await searchFor('a');
+
+        expect(search).not.toHaveBeenCalled();
+        expect(body().querySelector<HTMLButtonElement>('button[type="submit"]')!.disabled).toBe(true);
+    });
+
+    it('el botón se deshabilita cuando ya no caben más libros', async () => {
+        const wrapper = mount(LibraryCatalogSearch, { props: { disabled: true }, attachTo: document.body });
+        wrappers.push(wrapper);
+
+        expect(buttonWith('Buscar en la biblioteca').disabled).toBe(true);
+    });
+});

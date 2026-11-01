@@ -1,11 +1,14 @@
 import { flushPromises, mount } from '@vue/test-utils';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { searchLibraryCatalog } from '@/api/libraryCatalog';
 import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { setTemplateRuntime } from '@/lib/blocks/runtime';
 import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
 import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 import definition from '@/test/fixtures/template-definition.json';
+
+vi.mock('@/api/libraryCatalog');
 
 const official = definition as unknown as TemplateDefinitionPayload;
 const block = (kind: string, value: Record<string, unknown> = {}, props: Record<string, unknown> = {}): DocumentNode => ({ type: 'doc', content: [{ type: 'documentBlock', attrs: { kind, props, value } }] });
@@ -123,6 +126,59 @@ describe('bloques definidos en la plantilla', () => {
             const text = mount(FreeTextContent, { props: { value: block('evaluacion') } }).text();
             expect(text).toContain('3.0 PUNTOS');
             expect(text).not.toContain('práctico-experimental');
+        });
+    });
+
+    describe('bibliografía', () => {
+        type Book = Record<'autor' | 'titulo' | 'anio' | 'ciudad' | 'editorial' | 'isbn' | 'codigo', string>;
+        const empty: Book = { autor: '', titulo: '', anio: '', ciudad: '', editorial: '', isbn: '', codigo: '' };
+        const booksOf = (document: DocumentNode): Book[] => attrsOf<{ value: { libros: Book[] } }>(document).value.libros;
+        const bibliography = (libros: Book[] = [empty]) => block('bibliografia', { libros });
+        const buttonWith = (text: string): HTMLButtonElement => [...document.body.querySelectorAll('button')].find((item) => item.textContent?.trim() === text) as HTMLButtonElement;
+
+        it('se dibuja como la tabla de siempre, con los siete títulos y una fila por libro', () => {
+            const wrapper = mount(FreeTextContent, { props: { value: bibliography([{ ...empty, titulo: 'Proyectos de inversión', isbn: '9789563431063' }, { ...empty, titulo: 'Zootecnia básica' }]) } });
+
+            expect(wrapper.findAll('th').map((item) => item.text())).toEqual(['Autor', 'Título', 'Año', 'Ciudad', 'Editorial', 'ISBN', 'Código']);
+            expect(wrapper.findAll('tr')).toHaveLength(3);
+            expect(wrapper.text()).toContain('9789563431063');
+        });
+
+        it('el docente escribe en las columnas y agrega o quita libros', async () => {
+            const wrapper = mountEditor(bibliography());
+            await flushPromises();
+
+            await type('Título, libro 1', 'Proyectos de inversión');
+            expect(booksOf(last(wrapper))[0]!.titulo).toBe('Proyectos de inversión');
+            byLabel<HTMLButtonElement>('Agregar libro').click();
+            await flushPromises();
+            expect(booksOf(last(wrapper))).toHaveLength(2);
+        });
+
+        it('busca en la biblioteca y llena la fila vacía con el libro elegido', async () => {
+            vi.mocked(searchLibraryCatalog).mockResolvedValue([{ id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p' }]);
+            const wrapper = mountEditor(bibliography());
+            await flushPromises();
+
+            buttonWith('Buscar en la biblioteca').click();
+            await flushPromises();
+            const input = byLabel('Texto a buscar');
+            input.value = 'Sapag';
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            await flushPromises();
+            document.body.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+            await flushPromises();
+            buttonWith('Agregar').click();
+            await flushPromises();
+
+            expect(booksOf(last(wrapper))).toEqual([{ autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: '' }]);
+        });
+
+        it('Administración la ve sin el buscador', async () => {
+            mountEditor(bibliography(), 'configure');
+            await flushPromises();
+
+            expect(buttonWith('Buscar en la biblioteca')).toBeUndefined();
         });
     });
 });

@@ -1,11 +1,14 @@
 import { Minus, Plus } from '@lucide/vue';
 import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vue';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
+import LibraryCatalogSearch from '@/components/domain/syllabus/LibraryCatalogSearch.vue';
 import { renderFreeText, type RenderOptions } from '@/components/domain/syllabus/freeTextRender';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import type { CatalogBook } from '@/api/libraryCatalog';
+import { addCatalogBook, canAddCatalogBook } from '@/lib/blocks/catalog';
 import { holds } from '@/lib/blocks/condition';
 import { ruleFailures, ruleResults } from '@/lib/blocks/rules';
 import { blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
@@ -192,7 +195,14 @@ export default defineComponent({
             if (props.mode === 'configure' && Object.keys(block.props).length > 0) return configure(block);
             const resolved = resolveBlock(block, props.props, props.value, variables.value);
             if (props.mode !== 'fill') return h('div', { class: 'document-block' }, toDocument(resolved).map((child) => renderFreeText(child, { variable: (id) => variables.value[id] ?? '' })));
-            return h('div', { class: 'document-block flex flex-col gap-2' }, [summary(), ...resolved.map((child) => renderFreeText(child as DocumentNode, { ...fillOptions, variable: (id) => variables.value[id] ?? '' }))]);
+            const search = block.catalog ? h(LibraryCatalogSearch, {
+                disabled: !canAddCatalogBook(block, props.value),
+                onPick: (book: CatalogBook) => {
+                    const next = addCatalogBook(block, props.value, book, props.props);
+                    if (next) change(next);
+                },
+            }) : null;
+            return h('div', { class: 'document-block flex flex-col gap-2' }, [search, summary(), ...resolved.map((child) => renderFreeText(child as DocumentNode, { ...fillOptions, variable: (id) => variables.value[id] ?? '' }))]);
         };
     },
 });
