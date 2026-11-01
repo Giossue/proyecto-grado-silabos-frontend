@@ -949,6 +949,12 @@
 .setup-checklist .driver-checklist-item-done .driver-checklist-item-title {
     color: var(--muted-foreground);
 }
+.setup-checklist .driver-checklist-item-title {
+    font-weight: 500;
+}
+.setup-checklist .driver-checklist-item-done .driver-checklist-item-title {
+    font-weight: 400;
+}
 .setup-checklist .driver-checklist-item:has(button.driver-checklist-item-trigger:hover, a.driver-checklist-item-trigger:hover, button.driver-checklist-check + div.driver-checklist-item-trigger:hover, .driver-checklist-item-trigger:focus-visible) {
     background-color: var(--accent);
 }
