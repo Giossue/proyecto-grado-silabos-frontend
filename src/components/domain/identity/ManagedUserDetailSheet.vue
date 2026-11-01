@@ -90,7 +90,7 @@ const currentAssignments = computed(() =>
 <template>
     <Sheet v-model:open="open">
         <SheetContent :aria-describedby="undefined" class="sm:max-w-lg">
-            <SheetHeader>
+            <SheetHeader class="pb-0">
                 <SheetTitle>{{ editing ? 'Editar usuario' : 'Datos de la cuenta' }}</SheetTitle>
             </SheetHeader>
 
