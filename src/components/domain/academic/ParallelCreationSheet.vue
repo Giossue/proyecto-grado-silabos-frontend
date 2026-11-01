@@ -183,9 +183,8 @@ watch(open, (value) => value && reset());
           <Alert v-if="error" variant="destructive">
             <AlertDescription>{{ error }}</AlertDescription>
           </Alert>
-          <section class="flex flex-col gap-2" aria-labelledby="parallel-summary-title">
-            <div class="flex items-center justify-between gap-2">
-              <h3 id="parallel-summary-title" class="text-sm font-medium">Paralelos registrados</h3>
+          <section class="flex flex-col gap-2">
+            <div class="flex items-center justify-end gap-2">
               <Button type="button" size="sm" variant="outline" :disabled="adding || rowBusy" @click="startAdd"><Plus aria-hidden="true" /> Agregar paralelo</Button>
             </div>
             <Alert v-if="rowError" variant="destructive"><AlertDescription>{{ rowError }}</AlertDescription></Alert>
