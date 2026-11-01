@@ -26,7 +26,7 @@ const changePage = (page: number): void => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div class="-mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <p class="text-sm text-muted-foreground" aria-live="polite">
       {{ meta.from ?? 0 }}–{{ meta.to ?? 0 }} de {{ meta.total }}
     </p>
@@ -41,7 +41,7 @@ const changePage = (page: number): void => {
       @update:page="changePage"
     >
       <PaginationContent v-slot="{ items }" class="flex-wrap">
-        <PaginationPrevious aria-label="Página anterior">
+        <PaginationPrevious aria-label="Página anterior" class="h-8">
           <ChevronLeft aria-hidden="true" />
           <span class="hidden sm:inline">Anterior</span>
         </PaginationPrevious>
@@ -53,13 +53,13 @@ const changePage = (page: number): void => {
             :is-active="item.value === meta.current_page"
             :aria-current="item.value === meta.current_page ? 'page' : undefined"
             :aria-label="`Ir a la página ${item.value}`"
-            class="hidden sm:inline-flex"
+            class="hidden size-8 sm:inline-flex"
           >
             {{ item.value }}
           </PaginationItem>
-          <PaginationEllipsis v-else class="hidden sm:flex" />
+          <PaginationEllipsis v-else class="hidden size-8 sm:flex" />
         </template>
-        <PaginationNext aria-label="Página siguiente">
+        <PaginationNext aria-label="Página siguiente" class="h-8">
           <span class="hidden sm:inline">Siguiente</span>
           <ChevronRight aria-hidden="true" />
         </PaginationNext>
