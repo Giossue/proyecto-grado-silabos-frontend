@@ -93,7 +93,7 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <span class="flex-none [&_button]:pointer-events-none" :class="convocationId ? '[&_button]:pointer-events-auto' : ''" tabindex="-1">
+              <span class="flex-none" :class="convocationId ? '' : '[&_button]:pointer-events-none'" tabindex="-1">
                 <TabsTrigger value="seguimiento" :disabled="!convocationId" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><ChartNoAxesColumn aria-hidden="true" />Seguimiento</TabsTrigger>
               </span>
             </TooltipTrigger>

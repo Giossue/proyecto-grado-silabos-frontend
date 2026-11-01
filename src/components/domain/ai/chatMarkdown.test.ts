@@ -15,4 +15,11 @@ describe('renderChatMarkdown', () => {
     expect(wrapper.find('script').exists()).toBe(false);
     expect(wrapper.text()).toContain('<script>alert(1)</script>');
   });
+
+  it('la lista numerada deja margen para números de dos cifras, que si no se cortan por la izquierda', () => {
+    const wrapper = render(Array.from({ length: 12 }, (_, index) => `${index + 1}. Sección ${index + 1}`).join('\n'));
+
+    expect(wrapper.findAll('ol li')).toHaveLength(12);
+    expect(wrapper.get('ol').classes()).toContain('pl-8');
+  });
 });

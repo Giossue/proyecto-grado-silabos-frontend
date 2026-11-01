@@ -17,7 +17,7 @@ const fieldName = computed(() => props.selection?.kind === 'field' ? props.selec
 </script>
 
 <template>
-  <div class="flex w-56 shrink-0 items-center gap-0.5 overflow-hidden" role="group" :aria-label="selection?.kind === 'section' ? 'Sección seleccionada' : 'Campo seleccionado'">
+  <div class="flex min-w-44 flex-1 items-center gap-0.5 overflow-hidden" role="group" :aria-label="selection?.kind === 'section' ? 'Sección seleccionada' : 'Campo seleccionado'">
     <template v-if="selection?.kind === 'field'">
       <DropdownMenu>
         <DropdownMenuTrigger as-child>

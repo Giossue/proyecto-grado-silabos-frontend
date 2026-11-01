@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/core';
-import { ImageUp, ListTree, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from '@lucide/vue';
+import { Braces, ImageUp, ListTree, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
@@ -20,12 +20,11 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { layoutOf, layoutStyle, paperOf, sheetPixels, type DocumentLayout } from '@/lib/documentLayout';
 import { templateRuntime } from '@/lib/blocks/runtime';
 import { plural, type ValueSchema } from '@/lib/blocks/types';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useCountdown } from '@/composables/useCountdown';
@@ -155,7 +154,7 @@ const setLayout = (key: keyof DocumentLayout, value: unknown): void => {
     touched();
 };
 type ListLimits = { block: string; path: string; label: string; min: number; max: number; initial: number };
-const LIMITS = [{ key: 'min', label: 'Mínimo' }, { key: 'max', label: 'Máximo' }, { key: 'initial', label: 'Al empezar' }] as const;
+const LIMITS = [{ key: 'min', label: 'Mínimo' }, { key: 'max', label: 'Máximo' }, { key: 'initial', label: 'Empieza con' }] as const;
 const capitalize = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
 const templateLists = (): ListLimits[] => {
     const found: ListLimits[] = [];
@@ -169,10 +168,13 @@ const templateLists = (): ListLimits[] => {
         }
     };
     for (const [kind, block] of Object.entries(templateRuntime().definition?.blocks ?? {})) {
-        for (const [key, schema] of Object.entries(block.value)) walk(kind, schema, [key], null);
+        // La lista de libros pertenece al diseño de la plantilla, no a estos límites.
+        for (const [key, schema] of Object.entries(block.value)) if (block.catalog?.list !== key) walk(kind, schema, [key], null);
     }
     return found;
 };
+const designOpen = ref(false);
+const listsOpen = ref(false);
 const listsDraft = ref<ListLimits[]>(templateLists());
 const setListLimit = (list: ListLimits, key: (typeof LIMITS)[number]['key'], value: string | number): void => {
     list[key] = Math.max(0, Math.min(100, Math.trunc(Number(value) || 0)));
@@ -454,7 +456,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <Button type="button" :disabled="locked" @click="editWarningOpen = true"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
       </div>
-      <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 flex-wrap items-center gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
+      <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <TemplateSelectionTools
@@ -469,7 +472,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
           @remove="removeSelected"
           @orientation="toggleOrientation"
         />
-        <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
+        </div>
+        <div class="flex shrink-0 items-center gap-1">
+        <span class="mx-0.5 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <div class="flex shrink-0 items-center gap-1">
           <Tooltip>
             <TooltipTrigger as-child>
@@ -480,7 +485,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuGroup>
-                      <DropdownMenuItem :disabled="locked" @select="jsonOpen = true">Editar JSON</DropdownMenuItem>
+                      <DropdownMenuItem v-if="layoutControls.length" :disabled="locked" @select="designOpen = true"><Ruler aria-hidden="true" />Diseño</DropdownMenuItem>
+                      <DropdownMenuItem v-if="listsDraft.length" :disabled="locked" @select="listsOpen = true"><ListTree aria-hidden="true" />Listas</DropdownMenuItem>
+                      <DropdownMenuItem :disabled="locked" @select="jsonOpen = true"><Braces aria-hidden="true" />Editar JSON</DropdownMenuItem>
                     </DropdownMenuGroup>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -488,60 +495,11 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
             </TooltipTrigger>
             <TooltipContent>Opciones avanzadas</TooltipContent>
           </Tooltip>
-          <Tooltip v-if="layoutControls.length">
-            <TooltipTrigger as-child>
-              <span class="inline-flex">
-                <Popover>
-                  <PopoverTrigger as-child>
-                    <Button type="button" variant="ghost" size="icon-sm" aria-label="Diseño" :disabled="busy || locked"><Ruler aria-hidden="true" /></Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" class="w-72">
-                    <FieldGroup class="gap-4">
-                      <p class="text-sm text-muted-foreground">Márgenes y tamaños del documento. La letra, los colores y la alineación son los institucionales.</p>
-                      <Field v-for="control in layoutControls" :key="control.key">
-                        <FieldLabel :for="`template-layout-${control.key}`">{{ control.label }}</FieldLabel>
-                        <Select :model-value="String(layoutDraft[control.key])" @update:model-value="setLayout(control.key, $event)">
-                          <SelectTrigger :id="`template-layout-${control.key}`"><SelectValue /></SelectTrigger>
-                          <SelectContent><SelectGroup><SelectItem v-for="option in control.options" :key="option.value" :value="String(option.value)">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
-                        </Select>
-                      </Field>
-                    </FieldGroup>
-                  </PopoverContent>
-                </Popover>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>Diseño</TooltipContent>
-          </Tooltip>
-          <Tooltip v-if="listsDraft.length">
-            <TooltipTrigger as-child>
-              <span class="inline-flex">
-                <Popover>
-                  <PopoverTrigger as-child>
-                    <Button type="button" variant="ghost" size="icon-sm" aria-label="Listas" :disabled="busy || locked"><ListTree aria-hidden="true" /></Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" class="w-80">
-                    <FieldGroup class="gap-4">
-                      <p class="text-sm text-muted-foreground">Cuántos elementos puede tener el docente.</p>
-                      <FieldSet v-for="list in listsDraft" :key="`${list.block}-${list.path}`" class="gap-2">
-                        <FieldLegend variant="label">{{ list.label }}</FieldLegend>
-                        <div class="grid grid-cols-3 gap-2">
-                          <Field v-for="limit in LIMITS" :key="limit.key" class="gap-1">
-                            <FieldLabel :for="`template-list-${list.block}-${list.path}-${limit.key}`" class="text-xs font-normal">{{ limit.label }}</FieldLabel>
-                            <Input :id="`template-list-${list.block}-${list.path}-${limit.key}`" type="number" min="0" max="100" step="1" :model-value="list[limit.key]" @update:model-value="setListLimit(list, limit.key, $event)" />
-                          </Field>
-                        </div>
-                      </FieldSet>
-                    </FieldGroup>
-                  </PopoverContent>
-                </Popover>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>Listas</TooltipContent>
-          </Tooltip>
         </div>
-        <div class="ml-auto flex shrink-0 items-center gap-2 pl-2">
+        <div class="flex shrink-0 items-center gap-2">
           <span class="sr-only" aria-live="polite"><template v-if="changed">Sin guardar</template></span>
           <Button type="button" class="relative" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar<span v-if="changed" data-unsaved class="absolute -right-1 -top-1 size-2.5 rounded-full bg-warning ring-2 ring-background" aria-hidden="true" /></Button>
+        </div>
         </div>
       </div>
     </div>
@@ -616,6 +574,44 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
 
     <UnsavedChangesDialog :open="leaveOpen" title="Hay cambios sin guardar" description="Los cambios de la plantilla no se guardaron. Si vuelve, los perderá" discard-label="Volver y descartar cambios" @continue="leaveOpen = false" @discard="discardAndLeave" @update:open="leaveOpen = $event" />
 
+    <Dialog v-model:open="designOpen">
+      <DialogContent class="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Diseño</DialogTitle>
+          <DialogDescription>Márgenes y tamaños del documento. La letra, los colores y la alineación son los institucionales.</DialogDescription>
+        </DialogHeader>
+        <FieldGroup class="gap-4">
+          <Field v-for="control in layoutControls" :key="control.key">
+            <FieldLabel :for="`template-layout-${control.key}`">{{ control.label }}</FieldLabel>
+            <Select :model-value="String(layoutDraft[control.key])" @update:model-value="setLayout(control.key, $event)">
+              <SelectTrigger :id="`template-layout-${control.key}`"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectGroup><SelectItem v-for="option in control.options" :key="option.value" :value="String(option.value)">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
+            </Select>
+          </Field>
+        </FieldGroup>
+        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose></DialogFooter>
+      </DialogContent>
+    </Dialog>
+    <Dialog v-model:open="listsOpen">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Listas</DialogTitle>
+          <DialogDescription>Cuántos elementos puede tener el docente. «Empieza con» es cuántos ya aparecen al abrir el sílabo.</DialogDescription>
+        </DialogHeader>
+        <FieldGroup class="gap-4">
+          <FieldSet v-for="list in listsDraft" :key="`${list.block}-${list.path}`" class="gap-2">
+            <FieldLegend variant="label">{{ list.label }}</FieldLegend>
+            <div class="grid grid-cols-3 gap-2">
+              <Field v-for="limit in LIMITS" :key="limit.key" class="gap-1">
+                <FieldLabel :for="`template-list-${list.block}-${list.path}-${limit.key}`" class="text-xs font-normal">{{ limit.label }}</FieldLabel>
+                <Input :id="`template-list-${list.block}-${list.path}-${limit.key}`" type="number" min="0" max="100" step="1" :model-value="list[limit.key]" @update:model-value="setListLimit(list, limit.key, $event)" />
+              </Field>
+            </div>
+          </FieldSet>
+        </FieldGroup>
+        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose></DialogFooter>
+      </DialogContent>
+    </Dialog>
     <TemplateJsonDialog v-model:open="jsonOpen" :template-id="template.id" :locked="locked" @imported="reloadAfterJson" />
 
     <Dialog v-model:open="editWarningOpen">

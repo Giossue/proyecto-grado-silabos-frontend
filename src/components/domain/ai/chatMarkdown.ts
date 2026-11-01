@@ -12,7 +12,7 @@ export const renderChatMarkdown = (text: string): VNode[] => {
         paragraph = [];
     };
     const flushList = (): void => {
-        if (list) blocks.push(h(list.ordered ? 'ol' : 'ul', { class: list.ordered ? 'list-decimal pl-5' : 'list-disc pl-5' }, list.items.map((item) => h('li', inline(item)))));
+        if (list) blocks.push(h(list.ordered ? 'ol' : 'ul', { class: list.ordered ? 'list-decimal pl-8' : 'list-disc pl-5' }, list.items.map((item) => h('li', inline(item)))));
         list = null;
     };
     for (const raw of text.split(/\r?\n/)) {

@@ -114,6 +114,22 @@ describe('CoordinationReviewsPage', () => {
     wrapper.unmount();
   });
 
+  it('con convocatoria la pestaña Seguimiento recibe clics; sin ella el aviso se muestra sobre el envoltorio', async () => {
+    const wrapper = mountPage();
+    await flushPromises();
+    const seguimiento = () => wrapper.findAll('[role="tab"]').find((tab) => tab.text() === 'Seguimiento')!;
+
+    expect(seguimiento().attributes('data-disabled')).toBeUndefined();
+    expect(seguimiento().element.parentElement!.className).not.toContain('pointer-events');
+    wrapper.unmount();
+
+    vi.mocked(getDashboard).mockResolvedValue(summary(null));
+    const closed = mountPage();
+    await flushPromises();
+    expect(closed.findAll('[role="tab"]').find((tab) => tab.text() === 'Seguimiento')!.element.parentElement!.className).toContain('[&_button]:pointer-events-none');
+    closed.unmount();
+  });
+
   it('muestra un ícono en cada pestaña', async () => {
     vi.mocked(getDashboard).mockResolvedValue(summary(null));
     const wrapper = mountPage();

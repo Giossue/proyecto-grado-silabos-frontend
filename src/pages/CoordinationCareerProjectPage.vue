@@ -12,10 +12,9 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import { ChevronDown } from '@lucide/vue';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useClientFilter } from '@/composables/useClientFilter';
@@ -107,11 +106,26 @@ onMounted(() => { void load(); });
             <Badge :variant="completeCount(group.list) === group.list.length ? 'success' : 'warning'" :aria-label="`${completeCount(group.list)} de ${group.list.length} fichas completas`">{{ completeCount(group.list) }}/{{ group.list.length }}</Badge>
             <ChevronDown class="size-4 transition-transform group-data-[state=open]/cycle:rotate-180" aria-hidden="true" />
           </CollapsibleTrigger>
-          <CollapsibleContent class="flex flex-col divide-y border-t">
-            <Button v-for="subject in group.list" :key="subject.id" type="button" variant="ghost" class="h-auto justify-between rounded-none px-4 py-3 text-left font-normal" :aria-label="`Abrir la ficha de ${subject.nombre}`" @click="open(subject)">
-              <span>{{ subject.nombre }}</span>
-              <StatusBadge :label="statusOf(subject)" :tone="subject.profile_complete ? 'success' : 'warning'" />
-            </Button>
+          <CollapsibleContent class="border-t p-3">
+            <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" :aria-label="group.cycle === 'Sin ciclo' ? 'Materias sin ciclo' : `Materias del ciclo ${group.cycle}`">
+              <li v-for="subject in group.list" :key="subject.id">
+                <Card
+                  class="h-full cursor-pointer transition-colors hover:bg-accent/40 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-hidden"
+                  tabindex="0"
+                  :aria-label="`Abrir la ficha de ${subject.nombre}`"
+                  @click="open(subject)"
+                  @keydown.enter.self.prevent="open(subject)"
+                  @keydown.space.self.prevent="open(subject)"
+                >
+                  <CardHeader>
+                    <CardTitle>{{ subject.nombre }}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <StatusBadge :label="statusOf(subject)" :tone="subject.profile_complete ? 'success' : 'warning'" />
+                  </CardContent>
+                </Card>
+              </li>
+            </ul>
           </CollapsibleContent>
         </Collapsible>
       </div>

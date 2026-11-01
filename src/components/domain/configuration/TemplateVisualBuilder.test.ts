@@ -44,6 +44,13 @@ const body = () => document.body;
 const byText = (selector: string, text: string) => [...body().querySelectorAll<HTMLElement>(selector)].find((el) => el.textContent?.trim() === text);
 const byLabel = (label: string) => body().querySelector<HTMLElement>(`button[aria-label="${label}"]`);
 const click = async (el: Element | undefined | null) => { expect(el).toBeTruthy(); (el as HTMLElement).click(); await flushPromises(); };
+// Diseño, Listas y Editar JSON viven dentro de «Opciones avanzadas».
+const advancedItems = async (): Promise<string[]> => {
+    byLabel('Opciones avanzadas')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await flushPromises();
+    return [...body().querySelectorAll('[role="menuitem"]')].map((item) => item.textContent!.trim());
+};
+const chooseAdvanced = async (name: string): Promise<void> => { await advancedItems(); await click([...body().querySelectorAll('[role="menuitem"]')].find((item) => item.textContent!.trim() === name)); };
 const typeInto = async (label: string, value: string) => {
   const input = body().querySelector<HTMLInputElement>(`[aria-label="${label}"]`)!;
   input.value = value;
@@ -101,7 +108,14 @@ describe('TemplateVisualBuilder', () => {
     const wrapper = mount(TemplateVisualBuilder, { props: { template: designed, presets }, attachTo: document.body });
     expect(body().querySelector<HTMLElement>('[data-sheet]')!.style.getPropertyValue('--document-margin')).toBe('1.5cm');
     await click(byText('button', 'Editar')); await click(byText('button', 'Continuar'));
-    expect(byLabel('Diseño')).toBeTruthy();
+    expect(byLabel('Diseño')).toBeNull();
+    expect(byLabel('Listas')).toBeNull();
+    expect(await advancedItems()).toContain('Diseño');
+    body().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    await flushPromises();
+    await chooseAdvanced('Diseño');
+    expect(body().querySelector('[role="dialog"]')!.textContent).toContain('Márgenes y tamaños del documento');
+    expect(body().querySelector('#template-layout-margin_cm')).toBeTruthy();
     const state = (wrapper.vm as unknown as { $: { setupState: { setLayout: (key: string, value: unknown) => void } } }).$.setupState;
     state.setLayout('margin_cm', '2.5');
     state.setLayout('body_font_size', '12');
@@ -319,9 +333,14 @@ describe('TemplateVisualBuilder', () => {
   it('cambia cuántas unidades y semanas puede tener el docente y guarda solo lo que cambió', async () => {
     setTemplateRuntime(definition as unknown as TemplateDefinitionPayload, {});
     const wrapper = await mountBuilder();
-    expect(byLabel('Listas')).toBeTruthy();
+    expect(byLabel('Listas')).toBeNull();
+    await chooseAdvanced('Listas');
+    const dialog = body().querySelector('[role="dialog"]')!;
+    expect([...dialog.querySelectorAll('legend')].map((item) => item.textContent!.trim())).toEqual(['Unidades', 'Semanas por unidad']);
+    expect([...new Set([...dialog.querySelectorAll('label')].map((item) => item.textContent!.trim()))]).toEqual(['Mínimo', 'Máximo', 'Empieza con']);
+    expect(dialog.textContent).not.toContain('Libros');
     const state = (wrapper.vm as unknown as { $: { setupState: { listsDraft: Array<{ label: string; min: number }>; setListLimit: (list: unknown, key: string, value: string) => void } } }).$.setupState;
-    expect(state.listsDraft.map((entry) => entry.label)).toEqual(['Unidades', 'Semanas por unidad', 'Libros']);
+    expect(state.listsDraft.map((entry) => entry.label)).toEqual(['Unidades', 'Semanas por unidad']);
     state.setListLimit(state.listsDraft[1], 'min', '1');
     await flushPromises();
     await save();
