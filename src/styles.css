@@ -1019,9 +1019,9 @@
     border-right-color: var(--card);
 }
 
-/* Las columnas de acciones (celdas con solo botones) miden lo que su contenido necesita; en móvil las tablas pasan a tarjetas. */
+/* Las columnas de acciones (celdas con solo botones, sin selectores) miden lo que su contenido necesita; en móvil las tablas pasan a tarjetas. */
 @media (width >= 40rem) {
-    td:has(> button):not(:has(> :not(button))) {
+    td:has(> button):not(:has(> :not(button))):not(:has(> [role='combobox'])) {
         width: 1px;
         white-space: nowrap;
     }
