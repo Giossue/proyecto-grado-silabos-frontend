@@ -196,14 +196,21 @@ describe('LibraryReviewDetailPage', () => {
     wrapper.unmount();
   });
 
-  it('si otro bibliotecario devolvió el sílabo antes, avisa quién lo atiende y no deja actuar', async () => {
-    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail({ can_comment: false, can_verify: false, signing_statement: null, assigned_to_other: true, responsible: 'Bibliotecaria Ana' }) });
+  it('si otro bibliotecario devolvió el sílabo antes, avisa quién lo atiende y pide confirmar antes de actuar', async () => {
+    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail({ assigned_to_other: true, responsible: 'Bibliotecaria Ana' }) });
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Este sílabo lo atiende Bibliotecaria Ana, que lo devolvió antes: solo esa persona puede revisarlo');
-    expect(headerButton(wrapper, 'Devolver al docente')).toBeUndefined();
-    expect(headerButton(wrapper, 'Firmar y aprobar')).toBeUndefined();
+    expect(wrapper.text()).toContain('Lo atiende Bibliotecaria Ana, que lo devolvió antes');
+    await headerButton(wrapper, 'Devolver al docente')!.trigger('click');
+    await flushPromises();
+    expect(document.body.textContent).toContain('¿Quiere continuar usted?');
+    expect(document.body.querySelector('#library-comment-form')).toBeNull();
+
+    const next = [...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Continuar')!;
+    next.click();
+    await flushPromises();
+    expect(document.body.querySelector('#library-comment-form')).not.toBeNull();
     wrapper.unmount();
   });
 

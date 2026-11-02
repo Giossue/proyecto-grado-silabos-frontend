@@ -74,6 +74,22 @@ const toggleReason = (code: string, checked: boolean | 'indeterminate'): void =>
     : selectedReasons.value.filter((item) => item !== code);
 };
 
+// Si otra persona devolvió antes este sílabo, se le pregunta a quién lo abre si quiere continuar.
+const takeoverFor = ref<'return' | 'sign' | null>(null);
+const act = (action: 'return' | 'sign'): void => {
+  if (review.value?.assigned_to_other) {
+    takeoverFor.value = action;
+    return;
+  }
+  if (action === 'return') openReturn();
+  else signOpen.value = true;
+};
+const confirmTakeover = (): void => {
+  const action = takeoverFor.value;
+  takeoverFor.value = null;
+  if (action === 'return') openReturn();
+  else if (action === 'sign') signOpen.value = true;
+};
 const openReturn = (): void => {
   reasonErrors.value = [];
   otherErrors.value = [];
@@ -169,11 +185,11 @@ onMounted(load);
           <TooltipContent>Ver PDF</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <Button v-if="review.can_comment" type="button" variant="outline" @click="openReturn">Devolver al docente</Button>
-      <Button v-if="canSign" type="button" @click="signOpen = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
+      <Button v-if="review.can_comment" type="button" variant="outline" @click="act('return')">Devolver al docente</Button>
+      <Button v-if="canSign" type="button" @click="act('sign')"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
     </template>
 
-    <Alert v-if="review.assigned_to_other"><AlertDescription>Este sílabo lo atiende {{ review.responsible }}, que lo devolvió antes: solo esa persona puede revisarlo</AlertDescription></Alert>
+    <Alert v-if="review.assigned_to_other"><AlertDescription>Lo atiende {{ review.responsible }}, que lo devolvió antes</AlertDescription></Alert>
 
     <article v-if="fields.length" class="flex flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring" aria-label="Bibliografía">
       <section v-for="field in fields" :key="field.key" class="flex min-w-0 flex-col gap-2">
@@ -211,6 +227,18 @@ onMounted(load);
             <Button type="submit" variant="destructive" :disabled="sending || !canReturn"><Spinner v-if="sending" data-icon="inline-start" /><MessageSquareText v-else data-icon="inline-start" aria-hidden="true" />Devolver al docente</Button>
           </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+    <Dialog :open="takeoverFor !== null" @update:open="(value) => { if (!value) takeoverFor = null; }">
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Lo atiende {{ review.responsible }}</DialogTitle>
+          <DialogDescription>{{ review.responsible }} devolvió este sílabo antes y es quien lo revisa. ¿Quiere continuar usted?</DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button type="button" variant="outline" @click="takeoverFor = null">Cancelar</Button>
+          <Button type="button" @click="confirmTakeover">Continuar</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
     <FormDialog v-model:open="documentOpen" wide no-footer :show-trigger="false" :title="review.subject" trigger-label="Ver sílabo">
