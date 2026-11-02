@@ -16,7 +16,7 @@ const settings = (): SystemSettings => ({
     driver: { value: 'deepseek', source: 'entorno' },
     base_url: { value: 'https://api.deepseek.com', source: 'entorno' },
     model: { value: 'deepseek-chat', source: 'entorno' },
-    api_key: { configured: true, last4: '4c2e', source: 'entorno' },
+    api_key: { configured: true, source: 'entorno' },
     connect_timeout: { value: 2, source: 'entorno' },
     timeout: { value: 50, source: 'entorno' },
   },
@@ -42,12 +42,13 @@ describe('Configuración › Sistema', () => {
     vi.mocked(updateSystemSettings).mockResolvedValue(settings());
   });
 
-  it('muestra la clave solo por sus últimos 4 caracteres, sin decir de dónde sale cada ajuste', async () => {
+  it('no muestra la clave ni parte de ella, ni de dónde sale cada ajuste', async () => {
     const wrapper = mount(AdminSystemSettingsPage, { attachTo: document.body });
     await flushPromises();
     await openSection('Asistente de IA');
 
-    expect(wrapper.text()).toContain('Clave guardada · termina en …4c2e');
+    expect(wrapper.text()).not.toContain('Clave guardada');
+    expect(document.body.querySelector<HTMLInputElement>('#settings-ai-key')!.placeholder).toBe('Escriba una clave nueva solo para cambiarla');
     expect(wrapper.text()).not.toContain('variable de entorno');
     expect(document.body.querySelector<HTMLInputElement>('#settings-ai-key')!.value).toBe('');
   });
@@ -64,9 +65,10 @@ describe('Configuración › Sistema', () => {
     expect(document.body.querySelector('#settings-digest-time')).toBeNull();
   });
 
-  it('guarda las notificaciones sin pedir contraseña', async () => {
+  it('«Guardar» se activa solo con cambios y las notificaciones se guardan sin contraseña', async () => {
     mount(AdminSystemSettingsPage, { attachTo: document.body });
     await flushPromises();
+    expect(button('Guardar')[0]!.disabled).toBe(true);
     await setInput('settings-digest-time', '07:30');
     button('Guardar')[0]!.click();
     await flushPromises();
@@ -79,6 +81,8 @@ describe('Configuración › Sistema', () => {
     mount(AdminSystemSettingsPage, { attachTo: document.body });
     await flushPromises();
     await openSection('Asistente de IA');
+    expect(button('Guardar')[0]!.disabled).toBe(true);
+    await setInput('settings-ai-model', 'deepseek-flash');
 
     button('Guardar')[0]!.click();
     await flushPromises();
@@ -87,7 +91,7 @@ describe('Configuración › Sistema', () => {
     document.body.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit', { cancelable: true }));
     await flushPromises();
     expect(updateSystemSettings).toHaveBeenLastCalledWith('ia', expect.not.objectContaining({ api_key: expect.anything() }));
-    expect(updateSystemSettings).toHaveBeenLastCalledWith('ia', expect.objectContaining({ current_password: 'Demo-2026!', driver: 'deepseek' }));
+    expect(updateSystemSettings).toHaveBeenLastCalledWith('ia', expect.objectContaining({ current_password: 'Demo-2026!', driver: 'deepseek', model: 'deepseek-flash' }));
 
     await setInput('settings-ai-key', 'sk-nueva-11112222');
     button('Guardar')[0]!.click();

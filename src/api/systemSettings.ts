@@ -9,8 +9,8 @@ export type SystemSettings = {
     driver: Field<string | null>;
     base_url: Field<string | null>;
     model: Field<string | null>;
-    /** La clave nunca llega: solo si hay una y sus últimos 4 caracteres. */
-    api_key: { configured: boolean; last4: string | null; source: SettingSource };
+    /** La clave nunca llega: solo si hay una guardada. */
+    api_key: { configured: boolean; source: SettingSource };
     connect_timeout: Field<number | null>;
     timeout: Field<number | null>;
   };

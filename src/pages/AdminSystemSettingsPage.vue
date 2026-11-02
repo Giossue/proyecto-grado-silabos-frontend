@@ -49,6 +49,7 @@ const fill = (value: SystemSettings): void => {
         timeout: value.ai.timeout.value ?? 20,
     };
     library.value = { driver: value.library.driver.value ?? 'disabled', base_url: value.library.base_url.value ?? '' };
+    baseline.value = snapshot();
 };
 
 const load = async (): Promise<void> => {
@@ -61,11 +62,19 @@ const load = async (): Promise<void> => {
 };
 onMounted(load);
 
-const keyStatus = computed(() => {
-    const key = settings.value?.ai.api_key;
-    if (!key?.configured) return 'Sin clave guardada';
+const keyPlaceholder = computed(() => settings.value?.ai.api_key.configured ? 'Escriba una clave nueva solo para cambiarla' : 'Escriba la clave del proveedor');
 
-    return key.last4 ? `Clave guardada · termina en …${key.last4}` : 'Clave guardada';
+// «Guardar» solo se activa si la sección cambió respecto de lo guardado.
+const baseline = ref({ notifications: '', ai: '', library: '' });
+const snapshot = () => ({
+    notifications: JSON.stringify(notifications.value),
+    ai: JSON.stringify({ ...ai.value, api_key: ai.value.api_key.trim() }),
+    library: JSON.stringify(library.value),
+});
+const dirty = computed(() => {
+    const now = snapshot();
+
+    return { notifications: now.notifications !== baseline.value.notifications, ia: now.ai !== baseline.value.ai, biblioteca: now.library !== baseline.value.library };
 });
 
 const save = async (section: SettingsSection, currentPassword?: string): Promise<void> => {
@@ -158,7 +167,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                     <FieldError v-if="errors.digest_time" :errors="[errors.digest_time]" />
                 </Field>
                 <div>
-                    <Button type="button" :disabled="saving !== null" @click="save('notificaciones')">
+                    <Button type="button" :disabled="saving !== null || !dirty.notifications" @click="save('notificaciones')">
                         <Spinner v-if="saving === 'notificaciones'" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar
                     </Button>
                 </div>
@@ -201,8 +210,8 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                     </Field>
                     <Field :data-invalid="Boolean(errors.api_key)">
                         <FieldLabel for="settings-ai-key">Clave del proveedor</FieldLabel>
-                        <PasswordInput id="settings-ai-key" v-model="ai.api_key" autocomplete="new-password" :disabled="ai.clear_api_key" placeholder="Escriba una clave nueva solo para cambiarla" />
-                        <FieldDescription>{{ ai.clear_api_key ? 'La clave se quitará al guardar' : keyStatus }}. La clave nunca se muestra</FieldDescription>
+                        <PasswordInput id="settings-ai-key" v-model="ai.api_key" autocomplete="new-password" :disabled="ai.clear_api_key" :placeholder="keyPlaceholder" />
+                        <FieldDescription v-if="ai.clear_api_key">La clave se quitará al guardar</FieldDescription>
                         <FieldError v-if="errors.api_key" :errors="[errors.api_key]" />
                         <div v-if="settings.ai.api_key.configured">
                             <Button type="button" variant="outline" size="sm" @click="ai.clear_api_key = !ai.clear_api_key; ai.api_key = ''">
@@ -224,7 +233,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                     </div>
                 </template>
                 <div class="flex flex-wrap gap-2">
-                    <Button type="button" :disabled="saving !== null" @click="confirmFor = 'ia'">
+                    <Button type="button" :disabled="saving !== null || !dirty.ia" @click="confirmFor = 'ia'">
                         <Spinner v-if="saving === 'ia'" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar
                     </Button>
                     <Button type="button" variant="outline" :disabled="testing !== null" @click="test('ia')">
@@ -260,7 +269,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                     <Input id="settings-library-url" v-model="library.base_url" placeholder="Ej. http://biblioteca.ueb.edu.ec" autocomplete="off" aria-required="true" />
                 </Field>
                 <div class="flex flex-wrap gap-2">
-                    <Button type="button" :disabled="saving !== null" @click="confirmFor = 'biblioteca'">
+                    <Button type="button" :disabled="saving !== null || !dirty.biblioteca" @click="confirmFor = 'biblioteca'">
                         <Spinner v-if="saving === 'biblioteca'" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar
                     </Button>
                     <Button type="button" variant="outline" :disabled="testing !== null" @click="test('biblioteca')">
