@@ -13,7 +13,6 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import MetricTiles from '@/components/domain/MetricTiles.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Card, CardContent } from '@/components/ui/card';
@@ -43,6 +42,8 @@ const requests = latestRequest();
 const initialPage = Number(queryText(route.query.page)) || 1;
 const stateOptions = Object.entries(LIBRARY_STATE_FILTERS).map(([value, label]) => ({ value, label }));
 const periods = computed(() => [...new Set((data.value?.reviews.data ?? []).map((item) => item.period))]);
+// El período va en el título, como en «Mis sílabos»; sin período vigente (o con varios) queda el título solo.
+const title = computed(() => periods.value.length === 1 ? `Revisiones de biblioteca - Período ${periods.value[0]}` : 'Revisiones de biblioteca');
 
 const syncUrl = (page: number): void => {
   const query: Record<string, string> = {};
@@ -90,9 +91,8 @@ onMounted(() => { void load(initialPage, true); });
 </script>
 
 <template>
-  <PageFrame title="Revisiones de biblioteca" description="Bibliografía de los sílabos enviados" size="wide" :loading="!data">
+  <PageFrame :title="title" description="Bibliografía de los sílabos enviados" size="wide" :loading="!data">
     <template #actions><TooltipProvider><Tooltip><TooltipTrigger as-child><Button as-child variant="ghost" size="icon"><RouterLink :to="paths.library.history" aria-label="Historial"><History aria-hidden="true" /></RouterLink></Button></TooltipTrigger><TooltipContent>Historial</TooltipContent></Tooltip></TooltipProvider></template>
-    <template v-if="periods.length > 0" #meta><Badge v-for="period in periods" :key="period" variant="secondary">Período {{ period }}</Badge></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="2" :actions="false" chip metrics />
     <MetricTiles v-if="data && summary?.metrics.length" :metrics="summary.metrics" />

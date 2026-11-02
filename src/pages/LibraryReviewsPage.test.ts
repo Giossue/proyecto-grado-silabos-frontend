@@ -94,7 +94,8 @@ describe('LibraryReviewsPage', () => {
     expect(row.text()).not.toContain('SW-601');
     expect(row.text()).toContain('Software');
     expect(row.text()).not.toContain('A, B');
-    expect(wrapper.text()).toContain('Período ');
+    expect(wrapper.get('h1').text()).toBe('Revisiones de biblioteca - Período 2026-2027');
+    expect(wrapper.find('[data-slot="badge"]').exists() && wrapper.find('[data-slot="badge"]').text().startsWith('Período')).toBe(false);
     expect(row.text()).not.toContain('N.º');
     expect(row.text()).toContain('Atendido');
     wrapper.unmount();
