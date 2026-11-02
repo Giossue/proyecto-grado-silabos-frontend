@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
-import { ArrowLeft, Bot, RotateCcw, X } from '@lucide/vue';
+import { ArrowLeft, Bot, Pencil, RotateCcw, X } from '@lucide/vue';
 import { ApiError } from '@/api/client';
 import { createTemplate, getTemplate, type TemplatePayload } from '@/api/template';
 import { getSession } from '@/api/session';
@@ -168,6 +168,9 @@ onBeforeUnmount(() => {
         <template v-if="payload?.templateChangedDuringPause || payload?.processLock" #banner>
             <ProcessLockAlert v-if="payload?.templateChangedDuringPause" banner :icon="RotateCcw" title="Plantilla modificada durante la pausa" message="Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero" hide-action />
             <ProcessLockAlert v-if="payload?.processLock" banner :lock="payload.processLockDetail" />
+        </template>
+        <template v-if="!editing" #actions>
+            <Button type="button" :disabled="Boolean(payload?.processLock)" @click="builder?.askEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
         </template>
         <div class="mx-auto flex flex-col gap-4 empty:hidden" :style="{ width: `${SHEET_WIDTH}px`, maxWidth: '100%' }">
             <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>

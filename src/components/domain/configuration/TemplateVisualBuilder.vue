@@ -278,7 +278,10 @@ const applyProposal = (proposal: TemplateAssistantProposal): void => {
     activeEditor.value = null;
     touched();
 };
-defineExpose({ leave, snapshot, applyProposal, draftVersion });
+// «Editar» vive en las acciones de la página; abre el aviso previo a editar.
+const askEdit = (): void => { if (!locked.value) editWarningOpen.value = true; };
+
+defineExpose({ askEdit, leave, snapshot, applyProposal, draftVersion });
 const save = async (): Promise<void> => {
     if (busy.value) return;
     busy.value = true;
@@ -453,11 +456,8 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
 
-    <div :class="cn('pointer-events-none sticky z-20 mx-auto flex w-full justify-end', preview ? 'top-[calc(var(--app-header-height)+0.5rem)]' : 'top-16')" :style="{ maxWidth: toolbarWidth }">
-      <div v-if="preview" class="pointer-events-auto flex items-center gap-2 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
-        <Button type="button" :disabled="locked" @click="editWarningOpen = true"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
-      </div>
-      <div v-else data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
+    <div v-if="!preview" class="pointer-events-none sticky top-16 z-20 mx-auto flex w-full justify-end" :style="{ maxWidth: toolbarWidth }">
+      <div data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
