@@ -1,6 +1,7 @@
 import { Eraser, Plus, Trash2 } from '@lucide/vue';
 import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vue';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
+import { withTooltip } from '@/components/domain/withTooltip';
 import LibraryCatalogSearch from '@/components/domain/syllabus/LibraryCatalogSearch.vue';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
@@ -132,19 +133,19 @@ export default defineComponent({
             return ruleFailures(definition.value.rules, next, variables.value, 'save').length === 0;
         };
 
-        const removeButton = (schema: ListSchema, path: Path, index: number, name: string): VNodeChild => h(Button, {
+        const removeButton = (schema: ListSchema, path: Path, index: number, name: string): VNodeChild => withTooltip(`Quitar ${name}`, h(Button, {
             type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || listOf(path).length <= schema.minItems,
             'aria-label': `Quitar ${name}`,
             onClick: () => write(path, listOf(path).filter((__, position) => position !== index)),
-        }, () => h(Trash2, { 'aria-hidden': 'true' }));
+        }, () => h(Trash2, { 'aria-hidden': 'true' })));
 
         const isBlank = (row: unknown): boolean => isRecord(row) && Object.values(row).every((cell) => String(cell ?? '').trim() === '');
 
-        const clearButton = (schema: ListSchema, path: Path, index: number, name: string): VNodeChild => h(Button, {
+        const clearButton = (schema: ListSchema, path: Path, index: number, name: string): VNodeChild => withTooltip(`Limpiar ${name}`, h(Button, {
             type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || isBlank(listOf(path)[index]),
             'aria-label': `Limpiar ${name}`,
             onClick: () => write([...path, index], emptyValue(schema.items, props.props)),
-        }, () => h(Eraser, { 'aria-hidden': 'true' }));
+        }, () => h(Eraser, { 'aria-hidden': 'true' })));
 
         const addButton = (schema: ListSchema, path: Path, name: string): VNodeChild => h(Button, {
             type: 'button', variant: 'outline', size: 'sm', class: 'w-fit', disabled: !canAdd(path, schema),

@@ -1,6 +1,7 @@
 import { Minus, Plus } from '@lucide/vue';
 import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vue';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
+import { withTooltip } from '@/components/domain/withTooltip';
 import LibraryCatalogSearch from '@/components/domain/syllabus/LibraryCatalogSearch.vue';
 import { renderFreeText, type RenderOptions } from '@/components/domain/syllabus/freeTextRender';
 import { Button } from '@/components/ui/button';
@@ -136,7 +137,7 @@ export default defineComponent({
                 if (!row.row || !resizable(row.row.schema) || row.row.index < 0) return h('td', { class: 'w-10 border-0' });
                 const { listPath, index, schema } = row.row;
                 const where = definition.value ? describe(definition.value, [...listPath, index]).where : '';
-                return h('td', { class: 'w-10 border-0 align-middle' }, h(Button, {
+                return h('td', { class: 'w-10 border-0 align-middle' }, withTooltip(`Quitar ${where}`, h(Button, {
                     type: 'button', variant: 'ghost', size: 'icon-sm', disabled: listOf(listPath).length <= schema.minItems,
                     'aria-label': `Quitar ${where}`,
                     onClick: () => {
@@ -144,7 +145,7 @@ export default defineComponent({
                         list.splice(index, 1);
                         write(listPath, list);
                     },
-                }, () => h(Minus, { 'aria-hidden': 'true' })));
+                }, () => h(Minus, { 'aria-hidden': 'true' }))));
             };
             const rendered = h('table', { class: dense ? 'free-text-table min-w-208' : 'free-text-table' }, [h('tbody', {}, rows.filter((row) => !row.row?.placeholder).map((row) => h('tr', {}, [
                 ...(row.content ?? []).map((cell) => renderFreeText(cell, options)),

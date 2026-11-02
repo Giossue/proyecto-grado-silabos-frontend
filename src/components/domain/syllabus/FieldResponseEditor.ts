@@ -3,6 +3,7 @@ import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vu
 import BlockForm from '@/components/domain/syllabus/BlockForm';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import { renderFreeText } from '@/components/domain/syllabus/freeTextRender';
+import { withTooltip } from '@/components/domain/withTooltip';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -94,11 +95,11 @@ export default defineComponent({
                 });
                 return h(TableRow, { key: index }, () => [
                     ...cells,
-                    list ? h(TableCell, { class: 'w-10 align-top', 'data-sticky-end': '' }, () => h(Button, {
+                    list ? h(TableCell, { class: 'w-10 align-top', 'data-sticky-end': '' }, () => withTooltip(`Quitar fila ${number}`, h(Button, {
                         type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || values.length <= rows.length,
                         'aria-label': `Quitar fila ${number}`,
                         onClick: () => update(path, { ...current, content: values.filter((__, other) => other !== index) }),
-                    }, () => h(Trash2, { 'aria-hidden': 'true' }))) : null,
+                    }, () => h(Trash2, { 'aria-hidden': 'true' })))) : null,
                 ]);
             });
             return h('div', { class: 'flex min-w-0 flex-col gap-3' }, [
