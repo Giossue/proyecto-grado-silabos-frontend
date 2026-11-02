@@ -15,8 +15,6 @@ const props = withDefaults(
         fontFamily?: string;
         fontSize?: number;
         textColor?: string;
-        showPageNumbers?: boolean;
-        startPage?: number;
     }>(),
     {
         orientation: 'portrait',
@@ -25,8 +23,6 @@ const props = withDefaults(
         fontFamily: DOCUMENT_DEFAULTS.fontFamily,
         fontSize: DOCUMENT_DEFAULTS.fontSize,
         textColor: 'var(--document-text)',
-        showPageNumbers: true,
-        startPage: 1,
     },
 );
 
@@ -171,9 +167,7 @@ onBeforeUnmount(() => {
         }"
     >
         <div class="paged-document-papers" aria-hidden="true">
-            <div v-for="page in pages" :key="page" class="paged-document-paper">
-                <span v-if="props.showPageNumbers" class="paged-document-number">{{ page + props.startPage - 1 }}</span>
-            </div>
+            <div v-for="page in pages" :key="page" class="paged-document-paper" />
         </div>
         <div ref="content" class="paged-document-content">
             <slot />
@@ -205,14 +199,6 @@ onBeforeUnmount(() => {
     flex-shrink: 0;
     background: var(--document-paper);
     box-shadow: var(--document-paper-shadow);
-}
-
-.paged-document-number {
-    position: absolute;
-    right: var(--page-margin);
-    bottom: var(--document-page-number-inset);
-    color: var(--document-muted-text);
-    font-size: var(--document-page-number-size);
 }
 
 .paged-document-content {

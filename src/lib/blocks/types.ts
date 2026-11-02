@@ -64,8 +64,6 @@ export type DocumentStyle = {
     section_title: { bold: boolean; italic: boolean; alignment: string };
     body: { alignment: string };
     header: { logos: Array<{ source: 'institution' | 'faculty'; height_pt: number }>; left_share: number };
-    footer: { text: string; size: number; color: string } | null;
-    metadata: { text: string; size: number; color: string } | null;
     empty_text: string;
     choices: { margin_cm: number[]; title: number[]; section: number[]; body: number[] };
 };
