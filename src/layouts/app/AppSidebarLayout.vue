@@ -9,6 +9,7 @@ import InstallAppDialog from '@/components/InstallAppDialog.vue';
 import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import ScreenHelpButton from '@/components/domain/ScreenHelpButton.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Toaster } from '@/components/ui/sonner';
 import { breadcrumbsKey, pageTitleKey } from '@/composables/usePageBreadcrumbs';
 import { useShowsSidebar } from '@/composables/useShowsSidebar';
@@ -37,17 +38,20 @@ const showsSidebar = useShowsSidebar();
 </script>
 
 <template>
-    <AppShell variant="sidebar">
+    <AppShell variant="sidebar" class="h-dvh min-h-0">
         <AppSidebar v-if="!editorOpen && showsSidebar" />
-        <AppContent variant="sidebar" :class="editorOpen ? 'overflow-clip' : 'overflow-clip max-sm:pb-(--mobile-nav-height)'">
+        <AppContent variant="sidebar" :class="editorOpen ? 'min-h-0 overflow-clip' : 'min-h-0 overflow-clip max-sm:pb-(--mobile-nav-height)'">
             <AppSidebarHeader
                 v-if="!editorOpen"
                 :breadcrumbs="breadcrumbs"
                 :page-title="pageTitle"
                 :sidebar="showsSidebar"
             />
-            <RoleDeadlineBanner v-if="!editorOpen" />
-            <slot />
+            <!-- El desplazamiento empieza bajo el encabezado -->
+            <ScrollArea data-app-scroll class="min-h-0 flex-1">
+                <RoleDeadlineBanner v-if="!editorOpen" />
+                <slot />
+            </ScrollArea>
             <ScreenHelpButton v-if="!templateEditorOpen" :editor-mode="curriculumEditorOpen" />
             <SetupChecklist v-if="!editorOpen" />
             <AccessibilityDialog v-if="!editorOpen" floating />

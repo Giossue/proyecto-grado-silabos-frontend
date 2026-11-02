@@ -30,16 +30,17 @@ const breadcrumbs = computed<BreadcrumbItem[]>(() => {
 
 <template>
     <a href="#contenido" class="sr-only z-50 rounded-md bg-background px-4 py-2 text-sm font-medium text-foreground shadow-menu focus:not-sr-only focus:fixed focus:top-2 focus:left-2" @click.prevent="focusContent">Saltar al contenido</a>
-    <ScrollArea data-app-scroll class="h-dvh">
+    <!-- Con el menú lateral, AppSidebarLayout tiene su propio ScrollArea bajo el encabezado -->
+    <AppLayout v-if="usesShell" :breadcrumbs="breadcrumbs">
+        <RouterView />
+    </AppLayout>
+    <ScrollArea v-else data-app-scroll class="h-dvh">
         <SyllabusEditorLayout v-if="usesSyllabusEditorLayout">
             <RouterView />
         </SyllabusEditorLayout>
         <WorkspaceLayout v-else-if="usesWorkspaceLayout">
             <RouterView />
         </WorkspaceLayout>
-        <AppLayout v-else-if="usesShell" :breadcrumbs="breadcrumbs">
-            <RouterView />
-        </AppLayout>
         <RouterView v-else />
     </ScrollArea>
     <AppUpdatePrompt />
