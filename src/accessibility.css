@@ -12,11 +12,6 @@ html[data-motion='none'] *::after {
     scroll-behavior: auto !important;
 }
 
-html[data-links='underline'] :where(main, [role='dialog'], aside) a:not([data-slot='button']) {
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
 html[data-spacing='wide'] :where(p, li, td, th, dd, dt, label) {
     line-height: 1.8 !important;
     letter-spacing: 0.02em;

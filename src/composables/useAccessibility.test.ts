@@ -44,12 +44,12 @@ describe('accesibilidad en la cuenta', () => {
   it('adopta las preferencias de la cuenta al iniciar sesión y guarda los cambios', async () => {
     vi.useFakeTimers();
     sessionState.replace({
-      user: { id: 'u1', name: 'Ana', email: 'a@x.test', email_verified: true, can_edit_identity: false, accessibility: { high_contrast: true, text_size: '150', no_motion: false, underline_links: true, wide_spacing: false } },
+      user: { id: 'u1', name: 'Ana', email: 'a@x.test', email_verified: true, can_edit_identity: false, accessibility: { high_contrast: true, text_size: '150', no_motion: false, wide_spacing: false } },
       active_role: null,
       available_roles: [],
     });
     await nextTick();
-    expect(useAccessibility().settings.value).toMatchObject({ highContrast: true, textSize: '150', underlineLinks: true });
+    expect(useAccessibility().settings.value).toMatchObject({ highContrast: true, textSize: '150' });
     expect(updateAccessibility).not.toHaveBeenCalled();
 
     useAccessibility().settings.value.wideSpacing = true;
