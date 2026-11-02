@@ -3,7 +3,8 @@ import { getDeadline, type DashboardDeadline } from '@/api/dashboard';
 import { sessionState } from '@/state/session';
 
 const FRESH_FOR_MS = 60_000;
-const ROLES_WITH_DEADLINE = ['docente', 'coordinador', 'bibliotecario'] as const;
+// Administración solo recibe aviso cuando ella pausó la convocatoria (el servidor no le manda plazo en otro caso).
+const ROLES_WITH_DEADLINE = ['docente', 'coordinador', 'bibliotecario', 'administrador'] as const;
 
 type Audience = (typeof ROLES_WITH_DEADLINE)[number];
 

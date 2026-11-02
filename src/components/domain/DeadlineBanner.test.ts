@@ -11,9 +11,10 @@ const deadline: DashboardDeadline = {
   days_until_start: 0,
   days_until_due: 2,
   convocation_id: 'c1',
+  paused_by: null,
 };
 
-const text = (value: Partial<DashboardDeadline>, audience: 'docente' | 'coordinador' | 'bibliotecario' = 'docente') => mount(DeadlineBanner, { props: { deadline: { ...deadline, ...value }, audience } });
+const text = (value: Partial<DashboardDeadline>, audience: 'docente' | 'coordinador' | 'bibliotecario' | 'administrador' = 'docente') => mount(DeadlineBanner, { props: { deadline: { ...deadline, ...value }, audience } });
 
 describe('DeadlineBanner', () => {
   it('dice para qué son los días y hasta cuándo, sin barra ni botones', () => {
@@ -55,7 +56,18 @@ describe('DeadlineBanner', () => {
     expect(text({}).get('[role="status"]').classes()).toContain('bg-notice');
   });
 
-  it.each(['paused', 'closed'] as const)('en %s solo avisa el estado, sin conteo', (state) => {
-    expect(text({ state, days_until_due: 0 }).text()).toBe(state === 'paused' ? 'La convocatoria está pausada' : 'La convocatoria está cerrada');
+  it('cerrada solo avisa el estado, sin conteo', () => {
+    expect(text({ state: 'closed', days_until_due: 0 }).text()).toBe('La convocatoria está cerrada');
+  });
+
+  it.each([
+    ['docente', 'administracion', 'La convocatoria está en pausaLe avisaremos cuando se reanude para que siga con sus sílabos'],
+    ['docente', 'coordinacion', 'La convocatoria está en pausaLe avisaremos cuando se reanude para que siga con sus sílabos'],
+    ['coordinador', 'administracion', 'La convocatoria está en pausaAdministración pausó la convocatoria institucional. Le avisaremos cuando la reanude'],
+    ['coordinador', 'coordinacion', 'La convocatoria de su carrera está en pausaPuede reanudarla desde Revisión'],
+    ['administrador', 'administracion', 'La convocatoria institucional está en pausaPuede reanudarla desde Convocatorias'],
+    ['bibliotecario', 'administracion', 'La convocatoria está en pausa'],
+  ] as const)('en pausa, a %s (pausó %s) le dice lo que le toca', (audience, pausedBy, expected) => {
+    expect(text({ state: 'paused', days_until_due: 0, paused_by: pausedBy }, audience).text()).toBe(expected);
   });
 });

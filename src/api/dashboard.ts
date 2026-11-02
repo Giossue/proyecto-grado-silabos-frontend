@@ -32,6 +32,8 @@ export type DashboardDeadline = {
   days_until_start: number;
   days_until_due: number;
   convocation_id: string | null;
+  /** Solo en pausa: Administración pausó la convocatoria institucional o Coordinación la de su carrera. */
+  paused_by: 'administracion' | 'coordinacion' | null;
 };
 
 export type CoordinationConvocation = {

@@ -5,7 +5,7 @@ import type { DashboardDeadline } from '@/api/dashboard';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { cn } from '@/lib/utils';
 
-type Audience = 'docente' | 'coordinador' | 'bibliotecario';
+type Audience = 'docente' | 'coordinador' | 'bibliotecario' | 'administrador';
 
 const props = defineProps<{ deadline: DashboardDeadline; audience: Audience }>();
 
@@ -13,6 +13,7 @@ const tasks: Record<Audience, { task: string; upcoming: string; until: (due: str
   docente: { task: 'enviar sus sílabos a revisión', upcoming: 'La elaboración de sus sílabos inicia', until: (due) => `Podrá enviarlos a revisión hasta el ${due}` },
   coordinador: { task: 'recibir y revisar los sílabos de su carrera', upcoming: 'La elaboración de los sílabos inicia', until: (due) => `Los docentes podrán enviarlos hasta el ${due}` },
   bibliotecario: { task: 'revisar y firmar los sílabos', upcoming: 'La elaboración de los sílabos inicia', until: (due) => `Deben quedar revisados y firmados hasta el ${due}` },
+  administrador: { task: 'que los docentes envíen sus sílabos', upcoming: 'La elaboración de los sílabos inicia', until: (due) => `Los docentes podrán enviarlos hasta el ${due}` },
 };
 
 const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'long', timeZone: 'UTC' });
@@ -23,13 +24,24 @@ const overdueNotice: Record<Audience, (due: string) => { headline: string; detai
   docente: (due) => ({ headline: 'Venció el plazo para enviar sus sílabos a revisión', detail: `Era hasta el ${due}. Pida una prórroga a Administración` }),
   coordinador: (due) => ({ headline: 'Venció el plazo de entrega de los sílabos', detail: `Era hasta el ${due}. Solo puede revisar lo ya enviado` }),
   bibliotecario: (due) => ({ headline: 'Venció el plazo de entrega de los sílabos', detail: `Era hasta el ${due}. Solo puede revisar lo ya enviado` }),
+  administrador: (due) => ({ headline: 'Venció el plazo de entrega de los sílabos', detail: `Era hasta el ${due}` }),
+};
+
+// En pausa importa quién pausó solo para Coordinación: si fue Administración, no puede reanudarla ella.
+const pausedNotice = (audience: Audience, pausedBy: DashboardDeadline['paused_by']): { headline: string; detail: string | null } => {
+  if (audience === 'docente') return { headline: 'La convocatoria está en pausa', detail: 'Le avisaremos cuando se reanude para que siga con sus sílabos' };
+  if (audience === 'administrador') return { headline: 'La convocatoria institucional está en pausa', detail: 'Puede reanudarla desde Convocatorias' };
+  if (audience === 'coordinador' && pausedBy === 'coordinacion') return { headline: 'La convocatoria de su carrera está en pausa', detail: 'Puede reanudarla desde Revisión' };
+  if (audience === 'coordinador') return { headline: 'La convocatoria está en pausa', detail: 'Administración pausó la convocatoria institucional. Le avisaremos cuando la reanude' };
+
+  return { headline: 'La convocatoria está en pausa', detail: null };
 };
 
 const notice = computed((): { headline: string; detail: string | null } => {
   const { state, days_until_start: toStart, days_until_due: toDue } = props.deadline;
   const { task, upcoming, until } = tasks[props.audience];
   const due = formatDate(props.deadline.due_at);
-  if (state === 'paused') return { headline: 'La convocatoria está pausada', detail: null };
+  if (state === 'paused') return pausedNotice(props.audience, props.deadline.paused_by);
   if (state === 'closed') return { headline: 'La convocatoria está cerrada', detail: null };
   if (state === 'overdue') return overdueNotice[props.audience](due);
   if (state === 'upcoming') {

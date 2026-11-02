@@ -68,12 +68,14 @@ describe('AppSidebarLayout', () => {
     const banner = wrapper.get('[role="status"]');
     expect(banner.text()).toBe('Quedan 3 días para recibir y revisar los sílabos de su carreraHasta el 30 de octubre de 2026');
     expect(banner.element.compareDocumentPosition(wrapper.get('header').element) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
-    expect(getDeadline).toHaveBeenCalledTimes(1);
+    const calls = getDeadline.mock.calls.length;
 
+    // Administración pregunta también, pero el servidor solo le manda aviso cuando ella pausó la convocatoria.
+    getDeadline.mockResolvedValue({ deadline: null });
     sessionState.replace(administratorSession);
     await flushPromises();
     expect(wrapper.text()).not.toContain('Quedan 3 días');
-    expect(getDeadline).toHaveBeenCalledTimes(1);
+    expect(getDeadline).toHaveBeenCalledTimes(calls + 1);
   });
 
   afterEach(() => {
