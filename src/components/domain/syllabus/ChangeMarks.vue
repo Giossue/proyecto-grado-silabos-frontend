@@ -15,7 +15,7 @@ const measure = (): void => {
   }
   const origin = viewport.getBoundingClientRect().top - viewport.scrollTop;
   marks.value = Array.from(props.root.querySelectorAll<HTMLElement>('[data-changed]')).map((element) => ({
-    top: viewport.scrollHeight === 0 ? 0 : ((element.getBoundingClientRect().top - origin) / viewport.scrollHeight) * 100,
+    top: viewport.scrollHeight === 0 ? 0 : Math.min(98, Math.max(0, ((element.getBoundingClientRect().top - origin) / viewport.scrollHeight) * 100)),
     element,
   }));
 };
@@ -35,7 +35,7 @@ const goTo = (element: HTMLElement): void => element.scrollIntoView({ behavior: 
 </script>
 
 <template>
-  <div v-if="marks.length" class="pointer-events-none fixed inset-y-0 right-3 z-40 hidden w-3 lg:block" aria-label="Cambios en el documento">
+  <div v-if="marks.length" class="pointer-events-none fixed top-14 right-3 bottom-0 z-20 hidden w-3 lg:block" aria-label="Cambios en el documento">
     <Button
       v-for="(mark, index) in marks"
       :key="index"

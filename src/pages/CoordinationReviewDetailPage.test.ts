@@ -281,7 +281,7 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("desde la segunda versión «Comparar» muestra la anterior al lado, con los campos que cambiaron marcados", async () => {
+  it("desde la segunda versión «Comparar» muestra la anterior al lado y marca los campos que cambiaron solo en la actual", async () => {
     const second = detail();
     second.revision = { ...second.revision, id: "revision-2", number: 2 };
     second.history = [...second.history, { id: "revision-2", number: 2, submitted_at: "2026-09-20T10:00:00Z", submitted_by: "Docente Demo", approved_at: null }];
@@ -302,7 +302,7 @@ describe("CoordinationReviewDetailPage", () => {
     expect(getReview).toHaveBeenCalledWith("revision-1");
     expect(wrapper.find('[aria-label="Versión anterior"]').exists()).toBe(true);
     expect(wrapper.find('[aria-label="Versión actual"]').exists()).toBe(true);
-    expect(wrapper.findAll('[data-changed]')).toHaveLength(2);
+    expect(wrapper.findAll('[data-changed]')).toHaveLength(1);
 
     await headerButton(wrapper, "Comparar con la versión anterior")!.trigger("click");
     expect(wrapper.find('[aria-label="Versión anterior"]').exists()).toBe(false);

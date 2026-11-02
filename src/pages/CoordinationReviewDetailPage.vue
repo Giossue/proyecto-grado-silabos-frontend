@@ -213,7 +213,7 @@ onMounted(load);
     <div v-if="comparing && previousDetail" key="compare" class="mx-auto grid w-full grid-cols-2 items-start gap-6" :style="{ maxWidth: `${sheetWidth * 2 + 24}px` }">
       <section class="flex min-w-0 flex-col gap-2" aria-label="Versión anterior">
         <h2 class="text-sm font-medium text-muted-foreground">Versión {{ previousDetail.revision.number }} · anterior</h2>
-        <SyllabusDocumentPreview :presentation="previousDetail.presentation" :sections="previousSections" :changed="changedFields" />
+        <SyllabusDocumentPreview :presentation="previousDetail.presentation" :sections="previousSections" />
       </section>
       <section :ref="(element) => { currentSection = element as HTMLElement | null; }" class="flex min-w-0 flex-col gap-2" aria-label="Versión actual">
         <h2 class="text-sm font-medium text-muted-foreground">Versión {{ data.revision.number }} · actual</h2>
