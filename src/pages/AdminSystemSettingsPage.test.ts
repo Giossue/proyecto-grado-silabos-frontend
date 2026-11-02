@@ -49,6 +49,8 @@ describe('Configuración › Sistema', () => {
 
     expect(wrapper.text()).not.toContain('Clave guardada');
     expect(document.body.querySelector<HTMLInputElement>('#settings-ai-key')!.placeholder).toBe('Escriba una clave nueva solo para cambiarla');
+    expect(document.body.querySelector('button[aria-label="Mostrar contraseña"]')).toBeNull();
+    expect(document.body.querySelector('button[aria-label="Quitar la clave"]')).not.toBeNull();
     expect(wrapper.text()).not.toContain('variable de entorno');
     expect(document.body.querySelector<HTMLInputElement>('#settings-ai-key')!.value).toBe('');
   });
@@ -101,7 +103,7 @@ describe('Configuración › Sistema', () => {
     await flushPromises();
     expect(updateSystemSettings).toHaveBeenLastCalledWith('ia', expect.objectContaining({ api_key: 'sk-nueva-11112222' }));
 
-    button('Quitar la clave')[0]!.click();
+    document.body.querySelector<HTMLButtonElement>('button[aria-label="Quitar la clave"]')!.click();
     await flushPromises();
     button('Guardar')[0]!.click();
     await flushPromises();

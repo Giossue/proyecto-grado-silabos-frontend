@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Bell, Bot, Library, PlugZap, Save, Trash2 } from '@lucide/vue';
+import { Bell, Bot, Library, PlugZap, Save, Trash2, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { getSystemSettings, testSystemConnection, updateSystemSettings, type SettingsSection, type SystemSettings } from '@/api/systemSettings';
 import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
-import PasswordInput from '@/components/PasswordInput.vue';
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -210,14 +210,17 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                     </Field>
                     <Field :data-invalid="Boolean(errors.api_key)">
                         <FieldLabel for="settings-ai-key">Clave del proveedor</FieldLabel>
-                        <PasswordInput id="settings-ai-key" v-model="ai.api_key" autocomplete="new-password" :disabled="ai.clear_api_key" :placeholder="keyPlaceholder" />
+                        <!-- Sin «ver»: la clave guardada nunca se muestra. En su lugar, quitarla. -->
+                        <div class="relative">
+                            <Input id="settings-ai-key" v-model="ai.api_key" type="password" autocomplete="new-password" :disabled="ai.clear_api_key" :placeholder="keyPlaceholder" :class="settings.ai.api_key.configured ? 'pr-10' : ''" />
+                            <IconTooltip v-if="settings.ai.api_key.configured" :label="ai.clear_api_key ? 'No quitar la clave' : 'Quitar la clave'">
+                                <Button type="button" variant="ghost" size="icon" class="absolute inset-y-px right-px h-auto rounded-l-none rounded-r-md px-3 text-muted-foreground hover:bg-transparent hover:text-foreground" :aria-label="ai.clear_api_key ? 'No quitar la clave' : 'Quitar la clave'" :aria-pressed="ai.clear_api_key" @click="ai.clear_api_key = !ai.clear_api_key; ai.api_key = ''">
+                                    <Undo2 v-if="ai.clear_api_key" class="size-4" aria-hidden="true" /><Trash2 v-else class="size-4" aria-hidden="true" />
+                                </Button>
+                            </IconTooltip>
+                        </div>
                         <FieldDescription v-if="ai.clear_api_key">La clave se quitará al guardar</FieldDescription>
                         <FieldError v-if="errors.api_key" :errors="[errors.api_key]" />
-                        <div v-if="settings.ai.api_key.configured">
-                            <Button type="button" variant="outline" size="sm" @click="ai.clear_api_key = !ai.clear_api_key; ai.api_key = ''">
-                                <Trash2 data-icon="inline-start" aria-hidden="true" />{{ ai.clear_api_key ? 'No quitar la clave' : 'Quitar la clave' }}
-                            </Button>
-                        </div>
                     </Field>
                     <div class="grid grid-cols-2 gap-4">
                         <Field :data-invalid="Boolean(errors.connect_timeout)">
