@@ -48,7 +48,7 @@ const goBack = (): void => {
                 </RouterLink>
             </nav>
 
-            <Card class="min-w-0 max-w-xl gap-12 px-6">
+            <Card class="mx-auto w-full min-w-0 max-w-xl gap-12 px-6">
                 <slot />
             </Card>
         </div>

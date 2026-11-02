@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/api/client';
 import { getTwoFactorStatus, requestPasswordRecovery, type Session } from '@/api/session';
 import SecurityPage from '@/pages/SecurityPage.vue';
+import { toast } from '@/lib/toast';
 import { sessionState } from '@/state/session';
 
 vi.mock('@/api/session', () => ({
@@ -14,6 +15,7 @@ vi.mock('@/api/session', () => ({
   enableTwoFactor: vi.fn(),
   regenerateRecoveryCodes: vi.fn(),
 }));
+vi.mock('@/lib/toast', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/layouts/settings/Layout.vue', () => ({ default: { template: '<div><slot /></div>' } }));
 
 const session: Session = {
@@ -51,7 +53,8 @@ describe('Seguridad: restablecer la contraseña por correo', () => {
 
     expect(requestPasswordRecovery).toHaveBeenCalledWith('ana@ueb.edu.ec');
     expect(document.body.querySelector('[role="dialog"]')).toBeNull();
-    expect(wrapper.text()).toContain('Enlace enviado');
+    expect(toast.success).toHaveBeenCalledWith('Enlace enviado. Revise su correo');
+    expect(wrapper.text()).not.toContain('Enlace enviado');
     wrapper.unmount();
   });
 
@@ -69,8 +72,8 @@ describe('Seguridad: restablecer la contraseña por correo', () => {
     wrapper.unmount();
   });
 
-  it('muestra el error si no se pudo enviar', async () => {
-    vi.mocked(requestPasswordRecovery).mockRejectedValue(new ApiError('Demasiados intentos', 429, {}));
+  it('con el tope de envíos alcanzado lo explica en español', async () => {
+    vi.mocked(requestPasswordRecovery).mockRejectedValue(new ApiError('Too Many Attempts.', 429, {}));
     const wrapper = mount(SecurityPage, { attachTo: document.body });
     await flushPromises();
 
@@ -79,7 +82,21 @@ describe('Seguridad: restablecer la contraseña por correo', () => {
     dialogButton('Enviar enlace').click();
     await flushPromises();
 
-    expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Demasiados intentos');
+    expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Se alcanzó el máximo de envíos');
+    wrapper.unmount();
+  });
+
+  it('muestra el error si no se pudo enviar', async () => {
+    vi.mocked(requestPasswordRecovery).mockRejectedValue(new ApiError('Servicio de correo no disponible', 503, {}));
+    const wrapper = mount(SecurityPage, { attachTo: document.body });
+    await flushPromises();
+
+    await sendButton(wrapper).trigger('click');
+    await flushPromises();
+    dialogButton('Enviar enlace').click();
+    await flushPromises();
+
+    expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Servicio de correo no disponible');
     wrapper.unmount();
   });
 });

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ShieldCheck, ShieldOff } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
@@ -33,7 +34,7 @@ const submit = (): void => {
                 </div>
                 <DialogFooter>
                     <Button type="button" variant="outline" @click="open = false">Cancelar</Button>
-                    <Button type="submit" :variant="destructive ? 'destructive' : 'default'" :disabled="!password">{{ confirmLabel }}</Button>
+                    <Button type="submit" :variant="destructive ? 'destructive' : 'default'" :disabled="!password"><ShieldOff v-if="destructive" data-icon="inline-start" aria-hidden="true" /><ShieldCheck v-else data-icon="inline-start" aria-hidden="true" />{{ confirmLabel }}</Button>
                 </DialogFooter>
             </form>
         </DialogContent>

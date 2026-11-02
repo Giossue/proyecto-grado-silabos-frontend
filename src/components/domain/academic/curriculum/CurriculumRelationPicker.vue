@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Plus } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import type { RelationMode } from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
 import { Button } from '@/components/ui/button';
@@ -63,7 +64,7 @@ const confirm = (): void => {
             </Field>
             <DialogFooter>
                 <Button type="button" variant="outline" @click="picker = null">Cancelar</Button>
-                <Button type="button" :disabled="!chosen" @click="confirm">Agregar relación</Button>
+                <Button type="button" :disabled="!chosen" @click="confirm"><Plus data-icon="inline-start" aria-hidden="true" />Agregar relación</Button>
             </DialogFooter>
         </DialogContent>
     </Dialog>

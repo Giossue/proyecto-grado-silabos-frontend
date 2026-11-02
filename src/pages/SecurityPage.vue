@@ -25,7 +25,6 @@ const processing = ref(false);
 const errors = ref<Record<string, string>>({});
 
 const recoveryOpen = ref(false);
-const recoverySent = ref(false);
 const recoveryError = ref<string | null>(null);
 const recoveryProcessing = ref(false);
 const sendRecoveryLink = async (): Promise<void> => {
@@ -35,10 +34,12 @@ const sendRecoveryLink = async (): Promise<void> => {
     recoveryError.value = null;
     try {
         await requestPasswordRecovery(email);
-        recoverySent.value = true;
         recoveryOpen.value = false;
+        toast.success('Enlace enviado. Revise su correo');
     } catch (reason) {
-        recoveryError.value = reason instanceof ApiError ? reason.message : 'No se pudo enviar el enlace';
+        recoveryError.value = reason instanceof ApiError && reason.status === 429
+            ? 'Se alcanzó el máximo de envíos. Intente de nuevo más tarde'
+            : reason instanceof ApiError ? reason.message : 'No se pudo enviar el enlace';
     } finally {
         recoveryProcessing.value = false;
     }
@@ -109,11 +110,10 @@ const submit = async (): Promise<void> => {
 
             <div class="flex flex-col gap-4">
                 <Heading variant="small" title="Restablecer por correo" :description="`Le enviaremos un enlace a ${sessionState.current.value?.user.email ?? 'su correo'}. Al cambiar la contraseña con él, se cerrará la sesión en todos los dispositivos`" />
-                <p v-if="recoverySent" class="text-sm text-muted-foreground" role="status">Enlace enviado. Revise su correo</p>
                 <div>
                     <Button type="button" @click="recoveryError = null; recoveryOpen = true">
                         <Mail data-icon="inline-start" aria-hidden="true" />
-                        {{ recoverySent ? 'Enviar de nuevo' : 'Enviar enlace' }}
+                        Enviar enlace
                     </Button>
                 </div>
             </div>

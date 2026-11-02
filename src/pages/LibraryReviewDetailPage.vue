@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import IconTooltip from '@/components/domain/IconTooltip.vue';
-import { ArrowLeft, FileSignature, FileText, MessageSquareText } from '@lucide/vue';
+import { ArrowLeft, FileSignature, FileText, MessageSquareText, UserCheck } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -213,7 +213,7 @@ onMounted(load);
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="takeoverFor = null">Cancelar</Button>
-          <Button type="button" @click="confirmTakeover">Continuar</Button>
+          <Button type="button" @click="confirmTakeover"><UserCheck data-icon="inline-start" aria-hidden="true" />Continuar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
