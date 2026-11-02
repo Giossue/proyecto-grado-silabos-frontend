@@ -38,12 +38,12 @@ describe('Configuración › Sistema', () => {
     vi.mocked(updateSystemSettings).mockResolvedValue(settings());
   });
 
-  it('muestra de dónde sale cada ajuste y la clave solo por sus últimos 4 caracteres', async () => {
+  it('muestra la clave solo por sus últimos 4 caracteres, sin decir de dónde sale cada ajuste', async () => {
     const wrapper = mount(AdminSystemSettingsPage, { attachTo: document.body });
     await flushPromises();
 
     expect(wrapper.text()).toContain('Clave guardada · termina en …4c2e');
-    expect(wrapper.text()).toContain('Hoy sale de la variable de entorno');
+    expect(wrapper.text()).not.toContain('variable de entorno');
     expect(document.body.querySelector<HTMLInputElement>('#settings-ai-key')!.value).toBe('');
   });
 

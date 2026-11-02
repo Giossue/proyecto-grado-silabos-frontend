@@ -2,7 +2,7 @@
 import { PlugZap, Save, Trash2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
-import { getSystemSettings, testSystemConnection, updateSystemSettings, type SettingSource, type SettingsSection, type SystemSettings } from '@/api/systemSettings';
+import { getSystemSettings, testSystemConnection, updateSystemSettings, type SettingsSection, type SystemSettings } from '@/api/systemSettings';
 import Heading from '@/components/Heading.vue';
 import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -66,8 +66,6 @@ const keyStatus = computed(() => {
 
     return key.last4 ? `Clave guardada · termina en …${key.last4}` : 'Clave guardada';
 });
-
-const fromEnvironment = (source: SettingSource | undefined): boolean => source === 'entorno';
 
 const save = async (section: SettingsSection, currentPassword?: string): Promise<void> => {
     saving.value = section;
@@ -147,7 +145,6 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                 <Field :data-invalid="Boolean(errors.digest_time)">
                     <FieldLabel for="settings-digest-time" required>Hora del resumen</FieldLabel>
                     <Input id="settings-digest-time" v-model="notifications.digest_time" type="time" class="w-32" aria-required="true" />
-                    <FieldDescription v-if="fromEnvironment(settings.notifications.digest_time.source)">Hoy sale de la variable de entorno</FieldDescription>
                     <FieldError v-if="errors.digest_time" :errors="[errors.digest_time]" />
                 </Field>
                 <div>
@@ -172,7 +169,6 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                             <SelectItem value="anthropic">Anthropic</SelectItem>
                         </SelectGroup></SelectContent>
                     </Select>
-                    <FieldDescription v-if="fromEnvironment(settings.ai.driver.source)">Hoy sale de la variable de entorno</FieldDescription>
                 </Field>
                 <template v-if="ai.driver !== 'disabled'">
                     <Field :data-invalid="Boolean(errors.base_url)">
@@ -232,7 +228,6 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                             <SelectItem value="koha">Koha</SelectItem>
                         </SelectGroup></SelectContent>
                     </Select>
-                    <FieldDescription v-if="fromEnvironment(settings.library.driver.source)">Hoy sale de la variable de entorno</FieldDescription>
                 </Field>
                 <Field v-if="library.driver === 'koha'" :data-invalid="Boolean(errors.base_url && confirmFor !== 'ia')">
                     <FieldLabel for="settings-library-url" required>Dirección del catálogo</FieldLabel>
