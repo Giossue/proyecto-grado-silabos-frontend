@@ -29,7 +29,6 @@ import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import SignatureDialog, { type StatementSigner } from '@/components/domain/syllabus/SignatureDialog.vue';
 import ReviewCommentNotice from '@/components/domain/syllabus/ReviewCommentNotice.vue';
-import ReviewCommentsButton from '@/components/domain/syllabus/ReviewCommentsButton.vue';
 import TeacherFormationDialog from '@/components/domain/identity/TeacherFormationDialog.vue';
 import { sessionState } from '@/state/session';
 import { responsibleLabel } from '@/types/configuration';
@@ -511,7 +510,6 @@ onBeforeUnmount(() => {
   <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="!syllabus" header-class="syllabus-editor-header" :header-width="documentHeaderWidth" hide-icon>
     <template v-if="syllabus" #title-badge><SyllabusStateBadge :state="syllabus.state" /></template>
     <template #actions>
-      <ReviewCommentsButton v-if="syllabus?.state === 'correccion_solicitada' && reviewComments.length" :comments="reviewComments" />
       <TooltipProvider v-if="syllabus && showEditor"><Tooltip><TooltipTrigger as-child>
         <Button type="button" :variant="previewing ? 'secondary' : 'ghost'" size="icon" aria-label="Vista previa" :aria-pressed="previewing" @click="previewing ? (previewing = false) : openPreview()"><Eye aria-hidden="true" /></Button>
       </TooltipTrigger><TooltipContent>Vista previa</TooltipContent></Tooltip></TooltipProvider>

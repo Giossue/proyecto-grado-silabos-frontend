@@ -338,9 +338,7 @@ describe("TeacherSyllabusDetailPage", () => {
 
     expect(wrapper.get(".review-comment").text()).toContain("Coordinación pidió correcciones");
     expect(wrapper.get(".review-comment").text()).toContain("Aclare el resultado");
-    await wrapper.get('button[aria-label="Comentarios"]').trigger("click");
-    await flushPromises();
-    expect(document.body.querySelector(".review-comments")!.textContent).toContain("Aclare el resultado");
+    expect(wrapper.find('button[aria-label="Comentarios"]').exists()).toBe(false);
     expect(wrapper.text()).not.toContain("Está preparando una nueva revisión");
     expect(wrapper.getComponent(PageFrame).props("hideIcon")).toBe(true);
     expect(wrapper.text()).not.toContain("Guardar respuesta");
@@ -685,12 +683,9 @@ describe("TeacherSyllabusDetailPage", () => {
     await openTab(wrapper, "Bibliografía");
     expect(wrapper.find("#input-field-2").exists()).toBe(true);
     expect(wrapper.find(".library-correction").exists()).toBe(false);
-    await wrapper.get('button[aria-label="Comentarios"]').trigger("click");
-    await flushPromises();
-    const list = document.body.querySelector(".review-comments")!;
-    expect(list.textContent).toContain("La 10.ª edición no está disponible");
-    expect(list.textContent).toContain("Comentario anterior");
-    expect(list.textContent!.indexOf("La 10.ª edición no está disponible")).toBeLessThan(list.textContent!.indexOf("Comentario anterior"));
+    expect(wrapper.find('button[aria-label="Comentarios"]').exists()).toBe(false);
+    expect(wrapper.find(".review-comment").text()).toContain("La 10.ª edición no está disponible");
+    expect(wrapper.text()).not.toContain("Comentario anterior");
     expect(buttonNamed(wrapper, "Reenviar bibliografía")).toBeUndefined();
     expect(buttonNamed(wrapper, "Enviar")).toBeDefined();
     await buttonNamed(wrapper, "Enviar")!.trigger("click");
