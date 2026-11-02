@@ -69,6 +69,10 @@ export const screenTours: Record<string, TourStep[]> = {
     step(ACTIONS, 'Importar desde Excel', 'Descargue la plantilla de su carrera, complétela y cárguela para llenar varias materias a la vez', 'left'),
     step(TABLE, 'Proyecto de carrera por materia', 'Pulse una materia para editar su proyecto de carrera: lo que el docente recibe ya escrito', 'top'),
   ],
+  '/coordinacion/documentos-apoyo': [
+    step(ACTIONS, 'Subir documento', 'Suba un PDF, Word o Excel para los docentes de la carrera', 'left'),
+    step(TABLE, 'Documentos', 'Pulse uno para verlo. Desde el menú de la fila lo descarga o lo elimina', 'top'),
+  ],
   '/coordinacion/malla': [
     step(ACTIONS, 'Editar malla', 'Modifique ciclos, materias y relaciones. «Relaciones» las lista en una tabla', 'left'),
   ],

@@ -14,6 +14,7 @@ import {
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
 const CoordinationCareerProjectPage = () => import("@/pages/CoordinationCareerProjectPage.vue");
+const SupportDocumentsPage = () => import("@/pages/SupportDocumentsPage.vue");
 const TeacherSyllabiPage = () => import("@/pages/TeacherSyllabiPage.vue");
 const TeacherHistoryPage = () => import("@/pages/TeacherHistoryPage.vue");
 const TeacherHistoryCareerPage = () => import("@/pages/TeacherHistoryCareerPage.vue");
@@ -90,6 +91,7 @@ export const router = createRouter({
     { path: "/coordinacion/revisiones/:revision", component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión", layout: "syllabus-editor" } },
     { path: "/coordinacion/revisiones/:revision/historial", component: CoordinationReviewHistoryPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Historial de versiones", layout: "syllabus-editor" } },
     { path: "/coordinacion/proyecto-carrera", component: CoordinationCareerProjectPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Proyecto de carrera" } },
+    { path: "/coordinacion/documentos-apoyo", component: SupportDocumentsPage, props: { mode: "coordination" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Documentos de apoyo" } },
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },
     { path: "/coordinacion/materias-asignaciones", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y asignaciones" } },
     { path: "/coordinacion/docentes", component: CoordinationAcademicStructurePage, props: { mode: "teachers" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Docentes" } },
@@ -100,6 +102,7 @@ export const router = createRouter({
     { path: "/docente/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["docente"], title: "Seguridad" } },
     { path: "/docente/mis-silabos", component: TeacherSyllabiPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" } },
     { path: "/docente/historial", component: TeacherHistoryPage, meta: { requiresAuth: true, roles: ["docente"], title: "Historial" } },
+    { path: "/docente/documentos-apoyo", component: SupportDocumentsPage, props: { mode: "teacher" }, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos de apoyo" } },
     { path: "/docente/historial/:career", component: TeacherHistoryCareerPage, meta: { requiresAuth: true, roles: ["docente"], title: "Historial" } },
     { path: "/docente/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", layout: "syllabus-editor" } },
     { path: "/docente/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos" } },

@@ -49,6 +49,7 @@ export const paths = {
     curriculum: '/coordinacion/malla',
     scheduledSubjects: '/coordinacion/materias-asignaciones',
     careerProject: '/coordinacion/proyecto-carrera',
+    supportDocuments: '/coordinacion/documentos-apoyo',
     teachers: '/coordinacion/docentes',
     teacherAssignments: '/coordinacion/asignaciones-docentes',
     documents: (revision: string): string =>
@@ -62,6 +63,7 @@ export const paths = {
     syllabi: '/docente/mis-silabos',
     syllabus: (syllabus: string): string => `/docente/mis-silabos/${segment(syllabus)}`,
     history: '/docente/historial',
+    supportDocuments: '/docente/documentos-apoyo',
     historyCareer: (career: string): string => `/docente/historial/${segment(career)}`,
     documents: (revision: string): string =>
       `/docente/revisiones/${segment(revision)}/documentos`,
@@ -206,6 +208,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-history', path: '/coordinacion/revisiones/:revision/historial', component: 'CoordinationReviewHistoryPage', breadcrumb: 'Historial de versiones', layout: 'syllabus-editor', ...coordinator },
   { name: 'coordination-curriculum', path: paths.coordination.curriculum, component: 'CoordinationAcademicStructurePage', states: ['curriculum'], breadcrumb: 'Malla', ...coordinator },
   { name: 'coordination-career-project', path: paths.coordination.careerProject, component: 'CoordinationCareerProjectPage', breadcrumb: 'Proyecto de carrera', ...coordinator },
+  { name: 'coordination-support-documents', path: paths.coordination.supportDocuments, component: 'SupportDocumentsPage', states: ['coordination'], breadcrumb: 'Documentos de apoyo', ...coordinator },
   { name: 'coordination-scheduled-subjects', path: paths.coordination.scheduledSubjects, component: 'CoordinationAcademicStructurePage', states: ['schedule'], breadcrumb: 'Materias y asignaciones', ...coordinator },
   { name: 'coordination-teachers', path: paths.coordination.teachers, component: 'CoordinationAcademicStructurePage', states: ['teachers'], breadcrumb: 'Docentes', ...coordinator },
   { name: 'coordination-documents', path: '/coordinacion/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...coordinator },
@@ -215,6 +218,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'teacher-security', path: paths.teacher.security, component: 'SecurityPage', shortcut: 'security', ...teacher },
   { name: 'teacher-syllabi', path: paths.teacher.syllabi, component: 'TeacherSyllabiPage', breadcrumb: 'Mis sílabos', ...teacher },
   { name: 'teacher-history', path: paths.teacher.history, component: 'TeacherHistoryPage', breadcrumb: 'Historial', ...teacher },
+  { name: 'teacher-support-documents', path: paths.teacher.supportDocuments, component: 'SupportDocumentsPage', states: ['teacher'], breadcrumb: 'Documentos de apoyo', ...teacher },
   { name: 'teacher-history-career', path: '/docente/historial/:career', component: 'TeacherHistoryCareerPage', breadcrumb: 'Historial', ...teacher },
   { name: 'teacher-syllabus', path: '/docente/mis-silabos/:syllabus', component: 'TeacherSyllabusDetailPage', states: ['resumen', 'edicion', 'ia', 'envio'], breadcrumb: 'Mis sílabos', layout: 'syllabus-editor', ...teacher },
   { name: 'teacher-documents', path: '/docente/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...teacher },

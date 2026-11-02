@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { onBeforeUnmount, ref, watch } from 'vue';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
+import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { loadLogo, prepareLogo, type LoadedLogo } from '@/lib/logoPrepare';
 
-const props = defineProps<{ inputId: string; disabled?: boolean; invalid?: boolean; required?: boolean }>();
+defineProps<{ inputId: string; disabled?: boolean; invalid?: boolean; required?: boolean }>();
 const logo = defineModel<File | null>({ default: null });
 const emit = defineEmits<{ 'validation-error': [message: string | null] }>();
 
@@ -82,13 +83,13 @@ onBeforeUnmount(() => {
     <template v-if="previewUrl && source">
       <div class="grid gap-2 sm:grid-cols-2">
         <figure class="flex flex-col gap-1">
-          <div class="flex h-20 items-center justify-center rounded-md border bg-white p-2">
+          <div class="flex h-20 items-center justify-center rounded-md border bg-[var(--document-paper)] p-2">
             <img :src="previewUrl" alt="Así se verá el logo en el documento" class="h-12 w-auto max-w-full object-contain">
           </div>
           <figcaption class="text-xs text-muted-foreground">Así se verá en el documento</figcaption>
         </figure>
         <figure class="flex flex-col gap-1">
-          <div class="flex h-20 items-center justify-center rounded-md border p-2 [background:repeating-conic-gradient(#d4d8de_0%_25%,#fff_0%_50%)_50%/16px_16px]">
+          <div class="flex h-20 items-center justify-center rounded-md border p-2 [background:repeating-conic-gradient(var(--color-muted)_0%_25%,var(--color-card)_0%_50%)_50%/16px_16px]">
             <img :src="previewUrl" alt="Logo con su fondo transparente" class="h-12 w-auto max-w-full object-contain">
           </div>
           <figcaption class="text-xs text-muted-foreground">Lo cuadriculado es transparente</figcaption>
@@ -99,10 +100,10 @@ onBeforeUnmount(() => {
           Quitar el fondo blanco
           <Switch :id="`${inputId}-white`" v-model="removeWhite" :disabled="disabled" />
         </label>
-        <label v-if="removeWhite" class="flex items-center gap-3 text-sm text-muted-foreground" :for="`${inputId}-strength`">
-          <span class="shrink-0">Intensidad</span>
-          <input :id="`${inputId}-strength`" v-model.number="tolerance" type="range" min="0" max="80" step="1" class="w-full accent-primary" :disabled="disabled">
-        </label>
+        <div v-if="removeWhite" class="flex items-center gap-3 text-sm text-muted-foreground">
+          <span :id="`${inputId}-strength`" class="shrink-0">Intensidad</span>
+          <Slider :model-value="[tolerance]" :min="0" :max="80" :step="1" :disabled="disabled" :aria-labelledby="`${inputId}-strength`" @update:model-value="(value) => { if (value?.[0] !== undefined) tolerance = value[0]; }" />
+        </div>
       </div>
     </template>
   </div>

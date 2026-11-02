@@ -4,6 +4,7 @@ import {
     CalendarRange,
     ClipboardCheck,
     FileStack,
+    FileText,
     FolderOpen,
     Library,
     ScrollText,
@@ -42,11 +43,15 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                   { title: 'Materias y asignaciones', href: paths.coordination.scheduledSubjects, icon: Building2 },
                   { title: 'Docentes', href: paths.coordination.teachers, icon: UsersRound },
                   { title: 'Proyecto de carrera', href: paths.coordination.careerProject, icon: FolderOpen },
+                  { title: 'Documentos de apoyo', href: paths.coordination.supportDocuments, icon: FileText },
                   { title: 'Malla', href: paths.coordination.curriculum, icon: BookOpenCheck },
               ]
             : []),
         ...(activeRole.value?.code === 'docente'
-            ? [{ title: 'Mis sílabos', href: paths.teacher.syllabi, icon: BookOpenCheck }]
+            ? [
+                  { title: 'Mis sílabos', href: paths.teacher.syllabi, icon: BookOpenCheck },
+                  { title: 'Documentos de apoyo', href: paths.teacher.supportDocuments, icon: FileText },
+              ]
             : []),
         ...(activeRole.value?.code === 'bibliotecario'
             ? [{ title: 'Revisiones de biblioteca', href: paths.library.reviews, icon: Library }]

@@ -47,12 +47,12 @@ const formatLimit = (bytes: number): string => {
 };
 
 const copy = computed(() => props.kind === 'document' ? {
-  accept: '.pdf,.xlsx,.xls,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel',
+  accept: '.pdf,.doc,.docx,.xlsx,.xls,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel',
   label: 'Documento',
-  invalid: 'Seleccione archivos PDF o Excel',
+  invalid: 'Seleccione un PDF, Word o Excel',
   maxError: `Cada archivo puede pesar hasta ${formatLimit(props.maxBytes)}`,
-  emptyTitle: 'Arrastra tus PDF o Excel aquí',
-  chooseLabel: 'Cargar documentos PDF o Excel',
+  emptyTitle: 'Arrastra tu PDF, Word o Excel aquí',
+  chooseLabel: 'Cargar documento PDF, Word o Excel',
   removeLabel: 'Quitar documento',
   dropAnnouncement: 'Suelta los documentos para adjuntarlos',
 } : props.kind === 'certificate' ? {
@@ -109,7 +109,7 @@ const chooseFile = (): void => {
 const isValidFile = (file: File): boolean => {
   const name = file.name.toLowerCase();
   const isAccepted = props.kind === 'document'
-    ? ['.pdf', '.xlsx', '.xls'].some((extension) => name.endsWith(extension))
+    ? ['.pdf', '.doc', '.docx', '.xlsx', '.xls'].some((extension) => name.endsWith(extension))
     : props.kind === 'certificate'
     ? ['.p12', '.pfx'].some((extension) => name.endsWith(extension))
     : props.kind === 'image'
