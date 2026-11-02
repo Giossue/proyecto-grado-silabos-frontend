@@ -26,7 +26,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { formatDateDisplay } from '@/lib/dateDisplay';
-import { openPdfWindow } from '@/lib/openPdf';
+import { openPdfWindow, showInPdfWindow } from '@/lib/openPdf';
 import { activateRow } from '@/lib/rowActivation';
 import { toast } from '@/lib/toast';
 
@@ -74,8 +74,7 @@ const view = async (document: SupportDocument): Promise<void> => {
   const tab = openPdfWindow();
   try {
     const url = URL.createObjectURL(await viewSupportDocument(document.id));
-    if (tab) tab.location.href = url;
-    else window.location.assign(url);
+    showInPdfWindow(tab, url);
     window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   } catch (reason) {
     tab?.close();

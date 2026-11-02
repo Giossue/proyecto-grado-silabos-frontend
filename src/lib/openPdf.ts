@@ -7,7 +7,17 @@ export const openPdfWindow = (): Window | null => {
   const left = Math.round((window.screen.availWidth - width) / 2);
   const top = Math.round((window.screen.availHeight - height) / 2);
 
-  return window.open('', 'silabos-pdf', `popup=yes,width=${width},height=${height},left=${left},top=${top}`);
+  const tab = window.open('', 'silabos-pdf', `popup=yes,width=${width},height=${height},left=${left},top=${top}`);
+  tab?.focus();
+
+  return tab;
+};
+
+export const showInPdfWindow = (tab: Window | null, url: string): void => {
+  if (tab) {
+    tab.location.href = url;
+    tab.focus();
+  } else window.location.assign(url);
 };
 
 export const openRevisionPdf = async (revisionId: string): Promise<string | null> => {
@@ -22,8 +32,7 @@ export const openRevisionPdf = async (revisionId: string): Promise<string | null
       return 'El PDF aún no está listo';
     }
     const url = URL.createObjectURL(await downloadDocument(latest.id));
-    if (tab) tab.location.href = url;
-    else window.location.assign(url);
+    showInPdfWindow(tab, url);
     window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 
     return null;

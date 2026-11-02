@@ -39,7 +39,7 @@ describe('Documentos de apoyo', () => {
   afterEach(() => { vi.restoreAllMocks(); });
 
   it('el docente ve la lista sin subir ni eliminar y abre el documento en una ventana aparte', async () => {
-    const tab = { location: { href: '' }, close: vi.fn() };
+    const tab = { location: { href: '' }, close: vi.fn(), focus: vi.fn() };
     vi.spyOn(window, 'open').mockReturnValue(tab as unknown as Window);
     vi.mocked(viewSupportDocument).mockResolvedValue(new Blob(['%PDF-1.4'], { type: 'application/pdf' }));
     const wrapper = mountPage('teacher');
@@ -56,6 +56,7 @@ describe('Documentos de apoyo', () => {
     expect(viewSupportDocument).toHaveBeenCalledWith('d1');
     expect(window.open).toHaveBeenCalledWith('', 'silabos-pdf', expect.stringContaining('popup=yes'));
     expect(tab.location.href).toBe('blob:vista');
+    expect(tab.focus).toHaveBeenCalled();
     wrapper.unmount();
   });
 
