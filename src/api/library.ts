@@ -21,6 +21,7 @@ export type LibraryReviewItem = {
   sent_at: string;
   sent_by: string;
   signed_by?: string | null;
+  responsible?: string | null;
   state: LibraryReviewState;
   outcome: LibraryReviewOutcome | null;
 };
@@ -33,6 +34,7 @@ export type LibraryComment = {
 };
 
 export type LibraryReviewDetail = LibraryReviewItem & {
+  assigned_to_other?: boolean;
   can_comment: boolean;
   can_verify: boolean;
   signing_statement?: string | null;

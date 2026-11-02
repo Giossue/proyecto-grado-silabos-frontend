@@ -173,6 +173,8 @@ onMounted(load);
       <Button v-if="canSign" type="button" @click="signOpen = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
     </template>
 
+    <Alert v-if="review.assigned_to_other"><AlertDescription>Este sílabo lo atiende {{ review.responsible }}, que lo devolvió antes: solo esa persona puede revisarlo</AlertDescription></Alert>
+
     <article v-if="fields.length" class="flex flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring" aria-label="Bibliografía">
       <section v-for="field in fields" :key="field.key" class="flex min-w-0 flex-col gap-2">
         <h2 class="text-base font-semibold">{{ field.title }}</h2>

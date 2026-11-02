@@ -196,6 +196,17 @@ describe('LibraryReviewDetailPage', () => {
     wrapper.unmount();
   });
 
+  it('si otro bibliotecario devolvió el sílabo antes, avisa quién lo atiende y no deja actuar', async () => {
+    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail({ can_comment: false, can_verify: false, signing_statement: null, assigned_to_other: true, responsible: 'Bibliotecaria Ana' }) });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Este sílabo lo atiende Bibliotecaria Ana, que lo devolvió antes: solo esa persona puede revisarlo');
+    expect(headerButton(wrapper, 'Devolver al docente')).toBeUndefined();
+    expect(headerButton(wrapper, 'Firmar y aprobar')).toBeUndefined();
+    wrapper.unmount();
+  });
+
   it('no devuelve sin motivos', async () => {
     vi.mocked(getLibraryReview).mockResolvedValue({ review: detail() });
     const wrapper = mountPage();
