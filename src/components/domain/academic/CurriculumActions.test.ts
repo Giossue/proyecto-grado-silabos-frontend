@@ -16,6 +16,8 @@ describe('CurriculumActions', () => {
     });
 
     const button = wrapper.get('button');
+    expect(button.attributes('aria-label')).toBe('Configurar ciclos');
+    expect(button.text()).toBe('');
     expect(button.attributes('disabled')).toBeDefined();
 
     await button.trigger('click');

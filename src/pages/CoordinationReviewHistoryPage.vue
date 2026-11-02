@@ -134,7 +134,7 @@ watch(() => route.params.revision, (current, before) => { if (current !== before
 </script>
 
 <template>
-  <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 shadow-surface backdrop-blur sm:px-5" aria-label="Herramientas del historial">
+  <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 backdrop-blur sm:px-5" aria-label="Herramientas del historial">
     <IconTooltip label="Volver al sílabo"><Button as-child variant="ghost" size="icon" aria-label="Volver al sílabo"><RouterLink :to="area.review(currentVersion?.id ?? String(route.params.revision))"><ArrowLeft aria-hidden="true" /></RouterLink></Button></IconTooltip>
     <div class="flex min-w-0 flex-col leading-tight">
       <span class="truncate font-medium">{{ data?.syllabus.subject ?? '' }}</span>

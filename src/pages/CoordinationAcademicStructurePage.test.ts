@@ -67,7 +67,7 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     expect(getCurriculum).toHaveBeenCalledTimes(2);
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(true);
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('fullScreen')).toBe(true);
-    expect(wrapper.text()).toContain('Configurar ciclos');
+    expect(wrapper.find('button[aria-label="Configurar ciclos"]').exists()).toBe(true);
     expect(curriculumEditorState.open.value).toBe(true);
     expect(wrapper.find('[aria-label="Herramientas del editor de malla"]').exists()).toBe(true);
 
