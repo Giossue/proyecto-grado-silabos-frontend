@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { Download, Eye, Trash2, Upload } from '@lucide/vue';
+import { Eye, Trash2, Upload } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import {
   deleteSupportDocument,
-  downloadSupportDocument,
   getCoordinationSupportDocuments,
   getTeacherSupportDocuments,
   uploadSupportDocument,
@@ -16,7 +15,6 @@ import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
-import StatusBadge from '@/components/domain/StatusBadge.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -66,10 +64,8 @@ watch(pending, (value) => {
 });
 onBeforeUnmount(() => window.clearInterval(poll));
 
-const filter = useClientFilter(() => documents.value, (document) => [document.title, document.file_name]);
+const filter = useClientFilter(() => documents.value, (document) => [document.title]);
 
-const kinds: Record<string, string> = { pdf: 'PDF', doc: 'Word', docx: 'Word', xls: 'Excel', xlsx: 'Excel' };
-const kindOf = (document: SupportDocument): string => kinds[document.extension] ?? document.extension.toUpperCase();
 const sizeOf = (bytes: number): string => (bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`);
 
 const view = async (document: SupportDocument): Promise<void> => {
@@ -89,29 +85,11 @@ const view = async (document: SupportDocument): Promise<void> => {
   }
 };
 
-const download = async (document: SupportDocument): Promise<void> => {
-  busyId.value = document.id;
-  try {
-    const url = URL.createObjectURL(await downloadSupportDocument(document.id));
-    try {
-      const link = window.document.createElement('a');
-      link.href = url;
-      link.download = document.file_name;
-      link.click();
-    } finally { URL.revokeObjectURL(url); }
-  } catch (reason) {
-    toast.error(reason instanceof ApiError ? reason.message : 'No se pudo descargar el documento');
-  } finally {
-    busyId.value = null;
-  }
-};
-
 const title = ref('');
 const file = ref<File | null>(null);
 const fileError = ref<string | null>(null);
 const uploadError = ref<string | null>(null);
 const uploading = ref(false);
-const titleFromFile = (name: string): string => name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim();
 
 watch(uploadOpen, (open) => {
   if (open) return;
@@ -124,7 +102,6 @@ watch(uploadOpen, (open) => {
 const pickFile = (picked: File | null): void => {
   file.value = picked;
   fileError.value = null;
-  if (picked && !title.value.trim()) title.value = titleFromFile(picked.name);
 };
 
 const upload = async (): Promise<void> => {
@@ -178,9 +155,9 @@ onMounted(() => { void load(); });
         <ClientFilterBar :filter="filter" input-id="support-documents-search" label="Buscar documento" placeholder="Buscar documento" />
       </CardContent></Card>
       <Table label="Documentos de apoyo">
-        <TableHeader><TableRow><TableHead>Documento</TableHead><TableHead class="text-center">Tipo</TableHead><TableHead class="text-center">Tamaño</TableHead><TableHead>Subido</TableHead><TableHead><span class="sr-only">Acciones</span></TableHead></TableRow></TableHeader>
+        <TableHeader><TableRow><TableHead>Documento</TableHead><TableHead class="text-center">Tamaño</TableHead><TableHead>Subido</TableHead><TableHead v-if="manages" class="text-center">Acciones</TableHead></TableRow></TableHeader>
         <TableBody>
-          <TableEmpty v-if="!filter.items.value.length" :colspan="5">{{ filter.active.value ? 'Ningún documento coincide con la búsqueda' : manages ? 'Todavía no hay documentos' : 'Coordinación todavía no ha subido documentos' }}</TableEmpty>
+          <TableEmpty v-if="!filter.items.value.length" :colspan="manages ? 4 : 3">{{ filter.active.value ? 'Ningún documento coincide con la búsqueda' : manages ? 'Todavía no hay documentos' : 'Coordinación todavía no ha subido documentos' }}</TableEmpty>
           <TableRow
             v-for="document in filter.items.value"
             v-else
@@ -192,23 +169,15 @@ onMounted(() => { void load(); });
             @keydown.enter.self.prevent="view(document)"
             @keydown.space.self.prevent="view(document)"
           >
-            <TableCell><span class="font-medium">{{ document.title }}</span><span class="block text-xs text-muted-foreground">{{ document.file_name }}</span></TableCell>
-            <TableCell class="text-center"><StatusBadge :label="kindOf(document)" tone="neutral" /></TableCell>
+            <TableCell><span class="font-medium">{{ document.title }}</span><Spinner v-if="busyId === document.id" class="ml-2 inline" aria-label="Abriendo" /><span v-if="document.view === 'pendiente'" class="flex items-center gap-1 text-xs text-muted-foreground"><Spinner aria-hidden="true" />Preparando vista</span><span v-else-if="document.view === 'sin_vista'" class="block text-xs text-muted-foreground">No se pudo preparar la vista</span></TableCell>
             <TableCell class="text-center">{{ sizeOf(document.size) }}</TableCell>
-            <TableCell>{{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}<span v-if="document.uploaded_by" class="block text-xs text-muted-foreground">{{ document.uploaded_by }}</span></TableCell>
-            <TableCell class="text-right">
-              <div class="flex items-center justify-end gap-2">
-                <span v-if="document.view === 'pendiente'" class="flex items-center gap-1 text-xs text-muted-foreground"><Spinner aria-hidden="true" />Preparando vista</span>
-                <Spinner v-if="busyId === document.id" aria-label="Abriendo" />
-                <TableActionsMenu :label="`Acciones de ${document.title}`">
-                  <DropdownMenuItem :disabled="document.view !== 'lista'" @select="view(document)"><Eye aria-hidden="true" />{{ document.view === 'sin_vista' ? 'Sin vista previa' : 'Ver' }}</DropdownMenuItem>
-                  <DropdownMenuItem @select="download(document)"><Download aria-hidden="true" />Descargar</DropdownMenuItem>
-                  <template v-if="manages">
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem variant="destructive" @select="askRemoval(document)"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
-                  </template>
-                </TableActionsMenu>
-              </div>
+            <TableCell>{{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}</TableCell>
+            <TableCell v-if="manages" class="text-center">
+              <TableActionsMenu :label="`Acciones de ${document.title}`">
+                <DropdownMenuItem :disabled="document.view !== 'lista'" @select="view(document)"><Eye aria-hidden="true" />Ver</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem variant="destructive" @select="askRemoval(document)"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
+              </TableActionsMenu>
             </TableCell>
           </TableRow>
         </TableBody>

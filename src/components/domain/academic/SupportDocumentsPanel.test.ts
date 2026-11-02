@@ -21,19 +21,18 @@ vi.mock('@/api/support-documents', () => ({
   uploadSupportDocument: vi.fn(),
   deleteSupportDocument: vi.fn(),
   viewSupportDocument: vi.fn(),
-  downloadSupportDocument: vi.fn(),
 }));
 
-const doc = (id: string, title: string, extension: string, view: SupportDocument['view'] = 'lista'): SupportDocument => ({
-  id, title, extension, view, file_name: `${title}.${extension}`, size: 2048, uploaded_at: '2026-11-02T15:00:00Z', uploaded_by: 'COORDINADORA DEMO',
+const doc = (id: string, title: string, view: SupportDocument['view'] = 'lista'): SupportDocument => ({
+  id, title, view, size: 2048, uploaded_at: '2026-11-02T15:00:00Z',
 });
 const mountPage = (mode: 'coordination' | 'teacher', uploadOpen = false) => mount(SupportDocumentsPanel, { props: { manages: mode === 'coordination', uploadOpen }, attachTo: document.body });
 
 describe('Documentos de apoyo', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
-    vi.mocked(getCoordinationSupportDocuments).mockResolvedValue({ data: [doc('d1', 'Proyecto de carrera', 'pdf'), doc('d2', 'TIC TAC', 'xlsx', 'sin_vista')] });
-    vi.mocked(getTeacherSupportDocuments).mockResolvedValue({ data: [doc('d1', 'Proyecto de carrera', 'pdf')] });
+    vi.mocked(getCoordinationSupportDocuments).mockResolvedValue({ data: [doc('d1', 'Proyecto de carrera'), doc('d2', 'TIC TAC', 'sin_vista')] });
+    vi.mocked(getTeacherSupportDocuments).mockResolvedValue({ data: [doc('d1', 'Proyecto de carrera')] });
     URL.createObjectURL = vi.fn(() => 'blob:vista');
     URL.revokeObjectURL = vi.fn();
   });
@@ -47,7 +46,8 @@ describe('Documentos de apoyo', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Proyecto de carrera');
-    expect(wrapper.text()).toContain('PDF');
+    expect(wrapper.text()).not.toContain('PDF');
+    expect(wrapper.find('[data-table-actions]').exists()).toBe(false);
     expect(document.body.querySelector('[data-testid="support-document-form"]')).toBeNull();
     expect(getCoordinationSupportDocuments).not.toHaveBeenCalled();
 
@@ -64,12 +64,13 @@ describe('Documentos de apoyo', () => {
     await flushPromises();
 
     expect(wrapper.find('[aria-label="Ver TIC TAC"]').exists()).toBe(false);
-    expect(wrapper.text()).toContain('Excel');
+    expect(wrapper.text()).toContain('No se pudo preparar la vista');
+    expect(wrapper.text()).not.toContain('Excel');
     wrapper.unmount();
   });
 
-  it('Coordinación sube un documento con el nombre tomado del archivo y Subir queda deshabilitado hasta elegirlo', async () => {
-    vi.mocked(uploadSupportDocument).mockResolvedValue({ message: 'Documento subido.', document: doc('d3', 'Habilidades blandas', 'docx', 'pendiente') });
+  it('Coordinación sube un documento con el nombre que escribe y Subir queda deshabilitado hasta completar ambos', async () => {
+    vi.mocked(uploadSupportDocument).mockResolvedValue({ message: 'Documento subido.', document: doc('d3', 'Habilidades blandas', 'pendiente') });
     const wrapper = mountPage('coordination', true);
     await flushPromises();
 
@@ -83,12 +84,17 @@ describe('Documentos de apoyo', () => {
     input.dispatchEvent(new Event('change'));
     await flushPromises();
 
-    expect(form.querySelector<HTMLInputElement>('#support-document-title')!.value).toBe('habilidades blandas');
+    const title = form.querySelector<HTMLInputElement>('#support-document-title')!;
+    expect(title.value).toBe('');
+    expect(submit.disabled).toBe(true);
+    title.value = 'Habilidades blandas';
+    title.dispatchEvent(new Event('input'));
+    await flushPromises();
     expect(submit.disabled).toBe(false);
     form.dispatchEvent(new Event('submit'));
     await flushPromises();
 
-    expect(uploadSupportDocument).toHaveBeenCalledWith('habilidades blandas', file);
+    expect(uploadSupportDocument).toHaveBeenCalledWith('Habilidades blandas', file);
     expect(wrapper.text()).toContain('Preparando vista');
     wrapper.unmount();
   });
