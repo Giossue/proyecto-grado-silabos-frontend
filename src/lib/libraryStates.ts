@@ -1,19 +1,30 @@
-import type { LibraryReviewState } from '@/api/library';
+import type { LibraryReviewItem } from '@/api/library';
 
-// Etiqueta de cada envío en la tabla y en el detalle.
-export const LIBRARY_STATE_LABELS: Record<LibraryReviewState, string> = {
+type LibraryStatus = 'pendiente' | 'firmado' | 'devuelto' | 'reemplazado';
+type Tone = 'neutral' | 'info' | 'warning' | 'danger' | 'success';
+
+// Cómo se muestra cada envío en la tabla y en el detalle: Por revisar, Aceptado o Devuelto.
+const LABELS: Record<LibraryStatus, string> = {
   pendiente: 'Por revisar',
-  atendido: 'Atendido',
+  firmado: 'Aceptado',
+  devuelto: 'Devuelto',
+  reemplazado: 'Reemplazado',
 };
+const TONES: Record<LibraryStatus, Tone> = { pendiente: 'warning', firmado: 'success', devuelto: 'danger', reemplazado: 'neutral' };
 
 // Opciones del filtro de estado.
-export const LIBRARY_STATE_FILTERS: Record<LibraryReviewState, string> = {
+export const LIBRARY_STATE_FILTERS: Record<'pendiente' | 'firmado' | 'devuelto', string> = {
   pendiente: 'Por revisar',
-  atendido: 'Atendidos',
+  firmado: 'Aceptados',
+  devuelto: 'Devueltos',
 };
 
-export const libraryStateLabel = (state: string): string =>
-  Object.hasOwn(LIBRARY_STATE_LABELS, state) ? LIBRARY_STATE_LABELS[state as LibraryReviewState] : 'Estado no disponible';
+/** El estado visible: «Por revisar» mientras está pendiente; después, cómo terminó. */
+export const libraryStatus = (item: Pick<LibraryReviewItem, 'state' | 'outcome'>): LibraryStatus =>
+  item.state === 'pendiente' || item.outcome === null ? 'pendiente' : item.outcome;
 
-export const libraryStateTone = (state: string): 'neutral' | 'info' | 'warning' | 'danger' | 'success' =>
-  ({ pendiente: 'warning', atendido: 'success' } as const)[state as LibraryReviewState] ?? 'neutral';
+export const libraryStatusLabel = (status: string): string =>
+  Object.hasOwn(LABELS, status) ? LABELS[status as LibraryStatus] : 'Estado no disponible';
+
+export const libraryStatusTone = (status: string): Tone =>
+  Object.hasOwn(TONES, status) ? TONES[status as LibraryStatus] : 'neutral';

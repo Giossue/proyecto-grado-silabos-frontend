@@ -97,7 +97,7 @@ describe('LibraryReviewsPage', () => {
     expect(wrapper.get('h1').text()).toBe('Revisiones de biblioteca - Período 2026-2027');
     expect(wrapper.find('[data-slot="badge"]').exists() && wrapper.find('[data-slot="badge"]').text().startsWith('Período')).toBe(false);
     expect(row.text()).not.toContain('N.º');
-    expect(row.text()).toContain('Atendido');
+    expect(row.text()).toContain('Devuelto');
     wrapper.unmount();
   });
 

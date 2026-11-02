@@ -20,7 +20,7 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { LIBRARY_STATE_FILTERS, libraryStateLabel, libraryStateTone } from '@/lib/libraryStates';
+import { LIBRARY_STATE_FILTERS, libraryStatus, libraryStatusLabel, libraryStatusTone } from '@/lib/libraryStates';
 import { paths } from '@/lib/routes';
 import { latestRequest } from '@/lib/latestRequest';
 import { rememberLibraryFaculty, savedLibraryFaculty } from '@/lib/libraryFaculty';
@@ -145,7 +145,7 @@ onMounted(() => { void load(initialPage, true); });
             <TableRow v-for="item in data.reviews.data" :key="item.revision_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(paths.library.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(paths.library.review(item.revision_id))" @keydown.space.self.prevent="router.push(paths.library.review(item.revision_id))">
               <TableCell>{{ item.career }}</TableCell>
               <TableCell>{{ item.teachers.join(', ') }}</TableCell>
-              <TableCell class="text-center"><StatusBadge :label="libraryStateLabel(item.state)" :tone="libraryStateTone(item.state)" /></TableCell>
+              <TableCell class="text-center"><StatusBadge :label="libraryStatusLabel(libraryStatus(item))" :tone="libraryStatusTone(libraryStatus(item))" /></TableCell>
             </TableRow>
             <TableEmpty v-if="data.reviews.data.length === 0" :colspan="3">No hay sílabos para los filtros seleccionados</TableEmpty>
           </TableBody>

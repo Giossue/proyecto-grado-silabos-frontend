@@ -1,5 +1,5 @@
 import { api } from '@/api/client';
-import type { SnapshotSection } from '@/api/reviews';
+import type { ReviewDetail, SnapshotSection } from '@/api/reviews';
 import type { SignaturePayload, SignatureSummary } from '@/api/signatures';
 import type { PaginationMeta } from '@/types/pagination';
 
@@ -39,8 +39,10 @@ export type LibraryReviewDetail = LibraryReviewItem & {
   signatures?: SignatureSummary[];
   verified_at: string | null;
   verified_by: string | null;
+  presentation: ReviewDetail['presentation'];
   template_variables: Record<string, string>;
   sections: SnapshotSection[];
+  syllabus_sections: SnapshotSection[];
   comments: LibraryComment[];
   comment_reasons: Array<{ code: string; label: string }>;
 };
