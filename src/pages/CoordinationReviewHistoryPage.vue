@@ -30,7 +30,7 @@ const marks = ref<Array<{ top: number; element: HTMLElement }>>([]);
 
 const measureMarks = async (): Promise<void> => {
   await nextTick();
-  const container = page.value;
+  const container = page.value?.closest<HTMLElement>('[data-slot="scroll-area-viewport"]') ?? page.value;
   if (!container) { marks.value = []; return; }
   const origin = container.getBoundingClientRect().top - container.scrollTop;
   marks.value = Array.from(container.querySelectorAll<HTMLElement>('[data-changed]')).map((element) => ({
@@ -141,11 +141,13 @@ watch(() => route.params.revision, (current, before) => { if (current !== before
   <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
   <div v-else class="flex min-h-[calc(100dvh-3.5rem)] flex-col lg:flex-row">
     <div class="relative min-w-0 flex-1">
-      <main ref="page" class="h-full p-4 sm:p-6 lg:h-[calc(100dvh-3.5rem)] lg:overflow-y-scroll [scrollbar-color:var(--color-border)_transparent] [scrollbar-width:thin]">
-        <LoadingSkeleton v-if="loading && !data" variant="preview" />
-        <SyllabusDocumentPreview v-else-if="data" :presentation="data.presentation" :sections="previewSections" :changed="changedFields" />
-      </main>
-      <div v-if="marks.length" class="pointer-events-none absolute inset-y-0 right-0 hidden w-3 lg:block" aria-label="Cambios en el documento">
+      <ScrollArea type="auto" class="h-full lg:h-[calc(100dvh-3.5rem)]">
+        <main ref="page" class="p-4 sm:p-6">
+          <LoadingSkeleton v-if="loading && !data" variant="preview" />
+          <SyllabusDocumentPreview v-else-if="data" :presentation="data.presentation" :sections="previewSections" :changed="changedFields" />
+        </main>
+      </ScrollArea>
+      <div v-if="marks.length" class="pointer-events-none absolute inset-y-0 right-3 hidden w-3 lg:block" aria-label="Cambios en el documento">
         <Button
           v-for="(mark, index) in marks"
           :key="index"

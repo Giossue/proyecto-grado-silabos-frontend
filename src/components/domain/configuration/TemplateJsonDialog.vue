@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Download, FileUp, Save } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
@@ -91,9 +92,11 @@ const readFile = async (event: Event): Promise<void> => {
       <Alert v-if="failure" variant="destructive" role="alert">
         <AlertDescription>
           {{ failure }}
-          <ul v-if="problems.length" class="mt-2 max-h-40 list-disc overflow-y-auto pl-5 font-mono text-xs">
-            <li v-for="problem in problems" :key="problem">{{ problem }}</li>
-          </ul>
+          <ScrollArea v-if="problems.length" class="mt-2 [&>[data-slot=scroll-area-viewport]]:max-h-40">
+            <ul class="list-disc pl-5 font-mono text-xs">
+              <li v-for="problem in problems" :key="problem">{{ problem }}</li>
+            </ul>
+          </ScrollArea>
         </AlertDescription>
       </Alert>
       <DialogFooter>

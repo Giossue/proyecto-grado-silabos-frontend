@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Search } from '@lucide/vue';
 import { ref, watch } from 'vue';
 import { searchLibraryCatalog, type CatalogBook, type CatalogSearchField } from '@/api/libraryCatalog';
@@ -91,7 +92,7 @@ const pick = (book: CatalogBook): void => {
                 </Button>
             </form>
             <FeedbackAlert v-if="error" :message="error" />
-            <div v-else-if="results !== null" class="min-h-0 flex-1 overflow-y-auto">
+            <ScrollArea v-else-if="results !== null" class="min-h-0 flex-1">
                 <Table label="Libros de la biblioteca" :cards="false">
                     <TableHeader>
                         <TableRow>
@@ -123,7 +124,7 @@ const pick = (book: CatalogBook): void => {
                         </TableRow>
                     </TableBody>
                 </Table>
-            </div>
+            </ScrollArea>
             <TablePagination v-if="meta && meta.total > 0 && !error" class="shrink-0" :meta="meta" label="Paginación de los libros" @update:page="goTo" />
             <DialogFooter class="shrink-0">
                 <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
