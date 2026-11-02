@@ -171,7 +171,7 @@ onMounted(() => { void load(); });
             <TableCell class="text-center">{{ sizeOf(document.size) }}</TableCell>
             <TableCell>{{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}</TableCell>
             <TableCell v-if="manages" class="text-center">
-              <IconTooltip :label="`Eliminar ${document.title}`"><Button type="button" variant="ghost" size="icon-sm" class="text-destructive hover:text-destructive" :aria-label="`Eliminar ${document.title}`" @click="askRemoval(document)"><Trash2 aria-hidden="true" /></Button></IconTooltip>
+              <IconTooltip label="Eliminar"><Button type="button" variant="ghost" size="icon-sm" class="text-destructive hover:text-destructive" :aria-label="`Eliminar ${document.title}`" @click="askRemoval(document)"><Trash2 aria-hidden="true" /></Button></IconTooltip>
             </TableCell>
           </TableRow>
         </TableBody>
