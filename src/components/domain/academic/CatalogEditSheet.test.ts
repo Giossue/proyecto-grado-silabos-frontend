@@ -61,11 +61,11 @@ describe('CatalogEditSheet · logo de la facultad', () => {
 });
 
 describe('CatalogEditSheet · convocatoria activa', () => {
-  it('avisa por qué no se puede guardar y deja el botón deshabilitado', async () => {
+  it('con la convocatoria activa deja el botón deshabilitado, sin aviso dentro del diálogo', async () => {
     const wrapper = mountSheet({ lockReason: 'Convocatoria activa' });
     await flushPromises();
 
-    expect(document.body.textContent).toContain('Hay una convocatoria activa: pause la convocatoria para editar');
+    expect(document.body.textContent).not.toContain('Hay una convocatoria activa');
     expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
     wrapper.unmount();
   });

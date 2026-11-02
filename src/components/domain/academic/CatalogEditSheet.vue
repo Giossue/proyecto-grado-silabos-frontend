@@ -141,8 +141,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
         <template v-if="actions.length > 0" #header-actions><SheetActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
         <template #default="{ close }">
             <form @submit.prevent="submit()"><FieldGroup>
-                <Alert v-if="lockReason"><AlertDescription>Hay una convocatoria activa: pause la convocatoria para editar</AlertDescription></Alert>
-                <Alert v-else-if="generalError" variant="destructive"><AlertDescription>{{ generalError }}</AlertDescription></Alert>
+                <Alert v-if="generalError" variant="destructive"><AlertDescription>{{ generalError }}</AlertDescription></Alert>
                 <Tabs v-if="entity === 'facultad'" v-model="tab" class="gap-4">
                     <TabsList aria-label="Secciones de la facultad"><TabsTrigger value="datos">Datos</TabsTrigger><TabsTrigger value="bibliotecas">Bibliotecas</TabsTrigger></TabsList>
                     <TabsContent value="datos" class="flex flex-col gap-7">
