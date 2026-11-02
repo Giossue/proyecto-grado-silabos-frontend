@@ -21,12 +21,15 @@ withDefaults(
         disabled?: boolean;
         fullScreen?: boolean;
         wide?: boolean;
+        /** Para formularios de uno o dos campos. */
+        narrow?: boolean;
     }>(),
     {
         showTrigger: true,
         disabled: false,
         fullScreen: false,
         wide: false,
+        narrow: false,
     },
 );
 
@@ -65,7 +68,8 @@ const close = (): void => {
                 cn({
                     'top-0 left-0 h-dvh max-h-none w-full max-w-none translate-x-0 translate-y-0 rounded-none border-0 sm:max-w-none': fullScreen,
                     'sm:max-w-4xl': wide && !fullScreen,
-                    'sm:max-w-lg': !wide && !fullScreen,
+                    'sm:max-w-sm': narrow && !wide && !fullScreen,
+                    'sm:max-w-lg': !narrow && !wide && !fullScreen,
                 })
             "
         >

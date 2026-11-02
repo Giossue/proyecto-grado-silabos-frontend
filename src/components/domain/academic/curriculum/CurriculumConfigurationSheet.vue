@@ -30,7 +30,7 @@ const submit = async (close: () => void) => {
 };
 </script>
 <template>
-  <FormSheet v-model:open="open" trigger-label="Configurar ciclos" title="Configurar ciclos" :show-trigger="false">
+  <FormSheet v-model:open="open" trigger-label="Configurar ciclos" title="Configurar ciclos" :show-trigger="false" narrow>
     <template #default="{ close }"><form class="contents" @submit.prevent="submit(close)"><FieldGroup>
       <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
       <Field><FieldLabel for="curriculum-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="curriculum-cycle-count" v-model.number="form.cycle_count" type="number" min="1" :max="VALIDATION_LIMITS.cycleCount" aria-required="true" /></Field>
