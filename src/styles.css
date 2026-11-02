@@ -1018,3 +1018,11 @@
 .driver-popover.setup-popover .driver-popover-arrow-side-right.driver-popover-arrow {
     border-right-color: var(--card);
 }
+
+/* Las columnas de acciones (celdas con solo botones) miden lo que su contenido necesita; en móvil las tablas pasan a tarjetas. */
+@media (width >= 40rem) {
+    td:has(> button):not(:has(> :not(button))) {
+        width: 1px;
+        white-space: nowrap;
+    }
+}

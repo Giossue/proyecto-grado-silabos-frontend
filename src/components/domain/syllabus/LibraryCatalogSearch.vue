@@ -102,7 +102,7 @@ const pick = (book: CatalogBook): void => {
                             <TableHead>Editorial</TableHead>
                             <TableHead>ISBN</TableHead>
                             <TableHead>Código</TableHead>
-                            <TableHead class="w-px"><span class="sr-only">Agregar</span></TableHead>
+                            <TableHead><span class="sr-only">Agregar</span></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
