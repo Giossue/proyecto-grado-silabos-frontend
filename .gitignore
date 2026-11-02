@@ -11,3 +11,6 @@ tests/visual/current/
 .tmp-*
 .pw-*
 *.tsbuildinfo
+
+# gentle-ai (registro de skills por proyecto)
+/.atl/
