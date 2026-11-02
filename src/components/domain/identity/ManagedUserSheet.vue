@@ -10,6 +10,7 @@ import CoordinatorReplacementConfirm from '@/components/domain/identity/Coordina
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { NAME_PARTS, upperName, type NamePartKey } from '@/lib/personName';
 import { roleNeedsCareer } from '@/lib/roles';
 
 const props = withDefaults(defineProps<{
@@ -24,13 +25,8 @@ const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const emptyForm = () => ({ primer_nombre: '', segundo_nombre: '', primer_apellido: '', segundo_apellido: '', correo_electronico: '', role_code: 'docente', career_id: '' });
 const form = ref(emptyForm());
-const nameParts = [
-    { key: 'primer_nombre', label: 'Primer nombre', placeholder: 'Ej. ANA' },
-    { key: 'segundo_nombre', label: 'Segundo nombre', placeholder: 'Ej. MARÍA' },
-    { key: 'primer_apellido', label: 'Primer apellido', placeholder: 'Ej. PÉREZ' },
-    { key: 'segundo_apellido', label: 'Segundo apellido', placeholder: 'Ej. LÓPEZ' },
-] as const;
-const setPart = (key: (typeof nameParts)[number]['key'], value: string | number): void => { form.value[key] = String(value).normalize('NFC').toLocaleUpperCase('es-EC'); };
+const nameParts = NAME_PARTS;
+const setPart = (key: NamePartKey, value: string | number): void => { form.value[key] = upperName(value); };
 const reset = (): void => { form.value = emptyForm(); errors.value = {}; };
 watch(open, (value) => { if (value) reset(); });
 const replacement = ref<string | null>(null);

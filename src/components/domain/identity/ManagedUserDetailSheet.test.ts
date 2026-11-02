@@ -26,13 +26,13 @@ describe('ManagedUserDetailSheet', () => {
     await flushPromises();
 
     expect(document.body.textContent).toContain('Editar usuario');
-    expect(document.body.querySelector('#managed-edit-name-u1')).not.toBeNull();
+    expect(document.body.querySelector('#managed-edit-primer_nombre-u1')).not.toBeNull();
 
     const cancel = [...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Cancelar') as HTMLButtonElement;
     cancel.click();
     await flushPromises();
     expect(document.body.textContent).toContain('Datos de la cuenta');
-    expect(document.body.querySelector('#managed-edit-name-u1')).toBeNull();
+    expect(document.body.querySelector('#managed-edit-primer_nombre-u1')).toBeNull();
   });
 
   it('no ofrece editar cuando no corresponde, como en la propia cuenta', async () => {
