@@ -44,7 +44,7 @@ const reason = computed(() => {
 </script>
 
 <template>
-    <div v-if="banner" role="status" class="flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-primary/15 bg-accent px-4 py-2.5 text-sm text-accent-foreground sm:px-6">
+    <div v-if="banner" role="status" class="flex flex-wrap items-center gap-x-3 gap-y-1 border-y border-primary/15 bg-accent dark:border-primary/40 dark:bg-primary/25 px-4 py-2.5 text-sm text-accent-foreground sm:px-6">
         <component :is="icon ?? Lock" class="size-4 shrink-0 text-primary" aria-hidden="true" />
         <span class="font-medium">{{ headline }}</span>
         <span class="text-accent-foreground/80">{{ summary }}</span>
@@ -58,7 +58,7 @@ const reason = computed(() => {
             <RouterLink :to="href">{{ actionLabel }}</RouterLink>
         </Button>
     </div>
-    <Alert v-else class="w-fit max-w-full border-primary/20 bg-accent text-accent-foreground">
+    <Alert v-else class="w-fit max-w-full border-primary/20 bg-accent text-accent-foreground dark:border-primary/40 dark:bg-primary/25">
         <component :is="icon ?? Lock" class="text-primary" aria-hidden="true" />
         <AlertTitle>{{ headline }}</AlertTitle>
         <AlertDescription class="flex flex-col items-start gap-2 text-accent-foreground/80">
