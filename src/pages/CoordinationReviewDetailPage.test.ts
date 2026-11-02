@@ -229,6 +229,7 @@ describe("CoordinationReviewDetailPage", () => {
     expect(requestCorrection).toHaveBeenCalledWith("revision-1", {
       justification: "Debe precisar el resultado observado",
     });
+    expect(replace).toHaveBeenCalledWith("/coordinacion/revisiones");
     wrapper.unmount();
   });
 

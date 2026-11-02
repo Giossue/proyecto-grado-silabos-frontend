@@ -172,8 +172,7 @@ describe('LibraryReviewDetailPage', () => {
       reasons: ['libro_no_disponible', 'codigo_incorrecto'],
     });
     expect(toastSuccess).toHaveBeenCalledWith('Comentario enviado al docente');
-    expect(wrapper.text()).toContain('Devuelto al docente');
-    expect(headerButton(wrapper, 'Devolver al docente')).toBeUndefined();
+    expect(replace).toHaveBeenCalledWith('/biblioteca/revisiones');
     wrapper.unmount();
   });
 

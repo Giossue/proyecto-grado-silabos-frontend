@@ -141,7 +141,8 @@ const submitCorrection = async (): Promise<void> => {
     const result = await requestCorrection(data.value.revision.id, { justification: correctionJustification.value });
     correctionOpen.value = false;
     correctionJustification.value = '';
-    await changed(result.message);
+    toast.success(result.message);
+    await router.replace(area.reviews);
   } catch (failure) {
     const fieldErrors = failure instanceof ApiError ? [...(failure.errors.justification ?? []), ...(failure.errors.revision ?? [])] : [];
     correctionErrors.value = fieldErrors.length ? fieldErrors : [failure instanceof ApiError ? failure.message : 'No se pudo solicitar la corrección'];

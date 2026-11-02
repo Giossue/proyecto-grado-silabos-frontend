@@ -102,7 +102,7 @@ const sendReturn = async (): Promise<void> => {
     selectedReasons.value = [];
     otherReason.value = '';
     toast.success(result.message);
-    await load();
+    await router.replace(paths.library.reviews);
   } catch (failure) {
     if (failure instanceof ApiError) {
       reasonErrors.value = failure.errors.reasons ?? failure.errors['reasons.0'] ?? [];
