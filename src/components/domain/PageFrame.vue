@@ -96,7 +96,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
 
 <template>
     <div class="contents">
-    <div v-if="$slots.banner" class="flex flex-col">
+    <div v-if="$slots.banner" class="flex flex-col [&>*+*]:border-t-0">
         <slot name="banner" />
     </div>
     <div

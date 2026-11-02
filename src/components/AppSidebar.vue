@@ -34,7 +34,7 @@ watch(() => route.fullPath, () => {
 </script>
 
 <template>
-    <Sidebar collapsible="icon" variant="sidebar">
+    <Sidebar collapsible="icon" variant="sidebar" class="border-sidebar">
         <SidebarHeader>
             <div
                 class="flex min-h-16 items-center p-2 transition-[padding] duration-200 ease-linear group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:min-h-12 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0"
