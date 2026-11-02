@@ -4,6 +4,7 @@ import { getScheduledSubjects, type ScheduledSubjects } from '@/api/career-acade
 import { getSession } from '@/api/session';
 import SubjectProfileSheet from '@/components/domain/academic/SubjectProfileSheet.vue';
 import SupportDocumentsPanel from '@/components/domain/academic/SupportDocumentsPanel.vue';
+import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import CoordinationCareerProjectPage from '@/pages/CoordinationCareerProjectPage.vue';
 
 vi.mock('vue-router', async (importOriginal) => ({
@@ -16,7 +17,7 @@ vi.mock('@/api/session', () => ({ getSession: vi.fn() }));
 
 const subject = (id: string, nombre: string, ciclo: number, extra: Record<string, unknown> = {}) => ({ id, nombre, ciclo, generates_syllabus: true, profile_complete: true, ...extra });
 const scheduled = (subjects: unknown[]) => ({ career: { lock_reason: null, lock: null }, options: { activeSubjects: subjects } }) as unknown as ScheduledSubjects;
-const mountPage = () => mount(CoordinationCareerProjectPage, { attachTo: document.body, global: { stubs: { SubjectProfileSheet: true, FichaImportDialog: true, SupportDocumentsPanel: true } } });
+const mountPage = () => mount(CoordinationCareerProjectPage, { attachTo: document.body, global: { stubs: { SubjectProfileSheet: true, FichaImportDialog: true, SupportDocumentsPanel: true, ProcessLockAlert: true } } });
 
 describe('Proyecto de carrera', () => {
   beforeEach(() => {
@@ -58,9 +59,11 @@ describe('Proyecto de carrera', () => {
     wrapper.unmount();
   });
 
-  it('los documentos de apoyo son una pestaña con su propio botón para subir', async () => {
+  it('los documentos de apoyo son una pestaña con su propio botón para subir y sin el aviso de edición bloqueada', async () => {
+    vi.mocked(getScheduledSubjects).mockResolvedValue({ ...scheduled([subject('m2', 'Matemática Discreta', 1)]), career: { lock_reason: 'Convocatoria abierta', lock: { label: 'Edición bloqueada', reason: 'Convocatoria abierta' } } } as unknown as ScheduledSubjects);
     const wrapper = mountPage();
     await flushPromises();
+    expect(wrapper.findComponent(ProcessLockAlert).exists()).toBe(true);
     expect(wrapper.text()).not.toContain('Subir documento');
 
     const tab = wrapper.findAll('[role="tab"]').find((item) => item.text() === 'Documentos de apoyo')!;
@@ -68,6 +71,7 @@ describe('Proyecto de carrera', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Subir documento');
+    expect(wrapper.findComponent(ProcessLockAlert).exists()).toBe(false);
     expect(wrapper.findComponent(SupportDocumentsPanel).exists()).toBe(true);
     await wrapper.findAll('button').find((button) => button.text() === 'Subir documento')!.trigger('click');
     expect(wrapper.findComponent(SupportDocumentsPanel).props('uploadOpen')).toBe(true);
