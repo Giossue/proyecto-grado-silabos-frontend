@@ -72,4 +72,25 @@ describe('CoordinationReviewHistoryPage', () => {
     expect(compareReviews).toHaveBeenCalledWith('r1', 'r2');
     expect(wrapper.findAll('[data-changed]')).toHaveLength(1);
   });
+
+  it('el botón «Resaltar cambios» quita y vuelve a poner el resaltado', async () => {
+    vi.mocked(compareReviews).mockResolvedValue({ comparison: { changes: [{ section_key: 'descripcion', field_key: 'objetivo' }], changed_fields: 1 } } as never);
+    const wrapper = mount(CoordinationReviewHistoryPage, { attachTo: document.body, global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } } });
+    await flushPromises();
+    const toggle = (): HTMLButtonElement => wrapper.get('button[aria-label="Resaltar cambios"]').element as HTMLButtonElement;
+
+    expect(toggle().disabled).toBe(false);
+    await wrapper.get('button[aria-label="Resaltar cambios"]').trigger('click');
+    expect(wrapper.findAll('[data-changed]')).toHaveLength(0);
+    await wrapper.get('button[aria-label="Resaltar cambios"]').trigger('click');
+    expect(wrapper.findAll('[data-changed]')).toHaveLength(1);
+  });
+
+  it('sin cambios entre versiones, «Resaltar cambios» queda deshabilitado', async () => {
+    vi.mocked(compareReviews).mockResolvedValue({ comparison: { changes: [], changed_fields: 0 } } as never);
+    const wrapper = mount(CoordinationReviewHistoryPage, { attachTo: document.body, global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } } });
+    await flushPromises();
+
+    expect((wrapper.get('button[aria-label="Resaltar cambios"]').element as HTMLButtonElement).disabled).toBe(true);
+  });
 });

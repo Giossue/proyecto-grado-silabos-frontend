@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, FileSignature, FileText, GitCompareArrows, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
+import { ArrowLeft, FileSignature, FileText, GitCompareArrows, Highlighter, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -79,6 +79,8 @@ const previousRevision = computed(() => {
 });
 const showChanges = computed(() => Boolean(previousRevision.value && data.value?.syllabus.state === 'en_revision' && data.value.revision.is_current));
 const comparing = ref(false);
+const highlight = ref(true);
+const noChanges: ReadonlySet<string> = new Set();
 const currentSection = ref<HTMLElement | null>(null);
 const changedFields = ref<ReadonlySet<string>>(new Set());
 const previousDetail = ref<ReviewDetail | null>(null);
@@ -92,6 +94,7 @@ const toggleCompare = async (): Promise<void> => {
     ]);
     previousDetail.value = before;
     changedFields.value = new Set(result.comparison.changes.map((change) => `${change.section_key}.${change.field_key}`));
+    highlight.value = true;
     comparing.value = true;
   } catch (reason) {
     toast.error(reason instanceof ApiError ? reason.message : 'No se pudo comparar con la versión anterior');
@@ -185,6 +188,14 @@ onMounted(load);
           </TooltipTrigger>
           <TooltipContent>{{ comparing ? 'Cerrar la comparación' : 'Comparar con la versión anterior' }}</TooltipContent>
         </Tooltip>
+        <Tooltip v-if="comparing">
+          <TooltipTrigger as-child>
+            <span class="inline-flex" :tabindex="changedFields.size === 0 ? 0 : undefined">
+              <Button type="button" variant="ghost" size="icon" aria-label="Resaltar cambios" :aria-pressed="highlight" :disabled="changedFields.size === 0" :class="highlight && changedFields.size > 0 ? 'bg-accent text-accent-foreground' : ''" @click="highlight = !highlight"><Highlighter aria-hidden="true" /></Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{{ changedFields.size === 0 ? 'No hay cambios que resaltar' : highlight ? 'Quitar el resaltado' : 'Resaltar los cambios' }}</TooltipContent>
+        </Tooltip>
         </template>
       </TooltipProvider>
       <DropdownMenu v-if="canReset">
@@ -217,7 +228,7 @@ onMounted(load);
       </section>
       <section :ref="(element) => { currentSection = element as HTMLElement | null; }" class="flex min-w-0 flex-col gap-2" aria-label="Versión actual">
         <h2 class="text-sm font-medium text-muted-foreground">Versión {{ data.revision.number }} · actual</h2>
-        <SyllabusDocumentPreview :presentation="data.presentation" :sections="previewSections" :changed="changedFields" />
+        <SyllabusDocumentPreview :presentation="data.presentation" :sections="previewSections" :changed="highlight ? changedFields : noChanges" />
       </section>
       <ChangeMarks :root="currentSection" />
     </div>

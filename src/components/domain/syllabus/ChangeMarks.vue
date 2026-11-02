@@ -6,6 +6,7 @@ const props = defineProps<{ root: HTMLElement | null }>();
 
 const marks = ref<Array<{ top: number; element: HTMLElement }>>([]);
 let observer: ResizeObserver | null = null;
+let mutations: MutationObserver | null = null;
 
 const measure = (): void => {
   const viewport = document.querySelector<HTMLElement>('[data-app-scroll] [data-slot="scroll-area-viewport"]');
@@ -22,14 +23,22 @@ const measure = (): void => {
 
 watch(() => props.root, (root) => {
   observer?.disconnect();
+  mutations?.disconnect();
   observer = null;
+  mutations = null;
   measure();
   if (root === null || typeof ResizeObserver === 'undefined') return;
   observer = new ResizeObserver(measure);
   observer.observe(root);
+  // Al quitar o poner el resaltado cambian los campos marcados sin cambiar el tamaño.
+  mutations = new MutationObserver(measure);
+  mutations.observe(root, { subtree: true, childList: true, attributes: true, attributeFilter: ['data-changed'] });
 }, { immediate: true, flush: 'post' });
 
-onBeforeUnmount(() => observer?.disconnect());
+onBeforeUnmount(() => {
+  observer?.disconnect();
+  mutations?.disconnect();
+});
 
 const goTo = (element: HTMLElement): void => element.scrollIntoView({ behavior: 'smooth', block: 'center' });
 </script>

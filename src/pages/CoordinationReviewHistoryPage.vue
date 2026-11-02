@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft } from '@lucide/vue';
+import { ArrowLeft, Highlighter } from '@lucide/vue';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -11,6 +11,7 @@ import SyllabusDocumentPreview, { type PreviewSection } from '@/components/domai
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { reviewAreaPaths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
@@ -25,6 +26,8 @@ const data = ref<ReviewDetail | null>(null);
 const loading = ref(true);
 const loadError = ref('');
 const changedFields = ref<ReadonlySet<string>>(new Set());
+const highlight = ref(true);
+const noChanges: ReadonlySet<string> = new Set();
 const page = ref<HTMLElement | null>(null);
 const marks = ref<Array<{ top: number; element: HTMLElement }>>([]);
 
@@ -123,7 +126,7 @@ async function markChanges(): Promise<void> {
   }
 }
 
-watch([changedFields, () => data.value], measureMarks, { flush: 'post' });
+watch([changedFields, highlight, () => data.value], measureMarks, { flush: 'post' });
 onMounted(load);
 watch(() => route.params.revision, (current, before) => { if (current !== before) void load(); });
 </script>
@@ -136,6 +139,16 @@ watch(() => route.params.revision, (current, before) => { if (current !== before
       <span class="truncate text-sm text-muted-foreground">{{ title }}</span>
     </div>
     <span class="flex-1" />
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <span class="inline-flex" :tabindex="changedFields.size === 0 ? 0 : undefined">
+            <Button type="button" variant="ghost" size="icon" aria-label="Resaltar cambios" :aria-pressed="highlight" :disabled="changedFields.size === 0" :class="highlight && changedFields.size > 0 ? 'bg-accent text-accent-foreground' : ''" @click="highlight = !highlight"><Highlighter aria-hidden="true" /></Button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{{ changedFields.size === 0 ? 'No hay cambios que resaltar' : highlight ? 'Quitar el resaltado' : 'Resaltar los cambios' }}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
     <AppearanceToggle />
   </header>
   <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
@@ -144,7 +157,7 @@ watch(() => route.params.revision, (current, before) => { if (current !== before
       <ScrollArea type="auto" class="h-full lg:h-[calc(100dvh-3.5rem)]">
         <main ref="page" class="p-4 sm:p-6">
           <LoadingSkeleton v-if="loading && !data" variant="preview" />
-          <SyllabusDocumentPreview v-else-if="data" :presentation="data.presentation" :sections="previewSections" :changed="changedFields" />
+          <SyllabusDocumentPreview v-else-if="data" :presentation="data.presentation" :sections="previewSections" :changed="highlight ? changedFields : noChanges" />
         </main>
       </ScrollArea>
       <div v-if="marks.length" class="pointer-events-none absolute inset-y-0 right-3 hidden w-3 lg:block" aria-label="Cambios en el documento">

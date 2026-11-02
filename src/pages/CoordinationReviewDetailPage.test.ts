@@ -303,6 +303,10 @@ describe("CoordinationReviewDetailPage", () => {
     expect(wrapper.find('[aria-label="Versión anterior"]').exists()).toBe(true);
     expect(wrapper.find('[aria-label="Versión actual"]').exists()).toBe(true);
     expect(wrapper.findAll('[data-changed]')).toHaveLength(1);
+    await headerButton(wrapper, "Resaltar cambios")!.trigger("click");
+    expect(wrapper.findAll('[data-changed]')).toHaveLength(0);
+    await headerButton(wrapper, "Resaltar cambios")!.trigger("click");
+    expect(wrapper.findAll('[data-changed]')).toHaveLength(1);
 
     await headerButton(wrapper, "Comparar con la versión anterior")!.trigger("click");
     expect(wrapper.find('[aria-label="Versión anterior"]').exists()).toBe(false);
