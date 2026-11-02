@@ -7,7 +7,7 @@ import { catalogResults } from '@/test/libraryCatalog';
 vi.mock('@/api/libraryCatalog');
 const search = vi.mocked(searchLibraryCatalog);
 
-const book: CatalogBook = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico' };
+const book: CatalogBook = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico', kind: 'Libro' };
 const wrappers: Array<ReturnType<typeof mount>> = [];
 const body = (): HTMLElement => document.body;
 const buttonWith = (text: string): HTMLButtonElement => [...body().querySelectorAll('button')].find((item) => item.textContent?.includes(text)) as HTMLButtonElement;
@@ -44,8 +44,8 @@ describe('búsqueda en la biblioteca', () => {
 
         expect(search).toHaveBeenCalledWith('author', 'Sapag', 1);
         expect(body().textContent).toContain('Proyectos de inversión');
-        expect([...body().querySelectorAll('th')].map((item) => item.textContent?.trim())).toEqual(['Autor', 'Título', 'Año', 'Ciudad', 'Editorial', 'ISBN', 'Código', 'Agregar']);
-        expect([...body().querySelectorAll('tbody td')].map((item) => item.textContent?.trim()).slice(0, 7)).toEqual(['Sapag Chain, Nassir', 'Proyectos de inversión', '2011', 'Santiago de Chile', 'Pearson Educación', '9789563431063', '658.404 S2411p']);
+        expect([...body().querySelectorAll('th')].map((item) => item.textContent?.trim())).toEqual(['Autor', 'Título', 'Tipo', 'Año', 'Ciudad', 'Editorial', 'ISBN', 'Código', 'Agregar']);
+        expect([...body().querySelectorAll('tbody td')].map((item) => item.textContent?.trim()).slice(0, 8)).toEqual(['Sapag Chain, Nassir', 'Proyectos de inversión', 'Libro', '2011', 'Santiago de Chile', 'Pearson Educación', '9789563431063', 'Libro físico']);
         buttonWith('Agregar').click();
         await flushPromises();
         expect(wrapper.emitted('pick')).toEqual([[book]]);

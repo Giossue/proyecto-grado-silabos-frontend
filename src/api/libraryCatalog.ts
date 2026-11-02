@@ -12,6 +12,7 @@ export type CatalogBook = {
     isbn: string;
     call_number: string;
     format: string;
+    kind: string;
 };
 
 export type CatalogResults = { data: CatalogBook[]; meta: PaginationMeta };

@@ -157,7 +157,7 @@ describe('bloques definidos en la plantilla', () => {
         });
 
         it('busca en la biblioteca y llena la fila vacía con el libro elegido', async () => {
-            vi.mocked(searchLibraryCatalog).mockResolvedValue(catalogResults([{ id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico' }]));
+            vi.mocked(searchLibraryCatalog).mockResolvedValue(catalogResults([{ id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico', kind: 'Libro' }]));
             const wrapper = mountEditor(bibliography());
             await flushPromises();
 

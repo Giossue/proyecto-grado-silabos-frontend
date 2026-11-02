@@ -6,6 +6,7 @@ import { searchLibraryCatalog, type CatalogBook, type CatalogSearchField } from 
 import { catalogErrorMessage } from '@/lib/blocks/catalog';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -98,6 +99,7 @@ const pick = (book: CatalogBook): void => {
                         <TableRow>
                             <TableHead>Autor</TableHead>
                             <TableHead>Título</TableHead>
+                            <TableHead>Tipo</TableHead>
                             <TableHead class="text-center">Año</TableHead>
                             <TableHead>Ciudad</TableHead>
                             <TableHead>Editorial</TableHead>
@@ -107,15 +109,16 @@ const pick = (book: CatalogBook): void => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableEmpty v-if="results.length === 0" :colspan="8">No hay resultados</TableEmpty>
+                        <TableEmpty v-if="results.length === 0" :colspan="9">No hay resultados</TableEmpty>
                         <TableRow v-for="book in results" v-else :key="book.id">
                             <TableCell class="whitespace-normal">{{ book.author }}</TableCell>
                             <TableCell class="whitespace-normal font-medium">{{ book.title }}</TableCell>
+                            <TableCell><Badge variant="secondary">{{ book.kind }}</Badge></TableCell>
                             <TableCell class="text-center">{{ book.year }}</TableCell>
                             <TableCell class="whitespace-normal">{{ book.place }}</TableCell>
                             <TableCell class="whitespace-normal">{{ book.publisher }}</TableCell>
                             <TableCell>{{ book.isbn }}</TableCell>
-                            <TableCell class="whitespace-normal">{{ book.call_number }}</TableCell>
+                            <TableCell class="whitespace-normal">{{ book.format }}</TableCell>
                             <TableCell>
                                 <Button type="button" size="sm" :variant="added.has(book.id) ? 'outline' : 'default'" :disabled="added.has(book.id)" :aria-label="`Agregar ${book.title}`" @click="pick(book)">
                                     {{ added.has(book.id) ? 'Agregado' : 'Agregar' }}

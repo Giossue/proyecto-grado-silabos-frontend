@@ -133,7 +133,7 @@ describe('FieldResponseEditor', () => {
 
     describe('bibliografía con el catálogo de la biblioteca', () => {
         const empty = { autor: '', titulo: '', anio: '', ciudad: '', editorial: '', isbn: '', codigo: '' };
-        const found = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico' };
+        const found = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico', kind: 'Libro' };
         const wrappers: Array<ReturnType<typeof mountEditor>> = [];
         const mountBibliography = (disabled = false) => {
             const wrapper = mount(FieldResponseEditor, { props: { id: 'campo', label: 'Campo', template: block('bibliografia'), modelValue: block('bibliografia', { libros: [empty] }), disabled }, attachTo: document.body });
