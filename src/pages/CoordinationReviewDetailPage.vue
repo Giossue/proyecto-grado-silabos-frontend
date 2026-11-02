@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client';
 import { approveReview, compareReviews, getReview, requestCorrection, reviewStageLabel, type ReviewDetail } from '@/api/reviews';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import ChangeMarks from '@/components/domain/syllabus/ChangeMarks.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
@@ -78,6 +79,7 @@ const previousRevision = computed(() => {
 });
 const showChanges = computed(() => Boolean(previousRevision.value && data.value?.syllabus.state === 'en_revision' && data.value.revision.is_current));
 const comparing = ref(false);
+const currentSection = ref<HTMLElement | null>(null);
 const changedFields = ref<ReadonlySet<string>>(new Set());
 const previousDetail = ref<ReviewDetail | null>(null);
 const toggleCompare = async (): Promise<void> => {
@@ -213,10 +215,11 @@ onMounted(load);
         <h2 class="text-sm font-medium text-muted-foreground">Versión {{ previousDetail.revision.number }} · anterior</h2>
         <SyllabusDocumentPreview :presentation="previousDetail.presentation" :sections="previousSections" :changed="changedFields" />
       </section>
-      <section class="flex min-w-0 flex-col gap-2" aria-label="Versión actual">
+      <section :ref="(element) => { currentSection = element as HTMLElement | null; }" class="flex min-w-0 flex-col gap-2" aria-label="Versión actual">
         <h2 class="text-sm font-medium text-muted-foreground">Versión {{ data.revision.number }} · actual</h2>
         <SyllabusDocumentPreview :presentation="data.presentation" :sections="previewSections" :changed="changedFields" />
       </section>
+      <ChangeMarks :root="currentSection" />
     </div>
     <SyllabusDocumentPreview v-else key="single" :presentation="data.presentation" :sections="previewSections" />
     </Transition>
