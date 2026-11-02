@@ -691,6 +691,7 @@ describe("TeacherSyllabusDetailPage", () => {
     await buttonNamed(wrapper, "Enviar")!.trigger("click");
     await flushPromises();
     expect(document.body.textContent).toContain("¿Enviar a revisión?");
+    expect(document.body.textContent).toContain("Mientras se revisa no podrá editarlo");
     expect(document.body.textContent).not.toContain("Pasa directo a biblioteca");
     wrapper.unmount();
   });

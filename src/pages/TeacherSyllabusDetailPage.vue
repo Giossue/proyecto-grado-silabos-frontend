@@ -591,9 +591,10 @@ onBeforeUnmount(() => {
     </template>
 
     <Dialog v-model:open="confirmSubmitOpen">
-      <DialogContent :aria-describedby="undefined">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Enviar a revisión?</DialogTitle>
+          <DialogDescription>El sílabo pasa a revisión. Mientras se revisa no podrá editarlo; si piden correcciones, se lo devolverán con un comentario</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>
