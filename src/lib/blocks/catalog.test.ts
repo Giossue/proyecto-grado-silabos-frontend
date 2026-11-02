@@ -6,13 +6,19 @@ import type { BlockDefinition } from '@/lib/blocks/types';
 import definition from '@/test/fixtures/template-definition.json';
 
 const block = (definition as unknown as { blocks: Record<string, BlockDefinition> }).blocks.bibliografia!;
-const book: CatalogBook = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p' };
+const book: CatalogBook = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico' };
 const empty = { autor: '', titulo: '', anio: '', ciudad: '', editorial: '', isbn: '', codigo: '' };
-const full = { autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: '658.404 S2411p' };
+const full = { autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: 'Libro físico' };
 
 describe('libros del catálogo en un bloque', () => {
-    it('la plantilla oficial declara a qué columna va cada dato, con la signatura en «Código»', () => {
-        expect(block.catalog).toEqual({ list: 'libros', map: { author: 'autor', title: 'titulo', year: 'anio', place: 'ciudad', publisher: 'editorial', isbn: 'isbn', call_number: 'codigo' } });
+    it('la plantilla oficial declara a qué columna va cada dato, con el tipo de libro en «Código»', () => {
+        expect(block.catalog).toEqual({ list: 'libros', map: { author: 'autor', title: 'titulo', year: 'anio', place: 'ciudad', publisher: 'editorial', isbn: 'isbn', format: 'codigo' } });
+    });
+
+    it('pone N/A en los datos que el catálogo no tiene', () => {
+        const [row] = (addCatalogBook(block, { libros: [empty] }, { ...book, place: '', publisher: ' ', isbn: '' }, {})!.libros as Array<Record<string, string>>);
+
+        expect(row).toMatchObject({ ciudad: 'N/A', editorial: 'N/A', isbn: 'N/A', codigo: 'Libro físico' });
     });
 
     it('aprovecha la fila vacía del principio', () => {

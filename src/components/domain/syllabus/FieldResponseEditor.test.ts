@@ -133,7 +133,7 @@ describe('FieldResponseEditor', () => {
 
     describe('bibliografía con el catálogo de la biblioteca', () => {
         const empty = { autor: '', titulo: '', anio: '', ciudad: '', editorial: '', isbn: '', codigo: '' };
-        const found = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p' };
+        const found = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico' };
         const wrappers: Array<ReturnType<typeof mountEditor>> = [];
         const mountBibliography = (disabled = false) => {
             const wrapper = mount(FieldResponseEditor, { props: { id: 'campo', label: 'Campo', template: block('bibliografia'), modelValue: block('bibliografia', { libros: [empty] }), disabled }, attachTo: document.body });
@@ -161,7 +161,7 @@ describe('FieldResponseEditor', () => {
             await flushPromises();
 
             const attrs = emitted(wrapper).content![0]!.attrs as unknown as { value: { libros: Array<Record<string, string>> } };
-            expect(attrs.value.libros).toEqual([{ autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: '658.404 S2411p' }]);
+            expect(attrs.value.libros).toEqual([{ autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: 'Libro físico' }]);
         });
 
         it('«Limpiar» vacía la fila sin quitarla, y con una sola fila el botón de borrar no se puede usar', async () => {

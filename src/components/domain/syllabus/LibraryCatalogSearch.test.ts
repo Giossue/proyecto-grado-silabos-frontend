@@ -7,7 +7,7 @@ import { catalogResults } from '@/test/libraryCatalog';
 vi.mock('@/api/libraryCatalog');
 const search = vi.mocked(searchLibraryCatalog);
 
-const book: CatalogBook = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p' };
+const book: CatalogBook = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico' };
 const wrappers: Array<ReturnType<typeof mount>> = [];
 const body = (): HTMLElement => document.body;
 const buttonWith = (text: string): HTMLButtonElement => [...body().querySelectorAll('button')].find((item) => item.textContent?.includes(text)) as HTMLButtonElement;

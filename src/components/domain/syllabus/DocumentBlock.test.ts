@@ -157,7 +157,7 @@ describe('bloques definidos en la plantilla', () => {
         });
 
         it('busca en la biblioteca y llena la fila vacía con el libro elegido', async () => {
-            vi.mocked(searchLibraryCatalog).mockResolvedValue(catalogResults([{ id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p' }]));
+            vi.mocked(searchLibraryCatalog).mockResolvedValue(catalogResults([{ id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico' }]));
             const wrapper = mountEditor(bibliography());
             await flushPromises();
 
@@ -172,7 +172,7 @@ describe('bloques definidos en la plantilla', () => {
             buttonWith('Agregar').click();
             await flushPromises();
 
-            expect(booksOf(last(wrapper))).toEqual([{ autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: '658.404 S2411p' }]);
+            expect(booksOf(last(wrapper))).toEqual([{ autor: 'Sapag Chain, Nassir', titulo: 'Proyectos de inversión', anio: '2011', ciudad: 'Santiago de Chile', editorial: 'Pearson Educación', isbn: '9789563431063', codigo: 'Libro físico' }]);
         });
 
         it('Administración la ve sin el buscador', async () => {

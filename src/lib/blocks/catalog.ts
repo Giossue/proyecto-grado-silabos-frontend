@@ -10,6 +10,8 @@ const listOf = (definition: BlockDefinition): { name: string; schema: ListSchema
     return name && schema?.type === 'array' && schema.items.type === 'object' ? { name, schema } : null;
 };
 
+const MISSING = 'N/A';
+
 const blank = (row: unknown): boolean => typeof row === 'object' && row !== null && Object.values(row).every((cell) => String(cell ?? '').trim() === '');
 
 /** ¿Se puede agregar otro libro? Una fila vacía se aprovecha, así que solo cuenta la lista llena. */
@@ -28,7 +30,7 @@ export const addCatalogBook = (definition: BlockDefinition, value: Record<string
     const row = emptyValue(list.schema.items, props) as Record<string, unknown>;
     for (const [field, column] of Object.entries(definition.catalog?.map ?? {})) {
         const schema = columns[column];
-        const text = (book as Record<string, string>)[field] ?? '';
+        const text = ((book as Record<string, string>)[field] ?? '').trim() || MISSING;
         if (isText(schema)) row[column] = text.slice(0, schema.maxLength);
     }
     const rows = Array.isArray(value[list.name]) ? [...(value[list.name] as unknown[])] : [];
