@@ -233,8 +233,7 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("reinicia un sílabo aprobado desde «Más»: motivo, nombre de la materia, cuenta regresiva y vuelve a la cola", async () => {
-    vi.useFakeTimers();
+  it("reinicia un sílabo aprobado desde «Más»: motivo y nombre de la materia, sin cuenta regresiva, y vuelve a la cola", async () => {
     vi.mocked(getReview).mockResolvedValue({ ...detail(), reset: { allowed: true, erases_history: true, revisions: 2, signatures: 3, has_pdf: true } });
     vi.mocked(resetSyllabus).mockResolvedValue({ message: "Sílabo reiniciado" });
     const wrapper = mountPage();
@@ -255,11 +254,11 @@ describe("CoordinationReviewDetailPage", () => {
       input.value = value;
       input.dispatchEvent(new Event("input"));
     };
-    expect(confirm().textContent).toContain("(5)");
+    expect(confirm().textContent?.trim()).toBe("Reiniciar");
+    expect(confirm().disabled).toBe(true);
     type("#restart-reason", "Error en la ficha de la materia");
     type("#restart-name", "Álgebra");
     await flushPromises();
-    await vi.advanceTimersByTimeAsync(5000);
     expect(confirm().disabled).toBe(true);
 
     type("#restart-name", "Arquitectura de Software");
@@ -271,7 +270,6 @@ describe("CoordinationReviewDetailPage", () => {
     expect(resetSyllabus).toHaveBeenCalledWith("syllabus-1", "Error en la ficha de la materia");
     expect(replace).toHaveBeenCalled();
     wrapper.unmount();
-    vi.useRealTimers();
   });
 
   it("el historial lleva a su propia pantalla de versiones", async () => {

@@ -9,18 +9,16 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { useCountdown } from '@/composables/useCountdown';
 
 const props = defineProps<{ syllabusId: string; subject: string; impact: ReviewDetail['reset'] }>();
 const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
-const remaining = useCountdown(open);
 const reason = ref('');
 const typedName = ref('');
 const errors = ref<Record<string, string[]>>({});
 const processing = ref(false);
 const needsName = computed(() => props.impact.erases_history === true);
-const ready = computed(() => remaining.value === 0 && reason.value.trim().length >= 5 && (!needsName.value || typedName.value.trim() === props.subject.trim()));
+const ready = computed(() => reason.value.trim().length >= 5 && (!needsName.value || typedName.value.trim() === props.subject.trim()));
 const losses = computed(() => {
   const items = ['Lo escrito por el docente'];
   if ((props.impact.signatures ?? 0) > 0) items.push(`${props.impact.signatures} firma(s)`);
@@ -79,7 +77,7 @@ const submit = async (): Promise<void> => {
           <Button type="submit" variant="destructive" :disabled="processing || !ready">
             <Spinner v-if="processing" data-icon="inline-start" />
             <RotateCcw v-else data-icon="inline-start" aria-hidden="true" />
-            {{ remaining > 0 ? `Reiniciar (${remaining})` : 'Reiniciar' }}
+            Reiniciar
           </Button>
         </DialogFooter>
       </form>

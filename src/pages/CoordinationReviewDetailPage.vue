@@ -175,7 +175,7 @@ onMounted(load);
       <span v-for="note in statusNotes" :key="note" class="text-sm text-muted-foreground">{{ note }}</span>
     </template>
     <template #actions>
-      <Button v-if="approvedCurrent" type="button" :disabled="openingPdf" @click="openPdf(data.revision.id)"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" />Ver PDF</Button>
+      <Button v-if="approvedCurrent" type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf(data.revision.id)"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>

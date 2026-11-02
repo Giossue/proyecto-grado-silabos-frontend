@@ -21,7 +21,6 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -160,14 +159,7 @@ onMounted(load);
       <span v-if="review.outcome === 'reemplazado'" class="text-sm text-muted-foreground">Hay un envío más reciente · solo consulta</span>
     </template>
     <template #actions>
-      <TooltipProvider v-if="review.verified_at">
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <Button type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button>
-          </TooltipTrigger>
-          <TooltipContent>Ver PDF</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Button v-if="review.verified_at" type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button>
       <Button v-if="review.can_comment" type="button" variant="outline" @click="act('return')">Devolver al docente</Button>
       <Button v-if="canSign" type="button" @click="act('sign')"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
     </template>
