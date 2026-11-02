@@ -160,7 +160,7 @@ watch(() => route.params.revision, (current, before) => { if (current !== before
     </div>
     <aside class="flex w-full shrink-0 flex-col border-t bg-card lg:sticky lg:top-14 lg:h-[calc(100dvh-3.5rem)] lg:w-80 lg:border-t-0 lg:border-l" aria-label="Historial de versiones">
       <h2 class="p-4 pb-2 text-base font-medium">Historial de versiones</h2>
-      <ScrollArea type="always" class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-6.5rem)]">
+      <ScrollArea type="auto" class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-6.5rem)]">
         <div class="flex flex-col gap-1 px-4 pb-4">
           <section v-for="day in days" :key="day.label" class="flex flex-col gap-1">
             <h3 class="pt-3 pb-1 text-sm text-muted-foreground">{{ capitalized(day.label) }}</h3>
