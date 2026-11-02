@@ -3,6 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
 import { updateAcademicRecord } from '@/api/academic';
 import { getCatalogLibraries } from '@/api/libraryCatalog';
+import { ApiError } from '@/api/client';
+import { usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
 
 vi.mock('@/api/academic', () => ({ updateAcademicRecord: vi.fn() }));
 vi.mock('@/api/libraryCatalog', () => ({ getCatalogLibraries: vi.fn() }));
@@ -65,6 +67,32 @@ describe('CatalogEditSheet · convocatoria activa', () => {
 
     expect(document.body.textContent).toContain('Hay una convocatoria activa: pause la convocatoria para editar');
     expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
+    wrapper.unmount();
+  });
+});
+
+describe('CatalogEditSheet · cambios que devuelven sílabos enviados', () => {
+  it('al cambiar el nombre pide confirmar y, al confirmar, reenvía con confirm_purge', async () => {
+    vi.mocked(updateAcademicRecord)
+      .mockRejectedValueOnce(new ApiError('Confirme', 422, { purge_required: ['Este cambio devolverá 1 sílabo enviado o aprobado a borrador'], purge_count: ['1'] }))
+      .mockResolvedValueOnce({ message: 'Facultad actualizada.' });
+    const wrapper = mountSheet();
+    await flushPromises();
+    const name = document.querySelector<HTMLInputElement>('input[required]')!;
+    name.value = 'Facultad con otro nombre';
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushPromises();
+    button('Guardar cambios')!.click();
+    await flushPromises();
+
+    const { open, message, confirm } = usePurgeConfirmation();
+    expect(open.value).toBe(true);
+    expect(message.value).toContain('devolverá 1 sílabo');
+    await confirm();
+    await flushPromises();
+
+    expect(updateAcademicRecord).toHaveBeenCalledTimes(2);
+    expect((vi.mocked(updateAcademicRecord).mock.calls[1]![2] as FormData).get('confirm_purge')).toBe('1');
     wrapper.unmount();
   });
 });

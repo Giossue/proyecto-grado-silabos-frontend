@@ -122,7 +122,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
     } catch (reason) {
         errors.value = reason instanceof ApiError ? reason.errors : {};
         if (props.entity === 'facultad') tab.value = Object.keys(errors.value).some((key) => key.startsWith('catalog_libraries')) ? 'bibliotecas' : 'datos';
-        const purgeMessage = props.entity === 'periodo' ? errors.value.purge_required?.[0] : undefined;
+        const purgeMessage = errors.value.purge_required?.[0];
         if (purgeMessage) {
             requestPurgeConfirmation(
                 purgeMessage,
