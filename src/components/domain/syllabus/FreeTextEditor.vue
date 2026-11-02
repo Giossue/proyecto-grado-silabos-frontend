@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import IconTooltip from '@/components/domain/IconTooltip.vue';
+import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import { Table, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
@@ -152,15 +153,15 @@ defineExpose({ editor });
         <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().deleteTable().run()">Quitar tabla</Button>
         <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
       </template>
-      <DropdownMenu v-if="variables.length">
-        <IconTooltip label="Insertar dato del sistema"><DropdownMenuTrigger as-child>
+      <MenuTooltip v-if="variables.length" label="Insertar dato del sistema"><DropdownMenu>
+        <DropdownMenuTrigger as-child>
           <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar dato del sistema" :disabled="disabled"><Braces aria-hidden="true" /></Button>
-        </DropdownMenuTrigger></IconTooltip>
+        </DropdownMenuTrigger>
         <DropdownMenuContent class="max-h-72 overflow-y-auto">
           <DropdownMenuLabel>Datos del sistema</DropdownMenuLabel>
           <DropdownMenuItem v-for="variable in variables" :key="variable.key" @select="insertVariable(variable.key)">{{ variable.label }}</DropdownMenuItem>
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu></MenuTooltip>
     </div>
     <EditorContent :editor="editor" :class="['overflow-x-auto', bare ? '' : 'min-h-32 px-3 py-2 text-sm']" />
     <div v-if="editor && toolbar && hasTable && !disabled" class="px-3 pb-2"><Button type="button" variant="outline" size="sm" @mousedown.prevent @click="addTableRow"><Plus data-icon="inline-start" aria-hidden="true" />Agregar fila</Button></div>

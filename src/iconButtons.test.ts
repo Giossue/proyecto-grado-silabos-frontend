@@ -15,8 +15,8 @@ const iconButtonsWithoutTooltip = (path: string): string[] => {
   const missing: string[] = [];
   for (const match of source.matchAll(/<Button\b[^>]*?size="icon(?:-sm|-xs|-lg)?"[^>]*>/gs)) {
     const before = source.slice(Math.max(0, (match.index ?? 0) - 400), match.index);
-    const opener = Math.max(before.lastIndexOf('<IconTooltip'), before.lastIndexOf('<TooltipTrigger'));
-    const closer = Math.max(before.lastIndexOf('</IconTooltip>'), before.lastIndexOf('</TooltipTrigger>'));
+    const opener = Math.max(before.lastIndexOf('<IconTooltip'), before.lastIndexOf('<TooltipTrigger'), before.lastIndexOf('<MenuTooltip'));
+    const closer = Math.max(before.lastIndexOf('</IconTooltip>'), before.lastIndexOf('</TooltipTrigger>'), before.lastIndexOf('</MenuTooltip>'));
     if (opener === -1 || closer > opener) missing.push(`${path}:${source.slice(0, match.index).split('\n').length}`);
   }
 
@@ -35,5 +35,13 @@ describe('Botones de solo ícono', () => {
       .flatMap(iconButtonsWithoutTooltip);
 
     expect(missing).toEqual([]);
+  });
+
+  it('ningún botón que abre un menú va dentro de IconTooltip: el menú saldría fuera de pantalla (usar MenuTooltip)', () => {
+    const offenders = sourceFiles('src')
+      .filter((path) => !IGNORED.some((ignored) => path.startsWith(ignored)))
+      .filter((path) => /<IconTooltip\b[^>]*>\s*<DropdownMenuTrigger/.test(readFileSync(path, 'utf8')));
+
+    expect(offenders).toEqual([]);
   });
 });

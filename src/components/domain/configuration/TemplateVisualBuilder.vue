@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import IconTooltip from '@/components/domain/IconTooltip.vue';
 import type { Editor } from '@tiptap/core';
 import { Braces, ImageUp, ListTree, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
@@ -481,9 +480,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
             <TooltipTrigger as-child>
               <span class="inline-flex">
                 <DropdownMenu>
-                  <IconTooltip label="Opciones avanzadas"><DropdownMenuTrigger as-child>
+                  <DropdownMenuTrigger as-child>
                     <Button type="button" variant="ghost" size="icon-sm" aria-label="Opciones avanzadas" :disabled="busy || locked"><Settings2 aria-hidden="true" /></Button>
-                  </DropdownMenuTrigger></IconTooltip>
+                  </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuGroup>
                       <DropdownMenuItem v-if="layoutControls.length" :disabled="locked" @select="designOpen = true"><Ruler aria-hidden="true" />Diseño</DropdownMenuItem>

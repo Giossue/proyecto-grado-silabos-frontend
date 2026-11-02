@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import IconTooltip from '@/components/domain/IconTooltip.vue';
+import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import { ArrowLeft, FileSignature, FileText, GitCompareArrows, Highlighter, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -201,14 +202,14 @@ onMounted(load);
         </Tooltip>
         </template>
       </TooltipProvider>
-      <DropdownMenu v-if="canReset">
-        <IconTooltip label="Más"><DropdownMenuTrigger as-child><Button type="button" variant="ghost" size="icon" aria-label="Más"><MoreHorizontal aria-hidden="true" /></Button></DropdownMenuTrigger></IconTooltip>
+      <MenuTooltip v-if="canReset" label="Más"><DropdownMenu>
+        <DropdownMenuTrigger as-child><Button type="button" variant="ghost" size="icon" aria-label="Más"><MoreHorizontal aria-hidden="true" /></Button></DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
             <DropdownMenuItem variant="destructive" @select="restartOpen = true"><RotateCcw data-icon="inline-start" aria-hidden="true" />Reiniciar sílabo</DropdownMenuItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
-      </DropdownMenu>
+      </DropdownMenu></MenuTooltip>
       <Button v-if="canReviewCurrent" type="button" variant="outline" @click="openCorrection">Solicitar corrección</Button>
       <Button v-if="canSign" type="button" @click="signOpen = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y enviar a biblioteca</Button>
     </template>

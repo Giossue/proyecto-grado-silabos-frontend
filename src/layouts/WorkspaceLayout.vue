@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import IconTooltip from '@/components/domain/IconTooltip.vue';
+import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import { computed, provide, ref } from 'vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import logo from '@/assets/logo-ueb-horizontal.webp';
@@ -45,8 +45,8 @@ const user = computed<User>(() => ({
             <div class="ml-auto flex items-center gap-2">
                 <NotificationsSheet />
                 <AppearanceToggle />
-                <DropdownMenu>
-                    <IconTooltip label="Menú de usuario"><DropdownMenuTrigger as-child>
+                <MenuTooltip label="Menú de usuario"><DropdownMenu>
+                    <DropdownMenuTrigger as-child>
                         <Button
                             type="button"
                             variant="ghost"
@@ -60,11 +60,11 @@ const user = computed<User>(() => ({
                                 </AvatarFallback>
                             </Avatar>
                         </Button>
-                    </DropdownMenuTrigger></IconTooltip>
+                    </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" class="w-64">
                         <UserMenuContent :user="user" />
                     </DropdownMenuContent>
-                </DropdownMenu>
+                </DropdownMenu></MenuTooltip>
             </div>
         </header>
         <main id="contenido" tabindex="-1" class="flex flex-1 flex-col p-4 outline-hidden md:p-6">
