@@ -108,7 +108,7 @@ const submit = async (): Promise<void> => {
                 <InputError :message="recoveryError ?? undefined" />
                 <p v-if="recoverySent" class="text-sm text-muted-foreground" role="status">Enlace enviado. Revise su correo</p>
                 <div>
-                    <Button type="button" variant="outline" :disabled="recoveryProcessing" @click="sendRecoveryLink">
+                    <Button type="button" :disabled="recoveryProcessing" @click="sendRecoveryLink">
                         <Spinner v-if="recoveryProcessing" data-icon="inline-start" />
                         <Mail v-else data-icon="inline-start" aria-hidden="true" />
                         {{ recoverySent ? 'Enviar de nuevo' : 'Enviar enlace' }}
