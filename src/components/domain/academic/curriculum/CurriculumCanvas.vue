@@ -131,10 +131,14 @@ useResizeObserver(canvasElement, (entries) => {
   const rect = entries[0]?.contentRect;
   if (rect) canvasSize.value = { width: rect.width, height: rect.height };
 });
-const fitted = ref(false);
+// La malla se centra al medir el lienzo y cada vez que cambia de tamaño (por ejemplo al terminar de acomodarse
+// el menú lateral), hasta que la persona la mueve: así no salta de lugar con el primer clic.
+const userMoved = ref(false);
+const onMoveStart = ({ event }: { event?: { sourceEvent?: unknown } }): void => {
+  if (event?.sourceEvent) userMoved.value = true;
+};
 watch(canvasSize, async ({ width, height }) => {
-  if (fitted.value || width === 0 || height === 0) return;
-  fitted.value = true;
+  if (userMoved.value || width === 0 || height === 0) return;
   await nextTick();
   await fitView({ padding: 0.08 });
 });
@@ -541,6 +545,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
       :elements-selectable="true"
       @connect="onConnect"
       @edge-click="onEdgeClick"
+      @move-start="onMoveStart"
       @node-click="onNodeClick"
       @node-drag="onNodeDrag"
       @node-drag-stop="onNodeDragStop"
