@@ -115,6 +115,14 @@ const reviewComments = computed(() =>
     (left, right) => new Date(right.commented_at).getTime() - new Date(left.commented_at).getTime(),
   ),
 );
+const submitNote = computed(() => {
+  const stage = reviewComments.value[0]?.stage;
+  const reviewer = stage === 'biblioteca' ? 'Biblioteca' : 'Coordinación';
+
+  return stage === undefined
+    ? 'El sílabo pasa a revisión. Asegúrese de que esté completo'
+    : `El sílabo pasa a revisión. Asegúrese de haber hecho los arreglos que pidió ${reviewer}`;
+});
 const mustSign = computed(() => syllabus.value?.teacher_signature_required === true);
 const submitLabel = computed(() => (mustSign.value ? 'Firmar y enviar' : 'Enviar'));
 const previewHint = window.history.state?.syllabusPreview === true;
@@ -594,7 +602,7 @@ onBeforeUnmount(() => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>¿Enviar a revisión?</DialogTitle>
-          <DialogDescription>El sílabo pasa a revisión. Mientras se revisa no podrá editarlo; si piden correcciones, se lo devolverán con un comentario</DialogDescription>
+          <DialogDescription>{{ submitNote }}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>
