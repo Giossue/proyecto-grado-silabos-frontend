@@ -44,9 +44,6 @@ const detail = (overrides: Partial<LibraryReviewDetail> = {}): LibraryReviewDeta
   verified_by: null,
   presentation: { appearance: {}, title: 'PROGRAMA DE ASIGNATURA (SÍLABO)', logos: { institution: '/ueb.png', faculty: '/facultad.png' } } as unknown as LibraryReviewDetail['presentation'],
   template_variables: {},
-  syllabus_sections: [
-    { key: 'descripcion', title: '2. Descripción de la asignatura', orientation: 'portrait', fields: [{ key: 'descripcion', label: '', quien_llena: 'coordinacion', value: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Descripción completa del sílabo' }] }] } }] },
-  ],
   sections: [{
     key: 'bibliografia',
     title: 'Bibliografía',
@@ -180,19 +177,12 @@ describe('LibraryReviewDetailPage', () => {
     wrapper.unmount();
   });
 
-  it('el ícono «Ver sílabo» abre el sílabo completo, sin historial ni comparación', async () => {
+  it('solo ofrece el PDF, sin el ícono «Ver sílabo»', async () => {
     vi.mocked(getLibraryReview).mockResolvedValue({ review: detail() });
     const wrapper = mountPage();
     await flushPromises();
 
-    const view = wrapper.get('button[aria-label="Ver sílabo"]');
-    expect(view.text()).toBe('');
-    await view.trigger('click');
-    await flushPromises();
-
-    expect(document.body.textContent).toContain('Descripción completa del sílabo');
-    expect(document.body.textContent).not.toContain('Comparar');
-    expect(document.body.textContent).not.toContain('Historial');
+    expect(wrapper.find('button[aria-label="Ver sílabo"]').exists()).toBe(false);
     wrapper.unmount();
   });
 

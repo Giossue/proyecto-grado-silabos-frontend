@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { ArrowLeft, Eye, FileSignature, FileText, MessageSquareText } from '@lucide/vue';
+import { ArrowLeft, FileSignature, FileText, MessageSquareText } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { commentLibraryReview, getLibraryReview, verifyLibraryReview, type LibraryReviewDetail } from '@/api/library';
 import EmptyState from '@/components/domain/EmptyState.vue';
-import FormDialog from '@/components/domain/FormDialog.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { goBack } from '@/lib/goBack';
@@ -14,7 +13,6 @@ import { openRevisionPdf } from '@/lib/openPdf';
 import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
-import SyllabusDocumentPreview, { type PreviewSection } from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
 import SignatureDialog, { type StatementSigner } from '@/components/domain/syllabus/SignatureDialog.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -143,13 +141,6 @@ const approve = async (sign: StatementSigner): Promise<void> => {
   await router.replace(paths.library.reviews);
 };
 
-const documentOpen = ref(false);
-const documentSections = computed((): PreviewSection[] => (review.value?.syllabus_sections ?? []).map((section) => ({
-  id: section.key,
-  title: section.title,
-  orientation: section.orientation,
-  fields: section.fields.map((field) => ({ ...field, id: field.id ?? field.key })),
-})));
 
 const outcomeBadge = computed((): { label: string; tone: StatusTone } | null => {
   if (review.value === null || review.value.outcome === null) return null;
@@ -169,14 +160,6 @@ onMounted(load);
       <span v-if="review.outcome === 'reemplazado'" class="text-sm text-muted-foreground">Hay un envío más reciente · solo consulta</span>
     </template>
     <template #actions>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <Button type="button" variant="ghost" size="icon" aria-label="Ver sílabo" @click="documentOpen = true"><Eye aria-hidden="true" /></Button>
-          </TooltipTrigger>
-          <TooltipContent>Ver sílabo</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
       <TooltipProvider v-if="review.verified_at">
         <Tooltip>
           <TooltipTrigger as-child>
@@ -241,9 +224,6 @@ onMounted(load);
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    <FormDialog v-model:open="documentOpen" wide no-footer :show-trigger="false" :title="review.subject" trigger-label="Ver sílabo">
-      <SyllabusDocumentPreview :presentation="review.presentation" :sections="documentSections" />
-    </FormDialog>
     <SignatureDialog v-model:open="signOpen" title="Firmar y aprobar" confirm-label="Firmar y aprobar" :run="approve" />
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />

@@ -44,7 +44,6 @@ export type LibraryReviewDetail = LibraryReviewItem & {
   presentation: ReviewDetail['presentation'];
   template_variables: Record<string, string>;
   sections: SnapshotSection[];
-  syllabus_sections: SnapshotSection[];
   comments: LibraryComment[];
   comment_reasons: Array<{ code: string; label: string }>;
 };
