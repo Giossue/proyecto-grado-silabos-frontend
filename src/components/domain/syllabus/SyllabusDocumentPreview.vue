@@ -78,8 +78,8 @@ watch(() => [props.sections, props.presentation, props.changed], () => { void ne
         <div data-sheet-content class="flex flex-col gap-6">
           <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
             <div class="flex items-center justify-between gap-4">
-              <img :src="presentation.logos.institution" alt="Logo de la universidad" class="h-12 w-auto max-w-[45%] object-contain" @load="paginate">
-              <img :src="presentation.logos.faculty" alt="Logo de la facultad" class="h-12 w-auto max-w-[45%] object-contain" @load="paginate">
+              <img :src="presentation.logos.institution" alt="Logo de la universidad" class="h-12 w-auto object-contain" @load="paginate">
+              <img :src="presentation.logos.faculty" alt="Logo de la facultad" class="h-12 w-auto object-contain" @load="paginate">
             </div>
             <h2 class="template-sheet-title px-2 py-1">{{ presentation.title }}</h2>
           </header>

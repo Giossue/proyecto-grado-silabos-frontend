@@ -505,18 +505,18 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     </div>
 
     <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto" tabindex="0" role="region" :aria-label="`Hoja ${sheetIndex + 1} de la plantilla con desplazamiento horizontal`">
-    <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape), ...layoutStyle(shownLayout, documentStyle) }" :class="cn('template-sheet relative', sheet.landscape && 'template-sheet--landscape')">
+    <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape), ...layoutStyle(shownLayout, documentStyle) }" :class="cn('template-sheet relative shadow-none', sheet.landscape && 'template-sheet--landscape')">
       <div data-sheet-content class="flex flex-col gap-6">
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
           <label :class="cn('group relative block', !preview && !locked && 'cursor-pointer')">
-            <img :src="logoOverride ?? logos.institution" alt="Logo de la universidad" class="h-12 w-auto max-w-[45%] object-contain" @load="paginate">
+            <img :src="logoOverride ?? logos.institution" alt="Logo de la universidad" class="h-12 w-auto object-contain" @load="paginate">
             <template v-if="!preview && !locked">
               <span class="absolute inset-0 flex items-center justify-center gap-1 rounded-sm bg-background/80 text-sm font-medium opacity-0 outline outline-1 outline-border group-focus-within:opacity-100 group-hover:opacity-100"><Spinner v-if="uploadingLogo" /><ImageUp v-else class="size-4" aria-hidden="true" />Cambiar logo</span>
               <input type="file" accept="image/png" class="sr-only" aria-label="Cambiar el logo de la universidad" :disabled="uploadingLogo" @change="changeLogo">
             </template>
           </label>
-          <img :src="logos.faculty" alt="Logo de la facultad" class="h-12 w-auto max-w-[45%] object-contain" @load="paginate">
+          <img :src="logos.faculty" alt="Logo de la facultad" class="h-12 w-auto object-contain" @load="paginate">
         </div>
         <div class="flex items-center justify-center px-2 py-1">
           <div v-if="!preview && !locked" class="template-sheet-title w-full"><TemplateInlineText :model-value="titleDraft" :maxlength="180" label="Título del documento" class="rounded-sm text-center hover:outline hover:outline-1 hover:outline-primary/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary" @update:model-value="setDocumentTitle" /></div>
