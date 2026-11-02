@@ -14,7 +14,7 @@ import type {
   NodeMouseEvent,
 } from "@vue-flow/core";
 import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
-import { useResizeObserver } from "@vueuse/core";
+import { useEventListener, useResizeObserver } from "@vueuse/core";
 import { ApiError } from "@/api/client";
 import { updateSubjectLayout } from "@/api/career-academics";
 import CurriculumAddSubjectNode from "@/components/domain/academic/curriculum/CurriculumAddSubjectNode.vue";
@@ -124,7 +124,7 @@ const summaryRows = computed(() => [
 ]);
 
 const flowId = `curriculum-${props.curriculum.id}`;
-const { setEdges, setNodes, updateNode, fitView, setViewport, viewport } = useVueFlow(flowId);
+const { setEdges, setNodes, updateNode, setViewport, viewport } = useVueFlow(flowId);
 const canvasElement = useTemplateRef<HTMLElement>("canvasElement");
 const canvasSize = ref({ width: 0, height: 0 });
 useResizeObserver(canvasElement, (entries) => {
@@ -134,16 +134,21 @@ useResizeObserver(canvasElement, (entries) => {
 // La malla se centra al medir el lienzo y cada vez que cambia de tamaño (por ejemplo al terminar de acomodarse
 // el menú lateral), hasta que la persona la mueve: así no salta de lugar con el primer clic.
 const userMoved = ref(false);
-const onMoveStart = ({ event }: { event?: { sourceEvent?: unknown } }): void => {
-  if (event?.sourceEvent) userMoved.value = true;
-};
-// fitView mide los nodos y puede dejar la malla corrida respecto al área que permite mover el lienzo; entonces el
-// primer movimiento la acomodaba de golpe. Se centra con las mismas medidas que usa ese límite.
+useEventListener(canvasElement, ["pointerdown", "wheel"], () => { userMoved.value = true; }, { capture: true });
+// El ajuste inicial usa las mismas medidas que el límite de movimiento, para que el primer movimiento no la
+// acomode de golpe.
 const fitCentered = async (): Promise<void> => {
-  await fitView({ padding: 0.08 });
   const { width, height } = canvasSize.value;
-  const zoom = viewport.value.zoom;
-  await setViewport({ x: (width - laneWidth.value * zoom) / 2, y: (height - contentHeight.value * zoom) / 2, zoom });
+  const zoom = Math.min(
+    CANVAS_ZOOM.max,
+    Math.max(CANVAS_ZOOM.min, Math.min(width / (laneWidth.value * 1.08), height / (contentHeight.value * 1.08))),
+  );
+  const target = { x: (width - laneWidth.value * zoom) / 2, y: (height - contentHeight.value * zoom) / 2, zoom };
+  await setViewport(target);
+  // El límite de movimiento depende del zoom: recién ahora se actualiza, y el primer ajuste pudo quedar recortado
+  // por el límite anterior. Se repite ya con el límite nuevo.
+  await nextTick();
+  await setViewport(target);
 };
 watch(canvasSize, async ({ width, height }) => {
   if (userMoved.value || width === 0 || height === 0) return;
@@ -540,7 +545,6 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
       :id="flowId"
       v-model:nodes="nodes"
       v-model:edges="edges"
-      fit-view-on-init
       :min-zoom="CANVAS_ZOOM.min"
       :max-zoom="CANVAS_ZOOM.max"
       :translate-extent="navigationExtent"
@@ -555,7 +559,6 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
       :elements-selectable="true"
       @connect="onConnect"
       @edge-click="onEdgeClick"
-      @move-start="onMoveStart"
       @node-click="onNodeClick"
       @node-drag="onNodeDrag"
       @node-drag-stop="onNodeDragStop"
