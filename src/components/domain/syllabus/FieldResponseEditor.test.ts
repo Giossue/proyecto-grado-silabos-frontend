@@ -178,6 +178,20 @@ describe('FieldResponseEditor', () => {
             expect(attrs.value.libros).toEqual([{ autor: '', titulo: '', anio: '', ciudad: '', editorial: '', isbn: '', codigo: '' }]);
         });
 
+        it('los tooltips de «Limpiar» y «Quitar» dicen solo «libro», sin número de fila', async () => {
+            mountBibliography();
+            await flushPromises();
+            for (const [label, text] of [['Limpiar libro 1', 'Limpiar libro'], ['Quitar libro 1', 'Quitar libro']] as const) {
+                const trigger = document.body.querySelector(`[aria-label="${label}"]`)!.parentElement!;
+                trigger.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, pointerType: 'mouse' }));
+                await new Promise((resolve) => setTimeout(resolve, 50));
+                await flushPromises();
+                const tips = Array.from(document.body.querySelectorAll('[role="tooltip"]')).map((tip) => tip.textContent);
+                expect(tips).toContain(text);
+                trigger.dispatchEvent(new PointerEvent('pointerleave', { bubbles: true, pointerType: 'mouse' }));
+            }
+        });
+
         it('«Limpiar» no se puede usar en una fila vacía', async () => {
             mountBibliography();
             await flushPromises();

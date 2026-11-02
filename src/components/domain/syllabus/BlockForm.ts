@@ -133,7 +133,8 @@ export default defineComponent({
             return ruleFailures(definition.value.rules, next, variables.value, 'save').length === 0;
         };
 
-        const removeButton = (schema: ListSchema, path: Path, index: number, name: string): VNodeChild => withTooltip(`Quitar ${name}`, h(Button, {
+        // `tip` es el texto del tooltip (sin número de fila); `name` es el nombre accesible, con número.
+        const removeButton = (schema: ListSchema, path: Path, index: number, name: string, tip = name): VNodeChild => withTooltip(`Quitar ${tip}`, h(Button, {
             type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || listOf(path).length <= schema.minItems,
             'aria-label': `Quitar ${name}`,
             onClick: () => write(path, listOf(path).filter((__, position) => position !== index)),
@@ -141,7 +142,7 @@ export default defineComponent({
 
         const isBlank = (row: unknown): boolean => isRecord(row) && Object.values(row).every((cell) => String(cell ?? '').trim() === '');
 
-        const clearButton = (schema: ListSchema, path: Path, index: number, name: string): VNodeChild => withTooltip(`Limpiar ${name}`, h(Button, {
+        const clearButton = (schema: ListSchema, path: Path, index: number, name: string, tip = name): VNodeChild => withTooltip(`Limpiar ${tip}`, h(Button, {
             type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || isBlank(listOf(path)[index]),
             'aria-label': `Limpiar ${name}`,
             onClick: () => write([...path, index], emptyValue(schema.items, props.props)),
@@ -172,8 +173,8 @@ export default defineComponent({
                         return h(TableRow, { key: index }, () => [
                             ...columns.map(([key, column]) => h(TableCell, { class: 'align-top' }, () => applies(column, [...itemPath, key]) ? input(column, [...itemPath, key], `${column.title ?? key}, ${rowName}`, true) : null)),
                             resizable ? h(TableCell, { class: 'align-top', 'data-sticky-end': '' }, () => clearable
-                                ? h('div', { class: 'flex' }, [clearButton(schema, path, index, rowName), removeButton(schema, path, index, rowName)])
-                                : removeButton(schema, path, index, rowName)) : null,
+                                ? h('div', { class: 'flex' }, [clearButton(schema, path, index, rowName, name), removeButton(schema, path, index, rowName, name)])
+                                : removeButton(schema, path, index, rowName, name)) : null,
                         ]);
                     })),
                 ]),
