@@ -1,10 +1,11 @@
 import { ref } from 'vue';
 import type { RouteLocationNormalized } from 'vue-router';
-import { routeRegistry } from '@/lib/routes';
+import { paths, routeRegistry } from '@/lib/routes';
 
-const settingsPaths = new Set(
-  routeRegistry.filter((route) => route.shortcut === 'profile' || route.shortcut === 'security').map((route) => route.path),
-);
+const settingsPaths = new Set([
+  ...routeRegistry.filter((route) => route.shortcut === 'profile' || route.shortcut === 'security').map((route) => route.path),
+  paths.admin.system,
+]);
 
 /** Pantalla en la que estaba la persona antes de entrar a Configuración (Perfil y Seguridad cuentan como una sola). */
 export const settingsReturn = ref<string | null>(null);

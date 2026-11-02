@@ -12,6 +12,7 @@ import {
   type RoleCode,
 } from "@/lib/routes";
 
+const AdminSystemSettingsPage = () => import("@/pages/AdminSystemSettingsPage.vue");
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
 const CoordinationCareerProjectPage = () => import("@/pages/CoordinationCareerProjectPage.vue");
@@ -82,6 +83,7 @@ export const router = createRouter({
     { path: "/admin/auditoria", component: AdminAuditPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Auditoría" } },
     { path: "/admin/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Perfil" } },
     { path: "/admin/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Seguridad" } },
+    { path: "/admin/configuracion/sistema", component: AdminSystemSettingsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Sistema" } },
     { path: "/admin/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Notificaciones" } },
 
     { path: "/coordinacion/puesta-en-marcha", redirect: "/coordinacion/revisiones" },

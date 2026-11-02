@@ -18,6 +18,8 @@ const makeRouter = () => {
       { path: paths.coordination.profile, component: SettingsLayout },
       { path: paths.coordination.security, component: SettingsLayout },
       { path: paths.dashboard, component: Empty },
+      { path: paths.admin.security, component: SettingsLayout },
+      { path: paths.admin.system, component: SettingsLayout },
     ],
   });
   router.afterEach(trackSettingsReturn);
@@ -63,5 +65,17 @@ describe('Configuración: Volver', () => {
     await flushPromises();
 
     expect(router.currentRoute.value.fullPath).toBe(paths.coordination.reviews);
+  });
+
+  it('solo Administración tiene la pestaña «Sistema»', async () => {
+    const router = makeRouter();
+    await router.push(paths.coordination.security);
+    const coordinator = await mountAt(router);
+    expect(coordinator.find('nav[aria-label="Configuración"]').text()).not.toContain('Sistema');
+
+    await router.push(paths.admin.security);
+    const admin = await mountAt(router);
+    const tab = admin.findAll('nav[aria-label="Configuración"] a').find((link) => link.text() === 'Sistema');
+    expect(tab?.attributes('href')).toBe('/admin/configuracion/sistema');
   });
 });

@@ -34,6 +34,7 @@ export const paths = {
     audit: '/admin/auditoria',
     profile: '/admin/configuracion/perfil',
     security: '/admin/configuracion/seguridad',
+    system: '/admin/configuracion/sistema',
     notifications: '/admin/notificaciones',
   },
   coordination: {
@@ -196,6 +197,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'admin-audit', path: paths.admin.audit, component: 'AdminAuditPage', breadcrumb: 'Auditoría', ...admin },
   { name: 'admin-profile', path: paths.admin.profile, component: 'ProfilePage', shortcut: 'profile', ...admin },
   { name: 'admin-security', path: paths.admin.security, component: 'SecurityPage', shortcut: 'security', ...admin },
+  { name: 'admin-system-settings', path: paths.admin.system, component: 'AdminSystemSettingsPage', breadcrumb: 'Sistema', ...admin },
   { name: 'admin-notifications', path: paths.admin.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...admin },
 
   { name: 'coordination-notifications', path: paths.coordination.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...coordinator },

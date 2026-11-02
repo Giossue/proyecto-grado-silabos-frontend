@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, Settings, ShieldCheck, UserRound } from '@lucide/vue';
+import { ArrowLeft, Server, Settings, ShieldCheck, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -19,6 +19,8 @@ const area = computed(() => areaForPath(route.path));
 const sidebarNavItems = computed(() => [
     { title: 'Perfil', href: area.value ? areaSetting(area.value, 'profile') : paths.configuration.profile, icon: UserRound },
     { title: 'Seguridad', href: area.value ? areaSetting(area.value, 'security') : paths.configuration.security, icon: ShieldCheck },
+    // Ajustes del sistema (notificaciones, IA, biblioteca): solo Administración.
+    ...(area.value === 'admin' ? [{ title: 'Sistema', href: paths.admin.system, icon: Server }] : []),
 ]);
 
 // Vuelve a la pantalla de la que se vino; si se abrió Configuración directo, al inicio del rol.
