@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { ArrowDownIcon } from '@lucide/vue';
 import type { HTMLAttributes } from 'vue';
 import { computed } from 'vue';
@@ -20,15 +21,14 @@ function handleClick() {
 </script>
 
 <template>
-    <Button
-        v-if="showScrollButton"
+    <IconTooltip v-if="showScrollButton" label="Ir al final"><Button
         :class="
             cn(
                 'absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-background hover:bg-muted',
                 props.class,
             )
         "
-        aria-label="Scroll to bottom"
+        aria-label="Ir al final"
         size="icon"
         type="button"
         variant="outline"
@@ -36,5 +36,5 @@ function handleClick() {
         @click="handleClick"
     >
         <ArrowDownIcon class="size-4" />
-    </Button>
+    </Button></IconTooltip>
 </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { ArrowLeft, FileSignature, FileText, GitCompareArrows, Highlighter, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -175,7 +176,7 @@ onMounted(load);
       <span v-for="note in statusNotes" :key="note" class="text-sm text-muted-foreground">{{ note }}</span>
     </template>
     <template #actions>
-      <Button v-if="approvedCurrent" type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf(data.revision.id)"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button>
+      <IconTooltip v-if="approvedCurrent" label="Ver PDF"><Button type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf(data.revision.id)"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button></IconTooltip>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
@@ -201,7 +202,7 @@ onMounted(load);
         </template>
       </TooltipProvider>
       <DropdownMenu v-if="canReset">
-        <DropdownMenuTrigger as-child><Button type="button" variant="ghost" size="icon" aria-label="Más"><MoreHorizontal aria-hidden="true" /></Button></DropdownMenuTrigger>
+        <IconTooltip label="Más"><DropdownMenuTrigger as-child><Button type="button" variant="ghost" size="icon" aria-label="Más"><MoreHorizontal aria-hidden="true" /></Button></DropdownMenuTrigger></IconTooltip>
         <DropdownMenuContent align="end">
           <DropdownMenuGroup>
             <DropdownMenuItem variant="destructive" @select="restartOpen = true"><RotateCcw data-icon="inline-start" aria-hidden="true" />Reiniciar sílabo</DropdownMenuItem>

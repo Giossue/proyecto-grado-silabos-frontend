@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { Check, Pencil, Plus, Trash2, X } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
@@ -234,8 +235,8 @@ watch(open, (value) => value && reset());
                       <TeacherSelect v-model="newTeacher" :teachers="teacherUsers ?? []" label="Docente del nuevo paralelo" required :invalid="Boolean(error) && !newTeacher" />
                     </TableCell>
                     <TableCell class="text-right">
-                      <Button type="button" size="icon-sm" variant="ghost" :disabled="saving || !code.trim() || !shift || !newTeacher" aria-label="Guardar nuevo paralelo" @click="submit"><Check aria-hidden="true" /></Button>
-                      <Button type="button" size="icon-sm" variant="ghost" :disabled="saving" aria-label="Cancelar nuevo paralelo" @click="cancelAdd"><X aria-hidden="true" /></Button>
+                      <IconTooltip label="Guardar nuevo paralelo"><Button type="button" size="icon-sm" variant="ghost" :disabled="saving || !code.trim() || !shift || !newTeacher" aria-label="Guardar nuevo paralelo" @click="submit"><Check aria-hidden="true" /></Button></IconTooltip>
+                      <IconTooltip label="Cancelar nuevo paralelo"><Button type="button" size="icon-sm" variant="ghost" :disabled="saving" aria-label="Cancelar nuevo paralelo" @click="cancelAdd"><X aria-hidden="true" /></Button></IconTooltip>
                     </TableCell>
                   </TableRow>
                 </TableBody>

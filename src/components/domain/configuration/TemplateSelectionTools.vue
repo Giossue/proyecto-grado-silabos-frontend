@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { ArrowDown, ArrowUp, ChevronDown, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
 import type { TemplateField, TemplatePreset, TemplateSectionPayload } from '@/api/template';
@@ -43,15 +44,15 @@ const fieldName = computed(() => props.selection?.kind === 'field' ? props.selec
           </template>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveUp" :aria-label="`Subir el campo ${fieldName}`" @click="emit('move', -1)"><ArrowUp aria-hidden="true" /></Button>
-      <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveDown" :aria-label="`Bajar el campo ${fieldName}`" @click="emit('move', 1)"><ArrowDown aria-hidden="true" /></Button>
-      <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar el campo ${fieldName}`" @click="emit('remove')"><Trash2 aria-hidden="true" /></Button>
+      <IconTooltip :label="`Subir el campo ${fieldName}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveUp" :aria-label="`Subir el campo ${fieldName}`" @click="emit('move', -1)"><ArrowUp aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip :label="`Bajar el campo ${fieldName}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveDown" :aria-label="`Bajar el campo ${fieldName}`" @click="emit('move', 1)"><ArrowDown aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip :label="`Eliminar el campo ${fieldName}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar el campo ${fieldName}`" @click="emit('remove')"><Trash2 aria-hidden="true" /></Button></IconTooltip>
     </template>
     <template v-else-if="selection?.kind === 'section'">
       <Button type="button" variant="ghost" size="sm" :disabled="locked || busy" :aria-label="`Orientación de la sección ${selection.section.title}`" :aria-pressed="selection.section.orientation === 'landscape'" @click="emit('orientation')"><RectangleHorizontal v-if="selection.section.orientation === 'landscape'" data-icon="inline-start" aria-hidden="true" /><RectangleVertical v-else data-icon="inline-start" aria-hidden="true" />{{ selection.section.orientation === 'landscape' ? 'Horizontal' : 'Vertical' }}</Button>
-      <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveUp" :aria-label="`Subir la sección ${selection.section.title}`" @click="emit('move', -1)"><ArrowUp aria-hidden="true" /></Button>
-      <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveDown" :aria-label="`Bajar la sección ${selection.section.title}`" @click="emit('move', 1)"><ArrowDown aria-hidden="true" /></Button>
-      <Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar la sección ${selection.section.title}`" @click="emit('remove')"><Trash2 aria-hidden="true" /></Button>
+      <IconTooltip :label="`Subir la sección ${selection.section.title}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveUp" :aria-label="`Subir la sección ${selection.section.title}`" @click="emit('move', -1)"><ArrowUp aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip :label="`Bajar la sección ${selection.section.title}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveDown" :aria-label="`Bajar la sección ${selection.section.title}`" @click="emit('move', 1)"><ArrowDown aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip :label="`Eliminar la sección ${selection.section.title}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar la sección ${selection.section.title}`" @click="emit('remove')"><Trash2 aria-hidden="true" /></Button></IconTooltip>
     </template>
     <span v-else class="whitespace-nowrap px-2 text-sm text-muted-foreground">Seleccione un campo</span>
   </div>

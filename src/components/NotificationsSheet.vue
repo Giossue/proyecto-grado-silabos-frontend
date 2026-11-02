@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { withoutFinalPeriod } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
@@ -160,9 +161,9 @@ onMounted(refreshCount);
                         </TooltipTrigger>
                         <TooltipContent>Marcar todas como leídas</TooltipContent>
                     </Tooltip>
-                    <SheetClose as-child>
+                    <IconTooltip label="Cerrar notificaciones"><SheetClose as-child>
                         <Button type="button" variant="ghost" size="icon-sm" aria-label="Cerrar notificaciones"><X aria-hidden="true" /></Button>
-                    </SheetClose>
+                    </SheetClose></IconTooltip>
                 </div>
                 </TooltipProvider>
             </div>

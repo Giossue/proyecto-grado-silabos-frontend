@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { Check, MessageSquarePlus, Send, Trash2 } from '@lucide/vue';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
@@ -167,7 +168,7 @@ onBeforeUnmount(() => {
                     <FieldLabel for="template-assistant-message" class="sr-only">Pedido al asistente</FieldLabel>
                     <div class="flex items-end gap-2">
                         <Textarea id="template-assistant-message" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" class="min-w-0 flex-1" :disabled="!chat?.available || waiting" placeholder="¿Qué cambio quiere en la plantilla?" @focus="engaged = true" @blur="engaged = false" />
-                        <Button type="submit" size="icon" aria-label="Enviar" :disabled="!canSend"><Spinner v-if="waiting" /><Send v-else aria-hidden="true" /></Button>
+                        <IconTooltip label="Enviar"><Button type="submit" size="icon" aria-label="Enviar" :disabled="!canSend"><Spinner v-if="waiting" /><Send v-else aria-hidden="true" /></Button></IconTooltip>
                     </div>
                     <FieldDescription>Los cambios aplicados se guardan con «Guardar»</FieldDescription>
                 </Field>

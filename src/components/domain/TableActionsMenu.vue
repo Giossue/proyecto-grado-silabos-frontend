@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { MoreHorizontal } from '@lucide/vue';
 import type { VNode } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,7 @@ defineSlots<{
 
 <template>
     <DropdownMenu>
-        <DropdownMenuTrigger as-child>
+        <IconTooltip :label="label"><DropdownMenuTrigger as-child>
             <Button
                 type="button"
                 data-slot="table-actions"
@@ -38,7 +39,7 @@ defineSlots<{
             >
                 <MoreHorizontal data-icon="inline-start" aria-hidden="true" />
             </Button>
-        </DropdownMenuTrigger>
+        </DropdownMenuTrigger></IconTooltip>
         <DropdownMenuContent align="end">
             <DropdownMenuGroup>
                 <slot />

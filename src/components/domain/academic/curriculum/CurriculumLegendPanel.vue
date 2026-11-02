@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { ChevronDown, ChevronUp } from '@lucide/vue';
 import type { CSSProperties } from 'vue';
 import { ref } from 'vue';
@@ -26,7 +27,7 @@ const contentId = 'curriculum-legend-content';
         ]"
     >
         <Collapsible v-model:open="open">
-            <Button
+            <IconTooltip :label="open ? 'Contraer leyenda y totales' : 'Expandir leyenda y totales'"><Button
                 type="button"
                 variant="ghost"
                 size="icon"
@@ -38,7 +39,7 @@ const contentId = 'curriculum-legend-content';
             >
                 <ChevronUp v-if="open" aria-hidden="true" />
                 <ChevronDown v-else aria-hidden="true" />
-            </Button>
+            </Button></IconTooltip>
             <CollapsibleContent :id="contentId" class="px-3 py-2">
                 <CurriculumLegend :units="units" :rows="rows" />
             </CollapsibleContent>

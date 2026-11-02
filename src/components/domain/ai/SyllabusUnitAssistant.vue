@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import EvidenceDisclosure from '@/components/domain/EvidenceDisclosure.vue';
 import { Empty, EmptyContent, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
@@ -143,7 +144,7 @@ onBeforeUnmount(() => { generation += 1; stop(); });
                     <FieldLabel :for="`unit-assistant-${syllabusId}`" class="sr-only">Consulta sobre una unidad</FieldLabel>
                     <div class="flex items-end gap-2">
                         <Textarea :id="`unit-assistant-${syllabusId}`" v-model="message" :maxlength="VALIDATION_LIMITS.longText" rows="3" class="min-w-0 flex-1" :disabled="!enabled || !chat?.available || waiting" placeholder="Escribe la unidad o el tema…" @focus="engaged = true" @blur="engaged = false" />
-                        <Button type="submit" size="icon" aria-label="Enviar" :disabled="!canSend"><Spinner v-if="waiting" /><Send v-else aria-hidden="true" /></Button>
+                        <IconTooltip label="Enviar"><Button type="submit" size="icon" aria-label="Enviar" :disabled="!canSend"><Spinner v-if="waiting" /><Send v-else aria-hidden="true" /></Button></IconTooltip>
                     </div>
                     <FieldDescription v-if="outOfMessages">Llegó al límite de {{ limits?.messages_max }} preguntas al asistente para este sílabo</FieldDescription>
                     <FieldDescription v-else-if="saving">Espera a que se guarden los cambios del sílabo antes de consultar</FieldDescription>

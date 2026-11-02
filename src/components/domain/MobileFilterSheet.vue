@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { Check, ListFilter, X } from '@lucide/vue';
 import { onBeforeUnmount, ref, useAttrs, useTemplateRef, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
@@ -104,7 +105,7 @@ onBeforeUnmount(() => {
                 <ListFilter class="size-4" aria-hidden="true" />
                 Filtros
             </span>
-            <Button
+            <IconTooltip label="Cerrar filtros"><Button
                 type="button"
                 variant="ghost"
                 size="icon-sm"
@@ -112,7 +113,7 @@ onBeforeUnmount(() => {
                 @click="close"
             >
                 <X aria-hidden="true" />
-            </Button>
+            </Button></IconTooltip>
         </div>
 
         <div

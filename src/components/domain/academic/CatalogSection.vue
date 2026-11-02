@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { useFocusReturn } from '@/lib/focusReturn';
 import { Eye } from '@lucide/vue';
 import { computed, ref } from 'vue';
@@ -193,8 +194,7 @@ const {
                             {{ faculty.campus ?? 'Sin campus' }}
                         </TableCell>
                         <TableCell class="text-center">
-                            <Button
-                                v-if="faculty.logo_url"
+                            <IconTooltip v-if="faculty.logo_url" :label="`Ver logo de ${faculty.nombre}`"><Button
                                 type="button"
                                 variant="ghost"
                                 size="icon-sm"
@@ -202,7 +202,7 @@ const {
                                 @click="openLogoPreview(faculty.nombre, faculty.logo_url)"
                             >
                                 <Eye aria-hidden="true" />
-                            </Button>
+                            </Button></IconTooltip>
                             <span v-else class="text-sm text-muted-foreground">Sin logo</span>
                         </TableCell>
                     </TableRow>

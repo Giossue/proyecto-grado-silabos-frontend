@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { ArrowLeft, FileSignature, FileText, MessageSquareText } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -159,7 +160,7 @@ onMounted(load);
       <span v-if="review.outcome === 'reemplazado'" class="text-sm text-muted-foreground">Hay un envío más reciente · solo consulta</span>
     </template>
     <template #actions>
-      <Button v-if="review.verified_at" type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button>
+      <IconTooltip v-if="review.verified_at" label="Ver PDF"><Button type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button></IconTooltip>
       <Button v-if="review.can_comment" type="button" variant="outline" @click="act('return')">Devolver al docente</Button>
       <Button v-if="canSign" type="button" @click="act('sign')"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
     </template>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ListTree, Trash2 } from '@lucide/vue';
 import { ref } from 'vue';
@@ -51,9 +52,9 @@ const remove = (requirement: CurriculumRequirement): void => {
                                 <TableCell>{{ subjectName(requirement.subject_id) }}</TableCell>
                                 <TableCell>{{ requirement.type === 'correquisito' ? 'Correquisito' : 'Prerrequisito' }}</TableCell>
                                 <TableCell v-if="editable" class="text-right">
-                                    <Button type="button" variant="ghost" size="icon-sm" :aria-label="`Eliminar la relación de ${subjectName(requirement.requirement_id)} con ${subjectName(requirement.subject_id)}`" @click="remove(requirement)">
+                                    <IconTooltip :label="`Eliminar la relación de ${subjectName(requirement.requirement_id)} con ${subjectName(requirement.subject_id)}`"><Button type="button" variant="ghost" size="icon-sm" :aria-label="`Eliminar la relación de ${subjectName(requirement.requirement_id)} con ${subjectName(requirement.subject_id)}`" @click="remove(requirement)">
                                         <Trash2 aria-hidden="true" />
-                                    </Button>
+                                    </Button></IconTooltip>
                                 </TableCell>
                             </TableRow>
                         </TableBody>

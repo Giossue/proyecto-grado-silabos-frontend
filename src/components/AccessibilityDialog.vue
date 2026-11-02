@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { PersonStanding, RotateCcw } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -41,10 +42,10 @@ const setSize = (value: string): void => { settings.value.textSize = value as Te
   <Dialog v-model:open="open">
     <TooltipProvider v-if="!remote"><Tooltip>
       <TooltipTrigger as-child>
-        <DialogTrigger as-child>
+        <IconTooltip label="Accesibilidad"><DialogTrigger as-child>
           <Button v-if="floating" type="button" size="icon" class="fixed right-4 bottom-4 z-40 size-12 rounded-full shadow-menu [&_svg]:size-5 max-sm:hidden" aria-label="Accesibilidad"><PersonStanding aria-hidden="true" /></Button>
           <Button v-else type="button" variant="ghost" size="icon-sm" aria-label="Accesibilidad"><PersonStanding data-icon="inline-start" aria-hidden="true" /></Button>
-        </DialogTrigger>
+        </DialogTrigger></IconTooltip>
       </TooltipTrigger>
       <TooltipContent side="left">Accesibilidad</TooltipContent>
     </Tooltip></TooltipProvider>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Info } from "@lucide/vue";
 import CurriculumNavigationControls from '@/components/domain/academic/curriculum/CurriculumNavigationControls.vue';
@@ -506,7 +507,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
       @pick="(connection) => (pendingConnection = connection)"
     />
     <Popover>
-      <PopoverTrigger as-child>
+      <IconTooltip label="Ver leyenda y totales de la malla"><PopoverTrigger as-child>
         <Button
           type="button"
           variant="outline"
@@ -516,7 +517,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         >
           <Info aria-hidden="true" />
         </Button>
-      </PopoverTrigger>
+      </PopoverTrigger></IconTooltip>
       <PopoverContent align="end" class="w-60 p-3">
         <CurriculumLegend :units="legendUnits" :rows="summaryRows" />
       </PopoverContent>

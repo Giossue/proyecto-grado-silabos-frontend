@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { Table, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
@@ -124,13 +125,13 @@ defineExpose({ editor });
 <template>
   <div :class="['free-text-editor flex min-w-0 flex-col', bare ? 'bg-transparent' : 'rounded-md border border-border bg-background']" :data-disabled="disabled || undefined">
     <div v-if="editor && toolbar" role="toolbar" :aria-label="`Formato de ${label}`" class="flex flex-wrap items-center gap-1 border-b p-1.5">
-      <Button type="button" variant="ghost" size="icon-sm" aria-label="Negrita" :aria-pressed="editor.isActive('bold')" :disabled="disabled" @click="editor.chain().focus().toggleBold().run()"><Bold aria-hidden="true" /></Button>
-      <Button type="button" variant="ghost" size="icon-sm" aria-label="Cursiva" :aria-pressed="editor.isActive('italic')" :disabled="disabled" @click="editor.chain().focus().toggleItalic().run()"><Italic aria-hidden="true" /></Button>
-      <Button type="button" variant="ghost" size="icon-sm" aria-label="Subrayado" :aria-pressed="editor.isActive('underline')" :disabled="disabled" @click="editor.chain().focus().toggleUnderline().run()"><Underline aria-hidden="true" /></Button>
+      <IconTooltip label="Negrita"><Button type="button" variant="ghost" size="icon-sm" aria-label="Negrita" :aria-pressed="editor.isActive('bold')" :disabled="disabled" @click="editor.chain().focus().toggleBold().run()"><Bold aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip label="Cursiva"><Button type="button" variant="ghost" size="icon-sm" aria-label="Cursiva" :aria-pressed="editor.isActive('italic')" :disabled="disabled" @click="editor.chain().focus().toggleItalic().run()"><Italic aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip label="Subrayado"><Button type="button" variant="ghost" size="icon-sm" aria-label="Subrayado" :aria-pressed="editor.isActive('underline')" :disabled="disabled" @click="editor.chain().focus().toggleUnderline().run()"><Underline aria-hidden="true" /></Button></IconTooltip>
       <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
-      <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista con viñetas" :aria-pressed="editor.isActive('bulletList')" :disabled="disabled" @click="editor.chain().focus().toggleBulletList().run()"><List aria-hidden="true" /></Button>
-      <Button type="button" variant="ghost" size="icon-sm" aria-label="Lista numerada" :aria-pressed="editor.isActive('orderedList')" :disabled="disabled" @click="editor.chain().focus().toggleOrderedList().run()"><ListOrdered aria-hidden="true" /></Button>
-      <Button v-if="allowTables" type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" :disabled="disabled" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"><Table2 aria-hidden="true" /></Button>
+      <IconTooltip label="Lista con viñetas"><Button type="button" variant="ghost" size="icon-sm" aria-label="Lista con viñetas" :aria-pressed="editor.isActive('bulletList')" :disabled="disabled" @click="editor.chain().focus().toggleBulletList().run()"><List aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip label="Lista numerada"><Button type="button" variant="ghost" size="icon-sm" aria-label="Lista numerada" :aria-pressed="editor.isActive('orderedList')" :disabled="disabled" @click="editor.chain().focus().toggleOrderedList().run()"><ListOrdered aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip v-if="allowTables" label="Insertar tabla"><Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" :disabled="disabled" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"><Table2 aria-hidden="true" /></Button></IconTooltip>
       <template v-if="editor.isActive('table')">
         <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
         <Button type="button" variant="ghost" size="sm" :disabled="disabled" @click="editor.chain().focus().addRowAfter().run()">+ Fila</Button>
@@ -152,9 +153,9 @@ defineExpose({ editor });
         <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
       </template>
       <DropdownMenu v-if="variables.length">
-        <DropdownMenuTrigger as-child>
+        <IconTooltip label="Insertar dato del sistema"><DropdownMenuTrigger as-child>
           <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar dato del sistema" :disabled="disabled"><Braces aria-hidden="true" /></Button>
-        </DropdownMenuTrigger>
+        </DropdownMenuTrigger></IconTooltip>
         <DropdownMenuContent class="max-h-72 overflow-y-auto">
           <DropdownMenuLabel>Datos del sistema</DropdownMenuLabel>
           <DropdownMenuItem v-for="variable in variables" :key="variable.key" @select="insertVariable(variable.key)">{{ variable.label }}</DropdownMenuItem>

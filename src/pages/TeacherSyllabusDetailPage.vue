@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
 import { ruleFailures } from '@/lib/blocks/rules';
 import { blockAttrs, blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
@@ -523,7 +524,7 @@ onBeforeUnmount(() => {
       </TooltipTrigger><TooltipContent>Vista previa</TooltipContent></Tooltip></TooltipProvider>
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
-      <Button v-if="syllabus?.state === 'aprobado' && syllabus.approved_revision_id" type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf(syllabus.approved_revision_id)"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button>
+      <IconTooltip v-if="syllabus?.state === 'aprobado' && syllabus.approved_revision_id" label="Ver PDF"><Button type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf(syllabus.approved_revision_id)"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button></IconTooltip>
       <span v-if="syllabus && canEdit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== ''" @click="askSubmit"><Spinner v-if="processingAction" /><FileSignature v-else-if="mustSign" aria-hidden="true" /><Send v-else aria-hidden="true" />{{ submitLabel }}</Button></span></TooltipTrigger><TooltipContent>{{ withoutFinalPeriod(submitHint || submitLabel) }}</TooltipContent></Tooltip></span>
     </template>
 
