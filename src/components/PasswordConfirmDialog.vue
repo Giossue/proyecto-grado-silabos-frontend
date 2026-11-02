@@ -29,7 +29,7 @@ const submit = (): void => {
                 </DialogHeader>
                 <div class="grid gap-2">
                     <Label for="confirm-current-password" required>Contraseña actual</Label>
-                    <PasswordInput id="confirm-current-password" v-model="password" autocomplete="current-password" required />
+                    <PasswordInput id="confirm-current-password" v-model="password" autocomplete="current-password" aria-required="true" />
                 </div>
                 <DialogFooter>
                     <Button type="button" variant="outline" @click="open = false">Cancelar</Button>

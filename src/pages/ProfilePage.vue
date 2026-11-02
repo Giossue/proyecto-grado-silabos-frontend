@@ -91,7 +91,7 @@ const resendVerification = async (): Promise<void> => {
                         v-model="name"
                         class="mt-1 block w-full"
                         name="nombre"
-                        required
+                        aria-required="true"
                         autocomplete="name"
                         placeholder="Ej. MARÍA JOSÉ PÉREZ LÓPEZ"
                         :aria-invalid="Boolean(errors.nombre)"
@@ -111,7 +111,7 @@ const resendVerification = async (): Promise<void> => {
                         type="email"
                         class="mt-1 block w-full"
                         name="correo_electronico"
-                        required
+                        aria-required="true"
                         autocomplete="username"
                         placeholder="Ej. maria.perez@ueb.edu.ec"
                         :aria-invalid="Boolean(errors.correo_electronico)"

@@ -78,7 +78,7 @@ describe('CatalogEditSheet · cambios que devuelven sílabos enviados', () => {
       .mockResolvedValueOnce({ message: 'Facultad actualizada.' });
     const wrapper = mountSheet();
     await flushPromises();
-    const name = document.querySelector<HTMLInputElement>('input[required]')!;
+    const name = document.querySelector<HTMLInputElement>('input[aria-required="true"]')!;
     name.value = 'Facultad con otro nombre';
     name.dispatchEvent(new Event('input', { bubbles: true }));
     await flushPromises();

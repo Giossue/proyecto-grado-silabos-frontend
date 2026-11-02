@@ -47,7 +47,7 @@ const submit = async (): Promise<void> => {
       <form v-else @submit.prevent="submit">
         <div class="grid gap-2">
           <Label for="recovery-email" required>Correo electrónico</Label>
-          <Input id="recovery-email" v-model="email" type="email" autocomplete="off" maxlength="254" required placeholder="Ej. nombre@ueb.edu.ec" :aria-invalid="Boolean(errors.email)" />
+          <Input id="recovery-email" v-model="email" type="email" autocomplete="off" maxlength="254" aria-required="true" placeholder="Ej. nombre@ueb.edu.ec" :aria-invalid="Boolean(errors.email)" />
           <InputError :message="errors.email?.[0]" />
         </div>
         <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />

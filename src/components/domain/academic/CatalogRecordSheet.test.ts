@@ -43,7 +43,8 @@ describe('academic catalog code fields', () => {
     await flushPromises();
 
     const careerCode = document.body.querySelector<HTMLInputElement>('#catalog-code');
-    expect(careerCode?.required).toBe(true);
+    expect(careerCode?.getAttribute('aria-required')).toBe('true');
+    expect(careerCode?.required).toBe(false);
     expect(document.body.textContent).toContain('Código de carrera');
     expect(document.body.textContent).not.toContain('Código de malla curricular');
     career.unmount();

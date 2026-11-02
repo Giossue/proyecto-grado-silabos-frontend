@@ -64,7 +64,7 @@ const submit = async (): Promise<void> => {
       <form class="flex flex-col gap-4" @submit.prevent="submit">
         <Field :data-invalid="Boolean(errors.reason)">
           <FieldLabel for="restart-reason" required>Motivo (lo verá el docente)</FieldLabel>
-          <Textarea id="restart-reason" v-model="reason" rows="3" maxlength="500" required />
+          <Textarea id="restart-reason" v-model="reason" rows="3" maxlength="500" aria-required="true" />
           <FieldError :errors="errors.reason" />
         </Field>
         <Field v-if="needsName">

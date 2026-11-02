@@ -248,7 +248,7 @@ onMounted(load);
         <form id="correction-form" class="flex flex-col gap-4" @submit.prevent="submitCorrection">
           <Field :data-invalid="correctionErrors.length > 0">
             <FieldLabel for="correction-justification" required>Comentario para el docente</FieldLabel>
-            <Textarea id="correction-justification" v-model="correctionJustification" rows="4" required placeholder="Ej. Revise los resultados de aprendizaje de la unidad 2" />
+            <Textarea id="correction-justification" v-model="correctionJustification" rows="4" aria-required="true" placeholder="Ej. Revise los resultados de aprendizaje de la unidad 2" />
             <FieldError :errors="correctionErrors" />
           </Field>
           <DialogFooter>

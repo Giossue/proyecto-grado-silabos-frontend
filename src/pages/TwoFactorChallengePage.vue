@@ -79,7 +79,7 @@ const submit = async (): Promise<void> => {
         </div>
         <div v-else class="grid gap-2">
           <Label for="recovery-code" required>Código de recuperación</Label>
-          <Input id="recovery-code" v-model="code" type="text" autocomplete="one-time-code" placeholder="Ej. ABCD-EFGH" required :disabled="pending" />
+          <Input id="recovery-code" v-model="code" type="text" autocomplete="one-time-code" placeholder="Ej. ABCD-EFGH" aria-required="true" :disabled="pending" />
           <InputError :message="errors.recovery_code?.[0]" />
         </div>
         <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />

@@ -58,12 +58,12 @@ const submit = async (): Promise<void> => {
         <form class="flex flex-col gap-6" @submit.prevent="submit">
             <div class="grid gap-2">
                 <Label for="activation-password" required>Contraseña</Label>
-                <PasswordInput id="activation-password" v-model="password" autocomplete="new-password" required :aria-invalid="Boolean(errors.password)" />
+                <PasswordInput id="activation-password" v-model="password" autocomplete="new-password" aria-required="true" :aria-invalid="Boolean(errors.password)" />
                 <InputError :message="errors.password?.[0]" />
             </div>
             <div class="grid gap-2">
                 <Label for="activation-password-confirmation" required>Confirmar contraseña</Label>
-                <PasswordInput id="activation-password-confirmation" v-model="passwordConfirmation" autocomplete="new-password" required :aria-invalid="Boolean(errors.password_confirmation)" />
+                <PasswordInput id="activation-password-confirmation" v-model="passwordConfirmation" autocomplete="new-password" aria-required="true" :aria-invalid="Boolean(errors.password_confirmation)" />
                 <InputError :message="errors.password_confirmation?.[0]" />
             </div>
             <FeedbackAlert v-if="error && Object.keys(errors).length === 0" :message="error" />

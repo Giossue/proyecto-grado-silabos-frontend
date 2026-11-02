@@ -129,7 +129,7 @@ const submit = async (event: Event): Promise<void> => {
             name="code"
             :default-value="subject?.code"
             placeholder="Ej. SW-601"
-            required
+            aria-required="true"
             :aria-invalid="Boolean(errors.code)"
           />
           <FieldError :errors="[errors.code]" />
@@ -146,7 +146,7 @@ const submit = async (event: Event): Promise<void> => {
             name="nombre"
             :default-value="subject?.name"
             placeholder="Ej. Ingeniería de requisitos"
-            required
+            aria-required="true"
             :aria-invalid="Boolean(errors.nombre)"
           />
           <FieldError :errors="[errors.nombre]" />

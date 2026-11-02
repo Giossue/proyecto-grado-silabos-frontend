@@ -31,7 +31,7 @@ describe('ManagedUserSheet', () => {
 
     for (const part of ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido']) {
       const input = document.querySelector<HTMLInputElement>(`#managed-user-${part}`);
-      expect(input?.required).toBe(true);
+      expect(input?.getAttribute('aria-required')).toBe('true');
     }
     expect(document.querySelector('#managed-user-name')).toBeNull();
 
@@ -43,7 +43,7 @@ describe('ManagedUserSheet', () => {
     await flushPromises();
 
     for (const part of ['primer_nombre', 'segundo_nombre', 'primer_apellido', 'segundo_apellido']) {
-      expect(document.querySelector<HTMLInputElement>(`#managed-user-${part}`)?.required).toBe(true);
+      expect(document.querySelector<HTMLInputElement>(`#managed-user-${part}`)?.getAttribute('aria-required')).toBe('true');
     }
     expect(document.querySelector('#managed-user-name')).toBeNull();
 

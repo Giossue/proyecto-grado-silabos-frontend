@@ -5,14 +5,12 @@ type Control = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 const isControl = (element: Element): element is Control =>
     element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement;
 
-// Se lee `validity` en lugar de llamar a `checkValidity()`: este último dispara los avisos de campo vacío.
-const hasMissingFields = (form: HTMLFormElement): boolean =>
-    Array.from(form.elements).some((element) => isControl(element) && element.willValidate && !element.validity.valid);
+const isEmptyAriaRequired = (element: Control): boolean =>
+    element.getAttribute('aria-required') === 'true' && !element.disabled && element.value.trim() === '';
 
-/**
- * Para el botón de enviar de un formulario: dice si falta algún campo obligatorio, para
- * mantenerlo deshabilitado hasta que se complete.
- */
+const hasMissingFields = (form: HTMLFormElement): boolean =>
+    Array.from(form.elements).some((element) => isControl(element) && ((element.willValidate && !element.validity.valid) || isEmptyAriaRequired(element)));
+
 export function useFormIncomplete(button: Ref<HTMLElement | null>): Ref<boolean> {
     const incomplete = ref(false);
     let form: HTMLFormElement | null = null;
@@ -32,7 +30,7 @@ export function useFormIncomplete(button: Ref<HTMLElement | null>): Ref<boolean>
         form.addEventListener('input', update, true);
         form.addEventListener('change', update, true);
         observer = new MutationObserver(update);
-        observer.observe(form, { childList: true, subtree: true, attributes: true, attributeFilter: ['required', 'disabled'] });
+        observer.observe(form, { childList: true, subtree: true, attributes: true, attributeFilter: ['required', 'aria-required', 'disabled'] });
         update();
     });
 

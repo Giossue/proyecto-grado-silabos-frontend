@@ -72,7 +72,7 @@ const isCalculatedTotal = computed(
             "
             :readonly="isCalculatedTotal"
             :aria-readonly="isCalculatedTotal || undefined"
-            required
+            aria-required="true"
             :aria-invalid="Boolean(error)"
             @update:model-value="emit('update:value', $event)"
         />

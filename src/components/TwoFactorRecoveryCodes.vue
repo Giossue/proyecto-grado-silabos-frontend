@@ -45,7 +45,7 @@ const regenerate = (): void => {
                 </div>
                 <form class="grid gap-3" @submit.prevent="regenerate">
                     <Label for="recovery-current-password" required>Contraseña actual</Label>
-                    <PasswordInput id="recovery-current-password" v-model="password" autocomplete="current-password" required />
+                    <PasswordInput id="recovery-current-password" v-model="password" autocomplete="current-password" aria-required="true" />
                     <Button class="w-fit" type="submit" variant="secondary" :disabled="processing || !password">Regenerar códigos</Button>
                 </form>
             </div>

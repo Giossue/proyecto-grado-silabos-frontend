@@ -124,7 +124,7 @@ const submit = async (): Promise<void> => {
                 <FieldGroup>
                     <Transition :name="forward ? 'step-next' : 'step-back'" mode="out-in">
                         <FieldGroup v-if="entity === 'facultad' && step === 1" key="datos">
-                        <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel for="catalog-name" required>Nombre</FieldLabel><Input id="catalog-name" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
+                        <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel for="catalog-name" required>Nombre</FieldLabel><Input id="catalog-name" v-model="form.nombre" aria-required="true" /><FieldError :errors="errors.nombre" /></Field>
                         <Field :data-invalid="Boolean(errors.campus)">
                             <FieldLabel for="catalog-campus" required>Campus</FieldLabel>
                             <Select v-model="form.campus" required><SelectTrigger id="catalog-campus"><SelectValue placeholder="Seleccione el campus de la facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in options.campusOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select>
@@ -149,10 +149,10 @@ const submit = async (): Promise<void> => {
                         <Select v-model="form.modality" required><SelectTrigger id="catalog-modality"><SelectValue placeholder="Seleccione la modalidad aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in options.modalityOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select>
                         <FieldError :errors="errors.modality" />
                     </Field>
-                    <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.nombre)"><FieldLabel for="catalog-name" required>Nombre</FieldLabel><Input id="catalog-name" v-model="form.nombre" required /><FieldError :errors="errors.nombre" /></Field>
+                    <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.nombre)"><FieldLabel for="catalog-name" required>Nombre</FieldLabel><Input id="catalog-name" v-model="form.nombre" aria-required="true" /><FieldError :errors="errors.nombre" /></Field>
                     <div v-if="entity === 'carrera'" class="grid grid-cols-2 items-start gap-4">
-                        <Field :data-invalid="Boolean(errors.code)"><FieldLabel for="catalog-code" required>Código de carrera</FieldLabel><Input id="catalog-code" v-model="form.code" required /><FieldError :errors="errors.code" /></Field>
-                        <Field :data-invalid="Boolean(errors.cycle_count)"><FieldLabel for="catalog-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="catalog-cycle-count" v-model="form.cycle_count" type="number" min="1" :max="VALIDATION_LIMITS.cycleCount" step="1" required /><FieldError :errors="errors.cycle_count" /></Field>
+                        <Field :data-invalid="Boolean(errors.code)"><FieldLabel for="catalog-code" required>Código de carrera</FieldLabel><Input id="catalog-code" v-model="form.code" aria-required="true" /><FieldError :errors="errors.code" /></Field>
+                        <Field :data-invalid="Boolean(errors.cycle_count)"><FieldLabel for="catalog-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="catalog-cycle-count" v-model="form.cycle_count" type="number" min="1" :max="VALIDATION_LIMITS.cycleCount" step="1" aria-required="true" /><FieldError :errors="errors.cycle_count" /></Field>
                     </div>
                     <div v-if="entity === 'periodo'" class="grid grid-cols-2 items-start gap-4">
                         <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" :min-value="minimumPeriodDate" :aria-invalid="Boolean(errors.starts_on)" required /><FieldDescription>Debe ser hoy o una fecha posterior</FieldDescription><FieldError :errors="errors.starts_on" /></Field>
