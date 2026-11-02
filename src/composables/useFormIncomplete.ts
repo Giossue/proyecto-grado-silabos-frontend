@@ -10,8 +10,8 @@ const hasMissingFields = (form: HTMLFormElement): boolean =>
     Array.from(form.elements).some((element) => isControl(element) && element.willValidate && !element.validity.valid);
 
 /**
- * Para el botón de enviar de un formulario dentro de un modal: dice si falta algún campo
- * obligatorio, para mantenerlo deshabilitado hasta que se complete.
+ * Para el botón de enviar de un formulario: dice si falta algún campo obligatorio, para
+ * mantenerlo deshabilitado hasta que se complete.
  */
 export function useFormIncomplete(button: Ref<HTMLElement | null>): Ref<boolean> {
     const incomplete = ref(false);
@@ -23,7 +23,7 @@ export function useFormIncomplete(button: Ref<HTMLElement | null>): Ref<boolean>
 
     onMounted(() => {
         const element = button.value;
-        if (!(element instanceof HTMLButtonElement) || element.type !== 'submit' || element.closest('[role="dialog"]') === null) return;
+        if (!(element instanceof HTMLButtonElement) || element.type !== 'submit') return;
         form = element.form;
         if (form === null || form.noValidate) {
             form = null;

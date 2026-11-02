@@ -22,22 +22,20 @@ describe('installNativeValidation', () => {
     document.querySelector<HTMLFormElement>('#form')!.requestSubmit();
   };
 
-  it('marca los campos vacíos, escribe el mensaje debajo y enfoca el primero', async () => {
+  it('un campo vacío no lleva mensaje ni borde rojo, pero se enfoca el primero', async () => {
     submit();
     await Promise.resolve();
 
     const email = document.querySelector<HTMLInputElement>('#email')!;
-    const clave = document.querySelector<HTMLInputElement>('#clave')!;
-    expect(email.getAttribute('aria-invalid')).toBe('true');
-    expect(email.nextElementSibling?.textContent).toBe('Complete este campo');
-    expect(email.nextElementSibling?.getAttribute('role')).toBe('alert');
-    expect(clave.parentElement?.nextElementSibling?.textContent).toBe('Complete este campo');
+    expect(email.hasAttribute('aria-invalid')).toBe(false);
+    expect(document.querySelectorAll('[data-slot="field-error"]')).toHaveLength(0);
     expect(document.activeElement).toBe(email);
   });
 
   it('dice si el correo no tiene formato válido y lo quita al escribir', async () => {
     const email = document.querySelector<HTMLInputElement>('#email')!;
     email.value = 'sin-arroba';
+    document.querySelector<HTMLInputElement>('#clave')!.value = 'clave-larga';
     submit();
     await Promise.resolve();
 
@@ -51,10 +49,12 @@ describe('installNativeValidation', () => {
   });
 
   it('no repite el mensaje al enviar otra vez', async () => {
+    document.querySelector<HTMLInputElement>('#email')!.value = 'sin-arroba';
+    document.querySelector<HTMLInputElement>('#clave')!.value = 'clave-larga';
     submit();
     submit();
     await Promise.resolve();
 
-    expect(document.querySelectorAll('[data-slot="field-error"]')).toHaveLength(2);
+    expect(document.querySelectorAll('[data-slot="field-error"]')).toHaveLength(1);
   });
 });

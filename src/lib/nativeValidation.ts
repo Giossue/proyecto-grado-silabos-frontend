@@ -52,15 +52,16 @@ const show = (control: Control): void => {
 };
 
 /**
- * Cambia el globo del navegador («Rellene este campo») por el aviso del sistema:
- * borde rojo, mensaje debajo del campo y foco en el primero que falta.
+ * Cambia el globo del navegador («Rellene este campo») por el aviso del sistema: foco en
+ * el primer campo con problema y, si el valor está mal (no vacío), borde rojo y mensaje debajo.
  */
 export function installNativeValidation(): () => void {
     let first: Control | null = null;
     const onInvalid = (event: Event): void => {
         if (!isControl(event.target)) return;
         event.preventDefault();
-        show(event.target);
+        // Un campo vacío no lleva mensaje: el asterisco y el botón deshabilitado ya lo dicen.
+        if (!event.target.validity.valueMissing) show(event.target);
         if (first !== null) return;
         first = event.target;
         queueMicrotask(() => {

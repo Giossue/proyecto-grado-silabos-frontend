@@ -23,7 +23,7 @@ const props = withDefaults(defineProps<Props>(), {
 const attrs = useAttrs()
 const primitive = ref<{ $el: HTMLElement } | null>(null)
 const element = computed(() => primitive.value?.$el ?? null)
-// Dentro de un modal, el botón de enviar queda deshabilitado mientras falte un campo obligatorio.
+// El botón de enviar de un formulario queda deshabilitado mientras falte un campo obligatorio.
 const incomplete = useFormIncomplete(element)
 const disabled = computed(() => (attrs.disabled !== undefined && attrs.disabled !== false) || incomplete.value)
 </script>

@@ -14,7 +14,7 @@ const Modal = defineComponent({
 
 const submit = (wrapper: ReturnType<typeof mount>) => wrapper.get('button[type="submit"]').element as HTMLButtonElement;
 
-describe('Button de enviar dentro de un modal', () => {
+describe('Button de enviar de un formulario', () => {
   it('queda deshabilitado mientras falte un campo obligatorio y se habilita al completarlo', async () => {
     const wrapper = mount(Modal, { attachTo: document.body });
     await nextTick();
@@ -33,9 +33,11 @@ describe('Button de enviar dentro de un modal', () => {
     expect(submit(wrapper).disabled).toBe(true);
   });
 
-  it('fuera de un modal no se toca', async () => {
+  it('también fuera de un modal', async () => {
     const wrapper = mount(Modal, { props: { inDialog: false }, attachTo: document.body });
     await nextTick();
+    expect(submit(wrapper).disabled).toBe(true);
+    await wrapper.get('#field').setValue('texto');
     expect(submit(wrapper).disabled).toBe(false);
   });
 });
