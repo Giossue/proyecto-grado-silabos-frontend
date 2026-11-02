@@ -12,14 +12,13 @@ import {
 } from '@/api/support-documents';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
+import IconTooltip from '@/components/domain/IconTooltip.vue';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
-import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
@@ -168,13 +167,11 @@ onMounted(() => { void load(); });
             @keydown.enter.self.prevent="view(document)"
             @keydown.space.self.prevent="view(document)"
           >
-            <TableCell><span class="font-medium">{{ document.title }}</span><Spinner v-if="busyId === document.id" class="ml-2 inline" aria-label="Abriendo" /><span v-if="document.view === 'pendiente'" class="flex items-center gap-1 text-xs text-muted-foreground"><Spinner aria-hidden="true" />Preparando vista</span><span v-else-if="document.view === 'sin_vista'" class="block text-xs text-muted-foreground">No se pudo preparar la vista</span></TableCell>
+            <TableCell><span class="font-medium">{{ document.title }}</span><span v-if="document.view === 'pendiente'" class="flex items-center gap-1 text-xs text-muted-foreground"><Spinner aria-hidden="true" />Preparando vista</span><span v-else-if="document.view === 'sin_vista'" class="block text-xs text-muted-foreground">No se pudo preparar la vista</span></TableCell>
             <TableCell class="text-center">{{ sizeOf(document.size) }}</TableCell>
             <TableCell>{{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}</TableCell>
             <TableCell v-if="manages" class="text-center">
-              <TableActionsMenu :label="`Acciones de ${document.title}`">
-                <DropdownMenuItem variant="destructive" @select="askRemoval(document)"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
-              </TableActionsMenu>
+              <IconTooltip :label="`Eliminar ${document.title}`"><Button type="button" variant="ghost" size="icon-sm" class="text-destructive hover:text-destructive" :aria-label="`Eliminar ${document.title}`" @click="askRemoval(document)"><Trash2 aria-hidden="true" /></Button></IconTooltip>
             </TableCell>
           </TableRow>
         </TableBody>

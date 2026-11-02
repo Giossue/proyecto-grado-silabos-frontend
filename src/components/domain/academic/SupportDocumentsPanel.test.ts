@@ -47,7 +47,7 @@ describe('Documentos de apoyo', () => {
 
     expect(wrapper.text()).toContain('Proyecto de carrera');
     expect(wrapper.text()).not.toContain('PDF');
-    expect(wrapper.find('[data-table-actions]').exists()).toBe(false);
+    expect(wrapper.find('[aria-label^="Eliminar "]').exists()).toBe(false);
     expect(document.body.querySelector('[data-testid="support-document-form"]')).toBeNull();
     expect(getCoordinationSupportDocuments).not.toHaveBeenCalled();
 
@@ -100,16 +100,28 @@ describe('Documentos de apoyo', () => {
     wrapper.unmount();
   });
 
+  it('al abrir un documento no aparece un indicador de carga junto al nombre', async () => {
+    vi.spyOn(window, 'open').mockReturnValue({ location: { href: '' }, close: vi.fn(), focus: vi.fn() } as unknown as Window);
+    vi.mocked(viewSupportDocument).mockReturnValue(new Promise(() => {}));
+    const wrapper = mountPage('teacher');
+    await flushPromises();
+
+    await wrapper.get('[aria-label="Ver Proyecto de carrera"]').trigger('click');
+    await flushPromises();
+
+    expect(viewSupportDocument).toHaveBeenCalledWith('d1');
+    expect(wrapper.find('[aria-label="Abriendo"]').exists()).toBe(false);
+    wrapper.unmount();
+  });
+
   it('Coordinación elimina un documento tras confirmar', async () => {
     vi.mocked(deleteSupportDocument).mockResolvedValue({ message: 'Documento eliminado.' });
     const wrapper = mountPage('coordination');
     await flushPromises();
 
-    await wrapper.get('[aria-label="Acciones de Proyecto de carrera"]').trigger('keydown', { key: 'Enter' });
+    await wrapper.get('button[aria-label="Eliminar Proyecto de carrera"]').trigger('click');
     await flushPromises();
-    const remove = Array.from(document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')).find((item) => item.textContent?.trim() === 'Eliminar')!;
-    remove.click();
-    await flushPromises();
+    expect(viewSupportDocument).not.toHaveBeenCalled();
 
     const confirm = Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find((button) => button.textContent?.trim() === 'Eliminar')!;
     confirm.click();
