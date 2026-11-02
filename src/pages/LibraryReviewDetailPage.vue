@@ -120,7 +120,7 @@ const approve = async (sign: StatementSigner): Promise<void> => {
   const result = await verifyLibraryReview(review.value.revision_id, sign(review.value.signing_statement));
   signOpen.value = false;
   toast.success(result.message);
-  await load();
+  await router.replace(paths.library.reviews);
 };
 
 const outcomeBadge = computed((): { label: string; tone: StatusTone } | null => {

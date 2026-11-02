@@ -6,12 +6,12 @@ import { makeTestP12 } from '@/lib/signature/testCertificate';
 import LibraryReviewDetailPage from '@/pages/LibraryReviewDetailPage.vue';
 import { confirmSignatureDialog, fillSignatureDialog } from '@/test/signatureDialog';
 
-const { toastSuccess, openRevisionPdf } = vi.hoisted(() => ({ toastSuccess: vi.fn(), openRevisionPdf: vi.fn() }));
+const { toastSuccess, openRevisionPdf, replace } = vi.hoisted(() => ({ toastSuccess: vi.fn(), openRevisionPdf: vi.fn(), replace: vi.fn() }));
 
 vi.mock('vue-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
   useRoute: () => ({ params: { revision: 'revision-2' }, fullPath: '/biblioteca/revisiones/revision-2' }),
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ replace, push: vi.fn() }),
 }));
 vi.mock('@/api/library', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/library')>()),
@@ -120,8 +120,7 @@ describe('LibraryReviewDetailPage', () => {
       cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
     });
     expect(toastSuccess).toHaveBeenCalledWith('Sílabo aprobado');
-    expect(wrapper.text()).toContain('Aprobado');
-    expect(headerButton(wrapper, 'Firmar y aprobar')).toBeUndefined();
+    expect(replace).toHaveBeenCalledWith('/biblioteca/revisiones');
     wrapper.unmount();
   });
 

@@ -154,7 +154,8 @@ const approve = async (sign: StatementSigner): Promise<void> => {
   if (!data.value?.signing_statement) return;
   const result = await approveReview(data.value.revision.id, sign(data.value.signing_statement));
   signOpen.value = false;
-  await changed(result.message);
+  toast.success(result.message);
+  await router.replace(area.reviews);
 };
 
 watch(() => route.params.revision, (current, previous) => { if (current !== previous) { comparing.value = false; void load(); } });

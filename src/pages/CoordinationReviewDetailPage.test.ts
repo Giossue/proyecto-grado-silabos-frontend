@@ -191,7 +191,8 @@ describe("CoordinationReviewDetailPage", () => {
       statement: "silabos-ueb|silabo:syllabus-1|accion:aprobacion_coordinacion|huella:abc",
       cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
     });
-    expect(getReview).toHaveBeenCalledTimes(2);
+    expect(replace).toHaveBeenCalledWith("/coordinacion/revisiones");
+    expect(getReview).toHaveBeenCalledTimes(1);
     wrapper.unmount();
   });
 
