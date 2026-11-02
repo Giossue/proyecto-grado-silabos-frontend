@@ -61,7 +61,7 @@ const statusNotes = computed(() => {
   if (!data.value.decisions_allowed) notes.push('Convocatoria cerrada · solo consulta');
   if (!data.value.revision.is_current) notes.push(`Versión ${data.value.revision.number} (anterior) · solo consulta`);
   if (data.value.syllabus.state === 'en_revision' && stageLabel.value) notes.push(stageLabel.value);
-  if (data.value.correction_request?.stage === 'biblioteca') notes.push('Devuelto por biblioteca');
+  if (data.value.correction_request?.stage === 'biblioteca') notes.push('Corrección solicitada por biblioteca');
 
   return notes;
 });

@@ -75,7 +75,7 @@ export const screenTours: Record<string, TourStep[]> = {
   '/biblioteca/revisiones': [
     step(ACTIONS, 'Historial', 'Los sílabos de períodos terminados, en solo lectura', 'left'),
     step(FILTERS, 'Filtrar', 'Por facultad si se reparten el trabajo; el sistema recuerda su elección', 'bottom'),
-    step(TABLE, 'Por revisar', 'Los sílabos que Coordinación ya aprobó. Pulse uno para revisar su bibliografía y firmar, o devolverlo al docente', 'top'),
+    step(TABLE, 'En revisión', 'Los sílabos que Coordinación ya aprobó. Pulse uno para revisar su bibliografía y firmar, o devolverlo al docente', 'top'),
     shell.notifications,
     shell.user,
   ],

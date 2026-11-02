@@ -54,9 +54,9 @@ describe('LibraryReviewsPage', () => {
     vi.mocked(getDashboard).mockReset();
     vi.mocked(getDashboard).mockResolvedValue({
       metrics: [
-        { key: 'library_pending', label: 'Por revisar', value: 2, suffix: null, hint: 'Aprobados por coordinación; falta la bibliografía' },
+        { key: 'library_pending', label: 'En revisión', value: 2, suffix: null, hint: 'Aprobados por coordinación; falta la bibliografía' },
         { key: 'library_signed', label: 'Firmados', value: 3, suffix: null, hint: 'Bibliografía aprobada y firmada' },
-        { key: 'library_commented', label: 'Devueltos', value: 1, suffix: null, hint: 'Con observaciones para el docente' },
+        { key: 'library_commented', label: 'Corrección solicitada', value: 1, suffix: null, hint: 'Con observaciones para el docente' },
       ],
       setup: null,
       deadline: { period: '2026-2027', starts_at: '2026-10-01', due_at: '2026-11-15', state: 'active', days_until_start: 0, days_until_due: 19, convocation_id: null },
@@ -69,9 +69,9 @@ describe('LibraryReviewsPage', () => {
     const wrapper = mount(LibraryReviewsPageView);
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Por revisar');
+    expect(wrapper.text()).toContain('En revisión');
     expect(wrapper.text()).toContain('Firmados');
-    expect(wrapper.text()).toContain('Devueltos');
+    expect(wrapper.text()).toContain('Corrección solicitada');
 
     await wrapper.get('form').trigger('submit');
     await flushPromises();
@@ -97,7 +97,7 @@ describe('LibraryReviewsPage', () => {
     expect(wrapper.get('h1').text()).toBe('Revisiones de biblioteca - Período 2026-2027');
     expect(wrapper.find('[data-slot="badge"]').exists() && wrapper.find('[data-slot="badge"]').text().startsWith('Período')).toBe(false);
     expect(row.text()).not.toContain('N.º');
-    expect(row.text()).toContain('Devuelto');
+    expect(row.text()).toContain('Corrección solicitada');
     wrapper.unmount();
   });
 

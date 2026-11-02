@@ -160,7 +160,7 @@ describe("CoordinationReviewDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Devuelto por biblioteca");
+    expect(wrapper.text()).toContain("Corrección solicitada por biblioteca");
     expect(wrapper.find(".review-comment").exists()).toBe(false);
     wrapper.unmount();
   });
