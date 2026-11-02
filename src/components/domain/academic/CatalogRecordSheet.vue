@@ -133,7 +133,7 @@ const submit = async (): Promise<void> => {
                         <Field :data-invalid="Boolean(errors.logo)">
                             <FieldLabel for="faculty-logo" required>Logo de la facultad</FieldLabel>
                             <FacultyLogoField v-model="logo" input-id="faculty-logo" :disabled="processing" :invalid="Boolean(errors.logo)" required @validation-error="logoValidationError" />
-                            <FieldDescription>Suba el logo como lo tenga: el sistema lo deja en 600 × 180 px y con fondo transparente</FieldDescription>
+                            <FieldDescription>PNG, JPG o WebP. Se ajusta a 600 × 180 px con fondo transparente</FieldDescription>
                             <FieldError :errors="errors.logo" />
                         </Field>
                         </FieldGroup>
