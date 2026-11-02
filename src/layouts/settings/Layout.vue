@@ -32,7 +32,7 @@ const goBack = (): void => {
     >
         <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack"><ArrowLeft aria-hidden="true" />Volver</Button></template>
         <div class="flex min-w-0 flex-col gap-6">
-            <nav class="flex h-11 items-center justify-start gap-2 border-b" aria-label="Configuración">
+            <nav class="mx-auto flex h-11 w-full max-w-xl items-center justify-start gap-2 border-b" aria-label="Configuración">
                 <RouterLink
                     v-for="item in sidebarNavItems"
                     :key="item.href"
