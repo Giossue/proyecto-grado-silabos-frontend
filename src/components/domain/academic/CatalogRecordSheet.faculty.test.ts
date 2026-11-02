@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAcademicRecord } from '@/api/academic';
 import { getCatalogLibraries } from '@/api/libraryCatalog';
 import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
-import FileDropzone from '@/components/domain/FileDropzone.vue';
+import FacultyLogoField from '@/components/domain/academic/FacultyLogoField.vue';
 
 vi.mock('@/api/academic', () => ({ createAcademicRecord: vi.fn() }));
 vi.mock('@/api/libraryCatalog', () => ({ getCatalogLibraries: vi.fn() }));
@@ -22,7 +22,7 @@ const firstStep = async () => {
     const state = (wrapper.vm as unknown as { $: { setupState: { form: { nombre: string; campus: string } } } }).$.setupState;
     state.form.nombre = 'Facultad de Salud';
     state.form.campus = campus;
-    wrapper.findComponent(FileDropzone).vm.$emit('update:modelValue', new File(['x'], 'logo.png', { type: 'image/png' }));
+    wrapper.findComponent(FacultyLogoField).vm.$emit('update:modelValue', new File(['x'], 'logo.png', { type: 'image/png' }));
     await flushPromises();
 
     return wrapper;

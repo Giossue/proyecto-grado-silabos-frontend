@@ -6,7 +6,7 @@ import { ApiError } from '@/api/client';
 import { createAcademicRecord } from '@/api/academic';
 import DatePicker from '@/components/DatePicker.vue';
 import FacultyLibraryChecks from '@/components/domain/academic/FacultyLibraryChecks.vue';
-import FileDropzone from '@/components/domain/FileDropzone.vue';
+import FacultyLogoField from '@/components/domain/academic/FacultyLogoField.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
@@ -131,9 +131,9 @@ const submit = async (): Promise<void> => {
                             <FieldError :errors="errors.campus" />
                         </Field>
                         <Field :data-invalid="Boolean(errors.logo)">
-                            <FieldLabel for="faculty-logo" required>Logo de la facultad (PNG sin fondo)</FieldLabel>
-                            <FileDropzone v-model="logo" input-id="faculty-logo" kind="png" :max-bytes="4 * 1024 * 1024" :disabled="processing" :invalid="Boolean(errors.logo)" required @validation-error="logoValidationError" />
-                            <FieldDescription>Medida recomendada: 600 × 180 px. Use una imagen con fondo transparente</FieldDescription>
+                            <FieldLabel for="faculty-logo" required>Logo de la facultad</FieldLabel>
+                            <FacultyLogoField v-model="logo" input-id="faculty-logo" :disabled="processing" :invalid="Boolean(errors.logo)" required @validation-error="logoValidationError" />
+                            <FieldDescription>Suba el logo como lo tenga: el sistema lo deja en 600 × 180 px y con fondo transparente</FieldDescription>
                             <FieldError :errors="errors.logo" />
                         </Field>
                         </FieldGroup>

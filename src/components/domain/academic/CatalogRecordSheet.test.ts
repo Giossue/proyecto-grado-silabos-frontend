@@ -63,7 +63,7 @@ describe('academic catalog code fields', () => {
     expect(campusLabel).not.toBeNull();
     expect(logoLabel).not.toBeNull();
     expect(document.body.querySelector<HTMLInputElement>('#faculty-logo')?.required).toBe(true);
-    expect(document.body.textContent).toContain('Medida recomendada: 600 × 180 px');
+    expect(document.body.textContent).toContain('el sistema lo deja en 600 × 180 px');
     expect(document.body.textContent).toContain('fondo transparente');
     expect(document.body.textContent).not.toContain('fondo sólido');
     expect(document.body.textContent).not.toContain('Opcional para Administración');

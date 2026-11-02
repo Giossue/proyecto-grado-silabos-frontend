@@ -4,7 +4,7 @@ import { FileText, ImageIcon, Upload, X } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { Attachment, AttachmentAction, AttachmentActions, AttachmentContent, AttachmentDescription, AttachmentMedia, AttachmentTitle } from '@/components/ui/attachment';
 
-type FileKind = 'pdf' | 'png' | 'xlsx' | 'document' | 'certificate';
+type FileKind = 'pdf' | 'png' | 'image' | 'xlsx' | 'document' | 'certificate';
 
 const props = withDefaults(defineProps<{
   modelValue: File | null;
@@ -73,6 +73,15 @@ const copy = computed(() => props.kind === 'document' ? {
   chooseLabel: 'Cargar archivo Excel',
   removeLabel: 'Quitar Excel',
   dropAnnouncement: 'Suelta el Excel para seleccionarlo',
+} : props.kind === 'image' ? {
+  accept: 'image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp',
+  label: 'Imagen',
+  invalid: 'Seleccione una imagen PNG, JPG o WebP',
+  maxError: `La imagen no puede superar los ${formatLimit(props.maxBytes)}`,
+  emptyTitle: 'Arrastra tu imagen aquí',
+  chooseLabel: 'Cargar imagen',
+  removeLabel: 'Quitar imagen',
+  dropAnnouncement: 'Suelta la imagen para seleccionarla',
 } : props.kind === 'png' ? {
   accept: 'image/png,.png',
   label: 'PNG',
@@ -103,6 +112,8 @@ const isValidFile = (file: File): boolean => {
     ? ['.pdf', '.xlsx', '.xls'].some((extension) => name.endsWith(extension))
     : props.kind === 'certificate'
     ? ['.p12', '.pfx'].some((extension) => name.endsWith(extension))
+    : props.kind === 'image'
+    ? ['.png', '.jpg', '.jpeg', '.webp'].some((extension) => name.endsWith(extension)) || ['image/png', 'image/jpeg', 'image/webp'].includes(file.type)
     : props.kind === 'png'
     ? name.endsWith('.png') || file.type === 'image/png'
     : props.kind === 'xlsx'
@@ -177,7 +188,7 @@ const releasePreview = (): void => {
 watch(() => props.modelValue, (file) => {
   if (file === null && input.value) input.value.value = '';
   releasePreview();
-  if (file !== null && props.kind === 'png' && typeof URL.createObjectURL === 'function') previewUrl.value = URL.createObjectURL(file);
+  if (file !== null && (props.kind === 'png' || props.kind === 'image') && typeof URL.createObjectURL === 'function') previewUrl.value = URL.createObjectURL(file);
 }, { immediate: true });
 
 onBeforeUnmount(releasePreview);
@@ -205,7 +216,7 @@ onBeforeUnmount(releasePreview);
     </Button>
     <input ref="input" :id="inputId" class="sr-only" type="file" :multiple="multiple" :accept="copy.accept" :disabled="props.disabled" :required="props.required && !modelValue" :aria-invalid="props.invalid" :aria-required="props.required" tabindex="-1" @click.stop @change="selectFile" />
     <Attachment v-if="modelValue" class="w-full" :state="props.invalid ? 'error' : props.state">
-      <AttachmentMedia><img v-if="previewUrl" :src="previewUrl" alt="Vista previa del PNG seleccionado" class="size-full rounded-[inherit] object-contain" /><ImageIcon v-else-if="props.kind === 'png'" aria-hidden="true" /><FileText v-else aria-hidden="true" /></AttachmentMedia>
+      <AttachmentMedia><img v-if="previewUrl" :src="previewUrl" alt="Vista previa del PNG seleccionado" class="size-full rounded-[inherit] object-contain" /><ImageIcon v-else-if="props.kind === 'png' || props.kind === 'image'" aria-hidden="true" /><FileText v-else aria-hidden="true" /></AttachmentMedia>
       <AttachmentContent>
         <AttachmentTitle>{{ modelValue.name }}</AttachmentTitle>
         <AttachmentDescription>{{ fileDescription }}</AttachmentDescription>
