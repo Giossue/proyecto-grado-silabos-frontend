@@ -9,6 +9,7 @@ import FacultyLogoField from '@/components/domain/academic/FacultyLogoField.vue'
 import FormSheet from '@/components/domain/FormSheet.vue';
 import SheetActions, { type SheetAction } from '@/components/domain/SheetActions.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -24,7 +25,7 @@ const props = withDefaults(defineProps<{
     startsOn?: string | null; endsOn?: string | null;
     modalityOptions: Array<{ value: string; label: string }>;
     faculties: CatalogRecord[]; campusOptions: Array<{ value: string; label: string }>;
-    logoUrl?: string | null; showTrigger?: boolean; actions?: SheetAction[]; catalogLibraries?: string[];
+    lockReason?: string | null; logoUrl?: string | null; showTrigger?: boolean; actions?: SheetAction[]; catalogLibraries?: string[];
 }>(), { showTrigger: true, actions: () => [], catalogLibraries: () => [] });
 const emit = defineEmits<{ saved: [message: string]; action: [key: string] }>();
 const open = defineModel<boolean>('open', { default: false });
@@ -51,6 +52,13 @@ const librariesToSave = (): string[] | null => {
     return sameLibraries(stored, props.catalogLibraries) ? null : stored;
 };
 
+const FIELD_ERRORS = ['nombre', 'code', 'faculty_id', 'campus', 'modality', 'starts_on', 'ends_on', 'logo', 'catalog_libraries'];
+/** Avisos del servidor que no pertenecen a ningún campo (por ejemplo, una convocatoria abierta). */
+const generalError = computed((): string | null => {
+    const key = Object.keys(errors.value).find((name) => !FIELD_ERRORS.some((field) => name === field || name.startsWith(`${field}.`)) && !name.startsWith('purge_'));
+
+    return key === undefined ? null : (errors.value[key]?.[0] ?? null);
+});
 const entityLabel = computed(() => ({ facultad: 'facultad', carrera: 'carrera', periodo: 'periodo académico' })[props.entity]);
 const facultyOptions = computed(() => props.faculties.filter((faculty) => faculty.activo || faculty.id === props.facultyId));
 
@@ -132,6 +140,8 @@ const submit = async (confirmPurge = false): Promise<void> => {
         <template v-if="actions.length > 0" #header-actions><SheetActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
         <template #default="{ close }">
             <form @submit.prevent="submit()"><FieldGroup>
+                <Alert v-if="lockReason"><AlertDescription>Hay una convocatoria activa: pause la convocatoria para editar</AlertDescription></Alert>
+                <Alert v-else-if="generalError" variant="destructive"><AlertDescription>{{ generalError }}</AlertDescription></Alert>
                 <Tabs v-if="entity === 'facultad'" v-model="tab" class="gap-4">
                     <TabsList aria-label="Secciones de la facultad"><TabsTrigger value="datos">Datos</TabsTrigger><TabsTrigger value="bibliotecas">Bibliotecas</TabsTrigger></TabsList>
                     <TabsContent value="datos" class="flex flex-col gap-7">
@@ -151,7 +161,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
                     <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel :for="`edit-starts-on-${recordId}`" required>Fecha de inicio</FieldLabel><DatePicker :id="`edit-starts-on-${recordId}`" v-model="form.starts_on" required /><FieldError :errors="errors.starts_on" /></Field>
                     <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required /><FieldError :errors="errors.ends_on" /></Field>
                 </div>
-                <FormSheetActions :close="close" :processing="processing" :disabled="unchanged" :icon="Check" label="Guardar cambios" />
+                <FormSheetActions :close="close" :processing="processing" :disabled="unchanged || Boolean(lockReason)" :icon="Check" label="Guardar cambios" />
             </FieldGroup></form>
         </template>
     </FormSheet>

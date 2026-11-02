@@ -23,7 +23,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const editOpen = ref(false);
-const edit = (): void => { if (!props.lockReason) editOpen.value = true; };
+const edit = (): void => { editOpen.value = true; };
 defineExpose({ edit });
 const statusEntity = computed(() => props.entity === 'facultad' || props.entity === 'carrera');
 const noun = computed(() => props.entity === 'facultad' ? 'facultad' : 'carrera');
@@ -78,7 +78,7 @@ const remove = async (): Promise<void> => {
 <template>
     <div class="contents">
         <SyllabusProcessSheet v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName, starts_on: startsOn ?? undefined, ends_on: endsOn ?? undefined }" display="menu" trigger-label="Abrir convocatoria" @saved="emit('changed', $event)" />
-        <CatalogEditSheet :key="recordId" v-model:open="editOpen" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :catalog-libraries="catalogLibraries ?? []" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" :actions="sheetActions" @action="runAction" @saved="emit('changed', $event)" />
+        <CatalogEditSheet :key="recordId" v-model:open="editOpen" :lock-reason="lockReason ?? null" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :catalog-libraries="catalogLibraries ?? []" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" :actions="sheetActions" @action="runAction" @saved="emit('changed', $event)" />
 
         <Dialog v-if="entity === 'periodo'" v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar período</DialogTitle><DialogDescription>Se eliminará «{{ recordName }}». Se rechazará si ya tiene una convocatoria</DialogDescription></DialogHeader>
             <FeedbackAlert v-if="error" :message="error" />

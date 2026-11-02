@@ -185,6 +185,7 @@ const {
                                 :logo-url="faculty.logo_url"
                                 :faculties="catalogs.faculties"
                                 :deactivate-blocked-reason="faculty.deactivate_block ?? null"
+                                :lock-reason="faculty.lock_reason ?? null"
                                 @changed="emit('changed', $event)"
                             />
                         </TableCell>
@@ -299,6 +300,7 @@ const {
                                 :record-code="career.code"
                                 :active="career.active"
                                 :deactivate-blocked-reason="career.deactivate_block ?? null"
+                                :lock-reason="career.lock_reason ?? null"
                                 :faculty-id="career.faculty_id"
                                 :modality="career.modality"
                                 :faculties="catalogs.faculties"

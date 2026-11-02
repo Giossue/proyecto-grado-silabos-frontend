@@ -58,6 +58,17 @@ describe('CatalogEditSheet · logo de la facultad', () => {
   });
 });
 
+describe('CatalogEditSheet · convocatoria activa', () => {
+  it('avisa por qué no se puede guardar y deja el botón deshabilitado', async () => {
+    const wrapper = mountSheet({ lockReason: 'Convocatoria activa' });
+    await flushPromises();
+
+    expect(document.body.textContent).toContain('Hay una convocatoria activa: pause la convocatoria para editar');
+    expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
+    wrapper.unmount();
+  });
+});
+
 describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   const sentLibraries = (): string | null => (vi.mocked(updateAcademicRecord).mock.calls[0]![2] as FormData).get('catalog_libraries') as string | null;
   const row = (name: string): HTMLElement => Array.from(document.querySelectorAll<HTMLElement>('[data-slot="field"]')).find((item) => item.textContent?.trim() === name)!;
