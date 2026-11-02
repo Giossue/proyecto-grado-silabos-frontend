@@ -27,7 +27,8 @@ import { plural, type ValueSchema } from '@/lib/blocks/types';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { useCountdown } from '@/composables/useCountdown';
+import ConfirmPhrase from '@/components/domain/ConfirmPhrase.vue';
+import { matchesPhrase } from '@/lib/confirmPhrase';
 import { toast } from '@/lib/toast';
 import { templateEditorState } from '@/state/templateEditor';
 import { cn } from '@/lib/utils';
@@ -45,7 +46,9 @@ watch(preview, (value) => {
     emit('editing', !value);
 }, { immediate: true });
 const editWarningOpen = ref(false);
-const editCountdown = useCountdown(editWarningOpen);
+const EDIT_PHRASE = 'editar plantilla';
+const editTyped = ref('');
+watch(editWarningOpen, () => { editTyped.value = ''; });
 const selectedField = ref<string | null>(null);
 const selectedSection = ref<string | null>(null);
 const activeEditor = shallowRef<Editor | null>(null);
@@ -624,9 +627,10 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
             <li>En el próximo período, los docentes no conservan lo que escribieron</li>
           </ul>
         </DialogHeader>
+        <ConfirmPhrase id="template-edit-confirm" v-model="editTyped" :phrase="EDIT_PHRASE" />
         <DialogFooter>
           <Button type="button" variant="outline" @click="editWarningOpen = false">Cancelar</Button>
-          <Button type="button" :disabled="editCountdown > 0" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />{{ editCountdown > 0 ? `Continuar (${editCountdown})` : 'Continuar' }}</Button>
+          <Button type="button" :disabled="!matchesPhrase(editTyped, EDIT_PHRASE)" @click="startEditing"><Pencil data-icon="inline-start" aria-hidden="true" />Continuar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

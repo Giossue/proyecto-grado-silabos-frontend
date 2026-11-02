@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { CalendarClock, Lock, Pause, Play, Trash2 } from '@lucide/vue';
-import { ref, type Component } from 'vue';
+import { computed, ref, watch, type Component } from 'vue';
 import { ApiError } from '@/api/client';
 import { deleteProcess, transitionProcess, type SyllabusProcess, type SyllabusStateCounts } from '@/api/processes';
+import ConfirmPhrase from '@/components/domain/ConfirmPhrase.vue';
 import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -18,6 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
+import { matchesPhrase } from '@/lib/confirmPhrase';
 
 type Transition = 'pausar' | 'reanudar' | 'cerrar';
 
@@ -57,8 +59,21 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
   },
 };
 
+// Lo que no se deshace pide escribir una frase: cerrar, reanudar rehaciendo sílabos y eliminar.
+const typed = ref('');
+const phrase = computed((): string | null => {
+  if (pending.value === 'cerrar') return 'cerrar convocatoria';
+  if (pending.value === 'reanudar' && templateImpact.value) return 'rehacer sílabos';
+  return null;
+});
+const phraseReady = computed(() => phrase.value === null || matchesPhrase(typed.value, phrase.value));
+watch(phrase, () => { typed.value = ''; });
+const DELETE_PHRASE = 'eliminar convocatoria';
+const deleteTyped = ref('');
+watch(deleteOpen, () => { deleteTyped.value = ''; });
+
 const confirm = async (): Promise<void> => {
-  if (!pending.value) return;
+  if (!pending.value || !phraseReady.value) return;
   processing.value = true;
   error.value = null;
   try {
@@ -150,8 +165,9 @@ const remove = async (): Promise<void> => {
             </tbody>
           </table>
         </template>
+        <ConfirmPhrase v-if="phrase" id="process-transition-confirm" v-model="typed" :phrase="phrase" />
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="templateImpact || dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[pending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ templateImpact ? 'Reanudar y rehacer sílabos' : dialogs[pending].label }}</Button></DialogFooter>
+        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="templateImpact || dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing || !phraseReady"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[pending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ templateImpact ? 'Reanudar y rehacer sílabos' : dialogs[pending].label }}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>
@@ -161,10 +177,11 @@ const remove = async (): Promise<void> => {
         <DialogTitle>Eliminar convocatoria institucional</DialogTitle>
         <DialogDescription>La convocatoria se borra de verdad, con las de cada carrera y los sílabos que estén en borrador. Solo se permite si ningún docente ha enviado su sílabo: si ya hay sílabos enviados, ciérrala para conservarla como historial. El período queda libre para abrir otra convocatoria. Esta acción no se puede deshacer</DialogDescription>
       </DialogHeader>
+      <ConfirmPhrase id="process-delete-confirm" v-model="deleteTyped" :phrase="DELETE_PHRASE" />
       <Alert v-if="deleteError" variant="destructive"><AlertDescription>{{ deleteError }}</AlertDescription></Alert>
       <DialogFooter>
         <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
-        <Button type="button" variant="destructive" :disabled="deleting" @click="remove"><Spinner v-if="deleting" /><Trash2 v-else aria-hidden="true" />Eliminar convocatoria</Button>
+        <Button type="button" variant="destructive" :disabled="deleting || !matchesPhrase(deleteTyped, DELETE_PHRASE)" @click="remove"><Spinner v-if="deleting" /><Trash2 v-else aria-hidden="true" />Eliminar convocatoria</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

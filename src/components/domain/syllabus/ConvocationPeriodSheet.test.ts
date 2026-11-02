@@ -1,4 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils';
+import { typeConfirmation } from '@/test/confirmPhrase';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
@@ -7,15 +8,13 @@ import ConvocationPeriodSheet from '@/components/domain/syllabus/ConvocationPeri
 const api = vi.hoisted(() => ({ createAcademicRecord: vi.fn(), createProcess: vi.fn() }));
 vi.mock('@/api/academic', async (importOriginal) => ({ ...(await importOriginal<object>()), createAcademicRecord: api.createAcademicRecord }));
 vi.mock('@/api/processes', async (importOriginal) => ({ ...(await importOriginal<object>()), createProcess: api.createProcess }));
-vi.mock('@/composables/useCountdown', async () => {
-  const { ref } = await import('vue');
-  return { useCountdown: () => ref(0) };
-});
 
 afterEach(() => { document.body.innerHTML = ''; vi.clearAllMocks(); });
 
 const confirmSubmit = async (): Promise<void> => {
   document.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+  await flushPromises();
+  typeConfirmation('convocation-open-confirm', 'abrir convocatoria');
   await flushPromises();
   const confirm = [...document.querySelectorAll('[role="dialog"] button')].reverse().find((button) => button.textContent?.includes('Abrir convocatoria'));
   (confirm as HTMLButtonElement).click();

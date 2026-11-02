@@ -1,4 +1,5 @@
 import { flushPromises, mount } from '@vue/test-utils';
+import { typeConfirmation } from '@/test/confirmPhrase';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import DatePicker from '@/components/DatePicker.vue';
 import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
@@ -79,7 +80,7 @@ describe('syllabus process dates', () => {
     wrapper.unmount();
   });
 
-  it('confirma la apertura con una espera de unos segundos antes de abrir', async () => {
+  it('confirma la apertura solo después de escribir la frase', async () => {
     vi.useFakeTimers();
     api.createProcess.mockResolvedValue({ message: 'Convocatoria abierta.' });
     const wrapper = mount(SyllabusProcessSheet, {
@@ -93,8 +94,10 @@ describe('syllabus process dates', () => {
     const confirm = (): HTMLButtonElement => [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].reverse().find((button) => button.textContent?.includes('Abrir convocatoria'))!;
     expect(document.body.textContent).toContain('conservarán lo que escribieron en el período anterior');
     expect(confirm().disabled).toBe(true);
-    expect(confirm().textContent).toContain('(5)');
-    vi.advanceTimersByTime(5000);
+    typeConfirmation('process-open-confirm', 'abrir');
+    await flushPromises();
+    expect(confirm().disabled).toBe(true);
+    typeConfirmation('process-open-confirm', 'Abrir convocatoria');
     await flushPromises();
     expect(confirm().disabled).toBe(false);
     confirm().click();

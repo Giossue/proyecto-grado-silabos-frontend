@@ -11,7 +11,8 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { SheetFooter } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
-import { useCountdown } from '@/composables/useCountdown';
+import ConfirmPhrase from '@/components/domain/ConfirmPhrase.vue';
+import { matchesPhrase } from '@/lib/confirmPhrase';
 import { useInstitutionToday } from '@/composables/useInstitutionDate';
 
 const props = withDefaults(defineProps<{ disabled?: boolean }>(), { disabled: false });
@@ -20,7 +21,9 @@ const open = defineModel<boolean>('open', { default: false });
 
 const processing = ref(false);
 const confirmOpen = ref(false);
-const openingCountdown = useCountdown(confirmOpen);
+const OPEN_PHRASE = 'abrir convocatoria';
+const openingTyped = ref('');
+watch(confirmOpen, () => { openingTyped.value = ''; });
 const errors = ref<Record<string, string[]>>({});
 const form = ref({ starts_on: '', ends_on: '', starts_at: '', due_at: '' });
 const createdPeriodId = ref<string | null>(null);
@@ -168,9 +171,10 @@ const submit = async (): Promise<void> => {
                             <li>Si la plantilla cambió, empiezan de cero</li>
                         </ul>
                     </DialogHeader>
+                    <ConfirmPhrase id="convocation-open-confirm" v-model="openingTyped" :phrase="OPEN_PHRASE" />
                     <DialogFooter>
                         <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
-                        <Button type="button" :disabled="processing || openingCountdown > 0" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><CalendarPlus v-else data-icon="inline-start" aria-hidden="true" />{{ openingCountdown > 0 ? `Abrir convocatoria (${openingCountdown})` : 'Abrir convocatoria' }}</Button>
+                        <Button type="button" :disabled="processing || !matchesPhrase(openingTyped, OPEN_PHRASE)" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><CalendarPlus v-else data-icon="inline-start" aria-hidden="true" />Abrir convocatoria</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

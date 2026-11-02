@@ -9,11 +9,16 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { useCountdown } from '@/composables/useCountdown';
+import { computed, ref, watch } from 'vue';
+import ConfirmPhrase from '@/components/domain/ConfirmPhrase.vue';
 import { usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
+import { matchesPhrase } from '@/lib/confirmPhrase';
 
+const PHRASE = 'devolver a borrador';
 const { open, message, confirm, cancel } = usePurgeConfirmation();
-const remaining = useCountdown(open);
+const typed = ref('');
+const ready = computed(() => matchesPhrase(typed.value, PHRASE));
+watch(open, () => { typed.value = ''; });
 </script>
 
 <template>
@@ -30,13 +35,14 @@ const remaining = useCountdown(open);
                 <DialogTitle>Este cambio afecta sílabos en curso</DialogTitle>
                 <DialogDescription>{{ message }}</DialogDescription>
             </DialogHeader>
+            <ConfirmPhrase id="purge-confirm" v-model="typed" :phrase="PHRASE" />
             <DialogFooter>
                 <Button type="button" variant="outline" @click="cancel">
                     Cancelar
                 </Button>
-                <Button type="button" variant="destructive" :disabled="remaining > 0" @click="confirm">
+                <Button type="button" variant="destructive" :disabled="!ready" @click="confirm">
                     <RotateCcw data-icon="inline-start" aria-hidden="true" />
-                    {{ remaining > 0 ? `Guardar (${remaining})` : 'Guardar' }}
+                    Guardar
                 </Button>
             </DialogFooter>
         </DialogContent>

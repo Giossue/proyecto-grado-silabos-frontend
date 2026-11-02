@@ -1,4 +1,5 @@
 import { enableAutoUnmount, flushPromises, mount } from "@vue/test-utils";
+import { typeConfirmation } from '@/test/confirmPhrase';
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -25,10 +26,6 @@ vi.mock("@/api/templateAssistant", async (importOriginal) => ({
 vi.mock("@/components/domain/ai/avatar/useAvatarController", async () => {
   const { ref } = await import("vue");
   return { useAvatarController: () => ({ state: ref({}), applyAgentHint: vi.fn() }) };
-});
-vi.mock("@/composables/useCountdown", async () => {
-  const { ref } = await import("vue");
-  return { useCountdown: () => ref(0) };
 });
 
 vi.mock("@/api/template", async (importOriginal) => ({
@@ -97,6 +94,8 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.findAll('button').some((button) => button.text() === 'Asistente')).toBe(false);
     await wrapper.findAll('button').find((button) => button.text() === 'Editar')!.trigger('click');
     await flushPromises();
+    typeConfirmation('template-edit-confirm', 'editar plantilla');
+    await flushPromises();
     [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Continuar')!.click();
     await flushPromises();
     await wrapper.findAll('button').find((button) => button.text() === 'Asistente')!.trigger('click');
@@ -152,6 +151,8 @@ describe("AdminTemplatePage", () => {
     await flushPromises();
     await wrapper.findAll('button').find((button) => button.text() === 'Editar')!.trigger('click');
     await flushPromises();
+    typeConfirmation('template-edit-confirm', 'editar plantilla');
+    await flushPromises();
     [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Continuar')!.click();
     await flushPromises();
 
@@ -167,6 +168,8 @@ describe("AdminTemplatePage", () => {
     await flushPromises();
     expect(wrapper.find('header[aria-label="Herramientas de la plantilla"]').exists()).toBe(false);
     await wrapper.findAll('button').find((button) => button.text() === 'Editar')!.trigger('click');
+    await flushPromises();
+    typeConfirmation('template-edit-confirm', 'editar plantilla');
     await flushPromises();
     [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Continuar')!.click();
     await flushPromises();
@@ -268,6 +271,8 @@ describe("AdminTemplatePage", () => {
 
     expect(wrapper.findAll('button').some((item) => item.attributes('aria-label') === 'Opciones avanzadas')).toBe(false);
     await wrapper.findAll('button').find((item) => item.text().includes('Editar'))!.trigger('click');
+    await flushPromises();
+    typeConfirmation('template-edit-confirm', 'editar plantilla');
     await flushPromises();
     [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Continuar')!.click();
     await flushPromises();

@@ -87,6 +87,9 @@ describe('SyllabusProcessActions', () => {
 
     const confirm = wrapper.findAll('button').find((item) => item.text().includes('Eliminar convocatoria'));
     expect(confirm).toBeDefined();
+    expect(confirm!.attributes('disabled')).toBeDefined();
+    await wrapper.get('#process-delete-confirm').setValue('eliminar convocatoria');
+    expect(confirm!.attributes('disabled')).toBeUndefined();
     await confirm!.trigger('click');
     await flushPromises();
 
@@ -104,6 +107,10 @@ describe('SyllabusProcessActions', () => {
     expect(wrapper.find('[data-dialog]').text()).toContain('solo para consulta');
     expect(wrapper.find('[data-dialog]').text()).toContain('un cambio de docente no los borra');
 
+    await wrapper.find('[data-dialog] form').trigger('submit');
+    await flushPromises();
+    expect(transitionProcess).not.toHaveBeenCalled();
+    await wrapper.get('#process-transition-confirm').setValue('Cerrar convocatoria');
     await wrapper.find('[data-dialog] form').trigger('submit');
     await flushPromises();
 
@@ -142,6 +149,10 @@ describe('SyllabusProcessActions', () => {
     expect(wrapper.find('[data-dialog]').text()).toContain('Corrección solicitada');
     const destructive = wrapper.find('[data-dialog] button[type="submit"]');
     expect(destructive.text()).toContain('Reanudar y rehacer sílabos');
+    await wrapper.find('[data-dialog] form').trigger('submit');
+    await flushPromises();
+    expect(transitionProcess).toHaveBeenCalledTimes(1);
+    await wrapper.get('#process-transition-confirm').setValue('rehacer silabos');
     await wrapper.find('[data-dialog] form').trigger('submit');
     await flushPromises();
 
