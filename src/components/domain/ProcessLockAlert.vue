@@ -10,7 +10,7 @@ import { formatDateDisplay } from '@/lib/dateDisplay';
 import { paths } from '@/lib/routes';
 import { sessionState } from '@/state/session';
 
-const props = defineProps<{ lock?: LockDetail | null; title?: string; message?: string; hideAction?: boolean; icon?: Component; banner?: boolean }>();
+const props = defineProps<{ lock?: LockDetail | null; title?: string; message?: string; hideAction?: boolean; icon?: Component; banner?: boolean; why?: string }>();
 
 const isAdministrator = computed(() => sessionState.current.value?.active_role?.code === 'administrador');
 const href = computed(() => isAdministrator.value ? paths.admin.convocations : paths.coordination.reviews);
@@ -29,6 +29,7 @@ const summary = computed(() => {
 });
 const deadline = computed(() => props.lock?.delivery_on ? formatDateDisplay(props.lock.delivery_on, { dateStyle: 'long' }) : null);
 const reason = computed(() => {
+    if (props.why) return props.why;
     if (props.message || !props.lock) return null;
     const open = deadline.value ? `abierta, con entrega hasta el ${deadline.value}` : 'abierta';
     if (props.lock.scope === 'process') {

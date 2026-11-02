@@ -52,6 +52,15 @@ describe('ProcessLockAlert', () => {
     expect(document.body.textContent).toContain('se rehacen');
   });
 
+  it('un aviso propio puede traer su «¿Por qué?»', async () => {
+    const wrapper = mount(ProcessLockAlert, {
+      attachTo: document.body, props: { banner: true, title: 'Hay una convocatoria abierta', message: 'Si cambia algo, vuelven a Borrador', why: 'Se pedirá confirmación antes de cambiar', hideAction: true }, global: { stubs },
+    });
+    await wrapper.findAll('button').find((button) => button.text() === '¿Por qué?')!.trigger('click');
+
+    expect(document.body.textContent).toContain('Se pedirá confirmación antes de cambiar');
+  });
+
   it('sirve también para avisos propios sin acción ni detalle', () => {
     const wrapper = mount(ProcessLockAlert, { props: { title: 'Edición no disponible', message: 'La convocatoria está en pausa', hideAction: true }, global: { stubs } });
 
