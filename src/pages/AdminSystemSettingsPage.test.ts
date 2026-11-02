@@ -23,6 +23,10 @@ const settings = (): SystemSettings => ({
   library: { driver: { value: 'koha', source: 'pantalla' }, base_url: { value: 'http://biblioteca.ueb.edu.ec', source: 'pantalla' } },
 });
 const button = (text: string) => [...document.body.querySelectorAll<HTMLButtonElement>('button')].filter((item) => item.textContent?.trim() === text);
+const openSection = async (title: string): Promise<void> => {
+  [...document.body.querySelectorAll<HTMLButtonElement>('[data-slot="accordion-trigger"]')].find((item) => item.textContent?.includes(title))!.click();
+  await flushPromises();
+};
 // Los campos avisan el cambio en el siguiente ciclo: hay que esperarlo antes de guardar.
 const setInput = async (id: string, value: string): Promise<void> => {
   const input = document.body.querySelector<HTMLInputElement>(`#${id}`)!;
@@ -41,10 +45,23 @@ describe('Configuración › Sistema', () => {
   it('muestra la clave solo por sus últimos 4 caracteres, sin decir de dónde sale cada ajuste', async () => {
     const wrapper = mount(AdminSystemSettingsPage, { attachTo: document.body });
     await flushPromises();
+    await openSection('Asistente de IA');
 
     expect(wrapper.text()).toContain('Clave guardada · termina en …4c2e');
     expect(wrapper.text()).not.toContain('variable de entorno');
     expect(document.body.querySelector<HTMLInputElement>('#settings-ai-key')!.value).toBe('');
+  });
+
+  it('muestra cada opción en su acordeón, con Notificaciones abierta al entrar', async () => {
+    mount(AdminSystemSettingsPage, { attachTo: document.body });
+    await flushPromises();
+
+    expect([...document.body.querySelectorAll('[data-slot="accordion-trigger"]')].map((item) => item.textContent?.trim().split(/Avisos|Proveedor|Catálogo/)[0])).toEqual(['Notificaciones', 'Asistente de IA', 'Biblioteca (Koha)']);
+    expect(document.body.querySelector('#settings-digest-time')).not.toBeNull();
+    expect(document.body.querySelector('#settings-ai-driver')).toBeNull();
+    await openSection('Asistente de IA');
+    expect(document.body.querySelector('#settings-ai-driver')).not.toBeNull();
+    expect(document.body.querySelector('#settings-digest-time')).toBeNull();
   });
 
   it('guarda las notificaciones sin pedir contraseña', async () => {
@@ -61,8 +78,9 @@ describe('Configuración › Sistema', () => {
   it('la IA pide la contraseña y solo manda la clave si se escribió una nueva', async () => {
     mount(AdminSystemSettingsPage, { attachTo: document.body });
     await flushPromises();
+    await openSection('Asistente de IA');
 
-    button('Guardar')[1]!.click();
+    button('Guardar')[0]!.click();
     await flushPromises();
     expect(updateSystemSettings).not.toHaveBeenCalled();
     await setInput('confirm-current-password', 'Demo-2026!');
@@ -72,7 +90,7 @@ describe('Configuración › Sistema', () => {
     expect(updateSystemSettings).toHaveBeenLastCalledWith('ia', expect.objectContaining({ current_password: 'Demo-2026!', driver: 'deepseek' }));
 
     await setInput('settings-ai-key', 'sk-nueva-11112222');
-    button('Guardar')[1]!.click();
+    button('Guardar')[0]!.click();
     await flushPromises();
     await setInput('confirm-current-password', 'Demo-2026!');
     document.body.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -81,7 +99,7 @@ describe('Configuración › Sistema', () => {
 
     button('Quitar la clave')[0]!.click();
     await flushPromises();
-    button('Guardar')[1]!.click();
+    button('Guardar')[0]!.click();
     await flushPromises();
     await setInput('confirm-current-password', 'Demo-2026!');
     document.body.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -94,11 +112,13 @@ describe('Configuración › Sistema', () => {
     mount(AdminSystemSettingsPage, { attachTo: document.body });
     await flushPromises();
 
-    button('Probar conexión')[1]!.click();
+    await openSection('Biblioteca');
+    button('Probar conexión')[0]!.click();
     await flushPromises();
     expect(testSystemConnection).toHaveBeenCalledWith('biblioteca');
     expect(toast.success).toHaveBeenCalledWith('Conexión correcta: 3 bibliotecas');
 
+    await openSection('Asistente de IA');
     button('Probar conexión')[0]!.click();
     await flushPromises();
     expect(toast.error).toHaveBeenCalledWith('El proveedor no aceptó la clave');

@@ -1,18 +1,17 @@
 <script setup lang="ts">
-import { PlugZap, Save, Trash2 } from '@lucide/vue';
+import { Bell, Bot, Library, PlugZap, Save, Trash2 } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { getSystemSettings, testSystemConnection, updateSystemSettings, type SettingsSection, type SystemSettings } from '@/api/systemSettings';
-import Heading from '@/components/Heading.vue';
 import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
@@ -26,6 +25,8 @@ const testing = ref<'ia' | 'biblioteca' | null>(null);
 const errors = ref<Record<string, string>>({});
 const requestError = ref<string | null>(null);
 const confirmFor = ref<'ia' | 'biblioteca' | null>(null);
+// Una sección abierta a la vez; empieza con Notificaciones.
+const openSection = ref<string | undefined>('notificaciones');
 
 const notifications = ref({ emails: true, digest: true, digest_time: '08:00' });
 const ai = ref({ driver: 'disabled', base_url: '', model: '', api_key: '', clear_api_key: false, connect_timeout: 2, timeout: 20 });
@@ -132,8 +133,17 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
         <template v-else>
             <FeedbackAlert v-if="requestError" :message="requestError" />
 
-            <section class="flex flex-col gap-6" aria-labelledby="ajustes-notificaciones">
-                <Heading id="ajustes-notificaciones" variant="small" title="Notificaciones" description="Avisos por correo y resumen diario para Coordinación" />
+            <Accordion v-model="openSection" type="single" collapsible class="-mt-2">
+
+            <AccordionItem value="notificaciones">
+                <AccordionTrigger>
+                    <span class="flex items-center gap-3 text-left">
+                        <Bell class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        <span class="flex flex-col gap-0.5"><span class="font-medium">Notificaciones</span><span class="text-sm font-normal text-muted-foreground">Avisos por correo y resumen diario para Coordinación</span></span>
+                    </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                <div class="flex flex-col gap-6 px-1 pt-2 pb-2">
                 <Field orientation="horizontal">
                     <Switch id="settings-emails" v-model="notifications.emails" />
                     <FieldLabel for="settings-emails" class="font-normal">Enviar avisos por correo</FieldLabel>
@@ -152,12 +162,20 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                         <Spinner v-if="saving === 'notificaciones'" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar
                     </Button>
                 </div>
-            </section>
+                </div>
+                </AccordionContent>
+            </AccordionItem>
 
-            <Separator />
 
-            <section class="flex flex-col gap-6" aria-labelledby="ajustes-ia">
-                <Heading id="ajustes-ia" variant="small" title="Asistente de IA" description="Proveedor que responde al asistente del sílabo y de la plantilla" />
+            <AccordionItem value="ia">
+                <AccordionTrigger>
+                    <span class="flex items-center gap-3 text-left">
+                        <Bot class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        <span class="flex flex-col gap-0.5"><span class="font-medium">Asistente de IA</span><span class="text-sm font-normal text-muted-foreground">Proveedor que responde al asistente del sílabo y de la plantilla</span></span>
+                    </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                <div class="flex flex-col gap-6 px-1 pt-2 pb-2">
                 <Field :data-invalid="Boolean(errors.driver)">
                     <FieldLabel for="settings-ai-driver" required>Proveedor</FieldLabel>
                     <Select v-model="ai.driver">
@@ -213,12 +231,20 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                         <Spinner v-if="testing === 'ia'" data-icon="inline-start" /><PlugZap v-else data-icon="inline-start" aria-hidden="true" />Probar conexión
                     </Button>
                 </div>
-            </section>
+                </div>
+                </AccordionContent>
+            </AccordionItem>
 
-            <Separator />
 
-            <section class="flex flex-col gap-6" aria-labelledby="ajustes-biblioteca">
-                <Heading id="ajustes-biblioteca" variant="small" title="Biblioteca (Koha)" description="Catálogo donde los docentes buscan los libros de la bibliografía" />
+            <AccordionItem value="biblioteca">
+                <AccordionTrigger>
+                    <span class="flex items-center gap-3 text-left">
+                        <Library class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                        <span class="flex flex-col gap-0.5"><span class="font-medium">Biblioteca (Koha)</span><span class="text-sm font-normal text-muted-foreground">Catálogo donde los docentes buscan los libros de la bibliografía</span></span>
+                    </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                <div class="flex flex-col gap-6 px-1 pt-2 pb-2">
                 <Field>
                     <FieldLabel for="settings-library-driver" required>Búsqueda en el catálogo</FieldLabel>
                     <Select v-model="library.driver">
@@ -241,7 +267,10 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                         <Spinner v-if="testing === 'biblioteca'" data-icon="inline-start" /><PlugZap v-else data-icon="inline-start" aria-hidden="true" />Probar conexión
                     </Button>
                 </div>
-            </section>
+                </div>
+                </AccordionContent>
+            </AccordionItem>
+            </Accordion>
         </template>
 
         <PasswordConfirmDialog
