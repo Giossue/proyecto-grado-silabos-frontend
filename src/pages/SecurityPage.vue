@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Save } from '@lucide/vue';
+import { Mail, Save } from '@lucide/vue';
 import { ref } from 'vue';
 import { ApiError } from '@/api/client';
-import { updatePassword } from '@/api/session';
+import { requestPasswordRecovery, updatePassword } from '@/api/session';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -21,6 +21,24 @@ const password = ref('');
 const passwordConfirmation = ref('');
 const processing = ref(false);
 const errors = ref<Record<string, string>>({});
+
+const recoverySent = ref(false);
+const recoveryError = ref<string | null>(null);
+const recoveryProcessing = ref(false);
+const sendRecoveryLink = async (): Promise<void> => {
+    const email = sessionState.current.value?.user.email;
+    if (!email) return;
+    recoveryProcessing.value = true;
+    recoveryError.value = null;
+    try {
+        await requestPasswordRecovery(email);
+        recoverySent.value = true;
+    } catch (reason) {
+        recoveryError.value = reason instanceof ApiError ? reason.message : 'No se pudo enviar el enlace';
+    } finally {
+        recoveryProcessing.value = false;
+    }
+};
 
 const submit = async (): Promise<void> => {
     processing.value = true;
@@ -83,6 +101,19 @@ const submit = async (): Promise<void> => {
                         </Button>
                     </div>
                 </form>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <Heading variant="small" title="Restablecer por correo" :description="`Le enviaremos un enlace a ${sessionState.current.value?.user.email ?? 'su correo'}. Al cambiar la contraseña con él, se cerrará la sesión en todos los dispositivos`" />
+                <InputError :message="recoveryError ?? undefined" />
+                <p v-if="recoverySent" class="text-sm text-muted-foreground" role="status">Enlace enviado. Revise su correo</p>
+                <div>
+                    <Button type="button" variant="outline" :disabled="recoveryProcessing" @click="sendRecoveryLink">
+                        <Spinner v-if="recoveryProcessing" data-icon="inline-start" />
+                        <Mail v-else data-icon="inline-start" aria-hidden="true" />
+                        {{ recoverySent ? 'Enviar de nuevo' : 'Enviar enlace' }}
+                    </Button>
+                </div>
             </div>
 
             <ManageTwoFactor @loading="loading = $event" />

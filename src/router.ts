@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from "vue-router";
 import { sessionState } from "@/state/session";
+import { trackSettingsReturn } from "@/state/settingsReturn";
 import { rememberIntendedRoute } from "@/lib/intended-route";
 import {
   paths,
@@ -56,7 +57,8 @@ export const router = createRouter({
   routes: [
     { path: "/ingresar", component: LoginPage, meta: { guest: true } },
     { path: "/recuperar-contrasena", component: PasswordRecoveryPage, meta: { guest: true } },
-    { path: "/restablecer-contrasena", component: ResetPasswordPage, meta: { guest: true } },
+    // Se puede abrir con la sesión iniciada: al terminar, el servidor la cierra en todos los dispositivos.
+    { path: "/restablecer-contrasena", component: ResetPasswordPage },
     { path: "/activar-cuenta", component: ActivateAccountPage, meta: { shell: false } },
     { path: "/api/v1/authentication/email-verification/:user/:hash", component: VerifyEmailPage, meta: { shell: false } },
     { path: "/verificar-correo", component: VerifyEmailPage, meta: { requiresAuth: true, shell: false } },
@@ -118,6 +120,8 @@ export const router = createRouter({
     { path: "/:pathMatch(.*)*", component: NotFoundPage, meta: { title: "Página no encontrada" } },
   ],
 });
+
+router.afterEach(trackSettingsReturn);
 
 router.beforeEach(async (to) => {
   const needsSession = to.meta.requiresAuth === true || to.meta.guest === true;

@@ -177,7 +177,7 @@ const librarian = { ...authenticated, roles: ['bibliotecario'] as const };
 export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'login', path: paths.login, component: 'LoginPage', guest: true },
   { name: 'password-recovery', path: paths.passwordRecovery, component: 'PasswordRecoveryPage', guest: true },
-  { name: 'password-reset', path: paths.passwordReset, component: 'ResetPasswordPage', guest: true },
+  { name: 'password-reset', path: paths.passwordReset, component: 'ResetPasswordPage' },
   { name: 'email-verification-callback', path: '/api/v1/authentication/email-verification/:user/:hash', component: 'VerifyEmailPage' },
   { name: 'email-verification-required', path: paths.emailVerificationRequired, component: 'VerifyEmailPage', ...authenticated },
   { name: 'two-factor-challenge', path: paths.twoFactorChallenge, component: 'TwoFactorChallengePage', guest: true },

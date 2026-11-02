@@ -1,17 +1,26 @@
 <script setup lang="ts">
-import { ShieldCheck, UserRound } from '@lucide/vue';
+import { ArrowLeft, ShieldCheck, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import PageFrame from '@/components/domain/PageFrame.vue';
-import { areaForPath, areaSetting, paths } from '@/lib/routes';
+import { Button } from '@/components/ui/button';
+import { areaForPath, areaSetting, paths, roleHome } from '@/lib/routes';
 import { cn } from '@/lib/utils';
+import { sessionState } from '@/state/session';
+import { settingsReturn } from '@/state/settingsReturn';
 
 const route = useRoute();
+const router = useRouter();
 const area = computed(() => areaForPath(route.path));
 const sidebarNavItems = computed(() => [
     { title: 'Perfil', href: area.value ? areaSetting(area.value, 'profile') : paths.configuration.profile, icon: UserRound },
     { title: 'Seguridad', href: area.value ? areaSetting(area.value, 'security') : paths.configuration.security, icon: ShieldCheck },
 ]);
+
+// Vuelve a la pantalla de la que se vino; si se abrió Configuración directo, al inicio del rol.
+const goBack = (): void => {
+    void router.push(settingsReturn.value ?? roleHome(sessionState.current.value?.active_role?.code));
+};
 </script>
 
 <template>
@@ -20,6 +29,9 @@ const sidebarNavItems = computed(() => [
         description="Administre su perfil y seguridad"
         size="wide"
     >
+        <template #actions>
+            <Button type="button" variant="outline" @click="goBack"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Volver</Button>
+        </template>
         <div class="flex min-w-0 flex-col gap-6">
             <nav class="flex h-11 items-center justify-start gap-2 border-b" aria-label="Configuración">
                 <RouterLink

@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { paths } from '@/lib/routes';
+import { sessionState } from '@/state/session';
 
 const route = useRoute();
 const router = useRouter();
@@ -36,6 +37,7 @@ const submit = async (): Promise<void> => {
     const result = await resetForgottenPassword(email.value, token.value, password.value, passwordConfirmation.value);
     password.value = '';
     passwordConfirmation.value = '';
+    sessionState.clear();
     await router.replace({ path: paths.login, query: { status: result.message } });
   } catch (reason) {
     if (reason instanceof ApiError) {
