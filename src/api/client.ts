@@ -15,7 +15,7 @@ export class ApiError extends Error {
 const baseUrl = (
   window.__SILABOS_CONFIG__?.apiUrl ||
   import.meta.env.VITE_API_URL ||
-  (import.meta.env.DEV ? 'http://localhost:8000' : '')
+  (import.meta.env.DEV ? `${window.location.protocol}//${window.location.hostname}:8000` : '')
 ).replace(/\/$/, '');
 
 if (!baseUrl) throw new Error('Falta configurar la URL pública de la API');
