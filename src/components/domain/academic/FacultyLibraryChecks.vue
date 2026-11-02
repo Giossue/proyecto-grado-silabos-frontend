@@ -7,7 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-const props = defineProps<{ libraries: CatalogLibrary[] | null; error: string | null; saved?: string[]; idPrefix: string; invalid?: string[] }>();
+const props = defineProps<{ libraries: CatalogLibrary[] | null; error: string | null; saved?: string[]; idPrefix: string; invalid?: string[]; disabled?: boolean }>();
 const chosen = defineModel<string[]>({ required: true });
 
 // Una biblioteca guardada que Koha ya no publica se sigue mostrando, para poder quitarla.
@@ -39,7 +39,7 @@ const toggle = (code: string, checked: boolean | 'indeterminate'): void => {
         <p v-else-if="libraries === null" class="text-sm text-muted-foreground">Consultando Koha</p>
         <FieldGroup v-else class="gap-3">
             <Field v-for="library in rows" :key="library.id" orientation="horizontal">
-                <Checkbox :id="`${idPrefix}-${library.id}`" :model-value="chosen.includes(library.id)" @update:model-value="toggle(library.id, $event)" />
+                <Checkbox :id="`${idPrefix}-${library.id}`" :disabled="disabled" :model-value="chosen.includes(library.id)" @update:model-value="toggle(library.id, $event)" />
                 <FieldLabel :for="`${idPrefix}-${library.id}`" class="font-normal">{{ library.name }}</FieldLabel>
             </Field>
         </FieldGroup>
