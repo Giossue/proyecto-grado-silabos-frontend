@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDateDisplay } from '@/lib/dateDisplay';
+import { libraryCommentLines } from '@/lib/reviewComment';
 import { reviewAreaPaths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
@@ -196,7 +197,10 @@ watch(() => route.params.revision, (current, before) => { if (current !== before
               <ul v-if="version.events.length" class="ml-5 flex flex-col gap-2 border-l py-2 pl-4 text-sm">
                 <li v-for="(event, index) in version.events" :key="`${event.kind}-${index}`" class="flex flex-col">
                   <span>{{ eventText(event) }}</span>
-                  <span v-if="event.comment" class="text-muted-foreground">«{{ event.comment }}»</span>
+                  <ul v-if="event.comment && event.kind === 'devuelto_biblioteca'" class="list-disc pl-4 text-muted-foreground">
+                    <li v-for="line in libraryCommentLines(event.comment)" :key="line">{{ line }}</li>
+                  </ul>
+                  <span v-else-if="event.comment" class="text-muted-foreground">«{{ event.comment }}»</span>
                   <span class="text-xs text-muted-foreground">{{ time(event.at) }}</span>
                 </li>
               </ul>
