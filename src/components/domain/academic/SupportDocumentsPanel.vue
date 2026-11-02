@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Eye, Trash2, Upload } from '@lucide/vue';
+import { Trash2, Upload } from '@lucide/vue';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import {
@@ -19,7 +19,7 @@ import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
@@ -174,8 +174,6 @@ onMounted(() => { void load(); });
             <TableCell>{{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}</TableCell>
             <TableCell v-if="manages" class="text-center">
               <TableActionsMenu :label="`Acciones de ${document.title}`">
-                <DropdownMenuItem :disabled="document.view !== 'lista'" @select="view(document)"><Eye aria-hidden="true" />Ver</DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive" @select="askRemoval(document)"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
               </TableActionsMenu>
             </TableCell>
