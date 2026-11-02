@@ -7,10 +7,11 @@ import { getSession } from '@/api/session';
 import ImportSpreadsheetDialog from '@/components/domain/ImportSpreadsheetDialog.vue';
 import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
 import CatalogSection from '@/components/domain/academic/CatalogSection.vue';
-import { Building2, GraduationCap, Plus } from '@lucide/vue';
+import { Building2, GraduationCap, Plus, TriangleAlert } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import type { GovernanceSection } from '@/types/academic';
@@ -69,6 +70,7 @@ onMounted(load);
 
 <template>
     <PageFrame :title="sectionContent.title" :description="sectionContent.description" :icon="tabIcons[entity]" size="wide" :loading="!data">
+        <template v-if="data?.lock_reason" #banner><ProcessLockAlert banner hide-action :icon="TriangleAlert" title="Hay una convocatoria abierta" message="Si cambia una facultad o carrera, sus sílabos enviados o aprobados vuelven a Borrador" /></template>
         <template #actions>
             <ImportSpreadsheetDialog
                 v-if="data && entity === 'carrera'"
