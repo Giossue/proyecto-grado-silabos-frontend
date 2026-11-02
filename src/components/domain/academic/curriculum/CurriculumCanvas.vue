@@ -124,7 +124,7 @@ const summaryRows = computed(() => [
 ]);
 
 const flowId = `curriculum-${props.curriculum.id}`;
-const { setEdges, setNodes, updateNode, fitView, viewport } = useVueFlow(flowId);
+const { setEdges, setNodes, updateNode, fitView, setViewport, viewport } = useVueFlow(flowId);
 const canvasElement = useTemplateRef<HTMLElement>("canvasElement");
 const canvasSize = ref({ width: 0, height: 0 });
 useResizeObserver(canvasElement, (entries) => {
@@ -137,10 +137,18 @@ const userMoved = ref(false);
 const onMoveStart = ({ event }: { event?: { sourceEvent?: unknown } }): void => {
   if (event?.sourceEvent) userMoved.value = true;
 };
+// fitView mide los nodos y puede dejar la malla corrida respecto al área que permite mover el lienzo; entonces el
+// primer movimiento la acomodaba de golpe. Se centra con las mismas medidas que usa ese límite.
+const fitCentered = async (): Promise<void> => {
+  await fitView({ padding: 0.08 });
+  const { width, height } = canvasSize.value;
+  const zoom = viewport.value.zoom;
+  await setViewport({ x: (width - laneWidth.value * zoom) / 2, y: (height - contentHeight.value * zoom) / 2, zoom });
+};
 watch(canvasSize, async ({ width, height }) => {
   if (userMoved.value || width === 0 || height === 0) return;
   await nextTick();
-  await fitView({ padding: 0.08 });
+  await fitCentered();
 });
 
 const editingSubjectId = ref<string | null>(null);
@@ -197,19 +205,21 @@ const laneWidth = computed(() => {
   return Math.max(1120, widestCycle + 200);
 });
 
-const navigationExtent = computed<CoordinateExtent>(() => {
-  const contentHeight = Math.max(
+const contentHeight = computed(() =>
+  Math.max(
     laneHeight - laneInset,
     props.curriculum.cycle_count * laneHeight - laneInset,
-  );
+  ),
+);
 
+const navigationExtent = computed<CoordinateExtent>(() => {
   const zoom = Math.max(viewport.value?.zoom ?? 1, CANVAS_ZOOM.min);
   const slackX = Math.max(0, (canvasSize.value.width / zoom - laneWidth.value - navigationPadding * 2) / 2);
-  const slackY = Math.max(0, (canvasSize.value.height / zoom - contentHeight - navigationPadding * 2) / 2);
+  const slackY = Math.max(0, (canvasSize.value.height / zoom - contentHeight.value - navigationPadding * 2) / 2);
 
   return [
     [-navigationPadding - slackX, -navigationPadding - slackY],
-    [laneWidth.value + navigationPadding + slackX, contentHeight + navigationPadding + slackY],
+    [laneWidth.value + navigationPadding + slackX, contentHeight.value + navigationPadding + slackY],
   ];
 });
 
