@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft, ShieldCheck, UserRound } from '@lucide/vue';
+import { ArrowLeft, Settings, ShieldCheck, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PageFrame from '@/components/domain/PageFrame.vue';
@@ -9,6 +9,9 @@ import { areaForPath, areaSetting, paths, roleHome } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { sessionState } from '@/state/session';
 import { settingsReturn } from '@/state/settingsReturn';
+
+// Ancho de la tarjeta: el encabezado y las pestañas se alinean con ella (en px, igual que el encabezado).
+const CONTENT_WIDTH = 576;
 
 const route = useRoute();
 const router = useRouter();
@@ -29,10 +32,12 @@ const goBack = (): void => {
         title="Configuración"
         description="Administre su perfil y seguridad"
         size="wide"
+        :icon="Settings"
+        :header-width="CONTENT_WIDTH"
     >
         <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack"><ArrowLeft aria-hidden="true" />Volver</Button></template>
         <div class="flex min-w-0 flex-col gap-6">
-            <nav class="mx-auto flex h-11 w-full max-w-xl items-center justify-start gap-2 border-b" aria-label="Configuración">
+            <nav class="mx-auto flex h-11 w-full items-center justify-start gap-2 border-b" :style="{ maxWidth: `${CONTENT_WIDTH}px` }" aria-label="Configuración">
                 <RouterLink
                     v-for="item in sidebarNavItems"
                     :key="item.href"
@@ -48,7 +53,7 @@ const goBack = (): void => {
                 </RouterLink>
             </nav>
 
-            <Card class="mx-auto w-full min-w-0 max-w-xl gap-12 px-6">
+            <Card class="mx-auto w-full min-w-0 gap-12 px-6" :style="{ maxWidth: `${CONTENT_WIDTH}px` }">
                 <slot />
             </Card>
         </div>
