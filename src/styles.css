@@ -1026,3 +1026,23 @@
         white-space: nowrap;
     }
 }
+
+/* En las tablas de captura, la columna de acciones queda fija al borde derecho: no se pierde al desplazar la tabla. */
+[data-sticky-end] {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    box-shadow: -1px 0 0 var(--border);
+}
+thead [data-sticky-end] {
+    background-color: var(--field);
+}
+.dark thead [data-sticky-end] {
+    background-color: var(--muted);
+}
+tbody tr:nth-child(odd) > [data-sticky-end] {
+    background-color: var(--card);
+}
+tbody tr:nth-child(even) > [data-sticky-end] {
+    background-color: color-mix(in oklab, var(--muted) 50%, var(--card));
+}

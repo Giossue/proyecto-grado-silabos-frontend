@@ -94,7 +94,7 @@ export default defineComponent({
                 });
                 return h(TableRow, { key: index }, () => [
                     ...cells,
-                    list ? h(TableCell, { class: 'w-10 align-top' }, () => h(Button, {
+                    list ? h(TableCell, { class: 'w-10 align-top', 'data-sticky-end': '' }, () => h(Button, {
                         type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled || values.length <= rows.length,
                         'aria-label': `Quitar fila ${number}`,
                         onClick: () => update(path, { ...current, content: values.filter((__, other) => other !== index) }),
@@ -107,7 +107,7 @@ export default defineComponent({
                         ...(row.content ?? []).map((cell) => h(TableHead, {
                             colspan: Number(cell.attrs?.colspan ?? 1), rowspan: Number(cell.attrs?.rowspan ?? 1), class: 'h-auto py-2 whitespace-normal',
                         }, () => responseText(cell).trim())),
-                        list && rowIndex === 0 ? h(TableHead, { rowspan: headers.length, class: 'w-10' }, () => h('span', { class: 'sr-only' }, 'Acciones')) : null,
+                        list && rowIndex === 0 ? h(TableHead, { rowspan: headers.length, class: 'w-10', 'data-sticky-end': '' }, () => h('span', { class: 'sr-only' }, 'Acciones')) : null,
                     ]))) : null,
                     h(TableBody, {}, () => body),
                 ]),

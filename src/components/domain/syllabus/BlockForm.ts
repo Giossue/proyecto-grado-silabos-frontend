@@ -163,14 +163,14 @@ export default defineComponent({
                 h(Table, { label: capitalize(name), cards: false }, () => [
                     h(TableHeader, {}, () => h(TableRow, {}, () => [
                         ...columns.map(([key, column]) => h(TableHead, { class: column.type === 'number' ? 'w-20 text-center' : 'min-w-48 whitespace-normal' }, () => column.title ?? key)),
-                        resizable ? h(TableHead, { class: clearable ? 'w-20' : 'w-10' }, () => h('span', { class: 'sr-only' }, 'Acciones')) : null,
+                        resizable ? h(TableHead, { class: clearable ? 'w-20' : 'w-10', 'data-sticky-end': '' }, () => h('span', { class: 'sr-only' }, 'Acciones')) : null,
                     ])),
                     h(TableBody, {}, () => items.map((_, index) => {
                         const itemPath = [...path, index];
                         const rowName = `${name} ${first + index + 1}`;
                         return h(TableRow, { key: index }, () => [
                             ...columns.map(([key, column]) => h(TableCell, { class: 'align-top' }, () => applies(column, [...itemPath, key]) ? input(column, [...itemPath, key], `${column.title ?? key}, ${rowName}`, true) : null)),
-                            resizable ? h(TableCell, { class: 'align-top' }, () => clearable
+                            resizable ? h(TableCell, { class: 'align-top', 'data-sticky-end': '' }, () => clearable
                                 ? h('div', { class: 'flex' }, [clearButton(schema, path, index, rowName), removeButton(schema, path, index, rowName)])
                                 : removeButton(schema, path, index, rowName)) : null,
                         ]);
