@@ -29,9 +29,7 @@ const goBack = (): void => {
         description="Administre su perfil y seguridad"
         size="wide"
     >
-        <template #actions>
-            <Button type="button" variant="outline" @click="goBack"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Volver</Button>
-        </template>
+        <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack"><ArrowLeft aria-hidden="true" />Volver</Button></template>
         <div class="flex min-w-0 flex-col gap-6">
             <nav class="flex h-11 items-center justify-start gap-2 border-b" aria-label="Configuración">
                 <RouterLink
