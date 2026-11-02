@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { areaForPath, areaSetting, paths, roleHome } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { sessionState } from '@/state/session';
@@ -47,9 +48,9 @@ const goBack = (): void => {
                 </RouterLink>
             </nav>
 
-            <section class="flex min-w-0 max-w-xl flex-col gap-12">
+            <Card class="min-w-0 max-w-xl gap-12 px-6">
                 <slot />
-            </section>
+            </Card>
         </div>
     </PageFrame>
 </template>

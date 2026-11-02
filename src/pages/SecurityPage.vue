@@ -4,11 +4,13 @@ import { ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { requestPasswordRecovery, updatePassword } from '@/api/session';
 import Heading from '@/components/Heading.vue';
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import InputError from '@/components/InputError.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import ManageTwoFactor from '@/components/ManageTwoFactor.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
@@ -22,6 +24,7 @@ const passwordConfirmation = ref('');
 const processing = ref(false);
 const errors = ref<Record<string, string>>({});
 
+const recoveryOpen = ref(false);
 const recoverySent = ref(false);
 const recoveryError = ref<string | null>(null);
 const recoveryProcessing = ref(false);
@@ -33,6 +36,7 @@ const sendRecoveryLink = async (): Promise<void> => {
     try {
         await requestPasswordRecovery(email);
         recoverySent.value = true;
+        recoveryOpen.value = false;
     } catch (reason) {
         recoveryError.value = reason instanceof ApiError ? reason.message : 'No se pudo enviar el enlace';
     } finally {
@@ -105,12 +109,10 @@ const submit = async (): Promise<void> => {
 
             <div class="flex flex-col gap-4">
                 <Heading variant="small" title="Restablecer por correo" :description="`Le enviaremos un enlace a ${sessionState.current.value?.user.email ?? 'su correo'}. Al cambiar la contraseña con él, se cerrará la sesión en todos los dispositivos`" />
-                <InputError :message="recoveryError ?? undefined" />
                 <p v-if="recoverySent" class="text-sm text-muted-foreground" role="status">Enlace enviado. Revise su correo</p>
                 <div>
-                    <Button type="button" :disabled="recoveryProcessing" @click="sendRecoveryLink">
-                        <Spinner v-if="recoveryProcessing" data-icon="inline-start" />
-                        <Mail v-else data-icon="inline-start" aria-hidden="true" />
+                    <Button type="button" @click="recoveryError = null; recoveryOpen = true">
+                        <Mail data-icon="inline-start" aria-hidden="true" />
                         {{ recoverySent ? 'Enviar de nuevo' : 'Enviar enlace' }}
                     </Button>
                 </div>
@@ -118,5 +120,22 @@ const submit = async (): Promise<void> => {
 
             <ManageTwoFactor @loading="loading = $event" />
         </div>
+        <Dialog v-model:open="recoveryOpen">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Enviar enlace para restablecer la contraseña</DialogTitle>
+                    <DialogDescription>Se enviará a {{ sessionState.current.value?.user.email }}. Al cambiar la contraseña con él, se cerrará la sesión en todos los dispositivos</DialogDescription>
+                </DialogHeader>
+                <FeedbackAlert v-if="recoveryError" :message="recoveryError" />
+                <DialogFooter>
+                    <DialogClose as-child><Button type="button" variant="outline" :disabled="recoveryProcessing">Cancelar</Button></DialogClose>
+                    <Button type="button" :disabled="recoveryProcessing" @click="sendRecoveryLink">
+                        <Spinner v-if="recoveryProcessing" data-icon="inline-start" />
+                        <Mail v-else data-icon="inline-start" aria-hidden="true" />
+                        Enviar enlace
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </SettingsLayout>
 </template>
