@@ -59,16 +59,17 @@ describe('ParallelBulkActions', () => {
         wrapper.unmount();
     });
 
-    it('impide crear paralelos en lote sin elegir docente', async () => {
+    it('«Agregar paralelos» queda deshabilitado mientras falte la jornada o el docente', async () => {
         const wrapper = mountBar();
         (wrapper.vm as unknown as { $: { setupState: { openAdd: () => void } } }).$.setupState.openAdd();
         await flushPromises();
-        [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Agregar paralelos')!.click();
+        const add = [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Agregar paralelos')!;
+        add.click();
         await flushPromises();
 
+        expect(add.disabled).toBe(true);
         expect(api.createParallels).not.toHaveBeenCalled();
         expect(wrapper.emitted('clear')).toBeUndefined();
-        expect(document.body.textContent).toContain('Elija la jornada y el docente de los nuevos paralelos');
         wrapper.unmount();
     });
 

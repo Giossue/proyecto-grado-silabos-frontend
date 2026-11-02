@@ -183,9 +183,10 @@ describe('LibraryReviewDetailPage', () => {
     await flushPromises();
 
     await openReturn(wrapper);
+    const send = document.querySelector<HTMLButtonElement>('#library-comment-form button[type="submit"]')!;
+    expect(send.disabled).toBe(true);
     await submitReturn();
 
-    expect(document.body.textContent).toContain('Elija al menos un motivo');
     expect(commentLibraryReview).not.toHaveBeenCalled();
     wrapper.unmount();
   });

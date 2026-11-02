@@ -73,12 +73,11 @@ describe('ParallelCreationSheet', () => {
     expect(button('Docente del nuevo paralelo')?.textContent).toContain('Elija el docente');
     expect(button('Docente del nuevo paralelo')?.getAttribute('aria-required')).toBe('true');
 
+    expect(button('Guardar nuevo paralelo')!.hasAttribute('disabled')).toBe(true);
     button('Guardar nuevo paralelo')!.click();
     await flushPromises();
 
     expect(api.createParallels).not.toHaveBeenCalled();
-    expect(button('Docente del nuevo paralelo')?.getAttribute('aria-invalid')).toBe('true');
-    expect(document.body.textContent).toContain('Escriba el código y elija la jornada y el docente del paralelo');
     wrapper.unmount();
   });
 
@@ -113,11 +112,11 @@ describe('ParallelCreationSheet', () => {
     code.value = ' ';
     code.dispatchEvent(new Event('input'));
     await flushPromises();
+    expect(button('Guardar paralelo A')!.hasAttribute('disabled')).toBe(true);
     button('Guardar paralelo A')!.click();
     await flushPromises();
 
     expect(api.updateParallel).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain('Escriba el código y elija la jornada del paralelo');
     wrapper.unmount();
   });
 

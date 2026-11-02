@@ -47,8 +47,7 @@ describe('SignatureDialog', () => {
     const wrapper = mountDialog(run);
     await flushPromises();
 
-    await confirmSignatureDialog();
-    expect(dialogText()).toContain('Elija su archivo .p12 o .pfx');
+    expect((document.querySelector('[data-testid="signature-form"] button[type="submit"]') as HTMLButtonElement).disabled).toBe(true);
     expect(run).not.toHaveBeenCalled();
     wrapper.unmount();
   });

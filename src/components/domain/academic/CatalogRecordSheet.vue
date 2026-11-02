@@ -163,7 +163,7 @@ const submit = async (): Promise<void> => {
                             <Button v-if="step === 1" type="button" variant="outline" @click="close">Cancelar</Button>
                             <Button v-else type="button" variant="outline" @click="goTo(1)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
                             <Button v-if="step === 1" type="submit">Siguiente<ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
-                            <Button v-else type="submit" :disabled="processing">
+                            <Button v-else type="submit" :disabled="processing || (koha !== null && chosenLibraries.length === 0)">
                                 <Spinner v-if="processing" data-icon="inline-start" />
                                 <Plus v-else data-icon="inline-start" aria-hidden="true" />
                                 {{ submitLabel }}

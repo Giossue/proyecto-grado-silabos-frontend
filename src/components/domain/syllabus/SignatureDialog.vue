@@ -98,7 +98,7 @@ const submit = async (): Promise<void> => {
         <Alert v-if="errors.general" variant="destructive" role="alert"><AlertDescription>{{ errors.general }}</AlertDescription></Alert>
         <DialogFooter>
           <DialogClose as-child><Button type="button" variant="outline" :disabled="working">Cancelar</Button></DialogClose>
-          <Button type="submit" :disabled="working"><Spinner v-if="working" data-icon="inline-start" /><FileSignature v-else data-icon="inline-start" aria-hidden="true" />{{ confirmLabel }}</Button>
+          <Button type="submit" :disabled="working || !certificate || !password"><Spinner v-if="working" data-icon="inline-start" /><FileSignature v-else data-icon="inline-start" aria-hidden="true" />{{ confirmLabel }}</Button>
         </DialogFooter>
       </form>
     </DialogContent>

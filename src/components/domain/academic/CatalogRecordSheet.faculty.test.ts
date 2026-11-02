@@ -110,11 +110,9 @@ describe('Nueva facultad · paso de bibliotecas', () => {
             row(name).querySelector<HTMLElement>('[role="checkbox"]')!.click();
             await flushPromises();
         }
-        button('Crear facultad')!.click();
-        await flushPromises();
 
+        expect(button('Crear facultad')!.hasAttribute('disabled')).toBe(true);
         expect(createAcademicRecord).not.toHaveBeenCalled();
-        expect(body().textContent).toContain('Marque al menos una biblioteca');
         wrapper.unmount();
     });
 

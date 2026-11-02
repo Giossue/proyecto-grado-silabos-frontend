@@ -162,7 +162,7 @@ const setTeacher = (userId: string) => run(
           </FieldGroup>
           <DialogFooter>
             <Button type="button" variant="outline" @click="addOpen = false">Cancelar</Button>
-            <Button type="submit" :disabled="busy"><Plus data-icon="inline-start" aria-hidden="true" />Agregar paralelos</Button>
+            <Button type="submit" :disabled="busy || !addShift || !addTeacher"><Plus data-icon="inline-start" aria-hidden="true" />Agregar paralelos</Button>
           </DialogFooter>
         </form>
       </DialogContent>

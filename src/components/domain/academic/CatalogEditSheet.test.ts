@@ -176,18 +176,16 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
     wrapper.unmount();
   });
 
-  it('sin ninguna marcada no deja guardar y lleva a la pestaña de bibliotecas', async () => {
+  it('sin ninguna marcada «Guardar cambios» queda deshabilitado', async () => {
     const wrapper = mountSheet();
     await flushPromises();
     await tab('Bibliotecas');
     await tick('LAGUACOTO');
     await tick('MATRIZ');
     await tick('SAN MIGUEL');
-    await tab('Datos');
-    await save();
 
+    expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
     expect(updateAcademicRecord).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain('Marque al menos una biblioteca');
     wrapper.unmount();
   });
 

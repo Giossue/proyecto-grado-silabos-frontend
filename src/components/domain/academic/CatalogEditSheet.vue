@@ -161,7 +161,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
                     <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel :for="`edit-starts-on-${recordId}`" required>Fecha de inicio</FieldLabel><DatePicker :id="`edit-starts-on-${recordId}`" v-model="form.starts_on" required /><FieldError :errors="errors.starts_on" /></Field>
                     <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required /><FieldError :errors="errors.ends_on" /></Field>
                 </div>
-                <FormSheetActions :close="close" :processing="processing" :disabled="unchanged || Boolean(lockReason)" :icon="Check" label="Guardar cambios" />
+                <FormSheetActions :close="close" :processing="processing" :disabled="unchanged || Boolean(lockReason) || (entity === 'facultad' && koha !== null && chosenLibraries.length === 0)" :icon="Check" label="Guardar cambios" />
             </FieldGroup></form>
         </template>
     </FormSheet>

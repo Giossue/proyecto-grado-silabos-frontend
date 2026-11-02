@@ -3,7 +3,7 @@ import { DateFormatter, getLocalTimeZone, parseDate } from '@internationalized/d
 import { CalendarDays, X } from '@lucide/vue';
 import type { DateValue } from 'reka-ui';
 import { createYearRange } from 'reka-ui/date';
-import { computed, ref, useTemplateRef } from 'vue';
+import { computed, nextTick, ref, useTemplateRef, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -32,6 +32,9 @@ const props = withDefaults(defineProps<{
 });
 
 const model = defineModel<string | undefined>({ default: undefined });
+const field = ref<HTMLInputElement | null>(null);
+// El campo oculto lleva la fecha al formulario; se avisa del cambio para que el botón de enviar se entere.
+watch(model, () => { void nextTick(() => field.value?.dispatchEvent(new Event('input', { bubbles: true }))); });
 if (model.value === undefined) model.value = props.defaultValue ?? '';
 
 const root = useTemplateRef<HTMLElement>('root');
@@ -68,7 +71,8 @@ const clear = (): void => { selected.value = undefined; };
 
 <template>
   <div ref="root" data-slot="date-picker">
-    <input type="hidden" :name="name" :value="model">
+    <input v-if="required" ref="field" type="text" class="sr-only" tabindex="-1" aria-hidden="true" required :name="name" :value="model" @input.prevent @focus="($event.target as HTMLElement).blur()">
+    <input v-else type="hidden" :name="name" :value="model">
     <Popover v-model:open="open">
       <PopoverTrigger as-child>
         <Button :id="id" type="button" variant="outline" :disabled="disabled" :aria-invalid="ariaInvalid" :aria-required="required" :class="cn('w-full justify-start font-normal', selected === undefined && 'text-muted-foreground')">

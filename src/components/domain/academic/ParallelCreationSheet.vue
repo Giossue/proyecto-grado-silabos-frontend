@@ -206,7 +206,7 @@ watch(open, (value) => value && reset());
                         <span v-else>{{ assignmentOf(parallel.id)?.user_name ?? "Sin docente" }}</span>
                       </TableCell>
                       <TableCell class="text-right">
-                        <TooltipProvider><Tooltip><TooltipTrigger as-child><Button type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" :aria-label="`Guardar paralelo ${parallel.code}`" @click="saveEdit"><Check aria-hidden="true" /></Button></TooltipTrigger><TooltipContent>Guardar</TooltipContent></Tooltip></TooltipProvider>
+                        <TooltipProvider><Tooltip><TooltipTrigger as-child><Button type="button" size="icon-sm" variant="ghost" :disabled="rowBusy || !editCode.trim() || !editShift" :aria-label="`Guardar paralelo ${parallel.code}`" @click="saveEdit"><Check aria-hidden="true" /></Button></TooltipTrigger><TooltipContent>Guardar</TooltipContent></Tooltip></TooltipProvider>
                         <TooltipProvider><Tooltip><TooltipTrigger as-child><Button type="button" size="icon-sm" variant="ghost" :disabled="rowBusy" aria-label="Cancelar edición" @click="cancelEdit"><X aria-hidden="true" /></Button></TooltipTrigger><TooltipContent>Cancelar</TooltipContent></Tooltip></TooltipProvider>
                       </TableCell>
                     </template>
@@ -234,7 +234,7 @@ watch(open, (value) => value && reset());
                       <TeacherSelect v-model="newTeacher" :teachers="teacherUsers ?? []" label="Docente del nuevo paralelo" required :invalid="Boolean(error) && !newTeacher" />
                     </TableCell>
                     <TableCell class="text-right">
-                      <Button type="button" size="icon-sm" variant="ghost" :disabled="saving" aria-label="Guardar nuevo paralelo" @click="submit"><Check aria-hidden="true" /></Button>
+                      <Button type="button" size="icon-sm" variant="ghost" :disabled="saving || !code.trim() || !shift || !newTeacher" aria-label="Guardar nuevo paralelo" @click="submit"><Check aria-hidden="true" /></Button>
                       <Button type="button" size="icon-sm" variant="ghost" :disabled="saving" aria-label="Cancelar nuevo paralelo" @click="cancelAdd"><X aria-hidden="true" /></Button>
                     </TableCell>
                   </TableRow>

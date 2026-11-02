@@ -78,6 +78,7 @@ const openReturn = (): void => {
   returnOpen.value = true;
 };
 
+const canReturn = computed(() => selectedReasons.value.length > 0 && (!otherSelected.value || otherReason.value.trim().length >= 5));
 const sendReturn = async (): Promise<void> => {
   if (!review.value) return;
   reasonErrors.value = [];
@@ -188,7 +189,7 @@ onMounted(load);
           <Alert v-if="returnError" variant="destructive" role="alert"><AlertDescription>{{ returnError }}</AlertDescription></Alert>
           <DialogFooter>
             <DialogClose as-child><Button type="button" variant="outline" :disabled="sending">Cancelar</Button></DialogClose>
-            <Button type="submit" variant="destructive" :disabled="sending"><Spinner v-if="sending" data-icon="inline-start" /><MessageSquareText v-else data-icon="inline-start" aria-hidden="true" />Devolver al docente</Button>
+            <Button type="submit" variant="destructive" :disabled="sending || !canReturn"><Spinner v-if="sending" data-icon="inline-start" /><MessageSquareText v-else data-icon="inline-start" aria-hidden="true" />Devolver al docente</Button>
           </DialogFooter>
         </form>
       </DialogContent>
