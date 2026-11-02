@@ -43,7 +43,6 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                   { title: 'Materias y asignaciones', href: paths.coordination.scheduledSubjects, icon: Building2 },
                   { title: 'Docentes', href: paths.coordination.teachers, icon: UsersRound },
                   { title: 'Proyecto de carrera', href: paths.coordination.careerProject, icon: FolderOpen },
-                  { title: 'Documentos de apoyo', href: paths.coordination.supportDocuments, icon: FileText },
                   { title: 'Malla', href: paths.coordination.curriculum, icon: BookOpenCheck },
               ]
             : []),

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getScheduledSubjects, type ScheduledSubjects } from '@/api/career-academics';
 import { getSession } from '@/api/session';
 import SubjectProfileSheet from '@/components/domain/academic/SubjectProfileSheet.vue';
+import SupportDocumentsPanel from '@/components/domain/academic/SupportDocumentsPanel.vue';
 import CoordinationCareerProjectPage from '@/pages/CoordinationCareerProjectPage.vue';
 
 vi.mock('vue-router', async (importOriginal) => ({
@@ -15,7 +16,7 @@ vi.mock('@/api/session', () => ({ getSession: vi.fn() }));
 
 const subject = (id: string, nombre: string, ciclo: number, extra: Record<string, unknown> = {}) => ({ id, nombre, ciclo, generates_syllabus: true, profile_complete: true, ...extra });
 const scheduled = (subjects: unknown[]) => ({ career: { lock_reason: null, lock: null }, options: { activeSubjects: subjects } }) as unknown as ScheduledSubjects;
-const mountPage = () => mount(CoordinationCareerProjectPage, { attachTo: document.body, global: { stubs: { SubjectProfileSheet: true, FichaImportDialog: true } } });
+const mountPage = () => mount(CoordinationCareerProjectPage, { attachTo: document.body, global: { stubs: { SubjectProfileSheet: true, FichaImportDialog: true, SupportDocumentsPanel: true } } });
 
 describe('Proyecto de carrera', () => {
   beforeEach(() => {
@@ -54,6 +55,22 @@ describe('Proyecto de carrera', () => {
 
     await wrapper.get('[aria-label="Abrir el proyecto de carrera de Estructuras de Datos"]').trigger('keydown.enter');
     expect(wrapper.findComponent(SubjectProfileSheet).props()).toMatchObject({ subjectId: 'm3' });
+    wrapper.unmount();
+  });
+
+  it('los documentos de apoyo son una pestaña con su propio botón para subir', async () => {
+    const wrapper = mountPage();
+    await flushPromises();
+    expect(wrapper.text()).not.toContain('Subir documento');
+
+    const tab = wrapper.findAll('[role="tab"]').find((item) => item.text() === 'Documentos de apoyo')!;
+    await tab.trigger('mousedown', { button: 0 });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Subir documento');
+    expect(wrapper.findComponent(SupportDocumentsPanel).exists()).toBe(true);
+    await wrapper.findAll('button').find((button) => button.text() === 'Subir documento')!.trigger('click');
+    expect(wrapper.findComponent(SupportDocumentsPanel).props('uploadOpen')).toBe(true);
     wrapper.unmount();
   });
 });

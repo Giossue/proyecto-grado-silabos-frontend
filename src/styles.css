@@ -491,6 +491,10 @@
 }
 
 @layer components {
+    :is([data-slot='dialog-content'], [data-slot='sheet-content']) .grid:not([class*='grid-cols']) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     table[data-overflows='true']:has([data-table-actions])
         :is(th, td):last-child {
         position: sticky;

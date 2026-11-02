@@ -8,7 +8,7 @@ import {
   viewSupportDocument,
   type SupportDocument,
 } from '@/api/support-documents';
-import SupportDocumentsPage from '@/pages/SupportDocumentsPage.vue';
+import SupportDocumentsPanel from '@/components/domain/academic/SupportDocumentsPanel.vue';
 
 vi.mock('vue-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
@@ -27,7 +27,7 @@ vi.mock('@/api/support-documents', () => ({
 const doc = (id: string, title: string, extension: string, view: SupportDocument['view'] = 'lista'): SupportDocument => ({
   id, title, extension, view, file_name: `${title}.${extension}`, size: 2048, uploaded_at: '2026-11-02T15:00:00Z', uploaded_by: 'COORDINADORA DEMO',
 });
-const mountPage = (mode: 'coordination' | 'teacher') => mount(SupportDocumentsPage, { props: { mode }, attachTo: document.body });
+const mountPage = (mode: 'coordination' | 'teacher', uploadOpen = false) => mount(SupportDocumentsPanel, { props: { manages: mode === 'coordination', uploadOpen }, attachTo: document.body });
 
 describe('Documentos de apoyo', () => {
   beforeEach(() => {
@@ -48,7 +48,7 @@ describe('Documentos de apoyo', () => {
 
     expect(wrapper.text()).toContain('Proyecto de carrera');
     expect(wrapper.text()).toContain('PDF');
-    expect(wrapper.text()).not.toContain('Subir documento');
+    expect(document.body.querySelector('[data-testid="support-document-form"]')).toBeNull();
     expect(getCoordinationSupportDocuments).not.toHaveBeenCalled();
 
     await wrapper.get('[aria-label="Ver Proyecto de carrera"]').trigger('click');
@@ -70,11 +70,7 @@ describe('Documentos de apoyo', () => {
 
   it('Coordinación sube un documento con el nombre tomado del archivo y Subir queda deshabilitado hasta elegirlo', async () => {
     vi.mocked(uploadSupportDocument).mockResolvedValue({ message: 'Documento subido.', document: doc('d3', 'Habilidades blandas', 'docx', 'pendiente') });
-    const wrapper = mountPage('coordination');
-    await flushPromises();
-
-    const open = wrapper.findAll('button').find((button) => button.text() === 'Subir documento');
-    await open!.trigger('click');
+    const wrapper = mountPage('coordination', true);
     await flushPromises();
 
     const form = document.body.querySelector<HTMLFormElement>('[data-testid="support-document-form"]')!;
