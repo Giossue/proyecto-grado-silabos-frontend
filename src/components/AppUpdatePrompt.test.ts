@@ -2,6 +2,9 @@ import { mount } from '@vue/test-utils';
 import { ref } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
 import AppUpdatePrompt from '@/components/AppUpdatePrompt.vue';
+import { reloadPage } from '@/lib/pageReload';
+
+vi.mock('@/lib/pageReload', () => ({ navigateTo: vi.fn(), reloadPage: vi.fn() }));
 
 const needRefresh = ref(false);
 const updateServiceWorker = vi.fn();
@@ -43,5 +46,40 @@ describe('AppUpdatePrompt', () => {
     expect(registration.update).toHaveBeenCalledTimes(2);
     wrapper.unmount();
     vi.useRealTimers();
+  });
+
+  it('si «Actualizar» no logra recargar (otra pestaña ya activó la versión), recarga igual a los pocos segundos', async () => {
+    vi.useFakeTimers();
+    updateServiceWorker.mockClear();
+    updateServiceWorker.mockResolvedValue(undefined);
+    needRefresh.value = true;
+    const wrapper = mount(AppUpdatePrompt);
+    await wrapper.vm.$nextTick();
+
+    await wrapper.get('button').trigger('click');
+    expect(updateServiceWorker).toHaveBeenCalledWith(true);
+    expect(reloadPage).not.toHaveBeenCalled();
+    expect(wrapper.get('button').attributes('disabled')).toBeDefined();
+
+    vi.advanceTimersByTime(3000);
+    expect(reloadPage).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+    vi.useRealTimers();
+    needRefresh.value = false;
+  });
+
+  it('si otra pestaña ya actualizó, esta también muestra el aviso', async () => {
+    const worker = new EventTarget();
+    Object.defineProperty(navigator, 'serviceWorker', { value: worker, configurable: true });
+    needRefresh.value = false;
+    const wrapper = mount(AppUpdatePrompt);
+
+    worker.dispatchEvent(new Event('controllerchange'));
+    await wrapper.vm.$nextTick();
+
+    expect(wrapper.text()).toContain('Hay una versión nueva del sistema');
+    wrapper.unmount();
+    needRefresh.value = false;
+    Reflect.deleteProperty(navigator, 'serviceWorker');
   });
 });

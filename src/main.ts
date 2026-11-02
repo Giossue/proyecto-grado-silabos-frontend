@@ -7,6 +7,7 @@ import { initializeAccessibility } from '@/composables/useAccessibility';
 import { initializeTheme } from '@/composables/useAppearance';
 import { initializeDocumentPalette } from '@/lib/documentPalette';
 import { installNativeValidation } from '@/lib/nativeValidation';
+import { installStaleChunkRecovery } from '@/lib/staleChunks';
 import { initializeInstallApp } from '@/state/installApp';
 import '@/state/screenHelp';
 import '@/styles.css';
@@ -14,6 +15,7 @@ import '@/accessibility.css';
 
 initializeTheme();
 installPageAnnouncements(router);
+installStaleChunkRecovery(router);
 initializeAccessibility();
 initializeDocumentPalette();
 initializeInstallApp();
