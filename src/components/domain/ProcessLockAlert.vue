@@ -33,7 +33,7 @@ const reason = computed(() => {
     if (props.message || !props.lock) return null;
     const open = deadline.value ? `abierta, con entrega hasta el ${deadline.value}` : 'abierta';
     if (props.lock.scope === 'process') {
-        return `Hay una convocatoria ${open}. Mientras siga abierta, la plantilla no se puede editar. Para cambiarla, primero pause la convocatoria. Si la plantilla cambió, al reanudar se pedirá confirmación y se borrarán todos los sílabos de este período, incluso los aprobados, para que los docentes empiecen de nuevo. Los sílabos de períodos anteriores no se tocan`;
+        return `Hay una convocatoria ${open}. No puede editar la plantilla mientras siga abierta, porque los docentes ya están llenando sus sílabos con ella. Para editarla, pause la convocatoria. Al reanudar, si la plantilla cambió, se pedirá confirmación y los sílabos de este período se borrarán y empezarán de nuevo, incluso los aprobados. Los de períodos anteriores no se tocan`;
     }
     const consequence = 'Al corregir se pedirá confirmación: los sílabos en curso que no están aprobados se rehacen';
     const institutional = props.lock.institutional_pause
