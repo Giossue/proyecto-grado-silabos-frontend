@@ -41,7 +41,7 @@ const remove = (requirement: CurriculumRequirement): void => {
                                 <TableHead>Materia requerida</TableHead>
                                 <TableHead>Materia que la requiere</TableHead>
                                 <TableHead>Tipo</TableHead>
-                                <TableHead v-if="editable"><span class="sr-only">Acciones</span></TableHead>
+                                <TableHead v-if="editable" class="w-px"><span class="sr-only">Acciones</span></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
