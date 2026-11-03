@@ -52,7 +52,6 @@ export const paths = {
     scheduledSubjects: '/coordinacion/materias-asignaciones',
     careerProject: '/coordinacion/proyecto-carrera',
     teachers: '/coordinacion/docentes',
-    teacherAssignments: '/coordinacion/asignaciones-docentes',
     documents: (revision: string): string =>
       `/coordinacion/revisiones/${segment(revision)}/documentos`,
   },

@@ -5,7 +5,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
 import EmptyState from '@/components/domain/EmptyState.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
-import { Bell, BookOpen, CalendarClock, CheckCheck, ClipboardCheck, FileText, Library, Sparkles, UserRound, X } from '@lucide/vue';
+import { Bell, CalendarClock, CheckCheck, ClipboardCheck, FileText, Library, X } from '@lucide/vue';
 import { computed, onMounted, ref, watch, type Component } from 'vue';
 import { useMediaQuery } from '@vueuse/core';
 import { useRoute, useRouter } from 'vue-router';
@@ -39,14 +39,13 @@ const hasActiveRole = computed(() => sessionState.current.value?.active_role != 
 // La lista de avisos; no la pestaña «Notificaciones» de Configuración (avisos por correo), que también termina así.
 const isNotificationsPage = computed(() => (route.path.endsWith('/notificaciones') && !route.path.includes('/configuracion/')) || route.path === paths.notifications);
 
+const LIBRARY_NOTICES = ['coordinacion.aprobado', 'silabo.reenviado_biblioteca'];
+
 const iconFor = (tipo: string): Component => {
-    if (tipo.startsWith('biblioteca')) return Library;
+    if (LIBRARY_NOTICES.includes(tipo)) return Library;
     if (tipo.startsWith('documento')) return FileText;
-    if (tipo.startsWith('ia')) return Sparkles;
-    if (tipo.startsWith('fuente_academica')) return BookOpen;
     if (tipo.startsWith('proceso') || tipo.startsWith('convocatoria')) return CalendarClock;
     if (tipo.startsWith('silabo')) return ClipboardCheck;
-    if (tipo.startsWith('docente') || tipo.startsWith('coordinacion') || tipo.startsWith('usuario')) return UserRound;
     return Bell;
 };
 
