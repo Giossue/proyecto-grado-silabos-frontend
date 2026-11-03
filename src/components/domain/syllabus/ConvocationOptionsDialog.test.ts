@@ -13,7 +13,7 @@ const dialog = defineComponent({
 const button = defineComponent({
   props: { type: String, disabled: Boolean, variant: String },
   emits: ['click'],
-  template: '<button class="button" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
+  template: '<button class="button" :data-variant="variant" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
 });
 
 const process = (state: SyllabusProcess['state'], blockReason: string | null = null): SyllabusProcess => ({
@@ -59,6 +59,18 @@ const mountDialog = (state: SyllabusProcess['state'], blockReason: string | null
 const labels = (wrapper: ReturnType<typeof mountDialog>): string[] => wrapper.findAll('ul .button').map((item) => item.text());
 
 describe('ConvocationOptionsDialog', () => {
+  it('lo habitual va primero con botones normales; Finalizar y Eliminar quedan aparte, abajo y discretos', () => {
+    const wrapper = mountDialog('abierto');
+    const lists = wrapper.findAll('ul');
+
+    expect(lists).toHaveLength(2);
+    expect(lists[0]!.findAll('.button').map((item) => item.text())).toEqual(['Pausar', 'Prorrogar plazo']);
+    expect(lists[0]!.findAll('.button').map((item) => item.attributes('data-variant'))).toEqual(['outline', 'outline']);
+    expect(lists[1]!.attributes('aria-label')).toBe('Acciones que no se pueden deshacer');
+    expect(lists[1]!.findAll('.button').map((item) => item.text())).toEqual(['Finalizar', 'Eliminar']);
+    expect(lists[1]!.findAll('.button').map((item) => item.attributes('data-variant'))).toEqual(['ghost', 'ghost']);
+  });
+
   it('ofrece eliminar con la convocatoria abierta o pausada', () => {
     expect(labels(mountDialog('abierto'))).toContain('Eliminar');
     expect(labels(mountDialog('pausado'))).toContain('Eliminar');

@@ -39,6 +39,10 @@ const actions = computed<SheetAction[]>(() => {
     ];
 });
 
+// Lo habitual a la vista; lo que no se deshace (finalizar, eliminar) queda aparte y discreto.
+const regular = computed(() => actions.value.filter((action) => !action.destructive));
+const sensitive = computed(() => actions.value.filter((action) => action.destructive));
+
 const run = (key: string): void => {
     open.value = false;
     emit('action', key);
@@ -52,11 +56,28 @@ const run = (key: string): void => {
                 <DialogTitle>Convocatoria {{ row.code }}</DialogTitle>
             </DialogHeader>
             <ul class="grid grid-cols-2 items-start gap-2" aria-label="Opciones de la convocatoria">
-                <li v-for="action in actions" :key="action.key" class="flex flex-col gap-1">
+                <li v-for="action in regular" :key="action.key" class="flex flex-col gap-1">
                     <Button
                         type="button"
-                        :variant="action.destructive ? 'destructive' : 'outline'"
+                        variant="outline"
                         class="w-full"
+                        :disabled="action.disabled"
+                        :aria-describedby="action.disabled && action.disabledReason ? `option-reason-${action.key}` : undefined"
+                        @click="run(action.key)"
+                    >
+                        <component :is="action.icon" data-icon="inline-start" aria-hidden="true" />
+                        {{ action.label }}
+                    </Button>
+                    <p v-if="action.disabled && action.disabledReason" :id="`option-reason-${action.key}`" class="text-sm text-muted-foreground">{{ withoutFinalPeriod(action.disabledReason) }}</p>
+                </li>
+            </ul>
+            <ul v-if="sensitive.length" class="flex flex-wrap items-start gap-x-2 gap-y-1 border-t pt-3" aria-label="Acciones que no se pueden deshacer">
+                <li v-for="action in sensitive" :key="action.key" class="flex flex-col gap-1">
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        class="text-destructive hover:bg-destructive/10 hover:text-destructive"
                         :disabled="action.disabled"
                         :aria-describedby="action.disabled && action.disabledReason ? `option-reason-${action.key}` : undefined"
                         @click="run(action.key)"
