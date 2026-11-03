@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/core';
-import { Braces, ImageUp, ListTree, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from '@lucide/vue';
+import { Braces, ImageUp, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import type { TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload } from '@/api/template';
 import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
@@ -18,12 +18,10 @@ import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { layoutOf, layoutStyle, paperOf, sheetPixels, type DocumentLayout } from '@/lib/documentLayout';
 import { templateRuntime } from '@/lib/blocks/runtime';
-import { plural, type ValueSchema } from '@/lib/blocks/types';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -156,39 +154,7 @@ const setLayout = (key: keyof DocumentLayout, value: unknown): void => {
     layoutDraft.value = { ...layoutDraft.value, [key]: number };
     touched();
 };
-type ListLimits = { block: string; path: string; label: string; min: number; max: number; initial: number };
-const LIMITS = [{ key: 'min', label: 'Mínimo' }, { key: 'max', label: 'Máximo' }, { key: 'initial', label: 'Empieza con' }] as const;
-const capitalize = (text: string): string => text.charAt(0).toUpperCase() + text.slice(1);
-const templateLists = (): ListLimits[] => {
-    const found: ListLimits[] = [];
-    const walk = (block: string, schema: ValueSchema, path: string[], parent: string | null): void => {
-        if (schema.type === 'array') {
-            const name = plural(schema.title ?? path[path.length - 1] ?? 'elemento');
-            found.push({ block, path: path.join('.'), label: capitalize(parent ? `${name} por ${parent}` : name), min: schema.minItems, max: schema.maxItems, initial: schema.initial });
-            walk(block, schema.items, [...path, '*'], schema.title ?? null);
-        } else if (schema.type === 'object') {
-            for (const [key, child] of Object.entries(schema.properties)) walk(block, child, [...path, key], parent);
-        }
-    };
-    for (const [kind, block] of Object.entries(templateRuntime().definition?.blocks ?? {})) {
-        // La lista de libros pertenece al diseño de la plantilla, no a estos límites.
-        for (const [key, schema] of Object.entries(block.value)) if (block.catalog?.list !== key) walk(kind, schema, [key], null);
-    }
-    return found;
-};
 const designOpen = ref(false);
-const listsOpen = ref(false);
-const listsDraft = ref<ListLimits[]>(templateLists());
-const setListLimit = (list: ListLimits, key: (typeof LIMITS)[number]['key'], value: string | number): void => {
-    list[key] = Math.max(0, Math.min(100, Math.trunc(Number(value) || 0)));
-    touched();
-};
-const changedLists = (): Array<Omit<ListLimits, 'label'>> => {
-    const current = templateLists();
-    return listsDraft.value
-        .filter((list) => !current.some((saved) => saved.block === list.block && saved.path === list.path && saved.min === list.min && saved.max === list.max && saved.initial === list.initial))
-        .map(({ block, path, min, max, initial }) => ({ block, path, min, max, initial }));
-};
 const logoOverride = ref<string | null>(null);
 const uploadingLogo = ref(false);
 const shownTitle = computed(() => preview.value && !awaitingReload.value ? props.template.titleBlock.text : titleDraft.value);
@@ -228,7 +194,6 @@ const startEditing = (): void => {
         draft.value = clone(props.template.sections);
         titleDraft.value = props.template.titleBlock.text;
         layoutDraft.value = layoutOf(props.template.layout);
-        listsDraft.value = templateLists();
         dirty.value = false;
     }
     error.value = null;
@@ -293,7 +258,6 @@ const save = async (): Promise<void> => {
             version: 1,
             title: titleDraft.value.trim() || props.template.titleBlock.text,
             layout: layoutDraft.value,
-            lists: changedLists(),
             sections: draftSections(),
         });
         toast.success('Plantilla guardada');
@@ -489,7 +453,6 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
                   <DropdownMenuContent align="end">
                     <DropdownMenuGroup>
                       <DropdownMenuItem v-if="layoutControls.length" :disabled="locked" @select="designOpen = true"><Ruler aria-hidden="true" />Diseño</DropdownMenuItem>
-                      <DropdownMenuItem v-if="listsDraft.length" :disabled="locked" @select="listsOpen = true"><ListTree aria-hidden="true" />Listas</DropdownMenuItem>
                       <DropdownMenuItem :disabled="locked" @select="jsonOpen = true"><Braces aria-hidden="true" />Editar JSON</DropdownMenuItem>
                     </DropdownMenuGroup>
                   </DropdownMenuContent>
@@ -591,26 +554,6 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
               <SelectContent><SelectGroup><SelectItem v-for="option in control.options" :key="option.value" :value="String(option.value)">{{ option.label }}</SelectItem></SelectGroup></SelectContent>
             </Select>
           </Field>
-        </FieldGroup>
-        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose></DialogFooter>
-      </DialogContent>
-    </Dialog>
-    <Dialog v-model:open="listsOpen">
-      <DialogContent class="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Listas</DialogTitle>
-          <DialogDescription>Cuántos elementos puede tener el docente. «Empieza con» es cuántos ya aparecen al abrir el sílabo</DialogDescription>
-        </DialogHeader>
-        <FieldGroup class="gap-4">
-          <FieldSet v-for="list in listsDraft" :key="`${list.block}-${list.path}`" class="gap-2">
-            <FieldLegend variant="label">{{ list.label }}</FieldLegend>
-            <div class="grid grid-cols-3 gap-2">
-              <Field v-for="limit in LIMITS" :key="limit.key" class="gap-1">
-                <FieldLabel :for="`template-list-${list.block}-${list.path}-${limit.key}`" class="text-xs font-normal">{{ limit.label }}</FieldLabel>
-                <Input :id="`template-list-${list.block}-${list.path}-${limit.key}`" type="number" min="0" max="100" step="1" :model-value="list[limit.key]" @update:model-value="setListLimit(list, limit.key, $event)" />
-              </Field>
-            </div>
-          </FieldSet>
         </FieldGroup>
         <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose></DialogFooter>
       </DialogContent>

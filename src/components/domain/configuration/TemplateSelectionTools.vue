@@ -18,7 +18,7 @@ const fieldName = computed(() => props.selection?.kind === 'field' ? props.selec
 </script>
 
 <template>
-  <div class="flex min-w-44 flex-1 items-center gap-0.5 overflow-hidden" role="group" :aria-label="selection?.kind === 'section' ? 'Sección seleccionada' : 'Campo seleccionado'">
+  <div :class="['flex flex-1 items-center gap-0.5 overflow-hidden', selection ? 'min-w-44' : 'min-w-0']" role="group" :aria-label="selection?.kind === 'section' ? 'Sección seleccionada' : 'Campo seleccionado'">
     <template v-if="selection?.kind === 'field'">
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
@@ -54,6 +54,6 @@ const fieldName = computed(() => props.selection?.kind === 'field' ? props.selec
       <IconTooltip :label="`Bajar la sección ${selection.section.title}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveDown" :aria-label="`Bajar la sección ${selection.section.title}`" @click="emit('move', 1)"><ArrowDown aria-hidden="true" /></Button></IconTooltip>
       <IconTooltip :label="`Eliminar la sección ${selection.section.title}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar la sección ${selection.section.title}`" @click="emit('remove')"><Trash2 aria-hidden="true" /></Button></IconTooltip>
     </template>
-    <span v-else class="whitespace-nowrap px-2 text-sm text-muted-foreground">Seleccione un campo</span>
+    <span v-else class="min-w-0 basis-0 grow truncate px-2 text-sm text-muted-foreground">Seleccione un campo</span>
   </div>
 </template>

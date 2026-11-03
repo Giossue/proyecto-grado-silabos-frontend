@@ -42,7 +42,7 @@ const body = () => document.body;
 const byText = (selector: string, text: string) => [...body().querySelectorAll<HTMLElement>(selector)].find((el) => el.textContent?.trim() === text);
 const byLabel = (label: string) => body().querySelector<HTMLElement>(`button[aria-label="${label}"]`);
 const click = async (el: Element | undefined | null) => { expect(el).toBeTruthy(); (el as HTMLElement).click(); await flushPromises(); };
-// Diseño, Listas y Editar JSON viven dentro de «Opciones avanzadas».
+// Diseño y Editar JSON viven dentro de «Opciones avanzadas».
 const advancedItems = async (): Promise<string[]> => {
     byLabel('Opciones avanzadas')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
     await flushPromises();
@@ -330,20 +330,10 @@ describe('TemplateVisualBuilder', () => {
   });
 
   // Va al final: deja cargada la definición oficial para el resto del archivo.
-  it('cambia cuántas unidades y semanas puede tener el docente y guarda solo lo que cambió', async () => {
+  it('las listas (unidades y semanas) ya no se configuran desde la plantilla', async () => {
     setTemplateRuntime(definition as unknown as TemplateDefinitionPayload, {});
-    const wrapper = await mountBuilder();
-    expect(byLabel('Listas')).toBeNull();
-    await chooseAdvanced('Listas');
-    const dialog = body().querySelector('[role="dialog"]')!;
-    expect([...dialog.querySelectorAll('legend')].map((item) => item.textContent!.trim())).toEqual(['Unidades', 'Semanas por unidad']);
-    expect([...new Set([...dialog.querySelectorAll('label')].map((item) => item.textContent!.trim()))]).toEqual(['Mínimo', 'Máximo', 'Empieza con']);
-    expect(dialog.textContent).not.toContain('Libros');
-    const state = (wrapper.vm as unknown as { $: { setupState: { listsDraft: Array<{ label: string; min: number }>; setListLimit: (list: unknown, key: string, value: string) => void } } }).$.setupState;
-    expect(state.listsDraft.map((entry) => entry.label)).toEqual(['Unidades', 'Semanas por unidad']);
-    state.setListLimit(state.listsDraft[1], 'min', '1');
-    await flushPromises();
-    await save();
-    expect((saved() as unknown as { lists: unknown }).lists).toEqual([{ block: 'unidades', path: 'units.*.semanas', min: 1, max: 52, initial: 4 }]);
+    await mountBuilder();
+    expect(await advancedItems()).not.toContain('Listas');
+    expect(body().textContent).not.toContain('Empieza con');
   });
 });
