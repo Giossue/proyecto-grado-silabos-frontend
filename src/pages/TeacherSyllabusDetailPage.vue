@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
+import SupportDocumentsButton from '@/components/domain/academic/SupportDocumentsButton.vue';
 import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
 import { ruleFailures } from '@/lib/blocks/rules';
 import { blockAttrs, blockDefinition, templateRuntime } from '@/lib/blocks/runtime';
@@ -533,6 +534,7 @@ onBeforeUnmount(() => {
   <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="(!syllabus || canStart) && !error" :actions-skeleton="(!syllabus || canStart) && !error && !previewHint ? ['w-9', 'w-24'] : []" header-class="syllabus-editor-header" :header-width="documentHeaderWidth" hide-icon>
     <template v-if="syllabus" #title-badge><SyllabusStateBadge :state="syllabus.state" /></template>
     <template #actions>
+      <SupportDocumentsButton v-if="syllabus" />
       <TooltipProvider v-if="syllabus && showEditor"><Tooltip><TooltipTrigger as-child>
         <Button type="button" :variant="previewing ? 'secondary' : 'ghost'" size="icon" aria-label="Vista previa" :aria-pressed="previewing" @click="previewing ? (previewing = false) : openPreview()"><Eye aria-hidden="true" /></Button>
       </TooltipTrigger><TooltipContent>Vista previa</TooltipContent></Tooltip></TooltipProvider>

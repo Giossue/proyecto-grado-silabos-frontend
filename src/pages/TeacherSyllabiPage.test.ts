@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import TeacherSyllabiPage from '@/pages/TeacherSyllabiPage.vue';
 import { getDashboard } from '@/api/dashboard';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
+import { getTeacherSupportDocuments } from '@/api/support-documents';
 
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('vue-router', () => ({
@@ -13,6 +14,7 @@ vi.mock('vue-router', () => ({
 
 vi.mock('@/api/dashboard', () => ({ getDashboard: vi.fn() }));
 vi.mock('@/api/syllabi', () => ({ getTeacherSyllabi: vi.fn() }));
+vi.mock('@/api/support-documents', () => ({ getTeacherSupportDocuments: vi.fn(), viewSupportDocument: vi.fn() }));
 
 const mountPage = () => mount(TeacherSyllabiPage, {
   global: { stubs: { PageFrame: { template: '<div><slot name="banner" /><slot name="actions" /><slot /></div>' } } },
@@ -29,6 +31,20 @@ const syllabi: SyllabiResponse = {
 describe('TeacherSyllabiPage', () => {
   beforeEach(() => {
     vi.mocked(getTeacherSyllabi).mockResolvedValue(syllabi);
+    vi.mocked(getTeacherSupportDocuments).mockResolvedValue({ data: [] });
+  });
+
+  it('muestra «Documentos de apoyo» junto al historial solo si Coordinación compartió documentos', async () => {
+    const empty = mountPage();
+    await flushPromises();
+    expect(empty.find('[aria-label="Documentos de apoyo"]').exists()).toBe(false);
+    expect(empty.find('[aria-label="Historial"]').exists()).toBe(true);
+    empty.unmount();
+
+    vi.mocked(getTeacherSupportDocuments).mockResolvedValue({ data: [{ id: 'd1', title: 'Proyecto de carrera', size: 2048, view: 'lista', uploaded_at: '2026-11-02T15:00:00Z' }] });
+    const wrapper = mountPage();
+    await flushPromises();
+    expect(wrapper.find('[aria-label="Documentos de apoyo"]').exists()).toBe(true);
   });
 
   it('muestra los sílabos sin indicadores arriba', async () => {

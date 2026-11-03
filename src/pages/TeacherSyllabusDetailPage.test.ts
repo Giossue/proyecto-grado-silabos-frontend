@@ -33,6 +33,7 @@ vi.mock("vue-router", () => ({
 vi.mock("@/lib/unauthorized", () => ({ handleUnauthorized: vi.fn() }));
 
 vi.mock("@/api/session", () => ({ getSession: vi.fn(), updateFormation: vi.fn() }));
+vi.mock("@/api/support-documents", () => ({ getTeacherSupportDocuments: vi.fn(async () => ({ data: [] })), viewSupportDocument: vi.fn() }));
 
 vi.mock("@/api/syllabi", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/api/syllabi")>()),
