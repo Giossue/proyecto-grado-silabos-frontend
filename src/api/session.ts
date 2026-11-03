@@ -55,8 +55,11 @@ export const getTwoFactorStatus = () => api<TwoFactorStatus>('/authentication/tw
 export const enableTwoFactor = (currentPassword: string) =>
   api<TwoFactorStatus & { qr_code_svg: string }>('/authentication/two-factor', { method: 'POST', body: JSON.stringify({ current_password: currentPassword }) });
 export const confirmTwoFactor = (code: string) => api<TwoFactorStatus & { recovery_codes: string[] }>('/authentication/two-factor/confirm', { method: 'POST', body: JSON.stringify({ code }) });
-export const disableTwoFactor = (currentPassword: string) =>
-  api<TwoFactorStatus>('/authentication/two-factor', { method: 'DELETE', body: JSON.stringify({ current_password: currentPassword }) });
+export const disableTwoFactor = (currentPassword: string, code = '', recoveryCode = '') =>
+  api<TwoFactorStatus>('/authentication/two-factor', {
+    method: 'DELETE',
+    body: JSON.stringify({ current_password: currentPassword, code: code || undefined, recovery_code: recoveryCode || undefined }),
+  });
 export const regenerateRecoveryCodes = (currentPassword: string) =>
   api<TwoFactorStatus & { recovery_codes: string[] }>('/authentication/two-factor/recovery-codes', {
     method: 'POST', body: JSON.stringify({ current_password: currentPassword }),
