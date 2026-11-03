@@ -50,6 +50,13 @@ describe('PageFrame', () => {
     expect(wrapper.get('p').text()).toBe('Cuentas de coordinación');
   });
 
+  it('anticipa el estado bajo el título cuando la pantalla lo pide', () => {
+    const frame = (statusSkeleton: boolean) => mount(PageFrame, { props: { title: '', description: '', loading: true, statusSkeleton } });
+
+    expect(frame(true).find('[data-skeleton="page-status"]').exists()).toBe(true);
+    expect(frame(false).find('[data-skeleton="page-status"]').exists()).toBe(false);
+  });
+
   it('centra el ícono entre el título y la descripción', () => {
     const wrapper = mount(PageFrame, {
       props: { title: 'Docentes', description: 'Docentes de su carrera', icon: Users },

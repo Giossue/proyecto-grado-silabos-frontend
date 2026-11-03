@@ -166,4 +166,11 @@ describe('LoadingSkeleton', () => {
   it('las tarjetas de sílabo llevan la paginación de la pantalla', () => {
     expect(mount(LoadingSkeleton, { props: { variant: 'syllabus-cards', rows: 2 } }).find('[data-skeleton="table-pagination"]').exists()).toBe(true);
   });
+
+  it('usa el ancho de filtro que se le indica', () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'table', filters: 1, filterWidth: 'lg:w-44' } });
+
+    expect(wrapper.get('[data-skeleton="table-filters"] > div').classes()).toContain('lg:w-44');
+    expect(mount(LoadingSkeleton, { props: { variant: 'table', filters: 1 } }).get('[data-skeleton="table-filters"] > div').classes()).toContain('lg:w-48');
+  });
 });
