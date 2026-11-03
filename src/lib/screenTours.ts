@@ -9,6 +9,7 @@ const TABLE = '[data-slot="table-container"]';
 const FILTERS = '[data-tour="filters"]';
 const ACTIONS = '[data-tour="page-actions"]';
 const TABS = '[role="tablist"]';
+const METRICS = '[data-tour="metrics"]';
 const DEADLINE = '[data-tour="deadline"]';
 const CHECKLIST = '.driver-checklist-launcher';
 
@@ -25,8 +26,10 @@ const checklist = step(CHECKLIST, 'Antes de empezar', 'Los pasos previos para ab
 /** Guía por pantalla, con la ruta del frontend como clave. Después de estos pasos, la guía cierra sola. */
 export const screenTours: Record<string, TourStep[]> = {
   '/admin/convocatorias': [
-    step(ACTIONS, 'Nueva convocatoria', 'Abre la convocatoria institucional con las fechas del período y del plazo de entrega. Se habilita al terminar «Antes de empezar»', 'left'),
-    step(TABLE, 'Períodos', 'Cada fila es un período. En el menú de la fila abre, pausa, reanuda o cierra la convocatoria y extiende el plazo', 'top'),
+    step(METRICS, 'Indicadores', 'El avance de la convocatoria en curso, los días que faltan para la entrega y las carreras que aún no abren la suya', 'bottom'),
+    step(ACTIONS, 'Nueva convocatoria', 'Pide en dos pasos las fechas de clases y las de elaboración y entrega, y abre la convocatoria. Se habilita al terminar «Antes de empezar» y mientras no haya otra abierta o pausada', 'left'),
+    step(FILTERS, 'Buscar y filtrar', 'Encuentre un período por su nombre o filtre por estado', 'bottom'),
+    step(TABLE, 'Períodos', 'Pulse una fila para ver sus opciones: pausar, reanudar, prorrogar el plazo, finalizar o eliminar la convocatoria. Un período sin convocatoria se puede abrir o eliminar', 'top'),
     checklist,
     ...basics,
   ],

@@ -21,7 +21,7 @@ const search = props.filter.search;
 </script>
 
 <template>
-    <FieldGroup class="gap-3 lg:flex-row lg:items-end">
+    <FieldGroup data-tour="filters" class="gap-3 lg:flex-row lg:items-end">
         <div class="min-w-0 lg:flex-1">
             <Field>
                 <FieldLabel :for="inputId" class="sr-only">

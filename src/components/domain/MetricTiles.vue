@@ -10,7 +10,7 @@ const icons: Record<string, Component> = { progress: BookOpenCheck, days_left: C
 </script>
 
 <template>
-  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
+  <div data-tour="metrics" class="grid grid-cols-2 gap-3 sm:grid-cols-3 max-sm:[&>*:last-child:nth-child(odd)]:col-span-2">
     <StatTile v-for="metric in metrics.slice(0, 3)" :key="metric.key" :label="metric.label" :value="metric.value" :suffix="metric.suffix ?? undefined" :hint="metric.hint" :icon="icons[metric.key]" />
   </div>
 </template>
