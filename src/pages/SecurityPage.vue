@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { KeyRound, Mail, MonitorSmartphone, Save, ShieldCheck } from '@lucide/vue';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { requestPasswordRecovery, updatePassword } from '@/api/session';
 import Heading from '@/components/Heading.vue';
@@ -27,6 +27,15 @@ const password = ref('');
 const passwordConfirmation = ref('');
 const processing = ref(false);
 const errors = ref<Record<string, string>>({});
+const passwordOpen = ref(false);
+// Los campos se limpian al abrir: al guardar, el diálogo se desvanece con lo escrito.
+watch(passwordOpen, (value) => {
+    if (!value) return;
+    currentPassword.value = '';
+    password.value = '';
+    passwordConfirmation.value = '';
+    errors.value = {};
+});
 
 const recoveryOpen = ref(false);
 const recoveryError = ref<string | null>(null);
@@ -59,9 +68,7 @@ const submit = async (): Promise<void> => {
             currentPassword.value,
         );
         sessionState.replace(session);
-        currentPassword.value = '';
-        password.value = '';
-        passwordConfirmation.value = '';
+        passwordOpen.value = false;
         toast.success('Contraseña actualizada');
     } catch (reason) {
         if (reason instanceof ApiError) {
@@ -85,34 +92,14 @@ const submit = async (): Promise<void> => {
             <!-- Secciones en acordeón como en Sistema; las cerradas siguen montadas (el 2FA avisa cuando cargó). -->
             <Accordion v-model="openSection" type="single" collapsible :unmount-on-hide="false" class="-mt-2">
             <SettingsAccordionSection value="contrasena" data-tour="security-password" title="Contraseña" description="Cámbiela o pida un enlace por correo para crear otra" :icon="KeyRound">
-            <div class="flex flex-col gap-6">
+            <div class="flex flex-col gap-4">
                 <Heading variant="small" title="Actualizar contraseña" description="Use una contraseña larga y única para proteger su cuenta" />
-                <InputError :message="errors.request" />
-
-                <form class="flex flex-col gap-6" @submit.prevent="submit">
-                    <div class="grid gap-2">
-                        <Label for="current_password" required>Contraseña actual</Label>
-                        <PasswordInput id="current_password" v-model="currentPassword" aria-required="true" class="mt-1 block w-full" autocomplete="current-password" placeholder="Contraseña actual" />
-                        <InputError :message="errors.current_password" />
-                    </div>
-                    <div class="grid gap-2">
-                        <Label for="password" required>Contraseña nueva</Label>
-                        <PasswordInput id="password" v-model="password" aria-required="true" class="mt-1 block w-full" autocomplete="new-password" placeholder="Contraseña nueva" />
-                        <InputError :message="errors.password" />
-                    </div>
-                    <div class="grid gap-2">
-                        <Label for="password_confirmation" required>Confirmar contraseña</Label>
-                        <PasswordInput id="password_confirmation" v-model="passwordConfirmation" aria-required="true" class="mt-1 block w-full" autocomplete="new-password" placeholder="Confirmar contraseña" />
-                        <InputError :message="errors.password_confirmation" />
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <Button :disabled="processing" data-test="update-password-button">
-                            <Spinner v-if="processing" data-icon="inline-start" />
-                            <Save v-else data-icon="inline-start" aria-hidden="true" />
-                            Guardar
-                        </Button>
-                    </div>
-                </form>
+                <div>
+                    <Button type="button" data-test="open-password-dialog" @click="passwordOpen = true">
+                        <KeyRound data-icon="inline-start" aria-hidden="true" />
+                        Actualizar contraseña
+                    </Button>
+                </div>
             </div>
 
             <div data-tour="security-reset" class="flex flex-col gap-4 border-t pt-6">
@@ -136,6 +123,40 @@ const submit = async (): Promise<void> => {
             </SettingsAccordionSection>
             </Accordion>
         </div>
+        <Dialog v-model:open="passwordOpen">
+            <DialogContent>
+                <form class="flex flex-col gap-6" @submit.prevent="submit">
+                    <DialogHeader>
+                        <DialogTitle>Actualizar contraseña</DialogTitle>
+                        <DialogDescription>Use una contraseña larga y única para proteger su cuenta</DialogDescription>
+                    </DialogHeader>
+                    <FeedbackAlert v-if="errors.request" :message="errors.request" />
+                    <div class="grid gap-2">
+                        <Label for="current_password" required>Contraseña actual</Label>
+                        <PasswordInput id="current_password" v-model="currentPassword" aria-required="true" class="mt-1 block w-full" autocomplete="current-password" placeholder="Contraseña actual" />
+                        <InputError :message="errors.current_password" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="password" required>Contraseña nueva</Label>
+                        <PasswordInput id="password" v-model="password" aria-required="true" class="mt-1 block w-full" autocomplete="new-password" placeholder="Contraseña nueva" />
+                        <InputError :message="errors.password" />
+                    </div>
+                    <div class="grid gap-2">
+                        <Label for="password_confirmation" required>Confirmar contraseña</Label>
+                        <PasswordInput id="password_confirmation" v-model="passwordConfirmation" aria-required="true" class="mt-1 block w-full" autocomplete="new-password" placeholder="Confirmar contraseña" />
+                        <InputError :message="errors.password_confirmation" />
+                    </div>
+                    <DialogFooter>
+                        <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
+                        <Button type="submit" :disabled="processing" data-test="update-password-button">
+                            <Spinner v-if="processing" data-icon="inline-start" />
+                            <Save v-else data-icon="inline-start" aria-hidden="true" />
+                            Guardar
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
         <Dialog v-model:open="recoveryOpen">
             <DialogContent>
                 <DialogHeader>

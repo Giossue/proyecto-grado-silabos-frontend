@@ -41,15 +41,14 @@ describe('carga de Configuración', () => {
         const wrapper = mount(SecurityPage);
 
         expect(wrapper.get('[data-settings-section="security"]').isVisible()).toBe(true);
-        expect(wrapper.get('#current_password').isVisible()).toBe(false);
-        expect(wrapper.get('[data-test="update-password-button"]').isVisible()).toBe(false);
+        expect(wrapper.get('[data-test="open-password-dialog"]').isVisible()).toBe(false);
         expect(getTwoFactorStatus).toHaveBeenCalledTimes(1);
 
         finish({ enabled: false, confirmation_required: false });
         await flushPromises();
 
         expect(wrapper.find('[data-settings-section="security"]').exists()).toBe(false);
-        expect(wrapper.get('#current_password').isVisible()).toBe(true);
+        expect(wrapper.get('[data-test="open-password-dialog"]').isVisible()).toBe(true);
         // El segundo factor vive en su sección del acordeón: ya cargó y aparece al abrirla.
         const activate = () => wrapper.findAll('button').find((button) => button.text() === 'Activar 2FA');
         expect(activate()?.exists()).toBe(true);
@@ -65,7 +64,7 @@ describe('carga de Configuración', () => {
         await flushPromises();
 
         expect(wrapper.find('[data-settings-section="security"]').exists()).toBe(false);
-        expect(wrapper.get('#current_password').isVisible()).toBe(true);
+        expect(wrapper.get('[data-test="open-password-dialog"]').isVisible()).toBe(true);
         expect(wrapper.text()).toContain('No se pudo consultar la protección');
         expect(wrapper.findAll('button').some((button) => /Activar 2FA|Desactivar 2FA/.test(button.text()))).toBe(false);
     });

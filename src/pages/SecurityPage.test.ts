@@ -1,7 +1,7 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/api/client';
-import { getTwoFactorStatus, requestPasswordRecovery, type Session } from '@/api/session';
+import { getTwoFactorStatus, requestPasswordRecovery, updatePassword, type Session } from '@/api/session';
 import SecurityPage from '@/pages/SecurityPage.vue';
 import { toast } from '@/lib/toast';
 import { sessionState } from '@/state/session';
@@ -98,5 +98,45 @@ describe('Seguridad: restablecer la contraseña por correo', () => {
 
     expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Servicio de correo no disponible');
     wrapper.unmount();
+  });
+
+  it('«Actualizar contraseña» abre un diálogo con los campos; al guardar se cierra y avisa', async () => {
+    vi.mocked(updatePassword).mockResolvedValue(session);
+    const wrapper = mount(SecurityPage, { attachTo: document.body });
+    await flushPromises();
+
+    expect(wrapper.find('#current_password').exists()).toBe(false);
+    await wrapper.get('[data-test="open-password-dialog"]').trigger('click');
+    await flushPromises();
+    const fill = async (id: string, value: string): Promise<void> => {
+      const input = document.body.querySelector<HTMLInputElement>(`[role="dialog"] #${id}`)!;
+      input.value = value;
+      input.dispatchEvent(new Event('input'));
+      await flushPromises();
+    };
+    await fill('current_password', 'Actual-2026!');
+    await fill('password', 'Nueva-clave-2026!');
+    await fill('password_confirmation', 'Nueva-clave-2026!');
+    document.body.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await flushPromises();
+
+    expect(updatePassword).toHaveBeenCalledWith('Nueva-clave-2026!', 'Nueva-clave-2026!', 'Actual-2026!');
+    expect(toast.success).toHaveBeenCalledWith('Contraseña actualizada');
+    expect(document.body.querySelector('[role="dialog"]')?.getAttribute('data-state') ?? 'closed').toBe('closed');
+  });
+
+  it('si la contraseña actual es incorrecta, el error sale dentro del diálogo y no se cierra', async () => {
+    vi.mocked(updatePassword).mockRejectedValue(new ApiError('Datos inválidos', 422, { current_password: ['La contraseña actual no es correcta.'] }));
+    const wrapper = mount(SecurityPage, { attachTo: document.body });
+    await flushPromises();
+    await wrapper.get('[data-test="open-password-dialog"]').trigger('click');
+    await flushPromises();
+    document.body.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await flushPromises();
+
+    const dialog = document.body.querySelector('[role="dialog"]')!;
+    expect(dialog.getAttribute('data-state')).toBe('open');
+    expect(dialog.textContent).toContain('La contraseña actual no es correcta');
+    expect(toast.success).not.toHaveBeenCalled();
   });
 });
