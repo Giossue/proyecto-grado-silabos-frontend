@@ -139,20 +139,34 @@ describe('SyllabusProcessActions', () => {
     expect(wrapper.findAll('button').find((item) => item.text().includes('Eliminar convocatoria'))!.attributes('disabled')).toBeDefined();
   });
 
-  it('cierra la convocatoria tras confirmar y explica que los sílabos quedan para consulta', async () => {
+  it('finaliza la convocatoria tras ver lo que queda sin aprobar y escribir la frase', async () => {
     vi.mocked(transitionProcess).mockResolvedValue({ message: 'Convocatoria cerrada.' });
     const wrapper = mountActions(openProcess());
 
-    const close = wrapper.findAll('.menu-item').find((item) => item.text().includes('Cerrar'));
-    expect(close).toBeDefined();
-    await close!.trigger('click');
-    expect(wrapper.find('[data-dialog]').text()).toContain('solo para consulta');
-    expect(wrapper.find('[data-dialog]').text()).toContain('un cambio de docente no los borra');
+    expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Cerrar'))).toBe(false);
+    const finish = wrapper.findAll('.menu-item').find((item) => item.text().includes('Finalizar'));
+    expect(finish).toBeDefined();
+    await finish!.trigger('click');
+    await flushPromises();
 
+    expect(getProcessImpact).toHaveBeenCalledWith('process-1');
+    const dialog = wrapper.find('[data-dialog]');
+    expect(dialog.text()).toContain('Finalizar la convocatoria');
+    expect(dialog.text()).toContain('ya no se editan, envían, revisan ni firman');
+    expect(dialog.text()).toContain('un cambio de docente no los borra');
+    expect(dialog.text()).toContain('Lo que no esté aprobado quedará solo para consulta');
+    expect(dialog.findAll('tbody tr').map((row) => row.text())).toEqual(['Sin iniciar12', 'Borrador3', 'En revisión5', 'Total20']);
+
+    const confirm = wrapper.get('[data-dialog] button[type="submit"]');
+    expect(confirm.text()).toContain('Finalizar');
+    expect(confirm.attributes('disabled')).toBeDefined();
+    await wrapper.get('#process-transition-confirm').setValue('Cerrar convocatoria');
+    expect(confirm.attributes('disabled')).toBeDefined();
     await wrapper.find('[data-dialog] form').trigger('submit');
     await flushPromises();
     expect(transitionProcess).not.toHaveBeenCalled();
-    await wrapper.get('#process-transition-confirm').setValue('Cerrar convocatoria');
+    await wrapper.get('#process-transition-confirm').setValue('Finalizar convocatoria');
+    expect(confirm.attributes('disabled')).toBeUndefined();
     await wrapper.find('[data-dialog] form').trigger('submit');
     await flushPromises();
 
@@ -160,9 +174,53 @@ describe('SyllabusProcessActions', () => {
     expect(wrapper.emitted('completed')).toEqual([['Convocatoria cerrada.']]);
   });
 
-  it('una convocatoria cerrada no ofrece cerrar ni eliminar', () => {
+  it('con todo aprobado lo dice al finalizar, sin tabla', async () => {
+    vi.mocked(getProcessImpact).mockResolvedValueOnce({
+      syllabi: { sin_iniciar: 0, borrador: 0, en_revision: 0, correccion_solicitada: 0, aprobado: 7 },
+      total: 7,
+    });
+    const wrapper = mountActions(pausedProcess());
+
+    wrapper.vm.run('cerrar');
+    await flushPromises();
+
+    const dialog = wrapper.find('[data-dialog]');
+    expect(dialog.text()).toContain('Todos los sílabos están aprobados');
+    expect(dialog.text()).not.toContain('Lo que no esté aprobado');
+    expect(dialog.find('table').exists()).toBe(false);
+  });
+
+  it('sin el conteo de sílabos no deja finalizar', async () => {
+    vi.mocked(getProcessImpact).mockReturnValueOnce(new Promise(() => {}));
+    const wrapper = mountActions(openProcess());
+
+    wrapper.vm.run('cerrar');
+    await flushPromises();
+    await wrapper.get('#process-transition-confirm').setValue('finalizar convocatoria');
+
+    expect(wrapper.get('[data-dialog] button[type="submit"]').attributes('disabled')).toBeDefined();
+  });
+
+  it('avisa si no pudo saber lo que queda sin aprobar y no deja finalizar', async () => {
+    vi.mocked(getProcessImpact).mockRejectedValueOnce(new ApiError('Sin conexión.', 500));
+    const wrapper = mountActions(openProcess());
+
+    wrapper.vm.run('cerrar');
+    await flushPromises();
+    await wrapper.get('#process-transition-confirm').setValue('finalizar convocatoria');
+
+    expect(wrapper.find('[data-dialog]').text()).toContain('No se pudo saber cuántos sílabos quedan sin aprobar');
+    expect(wrapper.get('[data-dialog] button[type="submit"]').attributes('disabled')).toBeDefined();
+  });
+
+  it('una convocatoria pausada también ofrece finalizar', () => {
+    const wrapper = mountActions(pausedProcess());
+    expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Finalizar'))).toBe(true);
+  });
+
+  it('una convocatoria cerrada no ofrece finalizar ni eliminar', () => {
     const wrapper = mountActions();
-    expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Cerrar'))).toBe(false);
+    expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Finalizar'))).toBe(false);
     expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Eliminar'))).toBe(false);
   });
 

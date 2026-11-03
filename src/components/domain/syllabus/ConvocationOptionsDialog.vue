@@ -28,7 +28,7 @@ const actions = computed<SheetAction[]>(() => {
         ...(process.state === 'abierto' ? [{ key: 'pausar', label: 'Pausar', icon: Pause }] : []),
         ...(process.state === 'pausado' ? [{ key: 'reanudar', label: 'Reanudar', icon: Play }] : []),
         ...(active ? [{ key: 'prorrogar', label: 'Prorrogar plazo', icon: CalendarClock }] : []),
-        ...(active ? [{ key: 'cerrar', label: 'Cerrar', icon: Lock, destructive: true }] : []),
+        ...(active ? [{ key: 'cerrar', label: 'Finalizar', icon: Lock, destructive: true }] : []),
         ...(active ? [{ key: 'eliminar', label: 'Eliminar', icon: Trash2, destructive: true }] : []),
     ];
 });

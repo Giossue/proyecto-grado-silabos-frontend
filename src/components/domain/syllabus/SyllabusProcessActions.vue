@@ -42,7 +42,7 @@ const deleting = ref(false);
 const deleteError = ref<string | null>(null);
 const deleteErrors = ref<Record<string, string[]>>({});
 const deleteMessage = ref('');
-const deleteImpact = ref<ProcessImpact | null>(null);
+const impact = ref<ProcessImpact | null>(null);
 const impactLoading = ref(false);
 const impactError = ref<string | null>(null);
 
@@ -60,37 +60,42 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
     icon: Play,
   },
   cerrar: {
-    title: 'Cerrar la convocatoria',
-    description: 'Los sílabos del período quedan guardados solo para consulta: ya no se editan, envían ni revisan, y un cambio de docente no los borra. Esta acción no se deshace',
-    label: 'Cerrar',
+    title: 'Finalizar la convocatoria',
+    description: 'Los sílabos del período quedan guardados solo para consulta: ya no se editan, envían, revisan ni firman, y un cambio de docente no los borra. Esta acción no se deshace',
+    label: 'Finalizar',
     icon: Lock,
     destructive: true,
   },
 };
 
-// Lo que no se deshace pide escribir una frase: cerrar, reanudar rehaciendo sílabos y eliminar.
 const typed = ref('');
 const phrase = computed((): string | null => {
-  if (pending.value === 'cerrar') return 'cerrar convocatoria';
+  if (pending.value === 'cerrar') return 'finalizar convocatoria';
   if (pending.value === 'reanudar' && templateImpact.value) return 'rehacer sílabos';
   return null;
 });
 const phraseReady = computed(() => phrase.value === null || matchesPhrase(typed.value, phrase.value));
+const transitionReady = computed(() => phraseReady.value && (pending.value !== 'cerrar' || impact.value !== null));
+const unapproved = computed((): SyllabusStateCounts => Object.fromEntries(
+  Object.entries(impact.value?.syllabi ?? {}).filter(([state, count]) => state !== 'aprobado' && count > 0),
+));
+const unapprovedTotal = computed(() => Object.values(unapproved.value).reduce((sum, count) => sum + count, 0));
 watch(phrase, () => { typed.value = ''; });
 const DELETE_PHRASE = 'eliminar convocatoria';
 const deleteTyped = ref('');
 const deleteReady = computed(() => !deleting.value
-  && deleteImpact.value !== null
+  && impact.value !== null
   && deleteMessage.value.trim() !== ''
   && matchesPhrase(deleteTyped.value, DELETE_PHRASE));
 
-const loadImpact = async (): Promise<void> => {
+const loadImpact = async (failure: string): Promise<void> => {
+  impact.value = null;
   impactLoading.value = true;
   impactError.value = null;
   try {
-    deleteImpact.value = await getProcessImpact(props.process.id);
+    impact.value = await getProcessImpact(props.process.id);
   } catch {
-    impactError.value = 'No se pudo saber cuántos sílabos se borran. Inténtelo de nuevo';
+    impactError.value = failure;
   } finally {
     impactLoading.value = false;
   }
@@ -100,12 +105,16 @@ watch(deleteOpen, (open) => {
   deleteTyped.value = '';
   deleteMessage.value = '';
   deleteErrors.value = {};
-  deleteImpact.value = null;
-  if (open) void loadImpact();
+  impact.value = null;
+  if (open) void loadImpact('No se pudo saber cuántos sílabos se borran. Inténtelo de nuevo');
+});
+
+watch(pending, (value) => {
+  if (value === 'cerrar') void loadImpact('No se pudo saber cuántos sílabos quedan sin aprobar. Inténtelo de nuevo');
 });
 
 const confirm = async (): Promise<void> => {
-  if (!pending.value || !phraseReady.value) return;
+  if (!pending.value || !transitionReady.value) return;
   processing.value = true;
   error.value = null;
   try {
@@ -174,7 +183,7 @@ const remove = async (): Promise<void> => {
     <DropdownMenuItem v-if="process.state === 'pausado'" @select="pending = 'reanudar'"><Play />Reanudar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" @select="deadlineOpen = true"><CalendarClock />Prorrogar plazo</DropdownMenuItem>
     <DropdownMenuSeparator v-if="process.state !== 'cerrado'" />
-    <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" variant="destructive" @select="pending = 'cerrar'"><Lock />Cerrar</DropdownMenuItem>
+    <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" variant="destructive" @select="pending = 'cerrar'"><Lock />Finalizar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.deletable && process.state !== 'cerrado'" variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
   </TableActionsMenu>
 
@@ -186,9 +195,21 @@ const remove = async (): Promise<void> => {
           <p>El administrador cambió la plantilla durante la pausa. Al reanudar se rehacen desde cero todos los sílabos de este período y se elimina su historial</p>
           <SyllabusStateCountsTable :counts="templateImpact" caption="Cantidad de sílabos que se rehacen, por estado" />
         </template>
+        <template v-if="pending === 'cerrar'">
+          <Skeleton v-if="impactLoading" class="h-24 w-full" />
+          <Alert v-else-if="impactError" variant="destructive"><AlertDescription>{{ impactError }}</AlertDescription></Alert>
+          <template v-else-if="impact">
+            <p v-if="impact.total === 0">La convocatoria no tiene sílabos</p>
+            <p v-else-if="unapprovedTotal === 0">Todos los sílabos están aprobados</p>
+            <template v-else>
+              <p>Lo que no esté aprobado quedará solo para consulta</p>
+              <SyllabusStateCountsTable :counts="unapproved" :total="unapprovedTotal" caption="Sílabos sin aprobar, por estado" />
+            </template>
+          </template>
+        </template>
         <ConfirmPhrase v-if="phrase" id="process-transition-confirm" v-model="typed" :phrase="phrase" />
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="templateImpact || dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing || !phraseReady"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[pending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ templateImpact ? 'Reanudar y rehacer sílabos' : dialogs[pending].label }}</Button></DialogFooter>
+        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="templateImpact || dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing || !transitionReady"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[pending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ templateImpact ? 'Reanudar y rehacer sílabos' : dialogs[pending].label }}</Button></DialogFooter>
       </form>
     </DialogContent>
   </Dialog>
@@ -200,7 +221,7 @@ const remove = async (): Promise<void> => {
       </DialogHeader>
       <Skeleton v-if="impactLoading" class="h-36 w-full" />
       <Alert v-else-if="impactError" variant="destructive"><AlertDescription>{{ impactError }}</AlertDescription></Alert>
-      <SyllabusStateCountsTable v-else-if="deleteImpact" :counts="deleteImpact.syllabi" :total="deleteImpact.total" caption="Sílabos que se borran, por estado" />
+      <SyllabusStateCountsTable v-else-if="impact" :counts="impact.syllabi" :total="impact.total" caption="Sílabos que se borran, por estado" />
       <Field :data-invalid="Boolean(deleteErrors.mensaje)">
         <FieldLabel for="process-delete-message" required>Mensaje para docentes, coordinación y biblioteca</FieldLabel>
         <Textarea id="process-delete-message" v-model="deleteMessage" rows="3" maxlength="1000" aria-required="true" :aria-invalid="Boolean(deleteErrors.mensaje)" />

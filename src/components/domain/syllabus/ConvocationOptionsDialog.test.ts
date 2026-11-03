@@ -64,11 +64,17 @@ describe('ConvocationOptionsDialog', () => {
     expect(labels(mountDialog('cerrado'))).not.toContain('Eliminar');
   });
 
-  it('el botón que cierra el diálogo dice Cancelar para no confundirse con la acción Cerrar', () => {
+  it('la acción manual se llama Finalizar, abierta o pausada, y el botón del pie dice Cancelar', () => {
     const wrapper = mountDialog('abierto');
     const footer = wrapper.findAll('.button').filter((item) => !labels(wrapper).includes(item.text()));
 
     expect(footer.map((item) => item.text())).toEqual(['Cancelar']);
-    expect(labels(wrapper)).toContain('Cerrar');
+    expect(labels(wrapper)).toContain('Finalizar');
+    expect(labels(wrapper)).not.toContain('Cerrar');
+    expect(labels(mountDialog('pausado'))).toContain('Finalizar');
+  });
+
+  it('una convocatoria cerrada no ofrece finalizar', () => {
+    expect(labels(mountDialog('cerrado'))).not.toContain('Finalizar');
   });
 });
