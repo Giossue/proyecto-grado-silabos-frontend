@@ -11,12 +11,12 @@ const emit = defineEmits<{ confirm: [password: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const password = ref('');
 
+// Se limpia al abrir: al confirmar, el campo no se vacía mientras el diálogo se desvanece.
 watch(open, (value) => { if (value) password.value = ''; });
 
 const submit = (): void => {
     if (!password.value) return;
     emit('confirm', password.value);
-    password.value = '';
 };
 </script>
 

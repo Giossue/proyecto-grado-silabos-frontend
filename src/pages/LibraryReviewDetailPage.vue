@@ -22,6 +22,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
+import { afterDialogExit } from '@/lib/dialogExit';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
 
@@ -115,10 +116,10 @@ const sendReturn = async (): Promise<void> => {
       reasons: selectedReasons.value,
       ...(otherSelected.value ? { other: otherReason.value.trim() } : {}),
     });
+    // Los motivos quedan marcados mientras el diálogo se desvanece; se sale de la página cuando terminó.
     returnOpen.value = false;
-    selectedReasons.value = [];
-    otherReason.value = '';
     toast.success(result.message);
+    await afterDialogExit();
     await router.replace(paths.library.reviews);
   } catch (failure) {
     if (failure instanceof ApiError) {
@@ -138,6 +139,7 @@ const approve = async (sign: StatementSigner): Promise<void> => {
   const result = await verifyLibraryReview(review.value.revision_id, sign(review.value.signing_statement));
   signOpen.value = false;
   toast.success(result.message);
+  await afterDialogExit();
   await router.replace(paths.library.reviews);
 };
 

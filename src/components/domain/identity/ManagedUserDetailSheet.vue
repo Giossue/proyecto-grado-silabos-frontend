@@ -65,9 +65,9 @@ const runAction = (key: string): void => {
     open.value = false;
     emit('action', key as 'access' | 'resend' | 'delete');
 };
-watch(open, (value) => { if (!value) editing.value = false; });
+// Se vuelve a la ficha al abrir: al cerrar, el formulario y sus avisos se desvanecen tal como estaban.
+watch(open, (value) => { if (value) editing.value = false; });
 const saved = (message: string): void => {
-    editing.value = false;
     open.value = false;
     emit('saved', message);
 };

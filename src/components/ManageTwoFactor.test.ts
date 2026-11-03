@@ -12,7 +12,16 @@ vi.mock('@/api/session', () => ({
   regenerateRecoveryCodes: vi.fn(),
 }));
 
+// jsdom no anima: con un nombre de animación al cerrar, reka deja el contenido montado como en el navegador.
+const simulateExitAnimation = (): void => {
+  const style = document.createElement('style');
+  style.dataset.exit = '';
+  style.textContent = '[data-state="closed"] { animation-name: exit; }';
+  document.head.append(style);
+};
+
 describe('ManageTwoFactor', () => {
+  afterEach(() => document.head.querySelectorAll('style[data-exit]').forEach((style) => style.remove()));
   enableAutoUnmount(afterEach);
   beforeEach(() => vi.resetAllMocks());
 
@@ -63,5 +72,27 @@ describe('ManageTwoFactor', () => {
     await flushPromises();
 
     expect(disableTwoFactor).toHaveBeenCalledWith('clave-actual');
+  });
+
+  it('al confirmar, el diálogo se desvanece como diálogo de desactivar', async () => {
+    simulateExitAnimation();
+    vi.mocked(getTwoFactorStatus).mockResolvedValue({ enabled: true, confirmation_required: false });
+    vi.mocked(disableTwoFactor).mockResolvedValue({ enabled: false, confirmation_required: false });
+    const wrapper = mount(ManageTwoFactor, { attachTo: document.body });
+    await flushPromises();
+    await wrapper.findAll('button').find((button) => button.text().includes('Desactivar 2FA'))!.trigger('click');
+    await flushPromises();
+    const input = document.body.querySelector('#confirm-current-password') as HTMLInputElement;
+    input.value = 'clave-actual';
+    input.dispatchEvent(new Event('input'));
+    await flushPromises();
+
+    (document.body.querySelector('form button[type="submit"]') as HTMLButtonElement).click();
+    await flushPromises();
+
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(dialog.dataset.state).toBe('closed');
+    expect(dialog.textContent).toContain('Desactivar la verificación en dos pasos');
+    expect(dialog.querySelector('button[type="submit"]')!.textContent?.trim()).toBe('Desactivar 2FA');
   });
 });

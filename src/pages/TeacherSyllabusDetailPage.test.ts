@@ -19,6 +19,7 @@ import { makeTestP12 } from "@/lib/signature/testCertificate";
 import { confirmSignatureDialog, fillSignatureDialog } from "@/test/signatureDialog";
 import { updateFormation } from "@/api/session";
 import { sessionState } from "@/state/session";
+import { DIALOG_EXIT_MS } from "@/lib/dialogExit";
 
 const routeLeaveGuards: Array<() => Promise<boolean> | boolean> = [];
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -117,6 +118,14 @@ const mountPage = () => mount(PageWithTooltips, {
   },
 });
 
+// jsdom no anima: con un nombre de animación al cerrar, reka deja el contenido montado como en el navegador.
+const simulateExitAnimation = (): void => {
+  const style = document.createElement("style");
+  style.dataset.exit = "";
+  style.textContent = '[data-state="closed"] { animation-name: exit; }';
+  document.head.append(style);
+};
+
 const openTab = async (wrapper: ReturnType<typeof mountPage>, title: string): Promise<void> => {
   const tab = wrapper.findAll('[role="tab"]').find((candidate) => candidate.text().includes(title));
   await tab!.trigger("mousedown", { button: 0 });
@@ -135,6 +144,7 @@ describe("TeacherSyllabusDetailPage", () => {
     vi.mocked(validateTeacherSyllabus).mockReset();
     vi.mocked(handleUnauthorized).mockReset();
     routeLeaveGuards.length = 0;
+    document.head.querySelectorAll("style[data-exit]").forEach((style) => style.remove());
   });
 
   it("presenta como documento de solo lectura una revisión enviada", async () => {
@@ -790,7 +800,8 @@ describe("TeacherSyllabusDetailPage", () => {
       statement: "silabos-ueb|silabo:syllabus-1|accion:envio_docente|huella:abc",
       cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
     });
-    expect(router.push).toHaveBeenCalledWith("/docente/mis-silabos");
+    // Vuelve a la lista cuando el diálogo terminó de cerrarse.
+    await vi.waitFor(() => expect(router.push).toHaveBeenCalledWith("/docente/mis-silabos"));
     wrapper.unmount();
   });
 
@@ -824,6 +835,47 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(buttonNamed(wrapper, "Asistente")).toBeUndefined();
     expect(wrapper.find('a[href*="documentos"]').exists()).toBe(false);
     expect(buttonNamed(wrapper, "Firmar")).toBeUndefined();
+    wrapper.unmount();
+  });
+
+  it("al copiar, el diálogo se desvanece nombrando todavía el paralelo", async () => {
+    simulateExitAnimation();
+    const draft = syllabus("borrador");
+    draft.copy_sources = [{ id: "syllabus-2", parallel: "B", state: "borrador" }];
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+    vi.mocked(copyTeacherSyllabus).mockResolvedValue({ message: "Contenido copiado", syllabus: syllabus("borrador") });
+    const wrapper = mountPage();
+    await flushPromises();
+    await buttonNamed(wrapper, "Copiar desde paralelo B")!.trigger("click");
+    await flushPromises();
+    const dialog = (): HTMLElement => Array.from(document.body.querySelectorAll<HTMLElement>('[role="dialog"]')).find((item) => item.textContent?.includes("Copiar contenido"))!;
+
+    Array.from(dialog().querySelectorAll("button")).find((button) => button.textContent?.includes("Copiar contenido"))!.click();
+    await flushPromises();
+
+    expect(dialog().dataset.state).toBe("closed");
+    expect(dialog().textContent).toContain("¿Copiar desde el paralelo B?");
+    wrapper.unmount();
+  });
+
+  it("tras enviar, vuelve a la lista solo cuando el diálogo terminó de cerrarse", async () => {
+    router.push.mockClear();
+    const sent = syllabus("en_revision");
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
+    vi.mocked(submitTeacherSyllabus).mockResolvedValue({ message: "Enviado", syllabus: sent });
+    const wrapper = mountPage();
+    await flushPromises();
+    await buttonNamed(wrapper, "Enviar")!.trigger("click");
+    await flushPromises();
+
+    (Array.from(document.body.querySelectorAll('[role="dialog"] button')).find((button) => button.textContent?.trim() === "Enviar") as HTMLButtonElement).click();
+    await flushPromises();
+    expect(submitTeacherSyllabus).toHaveBeenCalled();
+    expect(router.push).not.toHaveBeenCalled();
+
+    await new Promise((resolve) => setTimeout(resolve, DIALOG_EXIT_MS));
+    await flushPromises();
+    expect(router.push).toHaveBeenCalledWith("/docente/mis-silabos");
     wrapper.unmount();
   });
 });

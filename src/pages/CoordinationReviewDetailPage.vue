@@ -24,6 +24,7 @@ import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { afterDialogExit } from '@/lib/dialogExit';
 import { goBack } from '@/lib/goBack';
 import { sheetPixels } from '@/lib/documentLayout';
 import { openRevisionPdf } from '@/lib/openPdf';
@@ -123,14 +124,13 @@ const toPreview = (detail: ReviewDetail | null): PreviewSection[] => (detail?.re
 const previewSections = computed(() => toPreview(data.value));
 const previousSections = computed(() => toPreview(previousDetail.value));
 
-const changed = async (message: string): Promise<void> => {
-  toast.success(message);
-  await load();
-};
+// Refresca o sale cuando el diálogo terminó de cerrarse: al refrescar, «Reiniciar» puede dejar de ofrecerse.
 const restarted = async (message: string): Promise<void> => {
-  if (!data.value?.reset.erases_history) { await changed(message); return; }
+  const leaves = Boolean(data.value?.reset.erases_history);
   toast.success(message);
-  await router.replace(area.reviews);
+  await afterDialogExit();
+  if (leaves) await router.replace(area.reviews);
+  else await load();
 };
 
 const openCorrection = (): void => {
@@ -143,9 +143,10 @@ const submitCorrection = async (): Promise<void> => {
   correctionErrors.value = [];
   try {
     const result = await requestCorrection(data.value.revision.id, { justification: correctionJustification.value });
+    // El comentario queda escrito mientras el diálogo se desvanece; se sale de la página cuando terminó.
     correctionOpen.value = false;
-    correctionJustification.value = '';
     toast.success(result.message);
+    await afterDialogExit();
     await router.replace(area.reviews);
   } catch (failure) {
     const fieldErrors = failure instanceof ApiError ? [...(failure.errors.justification ?? []), ...(failure.errors.revision ?? [])] : [];
@@ -160,6 +161,7 @@ const approve = async (sign: StatementSigner): Promise<void> => {
   const result = await approveReview(data.value.revision.id, sign(data.value.signing_statement));
   signOpen.value = false;
   toast.success(result.message);
+  await afterDialogExit();
   await router.replace(area.reviews);
 };
 

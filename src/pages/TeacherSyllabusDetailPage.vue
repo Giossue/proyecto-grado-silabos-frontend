@@ -49,6 +49,7 @@ import { openRevisionPdf } from '@/lib/openPdf';
 import { sheetPixels } from '@/lib/documentLayout';
 import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
 import { attemptKey } from '@/lib/attemptKey';
+import { afterDialogExit, useShownWhileClosing } from '@/lib/dialogExit';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { ArrowLeft, ArrowRight, Bot, Copy, Eye, FileSignature, FileText, Send, X } from '@lucide/vue';
@@ -92,6 +93,8 @@ const confirmSubmitOpen = ref(false);
 const signOpen = ref(false);
 const localBlockReason = ref<string | null>(null);
 const copySource = ref<{ id: string; parallel: string } | null>(null);
+// Mientras se desvanece, el diálogo sigue nombrando el paralelo elegido.
+const shownCopySource = useShownWhileClosing(() => copySource.value);
 const saveFailed = ref(false);
 const PAUSED_MESSAGE = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude";
 
@@ -418,6 +421,8 @@ const submit = async (sign: StatementSigner | null = null): Promise<void> => {
     invalidateValidation();
     validationResults.value = [];
     toast.success("Sílabo enviado correctamente");
+    // Sale de la página cuando el diálogo terminó de cerrarse.
+    await afterDialogExit();
     await router.push(paths.teacher.syllabi);
   } catch (reason) {
     if (sign && isSignatureFailure(reason)) throw reason;
@@ -625,8 +630,8 @@ onBeforeUnmount(() => {
     <Dialog :open="copySource !== null" @update:open="(open) => { if (!open) copySource = null; }">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>¿Copiar desde el paralelo {{ copySource?.parallel }}?</DialogTitle>
-          <DialogDescription>Todo lo que escribió en este sílabo se reemplazará por lo del paralelo {{ copySource?.parallel }}. Cada paralelo se envía y se firma por separado</DialogDescription>
+          <DialogTitle>¿Copiar desde el paralelo {{ shownCopySource?.parallel }}?</DialogTitle>
+          <DialogDescription>Todo lo que escribió en este sílabo se reemplazará por lo del paralelo {{ shownCopySource?.parallel }}. Cada paralelo se envía y se firma por separado</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="copySource = null">Cancelar</Button>

@@ -1,5 +1,6 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiError } from '@/api/client';
 import { getSystemSettings, testSystemConnection, updateSystemSettings, type SystemSettings } from '@/api/systemSettings';
 import AdminSystemSettingsPage from '@/pages/AdminSystemSettingsPage.vue';
 import { toast } from '@/lib/toast';
@@ -35,7 +36,16 @@ const setInput = async (id: string, value: string): Promise<void> => {
   await flushPromises();
 };
 
+// jsdom no anima: con un nombre de animación al cerrar, reka deja el contenido montado como en el navegador.
+const simulateExitAnimation = (): void => {
+  const style = document.createElement('style');
+  style.dataset.exit = '';
+  style.textContent = '[data-state="closed"] { animation-name: exit; }';
+  document.head.append(style);
+};
+
 describe('Configuración › Sistema', () => {
+  afterEach(() => document.head.querySelectorAll('style[data-exit]').forEach((style) => style.remove()));
   beforeEach(() => {
     document.body.innerHTML = '';
     vi.mocked(getSystemSettings).mockResolvedValue(settings());
@@ -128,5 +138,32 @@ describe('Configuración › Sistema', () => {
     button('Probar conexión')[0]!.click();
     await flushPromises();
     expect(toast.error).toHaveBeenCalledWith('El proveedor no aceptó la clave');
+  });
+
+  it('al cerrar la confirmación conserva su título y su aviso, y al abrirla de nuevo el aviso vuelve a empezar', async () => {
+    simulateExitAnimation();
+    vi.mocked(updateSystemSettings).mockRejectedValueOnce(new ApiError('Datos inválidos', 422, { current_password: ['La contraseña no es correcta'] }));
+    mount(AdminSystemSettingsPage, { attachTo: document.body });
+    await flushPromises();
+    await openSection('Asistente de IA');
+    await setInput('settings-ai-model', 'deepseek-flash');
+    button('Guardar')[0]!.click();
+    await flushPromises();
+    await setInput('confirm-current-password', 'mala');
+    document.body.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit', { cancelable: true }));
+    await flushPromises();
+    const dialog = (): HTMLElement => document.body.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(dialog().textContent).toContain('La contraseña no es correcta');
+
+    button('Cancelar')[0]!.click();
+    await flushPromises();
+    expect(dialog().dataset.state).toBe('closed');
+    expect(dialog().textContent).toContain('Guardar el asistente de IA');
+    expect(dialog().textContent).toContain('La contraseña no es correcta');
+
+    button('Guardar')[0]!.click();
+    await flushPromises();
+    expect(dialog().dataset.state).toBe('open');
+    expect(dialog().textContent).toContain('Por seguridad, confirme su contraseña actual para guardar');
   });
 });

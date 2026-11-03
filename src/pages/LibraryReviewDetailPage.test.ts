@@ -4,6 +4,7 @@ import { ApiError } from '@/api/client';
 import { commentLibraryReview, getLibraryReview, verifyLibraryReview, type LibraryReviewDetail } from '@/api/library';
 import { makeTestP12 } from '@/lib/signature/testCertificate';
 import LibraryReviewDetailPage from '@/pages/LibraryReviewDetailPage.vue';
+import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 import { confirmSignatureDialog, fillSignatureDialog } from '@/test/signatureDialog';
 
 const { toastSuccess, openRevisionPdf, replace } = vi.hoisted(() => ({ toastSuccess: vi.fn(), openRevisionPdf: vi.fn(), replace: vi.fn() }));
@@ -74,8 +75,17 @@ const submitReturn = async (): Promise<void> => {
   await flushPromises();
 };
 
+// jsdom no anima: con un nombre de animación al cerrar, reka deja el contenido montado como en el navegador.
+const simulateExitAnimation = (): void => {
+  const style = document.createElement('style');
+  style.dataset.exit = '';
+  style.textContent = '[data-state="closed"] { animation-name: exit; }';
+  document.head.append(style);
+};
+
 describe('LibraryReviewDetailPage', () => {
   beforeEach(() => {
+    document.head.querySelectorAll('style[data-exit]').forEach((style) => style.remove());
     vi.mocked(getLibraryReview).mockReset();
     vi.mocked(commentLibraryReview).mockReset();
     vi.mocked(verifyLibraryReview).mockReset();
@@ -121,7 +131,8 @@ describe('LibraryReviewDetailPage', () => {
       cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
     });
     expect(toastSuccess).toHaveBeenCalledWith('Sílabo aprobado');
-    expect(replace).toHaveBeenCalledWith('/biblioteca/revisiones');
+    // Vuelve a la lista cuando el diálogo terminó de cerrarse.
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith('/biblioteca/revisiones'));
     wrapper.unmount();
   });
 
@@ -173,7 +184,7 @@ describe('LibraryReviewDetailPage', () => {
       reasons: ['libro_no_disponible', 'codigo_incorrecto'],
     });
     expect(toastSuccess).toHaveBeenCalledWith('Comentario enviado al docente');
-    expect(replace).toHaveBeenCalledWith('/biblioteca/revisiones');
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith('/biblioteca/revisiones'));
     wrapper.unmount();
   });
 
@@ -263,6 +274,29 @@ describe('LibraryReviewDetailPage', () => {
     expect(wrapper.text()).toContain('Volver al historial');
     expect(wrapper.text()).not.toContain('Volver a revisiones');
     window.history.replaceState(null, '');
+    wrapper.unmount();
+  });
+
+  it('al devolver, el diálogo se desvanece con los motivos marcados y luego vuelve a la lista', async () => {
+    simulateExitAnimation();
+    replace.mockReset();
+    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail() });
+    vi.mocked(commentLibraryReview).mockResolvedValue({ message: 'Comentario enviado al docente' });
+    const wrapper = mountPage();
+    await flushPromises();
+    await openReturn(wrapper);
+    for (const box of reasonBoxes()) box.click();
+    await flushPromises();
+
+    await submitReturn();
+
+    expect(commentLibraryReview).toHaveBeenCalled();
+    expect(document.querySelector<HTMLElement>('[role="dialog"]')!.dataset.state).toBe('closed');
+    expect(reasonBoxes().map((box) => box.getAttribute('aria-checked'))).toEqual(['true', 'true']);
+    expect(replace).not.toHaveBeenCalled();
+    await new Promise((resolve) => setTimeout(resolve, DIALOG_EXIT_MS));
+    await flushPromises();
+    expect(replace).toHaveBeenCalledWith('/biblioteca/revisiones');
     wrapper.unmount();
   });
 });

@@ -4,6 +4,7 @@ import { Check, ListFilter, X } from '@lucide/vue';
 import { onBeforeUnmount, ref, useAttrs, useTemplateRef, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { afterDialogExit } from '@/lib/dialogExit';
 import { cn } from '@/lib/utils';
 
 defineOptions({ inheritAttrs: false });
@@ -11,6 +12,8 @@ defineOptions({ inheritAttrs: false });
 const attrs = useAttrs();
 
 const open = ref(false);
+// Sigue visible mientras se desvanece, igual que los modales.
+const shown = ref(false);
 const activeCount = ref(0);
 const panel = useTemplateRef<HTMLElement>('panel');
 
@@ -38,8 +41,9 @@ const onKey = (event: KeyboardEvent): void => {
     }
 };
 
-watch(open, (isOpen) => {
+watch(open, async (isOpen) => {
     if (isOpen) {
+        shown.value = true;
         recount();
         window.addEventListener('keydown', onKey);
         document.body.style.overflow = 'hidden';
@@ -49,6 +53,8 @@ watch(open, (isOpen) => {
 
     window.removeEventListener('keydown', onKey);
     document.body.style.overflow = '';
+    await afterDialogExit();
+    if (!open.value) shown.value = false;
 });
 
 onBeforeUnmount(() => {
@@ -75,12 +81,17 @@ onBeforeUnmount(() => {
             </Badge>
         </Button>
 
-        <div
-            v-show="open"
-            class="fixed inset-0 z-50 bg-overlay/50"
-            aria-hidden="true"
-            @click="close"
-        />
+        <Transition
+            enter-active-class="animate-in fade-in-0 duration-200"
+            leave-active-class="animate-out fade-out-0 duration-200"
+        >
+            <div
+                v-show="open"
+                class="fixed inset-0 z-50 bg-overlay/50"
+                aria-hidden="true"
+                @click="close"
+            />
+        </Transition>
     </div>
 
     <div
@@ -93,9 +104,12 @@ onBeforeUnmount(() => {
                 'max-sm:rounded-t-xl max-sm:bg-card max-sm:p-4',
                 'max-sm:pb-(--safe-footer-inset)',
                 'max-sm:shadow-modal max-sm:ring-1 max-sm:ring-surface-ring',
-                !open && 'max-sm:hidden',
+                'max-sm:duration-200 max-sm:data-[state=open]:animate-in max-sm:data-[state=open]:fade-in-0 max-sm:data-[state=open]:slide-in-from-bottom',
+                'max-sm:data-[state=closed]:animate-out max-sm:data-[state=closed]:fade-out-0 max-sm:data-[state=closed]:slide-out-to-bottom max-sm:data-[state=closed]:fill-mode-forwards',
+                !shown && 'max-sm:hidden',
             )
         "
+        :data-state="open ? 'open' : 'closed'"
         role="group"
         aria-label="Filtros de la tabla"
         @change="recount"

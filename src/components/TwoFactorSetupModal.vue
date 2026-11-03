@@ -30,8 +30,9 @@ const isOpen = defineModel<boolean>('isOpen');
 const verification = ref(false);
 const code = ref('');
 
+// Se vuelve al código QR al abrir: al cerrar, el paso actual se desvanece tal como estaba.
 watch(isOpen, (open) => {
-    if (!open) {
+    if (open) {
         verification.value = false;
         code.value = '';
     }

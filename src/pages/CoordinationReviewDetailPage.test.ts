@@ -15,6 +15,7 @@ import {
 import { getSession } from "@/api/session";
 import { makeTestP12 } from "@/lib/signature/testCertificate";
 import CoordinationReviewDetailPage from "@/pages/CoordinationReviewDetailPage.vue";
+import { DIALOG_EXIT_MS } from "@/lib/dialogExit";
 import { confirmSignatureDialog, fillSignatureDialog } from "@/test/signatureDialog";
 
 vi.mock("vue-router", async (importOriginal) => ({
@@ -117,8 +118,21 @@ const headerButton = (wrapper: ReturnType<typeof mountPage>, name: string) =>
 const dialogButton = (name: string) => [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')]
   .find((item) => item.textContent?.includes(name));
 
+// jsdom no anima: con un nombre de animación al cerrar, reka deja el contenido montado como en el navegador.
+const simulateExitAnimation = (): void => {
+  const style = document.createElement("style");
+  style.dataset.exit = "";
+  style.textContent = '[data-state="closed"] { animation-name: exit; }';
+  document.head.append(style);
+};
+const exit = async (): Promise<void> => {
+  await new Promise((resolve) => setTimeout(resolve, DIALOG_EXIT_MS));
+  await flushPromises();
+};
+
 describe("CoordinationReviewDetailPage", () => {
   beforeEach(() => {
+    document.head.querySelectorAll("style[data-exit]").forEach((style) => style.remove());
     for (const mock of [
       approveReview,
       compareReviews,
@@ -204,7 +218,7 @@ describe("CoordinationReviewDetailPage", () => {
       statement: "silabos-ueb|silabo:syllabus-1|accion:aprobacion_coordinacion|huella:abc",
       cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
     });
-    expect(replace).toHaveBeenCalledWith("/coordinacion/revisiones");
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/coordinacion/revisiones"));
     expect(getReview).toHaveBeenCalledTimes(1);
     wrapper.unmount();
   });
@@ -242,7 +256,8 @@ describe("CoordinationReviewDetailPage", () => {
     expect(requestCorrection).toHaveBeenCalledWith("revision-1", {
       justification: "Debe precisar el resultado observado",
     });
-    expect(replace).toHaveBeenCalledWith("/coordinacion/revisiones");
+    // Vuelve a la cola cuando el diálogo terminó de cerrarse.
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith("/coordinacion/revisiones"));
     wrapper.unmount();
   });
 
@@ -281,7 +296,7 @@ describe("CoordinationReviewDetailPage", () => {
     await flushPromises();
 
     expect(resetSyllabus).toHaveBeenCalledWith("syllabus-1", "Error en la ficha de la materia");
-    expect(replace).toHaveBeenCalled();
+    await vi.waitFor(() => expect(replace).toHaveBeenCalled());
     wrapper.unmount();
   });
 
@@ -378,6 +393,61 @@ describe("CoordinationReviewDetailPage", () => {
     expect(preview.get(".free-text-table").text()).toContain("Semana 1");
     expect(preview.text()).toContain("FACULTAD: Ciencias");
     expect(preview.text()).toContain("Texto institucional");
+    wrapper.unmount();
+  });
+
+  it("al solicitar corrección, el diálogo se desvanece con el comentario escrito y luego vuelve a la cola", async () => {
+    simulateExitAnimation();
+    vi.mocked(getReview).mockResolvedValue(detail());
+    vi.mocked(requestCorrection).mockResolvedValue({ message: "Corrección solicitada" });
+    const wrapper = mountPage();
+    await flushPromises();
+    await headerButton(wrapper, "Solicitar corrección")!.trigger("click");
+    await flushPromises();
+    const textarea = (): HTMLTextAreaElement => document.querySelector<HTMLTextAreaElement>("#correction-justification")!;
+    textarea().value = "Debe precisar el resultado observado";
+    textarea().dispatchEvent(new Event("input"));
+    await flushPromises();
+
+    document.querySelector<HTMLFormElement>("#correction-form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+    await flushPromises();
+
+    expect(requestCorrection).toHaveBeenCalled();
+    expect(document.querySelector<HTMLElement>('[role="dialog"]')!.dataset.state).toBe("closed");
+    expect(textarea().value).toBe("Debe precisar el resultado observado");
+    expect(replace).not.toHaveBeenCalled();
+    await exit();
+    expect(replace).toHaveBeenCalledWith("/coordinacion/revisiones");
+    wrapper.unmount();
+  });
+
+  it("al reiniciar sin borrar el historial, refresca la revisión cuando el diálogo terminó de cerrarse", async () => {
+    simulateExitAnimation();
+    vi.mocked(getReview)
+      .mockResolvedValueOnce({ ...detail(), reset: { allowed: true, erases_history: false, revisions: 1, signatures: 0, has_pdf: false } })
+      .mockResolvedValue({ ...detail(), reset: { allowed: false } });
+    vi.mocked(resetSyllabus).mockResolvedValue({ message: "Sílabo reiniciado" });
+    const wrapper = mountPage();
+    await flushPromises();
+    await headerButton(wrapper, "Más")!.trigger("keydown", { key: "Enter" });
+    await flushPromises();
+    [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((item) => item.textContent?.includes("Reiniciar sílabo"))!.click();
+    await flushPromises();
+    const reason = document.body.querySelector<HTMLTextAreaElement>("#restart-reason")!;
+    reason.value = "Error en la ficha de la materia";
+    reason.dispatchEvent(new Event("input"));
+    await flushPromises();
+
+    dialogButton("Reiniciar")!.click();
+    await flushPromises();
+
+    expect(resetSyllabus).toHaveBeenCalled();
+    expect(getReview).toHaveBeenCalledTimes(1);
+    const restart = (): HTMLElement | undefined => [...document.body.querySelectorAll<HTMLElement>('[role="dialog"]')].find((item) => item.textContent?.includes("Reiniciar «Arquitectura de Software»"));
+    expect(restart()?.dataset.state).toBe("closed");
+    await exit();
+    expect(getReview).toHaveBeenCalledTimes(2);
+    expect(restart()).toBeUndefined();
     wrapper.unmount();
   });
 });

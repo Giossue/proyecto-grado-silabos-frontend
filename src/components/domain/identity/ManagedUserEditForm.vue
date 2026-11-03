@@ -13,6 +13,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { joinName, NAME_PARTS, splitName, upperName, type NamePartKey } from '@/lib/personName';
+import { useShownWhileClosing } from '@/lib/dialogExit';
 import { roleNeedsCareer } from '@/lib/roles';
 
 const props = defineProps<{
@@ -35,6 +36,8 @@ reset();
 watch(() => props.user.id, reset);
 const unchanged = computed(() => fullName.value === joinName(splitName(props.user.nombre)) && form.value.correo_electronico === props.user.correo_electronico && !form.value.role_code);
 const removing = ref<ManagedUser['roles'][number] | null>(null);
+// Mientras se desvanece sigue nombrando el rol que se quitaba.
+const shownRemoving = useShownWhileClosing(() => removing.value);
 const removeProcessing = ref(false); const removeError = ref<string | null>(null);
 const removeRole = async (): Promise<void> => {
     if (!removing.value) return;
@@ -71,7 +74,7 @@ const submit = async (replaceCoordinator = false): Promise<void> => {
             <Field v-if="roleNeedsCareer(form.role_code)" :data-invalid="Boolean(errors.career_id)"><FieldLabel :for="`managed-edit-career-${user.id}`" required>Carrera</FieldLabel><Select v-model="form.career_id" required><SelectTrigger :id="`managed-edit-career-${user.id}`"><SelectValue placeholder="Seleccione" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="career in careers" :key="career.id" :value="career.id">{{ career.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.career_id" /></Field>
             <FormSheetActions :close="() => emit('cancel')" :processing="processing" :disabled="unchanged" :icon="Check" label="Guardar cambios" />
     </FieldGroup></form>
-    <Dialog :open="removing !== null" @update:open="(value: boolean) => { if (!value) removing = null; }"><DialogContent><DialogHeader><DialogTitle>Quitar rol</DialogTitle><DialogDescription>{{ user.nombre }} deja de ser {{ removing?.name }}{{ removing?.career_name ? ` de ${removing.career_name}` : '' }}. Su cuenta y sus otros roles no cambian y el rol queda en el historial. Si es docente, sus paralelos quedan sin docente</DialogDescription></DialogHeader>
+    <Dialog :open="removing !== null" @update:open="(value: boolean) => { if (!value) removing = null; }"><DialogContent><DialogHeader><DialogTitle>Quitar rol</DialogTitle><DialogDescription>{{ user.nombre }} deja de ser {{ shownRemoving?.name }}{{ shownRemoving?.career_name ? ` de ${shownRemoving.career_name}` : '' }}. Su cuenta y sus otros roles no cambian y el rol queda en el historial. Si es docente, sus paralelos quedan sin docente</DialogDescription></DialogHeader>
         <FeedbackAlert v-if="removeError" :message="removeError" />
         <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="button" variant="destructive" :disabled="removeProcessing" @click="removeRole"><Spinner v-if="removeProcessing" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Quitar rol</Button></DialogFooter>
     </DialogContent></Dialog>

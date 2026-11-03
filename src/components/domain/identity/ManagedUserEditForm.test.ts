@@ -1,11 +1,16 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { updateManagedUser, type ManagedUser } from '@/api/admin-users';
+import { removeManagedUserRole, updateManagedUser, type ManagedUser } from '@/api/admin-users';
 import { ApiError } from '@/api/client';
 import ManagedUserEditForm from '@/components/domain/identity/ManagedUserEditForm.vue';
 
 vi.mock('@/api/admin-users', () => ({ updateManagedUser: vi.fn(), removeManagedUserRole: vi.fn() }));
 const update = vi.mocked(updateManagedUser);
+const remove = vi.mocked(removeManagedUserRole);
+// jsdom no anima: con un nombre de animación al cerrar, reka deja el contenido montado como en el navegador.
+const style = document.createElement('style');
+style.textContent = '[data-state="closed"] { animation-name: exit; }';
+document.head.append(style);
 
 const user: ManagedUser = { id: 'u1', nombre: 'ANA PÉREZ', correo_electronico: 'ana@ueb.edu.ec', active: true, pending_activation: false, two_factor_enabled: false, roles: [{ id: 'r1', code: 'docente', name: 'Docente', career_name: 'Software' }], careers: ['Software'], assignments: [] };
 const roles = [{ codigo: 'docente', nombre: 'Docente' }, { codigo: 'coordinador', nombre: 'Coordinador' }];
@@ -49,6 +54,25 @@ describe('ManagedUserEditForm', () => {
     await flushPromises();
 
     expect(update).toHaveBeenCalledWith('u1', expect.objectContaining({ nombre: 'ANA MARÍA PÉREZ GÓMEZ' }));
+    wrapper.unmount();
+  });
+
+  it('al quitar un rol, el aviso sigue nombrando ese rol mientras se cierra', async () => {
+    remove.mockResolvedValue({ message: 'Rol quitado' });
+    const two: ManagedUser = { ...user, roles: [...user.roles, { id: 'r2', code: 'coordinador', name: 'Coordinador', career_name: 'Software' }] };
+    const wrapper = mount(ManagedUserEditForm, { attachTo: document.body, props: { user: two, roles, careers: [] } });
+    await flushPromises();
+
+    (document.body.querySelector('button[aria-label="Quitar el rol Coordinador de Software"]') as HTMLButtonElement).click();
+    await flushPromises();
+    expect(document.body.textContent).toContain('ANA PÉREZ deja de ser Coordinador de Software.');
+
+    ([...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Quitar rol') as HTMLButtonElement).click();
+    await flushPromises();
+
+    expect(wrapper.emitted('saved')).toEqual([['Rol quitado']]);
+    expect(document.body.querySelector('[role="dialog"]')?.getAttribute('data-state')).toBe('closed');
+    expect(document.body.textContent).toContain('ANA PÉREZ deja de ser Coordinador de Software.');
     wrapper.unmount();
   });
 });

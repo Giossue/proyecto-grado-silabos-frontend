@@ -7,8 +7,16 @@ vi.mock('@/lib/toast', () => ({ toast: { success: vi.fn() } }));
 
 const mountDialog = () => mount(InstallAppDialog, { props: { open: true }, attachTo: document.body });
 
+// jsdom no anima: con un nombre de animación al cerrar, reka deja el contenido montado como en el navegador.
+const simulateExitAnimation = (): void => {
+  const style = document.createElement('style');
+  style.dataset.exit = '';
+  style.textContent = '[data-state="closed"] { animation-name: exit; }';
+  document.head.append(style);
+};
+
 describe('InstallAppDialog', () => {
-  afterEach(() => { document.body.innerHTML = ''; });
+  afterEach(() => { document.body.innerHTML = ''; document.head.querySelectorAll('style[data-exit]').forEach((style) => style.remove()); });
 
   it('sin aviso del navegador explica cómo instalar en Chrome, Edge o Safari de Mac', async () => {
     const wrapper = mountDialog();
@@ -45,6 +53,26 @@ describe('InstallAppDialog', () => {
     await flushPromises();
 
     expect(document.body.textContent).toContain('Elija «Agregar a pantalla de inicio»');
+    wrapper.unmount();
+  });
+
+  it('al instalar se cierra con el botón Instalar a la vista, sin pasar a las instrucciones', async () => {
+    simulateExitAnimation();
+    initializeInstallApp();
+    const event = Object.assign(new Event('beforeinstallprompt', { cancelable: true }), { prompt: vi.fn().mockResolvedValue(undefined), userChoice: Promise.resolve({ outcome: 'accepted' as const }) });
+    window.dispatchEvent(event);
+    const wrapper = mountDialog();
+    await flushPromises();
+
+    Array.from(document.querySelectorAll('button')).find((item) => item.textContent?.trim() === 'Instalar')!.click();
+    await flushPromises();
+    await wrapper.setProps({ open: false });
+    await flushPromises();
+
+    const dialog = document.body.querySelector<HTMLElement>('[role="dialog"]')!;
+    expect(dialog.dataset.state).toBe('closed');
+    expect(Array.from(dialog.querySelectorAll('button')).some((item) => item.textContent?.trim() === 'Instalar')).toBe(true);
+    expect(dialog.textContent).not.toContain('Chrome o Edge');
     wrapper.unmount();
   });
 });

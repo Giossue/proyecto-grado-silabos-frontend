@@ -17,6 +17,7 @@ import TwoFactorSetupModal from '@/components/TwoFactorSetupModal.vue';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
+import { useShownWhileClosing } from '@/lib/dialogExit';
 
 const emit = defineEmits<{ loading: [loading: boolean] }>();
 
@@ -110,6 +111,8 @@ const confirmOpen = computed({
     get: () => pendingAction.value !== null,
     set: (value: boolean) => { if (!value) pendingAction.value = null; },
 });
+// Mientras se desvanece, el diálogo conserva el título y el botón de la acción que se confirmó.
+const shownAction = useShownWhileClosing(() => pendingAction.value);
 const confirmPassword = async (password: string): Promise<void> => {
     const action = pendingAction.value;
     pendingAction.value = null;
@@ -153,10 +156,10 @@ onMounted(() => void load());
 
         <PasswordConfirmDialog
             v-model:open="confirmOpen"
-            :title="pendingAction === 'disable' ? 'Desactivar la verificación en dos pasos' : 'Activar la verificación en dos pasos'"
+            :title="shownAction === 'disable' ? 'Desactivar la verificación en dos pasos' : 'Activar la verificación en dos pasos'"
             description="Por seguridad, confirme su contraseña actual para continuar"
-            :confirm-label="pendingAction === 'disable' ? 'Desactivar 2FA' : 'Continuar'"
-            :destructive="pendingAction === 'disable'"
+            :confirm-label="shownAction === 'disable' ? 'Desactivar 2FA' : 'Continuar'"
+            :destructive="shownAction === 'disable'"
             @confirm="confirmPassword"
         />
         <TwoFactorSetupModal

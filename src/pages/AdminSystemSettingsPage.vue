@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
+import { useShownWhileClosing } from '@/lib/dialogExit';
 import { toast } from '@/lib/toast';
 
 const settings = ref<SystemSettings | null>(null);
@@ -111,9 +112,11 @@ const save = async (section: SettingsSection, currentPassword?: string): Promise
     }
 };
 
-const closeConfirm = (): void => {
-    confirmFor.value = null;
+// El aviso de contraseña se limpia al abrir, no al cerrar: así la confirmación se desvanece tal como estaba.
+const shownConfirmFor = useShownWhileClosing(() => confirmFor.value);
+const openConfirm = (section: 'ia' | 'biblioteca'): void => {
     errors.value = Object.fromEntries(Object.entries(errors.value).filter(([key]) => key !== 'current_password'));
+    confirmFor.value = section;
 };
 
 const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
@@ -227,7 +230,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                     </div>
                 </template>
                 <div class="flex flex-wrap gap-2">
-                    <Button type="button" :disabled="saving !== null || !dirty.ia" @click="confirmFor = 'ia'">
+                    <Button type="button" :disabled="saving !== null || !dirty.ia" @click="openConfirm('ia')">
                         <Spinner v-if="saving === 'ia'" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar
                     </Button>
                     <Button type="button" variant="outline" :disabled="testing !== null" @click="test('ia')">
@@ -263,7 +266,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                     <Input id="settings-library-url" v-model="library.base_url" placeholder="Ej. http://biblioteca.ueb.edu.ec" autocomplete="off" aria-required="true" />
                 </Field>
                 <div class="flex flex-wrap gap-2">
-                    <Button type="button" :disabled="saving !== null || !dirty.biblioteca" @click="confirmFor = 'biblioteca'">
+                    <Button type="button" :disabled="saving !== null || !dirty.biblioteca" @click="openConfirm('biblioteca')">
                         <Spinner v-if="saving === 'biblioteca'" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar
                     </Button>
                     <Button type="button" variant="outline" :disabled="testing !== null" @click="test('biblioteca')">
@@ -278,10 +281,10 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
 
         <PasswordConfirmDialog
             :open="confirmFor !== null"
-            :title="confirmFor === 'ia' ? 'Guardar el asistente de IA' : 'Guardar la biblioteca'"
+            :title="shownConfirmFor === 'ia' ? 'Guardar el asistente de IA' : 'Guardar la biblioteca'"
             :description="errors.current_password ?? 'Por seguridad, confirme su contraseña actual para guardar'"
             confirm-label="Guardar"
-            @update:open="(value: boolean) => { if (!value) closeConfirm(); }"
+            @update:open="(value: boolean) => { if (!value) confirmFor = null; }"
             @confirm="(password: string) => confirmFor && save(confirmFor, password)"
         />
     </SettingsLayout>
