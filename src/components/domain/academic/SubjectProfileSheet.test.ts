@@ -15,7 +15,7 @@ const formSheet = defineComponent({
   template: '<div><slot :close="close" /></div>',
 });
 const passthrough = defineComponent({ template: '<div><slot /></div>' });
-const actions = defineComponent({ template: '<button type="submit">Guardar proyecto de carrera</button>' });
+const actions = defineComponent({ props: { disabled: Boolean }, template: '<button type="submit" :disabled="disabled">Guardar proyecto de carrera</button>' });
 const editor = defineComponent({
   props: { id: String, label: String, modelValue: { type: Object, default: null }, disabled: Boolean },
   emits: ['update:modelValue'],
@@ -61,6 +61,24 @@ describe('SubjectProfileSheet', () => {
     expect(wrapper.emitted('saved')).toHaveLength(1);
   });
 
+  it('sin cambios «Guardar proyecto de carrera» queda deshabilitado y se habilita al editar', async () => {
+    vi.mocked(getSubjectProfile).mockResolvedValue({
+      fields: [{ id: 'f1', key: 'descripcion', label: 'Descripción', section: 'Descripción', quien_llena: 'coordinacion', content: { type: 'doc', content: [{ type: 'paragraph' }] } }],
+      values: { f1: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Texto de ejemplo' }] }] } },
+      complete: true,
+    });
+    const wrapper = mountSheet();
+    await wrapper.setProps({ open: true });
+    await flushPromises();
+    const save = () => wrapper.get('button[type="submit"]');
+
+    expect(save().attributes('disabled')).toBeDefined();
+    await wrapper.get('form').trigger('submit');
+    expect(saveSubjectProfile).not.toHaveBeenCalled();
+    await wrapper.get('[data-id="ficha-f1"]').trigger('click');
+    expect(save().attributes('disabled')).toBeUndefined();
+  });
+
   it('divide la ficha en pestañas por sección y usa el nombre de la sección si el campo no tiene nombre', async () => {
     vi.mocked(getSubjectProfile).mockResolvedValue({
       fields: [
@@ -102,6 +120,7 @@ describe('SubjectProfileSheet', () => {
 
     expect(wrapper.text()).toContain('Sin llenar');
     expect(wrapper.text()).not.toContain('El docente puede editarlo');
+    await wrapper.get('[data-id="ficha-f1"]').trigger('click');
     await wrapper.get('form').trigger('submit');
     await flushPromises();
     expect(saveSubjectProfile).toHaveBeenCalledWith('subject-1', expect.any(Object));

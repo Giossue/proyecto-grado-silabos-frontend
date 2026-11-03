@@ -32,7 +32,10 @@ const activeSection = computed<string>({
 const isEmpty = (fieldId: string): boolean => responseEmpty(fields.value.find((field) => field.id === fieldId)?.template, values.value[fieldId]);
 const sectionHasEmpty = (section: string): boolean => fields.value.some((field) => sectionOf(field) === section && isEmpty(field.id));
 const shownFields = computed(() => fields.value.filter((field) => sectionOf(field) === activeSection.value));
-const canSave = computed(() => !loading.value && !saving.value && !props.disabled && fields.value.length > 0);
+// Lo cargado al abrir: sin cambios no hay nada que guardar, como en los demás formularios.
+const loaded = ref('');
+const changed = computed(() => JSON.stringify(values.value) !== loaded.value);
+const canSave = computed(() => !loading.value && !saving.value && !props.disabled && fields.value.length > 0 && changed.value);
 
 watch(open, async (value) => {
   if (!value) return;
@@ -42,6 +45,7 @@ watch(open, async (value) => {
     const profile = await getSubjectProfile(props.subjectId);
     fields.value = profile.fields;
     values.value = Object.fromEntries(profile.fields.map((field) => [field.id, profile.values[field.id] ?? field.content ?? null]));
+    loaded.value = JSON.stringify(values.value);
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo abrir el proyecto de carrera';
   } finally {
