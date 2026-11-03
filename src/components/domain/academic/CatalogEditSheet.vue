@@ -41,11 +41,17 @@ const form = ref({ nombre: '', code: '', faculty_id: '', campus: '', modality: '
 // Bibliotecas de Koha de la facultad: casillas con las disponibles; todas marcadas equivale a «todas».
 const tab = ref<'datos' | 'bibliotecas'>('datos');
 const chosenLibraries = ref<string[]>([]);
+// Las marcadas al abrir: «Guardar cambios» compara con esto, igual que los demás campos.
+const openedLibraries = ref<string[]>([]);
 const { libraries: koha, error: kohaError, load: loadKoha } = useCatalogLibraries();
 const loadLibraries = async (): Promise<void> => {
     await loadKoha();
-    if (koha.value !== null) chosenLibraries.value = initialLibraries(props.catalogLibraries, koha.value);
+    if (koha.value === null) return;
+    chosenLibraries.value = initialLibraries(props.catalogLibraries, koha.value);
+    openedLibraries.value = [...chosenLibraries.value];
 };
+// Solo exige marcar una cuando Koha publica bibliotecas; si no responde o no hay, no bloquea.
+const noLibraryChosen = computed(() => (koha.value?.length ?? 0) > 0 && chosenLibraries.value.length === 0);
 /** Lista a guardar; null si no cambia o si no se pudo consultar Koha. */
 const librariesToSave = (): string[] | null => {
     if (koha.value === null) return null;
@@ -75,6 +81,7 @@ const reset = (): void => {
     errors.value = {};
     tab.value = 'datos';
     chosenLibraries.value = [...props.catalogLibraries];
+    openedLibraries.value = [...props.catalogLibraries];
     if (props.entity === 'facultad') void loadLibraries();
 };
 watch(open, (value) => { if (value) reset(); }, { immediate: true });
@@ -87,7 +94,7 @@ const unchanged = computed(() => {
 
     return Object.entries(initial).every(([key, value]) => form.value[key as keyof typeof form.value] === value)
         && logo.value === null && !removeLogo.value
-        && (props.entity !== 'facultad' || (chosenLibraries.value.length > 0 && librariesToSave() === null));
+        && (props.entity !== 'facultad' || sameLibraries(chosenLibraries.value, openedLibraries.value));
 });
 const logoValidationError = (message: string | null): void => {
     const nextErrors = { ...errors.value };
@@ -102,7 +109,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
         tab.value = 'datos';
         return;
     }
-    if (props.entity === 'facultad' && koha.value !== null && chosenLibraries.value.length === 0) {
+    if (props.entity === 'facultad' && noLibraryChosen.value) {
         errors.value = { catalog_libraries: ['Marque al menos una biblioteca'] };
         tab.value = 'bibliotecas';
         return;
@@ -162,7 +169,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
                     <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel :for="`edit-starts-on-${recordId}`" required>Fecha de inicio</FieldLabel><DatePicker :id="`edit-starts-on-${recordId}`" v-model="form.starts_on" required :disabled="locked" /><FieldError :errors="errors.starts_on" /></Field>
                     <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required :disabled="locked" /><FieldError :errors="errors.ends_on" /></Field>
                 </div>
-                <FormSheetActions :close="close" :processing="processing" :disabled="unchanged || Boolean(lockReason) || (entity === 'facultad' && koha !== null && chosenLibraries.length === 0)" :icon="Check" label="Guardar cambios" />
+                <FormSheetActions :close="close" :processing="processing" :disabled="unchanged || Boolean(lockReason) || (entity === 'facultad' && noLibraryChosen)" :icon="Check" label="Guardar cambios" />
             </FieldGroup></form>
         </template>
     </FormSheet>

@@ -142,6 +142,22 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
     wrapper.unmount();
   });
 
+  it('si Koha no responde o no publica bibliotecas, sin cambios tampoco se puede guardar, y cambiar un dato sí', async () => {
+    for (const koha of [() => vi.mocked(getCatalogLibraries).mockRejectedValueOnce(new Error('Koha caído')), () => vi.mocked(getCatalogLibraries).mockResolvedValueOnce([])]) {
+      koha();
+      const wrapper = mountSheet();
+      await flushPromises();
+
+      expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
+      const name = document.querySelector<HTMLInputElement>('input[id^="edit-name-"]')!;
+      name.value = 'Facultad renombrada';
+      name.dispatchEvent(new Event('input'));
+      await flushPromises();
+      expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(false);
+      wrapper.unmount();
+    }
+  });
+
   it('desmarcar bibliotecas guarda los códigos de las que quedan', async () => {
     const wrapper = mountSheet();
     await flushPromises();
@@ -167,12 +183,21 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
     wrapper.unmount();
   });
 
-  it('si la facultad ya tenía guardadas todas, se ven todas marcadas y al guardar queda vacío', async () => {
+  it('si la facultad ya tenía guardadas todas, se ven todas marcadas, sin cambios no se guarda y al guardar otro dato queda vacío', async () => {
     const wrapper = mountSheet({ catalogLibraries: ['BFCCA', 'BGEN', 'BHTM'] });
     await flushPromises();
     await tab('Bibliotecas');
 
     expect(['LAGUACOTO', 'MATRIZ', 'SAN MIGUEL'].map(isChecked)).toEqual([true, true, true]);
+    expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
+    await tick('MATRIZ');
+    await tick('MATRIZ');
+    expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
+    await tab('Datos');
+    const name = document.querySelector<HTMLInputElement>('input[id^="edit-name-"]')!;
+    name.value = 'Facultad renombrada';
+    name.dispatchEvent(new Event('input'));
+    await flushPromises();
     await save();
     expect(sentLibraries()).toBe('[]');
     wrapper.unmount();
