@@ -46,7 +46,16 @@ export const screenTours: Record<string, TourStep[]> = {
     step(TABLE, 'Cuentas', 'Pulse una fila para ver el detalle. El «+1» junto al rol indica que la persona tiene otros roles', 'top'),
   ],
   '/admin/plantilla': [
-    step(ACTIONS, 'Plantilla', 'Edite el formato único del sílabo o cargue el formato oficial. Con una convocatoria abierta está bloqueada: pause la convocatoria para cambiarla', 'left'),
+    step(ACTIONS, 'Editar', 'Abre el editor de la plantilla. Pide escribir «editar plantilla». Con una convocatoria abierta está bloqueado: pause la convocatoria para cambiarla', 'left'),
+    // Pasos del editor: solo aparecen mientras se edita.
+    step('[data-tour="template-back"]', 'Volver a la vista', 'Sale del editor. Si hay cambios sin guardar, le pregunta antes de descartarlos', 'bottom'),
+    step('[aria-label="Formato del texto"]', 'Formato del texto', 'Negrita, color, alineación, listas y tablas. Se activa al escribir dentro de un campo', 'bottom'),
+    step('[data-tour="template-selection"]', 'Lo seleccionado', 'Pulse un campo o el título de una sección en la hoja. Aquí elige quién llena el campo (docente, carrera o texto fijo), lo sube, lo baja o lo elimina. Una sección también puede ir en horizontal', 'bottom'),
+    step('[aria-label="Opciones avanzadas"]', 'Opciones avanzadas', '«Diseño» cambia márgenes y tamaños de letra. «Editar JSON» descarga la plantilla o la reemplaza entera, y eso se guarda al instante', 'bottom'),
+    step('[data-tour="template-save"]', 'Guardar', 'Guarda los cambios y vuelve a la vista. Un punto en el botón avisa que hay cambios sin guardar. También con Ctrl+S', 'bottom'),
+    step('[data-sheet]', 'La hoja', 'Así se verá el sílabo. Escriba directo en los títulos y campos. Pase el ratón entre campos para agregar un campo o una sección. Pulse el logo de la universidad para cambiarlo; ese cambio se guarda al instante', 'left'),
+    step('[data-tour="template-assistant"]', 'Asistente', 'Pídale cambios con sus palabras. Revise cada propuesta y aplíquela; después pulse «Guardar»', 'left'),
+    shell.theme,
   ],
   '/admin/auditoria': [
     step(FILTERS, 'Filtros', 'Acote por fecha, persona, acción o resultado', 'bottom'),

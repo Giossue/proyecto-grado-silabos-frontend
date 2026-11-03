@@ -467,7 +467,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
         </div>
         <div class="flex shrink-0 items-center gap-2">
           <span class="sr-only" aria-live="polite"><template v-if="changed">Sin guardar</template></span>
-          <Button type="button" class="relative" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar<span v-if="changed" data-unsaved class="absolute -right-1 -top-1 size-2.5 rounded-full bg-warning ring-2 ring-background" aria-hidden="true" /></Button>
+          <Button type="button" class="relative" data-tour="template-save" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar<span v-if="changed" data-unsaved class="absolute -right-1 -top-1 size-2.5 rounded-full bg-warning ring-2 ring-background" aria-hidden="true" /></Button>
         </div>
         </div>
       </div>

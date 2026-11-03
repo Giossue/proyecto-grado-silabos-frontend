@@ -52,7 +52,7 @@ const showsSidebar = useShowsSidebar();
                 <RoleDeadlineBanner v-if="!editorOpen" />
                 <slot />
             </ScrollArea>
-            <ScreenHelpButton v-if="!templateEditorOpen" :editor-mode="curriculumEditorOpen" />
+            <ScreenHelpButton :editor-mode="editorOpen" :corner="templateEditorOpen ? 'left' : 'right'" />
             <SetupChecklist v-if="!editorOpen" />
             <AccessibilityDialog v-if="!editorOpen" floating />
         </AppContent>

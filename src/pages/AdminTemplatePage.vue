@@ -136,7 +136,7 @@ onBeforeUnmount(() => {
 
 <template>
     <header v-if="editing" class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 backdrop-blur sm:px-5" aria-label="Herramientas de la plantilla">
-        <Button type="button" variant="link" size="sm" class="h-auto px-0" @click="builder?.leave()"><ArrowLeft aria-hidden="true" />Volver a la vista</Button>
+        <Button type="button" variant="link" size="sm" class="h-auto px-0" data-tour="template-back" @click="builder?.leave()"><ArrowLeft aria-hidden="true" />Volver a la vista</Button>
         <span class="flex-1" />
         <AppearanceToggle />
     </header>
@@ -183,7 +183,7 @@ onBeforeUnmount(() => {
             <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-7rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de plantilla">
                 <TemplateAssistant :refresh="assistantRefresh" :draft-version="draftVersion" :snapshot="draftSnapshot" :busy="deciding" @apply="applyProposal" @discard="discardProposal" />
             </aside>
-            <Button type="button" class="fixed right-6 bottom-6 z-40 h-12 rounded-full px-5 shadow-menu" :aria-expanded="assistantOpen" @click="toggleAssistant">
+            <Button type="button" data-tour="template-assistant" class="fixed right-6 bottom-6 z-40 h-12 rounded-full px-5 shadow-menu" :aria-expanded="assistantOpen" @click="toggleAssistant">
                 <X v-if="assistantOpen" data-icon="inline-start" aria-hidden="true" /><Bot v-else data-icon="inline-start" aria-hidden="true" />{{ assistantOpen ? 'Cerrar asistente' : 'Asistente' }}
             </Button>
         </template>

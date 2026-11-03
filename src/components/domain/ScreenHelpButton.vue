@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 import { screenHelpState } from '@/state/screenHelp';
 import 'driver.js/dist/driver.css';
 
-const props = withDefaults(defineProps<{ editorMode?: boolean }>(), { editorMode: false });
+const props = withDefaults(defineProps<{ editorMode?: boolean; corner?: 'left' | 'right' }>(), { editorMode: false, corner: 'right' });
 
 const route = useRoute();
 const button = ref<{ $el: HTMLElement } | null>(null);
@@ -74,7 +74,7 @@ onBeforeUnmount(stop);
           variant="secondary"
           :class="cn(
             'fixed z-40 size-12 rounded-full bg-ring text-background shadow-menu hover:bg-ring/90 [&_svg]:size-5',
-            'max-sm:bottom-4 max-sm:left-4 sm:right-4',
+            'max-sm:bottom-4 max-sm:left-4', props.corner === 'left' ? 'sm:left-4' : 'sm:right-4',
             props.editorMode ? 'sm:bottom-4' : 'sm:bottom-20',
           )"
           aria-label="Ayuda de esta pantalla"
@@ -83,7 +83,7 @@ onBeforeUnmount(stop);
           <CircleHelp aria-hidden="true" />
         </Button>
       </TooltipTrigger>
-      <TooltipContent side="left">Ayuda de esta pantalla</TooltipContent>
+      <TooltipContent :side="props.corner === 'left' ? 'right' : 'left'">Ayuda de esta pantalla</TooltipContent>
     </Tooltip>
   </TooltipProvider>
 </template>

@@ -14,7 +14,7 @@ enableAutoUnmount(afterEach);
 
 const help = { screen: '/admin/usuarios', title: 'Usuarios y roles', content: 'Primer párrafo.\n\nSegundo párrafo.' };
 const signIn = () => sessionState.replace({ user: { id: 'u1' }, active_role: { code: 'administrador' } } as never);
-const mountButton = () => mount({ components: { ScreenHelpButton }, template: '<main><ScreenHelpButton /></main>' }, { attachTo: document.body });
+const mountButton = (props = '') => mount({ components: { ScreenHelpButton }, template: `<main><ScreenHelpButton ${props} /></main>` }, { attachTo: document.body });
 const visible = (element: Element) => Object.defineProperty(element, 'getClientRects', { value: () => [{}] });
 
 describe('ScreenHelpButton', () => {
@@ -75,5 +75,17 @@ describe('ScreenHelpButton', () => {
     expect(classes).toContain('fixed');
     expect(classes).toContain('sm:bottom-20');
     expect(classes).toContain('sm:right-4');
+  });
+
+  it('en el editor de la plantilla va abajo a la izquierda, lejos del botón «Asistente»', async () => {
+    vi.mocked(listAvailableScreenHelp).mockResolvedValue({ help: [help] });
+    signIn();
+    const wrapper = mountButton('editor-mode corner="left"');
+    await flushPromises();
+
+    const classes = wrapper.get('[aria-label="Ayuda de esta pantalla"]').classes();
+    expect(classes).toContain('sm:left-4');
+    expect(classes).toContain('sm:bottom-4');
+    expect(classes).not.toContain('sm:right-4');
   });
 });
