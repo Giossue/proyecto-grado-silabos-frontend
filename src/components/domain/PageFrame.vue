@@ -32,11 +32,13 @@ const props = withDefaults(
         hideIcon?: boolean;
         loading?: boolean;
         actionsSkeleton?: string[];
+        statusSkeleton?: boolean;
     }>(),
     {
         size: 'full',
         loading: false,
         actionsSkeleton: () => [],
+        statusSkeleton: false,
     },
 );
 
@@ -138,6 +140,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                     <div v-if="loading" class="flex min-w-0 flex-col gap-1">
                         <h1 v-if="title" class="sr-only">{{ title }}</h1>
                         <Skeleton data-skeleton="page-title" class="h-8 w-72 max-w-full" />
+                        <Skeleton v-if="statusSkeleton" data-skeleton="page-status" class="h-5.5 w-24 rounded-full" />
                         <Skeleton data-skeleton="page-description" class="h-6 w-96 max-w-full" />
                     </div>
                     <div v-else class="flex min-w-0 flex-col gap-1">

@@ -58,6 +58,8 @@ withDefaults(
         :filters="mode === 'schedule' ? 3 : 1"
         :actions="false"
         :selectable="mode === 'schedule'"
+        :badges="mode === 'teachers' ? [3] : []"
+        filter-width="lg:w-44"
         search
     />
 </template>

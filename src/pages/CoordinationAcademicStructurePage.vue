@@ -183,7 +183,8 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
     :title="pageTitle"
     :description="pageDescription"
     :size="mode === 'curriculum' ? 'full' : 'wide'"
-    :loading="!(curriculum && schedule && assignments)"
+    :loading="!(curriculum && schedule && assignments) && !loadError"
+    :actions-skeleton="loading && !loadError ? ({ teachers: ['w-44', 'w-36'], curriculum: ['w-44', 'w-32'], schedule: [] } as Record<string, string[]>)[mode] : []"
   >
     <template v-if="mode === 'curriculum' && curriculum?.curriculum.lock_reason" #banner>
       <ProcessLockAlert banner :lock="curriculum.curriculum.lock" />
@@ -230,7 +231,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
       </template
     >
     <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading" variant="academic-structure" :mode="mode" :filters="mode === 'schedule' ? 3 : 1" />
+    <LoadingSkeleton v-else-if="loading" variant="academic-structure" :mode="mode" />
     <ManagedUserSheet
       v-if="mode === 'teachers'"
       v-model:open="teacherOpen"

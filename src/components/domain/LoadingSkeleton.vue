@@ -47,6 +47,7 @@ const props = withDefaults(defineProps<{
     actions?: boolean;
     cellLines?: number | number[];
     badges?: number[];
+    filterWidth?: string;
     selectable?: boolean;
     chip?: boolean;
     tabs?: number;
@@ -69,6 +70,7 @@ const props = withDefaults(defineProps<{
     actions: true,
     cellLines: 1,
     badges: undefined,
+    filterWidth: undefined,
     selectable: false,
     chip: false,
     tabs: 0,
@@ -90,6 +92,7 @@ const tableProps = computed(() => ({
     actions: props.actions,
     cellLines: props.cellLines,
     badges: props.badges,
+    filterWidth: props.filterWidth,
     selectable: props.selectable,
     tabs: props.tabs,
     heading: props.heading,
@@ -220,15 +223,15 @@ const tableProps = computed(() => ({
                 </div>
             </div>
 
-            <div v-else-if="variant === 'form'" :class="sidebar ? 'flex flex-col gap-6 md:flex-row md:items-start' : 'contents'">
+            <div v-else-if="variant === 'form'" :class="sidebar ? 'flex flex-col gap-6 md:min-h-96 md:flex-row md:items-start' : 'contents'">
                 <div v-if="sidebar" data-skeleton="form-sections" class="flex w-full shrink-0 flex-col gap-1 md:w-72">
                     <div v-for="section in 4" :key="section" class="flex items-center border-l-2 px-3 py-2"><Skeleton class="h-5 w-3/4" /></div>
                 </div>
                 <div class="flex min-w-0 flex-1 flex-col gap-7">
                     <div v-for="row in rows" :key="row" class="flex flex-col gap-2">
-                        <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2">
                             <Skeleton class="h-3.5 w-32" />
-                            <Skeleton v-if="sidebar" class="h-5 w-44 max-w-1/2" />
+                            <Skeleton v-if="sidebar" class="h-5.5 w-20 rounded-full" />
                         </div>
                         <Skeleton class="h-9 w-full" />
                     </div>

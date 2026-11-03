@@ -57,6 +57,7 @@ const load = async (): Promise<void> => {
 const canReviewCurrent = computed(() => Boolean(data.value?.can_decide && data.value.revision.is_current && data.value.syllabus.state === 'en_revision'));
 const canSign = computed(() => canReviewCurrent.value && Boolean(data.value?.signing_statement));
 const sheetWidth = computed(() => (data.value ? sheetPixels(data.value.presentation.document).portrait : 0));
+const defaultSheetWidth = sheetPixels(null).portrait;
 const statusNotes = computed(() => {
   if (!data.value) return [];
   const notes: string[] = [];
@@ -263,5 +264,5 @@ onMounted(load);
     <SignatureDialog v-model:open="signOpen" title="Firmar y enviar a biblioteca" confirm-label="Firmar y enviar" :run="approve" />
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-  <PageFrame v-else-if="loading" title="" description="" loading header-class="syllabus-editor-header" hide-icon><LoadingSkeleton variant="preview" /></PageFrame>
+  <PageFrame v-else-if="loading" title="" description="" loading status-skeleton :actions-skeleton="['w-9', 'w-44', 'w-64']" header-class="syllabus-editor-header" :header-width="defaultSheetWidth" hide-icon><LoadingSkeleton variant="preview" /></PageFrame>
 </template>

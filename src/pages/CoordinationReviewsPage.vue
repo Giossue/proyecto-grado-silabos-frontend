@@ -82,11 +82,11 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
 </script>
 
 <template>
-  <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo" size="wide" :loading="!data && !error">
+  <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo" size="wide" :loading="!data && !error" :actions-skeleton="loading && !data ? ['w-48'] : []">
     <template #actions>
       <ConvocationActions v-if="summary?.coordination_convocation" :convocation="summary.coordination_convocation" :blocked-reason="openHint" @changed="changed" />
     </template>
-    <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="1" :cell-lines="[2, 1, 1, 2]" :actions="false" :tabs="2" />
+    <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" /><LoadingSkeleton v-else-if="loading && !data && tab === 'seguimiento'" variant="table" :columns="3" :filters="1" filter-width="lg:w-44" :cell-lines="[2, 2, 1]" :badges="[3]" :actions="false" :tabs="2" /><LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :cell-lines="[2, 1, 1, 1]" :actions="false" :tabs="2" />
     <Tabs v-if="data" v-model="tab" class="gap-4">
       <TabsList class="h-11 justify-start" aria-label="Vistas de revisión">
         <TabsTrigger value="cola" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><Inbox aria-hidden="true" />Cola de revisión</TabsTrigger>

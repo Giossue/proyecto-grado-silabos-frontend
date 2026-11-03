@@ -69,7 +69,7 @@ const reviewPanels = computed(() =>
         </div>
     </template>
 
-    <div v-else-if="variant === 'preview'" data-skeleton="preview-sheet" class="min-w-0 overflow-x-auto py-4">
+    <div v-else-if="variant === 'preview'" data-skeleton="preview-sheet" class="min-w-0 overflow-x-auto">
         <div class="template-sheet relative">
             <div class="flex flex-col gap-6">
                 <div class="flex items-center justify-between gap-4">

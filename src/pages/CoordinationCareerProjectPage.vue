@@ -23,6 +23,8 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { useClientFilter } from '@/composables/useClientFilter';
 import { paths } from '@/lib/routes';
 import { toast } from '@/lib/toast';
+import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 
 type Subject = ScheduledSubjects['options']['activeSubjects'][number];
@@ -84,14 +86,17 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos" size="wide" :loading="!data && !loadError">
+  <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos" size="wide" :loading="!data && !loadError" :actions-skeleton="!data && !loadError ? [tab === 'documentos' ? 'w-40' : 'w-44'] : []">
     <template v-if="data?.career.lock_reason && tab !== 'documentos'" #banner><ProcessLockAlert banner :lock="data.career.lock" /></template>
     <template #actions>
       <Button v-if="tab === 'documentos'" type="button" @click="uploadOpen = true"><Plus data-icon="inline-start" aria-hidden="true" />Subir documento</Button>
       <FichaImportDialog v-else :disabled="Boolean(data?.career.lock_reason)" @applied="saved" />
     </template>
     <Tabs v-model="tab" class="gap-4">
-      <TabsList class="h-11 justify-start" aria-label="Vistas del proyecto de carrera">
+      <div v-if="!data && !loadError" data-skeleton="table-tabs" class="flex h-11 items-center gap-2" aria-hidden="true">
+        <div v-for="width in ['w-16', 'w-36']" :key="width" class="flex h-full items-center gap-2 px-4"><Skeleton class="size-4" /><Skeleton :class="cn('h-4', width)" /></div>
+      </div>
+      <TabsList v-else class="h-11 justify-start" aria-label="Vistas del proyecto de carrera">
         <TabsTrigger value="materias" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><BookOpen aria-hidden="true" />Materias</TabsTrigger>
         <TabsTrigger value="documentos" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><FileText aria-hidden="true" />Documentos de apoyo</TabsTrigger>
       </TabsList>

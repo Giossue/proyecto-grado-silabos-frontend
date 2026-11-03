@@ -12,6 +12,7 @@ import SyllabusDocumentPreview, { type PreviewSection } from '@/components/domai
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { libraryCommentLines } from '@/lib/reviewComment';
@@ -136,12 +137,17 @@ watch(() => route.params.revision, (current, before) => { if (current !== before
 <template>
   <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 backdrop-blur sm:px-5" aria-label="Herramientas del historial">
     <IconTooltip label="Volver al sílabo"><Button as-child variant="ghost" size="icon" aria-label="Volver al sílabo"><RouterLink :to="area.review(currentVersion?.id ?? String(route.params.revision))"><ArrowLeft aria-hidden="true" /></RouterLink></Button></IconTooltip>
-    <div class="flex min-w-0 flex-col leading-tight">
+    <div v-if="!data && !loadError" class="flex min-w-0 flex-col gap-1.5" data-skeleton="history-title">
+      <Skeleton class="h-4 w-48 max-w-full" />
+      <Skeleton class="h-3.5 w-32 max-w-full" />
+    </div>
+    <div v-else class="flex min-w-0 flex-col leading-tight">
       <span class="truncate font-medium">{{ data?.syllabus.subject ?? '' }}</span>
       <span class="truncate text-sm text-muted-foreground">{{ title }}</span>
     </div>
     <span class="flex-1" />
-    <TooltipProvider>
+    <Skeleton v-if="!data && !loadError" class="size-9" />
+    <TooltipProvider v-else>
       <Tooltip>
         <TooltipTrigger as-child>
           <span class="inline-flex" :tabindex="changedFields.size === 0 ? 0 : undefined">
@@ -176,8 +182,18 @@ watch(() => route.params.revision, (current, before) => { if (current !== before
       </div>
     </div>
     <aside class="flex w-full shrink-0 flex-col border-t bg-card lg:sticky lg:top-14 lg:h-[calc(100dvh-3.5rem)] lg:w-80 lg:border-t-0 lg:border-l" aria-label="Historial de versiones">
-      <h2 class="p-4 pb-2 text-base font-medium">Historial de versiones</h2>
-      <ScrollArea type="auto" class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-6.5rem)]">
+      <div v-if="loading && !data" class="flex flex-col gap-1 p-4" role="status" aria-label="Cargando versiones" data-skeleton="history-versions">
+        <div class="flex h-6 items-center pb-2"><Skeleton class="h-5 w-44" /></div>
+        <section v-for="day in 2" :key="day" class="flex flex-col gap-1">
+          <div class="flex h-9 items-end pb-1"><Skeleton class="h-4 w-32" /></div>
+          <div v-for="version in 2" :key="version" class="flex flex-col gap-1.5 px-3 py-2">
+            <Skeleton class="h-4 w-44" />
+            <Skeleton class="h-3.5 w-12" />
+          </div>
+        </section>
+      </div>
+      <h2 v-else class="p-4 pb-2 text-base font-medium">Historial de versiones</h2>
+      <ScrollArea v-if="data" type="auto" class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-6.5rem)]">
         <div class="flex flex-col gap-1 px-4 pb-4">
           <section v-for="day in days" :key="day.label" class="flex flex-col gap-1">
             <h3 class="pt-3 pb-1 text-sm text-muted-foreground">{{ capitalized(day.label) }}</h3>

@@ -18,6 +18,7 @@ const props = withDefaults(defineProps<{
     plainToolbar?: boolean;
     cellLines?: number | number[];
     badges?: number[];
+    filterWidth?: string;
 }>(), {
     rows: 5,
     columns: 6,
@@ -32,6 +33,7 @@ const props = withDefaults(defineProps<{
     plainToolbar: false,
     cellLines: 1,
     badges: () => [],
+    filterWidth: 'lg:w-48',
 });
 
 const columnCount = computed(() => Math.max(2, props.columns));
@@ -68,7 +70,7 @@ const hasToolbar = computed(() => props.search || props.filters > 0);
                 </div>
                 <Skeleton v-if="filters > 0" class="h-9 w-full sm:hidden" />
                 <div v-if="filters > 0" data-skeleton="table-filters" class="hidden gap-3 sm:grid sm:grid-cols-2 lg:flex lg:items-end">
-                    <div v-for="filter in filters" :key="filter" class="min-w-0 lg:w-48 lg:shrink-0">
+                    <div v-for="filter in filters" :key="filter" :class="cn('min-w-0 lg:shrink-0', filterWidth)">
                         <Skeleton class="h-9 w-full" />
                     </div>
                 </div>
