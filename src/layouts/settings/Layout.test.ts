@@ -20,6 +20,7 @@ const makeRouter = () => {
       { path: paths.dashboard, component: Empty },
       { path: paths.admin.security, component: SettingsLayout },
       { path: paths.admin.system, component: SettingsLayout },
+      { path: paths.coordination.emailNotices, component: SettingsLayout },
     ],
   });
   router.afterEach(trackSettingsReturn);
@@ -77,5 +78,17 @@ describe('Configuración: Volver', () => {
     const admin = await mountAt(router);
     const tab = admin.findAll('nav[aria-label="Configuración"] a').find((link) => link.text() === 'Sistema');
     expect(tab?.attributes('href')).toBe('/admin/configuracion/sistema');
+  });
+
+  it('Coordinación, Docente y Biblioteca tienen la pestaña «Notificaciones»; Administración no', async () => {
+    const router = makeRouter();
+    await router.push(paths.coordination.security);
+    const coordinator = await mountAt(router);
+    const tab = coordinator.findAll('nav[aria-label="Configuración"] a').find((link) => link.text() === 'Notificaciones');
+    expect(tab?.attributes('href')).toBe('/coordinacion/configuracion/notificaciones');
+
+    await router.push(paths.admin.security);
+    const admin = await mountAt(router);
+    expect(admin.find('nav[aria-label="Configuración"]').text()).not.toContain('Notificaciones');
   });
 });

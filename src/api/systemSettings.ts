@@ -4,7 +4,7 @@ export type SettingSource = 'pantalla' | 'entorno';
 type Field<T> = { value: T; source: SettingSource };
 
 export type SystemSettings = {
-  notifications: { emails: Field<boolean | null>; digest: Field<boolean | null>; digest_time: Field<string | null> };
+  notifications: { emails: Field<boolean | null>; digest_time: Field<string | null> };
   ai: {
     driver: Field<string | null>;
     base_url: Field<string | null>;

@@ -11,7 +11,7 @@ vi.mock('@/layouts/settings/Layout.vue', () => ({ default: { template: '<div><sl
 enableAutoUnmount(afterEach);
 
 const settings = (): SystemSettings => ({
-  notifications: { emails: { value: true, source: 'entorno' }, digest: { value: true, source: 'entorno' }, digest_time: { value: '08:00', source: 'entorno' } },
+  notifications: { emails: { value: true, source: 'entorno' }, digest_time: { value: '08:00', source: 'entorno' } },
   ai: {
     driver: { value: 'deepseek', source: 'entorno' },
     base_url: { value: 'https://api.deepseek.com', source: 'entorno' },
@@ -75,7 +75,7 @@ describe('Configuración › Sistema', () => {
     button('Guardar')[0]!.click();
     await flushPromises();
 
-    expect(updateSystemSettings).toHaveBeenCalledWith('notificaciones', { emails: true, digest: true, digest_time: '07:30' });
+    expect(updateSystemSettings).toHaveBeenCalledWith('notificaciones', { emails: true, digest_time: '07:30' });
     expect(toast.success).toHaveBeenCalledWith('Ajustes guardados');
   });
 

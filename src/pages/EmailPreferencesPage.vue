@@ -1,0 +1,81 @@
+<script setup lang="ts">
+import { Save } from '@lucide/vue';
+import { computed, onMounted, ref } from 'vue';
+import { ApiError } from '@/api/client';
+import { getEmailPreferences, updateEmailPreferences, type EmailNoticeOption } from '@/api/emailPreferences';
+import Heading from '@/components/Heading.vue';
+import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
+import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import { Button } from '@/components/ui/button';
+import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Spinner } from '@/components/ui/spinner';
+import { Switch } from '@/components/ui/switch';
+import SettingsLayout from '@/layouts/settings/Layout.vue';
+import { toast } from '@/lib/toast';
+
+const options = ref<EmailNoticeOption[] | null>(null);
+const chosen = ref<Record<string, boolean>>({});
+const loadError = ref<string | null>(null);
+const saveError = ref<string | null>(null);
+const saving = ref(false);
+
+const fill = (value: EmailNoticeOption[]): void => {
+    options.value = value;
+    chosen.value = Object.fromEntries(value.map((option) => [option.type, option.enabled]));
+};
+
+const load = async (): Promise<void> => {
+    loadError.value = null;
+    try {
+        fill((await getEmailPreferences()).options);
+    } catch (reason) {
+        loadError.value = reason instanceof ApiError ? reason.message : 'No se pudieron cargar sus avisos por correo';
+    }
+};
+onMounted(load);
+
+// «Guardar» solo se activa si cambió algo.
+const dirty = computed(() => (options.value ?? []).some((option) => chosen.value[option.type] !== option.enabled));
+
+const save = async (): Promise<void> => {
+    saving.value = true;
+    saveError.value = null;
+    try {
+        fill((await updateEmailPreferences({ ...chosen.value })).options);
+        toast.success('Avisos por correo guardados');
+    } catch (reason) {
+        saveError.value = reason instanceof ApiError ? reason.message : 'No se pudieron guardar sus avisos por correo';
+    } finally {
+        saving.value = false;
+    }
+};
+</script>
+
+<template>
+    <SettingsLayout>
+        <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
+        <div v-else-if="!options" class="flex flex-col gap-4" aria-busy="true">
+            <Skeleton class="h-6 w-48" />
+            <Skeleton class="h-10 w-full" />
+            <Skeleton class="h-10 w-full" />
+        </div>
+        <div v-else class="flex flex-col gap-6">
+            <Heading variant="small" title="Avisos por correo" description="Elija qué avisos quiere recibir también en su correo. En el sistema los verá siempre" />
+            <FeedbackAlert v-if="saveError" :message="saveError" />
+            <p v-if="options.length === 0" class="text-sm text-muted-foreground">Su rol no recibe avisos por correo</p>
+            <Field v-for="option in options" :key="option.type" orientation="horizontal">
+                <Switch :id="`email-notice-${option.type}`" v-model="chosen[option.type]" />
+                <FieldContent>
+                    <FieldLabel :for="`email-notice-${option.type}`">{{ option.label }}</FieldLabel>
+                    <FieldDescription>{{ option.description }}</FieldDescription>
+                </FieldContent>
+            </Field>
+            <div v-if="options.length">
+                <Button type="button" :disabled="saving || !dirty" @click="save">
+                    <Spinner v-if="saving" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar
+                </Button>
+            </div>
+        </div>
+    </SettingsLayout>
+</template>

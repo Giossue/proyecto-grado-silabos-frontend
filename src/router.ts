@@ -13,6 +13,7 @@ import {
 } from "@/lib/routes";
 
 const AdminSystemSettingsPage = () => import("@/pages/AdminSystemSettingsPage.vue");
+const EmailPreferencesPage = () => import("@/pages/EmailPreferencesPage.vue");
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
 const CoordinationCareerProjectPage = () => import("@/pages/CoordinationCareerProjectPage.vue");
@@ -90,6 +91,7 @@ export const router = createRouter({
     { path: "/coordinacion/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Notificaciones" } },
     { path: "/coordinacion/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Perfil" } },
     { path: "/coordinacion/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Seguridad" } },
+    { path: "/coordinacion/configuracion/notificaciones", component: EmailPreferencesPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Notificaciones" } },
 
     { path: "/coordinacion/revisiones", component: CoordinationReviewsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Revisión" } },
     { path: "/coordinacion/revisiones/:revision", component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión", layout: "syllabus-editor" } },
@@ -104,6 +106,7 @@ export const router = createRouter({
     { path: "/docente/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Notificaciones" } },
     { path: "/docente/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["docente"], title: "Perfil" } },
     { path: "/docente/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["docente"], title: "Seguridad" } },
+    { path: "/docente/configuracion/notificaciones", component: EmailPreferencesPage, meta: { requiresAuth: true, roles: ["docente"], title: "Notificaciones" } },
     { path: "/docente/mis-silabos", component: TeacherSyllabiPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" } },
     { path: "/docente/historial", component: TeacherHistoryPage, meta: { requiresAuth: true, roles: ["docente"], title: "Historial" } },
     { path: "/docente/documentos-apoyo", component: SupportDocumentsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos de apoyo" } },
@@ -114,6 +117,7 @@ export const router = createRouter({
     { path: "/biblioteca/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Notificaciones" } },
     { path: "/biblioteca/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Perfil" } },
     { path: "/biblioteca/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Seguridad" } },
+    { path: "/biblioteca/configuracion/notificaciones", component: EmailPreferencesPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Notificaciones" } },
     { path: "/biblioteca/revisiones", component: LibraryReviewsPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Revisiones de biblioteca" } },
     { path: "/biblioteca/historial", component: LibraryHistoryPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Historial" } },
     { path: "/biblioteca/revisiones/:revision", component: LibraryReviewDetailPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Revisión de bibliografía" } },

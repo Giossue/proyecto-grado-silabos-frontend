@@ -42,6 +42,7 @@ export const paths = {
     notifications: '/coordinacion/notificaciones',
     profile: '/coordinacion/configuracion/perfil',
     security: '/coordinacion/configuracion/seguridad',
+    emailNotices: '/coordinacion/configuracion/notificaciones',
 
     reviews: '/coordinacion/revisiones',
     review: (revision: string): string => `/coordinacion/revisiones/${segment(revision)}`,
@@ -60,6 +61,7 @@ export const paths = {
     notifications: '/docente/notificaciones',
     profile: '/docente/configuracion/perfil',
     security: '/docente/configuracion/seguridad',
+    emailNotices: '/docente/configuracion/notificaciones',
     syllabi: '/docente/mis-silabos',
     syllabus: (syllabus: string): string => `/docente/mis-silabos/${segment(syllabus)}`,
     history: '/docente/historial',
@@ -73,6 +75,7 @@ export const paths = {
     notifications: '/biblioteca/notificaciones',
     profile: '/biblioteca/configuracion/perfil',
     security: '/biblioteca/configuracion/seguridad',
+    emailNotices: '/biblioteca/configuracion/notificaciones',
     reviews: '/biblioteca/revisiones',
     history: '/biblioteca/historial',
     review: (revision: string): string => `/biblioteca/revisiones/${segment(revision)}`,
@@ -153,6 +156,13 @@ export const roleDocuments = (role: RoleCode, revision: string): string => {
   return area ? areaDocuments[area](revision) : paths.roleSelection;
 };
 
+/** Configuración › Notificaciones (avisos por correo): Coordinación, Docente y Biblioteca. */
+export const areaEmailNotices = (area: RoleArea): string | null =>
+  area === 'coordination' ? paths.coordination.emailNotices
+    : area === 'teacher' ? paths.teacher.emailNotices
+      : area === 'library' ? paths.library.emailNotices
+        : null;
+
 export const areaForPath = (path: string): RoleArea | null =>
   (Object.keys(areaPaths) as RoleArea[]).find((area) => path.startsWith(`${areaPaths[area].root}/`)) ?? null;
 
@@ -203,6 +213,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-notifications', path: paths.coordination.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...coordinator },
   { name: 'coordination-profile', path: paths.coordination.profile, component: 'ProfilePage', shortcut: 'profile', ...coordinator },
   { name: 'coordination-security', path: paths.coordination.security, component: 'SecurityPage', shortcut: 'security', ...coordinator },
+  { name: 'coordination-email-notices', path: paths.coordination.emailNotices, component: 'EmailPreferencesPage', breadcrumb: 'Notificaciones', ...coordinator },
 
   { name: 'coordination-reviews', path: paths.coordination.reviews, component: 'CoordinationReviewsPage', breadcrumb: 'Revisión', ...coordinator },
   { name: 'coordination-review', path: '/coordinacion/revisiones/:revision', component: 'CoordinationReviewDetailPage', breadcrumb: 'Detalle de revisión', layout: 'syllabus-editor', ...coordinator },
@@ -216,6 +227,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'teacher-notifications', path: paths.teacher.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...teacher },
   { name: 'teacher-profile', path: paths.teacher.profile, component: 'ProfilePage', shortcut: 'profile', ...teacher },
   { name: 'teacher-security', path: paths.teacher.security, component: 'SecurityPage', shortcut: 'security', ...teacher },
+  { name: 'teacher-email-notices', path: paths.teacher.emailNotices, component: 'EmailPreferencesPage', breadcrumb: 'Notificaciones', ...teacher },
   { name: 'teacher-syllabi', path: paths.teacher.syllabi, component: 'TeacherSyllabiPage', breadcrumb: 'Mis sílabos', ...teacher },
   { name: 'teacher-history', path: paths.teacher.history, component: 'TeacherHistoryPage', breadcrumb: 'Historial', ...teacher },
   { name: 'teacher-support-documents', path: paths.teacher.supportDocuments, component: 'SupportDocumentsPage', breadcrumb: 'Documentos de apoyo', ...teacher },
@@ -226,6 +238,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'library-notifications', path: paths.library.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...librarian },
   { name: 'library-profile', path: paths.library.profile, component: 'ProfilePage', shortcut: 'profile', ...librarian },
   { name: 'library-security', path: paths.library.security, component: 'SecurityPage', shortcut: 'security', ...librarian },
+  { name: 'library-email-notices', path: paths.library.emailNotices, component: 'EmailPreferencesPage', breadcrumb: 'Notificaciones', ...librarian },
   { name: 'library-reviews', path: paths.library.reviews, component: 'LibraryReviewsPage', breadcrumb: 'Revisiones de biblioteca', ...librarian },
   { name: 'library-history', path: paths.library.history, component: 'LibraryHistoryPage', breadcrumb: 'Historial', ...librarian },
   { name: 'library-review', path: '/biblioteca/revisiones/:revision', component: 'LibraryReviewDetailPage', breadcrumb: 'Revisión de bibliografía', ...librarian },

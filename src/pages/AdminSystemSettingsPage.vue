@@ -28,7 +28,7 @@ const confirmFor = ref<'ia' | 'biblioteca' | null>(null);
 // Una sección abierta a la vez; empieza con Notificaciones.
 const openSection = ref<string | undefined>('notificaciones');
 
-const notifications = ref({ emails: true, digest: true, digest_time: '08:00' });
+const notifications = ref({ emails: true, digest_time: '08:00' });
 const ai = ref({ driver: 'disabled', base_url: '', model: '', api_key: '', clear_api_key: false, connect_timeout: 2, timeout: 20 });
 const library = ref({ driver: 'disabled', base_url: '' });
 
@@ -36,7 +36,6 @@ const fill = (value: SystemSettings): void => {
     settings.value = value;
     notifications.value = {
         emails: value.notifications.emails.value ?? true,
-        digest: value.notifications.digest.value ?? true,
         digest_time: value.notifications.digest_time.value ?? '08:00',
     };
     ai.value = {
@@ -156,10 +155,6 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                 <Field orientation="horizontal">
                     <Switch id="settings-emails" v-model="notifications.emails" />
                     <FieldLabel for="settings-emails" class="font-normal">Enviar avisos por correo</FieldLabel>
-                </Field>
-                <Field orientation="horizontal">
-                    <Switch id="settings-digest" v-model="notifications.digest" />
-                    <FieldLabel for="settings-digest" class="font-normal">Resumen diario para Coordinación</FieldLabel>
                 </Field>
                 <Field :data-invalid="Boolean(errors.digest_time)">
                     <FieldLabel for="settings-digest-time" required>Hora del resumen</FieldLabel>
