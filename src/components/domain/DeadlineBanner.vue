@@ -31,11 +31,10 @@ const overdueNotice: Record<Audience, (due: string) => { headline: string; detai
 const pausedNotice = (audience: Audience, pausedBy: DashboardDeadline['paused_by']): { headline: string; detail: string | null } => {
   if (audience === 'docente') return { headline: 'La convocatoria está en pausa', detail: 'Le avisaremos cuando se reanude para que siga con sus sílabos' };
   if (audience === 'administrador') return { headline: 'La convocatoria institucional está en pausa', detail: 'Puede reanudarla desde Convocatorias' };
-  if (audience === 'coordinador' && pausedBy === 'coordinacion') return { headline: 'La convocatoria de su carrera está en pausa', detail: 'Puede reanudarla desde Revisión' };
-  // Coordinación y Biblioteca siguen revisando lo ya enviado durante la pausa; solo el docente se detiene.
-  if (audience === 'coordinador') return { headline: 'La convocatoria está en pausa', detail: 'Administración pausó la convocatoria institucional. Puede seguir revisando lo ya enviado; le avisaremos cuando la reanude' };
+  // En pausa nadie edita ni revisa (2026-11-02): Coordinación y Biblioteca se detienen igual que el docente.
+  if (audience === 'coordinador' && pausedBy === 'coordinacion') return { headline: 'La convocatoria de su carrera está en pausa', detail: 'Mientras tanto no se edita ni se revisa. Puede reanudarla desde Revisión' };
 
-  return { headline: 'La convocatoria está en pausa', detail: 'Administración pausó la convocatoria institucional. Puede seguir revisando lo ya enviado; le avisaremos cuando la reanude' };
+  return { headline: 'La convocatoria está en pausa', detail: 'Administración pausó la convocatoria institucional. Las revisiones se retoman cuando la reanude; le avisaremos' };
 };
 
 const closedNotice: Record<Audience, string> = {

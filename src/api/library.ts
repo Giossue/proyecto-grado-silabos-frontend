@@ -37,6 +37,8 @@ export type LibraryReviewDetail = LibraryReviewItem & {
   assigned_to_other?: boolean;
   can_comment: boolean;
   can_verify: boolean;
+  /** Por qué no se puede decidir ahora (cerrada o en pausa), o null. */
+  decision_block?: string | null;
   signing_statement?: string | null;
   signatures?: SignatureSummary[];
   verified_at: string | null;

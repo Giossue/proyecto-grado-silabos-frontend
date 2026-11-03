@@ -63,10 +63,10 @@ describe('DeadlineBanner', () => {
   it.each([
     ['docente', 'administracion', 'La convocatoria está en pausaLe avisaremos cuando se reanude para que siga con sus sílabos'],
     ['docente', 'coordinacion', 'La convocatoria está en pausaLe avisaremos cuando se reanude para que siga con sus sílabos'],
-    ['coordinador', 'administracion', 'La convocatoria está en pausaAdministración pausó la convocatoria institucional. Puede seguir revisando lo ya enviado; le avisaremos cuando la reanude'],
-    ['coordinador', 'coordinacion', 'La convocatoria de su carrera está en pausaPuede reanudarla desde Revisión'],
+    ['coordinador', 'administracion', 'La convocatoria está en pausaAdministración pausó la convocatoria institucional. Las revisiones se retoman cuando la reanude; le avisaremos'],
+    ['coordinador', 'coordinacion', 'La convocatoria de su carrera está en pausaMientras tanto no se edita ni se revisa. Puede reanudarla desde Revisión'],
     ['administrador', 'administracion', 'La convocatoria institucional está en pausaPuede reanudarla desde Convocatorias'],
-    ['bibliotecario', 'administracion', 'La convocatoria está en pausaAdministración pausó la convocatoria institucional. Puede seguir revisando lo ya enviado; le avisaremos cuando la reanude'],
+    ['bibliotecario', 'administracion', 'La convocatoria está en pausaAdministración pausó la convocatoria institucional. Las revisiones se retoman cuando la reanude; le avisaremos'],
   ] as const)('en pausa, a %s (pausó %s) le dice lo que le toca', (audience, pausedBy, expected) => {
     expect(text({ state: 'paused', days_until_due: 0, paused_by: pausedBy }, audience).text()).toBe(expected);
   });

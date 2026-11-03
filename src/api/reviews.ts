@@ -78,6 +78,8 @@ export type ReviewDetail = {
   timeline: ReviewTimelineEvent[];
   correction_request: { justification: string | null; requested_at: string; stage?: ReviewStage; requested_by?: string | null } | null;
   decisions_allowed: boolean;
+  /** Por qué no se puede decidir ahora (cerrada o en pausa), o null. */
+  decision_block?: string | null;
   reset: { allowed: boolean; erases_history?: boolean; revisions?: number; signatures?: number; has_pdf?: boolean };
 };
 export type ReviewTimelineEvent = {

@@ -165,6 +165,7 @@ onMounted(load);
       <Button v-if="canSign" type="button" @click="act('sign')"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
     </template>
 
+    <Alert v-if="review.decision_block && review.state === 'pendiente'"><AlertDescription>{{ review.decision_block }}</AlertDescription></Alert>
     <Alert v-if="review.assigned_to_other"><AlertDescription>Lo atiende {{ review.responsible }}, que lo devolvió antes</AlertDescription></Alert>
 
     <article v-if="fields.length" class="flex flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring" aria-label="Bibliografía">
