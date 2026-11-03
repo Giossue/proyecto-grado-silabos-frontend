@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { withoutFinalPeriod } from '@/lib/utils';
-import { CalendarClock, CalendarPlus, Lock, Pause, Play, Trash2 } from '@lucide/vue';
+import { CalendarClock, CalendarPlus, Lock, MoreHorizontal, Pause, Play, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
 import type { SheetAction } from '@/components/domain/SheetActions.vue';
+import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { ConvocationRow } from '@/pages/AdminProcessesPage.vue';
 
@@ -39,7 +41,7 @@ const actions = computed<SheetAction[]>(() => {
     ];
 });
 
-// Lo habitual a la vista; lo que no se deshace (finalizar, eliminar) queda aparte y discreto.
+// Lo habitual a la vista; lo que no se deshace (finalizar, eliminar) va en el menú «Más opciones» de la esquina.
 const regular = computed(() => actions.value.filter((action) => !action.destructive));
 const sensitive = computed(() => actions.value.filter((action) => action.destructive));
 
@@ -51,9 +53,22 @@ const run = (key: string): void => {
 
 <template>
     <Dialog v-model:open="open">
-        <DialogContent :aria-describedby="undefined" class="sm:max-w-md">
-            <DialogHeader>
+        <DialogContent :aria-describedby="undefined" class="sm:max-w-lg">
+            <DialogHeader class="flex-row items-center justify-between gap-2 pr-0">
                 <DialogTitle>Convocatoria {{ row.code }}</DialogTitle>
+                <MenuTooltip v-if="sensitive.length" label="Más opciones">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Más opciones"><MoreHorizontal aria-hidden="true" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem v-for="action in sensitive" :key="action.key" variant="destructive" :disabled="action.disabled" @select="run(action.key)">
+                                <component :is="action.icon" aria-hidden="true" />
+                                <span class="flex flex-col">{{ action.label }}<span v-if="action.disabled && action.disabledReason" class="text-xs text-muted-foreground">{{ withoutFinalPeriod(action.disabledReason) }}</span></span>
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </MenuTooltip>
             </DialogHeader>
             <ul class="grid grid-cols-2 items-start gap-2" aria-label="Opciones de la convocatoria">
                 <li v-for="action in regular" :key="action.key" class="flex flex-col gap-1">
@@ -61,23 +76,6 @@ const run = (key: string): void => {
                         type="button"
                         variant="outline"
                         class="w-full"
-                        :disabled="action.disabled"
-                        :aria-describedby="action.disabled && action.disabledReason ? `option-reason-${action.key}` : undefined"
-                        @click="run(action.key)"
-                    >
-                        <component :is="action.icon" data-icon="inline-start" aria-hidden="true" />
-                        {{ action.label }}
-                    </Button>
-                    <p v-if="action.disabled && action.disabledReason" :id="`option-reason-${action.key}`" class="text-sm text-muted-foreground">{{ withoutFinalPeriod(action.disabledReason) }}</p>
-                </li>
-            </ul>
-            <ul v-if="sensitive.length" class="flex flex-wrap items-start gap-x-2 gap-y-1 border-t pt-3" aria-label="Acciones que no se pueden deshacer">
-                <li v-for="action in sensitive" :key="action.key" class="flex flex-col gap-1">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        class="text-destructive hover:bg-destructive/10 hover:text-destructive"
                         :disabled="action.disabled"
                         :aria-describedby="action.disabled && action.disabledReason ? `option-reason-${action.key}` : undefined"
                         @click="run(action.key)"

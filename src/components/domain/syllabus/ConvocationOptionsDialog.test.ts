@@ -16,6 +16,13 @@ const button = defineComponent({
   template: '<button class="button" :data-variant="variant" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
 });
 
+const menu = defineComponent({ template: '<div data-menu><slot /></div>' });
+const menuItem = defineComponent({
+  props: { disabled: Boolean, variant: String },
+  emits: ['select'],
+  template: '<div data-menu-item :data-disabled="disabled || undefined" @click="!disabled && $emit(\'select\', $event)"><slot /></div>',
+});
+
 const process = (state: SyllabusProcess['state'], blockReason: string | null = null): SyllabusProcess => ({
   id: 'process-1',
   name: 'Octubre-Enero 2026-2027',
@@ -52,23 +59,28 @@ const mountDialog = (state: SyllabusProcess['state'], blockReason: string | null
       DialogHeader: passthrough,
       DialogTitle: passthrough,
       Button: button,
+      MenuTooltip: passthrough,
+      DropdownMenu: menu,
+      DropdownMenuTrigger: passthrough,
+      DropdownMenuContent: passthrough,
+      DropdownMenuItem: menuItem,
     },
   },
 });
 
-const labels = (wrapper: ReturnType<typeof mountDialog>): string[] => wrapper.findAll('ul .button').map((item) => item.text());
+const labels = (wrapper: ReturnType<typeof mountDialog>): string[] => wrapper.findAll('ul .button, [data-menu-item]').map((item) => item.text());
 
 describe('ConvocationOptionsDialog', () => {
-  it('lo habitual va primero con botones normales; Finalizar y Eliminar quedan aparte, abajo y discretos', () => {
+  it('lo habitual va con botones; Finalizar y Eliminar quedan en el menú de tres puntos de la esquina', async () => {
     const wrapper = mountDialog('abierto');
-    const lists = wrapper.findAll('ul');
 
-    expect(lists).toHaveLength(2);
-    expect(lists[0]!.findAll('.button').map((item) => item.text())).toEqual(['Pausar', 'Prorrogar plazo']);
-    expect(lists[0]!.findAll('.button').map((item) => item.attributes('data-variant'))).toEqual(['outline', 'outline']);
-    expect(lists[1]!.attributes('aria-label')).toBe('Acciones que no se pueden deshacer');
-    expect(lists[1]!.findAll('.button').map((item) => item.text())).toEqual(['Finalizar', 'Eliminar']);
-    expect(lists[1]!.findAll('.button').map((item) => item.attributes('data-variant'))).toEqual(['ghost', 'ghost']);
+    expect(wrapper.findAll('ul .button').map((item) => item.text())).toEqual(['Pausar', 'Prorrogar plazo']);
+    expect(wrapper.find('[data-menu] [aria-label="Más opciones"]').exists()).toBe(true);
+    expect(wrapper.findAll('[data-menu-item]').map((item) => item.text())).toEqual(['Finalizar', 'Eliminar']);
+
+    await wrapper.findAll('[data-menu-item]')[1]!.trigger('click');
+    expect(wrapper.emitted('action')).toEqual([['eliminar']]);
+    expect(wrapper.emitted('update:open')).toEqual([[false]]);
   });
 
   it('ofrece eliminar con la convocatoria abierta o pausada', () => {
@@ -82,7 +94,7 @@ describe('ConvocationOptionsDialog', () => {
 
   it('la acción manual se llama Finalizar, abierta o pausada, y el botón del pie dice Cancelar', () => {
     const wrapper = mountDialog('abierto');
-    const footer = wrapper.findAll('.button').filter((item) => !labels(wrapper).includes(item.text()));
+    const footer = wrapper.findAll('.button').filter((item) => item.text() !== '' && !labels(wrapper).includes(item.text()));
 
     expect(footer.map((item) => item.text())).toEqual(['Cancelar']);
     expect(labels(wrapper)).toContain('Finalizar');
