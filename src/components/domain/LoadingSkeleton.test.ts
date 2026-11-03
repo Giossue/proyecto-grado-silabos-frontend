@@ -139,4 +139,27 @@ describe('LoadingSkeleton', () => {
     expect(mount(LoadingSkeleton, { props: { variant: 'form', rows: 2 } }).find('[data-skeleton="form-sections"]').exists()).toBe(false);
     expect(mount(LoadingSkeleton, { props: { variant: 'form', rows: 2, sidebar: true } }).find('[data-skeleton="form-sections"]').exists()).toBe(true);
   });
+
+  it('dibuja las columnas de estado como un badge centrado', () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'table', rows: 2, columns: 4, actions: false, badges: [4] } });
+    const badges = wrapper.findAll('[data-skeleton="table-badge"]');
+
+    expect(badges).toHaveLength(2);
+    expect(badges[0]!.classes()).toEqual(expect.arrayContaining(['mx-auto', 'rounded-full']));
+    expect(mount(LoadingSkeleton, { props: { variant: 'table', rows: 2, columns: 4, actions: false } }).find('[data-skeleton="table-badge"]').exists()).toBe(false);
+  });
+
+  it('separa los datos de la tarjeta móvil igual que la tabla real', () => {
+    const card = mount(LoadingSkeleton, { props: { variant: 'table', rows: 1, columns: 4, actions: false } }).get('[data-skeleton="table-card"]');
+
+    expect(card.classes()).toEqual(expect.arrayContaining(['grid', 'grid-cols-2', 'gap-y-3', 'p-4']));
+  });
+
+  it('muestra los ajustes del sistema como un acordeón con la primera sección abierta', () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'settings', settingsSection: 'system' } });
+
+    expect(wrapper.findAll('[data-skeleton="settings-accordion-item"]')).toHaveLength(3);
+    expect(wrapper.findAll('[data-skeleton="settings-accordion-content"]')).toHaveLength(1);
+    expect(wrapper.find('[data-skeleton="settings-field"]').exists()).toBe(false);
+  });
 });

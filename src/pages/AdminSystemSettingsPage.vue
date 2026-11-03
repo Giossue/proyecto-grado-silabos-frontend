@@ -7,12 +7,12 @@ import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
@@ -133,11 +133,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
 <template>
     <SettingsLayout>
         <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
-        <div v-else-if="!settings" class="flex flex-col gap-4" aria-busy="true">
-            <Skeleton class="h-6 w-48" />
-            <Skeleton class="h-10 w-full" />
-            <Skeleton class="h-10 w-full" />
-        </div>
+        <LoadingSkeleton v-else-if="!settings" variant="settings" settings-section="system" />
         <template v-else>
             <FeedbackAlert v-if="requestError" :message="requestError" />
 

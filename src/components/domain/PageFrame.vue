@@ -31,10 +31,12 @@ const props = withDefaults(
         icon?: Component;
         hideIcon?: boolean;
         loading?: boolean;
+        actionsSkeleton?: string[];
     }>(),
     {
         size: 'full',
         loading: false,
+        actionsSkeleton: () => [],
     },
 );
 
@@ -150,6 +152,15 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 >
                     <slot name="meta" />
                 </div>
+            </div>
+
+            <div
+                v-if="actionCount === 0 && actionsSkeleton.length > 0"
+                data-skeleton="page-actions"
+                class="hidden shrink-0 items-center gap-2 sm:flex"
+                aria-hidden="true"
+            >
+                <Skeleton v-for="(width, index) in actionsSkeleton" :key="index" :class="cn('h-9', width)" />
             </div>
 
             <div

@@ -20,6 +20,21 @@ describe('PageFrame', () => {
     expect(wrapper.get('button').text()).toBe('Historial');
   });
 
+  it('reserva el lugar de los botones mientras carga cuando la pantalla lo pide', async () => {
+    const wrapper = mount(PageFrame, {
+      props: { title: 'Mis sílabos', description: 'Los sílabos de sus materias', loading: true, actionsSkeleton: ['w-44', 'w-32'] },
+      slots: { actions: '<button type="button">Historial</button>' },
+    });
+    const placeholder = wrapper.get('[data-skeleton="page-actions"]');
+
+    expect(placeholder.attributes('aria-hidden')).toBe('true');
+    expect(placeholder.findAll('[data-slot="skeleton"]')).toHaveLength(2);
+
+    await wrapper.setProps({ loading: false });
+    expect(wrapper.find('[data-skeleton="page-actions"]').exists()).toBe(false);
+    expect(wrapper.get('button').text()).toBe('Historial');
+  });
+
   it('centra el ícono entre el título y la descripción', () => {
     const wrapper = mount(PageFrame, {
       props: { title: 'Docentes', description: 'Docentes de su carrera', icon: Users },

@@ -46,6 +46,7 @@ const props = withDefaults(defineProps<{
     pagination?: boolean;
     actions?: boolean;
     cellLines?: number | number[];
+    badges?: number[];
     selectable?: boolean;
     chip?: boolean;
     tabs?: number;
@@ -56,7 +57,7 @@ const props = withDefaults(defineProps<{
     workspaceCount?: number;
     reviewStage?: 'coordination' | 'library';
     readonly?: boolean;
-    settingsSection?: 'profile' | 'security';
+    settingsSection?: 'profile' | 'security' | 'system';
     metrics?: boolean;
 }>(), {
     variant: 'table',
@@ -67,6 +68,7 @@ const props = withDefaults(defineProps<{
     pagination: true,
     actions: true,
     cellLines: 1,
+    badges: undefined,
     selectable: false,
     chip: false,
     tabs: 0,
@@ -87,6 +89,7 @@ const tableProps = computed(() => ({
     pagination: props.pagination,
     actions: props.actions,
     cellLines: props.cellLines,
+    badges: props.badges,
     selectable: props.selectable,
     tabs: props.tabs,
     heading: props.heading,

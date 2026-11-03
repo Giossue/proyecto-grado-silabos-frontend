@@ -3,7 +3,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 withDefaults(defineProps<{
-    section?: 'profile' | 'security';
+    section?: 'profile' | 'security' | 'system';
     readonly?: boolean;
 }>(), {
     section: 'security',
@@ -12,7 +12,32 @@ withDefaults(defineProps<{
 </script>
 
 <template>
-    <div class="flex min-w-0 flex-col gap-12" :data-settings-section="section">
+    <div v-if="section === 'system'" class="-mt-2 flex min-w-0 flex-col" data-settings-section="system">
+        <div v-for="item in 3" :key="item" data-skeleton="settings-accordion-item" class="border-b last:border-b-0">
+            <div class="flex items-start justify-between gap-4 py-4">
+                <div class="flex min-w-0 flex-1 items-center gap-3">
+                    <Skeleton class="size-4 shrink-0" />
+                    <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+                        <div class="flex h-5 items-center"><Skeleton :class="cn('h-4 max-w-full', item === 3 ? 'w-36' : 'w-28')" /></div>
+                        <div class="flex h-5 items-center"><Skeleton :class="cn('h-4 max-w-full', item === 1 ? 'w-80' : 'w-96')" /></div>
+                    </div>
+                </div>
+                <Skeleton class="size-4 shrink-0 translate-y-0.5" />
+            </div>
+            <div v-if="item === 1" data-skeleton="settings-accordion-content" class="flex min-w-0 flex-col gap-6 px-1 pt-2 pb-6">
+                <div class="flex items-center gap-3">
+                    <Skeleton class="h-5 w-9 rounded-full" />
+                    <Skeleton class="h-4 w-40 max-w-full" />
+                </div>
+                <div class="flex min-w-0 flex-col gap-3">
+                    <Skeleton class="h-3.5 w-32" />
+                    <Skeleton class="h-9 w-32" />
+                </div>
+                <Skeleton class="h-9 w-25" />
+            </div>
+        </div>
+    </div>
+    <div v-else class="flex min-w-0 flex-col gap-12" :data-settings-section="section">
         <div class="flex min-w-0 flex-col gap-6" :data-skeleton="section === 'security' ? 'settings-password-form' : 'settings-profile-form'">
             <div class="flex min-w-0 flex-col gap-0.5">
                 <Skeleton :class="cn('h-6 max-w-full', section === 'security' ? 'w-44' : 'w-16')" />

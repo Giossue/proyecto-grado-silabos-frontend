@@ -88,7 +88,7 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Convocatorias" description="Periodos lectivos y sus fechas de clases y de elaboración de sílabos" size="wide" :loading="!loaded">
+  <PageFrame title="Convocatorias" description="Periodos lectivos y sus fechas de clases y de elaboración de sílabos" size="wide" :loading="!loaded" :actions-skeleton="loading && !loaded ? ['w-44'] : []">
     <template v-if="loaded && inProgress" #banner>
       <ProcessLockAlert banner title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra" hide-action />
     </template>
@@ -97,7 +97,7 @@ onMounted(load);
       <ConvocationPeriodSheet v-else-if="loaded" :disabled="inProgress" @saved="changed" />
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :columns="4" :filters="1" :actions="false" />
+    <LoadingSkeleton v-else-if="loading && !loaded" variant="table" metrics :columns="4" :filters="1" :actions="false" :badges="[4]" />
     <MetricTiles v-if="loaded && summary?.metrics.length" :metrics="summary.metrics" />
     <div v-if="loaded" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
       <ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar período" placeholder="Buscar por período">

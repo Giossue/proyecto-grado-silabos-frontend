@@ -17,6 +17,7 @@ const props = withDefaults(defineProps<{
     widths?: string[];
     plainToolbar?: boolean;
     cellLines?: number | number[];
+    badges?: number[];
 }>(), {
     rows: 5,
     columns: 6,
@@ -30,6 +31,7 @@ const props = withDefaults(defineProps<{
     widths: undefined,
     plainToolbar: false,
     cellLines: 1,
+    badges: () => [],
 });
 
 const columnCount = computed(() => Math.max(2, props.columns));
@@ -44,6 +46,7 @@ const gridColumns = computed(() => {
 const minimumWidth = computed(() =>
     `calc(var(--layout-skeleton-leading-column) + ${dataColumns.value - 1} * var(--layout-skeleton-column)${props.actions ? ' + 3rem' : ''}${props.selectable ? ' + 2.5rem' : ''})`,
 );
+const isBadge = (column: number): boolean => props.badges.includes(column);
 const hasToolbar = computed(() => props.search || props.filters > 0);
 </script>
 
@@ -79,6 +82,7 @@ const hasToolbar = computed(() => props.search || props.filters > 0);
                         <div v-if="selectable" class="flex items-center px-2"><Skeleton class="size-4" /></div>
                         <div v-for="column in columnCount" :key="column" :class="cn('flex min-w-0 items-center px-2', (selectable || column > 1) && 'border-l border-border')">
                             <Skeleton v-if="actions && column === columnCount" class="ml-auto h-3.5 w-12" />
+                            <Skeleton v-else-if="isBadge(column)" class="mx-auto h-3.5 w-12" />
                             <Skeleton v-else class="h-3.5 w-3/4" />
                         </div>
                     </div>
@@ -86,6 +90,7 @@ const hasToolbar = computed(() => props.search || props.filters > 0);
                         <div v-if="selectable" class="flex items-center px-2"><Skeleton class="size-4" /></div>
                         <div v-for="column in columnCount" :key="column" :class="cn('flex min-w-0 flex-col justify-center p-2', (selectable || column > 1) && 'border-l border-border')">
                             <Skeleton v-if="actions && column === columnCount" class="ml-auto size-8" />
+                            <Skeleton v-else-if="isBadge(column)" data-skeleton="table-badge" class="mx-auto h-5.5 w-20 rounded-full" />
                             <template v-else>
                                 <div class="flex h-5 items-center"><Skeleton :class="cn('h-4', row % 2 === 0 ? 'w-3/4' : 'w-5/6')" /></div>
                                 <div v-for="line in linesFor(column) - 1" :key="line" class="flex h-5 items-center"><Skeleton class="h-3 w-2/3" /></div>
@@ -96,19 +101,20 @@ const hasToolbar = computed(() => props.search || props.filters > 0);
             </div>
 
             <div class="flex flex-col gap-4 sm:hidden" data-skeleton="table-mobile">
-                <div v-for="row in rows" :key="row" data-skeleton="table-card" class="flex min-w-0 flex-col gap-6 rounded-md bg-card p-4 shadow-surface ring-1 ring-surface-ring odd:bg-card even:bg-secondary">
-                    <div class="flex min-w-0 flex-col gap-1.5">
-                        <Skeleton class="h-5 w-3/4" />
-                        <Skeleton v-for="line in linesFor(1) - 1" :key="line" class="h-4 w-1/2" />
+                <div v-for="row in rows" :key="row" data-skeleton="table-card" class="grid min-w-0 grid-cols-2 gap-x-4 gap-y-3 rounded-md bg-card p-4 shadow-surface ring-1 ring-surface-ring odd:bg-card even:bg-secondary">
+                    <div class="col-span-2 flex min-w-0 flex-col gap-1">
+                        <div class="flex h-6 items-center"><Skeleton class="h-5 w-3/4" /></div>
+                        <div v-for="line in linesFor(1) - 1" :key="line" class="flex h-5 items-center"><Skeleton class="h-4 w-1/2" /></div>
                     </div>
-                    <div v-if="dataColumns > 1" class="grid grid-cols-2 gap-x-4 gap-y-6">
-                        <div v-for="cell in dataColumns - 1" :key="cell" class="flex min-w-0 flex-col gap-1.5">
-                            <Skeleton class="h-3 w-16" />
-                            <Skeleton class="h-4 w-5/6" />
-                            <Skeleton v-for="line in linesFor(cell + 1) - 1" :key="line" class="h-3 w-2/3" />
-                        </div>
+                    <div v-for="cell in dataColumns - 1" :key="cell" class="flex min-w-0 flex-col">
+                        <div class="mb-1 flex h-4 items-center"><Skeleton class="h-3 w-16" /></div>
+                        <Skeleton v-if="isBadge(cell + 1)" class="h-5.5 w-20 rounded-full" />
+                        <template v-else>
+                            <div class="flex h-5 items-center"><Skeleton class="h-4 w-5/6" /></div>
+                            <div v-for="line in linesFor(cell + 1) - 1" :key="line" class="flex h-5 items-center"><Skeleton class="h-3 w-2/3" /></div>
+                        </template>
                     </div>
-                    <div v-if="actions" class="flex items-center justify-between border-t pt-3"><Skeleton class="h-3 w-20" /><Skeleton class="size-8" /></div>
+                    <div v-if="actions" class="col-span-2 flex items-center justify-between border-t pt-3"><Skeleton class="h-3 w-20" /><Skeleton class="size-8" /></div>
                 </div>
             </div>
         </div>

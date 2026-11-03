@@ -74,10 +74,10 @@ onMounted(() => { void load(queryPage(route.query.page)); });
 </script>
 
 <template>
-    <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca" size="wide" :loading="!result">
+    <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca" size="wide" :loading="!result" :actions-skeleton="loading && !result ? ['w-44', 'w-32'] : []">
         <template #actions><template v-if="result"><ImportSpreadsheetDialog title="Importar cuentas" kind="users" template-name="plantilla-usuarios.xlsx" :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }, { key: 'rol', label: 'Rol' }, { key: 'carrera', label: 'Carrera' }]" @imported="changed" /><ManagedUserSheet :roles="result.roles" :careers="result.careers" @saved="changed" /></template></template>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-if="loading && !result" variant="table" :columns="4" :filters="3" :actions="false" :cell-lines="[2, 1, 1, 1]" />
+        <LoadingSkeleton v-if="loading && !result" variant="table" :columns="4" :filters="3" :actions="false" :cell-lines="[2, 1, 1, 1]" :badges="[4]" />
 
         <div v-if="result" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
             <form @submit.prevent="load()"><FilterToolbar :active="filtersActive" @clear="clearFilters">

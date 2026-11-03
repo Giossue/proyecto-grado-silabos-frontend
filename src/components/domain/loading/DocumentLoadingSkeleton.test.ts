@@ -57,7 +57,7 @@ describe('DocumentLoadingSkeleton', () => {
         expect(landscape.classes()).toContain('template-sheet--landscape');
         expect(wrapper.findAll('[data-skeleton="template-page"]')).toHaveLength(2);
         expect(wrapper.find('.sticky').exists()).toBe(false);
-        expect(wrapper.get('[data-skeleton="template-toolbar"]').element.nextElementSibling).toBe(pages.element);
+        expect(wrapper.find('[data-skeleton="template-toolbar"]').exists()).toBe(false);
     });
 
     it('compara las revisiones en un resumen y cambios con dos lados', () => {
