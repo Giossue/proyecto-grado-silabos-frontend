@@ -56,17 +56,17 @@ describe('DeadlineBanner', () => {
     expect(text({}).get('[role="status"]').classes()).toContain('bg-notice');
   });
 
-  it('cerrada solo avisa el estado, sin conteo', () => {
-    expect(text({ state: 'closed', days_until_due: 0 }).text()).toBe('La convocatoria está cerrada');
+  it('cerrada dice que los sílabos quedan para consulta, sin conteo', () => {
+    expect(text({ state: 'closed', days_until_due: 0 }).text()).toBe('La convocatoria está cerradaSus sílabos quedan guardados solo para consulta');
   });
 
   it.each([
     ['docente', 'administracion', 'La convocatoria está en pausaLe avisaremos cuando se reanude para que siga con sus sílabos'],
     ['docente', 'coordinacion', 'La convocatoria está en pausaLe avisaremos cuando se reanude para que siga con sus sílabos'],
-    ['coordinador', 'administracion', 'La convocatoria está en pausaAdministración pausó la convocatoria institucional. Le avisaremos cuando la reanude'],
+    ['coordinador', 'administracion', 'La convocatoria está en pausaAdministración pausó la convocatoria institucional. Puede seguir revisando lo ya enviado; le avisaremos cuando la reanude'],
     ['coordinador', 'coordinacion', 'La convocatoria de su carrera está en pausaPuede reanudarla desde Revisión'],
     ['administrador', 'administracion', 'La convocatoria institucional está en pausaPuede reanudarla desde Convocatorias'],
-    ['bibliotecario', 'administracion', 'La convocatoria está en pausa'],
+    ['bibliotecario', 'administracion', 'La convocatoria está en pausaAdministración pausó la convocatoria institucional. Puede seguir revisando lo ya enviado; le avisaremos cuando la reanude'],
   ] as const)('en pausa, a %s (pausó %s) le dice lo que le toca', (audience, pausedBy, expected) => {
     expect(text({ state: 'paused', days_until_due: 0, paused_by: pausedBy }, audience).text()).toBe(expected);
   });
