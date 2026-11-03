@@ -58,7 +58,7 @@ const save = async (): Promise<void> => {
     <SettingsLayout :loading="!options && !loadError">
         <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
         <LoadingSkeleton v-else-if="!options" variant="settings" settings-section="email" :rows="optionRows" />
-        <div v-else class="flex flex-col gap-6">
+        <div v-else data-tour="email-notices" class="flex flex-col gap-6">
             <Heading variant="small" title="Avisos por correo" description="Elija qué avisos quiere recibir también en su correo. En el sistema los verá siempre" />
             <FeedbackAlert v-if="saveError" :message="saveError" />
             <p v-if="options.length === 0" class="text-sm text-muted-foreground">Su rol no recibe avisos por correo</p>

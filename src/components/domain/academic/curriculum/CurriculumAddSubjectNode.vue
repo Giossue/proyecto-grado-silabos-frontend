@@ -17,6 +17,7 @@ const emit = defineEmits<{
     <Button
         type="button"
         variant="outline"
+        data-tour="curriculum-add"
         class="nodrag nopan w-64 border-dashed"
         :disabled="data.disabled"
         @click="emit('add', data.cycle)"

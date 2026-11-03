@@ -139,7 +139,7 @@ const resendVerification = async (): Promise<void> => {
                 </div>
             </form>
 
-            <div v-else class="flex flex-col gap-6">
+            <div v-else data-tour="profile-readonly" class="flex flex-col gap-6">
                 <div class="grid gap-2">
                     <Label for="readonly-name">Nombre completo</Label>
                     <Input id="readonly-name" :model-value="user?.name" placeholder="Ej. MARÍA JOSÉ PÉREZ LÓPEZ" disabled aria-describedby="identity-help" />

@@ -11,6 +11,7 @@ const ACTIONS = '[data-tour="page-actions"]';
 const TABS = '[role="tablist"]';
 const METRICS = '[data-tour="metrics"]';
 const DEADLINE = '[data-tour="deadline"]';
+const SHEET = '[aria-label="Vista previa del sílabo"]';
 const CHECKLIST = '.driver-checklist-launcher';
 
 const shell = {
@@ -60,66 +61,124 @@ export const screenTours: Record<string, TourStep[]> = {
     step(FILTERS, 'Filtros', 'Filtre por período, rol, carrera, actividad o si salió bien', 'bottom'),
     step(TABLE, 'Registro', 'Quién hizo qué y cuándo. Solo se puede consultar', 'top'),
   ],
-  '/admin/configuracion/perfil': [
-    step('[data-tour="profile-form"]', 'Sus datos', 'Cambie su nombre. El correo solo se puede cambiar antes de activar la cuenta', 'top'),
-  ],
-  '/admin/configuracion/seguridad': [
-    step('[data-tour="security-password"]', 'Contraseña', 'Escriba la actual y la nueva para cambiarla', 'top'),
-    step('[data-tour="security-reset"]', 'Por correo', 'Si no recuerda su contraseña, le enviamos un enlace para crear otra', 'top'),
-    step('[data-tour="security-2fa"]', 'Doble verificación', 'Al entrar le pide también un código del celular. Guarde los códigos de respaldo por si lo pierde', 'top'),
-  ],
   '/admin/configuracion/sistema': [
     step('[data-tour="settings-notices"]', 'Correos', 'Active o apague los avisos por correo y elija a qué hora llega el resumen del día', 'bottom'),
     step('[data-tour="settings-ai"]', 'Asistente', 'Conecte el asistente con un servicio de inteligencia artificial y pruebe que funcione', 'bottom'),
     step('[data-tour="settings-library"]', 'Biblioteca', 'Conecte el catálogo de la biblioteca para que los docentes busquen libros', 'top'),
   ],
-  '/admin/notificaciones': [
-    step(ACTIONS, 'Marcar todo', 'Marca todos los avisos como leídos', 'left'),
-    step('nav[aria-label="Filtrar notificaciones"]', 'Ver', 'Vea solo los nuevos o todos', 'bottom'),
-    step('[data-tour="notifications-list"]', 'Avisos', 'Pulse «Abrir» para ir a donde corresponde, o «Marcar leída» para quitarlo de los nuevos', 'top'),
-  ],
   '/coordinacion/revisiones': [
-    step(ACTIONS, 'Convocatoria de su carrera', 'Desde aquí abre, pausa o reanuda la convocatoria. «Abrir» se habilita cuando están completos los pasos previos', 'left'),
-    step(DEADLINE, 'Plazo de entrega', 'La fecha límite que tienen los docentes. Pasado el plazo, solo Administración puede ampliarlo', 'bottom'),
-    step(TABS, 'Cola y seguimiento', '«Cola de revisión» es lo que le toca revisar ahora. «Seguimiento» muestra todos los sílabos con su estado', 'bottom'),
-    step(TABLE, 'Sílabos por revisar', 'Pulse un sílabo para aprobarlo o pedir correcciones. Al aprobarlo pasa a Biblioteca', 'top'),
+    step(DEADLINE, 'Plazo', 'Hasta cuándo pueden entregar los docentes', 'bottom'),
+    step(ACTIONS, 'Convocatoria de su carrera', 'Ábrala cuando termine «Antes de empezar». También puede pausarla y reanudarla', 'left'),
+    step(TABS, 'Por revisar y seguimiento', '«Cola de revisión» es lo que le toca revisar. «Seguimiento» muestra cómo va cada sílabo', 'bottom'),
+    step(FILTERS, 'Buscar', 'Busque una materia por nombre o código', 'bottom'),
+    step(TABLE, 'Sílabos', 'Pulse uno para revisarlo. Puede pedir correcciones o firmarlo y enviarlo a biblioteca', 'top'),
     checklist,
     ...basics,
   ],
+  '/coordinacion/revisiones/:revision': [
+    step(ACTIONS, 'Qué puede hacer', 'Pida correcciones al docente o firme y envíe el sílabo a biblioteca. También puede ver versiones anteriores y comparar', 'bottom'),
+    step(SHEET, 'El sílabo', 'Así lo entregó el docente. Léalo antes de decidir', 'top'),
+  ],
+  '/coordinacion/revisiones/:revision/historial': [
+    step('aside[aria-label="Historial de versiones"]', 'Versiones', 'Pulse una versión para verla. Debajo de cada una están sus comentarios', 'left'),
+    step(SHEET, 'El sílabo', 'Así quedó en esa versión. Use «Resaltar cambios» para ver qué cambió', 'top'),
+  ],
   '/coordinacion/materias-asignaciones': [
-    step(FILTERS, 'Buscar materias', 'Encuentre una materia por nombre o código', 'bottom'),
-    step(TABLE, 'Materias del período', 'Marque una o varias para programarlas, crear sus paralelos y elegir el docente de cada uno', 'top'),
-    step(ACTIONS, 'Acciones', 'Aquí aparecen las acciones sobre las materias que marcó', 'left'),
+    step(FILTERS, 'Buscar', 'Busque una materia o filtre por ciclo, paralelo o jornada', 'bottom'),
+    step(TABLE, 'Materias', 'Marque materias para agregar paralelos o poner docente a varias a la vez. Pulse una para cambiar sus paralelos', 'top'),
+    step('[aria-label="Acciones masivas de materias"]', 'Para lo marcado', 'Agregue un paralelo o asigne jornada y docente a todo lo que marcó', 'bottom'),
   ],
   '/coordinacion/docentes': [
-    step(ACTIONS, 'Nuevo docente', 'Cree un docente o importe varios desde Excel. Cada uno recibe una invitación por correo', 'left'),
-    step(TABLE, 'Docentes', 'Sus cuentas y los paralelos que dictan en el período. Desde el menú de la fila los corrige o los retira de la carrera', 'top'),
+    step(ACTIONS, 'Crear docente', 'Cree un docente o suba varios con un Excel. Cada uno recibe un correo para entrar', 'left'),
+    step(FILTERS, 'Buscar', 'Busque por nombre o correo, o filtre por estado', 'bottom'),
+    step(TABLE, 'Docentes', 'Pulse uno para ver sus datos, reenviarle la invitación o quitarlo de la carrera', 'top'),
   ],
   '/coordinacion/proyecto-carrera': [
-    step(ACTIONS, 'Importar desde Excel', 'Descargue la plantilla de su carrera, complétela y cárguela para llenar varias materias a la vez', 'left'),
-    step(TABLE, 'Proyecto de carrera por materia', 'Pulse una materia para editar su proyecto de carrera: lo que el docente recibe ya escrito', 'top'),
-    step('[role="tablist"]', 'Documentos de apoyo', 'Suba PDF, Word o Excel para que sus docentes conozcan mejor sus asignaturas', 'bottom'),
+    step(TABS, 'Materias y documentos', 'Cambie entre el proyecto de cada materia y los documentos de apoyo', 'bottom'),
+    step(ACTIONS, 'Excel o documentos', 'En «Materias», llene varias a la vez con un Excel. En «Documentos de apoyo», suba un archivo', 'left'),
+    step(FILTERS, 'Buscar', 'Busque una materia o filtre por ciclo o si está completa', 'bottom'),
+    step('[data-tour="career-subjects"]', 'Materias por ciclo', 'Pulse una materia para llenar su proyecto. El docente lo recibe ya escrito', 'top'),
+    step(TABLE, 'Documentos de apoyo', 'Archivos para que sus docentes conozcan mejor sus materias. Pulse uno para verlo', 'top'),
   ],
   '/coordinacion/malla': [
-    step(ACTIONS, 'Editar malla', 'Modifique ciclos, materias y relaciones. «Relaciones» las lista en una tabla', 'left'),
+    step(ACTIONS, 'Editar malla', 'Cambie ciclos, materias y requisitos. También puede subir la malla con un Excel', 'left'),
+    step('[data-tour="curriculum-relations"]', 'Relaciones', 'Vea en una lista qué materia es requisito de cuál', 'right'),
+    step('[aria-label="Zoom de la malla"]', 'Acercar y alejar', 'Agrande o achique la malla para verla mejor', 'left'),
+    // Pasos del editor: solo aparecen mientras se edita.
+    step('[data-tour="curriculum-back"]', 'Volver', 'Sale del editor', 'bottom'),
+    step('[aria-label="Configurar ciclos"]', 'Ciclos', 'Cambie cuántos ciclos tiene la carrera', 'bottom'),
+    step('[data-tour="curriculum-add"]', 'Agregar materia', 'Agrega una materia en ese ciclo. Arrastre de una materia a otra para unirlas como requisito', 'top'),
   ],
   '/biblioteca/revisiones': [
-    step(ACTIONS, 'Historial', 'Los sílabos de períodos terminados, en solo lectura', 'left'),
-    step(FILTERS, 'Filtrar', 'Por facultad si se reparten el trabajo; el sistema recuerda su elección', 'bottom'),
-    step(TABLE, 'En revisión', 'Los sílabos que Coordinación ya aprobó. Pulse uno para revisar su bibliografía y firmar, o devolverlo al docente', 'top'),
+    step(ACTIONS, 'Historial', 'Los sílabos de períodos que ya terminaron', 'left'),
+    step(METRICS, 'Resumen', 'Cuántos hay por revisar, aprobados y devueltos', 'bottom'),
+    step(FILTERS, 'Buscar', 'Busque por materia, carrera o docente, o filtre por facultad y estado. La facultad se recuerda', 'bottom'),
+    step(TABLE, 'Sílabos', 'Pulse uno para revisar sus libros y firmarlo, o devolverlo al docente', 'top'),
     shell.notifications,
     shell.theme,
     shell.user,
   ],
+  '/biblioteca/revisiones/:revision': [
+    step(ACTIONS, 'Qué puede hacer', 'Si los libros están bien, firme y apruebe. Si algo falla, devuélvalo al docente diciendo qué corregir', 'bottom'),
+    step('[aria-label="Bibliografía"]', 'Libros del sílabo', 'Revise que cada libro esté en la biblioteca y que sus datos sean correctos', 'top'),
+  ],
   '/biblioteca/historial': [
-    step(FILTERS, 'Filtros', 'Por período o facultad. «Solo los míos» muestra los que usted firmó o devolvió', 'bottom'),
-    step(TABLE, 'Sílabos', 'Pulse una fila para abrirla. En los aprobados puede ver el PDF completo', 'top'),
+    step(FILTERS, 'Buscar', 'Busque o filtre por período o facultad. «Solo los míos» muestra los que usted atendió', 'bottom'),
+    step(TABLE, 'Sílabos', 'Pulse uno para verlo. En los aprobados puede abrir el PDF', 'top'),
   ],
   '/docente/mis-silabos': [
-    step(DEADLINE, 'Plazo', 'La fecha límite de entrega. Pasado el plazo solo puede consultar sus sílabos', 'bottom'),
-    step(TABLE, 'Sus sílabos', 'Uno por cada paralelo que dicta. Pulse uno para empezar o continuar. Al primer envío lo firma con su archivo .p12', 'top'),
+    step(DEADLINE, 'Plazo', 'Hasta cuándo puede entregar. Después solo puede ver sus sílabos', 'bottom'),
+    step(ACTIONS, 'Historial', 'Sus sílabos de períodos anteriores', 'left'),
+    step(FILTERS, 'Buscar', 'Busque una materia o filtre por estado', 'bottom'),
+    step('ul[aria-label="Mis sílabos"]', 'Sus sílabos', 'Uno por materia. Pulse uno para empezar o seguir', 'top'),
     ...basics,
+  ],
+  '/docente/mis-silabos/:syllabus': [
+    step(DEADLINE, 'Plazo', 'Hasta cuándo puede entregar este sílabo', 'bottom'),
+    step('.review-comment', 'Correcciones', 'Lo que le pidieron cambiar. Corríjalo y vuelva a enviar', 'bottom'),
+    step('[aria-label="Secciones del sílabo"]', 'Secciones', 'Pase de una parte del sílabo a otra', 'bottom'),
+    step('.teacher-form', 'Su parte', 'Llene los campos con asterisco. Lo demás ya viene escrito. Todo se guarda solo mientras escribe', 'top'),
+    step('[aria-label="Vista previa"]', 'Vista previa', 'Vea cómo queda el sílabo terminado', 'bottom'),
+    step('[data-tour="syllabus-submit"]', 'Enviar', 'Cuando termine, envíelo a revisión. La primera vez lo firma con su archivo de firma electrónica', 'bottom'),
+    step('[data-tour="syllabus-assistant"]', 'Asistente', 'Pídale ayuda para escribir sus unidades', 'left'),
+  ],
+  '/docente/historial': [
+    step(TABLE, 'Carreras', 'Pulse una carrera para ver sus sílabos de períodos anteriores', 'top'),
+  ],
+  '/docente/historial/:career': [
+    step(TABLE, 'Sílabos anteriores', 'Uno por período. Pulse uno para verlo', 'top'),
+  ],
+  '/docente/documentos-apoyo': [
+    step(FILTERS, 'Buscar', 'Busque un documento por su nombre', 'bottom'),
+    step(TABLE, 'Documentos', 'Archivos que le dejó su coordinación. Pulse uno para verlo', 'top'),
   ],
 };
 
 screenTours['/admin/estructura-academica/:section'] = screenTours['/admin/estructura-academica']!;
+
+/** Pantallas que tienen todos los roles. */
+const sharedScreens: Record<string, TourStep[]> = {
+  'configuracion/perfil': [
+    step('[data-tour="profile-form"]', 'Sus datos', 'Cambie su nombre. El correo solo se puede cambiar antes de activar la cuenta', 'top'),
+    step('[data-tour="profile-readonly"]', 'Sus datos', 'Si su nombre o correo están mal, pida el cambio a Administración', 'top'),
+  ],
+  'configuracion/seguridad': [
+    step('[data-tour="security-password"]', 'Contraseña', 'Escriba la actual y la nueva para cambiarla', 'top'),
+    step('[data-tour="security-reset"]', 'Por correo', 'Si no recuerda su contraseña, le enviamos un enlace para crear otra', 'top'),
+    step('[data-tour="security-2fa"]', 'Doble verificación', 'Al entrar le pide también un código del celular. Guarde los códigos de respaldo por si lo pierde', 'top'),
+  ],
+  'configuracion/notificaciones': [
+    step('[data-tour="email-notices"]', 'Avisos por correo', 'Elija qué avisos le llegan también al correo. En el sistema los verá siempre', 'top'),
+  ],
+  notificaciones: [
+    step(ACTIONS, 'Marcar todo', 'Marca todos los avisos como leídos', 'left'),
+    step('nav[aria-label="Filtrar notificaciones"]', 'Ver', 'Vea solo los nuevos o todos', 'bottom'),
+    step('[data-tour="notifications-list"]', 'Avisos', 'Pulse «Abrir» para ir a donde corresponde, o «Marcar leída» para quitarlo de los nuevos', 'top'),
+  ],
+  'revisiones/:revision/documentos': [step(ACTIONS, 'PDF', 'Vea o descargue el PDF del sílabo aprobado', 'left')],
+};
+for (const role of ['admin', 'coordinacion', 'docente', 'biblioteca']) {
+  for (const [screen, steps] of Object.entries(sharedScreens)) {
+    screenTours[`/${role}/${screen}`] ??= steps;
+  }
+}

@@ -87,5 +87,6 @@ describe('ScreenHelpButton', () => {
     expect(classes).toContain('sm:left-4');
     expect(classes).toContain('sm:bottom-4');
     expect(classes).not.toContain('sm:right-4');
+    expect(classes).toContain('max-sm:bottom-20');
   });
 });

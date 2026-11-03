@@ -25,7 +25,7 @@ const remove = (requirement: CurriculumRequirement): void => {
 </script>
 
 <template>
-    <Button type="button" variant="outline" size="sm" class="absolute top-3 left-3 z-10 bg-card" @click="open = true">
+    <Button type="button" variant="outline" size="sm" data-tour="curriculum-relations" class="absolute top-3 left-3 z-10 bg-card" @click="open = true">
         <ListTree data-icon="inline-start" aria-hidden="true" />
         Relaciones
     </Button>
