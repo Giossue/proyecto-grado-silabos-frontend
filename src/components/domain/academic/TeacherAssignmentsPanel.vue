@@ -3,7 +3,8 @@ import StatusBadge from '@/components/domain/StatusBadge.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import { Trash2 } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
-import { removeCareerTeacher, type TeacherAssignments } from "@/api/career-academics";
+import { removeCareerTeacher, resendCareerTeacherInvitation, type TeacherAssignments } from "@/api/career-academics";
+import { toast } from "@/lib/toast";
 import { ApiError } from "@/api/client";
 import CareerTeacherEditSheet from "@/components/domain/academic/CareerTeacherEditSheet.vue";
 import ClientFilterBar from "@/components/domain/ClientFilterBar.vue";
@@ -27,6 +28,7 @@ type TeacherRow = {
   name: string;
   email: string;
   pending_activation: boolean;
+  invitation_expired: boolean;
 };
 
 const rows = computed<TeacherRow[]>(() => props.data.careerTeachers.map((teacher) => ({
@@ -34,9 +36,10 @@ const rows = computed<TeacherRow[]>(() => props.data.careerTeachers.map((teacher
   name: teacher.name,
   email: teacher.email,
   pending_activation: teacher.pending_activation,
+  invitation_expired: teacher.invitation_expired,
 })));
 const statusOf = (item: TeacherRow): string => item.pending_activation
-  ? "Pendiente"
+  ? (item.invitation_expired ? "Invitación vencida" : "Pendiente")
   : "Activa";
 const filter = useClientFilter(() => rows.value, (item) => [item.name, item.email], {
   estado: { matches: (item, value) => value === "pending" ? item.pending_activation : !item.pending_activation },
@@ -55,6 +58,16 @@ const askRemoval = (item: TeacherRow): void => {
   sheetOpen.value = false;
   removing.value = item;
   removeError.value = null;
+};
+const resendInvitation = async (item: TeacherRow): Promise<void> => {
+  sheetOpen.value = false;
+  try {
+    const result = await resendCareerTeacherInvitation(item.id);
+    await afterDialogExit();
+    emit("changed", result.message);
+  } catch (reason) {
+    toast.error(reason instanceof ApiError ? reason.message : "No se pudo reenviar la invitación");
+  }
 };
 const removeFromCareer = async (): Promise<void> => {
   if (!removing.value) return;
@@ -87,7 +100,7 @@ const removeFromCareer = async (): Promise<void> => {
         </TableRow>
       </TableBody>
     </Table>
-    <CareerTeacherEditSheet v-if="editing" :key="editing.id" :teacher="editing" v-model:open="sheetOpen" :remove-disabled="Boolean(data.career.lock_reason)" @remove="askRemoval(editing)" />
+    <CareerTeacherEditSheet v-if="editing" :key="editing.id" :teacher="editing" v-model:open="sheetOpen" :remove-disabled="Boolean(data.career.lock_reason)" @remove="askRemoval(editing)" @resend="resendInvitation(editing)" />
     <TablePagination :meta="meta" mode="client" label="Paginación de docentes" @update:page="setPage" />
     <Dialog :open="removing !== null" @update:open="(value) => { if (!value) removing = null; }">
       <DialogContent>

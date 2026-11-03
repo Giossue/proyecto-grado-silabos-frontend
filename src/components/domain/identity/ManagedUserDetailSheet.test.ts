@@ -59,10 +59,18 @@ describe('ManagedUserDetailSheet', () => {
     expect(wrapper.emitted('action')?.[0]).toEqual(['access']);
     wrapper.unmount();
 
-    const pending = { ...props, user: { ...user, pending_activation: true } as ManagedUser };
-    mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...pending, canEdit: true } });
+    const pending = { ...props, user: { ...user, pending_activation: true, invitation_expired: false } as ManagedUser };
+    const fresh = mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...pending, canEdit: true } });
+    await flushPromises();
+    expect(document.body.querySelector('button[aria-label="Eliminar cuenta pendiente"]')).not.toBeNull();
+    expect(document.body.textContent).not.toContain('Reenviar invitación');
+    fresh.unmount();
+
+    const expired = { ...props, user: { ...user, pending_activation: true, invitation_expired: true } as ManagedUser };
+    mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...expired, canEdit: true } });
     await flushPromises();
     expect(document.body.querySelector('button[aria-label="Acciones para Ana Pérez"]')).not.toBeNull();
+    expect(document.body.textContent).toContain('Invitación vencida');
   });
 
   it('no ofrece acciones en la propia cuenta', async () => {

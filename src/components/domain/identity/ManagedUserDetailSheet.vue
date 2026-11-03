@@ -30,6 +30,7 @@ export type ManagedUserRow = {
     correo_electronico: string;
     active: boolean;
     pending_activation: boolean;
+    invitation_expired: boolean;
     two_factor_enabled: boolean;
     roles: { name: string; career_name: string | null }[];
     careers: (string | null)[];
@@ -49,9 +50,10 @@ const editing = ref(false);
 const actions = computed<SheetAction[]>(() => {
     if (!props.canEdit) return [];
     if (props.user.pending_activation) {
+        // Reenviar solo cuando la invitación venció sin aceptarse.
         return props.user.active
             ? [
-                { key: 'resend', label: 'Reenviar invitación', icon: MailCheck },
+                ...(props.user.invitation_expired ? [{ key: 'resend', label: 'Reenviar invitación', icon: MailCheck }] : []),
                 { key: 'delete', label: 'Eliminar cuenta pendiente', icon: Trash2, destructive: true },
             ]
             : [];
@@ -74,7 +76,7 @@ const saved = (message: string): void => {
 
 const status = computed(() => {
     if (!props.user.active) return { label: 'Inactivo', tone: 'neutral' as StatusTone };
-    if (props.user.pending_activation) return { label: 'Pendiente', tone: 'warning' as StatusTone };
+    if (props.user.pending_activation) return { label: props.user.invitation_expired ? 'Invitación vencida' : 'Pendiente', tone: 'warning' as StatusTone };
 
     return { label: 'Activo', tone: 'success' as StatusTone };
 });

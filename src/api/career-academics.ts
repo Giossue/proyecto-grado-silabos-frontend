@@ -144,7 +144,7 @@ export type TeacherAssignments = {
   canCreateTeacher: boolean;
   career: { id: string; name: string; lock_reason: string | null; lock?: LockDetail | null };
   pendingTeachers: Array<{ id: string; name: string; email: string }>;
-  careerTeachers: Array<{ id: string; name: string; email: string; pending_activation: boolean }>;
+  careerTeachers: Array<{ id: string; name: string; email: string; pending_activation: boolean; invitation_expired: boolean }>;
   teacherAssignments: Array<{
     id: string;
     user_id: string;
@@ -277,6 +277,11 @@ export const createCareerTeacher = (payload: {
   api<{ message: string }>("/coordination/academic/teachers", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+/** Solo cuando la invitación venció sin aceptarse; el enlace llega al correo del docente. */
+export const resendCareerTeacherInvitation = (userId: string) =>
+  api<{ message: string }>(`/coordination/academic/teachers/${userId}/resend-activation`, {
+    method: "POST",
   });
 export const removeCareerTeacher = (userId: string) =>
   api<{ message: string }>(`/coordination/academic/teachers/${userId}`, {

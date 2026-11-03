@@ -2,11 +2,12 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { defineComponent } from 'vue';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import TeacherAssignmentsPanel from '@/components/domain/academic/TeacherAssignmentsPanel.vue';
-import { removeCareerTeacher, type TeacherAssignments } from '@/api/career-academics';
+import { removeCareerTeacher, resendCareerTeacherInvitation, type TeacherAssignments } from '@/api/career-academics';
 import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 
 vi.mock('@/api/career-academics', () => ({
     removeCareerTeacher: vi.fn(),
+    resendCareerTeacherInvitation: vi.fn(),
 }));
 
 // Simula la animación de salida: el modal cerrado sigue en pantalla hasta que termina.
@@ -25,9 +26,9 @@ const data: TeacherAssignments = {
     career: { id: 'career-1', name: 'Software', lock_reason: null },
     pendingTeachers: [{ id: 'teacher-pending', name: 'Docente pendiente', email: 'pendiente@example.test' }],
     careerTeachers: [
-        { id: 'teacher-pending', name: 'Docente pendiente', email: 'pendiente@example.test', pending_activation: true },
-        { id: 'teacher-active', name: 'Docente activo', email: 'activo@example.test', pending_activation: false },
-        { id: 'teacher-free', name: 'Docente sin paralelo', email: 'docente2.pruebas@example.test', pending_activation: false },
+        { id: 'teacher-pending', name: 'Docente pendiente', email: 'pendiente@example.test', pending_activation: true, invitation_expired: false },
+        { id: 'teacher-active', name: 'Docente activo', email: 'activo@example.test', pending_activation: false, invitation_expired: false },
+        { id: 'teacher-free', name: 'Docente sin paralelo', email: 'docente2.pruebas@example.test', pending_activation: false, invitation_expired: false },
     ],
     teacherAssignments: [{
         id: 'assignment-1',
@@ -46,7 +47,7 @@ const data: TeacherAssignments = {
 const inactivePendingData: TeacherAssignments = {
     ...data,
     pendingTeachers: [{ id: 'teacher-inactive', name: 'Docente retirado', email: 'retirado@example.test' }],
-    careerTeachers: [{ id: 'teacher-inactive', name: 'Docente retirado', email: 'retirado@example.test', pending_activation: true }],
+    careerTeachers: [{ id: 'teacher-inactive', name: 'Docente retirado', email: 'retirado@example.test', pending_activation: true, invitation_expired: false }],
     teacherAssignments: [{
         ...data.teacherAssignments[0],
         id: 'assignment-inactive',
@@ -227,6 +228,28 @@ describe('TeacherAssignmentsPanel', () => {
         expect(buttons).not.toContain('Guardar cambios');
         expect(dialog.textContent).not.toContain('Reenviar invitación');
         expect(dialog.querySelector('button[aria-label="Acciones para Docente pendiente"]')).toBeNull();
+        wrapper.unmount();
+    });
+
+    it('si la invitación venció sin aceptarse, la tabla lo dice y la ficha ofrece reenviarla', async () => {
+        vi.mocked(resendCareerTeacherInvitation).mockResolvedValue({ message: 'Invitación de activación enviada a pendiente@example.test.' });
+        const expired = { ...data, careerTeachers: [{ ...data.careerTeachers[0], invitation_expired: true }, ...data.careerTeachers.slice(1)] };
+        const wrapper = mount(TeacherAssignmentsPanel, { props: { data: expired }, attachTo: document.body });
+        const row = wrapper.findAll('tbody tr').find((item) => item.text().includes('Docente pendiente'))!;
+        expect(row.text()).toContain('Invitación vencida');
+        await row.trigger('click');
+        await flushPromises();
+
+        (document.body.querySelector('button[aria-label="Acciones para Docente pendiente"]') as HTMLButtonElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        await flushPromises();
+        const item = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((entry) => entry.textContent?.includes('Reenviar invitación'))!;
+        item.click();
+        await flushPromises();
+        await new Promise((resolve) => setTimeout(resolve, 250));
+        await flushPromises();
+
+        expect(resendCareerTeacherInvitation).toHaveBeenCalledWith('teacher-pending');
+        expect(wrapper.emitted('changed')?.[0]).toEqual(['Invitación de activación enviada a pendiente@example.test.']);
         wrapper.unmount();
     });
 

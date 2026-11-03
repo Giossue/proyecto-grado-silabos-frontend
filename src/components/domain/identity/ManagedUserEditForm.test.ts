@@ -12,7 +12,7 @@ const style = document.createElement('style');
 style.textContent = '[data-state="closed"] { animation-name: exit; }';
 document.head.append(style);
 
-const user: ManagedUser = { id: 'u1', nombre: 'ANA PÉREZ', correo_electronico: 'ana@ueb.edu.ec', active: true, pending_activation: false, two_factor_enabled: false, roles: [{ id: 'r1', code: 'docente', name: 'Docente', career_name: 'Software' }], careers: ['Software'], assignments: [] };
+const user: ManagedUser = { id: 'u1', nombre: 'ANA PÉREZ', correo_electronico: 'ana@ueb.edu.ec', active: true, pending_activation: false, invitation_expired: false, two_factor_enabled: false, roles: [{ id: 'r1', code: 'docente', name: 'Docente', career_name: 'Software' }], careers: ['Software'], assignments: [] };
 const roles = [{ codigo: 'docente', nombre: 'Docente' }, { codigo: 'coordinador', nombre: 'Coordinador' }];
 
 describe('ManagedUserEditForm', () => {

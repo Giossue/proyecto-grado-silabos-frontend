@@ -7,6 +7,8 @@ export type ManagedUser = {
   correo_electronico: string;
   active: boolean;
   pending_activation: boolean;
+  /** Pendiente y sin invitación vigente: se puede reenviar. */
+  invitation_expired: boolean;
   two_factor_enabled: boolean;
   roles: Array<{ id: string; code: RoleCode; name: string; career_name: string | null }>;
   careers: Array<string | null>;
