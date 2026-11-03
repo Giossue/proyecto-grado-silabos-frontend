@@ -104,6 +104,8 @@ const canEdit = computed(() =>
   ["borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? "") &&
   editBlockReason.value === null,
 );
+// El motivo se muestra solo si la franja no lo explica (pausa, cierre o plazo vencido ya salen ahí).
+const showBlockReason = computed(() => editBlockReason.value !== null && (localBlockReason.value !== null || syllabus.value?.edit_blocked_by_convocation !== true));
 const pausedEdit = computed(() =>
   editBlockReason.value !== null && ["sin_iniciar", "borrador", "correccion_solicitada"].includes(syllabus.value?.state ?? ""),
 );
@@ -538,11 +540,11 @@ onBeforeUnmount(() => {
     <LoadingSkeleton v-if="(!syllabus || canStart) && !error" :variant="previewHint && !syllabus ? 'preview' : 'syllabus'" />
 
     <template v-if="syllabus">
-      <ProcessLockAlert v-if="editBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
+      <ProcessLockAlert v-if="showBlockReason && syllabus.state === 'sin_iniciar'" class="edit-blocked" title="Edición no disponible" :message="editBlockReason ?? undefined" hide-action />
 
       <template v-if="syllabus.state !== 'sin_iniciar' || pausedEdit">
         <div class="mx-auto flex w-full max-w-screen-2xl min-w-0 flex-col gap-8" :class="{ 'pb-16': !pausedEdit }">
-          <ProcessLockAlert v-if="editBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason" hide-action />
+          <ProcessLockAlert v-if="showBlockReason && ['borrador', 'correccion_solicitada'].includes(syllabus.state)" class="edit-blocked" title="Edición no disponible" :message="editBlockReason ?? undefined" hide-action />
 
 
           <ReviewCommentNotice v-if="syllabus.state === 'correccion_solicitada' && reviewComments.length" :comments="reviewComments" />

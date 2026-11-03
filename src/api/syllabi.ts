@@ -56,6 +56,8 @@ export type SyllabusDetail = {
   version_bloqueo: number;
   editable?: boolean;
   edit_block_reason?: string | null;
+  /** Pausa, cierre o plazo vencido: la franja ya lo explica y no se repite en el sílabo. */
+  edit_blocked_by_convocation?: boolean;
   approved_revision_id?: string | null;
   iniciado_en: string | null;
   parallels: string[];

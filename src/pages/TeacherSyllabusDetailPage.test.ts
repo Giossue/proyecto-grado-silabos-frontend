@@ -514,17 +514,33 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(wrapper.findComponent(FreeTextEditor).exists()).toBe(true);
   });
 
-  it("muestra el motivo y no ofrece iniciar cuando la convocatoria está en pausa", async () => {
+  it("en pausa no ofrece iniciar ni repite el motivo: lo explica la franja", async () => {
+    for (const state of ["sin_iniciar", "borrador"] as const) {
+      const draft = syllabus("borrador");
+      draft.state = state as SyllabusDetail["state"];
+      draft.editable = false;
+      draft.edit_block_reason = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude";
+      draft.edit_blocked_by_convocation = true;
+      vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+      const wrapper = mountPage();
+      await flushPromises();
+
+      expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();
+      expect(wrapper.find(".edit-blocked").exists()).toBe(false);
+      wrapper.unmount();
+    }
+  });
+
+  it("un bloqueo que no es de la convocatoria sí muestra su motivo", async () => {
     const draft = syllabus("borrador");
-    draft.state = "sin_iniciar" as SyllabusDetail["state"];
     draft.editable = false;
-    draft.edit_block_reason = "La convocatoria está en pausa. Podrá seguir editando cuando se reanude";
+    draft.edit_block_reason = "No tiene una asignación vigente para editar este sílabo";
+    draft.edit_blocked_by_convocation = false;
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();
-    expect(wrapper.get(".edit-blocked").text()).toContain("en pausa");
+    expect(wrapper.get(".edit-blocked").text()).toContain("No tiene una asignación vigente");
   });
 
   it("queda sin poder editar, con el mismo aspecto, si un guardado es rechazado por pausa", async () => {
