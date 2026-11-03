@@ -102,6 +102,7 @@ const detail = (decisionsAllowed = true): ReviewDetail => ({
   timeline: [{ kind: "enviado", at: "2026-09-16T10:00:00Z", revision_id: "revision-1", revision_number: 1, by: "Docente Demo", comment: null, previous_id: null }],
   correction_request: null,
   decisions_allowed: decisionsAllowed,
+  convocation_closed: !decisionsAllowed,
   reset: { allowed: false },
 });
 
@@ -142,6 +143,16 @@ describe("CoordinationReviewDetailPage", () => {
       },
       available_roles: [],
     });
+  });
+
+  it("en pausa no repite el motivo junto al estado: lo explica la franja", async () => {
+    vi.mocked(getReview).mockResolvedValue({ ...detail(false), convocation_closed: false, decision_block: "La convocatoria de la carrera está en pausa: las revisiones se retoman cuando se reanude." });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).not.toContain("está en pausa");
+    expect(wrapper.text()).not.toContain("Convocatoria cerrada");
+    expect(headerButton(wrapper, "Firmar y enviar a biblioteca")).toBeUndefined();
   });
 
   it("deja la revisión solo para consulta con la convocatoria cerrada", async () => {

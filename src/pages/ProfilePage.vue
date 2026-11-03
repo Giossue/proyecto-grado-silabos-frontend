@@ -72,7 +72,7 @@ const resendVerification = async (): Promise<void> => {
 </script>
 
 <template>
-    <SettingsLayout>
+    <SettingsLayout :loading="!user">
         <LoadingSkeleton v-if="!user" variant="settings" settings-section="profile" :readonly="sessionState.current.value?.active_role?.code !== 'administrador'" :formation="isTeacher" />
         <div v-else class="flex flex-col gap-6">
             <Heading

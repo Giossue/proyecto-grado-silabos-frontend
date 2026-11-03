@@ -468,7 +468,12 @@ const copyFromSource = async (): Promise<void> => {
 
 const visibleSections = computed(() => (syllabus.value?.sections ?? []).filter((section) => section.fields.some(isTeacherField)));
 const pageDescription = computed(() => syllabus.value?.period ?? '');
-const documentHeaderWidth = computed(() => syllabus.value && syllabus.value.state !== 'sin_iniciar' && !showEditor.value ? sheetPixels(syllabus.value.presentation.document).portrait : undefined);
+// Mientras carga la vista previa, el encabezado ya se alinea con la hoja (ancho por defecto).
+const documentHeaderWidth = computed(() => {
+  if (!syllabus.value) return previewHint ? sheetPixels(null).portrait : undefined;
+
+  return syllabus.value.state !== 'sin_iniciar' && !showEditor.value ? sheetPixels(syllabus.value.presentation.document).portrait : undefined;
+});
 
 const chosenSectionId = ref<string | null>(null);
 const activeSectionId = computed<string>({

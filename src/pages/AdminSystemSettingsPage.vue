@@ -131,7 +131,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
 </script>
 
 <template>
-    <SettingsLayout>
+    <SettingsLayout :loading="!settings && !loadError">
         <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
         <LoadingSkeleton v-else-if="!settings" variant="settings" settings-section="system" />
         <template v-else>

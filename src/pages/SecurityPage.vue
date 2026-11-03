@@ -75,7 +75,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <SettingsLayout>
+    <SettingsLayout :loading="loading">
         <LoadingSkeleton v-if="loading" variant="settings" settings-section="security" />
         <div v-show="!loading" class="contents">
             <div class="flex flex-col gap-6">

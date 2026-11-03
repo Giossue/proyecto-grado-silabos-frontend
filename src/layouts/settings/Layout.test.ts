@@ -92,3 +92,30 @@ describe('Configuración: Volver', () => {
     expect(admin.find('nav[aria-label="Configuración"]').text()).not.toContain('Notificaciones');
   });
 });
+
+describe('Configuración: carga', () => {
+  beforeEach(() => {
+    sessionState.replace({
+      user: { id: 'u1', name: 'Ana', email: 'ana@ueb.edu.ec', email_verified: true, can_edit_identity: false },
+      active_role: { id: 'r1', code: 'coordinador', career_id: 'c1', career_name: 'Software' },
+      available_roles: [],
+    });
+  });
+  afterEach(() => sessionState.clear());
+
+  it('mientras carga, el ícono, el título y el subtítulo también son esqueleto', async () => {
+    const router = makeRouter();
+    await router.push(paths.coordination.security);
+    await router.isReady();
+    const wrapper = mount(SettingsLayout, { props: { loading: true }, global: { plugins: [router] }, slots: { default: '<p>Contenido</p>' } });
+
+    expect(wrapper.find('[data-skeleton="page-icon"]').exists()).toBe(true);
+    expect(wrapper.find('[data-skeleton="page-title"]').exists()).toBe(true);
+    expect(wrapper.find('[data-skeleton="page-description"]').exists()).toBe(true);
+    expect(wrapper.text()).not.toContain('Administre su perfil');
+
+    await wrapper.setProps({ loading: false });
+    expect(wrapper.find('[data-skeleton="page-title"]').exists()).toBe(false);
+    expect(wrapper.text()).toContain('Administre su perfil y seguridad');
+  });
+});

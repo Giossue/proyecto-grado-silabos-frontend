@@ -10,6 +10,9 @@ import { cn } from '@/lib/utils';
 import { sessionState } from '@/state/session';
 import { settingsReturn } from '@/state/settingsReturn';
 
+// Mientras la pestaña carga, el encabezado (ícono, título y subtítulo) también es esqueleto.
+defineProps<{ loading?: boolean }>();
+
 // Ancho de la tarjeta: el encabezado y las pestañas se alinean con ella (en px, igual que el encabezado).
 const CONTENT_WIDTH = 576;
 
@@ -38,6 +41,7 @@ const goBack = (): void => {
         size="wide"
         :icon="Settings"
         :header-width="CONTENT_WIDTH"
+        :loading="loading"
     >
         <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack"><ArrowLeft aria-hidden="true" />Volver</Button></template>
         <div class="flex min-w-0 flex-col gap-6">

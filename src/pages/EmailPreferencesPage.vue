@@ -55,7 +55,7 @@ const save = async (): Promise<void> => {
 </script>
 
 <template>
-    <SettingsLayout>
+    <SettingsLayout :loading="!options && !loadError">
         <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
         <LoadingSkeleton v-else-if="!options" variant="settings" settings-section="email" :rows="optionRows" />
         <div v-else class="flex flex-col gap-6">
