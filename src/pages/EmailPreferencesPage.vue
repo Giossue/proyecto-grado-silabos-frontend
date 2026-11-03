@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Save } from '@lucide/vue';
+import { CalendarClock, Mail, Save } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { getEmailPreferences, updateEmailPreferences, type EmailNoticeOption } from '@/api/emailPreferences';
-import Heading from '@/components/Heading.vue';
+import SettingsAccordionSection from '@/components/domain/SettingsAccordionSection.vue';
+import { Accordion } from '@/components/ui/accordion';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -38,6 +39,18 @@ const load = async (): Promise<void> => {
 onMounted(load);
 
 // «Guardar» solo se activa si cambió algo.
+// Resumen diario aparte de los avisos sueltos; un grupo vacío no se muestra.
+const groups = computed(() => {
+    const all = options.value ?? [];
+    const summary = all.filter((option) => option.type.endsWith('.resumen_diario'));
+    const notices = all.filter((option) => !option.type.endsWith('.resumen_diario'));
+
+    return [
+        { value: 'resumen', title: 'Resumen diario', description: 'Un correo de lunes a viernes, solo si tiene pendientes', icon: CalendarClock, options: summary },
+        { value: 'avisos', title: 'Avisos por correo', description: 'Elija qué avisos recibe también en su correo', icon: Mail, options: notices },
+    ].filter((group) => group.options.length > 0);
+});
+const openSection = ref<string | undefined>('resumen');
 const dirty = computed(() => (options.value ?? []).some((option) => chosen.value[option.type] !== option.enabled));
 
 const save = async (): Promise<void> => {
@@ -59,16 +72,20 @@ const save = async (): Promise<void> => {
         <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
         <LoadingSkeleton v-else-if="!options" variant="settings" settings-section="email" :rows="optionRows" />
         <div v-else data-tour="email-notices" class="flex flex-col gap-6">
-            <Heading variant="small" title="Avisos por correo" description="Elija qué avisos quiere recibir también en su correo. En el sistema los verá siempre" />
             <FeedbackAlert v-if="saveError" :message="saveError" />
             <p v-if="options.length === 0" class="text-sm text-muted-foreground">Su rol no recibe avisos por correo</p>
-            <Field v-for="option in options" :key="option.type" orientation="horizontal">
-                <Switch :id="`email-notice-${option.type}`" v-model="chosen[option.type]" />
-                <FieldContent>
-                    <FieldLabel :for="`email-notice-${option.type}`">{{ option.label }}</FieldLabel>
-                    <FieldDescription>{{ option.description }}</FieldDescription>
-                </FieldContent>
-            </Field>
+            <!-- Secciones en acordeón como en Sistema; en el sistema los avisos se ven siempre. -->
+            <Accordion v-else v-model="openSection" type="single" collapsible :unmount-on-hide="false" class="-mt-2">
+                <SettingsAccordionSection v-for="group in groups" :key="group.value" :value="group.value" :title="group.title" :description="group.description" :icon="group.icon">
+                    <Field v-for="option in group.options" :key="option.type" orientation="horizontal">
+                        <Switch :id="`email-notice-${option.type}`" v-model="chosen[option.type]" />
+                        <FieldContent>
+                            <FieldLabel :for="`email-notice-${option.type}`">{{ option.label }}</FieldLabel>
+                            <FieldDescription>{{ option.description }}</FieldDescription>
+                        </FieldContent>
+                    </Field>
+                </SettingsAccordionSection>
+            </Accordion>
             <div v-if="options.length">
                 <Button type="button" :disabled="saving || !dirty" @click="save">
                     <Spinner v-if="saving" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar

@@ -3,7 +3,6 @@ import { LogOut, Monitor } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { closeOtherDeviceSessions, getDeviceSessions, type DeviceSession } from '@/api/session';
-import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
@@ -60,7 +59,7 @@ const closeOthers = async (): Promise<void> => {
 
 <template>
     <div data-tour="security-sessions" class="flex flex-col gap-4">
-        <Heading variant="small" title="Sesiones abiertas" description="Dispositivos donde su cuenta está abierta. Si no reconoce alguno, cierre las otras sesiones y cambie su contraseña" />
+        <p class="text-sm text-muted-foreground">Si no reconoce algún dispositivo, cierre las otras sesiones y cambie su contraseña</p>
         <FeedbackAlert v-if="loadError" :message="loadError" />
         <div v-else-if="sessions === null" class="flex flex-col gap-2"><Skeleton class="h-12 w-full" /><Skeleton class="h-12 w-full" /></div>
         <ul v-else class="flex flex-col divide-y rounded-md border" aria-label="Sesiones abiertas">

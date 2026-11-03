@@ -10,7 +10,6 @@ import {
     getTwoFactorStatus,
     regenerateRecoveryCodes,
 } from '@/api/session';
-import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
 import PasswordConfirmDialog from '@/components/PasswordConfirmDialog.vue';
 import PasswordInput from '@/components/PasswordInput.vue';
@@ -148,7 +147,6 @@ onMounted(() => void load());
 
 <template>
     <div data-tour="security-2fa" class="flex flex-col gap-6">
-        <Heading variant="small" title="Autenticación de dos factores" description="Administre la protección adicional de su cuenta" />
         <FeedbackAlert v-if="error" :message="error" />
 
         <div v-if="loading" role="status" aria-live="polite" aria-busy="true" aria-label="Cargando autenticación de dos factores">

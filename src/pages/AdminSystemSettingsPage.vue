@@ -8,7 +8,8 @@ import IconTooltip from '@/components/domain/IconTooltip.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Accordion } from '@/components/ui/accordion';
+import SettingsAccordionSection from '@/components/domain/SettingsAccordionSection.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -142,15 +143,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
 
             <Accordion v-model="openSection" type="single" collapsible class="-mt-2">
 
-            <AccordionItem value="notificaciones" data-tour="settings-notices">
-                <AccordionTrigger>
-                    <span class="flex items-center gap-3 text-left">
-                        <Bell class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                        <span class="flex flex-col gap-0.5"><span class="font-medium">Notificaciones</span><span class="text-sm font-normal text-muted-foreground">Avisos por correo y resumen diario para Coordinación</span></span>
-                    </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                <div class="flex flex-col gap-6 px-1 pt-2 pb-2">
+            <SettingsAccordionSection value="notificaciones" data-tour="settings-notices" title="Notificaciones" description="Avisos por correo y resumen diario para Coordinación" :icon="Bell">
                 <Field orientation="horizontal">
                     <Switch id="settings-emails" v-model="notifications.emails" />
                     <FieldLabel for="settings-emails" class="font-normal">Enviar avisos por correo</FieldLabel>
@@ -165,20 +158,10 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                         <Spinner v-if="saving === 'notificaciones'" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar
                     </Button>
                 </div>
-                </div>
-                </AccordionContent>
-            </AccordionItem>
+            </SettingsAccordionSection>
 
 
-            <AccordionItem value="ia" data-tour="settings-ai">
-                <AccordionTrigger>
-                    <span class="flex items-center gap-3 text-left">
-                        <Bot class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                        <span class="flex flex-col gap-0.5"><span class="font-medium">Asistente de IA</span><span class="text-sm font-normal text-muted-foreground">Proveedor que responde al asistente del sílabo y de la plantilla</span></span>
-                    </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                <div class="flex flex-col gap-6 px-1 pt-2 pb-2">
+            <SettingsAccordionSection value="ia" data-tour="settings-ai" title="Asistente de IA" description="Proveedor que responde al asistente del sílabo y de la plantilla" :icon="Bot">
                 <Field :data-invalid="Boolean(errors.driver)">
                     <FieldLabel for="settings-ai-driver" required>Proveedor</FieldLabel>
                     <Select v-model="ai.driver">
@@ -237,20 +220,10 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                         <Spinner v-if="testing === 'ia'" data-icon="inline-start" /><PlugZap v-else data-icon="inline-start" aria-hidden="true" />Probar conexión
                     </Button>
                 </div>
-                </div>
-                </AccordionContent>
-            </AccordionItem>
+            </SettingsAccordionSection>
 
 
-            <AccordionItem value="biblioteca" data-tour="settings-library">
-                <AccordionTrigger>
-                    <span class="flex items-center gap-3 text-left">
-                        <Library class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                        <span class="flex flex-col gap-0.5"><span class="font-medium">Biblioteca (Koha)</span><span class="text-sm font-normal text-muted-foreground">Catálogo donde los docentes buscan los libros de la bibliografía</span></span>
-                    </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                <div class="flex flex-col gap-6 px-1 pt-2 pb-2">
+            <SettingsAccordionSection value="biblioteca" data-tour="settings-library" title="Biblioteca (Koha)" description="Catálogo donde los docentes buscan los libros de la bibliografía" :icon="Library">
                 <Field>
                     <FieldLabel for="settings-library-driver" required>Búsqueda en el catálogo</FieldLabel>
                     <Select v-model="library.driver">
@@ -273,9 +246,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                         <Spinner v-if="testing === 'biblioteca'" data-icon="inline-start" /><PlugZap v-else data-icon="inline-start" aria-hidden="true" />Probar conexión
                     </Button>
                 </div>
-                </div>
-                </AccordionContent>
-            </AccordionItem>
+            </SettingsAccordionSection>
             </Accordion>
         </template>
 

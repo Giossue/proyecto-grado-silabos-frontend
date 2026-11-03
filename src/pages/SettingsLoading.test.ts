@@ -50,7 +50,12 @@ describe('carga de Configuración', () => {
 
         expect(wrapper.find('[data-settings-section="security"]').exists()).toBe(false);
         expect(wrapper.get('#current_password').isVisible()).toBe(true);
-        expect(wrapper.findAll('button').find((button) => button.text() === 'Activar 2FA')?.isVisible()).toBe(true);
+        // El segundo factor vive en su sección del acordeón: ya cargó y aparece al abrirla.
+        const activate = () => wrapper.findAll('button').find((button) => button.text() === 'Activar 2FA');
+        expect(activate()?.exists()).toBe(true);
+        await wrapper.findAll('button').find((button) => button.text().includes('Verificación en dos pasos'))!.trigger('click');
+        await flushPromises();
+        expect(activate()!.element.closest('[data-slot="accordion-content"]')?.getAttribute('data-state')).toBe('open');
         expect(getTwoFactorStatus).toHaveBeenCalledTimes(1);
     });
 

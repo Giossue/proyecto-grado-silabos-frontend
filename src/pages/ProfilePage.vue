@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Save } from '@lucide/vue';
+import { GraduationCap, Save, UserRound } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { resendEmailVerification, updateProfile } from '@/api/session';
-import Heading from '@/components/Heading.vue';
+import SettingsAccordionSection from '@/components/domain/SettingsAccordionSection.vue';
+import { Accordion } from '@/components/ui/accordion';
 import InputError from '@/components/InputError.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import TeacherFormationField from '@/components/domain/identity/TeacherFormationField.vue';
@@ -69,18 +70,15 @@ const resendVerification = async (): Promise<void> => {
         resending.value = false;
     }
 };
+const openSection = ref<string | undefined>('cuenta');
 </script>
 
 <template>
     <SettingsLayout :loading="!user">
         <LoadingSkeleton v-if="!user" variant="settings" settings-section="profile" :readonly="sessionState.current.value?.active_role?.code !== 'administrador'" :formation="isTeacher" />
-        <div v-else class="flex flex-col gap-6">
-            <Heading
-                variant="small"
-                title="Perfil"
-                :description="user?.can_edit_identity ? 'Actualice su nombre y correo electrónico' : 'Consulte los datos de su cuenta'"
-            />
-
+        <!-- Secciones en acordeón como en Sistema. -->
+        <Accordion v-else v-model="openSection" type="single" collapsible :unmount-on-hide="false" class="-mt-2">
+            <SettingsAccordionSection value="cuenta" title="Datos de la cuenta" :description="user.can_edit_identity ? 'Actualice su nombre y correo electrónico' : 'Consulte su nombre y correo'" :icon="UserRound">
             <InputError :message="errors.request" />
 
             <form v-if="user?.can_edit_identity" data-tour="profile-form" class="flex flex-col gap-6" @submit.prevent="submit">
@@ -152,8 +150,10 @@ const resendVerification = async (): Promise<void> => {
                     Si necesita corregir su nombre o correo, solicite el cambio a Administración
                 </p>
             </div>
+            </SettingsAccordionSection>
 
-            <form v-if="isTeacher" class="flex flex-col gap-4 border-t pt-6" @submit.prevent="submitFormation">
+            <SettingsAccordionSection v-if="isTeacher" value="formacion" title="Formación y experiencia académica" description="Lo que aparece en sus sílabos como perfil del docente" :icon="GraduationCap">
+            <form class="flex flex-col gap-4" @submit.prevent="submitFormation">
                 <TeacherFormationField v-model="formation" :error="formationError" />
                 <div>
                     <Button :disabled="savingFormation || !formationChanged" data-test="update-formation-button">
@@ -163,6 +163,7 @@ const resendVerification = async (): Promise<void> => {
                     </Button>
                 </div>
             </form>
-        </div>
+            </SettingsAccordionSection>
+        </Accordion>
     </SettingsLayout>
 </template>
