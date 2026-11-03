@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { ApiError } from '@/api/client';
 import { requestPasswordRecovery, updatePassword } from '@/api/session';
 import Heading from '@/components/Heading.vue';
+import OtherSessions from '@/components/OtherSessions.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import InputError from '@/components/InputError.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -119,6 +120,8 @@ const submit = async (): Promise<void> => {
             </div>
 
             <ManageTwoFactor @loading="loading = $event" />
+
+            <OtherSessions />
         </div>
         <Dialog v-model:open="recoveryOpen">
             <DialogContent>
