@@ -221,5 +221,8 @@ onMounted(load);
     <SignatureDialog v-model:open="signOpen" title="Firmar y aprobar" confirm-label="Firmar y aprobar" :run="approve" />
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-  <LoadingSkeleton v-else-if="loading" variant="review" review-stage="library" />
+  <PageFrame v-else-if="loading" title="" description="" loading :actions-skeleton="['w-44', 'w-40']" hide-icon size="narrow">
+    <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, fromHistory ? paths.library.history : paths.library.reviews)"><ArrowLeft aria-hidden="true" />{{ fromHistory ? 'Volver al historial' : 'Volver a revisiones' }}</Button></template>
+    <LoadingSkeleton variant="review" review-stage="library" />
+  </PageFrame>
 </template>

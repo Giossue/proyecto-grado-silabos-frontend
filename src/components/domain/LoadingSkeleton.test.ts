@@ -173,4 +173,23 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.get('[data-skeleton="table-filters"] > div').classes()).toContain('lg:w-44');
     expect(mount(LoadingSkeleton, { props: { variant: 'table', filters: 1 } }).get('[data-skeleton="table-filters"] > div').classes()).toContain('lg:w-48');
   });
+
+  it('los avisos por correo cargan con una fila por aviso del rol', () => {
+    const wrapper = mount(LoadingSkeleton, { props: { variant: 'settings', settingsSection: 'email', rows: 2 } });
+
+    expect(wrapper.findAll('[data-skeleton="settings-email-option"]')).toHaveLength(2);
+  });
+
+  it('seguridad incluye restablecer por correo entre la contraseña y la doble verificación', () => {
+    const sections = mount(LoadingSkeleton, { props: { variant: 'settings', settingsSection: 'security' } })
+      .findAll('[data-skeleton^="settings-"]').map((node) => node.attributes('data-skeleton'))
+      .filter((name) => ['settings-password-form', 'settings-password-reset', 'settings-two-factor'].includes(name ?? ''));
+
+    expect(sections).toEqual(['settings-password-form', 'settings-password-reset', 'settings-two-factor']);
+  });
+
+  it('el perfil del docente incluye su formación', () => {
+    expect(mount(LoadingSkeleton, { props: { variant: 'settings', settingsSection: 'profile', formation: true } }).find('[data-skeleton="settings-formation"]').exists()).toBe(true);
+    expect(mount(LoadingSkeleton, { props: { variant: 'settings', settingsSection: 'profile' } }).find('[data-skeleton="settings-formation"]').exists()).toBe(false);
+  });
 });

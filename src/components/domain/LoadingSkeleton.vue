@@ -58,7 +58,8 @@ const props = withDefaults(defineProps<{
     workspaceCount?: number;
     reviewStage?: 'coordination' | 'library';
     readonly?: boolean;
-    settingsSection?: 'profile' | 'security' | 'system';
+    settingsSection?: 'profile' | 'security' | 'system' | 'email';
+    formation?: boolean;
     metrics?: boolean;
 }>(), {
     variant: 'table',
@@ -81,6 +82,7 @@ const props = withDefaults(defineProps<{
     workspaceCount: 3,
     readonly: false,
     metrics: false,
+    formation: false,
 });
 
 const tableProps = computed(() => ({
@@ -175,7 +177,7 @@ const tableProps = computed(() => ({
 
             <SetupLoadingSkeleton v-else-if="variant === 'setup'" :steps="5" />
 
-            <SettingsLoadingSkeleton v-else-if="variant === 'settings'" :section="settingsSection" :readonly="readonly" />
+            <SettingsLoadingSkeleton v-else-if="variant === 'settings'" :section="settingsSection" :readonly="readonly" :rows="rows" :formation="formation" />
 
             <AcademicLoadingSkeleton v-else-if="variant === 'academic-structure'" :mode="mode" :rows="rows" />
 

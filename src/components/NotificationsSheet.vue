@@ -101,11 +101,14 @@ const readAll = async (): Promise<void> => {
 
 watch(open, (value) => {
     if (!value) return;
+    items.value = [];
     if (status.value === 'unread') void load();
     else status.value = 'unread';
 });
 watch(status, () => {
-    if (open.value) void load();
+    if (!open.value) return;
+    items.value = [];
+    void load();
 });
 watch(isNotificationsPage, (current, previous) => {
     if (previous && !current) void refreshCount();

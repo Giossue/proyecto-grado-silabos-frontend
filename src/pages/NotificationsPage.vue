@@ -13,6 +13,7 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { useOpenNotification } from '@/composables/useOpenNotification';
 import { paths } from '@/lib/routes';
@@ -45,9 +46,10 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Notificaciones" description="Avisos del período en curso sobre sus sílabos y sus documentos" size="wide" :loading="!result && !error">
+  <PageFrame title="Notificaciones" description="Avisos del período en curso sobre sus sílabos y sus documentos" size="wide" :loading="!result && !error" :actions-skeleton="!result && !error ? ['w-56'] : []">
     <template #actions><Button v-if="result?.unread_count" type="button" variant="outline" :disabled="pending" @click="readAll"><Spinner v-if="pending" /><CheckCheck v-else aria-hidden="true" />Marcar todas como leídas</Button></template>
-    <nav class="flex gap-2" aria-label="Filtrar notificaciones"><Button :variant="status === 'all' ? 'default' : 'outline'" :disabled="pending" @click="status = 'all'; load()">Todas</Button><Button :variant="status === 'unread' ? 'default' : 'outline'" :disabled="pending" @click="status = 'unread'; load()">No leídas</Button></nav>
+    <div v-if="!result && !error" data-skeleton="notification-filters" class="flex gap-2" aria-hidden="true"><Skeleton class="h-9 w-18" /><Skeleton class="h-9 w-26" /></div>
+    <nav v-else class="flex gap-2" aria-label="Filtrar notificaciones"><Button :variant="status === 'all' ? 'default' : 'outline'" :disabled="pending" @click="status = 'all'; load()">Todas</Button><Button :variant="status === 'unread' ? 'default' : 'outline'" :disabled="pending" @click="status = 'unread'; load()">No leídas</Button></nav>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-if="loading && !result" variant="notifications" />
     <Card v-else-if="result"><CardContent class="flex flex-col gap-3">

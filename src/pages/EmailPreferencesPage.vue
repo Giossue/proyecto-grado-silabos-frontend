@@ -6,15 +6,17 @@ import { getEmailPreferences, updateEmailPreferences, type EmailNoticeOption } f
 import Heading from '@/components/Heading.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
+import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldContent, FieldDescription, FieldLabel } from '@/components/ui/field';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { toast } from '@/lib/toast';
+import { sessionState } from '@/state/session';
 
 const options = ref<EmailNoticeOption[] | null>(null);
+const optionRows = computed(() => ({ docente: 6, coordinador: 2, bibliotecario: 4 } as Record<string, number>)[sessionState.current.value?.active_role?.code ?? ''] ?? 4);
 const chosen = ref<Record<string, boolean>>({});
 const loadError = ref<string | null>(null);
 const saveError = ref<string | null>(null);
@@ -55,11 +57,7 @@ const save = async (): Promise<void> => {
 <template>
     <SettingsLayout>
         <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
-        <div v-else-if="!options" class="flex flex-col gap-4" aria-busy="true">
-            <Skeleton class="h-6 w-48" />
-            <Skeleton class="h-10 w-full" />
-            <Skeleton class="h-10 w-full" />
-        </div>
+        <LoadingSkeleton v-else-if="!options" variant="settings" settings-section="email" :rows="optionRows" />
         <div v-else class="flex flex-col gap-6">
             <Heading variant="small" title="Avisos por correo" description="Elija qué avisos quiere recibir también en su correo. En el sistema los verá siempre" />
             <FeedbackAlert v-if="saveError" :message="saveError" />

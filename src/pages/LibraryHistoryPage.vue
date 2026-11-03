@@ -80,10 +80,10 @@ onMounted(() => { void load(initialPage); });
 </script>
 
 <template>
-  <PageFrame title="Historial" description="Sílabos de períodos terminados, en solo lectura" size="wide">
+  <PageFrame title="Historial" description="Sílabos de períodos terminados, en solo lectura" size="wide" :loading="!data && !error">
     <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.library.reviews)"><ArrowLeft aria-hidden="true" />Volver a revisiones</Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="4" :actions="false" />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="3" :actions="false" />
     <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
         <form @submit.prevent="load()">
           <FilterToolbar :active="filtersActive" @clear="clearFilters">

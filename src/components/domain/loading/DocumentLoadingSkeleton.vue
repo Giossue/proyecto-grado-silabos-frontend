@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import WorkspaceLayout from '@/components/domain/WorkspaceLayout.vue';
-import TableLoadingSkeleton from '@/components/domain/loading/TableLoadingSkeleton.vue';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -90,6 +88,15 @@ const reviewPanels = computed(() =>
             </div>
         </div>
     </div>
+
+    <article v-else-if="variant === 'review' && reviewStage === 'library'" data-skeleton="library-bibliography" class="flex min-w-0 flex-col gap-6 rounded-md bg-card px-6 py-6 shadow-surface ring-1 ring-surface-ring">
+        <section v-for="section in 2" :key="section" data-skeleton="review-section" class="flex min-w-0 flex-col gap-2">
+            <div class="flex h-6 items-center"><Skeleton class="h-4 w-40 max-w-full" /></div>
+            <div class="flex h-5 items-center"><Skeleton class="h-4 w-full" /></div>
+            <div class="flex h-5 items-center"><Skeleton class="h-4 w-5/6" /></div>
+            <div class="flex h-5 items-center"><Skeleton class="h-4 w-2/3" /></div>
+        </section>
+    </article>
 
     <div v-else-if="variant === 'review'" class="flex min-w-0 flex-col gap-6 p-4 sm:p-6">
         <header class="flex min-w-0 flex-col gap-2" data-skeleton="review-heading">
@@ -251,17 +258,7 @@ const reviewPanels = computed(() =>
         </Card>
     </template>
 
-    <template v-else>
-        <Alert v-for="notice in 2" :key="notice" class="min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-3" data-skeleton="document-notice">
-            <Skeleton class="row-span-2 size-4 shrink-0" />
-            <AlertTitle class="min-w-0">
-                <Skeleton class="h-4 w-40 max-w-full" />
-            </AlertTitle>
-            <AlertDescription class="flex min-w-0 flex-col gap-2">
-                <Skeleton class="h-4 w-full" />
-                <Skeleton class="h-4 w-5/6" />
-            </AlertDescription>
-        </Alert>
-        <TableLoadingSkeleton :rows="rows" :columns="4" :actions="false" :cell-lines="[2, 1, 1, 1]" search :filters="1" />
-    </template>
+    <div v-else data-skeleton="document-status" class="flex h-5 items-center">
+        <Skeleton class="h-4 w-44 max-w-full" />
+    </div>
 </template>

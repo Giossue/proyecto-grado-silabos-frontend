@@ -27,15 +27,15 @@ describe('DocumentLoadingSkeleton', () => {
         expect(wrapper.find('[data-skeleton="syllabus-presentation"]').exists()).toBe(false);
     });
 
-    it('limita biblioteca a bibliografía con aprobación, comentario e historial', () => {
+    it('en biblioteca muestra solo la tarjeta de bibliografía, como la pantalla', () => {
         const wrapper = mount(DocumentLoadingSkeleton, {
             props: { variant: 'review', reviewStage: 'library' },
         });
 
-        expect(wrapper.findAll('[data-skeleton="review-section"]')).toHaveLength(1);
-        expect(wrapper.find('[data-skeleton="review-correction"]').exists()).toBe(true);
-        expect(wrapper.find('[data-skeleton="review-approval"]').exists()).toBe(true);
-        expect(wrapper.find('[data-skeleton="review-history"]').exists()).toBe(true);
+        expect(wrapper.find('[data-skeleton="library-bibliography"]').exists()).toBe(true);
+        expect(wrapper.findAll('[data-skeleton="review-section"]')).toHaveLength(2);
+        expect(wrapper.find('[data-skeleton="review-heading"]').exists()).toBe(false);
+        expect(wrapper.find('[data-skeleton="review-approval"]').exists()).toBe(false);
     });
 
     it('muestra las acciones de coordinación en su expediente', () => {
@@ -67,13 +67,10 @@ describe('DocumentLoadingSkeleton', () => {
         expect(wrapper.findAll('[data-skeleton="comparison-change"]')).toHaveLength(2);
     });
 
-    it('presenta la exportación como avisos y una tabla adaptable con filas y paginación', () => {
+    it('el PDF del sílabo carga como la única línea de estado de la pantalla', () => {
         const wrapper = mount(DocumentLoadingSkeleton, { props: { variant: 'documents', rows: 2 } });
 
-        expect(wrapper.findAll('[data-skeleton="document-notice"]')).toHaveLength(2);
-        expect(wrapper.findAll('[data-skeleton="table-row"]')).toHaveLength(2);
-        expect(wrapper.find('[data-skeleton="table-mobile"]').exists()).toBe(true);
-        expect(wrapper.find('[data-skeleton="table-filters"]').exists()).toBe(true);
-        expect(wrapper.find('[data-skeleton="table-pagination"]').exists()).toBe(true);
+        expect(wrapper.find('[data-skeleton="document-status"]').exists()).toBe(true);
+        expect(wrapper.find('[data-skeleton="table-row"]').exists()).toBe(false);
     });
 });

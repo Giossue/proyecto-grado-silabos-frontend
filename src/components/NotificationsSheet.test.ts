@@ -82,6 +82,22 @@ describe('NotificationsSheet', () => {
         wrapper.unmount();
     });
 
+    it('al reabrir muestra la carga en vez de los avisos anteriores', async () => {
+        const wrapper = await mountOpen();
+        expect(wrapper.text()).toContain('Sílabo aprobado');
+        const vm = wrapper.vm as unknown as { open: boolean };
+        vm.open = false;
+        await flushPromises();
+
+        vi.mocked(getNotifications).mockReturnValueOnce(new Promise(() => {}));
+        vm.open = true;
+        await flushPromises();
+
+        expect(wrapper.find('[aria-label="Cargando notificaciones"]').exists()).toBe(true);
+        expect(wrapper.text()).not.toContain('Sílabo aprobado');
+        wrapper.unmount();
+    });
+
     it('abre siempre en «No leídas»', async () => {
         const wrapper = await mountOpen();
         const vm = wrapper.vm as unknown as { open: boolean };
