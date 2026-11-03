@@ -62,7 +62,7 @@ const run = (key: string): void => {
                 </li>
             </ul>
             <DialogFooter>
-                <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
+                <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
             </DialogFooter>
         </DialogContent>
     </Dialog>

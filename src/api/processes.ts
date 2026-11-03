@@ -32,10 +32,18 @@ export const getProcesses = () => api<Processes>('/admin/processes');
 export const createProcess = (payload: ProcessPayload) =>
   api<{ message: string }>('/admin/processes', { method: 'POST', body: JSON.stringify(payload) });
 
-export const deleteProcess = (processId: string) =>
-  api<{ message: string }>(`/admin/processes/${processId}`, { method: 'DELETE' });
-
 export type SyllabusStateCounts = Record<string, number>;
+
+export type ProcessImpact = {
+  syllabi: SyllabusStateCounts;
+  total: number;
+};
+
+export const getProcessImpact = (processId: string) =>
+  api<ProcessImpact>(`/admin/processes/${processId}/impact`);
+
+export const deleteProcess = (processId: string, payload: { mensaje: string }) =>
+  api<{ message: string }>(`/admin/processes/${processId}`, { method: 'DELETE', body: JSON.stringify(payload) });
 
 export type ProcessTransitionPayload = {
   confirmar_rehacer?: boolean;

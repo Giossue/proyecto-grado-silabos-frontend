@@ -2,9 +2,10 @@
 import { CalendarClock, Lock, Pause, Play, Trash2 } from '@lucide/vue';
 import { computed, ref, watch, type Component } from 'vue';
 import { ApiError } from '@/api/client';
-import { deleteProcess, transitionProcess, type SyllabusProcess, type SyllabusStateCounts } from '@/api/processes';
+import { deleteProcess, getProcessImpact, transitionProcess, type ProcessImpact, type SyllabusProcess, type SyllabusStateCounts } from '@/api/processes';
 import ConfirmPhrase from '@/components/domain/ConfirmPhrase.vue';
 import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
+import SyllabusStateCountsTable from '@/components/domain/syllabus/SyllabusStateCountsTable.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Field, FieldDescription, FieldError, FieldLabel } from '@/components/ui/field';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
+import { Textarea } from '@/components/ui/textarea';
 import { matchesPhrase } from '@/lib/confirmPhrase';
 
 type Transition = 'pausar' | 'reanudar' | 'cerrar';
@@ -36,6 +40,11 @@ const deadlineOpen = ref(false);
 const deleteOpen = ref(false);
 const deleting = ref(false);
 const deleteError = ref<string | null>(null);
+const deleteErrors = ref<Record<string, string[]>>({});
+const deleteMessage = ref('');
+const deleteImpact = ref<ProcessImpact | null>(null);
+const impactLoading = ref(false);
+const impactError = ref<string | null>(null);
 
 const dialogs: Record<Transition, { title: string; description: string; label: string; icon: Component; destructive?: boolean }> = {
   pausar: {
@@ -70,7 +79,30 @@ const phraseReady = computed(() => phrase.value === null || matchesPhrase(typed.
 watch(phrase, () => { typed.value = ''; });
 const DELETE_PHRASE = 'eliminar convocatoria';
 const deleteTyped = ref('');
-watch(deleteOpen, () => { deleteTyped.value = ''; });
+const deleteReady = computed(() => !deleting.value
+  && deleteImpact.value !== null
+  && deleteMessage.value.trim() !== ''
+  && matchesPhrase(deleteTyped.value, DELETE_PHRASE));
+
+const loadImpact = async (): Promise<void> => {
+  impactLoading.value = true;
+  impactError.value = null;
+  try {
+    deleteImpact.value = await getProcessImpact(props.process.id);
+  } catch {
+    impactError.value = 'No se pudo saber cuántos sílabos se borran. Inténtelo de nuevo';
+  } finally {
+    impactLoading.value = false;
+  }
+};
+
+watch(deleteOpen, (open) => {
+  deleteTyped.value = '';
+  deleteMessage.value = '';
+  deleteErrors.value = {};
+  deleteImpact.value = null;
+  if (open) void loadImpact();
+});
 
 const confirm = async (): Promise<void> => {
   if (!pending.value || !phraseReady.value) return;
@@ -99,14 +131,6 @@ const confirm = async (): Promise<void> => {
   }
 };
 
-const stateLabel = (state: string): string => ({
-  sin_iniciar: 'Sin iniciar',
-  borrador: 'Borrador',
-  en_revision: 'En revisión',
-  correccion_solicitada: 'Corrección solicitada',
-  aprobado: 'Aprobado',
-}[state] ?? state);
-
 const openDelete = (event: Event): void => {
   event.preventDefault();
   deleteError.value = null;
@@ -121,13 +145,19 @@ const run = (key: 'pausar' | 'reanudar' | 'cerrar' | 'prorrogar' | 'eliminar'): 
 defineExpose({ run });
 
 const remove = async (): Promise<void> => {
+  if (!deleteReady.value) return;
   deleting.value = true;
   deleteError.value = null;
+  deleteErrors.value = {};
   try {
-    const response = await deleteProcess(props.process.id);
+    const response = await deleteProcess(props.process.id, { mensaje: deleteMessage.value.trim() });
     deleteOpen.value = false;
     emit('completed', response.message);
   } catch (cause) {
+    if (cause instanceof ApiError && cause.errors.mensaje) {
+      deleteErrors.value = cause.errors;
+      return;
+    }
     deleteError.value = cause instanceof ApiError
       ? (cause.errors.process?.[0] ?? cause.message)
       : 'No se pudo eliminar la convocatoria institucional';
@@ -146,7 +176,6 @@ const remove = async (): Promise<void> => {
     <DropdownMenuSeparator v-if="process.state !== 'cerrado'" />
     <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" variant="destructive" @select="pending = 'cerrar'"><Lock />Cerrar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.deletable && process.state !== 'cerrado'" variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
-    <DropdownMenuItem v-else-if="process.state !== 'cerrado'" disabled><Lock aria-hidden="true" />No se puede eliminar: ya hay sílabos enviados</DropdownMenuItem>
   </TableActionsMenu>
 
   <Dialog :open="pending !== null" @update:open="(value) => { if (!value) { pending = null; templateImpact = null; error = null; } }">
@@ -155,15 +184,7 @@ const remove = async (): Promise<void> => {
       <form class="flex flex-col gap-4" @submit.prevent="confirm">
         <template v-if="templateImpact">
           <p>El administrador cambió la plantilla durante la pausa. Al reanudar se rehacen desde cero todos los sílabos de este período y se elimina su historial</p>
-          <table class="w-full text-sm">
-            <caption class="sr-only">Cantidad de sílabos que se rehacen, por estado</caption>
-            <tbody>
-              <tr v-for="(count, state) in templateImpact" :key="state">
-                <th scope="row" class="py-1 text-left font-medium">{{ stateLabel(state) }}</th>
-                <td class="py-1 text-right tabular-nums">{{ count }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <SyllabusStateCountsTable :counts="templateImpact" caption="Cantidad de sílabos que se rehacen, por estado" />
         </template>
         <ConfirmPhrase v-if="phrase" id="process-transition-confirm" v-model="typed" :phrase="phrase" />
         <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
@@ -175,13 +196,22 @@ const remove = async (): Promise<void> => {
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Eliminar convocatoria institucional</DialogTitle>
-        <DialogDescription>La convocatoria se borra de verdad, con las de cada carrera y los sílabos que estén en borrador. Solo se permite si ningún docente ha enviado su sílabo: si ya hay sílabos enviados, ciérrala para conservarla como historial. El período queda libre para abrir otra convocatoria. Esta acción no se puede deshacer</DialogDescription>
+        <DialogDescription>Se borran la convocatoria, las de cada carrera y todos sus sílabos, incluso los enviados y aprobados. El período queda libre para abrir otra convocatoria. Esta acción no se puede deshacer</DialogDescription>
       </DialogHeader>
+      <Skeleton v-if="impactLoading" class="h-36 w-full" />
+      <Alert v-else-if="impactError" variant="destructive"><AlertDescription>{{ impactError }}</AlertDescription></Alert>
+      <SyllabusStateCountsTable v-else-if="deleteImpact" :counts="deleteImpact.syllabi" :total="deleteImpact.total" caption="Sílabos que se borran, por estado" />
+      <Field :data-invalid="Boolean(deleteErrors.mensaje)">
+        <FieldLabel for="process-delete-message" required>Mensaje para docentes, coordinación y biblioteca</FieldLabel>
+        <Textarea id="process-delete-message" v-model="deleteMessage" rows="3" maxlength="1000" aria-required="true" :aria-invalid="Boolean(deleteErrors.mensaje)" />
+        <FieldDescription>Les llega como aviso y por correo</FieldDescription>
+        <FieldError :errors="deleteErrors.mensaje" />
+      </Field>
       <ConfirmPhrase id="process-delete-confirm" v-model="deleteTyped" :phrase="DELETE_PHRASE" />
       <Alert v-if="deleteError" variant="destructive"><AlertDescription>{{ deleteError }}</AlertDescription></Alert>
       <DialogFooter>
         <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
-        <Button type="button" variant="destructive" :disabled="deleting || !matchesPhrase(deleteTyped, DELETE_PHRASE)" @click="remove"><Spinner v-if="deleting" /><Trash2 v-else aria-hidden="true" />Eliminar convocatoria</Button>
+        <Button type="button" variant="destructive" :disabled="!deleteReady" @click="remove"><Spinner v-if="deleting" data-icon="inline-start" /><Trash2 v-else data-icon="inline-start" aria-hidden="true" />Eliminar convocatoria</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
