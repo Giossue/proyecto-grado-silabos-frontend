@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ScrollArea } from '@/components/ui/scroll-area';
-import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
+import StatusBadge from '@/components/domain/StatusBadge.vue';
+import { managedUserStatus } from '@/lib/managedUserStatus';
 import { Ban, CircleCheck, MailCheck, Pencil, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import type { ManagedUser } from '@/api/admin-users';
@@ -74,12 +75,7 @@ const saved = (message: string): void => {
     emit('saved', message);
 };
 
-const status = computed(() => {
-    if (!props.user.active) return { label: 'Inactivo', tone: 'neutral' as StatusTone };
-    if (props.user.pending_activation) return { label: props.user.invitation_expired ? 'Invitación vencida' : 'Pendiente', tone: 'warning' as StatusTone };
-
-    return { label: 'Activo', tone: 'success' as StatusTone };
-});
+const status = computed(() => managedUserStatus(props.user));
 
 const scopeOf = (assignment: ManagedUserRoleAssignment): string =>
     assignment.career_name ?? 'Todas las carreras';

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import StatusBadge, { type StatusTone } from '@/components/domain/StatusBadge.vue';
+import { managedUserStatus } from '@/lib/managedUserStatus';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { getManagedUsers, type ManagedUser, type ManagedUsersResponse } from '@/api/admin-users';
@@ -34,15 +35,8 @@ const error = ref<string | null>(null); const loading = ref(true);
 const q = ref(queryText(route.query.q)); const status = ref(queryText(route.query.status) || 'all'); const role = ref(queryText(route.query.role) || 'all'); const career = ref(queryText(route.query.career) || 'all');
 const filtersActive = computed(() => q.value !== '' || status.value !== 'all' || role.value !== 'all' || career.value !== 'all');
 const requests = latestRequest();
-const statusTone = (user: ManagedUser): StatusTone => {
-    if (!user.active) return 'neutral';
-    return user.pending_activation ? 'warning' : 'success';
-};
-const statusOf = (user: ManagedUser): string => {
-    if (!user.active) return 'Inactivo';
-    if (user.pending_activation) return 'Pendiente';
-    return 'Activo';
-};
+const statusTone = (user: ManagedUser): StatusTone => managedUserStatus(user).tone;
+const statusOf = (user: ManagedUser): string => managedUserStatus(user).label;
 const careerOf = (role: ManagedUser['roles'][number]): string =>
     role.code === 'administrador' ? '-' : (role.career_name ?? 'Todas las carreras');
 const load = async (page = 1): Promise<void> => {
