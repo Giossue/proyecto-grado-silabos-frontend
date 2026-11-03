@@ -153,17 +153,15 @@ describe('Configuración › Sistema', () => {
     document.body.querySelector<HTMLFormElement>('[role="dialog"] form')!.dispatchEvent(new Event('submit', { cancelable: true }));
     await flushPromises();
     const dialog = (): HTMLElement => document.body.querySelector<HTMLElement>('[role="dialog"]')!;
-    expect(dialog().textContent).toContain('La contraseña no es correcta');
+    await vi.waitFor(() => expect(dialog().textContent).toContain('La contraseña no es correcta'));
 
     button('Cancelar')[0]!.click();
-    await flushPromises();
-    expect(dialog().dataset.state).toBe('closed');
+    await vi.waitFor(() => expect(dialog().dataset.state).toBe('closed'));
     expect(dialog().textContent).toContain('Guardar el asistente de IA');
     expect(dialog().textContent).toContain('La contraseña no es correcta');
 
     button('Guardar')[0]!.click();
-    await flushPromises();
-    expect(dialog().dataset.state).toBe('open');
+    await vi.waitFor(() => expect(dialog().dataset.state).toBe('open'));
     expect(dialog().textContent).toContain('Por seguridad, confirme su contraseña actual para guardar');
   });
 });
