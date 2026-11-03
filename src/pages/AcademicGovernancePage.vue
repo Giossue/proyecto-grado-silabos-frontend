@@ -92,7 +92,7 @@ onMounted(load);
             </Button>
         </template>
 
-        <Tabs :model-value="entity" class="-mb-3" @update:model-value="selectTab">
+        <Tabs v-if="data || error" :model-value="entity" class="-mb-3" @update:model-value="selectTab">
             <TabsList class="h-11 justify-start">
                 <TabsTrigger
                     v-for="item in routeSections" :key="item.value" :value="item.value"
@@ -104,7 +104,7 @@ onMounted(load);
         </Tabs>
 
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-        <LoadingSkeleton v-if="loading && !data" variant="catalog" :columns="entity === 'carrera' ? 4 : 3" :filters="entity === 'carrera' ? 2 : 1" :actions="false" :widths="entity === 'facultad' ? ['minmax(0, 2fr)', 'minmax(0, 1fr)', '5rem'] : undefined" />
+        <LoadingSkeleton v-if="loading && !data && !error" variant="catalog" :tabs="2" :columns="entity === 'carrera' ? 4 : 3" :filters="entity === 'carrera' ? 2 : 1" :actions="false" :widths="entity === 'facultad' ? ['minmax(0, 2fr)', 'minmax(0, 1fr)', '5rem'] : undefined" />
 
         <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" @changed="changed" />
     </PageFrame>

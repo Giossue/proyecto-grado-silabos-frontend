@@ -37,4 +37,22 @@ describe('AcademicGovernancePage', () => {
     expect(wrapper.find('h1').text()).toBe('Facultades');
     wrapper.unmount();
   });
+
+  it('mientras carga muestra las pestañas como skeleton', async () => {
+    api.getSession.mockResolvedValue({ active_role: { code: 'administrador' } });
+    api.route.params = {};
+    let resolve: (value: unknown) => void = () => {};
+    api.getAcademicGovernance.mockReturnValue(new Promise((done) => { resolve = done; }));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(false);
+    expect(wrapper.find('[data-skeleton="table-tabs"]').exists()).toBe(true);
+
+    resolve({ lock_reason: null, catalogs: { faculties: [], careers: [], periods: [] }, options: {} });
+    await flushPromises();
+    expect(wrapper.find('[role="tablist"]').exists()).toBe(true);
+    expect(wrapper.find('[data-skeleton="table-tabs"]').exists()).toBe(false);
+    wrapper.unmount();
+  });
 });
