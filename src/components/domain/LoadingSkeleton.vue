@@ -137,6 +137,15 @@ const tableProps = computed(() => ({
                         </CardContent>
                     </Card>
                 </div>
+                <div v-if="pagination" data-skeleton="table-pagination" class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <Skeleton class="h-4 w-16" />
+                    <div class="flex items-center gap-1">
+                        <Skeleton class="size-9 sm:w-24" />
+                        <Skeleton class="h-5 w-32 sm:hidden" />
+                        <Skeleton v-for="page in 3" :key="page" class="hidden size-9 sm:block" />
+                        <Skeleton class="size-9 sm:w-24" />
+                    </div>
+                </div>
             </div>
 
             <div v-else-if="variant === 'accordion'" class="flex min-w-0 flex-col gap-4">

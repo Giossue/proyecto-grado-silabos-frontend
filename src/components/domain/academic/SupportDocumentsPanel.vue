@@ -31,6 +31,7 @@ import { toast } from '@/lib/toast';
 
 const props = defineProps<{ manages: boolean }>();
 const uploadOpen = defineModel<boolean>('uploadOpen', { default: false });
+const initialLoading = defineModel<boolean>('loading', { default: false });
 
 const MAX_BYTES = 20 * 1024 * 1024;
 const POLL_MS = 4000;
@@ -40,6 +41,7 @@ const documents = ref<SupportDocument[]>([]);
 const loaded = ref(false);
 const loading = ref(true);
 const loadError = ref<string | null>(null);
+watch(() => loading.value && !loaded.value && !loadError.value, (value) => { initialLoading.value = value; }, { immediate: true });
 const busyId = ref<string | null>(null);
 let poll: number | undefined;
 
@@ -147,7 +149,7 @@ onMounted(() => { void load(); });
 <template>
   <div class="flex flex-col gap-4">
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :rows="4" :filters="1" />
+    <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :rows="4" :columns="manages ? 4 : 3" :actions="manages" :pagination="false" :cell-lines="[2, 1, 1]" />
     <div v-else class="flex flex-col gap-4">
       <Card class="py-3"><CardContent class="px-3">
         <ClientFilterBar :filter="filter" input-id="support-documents-search" label="Buscar documento" placeholder="Buscar documento" />

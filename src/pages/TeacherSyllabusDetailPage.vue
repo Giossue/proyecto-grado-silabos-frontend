@@ -516,7 +516,7 @@ onBeforeUnmount(() => {
     <span class="flex-1" />
     <AppearanceToggle />
   </header>
-  <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="!syllabus && !error" header-class="syllabus-editor-header" :header-width="documentHeaderWidth" hide-icon>
+  <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="(!syllabus || canStart) && !error" :actions-skeleton="(!syllabus || canStart) && !error && !previewHint ? ['w-9', 'w-24'] : []" header-class="syllabus-editor-header" :header-width="documentHeaderWidth" hide-icon>
     <template v-if="syllabus" #title-badge><SyllabusStateBadge :state="syllabus.state" /></template>
     <template #actions>
       <TooltipProvider v-if="syllabus && showEditor"><Tooltip><TooltipTrigger as-child>

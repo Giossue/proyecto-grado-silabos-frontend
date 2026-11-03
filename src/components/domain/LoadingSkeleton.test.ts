@@ -162,4 +162,8 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.findAll('[data-skeleton="settings-accordion-content"]')).toHaveLength(1);
     expect(wrapper.find('[data-skeleton="settings-field"]').exists()).toBe(false);
   });
+
+  it('las tarjetas de sílabo llevan la paginación de la pantalla', () => {
+    expect(mount(LoadingSkeleton, { props: { variant: 'syllabus-cards', rows: 2 } }).find('[data-skeleton="table-pagination"]').exists()).toBe(true);
+  });
 });

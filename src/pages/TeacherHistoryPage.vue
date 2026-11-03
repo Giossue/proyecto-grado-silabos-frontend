@@ -31,7 +31,7 @@ onMounted(load);
 </script>
 
 <template>
-  <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera" size="wide">
+  <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera" size="wide" :loading="loading">
     <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.teacher.syllabi)"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading" variant="table-body" :columns="2" :actions="false" :pagination="false" />

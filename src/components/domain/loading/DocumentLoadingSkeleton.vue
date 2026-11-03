@@ -44,10 +44,13 @@ const reviewPanels = computed(() =>
                     <Skeleton class="h-7 w-56 max-w-full" />
                     <Skeleton class="h-5 w-80 max-w-full" />
                 </header>
-                <div class="flex min-w-0 flex-col gap-7">
-                    <div v-for="field in 2" :key="field" data-skeleton="syllabus-field" class="flex min-w-0 flex-col gap-3">
-                        <Skeleton class="h-4 w-48 max-w-full" />
-                        <div class="flex min-w-0 flex-col rounded-md ring-1 ring-surface-ring">
+                <div class="-mx-1 flex min-w-0 flex-col">
+                    <div v-for="field in 2" :key="field" data-skeleton="syllabus-field" class="flex min-w-0 flex-col border-b last:border-b-0">
+                        <div class="flex items-center justify-between gap-4 px-1 py-4">
+                            <div class="flex h-6 items-center"><Skeleton class="h-5 w-56 max-w-full" /></div>
+                            <Skeleton class="size-4 shrink-0" />
+                        </div>
+                        <div class="flex min-w-0 flex-col rounded-md ring-1 ring-surface-ring mx-1 mt-1 mb-4">
                             <div class="flex items-center gap-1 border-b p-1.5">
                                 <Skeleton v-for="tool in 5" :key="tool" class="size-8" />
                             </div>

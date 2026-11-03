@@ -131,4 +131,19 @@ describe('Documentos de apoyo', () => {
     expect(wrapper.text()).not.toContain('Proyecto de carrera');
     wrapper.unmount();
   });
+
+  it('avisa a la página mientras hace la primera carga', async () => {
+    let resolve: (value: { data: SupportDocument[] }) => void = () => {};
+    vi.mocked(getTeacherSupportDocuments).mockReturnValue(new Promise((done) => { resolve = done; }) as never);
+    const wrapper = mountPage('teacher');
+
+    expect(wrapper.emitted('update:loading')?.at(-1)).toEqual([true]);
+    expect(wrapper.findAll('[data-skeleton="table-row"]')).toHaveLength(4);
+    expect(wrapper.find('[data-skeleton="table-pagination"]').exists()).toBe(false);
+
+    resolve({ data: [doc('1', 'Reglamento')] });
+    await flushPromises();
+    expect(wrapper.emitted('update:loading')?.at(-1)).toEqual([false]);
+    wrapper.unmount();
+  });
 });
