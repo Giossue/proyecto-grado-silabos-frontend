@@ -36,7 +36,8 @@ const loading = ref(false);
 const error = ref<string | null>(null);
 
 const hasActiveRole = computed(() => sessionState.current.value?.active_role != null);
-const isNotificationsPage = computed(() => route.path.endsWith('/notificaciones') || route.path === paths.notifications);
+// La lista de avisos; no la pestaña «Notificaciones» de Configuración (avisos por correo), que también termina así.
+const isNotificationsPage = computed(() => (route.path.endsWith('/notificaciones') && !route.path.includes('/configuracion/')) || route.path === paths.notifications);
 
 const iconFor = (tipo: string): Component => {
     if (tipo.startsWith('biblioteca')) return Library;

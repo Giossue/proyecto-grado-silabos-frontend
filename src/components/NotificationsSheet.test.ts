@@ -4,10 +4,10 @@ import NotificationsSheet from '@/components/NotificationsSheet.vue';
 import { getNotifications, openNotification, type Notification, type NotificationsResponse } from '@/api/notifications';
 import { sessionState } from '@/state/session';
 
-const { push, load } = vi.hoisted(() => ({ push: vi.fn(), load: vi.fn() }));
+const { push, load, route } = vi.hoisted(() => ({ push: vi.fn(), load: vi.fn(), route: { path: '/rol' } }));
 
 vi.mock('vue-router', () => ({
-    useRoute: () => ({ path: '/rol' }),
+    useRoute: () => route,
     useRouter: () => ({ push }),
     RouterLink: { template: '<a><slot /></a>' },
 }));
@@ -52,6 +52,7 @@ const mountOpen = async () => {
 
 describe('NotificationsSheet', () => {
     beforeEach(() => {
+        route.path = '/rol';
         push.mockReset();
         load.mockReset();
         vi.mocked(openNotification).mockReset();
@@ -130,5 +131,19 @@ describe('NotificationsSheet', () => {
         expect(push).toHaveBeenCalledWith('/docente/mis-silabos/s-1');
         expect(load.mock.invocationCallOrder[0]).toBeLessThan(push.mock.invocationCallOrder[0]);
         wrapper.unmount();
+    });
+
+    it('la campana queda marcada en la lista de avisos, no en la pestaña «Notificaciones» de Configuración', async () => {
+        const bell = async (path: string): Promise<string> => {
+            route.path = path;
+            const wrapper = mount(NotificationsSheet, { attachTo: document.body });
+            await flushPromises();
+            const classes = wrapper.get('button[aria-haspopup="dialog"]').classes().join(' ');
+            wrapper.unmount();
+            return classes;
+        };
+
+        expect(await bell('/docente/notificaciones')).toContain('bg-secondary');
+        expect(await bell('/docente/configuracion/notificaciones')).not.toContain('bg-secondary');
     });
 });
