@@ -175,7 +175,7 @@ onMounted(load);
   </header>
   <RoleDeadlineBanner />
   <PageFrame v-if="data && !loadError" header-class="syllabus-editor-header" :header-width="sheetWidth" hide-icon :title="data.syllabus.subject" :description="`${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
-    <template #status>
+    <template #title-badge>
       <SyllabusStateBadge :state="data.syllabus.state" />
       <span v-for="note in statusNotes" :key="note" class="text-sm text-muted-foreground">{{ note }}</span>
     </template>
@@ -266,5 +266,5 @@ onMounted(load);
     <SignatureDialog v-model:open="signOpen" title="Firmar y enviar a biblioteca" confirm-label="Firmar y enviar" :run="approve" />
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-  <PageFrame v-else-if="loading" title="" description="" loading status-skeleton :actions-skeleton="['w-9', 'w-44', 'w-64']" header-class="syllabus-editor-header" :header-width="defaultSheetWidth" hide-icon><LoadingSkeleton variant="preview" /></PageFrame>
+  <PageFrame v-else-if="loading" title="" description="" loading :actions-skeleton="['w-9', 'w-44', 'w-64']" header-class="syllabus-editor-header" :header-width="defaultSheetWidth" hide-icon><LoadingSkeleton variant="preview" /></PageFrame>
 </template>
