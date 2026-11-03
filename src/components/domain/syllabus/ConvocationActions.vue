@@ -20,7 +20,7 @@ const processing = ref(false);
 const error = ref<string | null>(null);
 const openingOpen = ref(false);
 const dialogs: Record<Transition, { title: string; description: string; label: string }> = {
-  pausar: { title: 'Pausar la convocatoria', description: 'Los docentes de su carrera no podrán editar ni enviar hasta que la reanude; sus borradores se conservan. Durante la pausa puede corregir la malla y los datos curriculares; la revisión de lo enviado continúa', label: 'Pausar' },
+  pausar: { title: 'Pausar la convocatoria', description: 'Hasta que la reanude, los docentes de su carrera no podrán editar ni enviar, y Coordinación y Biblioteca no podrán revisar sus sílabos. Los borradores se conservan. Durante la pausa puede corregir la malla y los datos curriculares', label: 'Pausar' },
   reanudar: { title: 'Reanudar la convocatoria', description: 'Los docentes vuelven a trabajar, los paralelos creados durante la pausa reciben su sílabo y la malla y los datos curriculares de la carrera quedan protegidos de nuevo', label: 'Reanudar' },
 };
 const select = (value: Transition): void => {
