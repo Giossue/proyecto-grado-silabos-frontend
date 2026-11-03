@@ -142,7 +142,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
 
             <Accordion v-model="openSection" type="single" collapsible class="-mt-2">
 
-            <AccordionItem value="notificaciones">
+            <AccordionItem value="notificaciones" data-tour="settings-notices">
                 <AccordionTrigger>
                     <span class="flex items-center gap-3 text-left">
                         <Bell class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -170,7 +170,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
             </AccordionItem>
 
 
-            <AccordionItem value="ia">
+            <AccordionItem value="ia" data-tour="settings-ai">
                 <AccordionTrigger>
                     <span class="flex items-center gap-3 text-left">
                         <Bot class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -242,7 +242,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
             </AccordionItem>
 
 
-            <AccordionItem value="biblioteca">
+            <AccordionItem value="biblioteca" data-tour="settings-library">
                 <AccordionTrigger>
                     <span class="flex items-center gap-3 text-left">
                         <Library class="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />

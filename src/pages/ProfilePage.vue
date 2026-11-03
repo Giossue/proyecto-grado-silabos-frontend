@@ -83,7 +83,7 @@ const resendVerification = async (): Promise<void> => {
 
             <InputError :message="errors.request" />
 
-            <form v-if="user?.can_edit_identity" class="flex flex-col gap-6" @submit.prevent="submit">
+            <form v-if="user?.can_edit_identity" data-tour="profile-form" class="flex flex-col gap-6" @submit.prevent="submit">
                 <div class="grid gap-2">
                     <Label for="name" required>Nombre completo</Label>
                     <Input

@@ -124,7 +124,7 @@ onMounted(() => void load());
 </script>
 
 <template>
-    <div class="flex flex-col gap-6">
+    <div data-tour="security-2fa" class="flex flex-col gap-6">
         <Heading variant="small" title="Autenticación de dos factores" description="Administre la protección adicional de su cuenta" />
         <FeedbackAlert v-if="error" :message="error" />
 

@@ -78,7 +78,7 @@ const submit = async (): Promise<void> => {
     <SettingsLayout :loading="loading">
         <LoadingSkeleton v-if="loading" variant="settings" settings-section="security" />
         <div v-show="!loading" class="contents">
-            <div class="flex flex-col gap-6">
+            <div data-tour="security-password" class="flex flex-col gap-6">
                 <Heading variant="small" title="Actualizar contraseña" description="Use una contraseña larga y única para proteger su cuenta" />
                 <InputError :message="errors.request" />
 
@@ -108,7 +108,7 @@ const submit = async (): Promise<void> => {
                 </form>
             </div>
 
-            <div class="flex flex-col gap-4">
+            <div data-tour="security-reset" class="flex flex-col gap-4">
                 <Heading variant="small" title="Restablecer por correo" :description="`Le enviaremos un enlace a ${sessionState.current.value?.user.email ?? 'su correo'}. Al cambiar la contraseña con él, se cerrará la sesión en todos los dispositivos`" />
                 <div>
                     <Button type="button" @click="recoveryError = null; recoveryOpen = true">
