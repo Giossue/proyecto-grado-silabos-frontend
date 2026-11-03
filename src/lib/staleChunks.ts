@@ -11,8 +11,12 @@ export const isStaleChunkError = (error: unknown): boolean =>
   error instanceof Error
   && /dynamically imported module|Importing a module script failed|Unable to preload CSS/i.test(error.message);
 
+// Solo rutas del mismo sitio: «/algo», nunca «//otro-dominio», «/\otro-dominio» ni una dirección con esquema.
+const isSameOriginPath = (target: string): boolean => /^\/(?![/\\])/.test(target) && !/[\u0000-\u001f]/.test(target);
+
 /** Recarga hacia `target`, pero no dos veces seguidas: si la versión nueva también falla, no entra en bucle. */
 export const reloadForNewVersion = (target: string): boolean => {
+  if (!isSameOriginPath(target)) return false;
   const last = Number(sessionStorage.getItem(KEY) ?? 0);
   if (Date.now() - last < RETRY_AFTER_MS) return false;
   sessionStorage.setItem(KEY, String(Date.now()));

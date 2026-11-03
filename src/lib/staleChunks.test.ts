@@ -27,6 +27,16 @@ describe('pantallas de una versión anterior', () => {
     expect(reloadForNewVersion('/docente/silabos')).toBe(true);
   });
 
+  it('solo recarga hacia una ruta del mismo sitio, nunca hacia otro dominio', () => {
+    for (const target of ['//evil.example', '//evil.example/docente', 'https://evil.example/docente', 'javascript:alert(1)', 'docente', '/\\evil.example']) {
+      expect(reloadForNewVersion(target)).toBe(false);
+    }
+    expect(navigateTo).not.toHaveBeenCalled();
+
+    expect(reloadForNewVersion('/docente/mis-silabos')).toBe(true);
+    expect(navigateTo).toHaveBeenCalledWith('/docente/mis-silabos');
+  });
+
   it('si al cambiar de pantalla falta el archivo de la versión anterior, abre esa pantalla con la versión nueva', async () => {
     const router = createRouter({
       history: createMemoryHistory(),
