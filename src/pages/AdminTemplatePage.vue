@@ -168,7 +168,7 @@ onBeforeUnmount(() => {
         :header-width="SHEET_WIDTH"
     >
         <template v-if="payload?.templateChangedDuringPause || payload?.processLock" #banner>
-            <ProcessLockAlert v-if="payload?.templateChangedDuringPause" banner :icon="RotateCcw" title="Plantilla modificada durante la pausa" message="Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero" hide-action />
+            <ProcessLockAlert v-if="payload?.templateChangedDuringPause" banner :icon="RotateCcw" title="Plantilla modificada durante la pausa" message="Al reanudar el proceso, los sílabos de este período se adaptan a la plantilla: se conserva lo escrito y los enviados o aprobados vuelven a borrador" hide-action />
             <ProcessLockAlert v-if="payload?.processLock" banner :lock="payload.processLockDetail" />
         </template>
         <template v-if="!editing" #actions>

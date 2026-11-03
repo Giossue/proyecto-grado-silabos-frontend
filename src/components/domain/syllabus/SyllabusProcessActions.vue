@@ -75,7 +75,7 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
 const typed = ref('');
 const phrase = computed((): string | null => {
   if (shownPending.value === 'cerrar') return 'finalizar convocatoria';
-  if (shownPending.value === 'reanudar' && templateImpact.value) return 'rehacer sílabos';
+  if (shownPending.value === 'reanudar' && templateImpact.value) return 'adaptar sílabos';
   return null;
 });
 const phraseReady = computed(() => phrase.value === null || matchesPhrase(typed.value, phrase.value));
@@ -206,8 +206,8 @@ const remove = async (): Promise<void> => {
         <DialogHeader><DialogTitle>{{ dialogs[shownPending].title }}</DialogTitle><DialogDescription>{{ dialogs[shownPending].description }}</DialogDescription></DialogHeader>
         <form class="flex flex-col gap-4" @submit.prevent="confirm">
           <template v-if="templateImpact">
-            <p>El administrador cambió la plantilla durante la pausa. Al reanudar se rehacen desde cero todos los sílabos de este período y se elimina su historial</p>
-            <SyllabusStateCountsTable :counts="templateImpact" caption="Cantidad de sílabos que se rehacen, por estado" />
+            <p>El administrador cambió la plantilla durante la pausa. Al reanudar, los sílabos de este período se adaptan a la plantilla nueva: se conserva lo escrito en los campos que siguen encajando y los enviados o aprobados vuelven a borrador, sin su historial ni sus firmas</p>
+            <SyllabusStateCountsTable :counts="templateImpact" caption="Cantidad de sílabos que se adaptan, por estado" />
           </template>
           <template v-if="shownPending === 'cerrar'">
             <Skeleton v-if="impactLoading" class="h-24 w-full" />
@@ -223,7 +223,7 @@ const remove = async (): Promise<void> => {
           </template>
           <ConfirmPhrase v-if="phrase" id="process-transition-confirm" v-model="typed" :phrase="phrase" />
           <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-          <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="templateImpact || dialogs[shownPending].destructive ? 'destructive' : 'default'" :disabled="processing || !transitionReady"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[shownPending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ templateImpact ? 'Reanudar y rehacer sílabos' : dialogs[shownPending].label }}</Button></DialogFooter>
+          <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="templateImpact || dialogs[shownPending].destructive ? 'destructive' : 'default'" :disabled="processing || !transitionReady"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[shownPending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ templateImpact ? 'Reanudar y adaptar sílabos' : dialogs[shownPending].label }}</Button></DialogFooter>
         </form>
       </template>
     </DialogContent>

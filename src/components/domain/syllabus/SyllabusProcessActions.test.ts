@@ -305,7 +305,7 @@ describe('SyllabusProcessActions', () => {
         code: 'plantilla_cambiada',
         counts: { sin_iniciar: 1, borrador: 2, en_revision: 1, correccion_solicitada: 0, aprobado: 1 },
       }))
-      .mockResolvedValueOnce({ message: 'Proceso reanudado. Los sílabos se rehacieron desde cero.' });
+      .mockResolvedValueOnce({ message: 'Proceso reanudado. Los envíos vuelven a admitirse.' });
     const wrapper = mountActions(pausedProcess());
 
     await wrapper.find('.menu-item').trigger('click');
@@ -315,16 +315,16 @@ describe('SyllabusProcessActions', () => {
     expect(wrapper.find('[data-dialog]').text()).toContain('Borrador');
     expect(wrapper.find('[data-dialog]').text()).toContain('Corrección solicitada');
     const destructive = wrapper.find('[data-dialog] button[type="submit"]');
-    expect(destructive.text()).toContain('Reanudar y rehacer sílabos');
+    expect(destructive.text()).toContain('Reanudar y adaptar sílabos');
     await wrapper.find('[data-dialog] form').trigger('submit');
     await flushPromises();
     expect(transitionProcess).toHaveBeenCalledTimes(1);
-    await wrapper.get('#process-transition-confirm').setValue('rehacer silabos');
+    await wrapper.get('#process-transition-confirm').setValue('adaptar silabos');
     await wrapper.find('[data-dialog] form').trigger('submit');
     await flushPromises();
 
     expect(transitionProcess).toHaveBeenNthCalledWith(1, 'process-1', 'reanudar', undefined);
     expect(transitionProcess).toHaveBeenNthCalledWith(2, 'process-1', 'reanudar', { confirmar_rehacer: true });
-    expect(wrapper.emitted('completed')).toEqual([['Proceso reanudado. Los sílabos se rehacieron desde cero.']]);
+    expect(wrapper.emitted('completed')).toEqual([['Proceso reanudado. Los envíos vuelven a admitirse.']]);
   });
 });

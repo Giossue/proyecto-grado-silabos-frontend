@@ -569,7 +569,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
           <DialogTitle>Editar la plantilla</DialogTitle>
           <DialogDescription>Si guarda cambios:</DialogDescription>
           <ul class="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-            <li>Al reanudar una convocatoria en pausa, sus sílabos se rehacen desde cero</li>
+            <li>Al reanudar una convocatoria en pausa, sus sílabos vuelven a borrador y conservan lo escrito en los campos que siguen igual</li>
             <li>En el próximo período, los docentes no conservan lo que escribieron</li>
           </ul>
         </DialogHeader>

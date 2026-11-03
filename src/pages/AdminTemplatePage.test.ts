@@ -207,12 +207,12 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.get('[data-sheet]').element.parentElement).toBe(scrollRegion.element);
   });
 
-  it("avisa que reanudar rehace los sílabos si la plantilla cambió durante la pausa", async () => {
+  it("avisa que reanudar adapta los sílabos si la plantilla cambió durante la pausa", async () => {
     vi.mocked(getTemplate).mockResolvedValue({ ...payload, templateChangedDuringPause: true });
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Al reanudar el proceso, todos los sílabos de este período se rehacen desde cero');
+    expect(wrapper.text()).toContain('Al reanudar el proceso, los sílabos de este período se adaptan a la plantilla');
   });
 
   it("sincroniza una mutación sin desmontar el constructor", async () => {
