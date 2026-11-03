@@ -69,7 +69,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
 </script>
 
 <template>
-  <PageFrame title="Auditoría" description="Registro de las acciones realizadas en el sistema" size="wide">
+  <PageFrame title="Auditoría" description="Registro de las acciones realizadas en el sistema" size="wide" :loading="loading && !data && !error">
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
     <LoadingSkeleton v-if="loading && !data && !error" variant="table" :columns="3" :search="false" :filters="5" :actions="false" :cell-lines="[1, 2, 2]" :widths="['minmax(0, 1fr)', 'minmax(0, 2fr)', 'minmax(0, 1.5fr)']" />
     <div v-if="data" class="flex flex-col gap-4">

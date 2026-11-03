@@ -59,7 +59,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
 </script>
 
 <template>
-  <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta" size="wide" :loading="!result">
+  <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta" size="wide" :loading="!result && !error">
     <template #actions><TooltipProvider><Tooltip><TooltipTrigger as-child><Button as-child variant="ghost" size="icon"><RouterLink :to="paths.teacher.history" aria-label="Historial"><History aria-hidden="true" /></RouterLink></Button></TooltipTrigger><TooltipContent>Historial</TooltipContent></Tooltip></TooltipProvider></template>
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
     <Card v-if="result" class="py-3">

@@ -82,7 +82,7 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
 </script>
 
 <template>
-  <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo" size="wide" :loading="!data">
+  <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo" size="wide" :loading="!data && !error">
     <template #actions>
       <ConvocationActions v-if="summary?.coordination_convocation" :convocation="summary.coordination_convocation" :blocked-reason="openHint" @changed="changed" />
     </template>

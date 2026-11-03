@@ -146,6 +146,7 @@ onBeforeUnmount(() => {
         description="El formato del sílabo: secciones y campos"
         size="wide"
         :header-width="SHEET_WIDTH"
+        loading
         :actions-skeleton="['w-22']"
     >
         <LoadingSkeleton variant="template" />

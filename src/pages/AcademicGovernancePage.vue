@@ -69,7 +69,7 @@ onMounted(load);
 </script>
 
 <template>
-    <PageFrame :title="sectionContent.title" :description="sectionContent.description" :icon="tabIcons[entity]" size="wide" :loading="!data">
+    <PageFrame :title="sectionContent.title" :description="sectionContent.description" :icon="tabIcons[entity]" size="wide" :loading="!data && !error" :actions-skeleton="loading && !data ? (entity === 'carrera' ? ['w-44', 'w-34'] : ['w-36']) : []">
         <template v-if="data?.lock_reason" #banner><ProcessLockAlert banner hide-action :icon="TriangleAlert" title="Hay una convocatoria abierta" message="Si cambia una facultad o carrera, sus sílabos enviados o aprobados vuelven a Borrador" why="Los sílabos llevan datos de la facultad y de la carrera, como el logo, el nombre, el código y la modalidad. Si alguno cambia, los sílabos enviados o aprobados vuelven a Borrador para actualizarse con los datos nuevos." /></template>
         <template #actions>
             <ImportSpreadsheetDialog

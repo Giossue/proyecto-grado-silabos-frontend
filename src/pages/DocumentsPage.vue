@@ -108,7 +108,7 @@ onBeforeUnmount(() => { if (timer !== null) clearInterval(timer); });
 </script>
 
 <template>
-  <PageFrame title="PDF del sílabo" :description="data ? `${data.syllabus.subject} · ${data.syllabus.period}` : ''" size="narrow" :loading="!data">
+  <PageFrame title="PDF del sílabo" :description="data ? `${data.syllabus.subject} · ${data.syllabus.period}` : ''" size="narrow" :loading="!data && !loadError">
     <template #eyebrow><Button as-child variant="link" size="sm" class="h-auto px-0"><RouterLink :to="backHref"><ArrowLeft aria-hidden="true" />Volver</RouterLink></Button></template>
     <template v-if="ready" #actions>
       <Button type="button" variant="outline" :disabled="working" @click="view">Ver PDF</Button>

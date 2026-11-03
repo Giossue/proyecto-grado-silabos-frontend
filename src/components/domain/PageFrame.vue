@@ -123,14 +123,24 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <Skeleton
+                        v-if="loading && headerIcon"
+                        data-skeleton="page-icon"
+                        class="size-11 shrink-0 rounded-md"
+                    />
                     <div
-                        v-if="headerIcon && title"
+                        v-else-if="headerIcon && title"
                         class="flex size-11 shrink-0 items-center justify-center rounded-md bg-accent text-accent-foreground"
                         aria-hidden="true"
                     >
                         <component :is="headerIcon" class="size-5" />
                     </div>
-                    <div class="flex min-w-0 flex-col gap-1">
+                    <div v-if="loading" class="flex min-w-0 flex-col gap-1">
+                        <h1 v-if="title" class="sr-only">{{ title }}</h1>
+                        <Skeleton data-skeleton="page-title" class="h-8 w-72 max-w-full" />
+                        <Skeleton data-skeleton="page-description" class="h-6 w-96 max-w-full" />
+                    </div>
+                    <div v-else class="flex min-w-0 flex-col gap-1">
                         <div v-if="title && $slots['title-badge']" class="flex flex-wrap items-center gap-3">
                             <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
                             <slot name="title-badge" />
@@ -139,11 +149,9 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                         <div v-if="title && $slots.status" class="flex flex-wrap items-center gap-2">
                             <slot name="status" />
                         </div>
-                        <Skeleton v-else-if="loading" data-skeleton="page-title" class="h-8 w-72 max-w-full" />
                         <p v-if="description" class="max-w-3xl text-muted-foreground">
                             {{ withoutEndPeriod(description) }}
                         </p>
-                        <Skeleton v-else-if="loading" data-skeleton="page-description" class="h-6 w-96 max-w-full" />
                     </div>
                 </div>
                 <div

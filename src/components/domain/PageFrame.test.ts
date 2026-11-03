@@ -35,6 +35,21 @@ describe('PageFrame', () => {
     expect(wrapper.get('button').text()).toBe('Historial');
   });
 
+  it('muestra ícono, título y descripción como skeleton mientras carga', async () => {
+    const wrapper = mount(PageFrame, { props: { title: 'Usuarios y roles', description: 'Cuentas de coordinación', icon: Users, loading: true } });
+
+    expect(wrapper.find('[data-skeleton="page-icon"]').exists()).toBe(true);
+    expect(wrapper.find('[data-skeleton="page-title"]').exists()).toBe(true);
+    expect(wrapper.find('[data-skeleton="page-description"]').exists()).toBe(true);
+    expect(wrapper.get('h1').classes()).toContain('sr-only');
+    expect(wrapper.find('p').exists()).toBe(false);
+
+    await wrapper.setProps({ loading: false });
+    expect(wrapper.find('[data-skeleton]').exists()).toBe(false);
+    expect(wrapper.get('h1').classes()).not.toContain('sr-only');
+    expect(wrapper.get('p').text()).toBe('Cuentas de coordinación');
+  });
+
   it('centra el ícono entre el título y la descripción', () => {
     const wrapper = mount(PageFrame, {
       props: { title: 'Docentes', description: 'Docentes de su carrera', icon: Users },

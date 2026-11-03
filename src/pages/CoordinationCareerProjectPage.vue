@@ -84,7 +84,7 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos" size="wide" :loading="!data">
+  <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos" size="wide" :loading="!data && !loadError">
     <template v-if="data?.career.lock_reason && tab !== 'documentos'" #banner><ProcessLockAlert banner :lock="data.career.lock" /></template>
     <template #actions>
       <Button v-if="tab === 'documentos'" type="button" @click="uploadOpen = true"><Plus data-icon="inline-start" aria-hidden="true" />Subir documento</Button>
