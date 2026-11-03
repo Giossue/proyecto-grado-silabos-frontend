@@ -7,6 +7,7 @@ import { removeCareerTeacher, resendCareerTeacherInvitation, type TeacherAssignm
 import { ApiError } from "@/api/client";
 import CareerTeacherEditSheet from "@/components/domain/academic/CareerTeacherEditSheet.vue";
 import ClientFilterBar from "@/components/domain/ClientFilterBar.vue";
+import { afterDialogExit, useShownWhileClosing } from "@/lib/dialogExit";
 import { activateRow } from "@/lib/rowActivation";
 import TablePagination from "@/components/domain/TablePagination.vue";
 import { Button } from "@/components/ui/button";
@@ -46,10 +47,12 @@ const { items, meta, setPage } = useClientPagination(() => filter.items.value, 2
 const editing = ref<TeacherRow | null>(null);
 const sheetOpen = ref(false);
 const openEditor = (item: TeacherRow): void => { editing.value = item; sheetOpen.value = true; };
-watch(sheetOpen, (value) => { if (!value) window.setTimeout(() => { if (!sheetOpen.value) editing.value = null; }, 350); });
+// La ficha se retira cuando termina de cerrarse, no a mitad de la salida.
+watch(sheetOpen, (value) => { if (!value) void afterDialogExit().then(() => { if (!sheetOpen.value) editing.value = null; }); });
 const removing = ref<TeacherRow | null>(null);
 const removeProcessing = ref(false);
 const removeError = ref<string | null>(null);
+const removingShown = useShownWhileClosing(() => removing.value);
 const askRemoval = (item: TeacherRow): void => {
   sheetOpen.value = false;
   removing.value = item;
@@ -105,7 +108,7 @@ const resendInvitation = async (userId: string): Promise<void> => {
     <Dialog :open="removing !== null" @update:open="(value) => { if (!value) removing = null; }">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Quitar a {{ removing?.name }} de la carrera</DialogTitle>
+          <DialogTitle>Quitar a {{ removingShown?.name }} de la carrera</DialogTitle>
           <DialogDescription>Deja de ser docente de esta carrera y sus paralelos quedan sin docente. Los sílabos se conservan; quien se asigne después empieza desde cero. Su cuenta y sus otros roles no cambian</DialogDescription>
         </DialogHeader>
         <FeedbackAlert v-if="removeError" :message="removeError" />

@@ -5,8 +5,19 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import DatePicker from '@/components/DatePicker.vue';
 import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
 import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
+import { createAcademicRecord } from '@/api/academic';
 
 vi.mock('@/api/libraryCatalog', () => ({ getCatalogLibraries: vi.fn().mockResolvedValue([]) }));
+vi.mock('@/api/academic', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/api/academic')>()), createAcademicRecord: vi.fn() }));
+
+// Simula la animación de salida: el modal cerrado sigue en pantalla hasta que termina.
+const keepClosingDialogs = (): void => {
+  const real = window.getComputedStyle.bind(window);
+  vi.spyOn(window, 'getComputedStyle').mockImplementation((element, pseudo) => {
+    const style = real(element, pseudo);
+    return element.getAttribute('data-state') === 'closed' ? new Proxy(style, { get: (target, key) => (key === 'animationName' ? 'exit' : Reflect.get(target, key)) }) : style;
+  });
+};
 
 const options = {
   faculties: [],
@@ -21,6 +32,7 @@ const options = {
 };
 
 afterEach(() => {
+  vi.restoreAllMocks();
   document.body.innerHTML = '';
 });
 
@@ -186,6 +198,34 @@ describe('academic catalog code fields', () => {
     expect(document.body.querySelector('#edit-code-period-1')).toBeNull();
     expect(document.body.querySelector('input#edit-teaching-weeks-period-1')).toBeNull();
     expect(document.body.textContent).not.toContain('Semanas lectivas calculadas');
+    wrapper.unmount();
+  });
+});
+
+describe('salida del formulario de creación', () => {
+  it('al crear, el formulario se cierra con lo escrito y se limpia al volver a abrirlo', async () => {
+    keepClosingDialogs();
+    vi.mocked(createAcademicRecord).mockResolvedValue({ message: 'Carrera creada.' } as never);
+    const wrapper = mount(CatalogRecordSheet, {
+      attachTo: document.body,
+      props: { entity: 'carrera' as const, options, open: true, 'onUpdate:open': (value: boolean) => wrapper.setProps({ open: value }) },
+    });
+    await flushPromises();
+    const name = (): HTMLInputElement => document.body.querySelector<HTMLInputElement>('#catalog-name')!;
+    name().value = 'Software';
+    name().dispatchEvent(new Event('input'));
+    await flushPromises();
+    name().closest('form')!.dispatchEvent(new Event('submit'));
+    await flushPromises();
+
+    expect(createAcademicRecord).toHaveBeenCalledWith('carrera', expect.any(FormData));
+    expect(wrapper.emitted('saved')).toEqual([['Carrera creada.']]);
+    expect(document.body.querySelector('[role="dialog"]')?.getAttribute('data-state')).toBe('closed');
+    expect(name().value).toBe('Software');
+
+    await wrapper.setProps({ open: true });
+    await flushPromises();
+    expect(name().value).toBe('');
     wrapper.unmount();
   });
 });

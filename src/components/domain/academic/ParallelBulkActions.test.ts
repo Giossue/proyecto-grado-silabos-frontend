@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import ParallelBulkActions from '@/components/domain/academic/ParallelBulkActions.vue';
+import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 
 const api = vi.hoisted(() => ({
     createParallels: vi.fn(),
@@ -14,6 +15,7 @@ const scrollIntoView = Element.prototype.scrollIntoView;
 beforeAll(() => { Element.prototype.scrollIntoView = vi.fn(); });
 afterAll(() => { Element.prototype.scrollIntoView = scrollIntoView; });
 afterEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
     document.body.innerHTML = '';
 });
@@ -41,6 +43,7 @@ describe('ParallelBulkActions', () => {
     });
 
     it('agrega el siguiente paralelo libre a cada materia con jornada y docente juntos', async () => {
+        vi.useFakeTimers();
         api.createParallels.mockResolvedValue({ message: 'ok' });
         const wrapper = mountBar();
         (wrapper.vm as unknown as { $: { setupState: { openAdd: () => void } } }).$.setupState.openAdd();
@@ -55,6 +58,9 @@ describe('ParallelBulkActions', () => {
         expect(api.createParallels).toHaveBeenCalledWith({ subject_id: 's1', codes: ['B'], shift: 'matutina', user_id: 't1' });
         expect(api.createParallels).toHaveBeenCalledWith({ subject_id: 's2', codes: ['A'], shift: 'matutina', user_id: 't1' });
         expect(wrapper.emitted('changed')?.[0]).toEqual(['Paralelo agregado a 2 materias']);
+        // Quitar la selección retira esta barra y su modal: espera a que el modal termine de cerrarse.
+        expect(wrapper.emitted('clear')).toBeUndefined();
+        await vi.advanceTimersByTimeAsync(DIALOG_EXIT_MS);
         expect(wrapper.emitted('clear')).toHaveLength(1);
         wrapper.unmount();
     });

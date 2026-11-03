@@ -105,8 +105,8 @@ const submit = async (): Promise<void> => {
     if (libraries.length > 0) payload.set('catalog_libraries', JSON.stringify(libraries));
     try {
         const result = await createAcademicRecord(props.entity, payload);
+        // El formulario se limpia al volver a abrirlo, no mientras se desvanece.
         open.value = false;
-        reset();
         emit('saved', result.message);
     } catch (reason) {
         errors.value = reason instanceof ApiError ? reason.errors : {};

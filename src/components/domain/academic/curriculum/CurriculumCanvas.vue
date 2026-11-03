@@ -54,6 +54,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { formatNumericDisplay } from "@/lib/numberDisplay";
+import { useShownWhileClosing } from "@/lib/dialogExit";
 import { useFocusReturn } from "@/lib/focusReturn";
 import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
@@ -231,13 +232,23 @@ const navigationExtent = computed<CoordinateExtent>(() => {
 const subjectById = computed(
   () => new Map(props.subjects.map((subject) => [subject.id, subject])),
 );
+// Al cerrar, el modal sigue mostrando la materia que tenía; al abrir, el formulario se rehace.
+const shownEditor = useShownWhileClosing(() =>
+  hasOpenEditor.value
+    ? { subjectId: editingSubjectId.value, cycle: draftCycle.value }
+    : null,
+);
+const editorOpenings = ref(0);
+watch(hasOpenEditor, (open) => {
+  if (open) editorOpenings.value += 1;
+});
 const editorSubject = computed(() =>
-  editingSubjectId.value
-    ? (subjectById.value.get(editingSubjectId.value) ?? null)
+  shownEditor.value?.subjectId
+    ? (subjectById.value.get(shownEditor.value.subjectId) ?? null)
     : null,
 );
 const editorCycle = computed(
-  () => editorSubject.value?.cycle ?? draftCycle.value ?? 1,
+  () => editorSubject.value?.cycle ?? shownEditor.value?.cycle ?? 1,
 );
 const editorPosition = computed(
   () =>
@@ -611,7 +622,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
                   }}</DialogTitle>
                 </DialogHeader>
                 <CurriculumVisualSubjectForm
-                  :key="editorSubject?.id ?? `new-${editorCycle}`"
+                  :key="`${editorSubject?.id ?? `new-${editorCycle}`}-${editorOpenings}`"
                   :career="career"
                   :modality-options="modalityOptions"
                   :curriculum="curriculum"

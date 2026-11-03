@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { CurriculumBuilderSubject } from '@/types/academic';
+import { useShownWhileClosing } from '@/lib/dialogExit';
 import { useFocusReturn } from '@/lib/focusReturn';
 import { toRoman } from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
 
@@ -15,14 +16,16 @@ const emit = defineEmits<{ pick: [connection: { sourceId: string; targetId: stri
 const picker = defineModel<{ subjectId: string; mode: RelationMode } | null>('picker', { required: true });
 const chosen = ref('');
 useFocusReturn(() => picker.value !== null);
+// Al cerrar, el modal sigue mostrando la pregunta y las materias que tenía.
+const shown = useShownWhileClosing(() => picker.value);
 
-const current = computed(() => props.subjects.find((subject) => subject.id === picker.value?.subjectId) ?? null);
+const current = computed(() => props.subjects.find((subject) => subject.id === shown.value?.subjectId) ?? null);
 const options = computed(() =>
     props.subjects
-        .filter((subject) => subject.id !== picker.value?.subjectId)
+        .filter((subject) => subject.id !== shown.value?.subjectId)
         .filter((subject) => {
             const cycle = current.value?.cycle ?? 0;
-            return picker.value?.mode === 'requires' ? (subject.cycle ?? 0) <= cycle : (subject.cycle ?? 0) >= cycle;
+            return shown.value?.mode === 'requires' ? (subject.cycle ?? 0) <= cycle : (subject.cycle ?? 0) >= cycle;
         })
         .sort((left, right) => (left.cycle ?? 0) - (right.cycle ?? 0) || left.position - right.position),
 );
@@ -32,7 +35,7 @@ const groups = computed(() => {
 
     return [...byCycle.entries()].map(([cycle, subjects]) => ({ cycle, subjects }));
 });
-const question = computed(() => picker.value?.mode === 'requires' ? '¿Qué materia requiere?' : '¿De qué materia es requisito?');
+const question = computed(() => shown.value?.mode === 'requires' ? '¿Qué materia requiere?' : '¿De qué materia es requisito?');
 
 watch(picker, (value) => { if (value) chosen.value = ''; });
 

@@ -28,6 +28,16 @@ const doc = (id: string, title: string, view: SupportDocument['view'] = 'lista')
 });
 const mountPage = (mode: 'coordination' | 'teacher', uploadOpen = false) => mount(SupportDocumentsPanel, { props: { manages: mode === 'coordination', uploadOpen }, attachTo: document.body });
 
+// Simula la animación de salida: el modal cerrado sigue en pantalla hasta que termina.
+const keepClosingDialogs = (): void => {
+  const real = window.getComputedStyle.bind(window);
+  vi.spyOn(window, 'getComputedStyle').mockImplementation((element, pseudo) => {
+    const style = real(element, pseudo);
+    return element.getAttribute('data-state') === 'closed' ? new Proxy(style, { get: (target, key) => (key === 'animationName' ? 'exit' : Reflect.get(target, key)) }) : style;
+  });
+};
+const dialogs = (): HTMLElement[] => Array.from(document.body.querySelectorAll<HTMLElement>('[role="dialog"]'));
+
 describe('Documentos de apoyo', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -129,6 +139,42 @@ describe('Documentos de apoyo', () => {
 
     expect(deleteSupportDocument).toHaveBeenCalledWith('d1');
     expect(wrapper.text()).not.toContain('Proyecto de carrera');
+    wrapper.unmount();
+  });
+
+  it('al eliminar, el modal conserva el nombre del documento mientras se cierra', async () => {
+    keepClosingDialogs();
+    vi.mocked(deleteSupportDocument).mockResolvedValue({ message: 'Documento eliminado.' });
+    const wrapper = mountPage('coordination');
+    await flushPromises();
+
+    await wrapper.get('button[aria-label="Eliminar Proyecto de carrera"]').trigger('click');
+    await flushPromises();
+    Array.from(document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')).find((button) => button.textContent?.trim() === 'Eliminar')!.click();
+    await flushPromises();
+
+    expect(deleteSupportDocument).toHaveBeenCalledWith('d1');
+    const closing = dialogs().find((dialog) => dialog.getAttribute('data-state') === 'closed')!;
+    expect(closing.textContent).toContain('Eliminar Proyecto de carrera');
+    wrapper.unmount();
+  });
+
+  it('el formulario de subida se limpia al volver a abrirlo, no mientras se cierra', async () => {
+    keepClosingDialogs();
+    const wrapper = mountPage('coordination', true);
+    await flushPromises();
+    const title = (): HTMLInputElement => document.body.querySelector<HTMLInputElement>('#support-document-title')!;
+    title().value = 'Borrador';
+    title().dispatchEvent(new Event('input'));
+    await flushPromises();
+
+    await wrapper.setProps({ uploadOpen: false });
+    await flushPromises();
+    expect(title().value).toBe('Borrador');
+
+    await wrapper.setProps({ uploadOpen: true });
+    await flushPromises();
+    expect(title().value).toBe('');
     wrapper.unmount();
   });
 

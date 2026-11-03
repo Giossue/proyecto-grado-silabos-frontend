@@ -1,14 +1,24 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { defineComponent } from 'vue';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import TeacherAssignmentsPanel from '@/components/domain/academic/TeacherAssignmentsPanel.vue';
-import type { TeacherAssignments } from '@/api/career-academics';
+import { removeCareerTeacher, type TeacherAssignments } from '@/api/career-academics';
+import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 
 vi.mock('@/api/career-academics', () => ({
     removeCareerTeacher: vi.fn(),
     resendCareerTeacherInvitation: vi.fn(),
     updateCareerTeacher: vi.fn(),
 }));
+
+// Simula la animación de salida: el modal cerrado sigue en pantalla hasta que termina.
+const keepClosingDialogs = (): void => {
+    const real = window.getComputedStyle.bind(window);
+    vi.spyOn(window, 'getComputedStyle').mockImplementation((element, pseudo) => {
+        const style = real(element, pseudo);
+        return element.getAttribute('data-state') === 'closed' ? new Proxy(style, { get: (target, key) => (key === 'animationName' ? 'exit' : Reflect.get(target, key)) }) : style;
+    });
+};
 
 const passthrough = defineComponent({ template: '<div><slot /></div>' });
 
@@ -51,6 +61,8 @@ const inactivePendingData: TeacherAssignments = {
 };
 
 describe('TeacherAssignmentsPanel', () => {
+    afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers(); document.body.innerHTML = ''; });
+
     it('muestra la invitación pendiente dentro de la tabla', () => {
         const wrapper = mount(TeacherAssignmentsPanel, {
             props: { data },
@@ -214,6 +226,41 @@ describe('TeacherAssignmentsPanel', () => {
         expect(buttons).toContain('Cerrar');
         expect(buttons).not.toContain('Guardar cambios');
         expect(buttons).not.toContain('Cancelar');
+        wrapper.unmount();
+    });
+
+    it('al quitar a un docente, el modal conserva su nombre mientras se cierra', async () => {
+        keepClosingDialogs();
+        vi.mocked(removeCareerTeacher).mockResolvedValue({ message: 'Docente quitado.' } as never);
+        const wrapper = mount(TeacherAssignmentsPanel, { props: { data }, attachTo: document.body });
+        await wrapper.findAll('tbody tr').find((item) => item.text().includes('Docente activo'))!.trigger('click');
+        await flushPromises();
+        document.body.querySelector<HTMLButtonElement>('button[aria-label="Quitar de la carrera"]')!.click();
+        await flushPromises();
+        const confirm = [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"][data-state="open"] button')].find((button) => button.textContent?.trim() === 'Quitar de la carrera')!;
+        confirm.click();
+        await flushPromises();
+
+        expect(removeCareerTeacher).toHaveBeenCalledWith('teacher-active');
+        expect(wrapper.emitted('changed')).toEqual([['Docente quitado.']]);
+        const closing = [...document.body.querySelectorAll('[role="dialog"][data-state="closed"]')].map((dialog) => dialog.textContent ?? '');
+        expect(closing.some((text) => text.includes('Quitar a Docente activo de la carrera'))).toBe(true);
+        wrapper.unmount();
+    });
+
+    it('la ficha del docente se retira cuando termina la animación de salida', async () => {
+        keepClosingDialogs();
+        vi.useFakeTimers();
+        const wrapper = mount(TeacherAssignmentsPanel, { props: { data }, attachTo: document.body });
+        await wrapper.findAll('tbody tr').find((item) => item.text().includes('Docente activo'))!.trigger('click');
+        await flushPromises();
+        const close = [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find((button) => button.textContent?.trim() === 'Cerrar')!;
+        close.click();
+        await flushPromises();
+        expect(wrapper.findComponent({ name: 'CareerTeacherEditSheet' }).exists()).toBe(true);
+
+        await vi.advanceTimersByTimeAsync(DIALOG_EXIT_MS);
+        expect(wrapper.findComponent({ name: 'CareerTeacherEditSheet' }).exists()).toBe(false);
         wrapper.unmount();
     });
 });

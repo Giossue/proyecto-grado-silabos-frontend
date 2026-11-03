@@ -25,6 +25,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { formatDateDisplay } from '@/lib/dateDisplay';
+import { useShownWhileClosing } from '@/lib/dialogExit';
 import { openPdfWindow, showInPdfWindow } from '@/lib/openPdf';
 import { activateRow } from '@/lib/rowActivation';
 import { toast } from '@/lib/toast';
@@ -91,8 +92,9 @@ const fileError = ref<string | null>(null);
 const uploadError = ref<string | null>(null);
 const uploading = ref(false);
 
+// Se limpia al abrir: al cerrar, el formulario se desvanece tal como estaba.
 watch(uploadOpen, (open) => {
-  if (open) return;
+  if (!open) return;
   title.value = '';
   file.value = null;
   fileError.value = null;
@@ -123,6 +125,7 @@ const upload = async (): Promise<void> => {
 const removing = ref<SupportDocument | null>(null);
 const removeError = ref<string | null>(null);
 const removeProcessing = ref(false);
+const removingShown = useShownWhileClosing(() => removing.value);
 const askRemoval = (document: SupportDocument): void => {
   removeError.value = null;
   removing.value = document;
@@ -208,7 +211,7 @@ onMounted(() => { void load(); });
     <Dialog v-if="manages" :open="removing !== null" @update:open="(value) => { if (!value) removing = null; }">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Eliminar {{ removing?.title }}</DialogTitle>
+          <DialogTitle>Eliminar {{ removingShown?.title }}</DialogTitle>
           <DialogDescription>Los docentes dejarán de verlo</DialogDescription>
         </DialogHeader>
         <FeedbackAlert v-if="removeError" :message="removeError" />

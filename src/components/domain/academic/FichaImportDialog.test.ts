@@ -30,8 +30,18 @@ const openDialog = async (review = true) => {
 };
 const button = (text: string) => [...document.body.querySelectorAll('button')].find((item) => item.textContent?.includes(text));
 
+// Simula la animación de salida: el modal cerrado sigue en pantalla hasta que termina.
+const keepClosingDialogs = (): void => {
+  const real = window.getComputedStyle.bind(window);
+  vi.spyOn(window, 'getComputedStyle').mockImplementation((element, pseudo) => {
+    const style = real(element, pseudo);
+    return element.getAttribute('data-state') === 'closed' ? new Proxy(style, { get: (target, key) => (key === 'animationName' ? 'exit' : Reflect.get(target, key)) }) : style;
+  });
+};
+
 describe('FichaImportDialog', () => {
   enableAutoUnmount(afterEach);
+  afterEach(() => { vi.restoreAllMocks(); });
 
   it('ofrece la plantilla Excel aunque la IA no esté configurada', async () => {
     await openDialog(false);
@@ -107,5 +117,25 @@ describe('FichaImportDialog', () => {
 
     expect(document.body.textContent).toContain('Sin contenido en el archivo');
     expect(button('Aplicar a 0 materias')!.disabled).toBe(true);
+  });
+
+  it('al aplicar, el modal se cierra con la vista previa y vuelve al primer paso solo al abrirlo otra vez', async () => {
+    keepClosingDialogs();
+    vi.mocked(previewFichaWorkbook).mockResolvedValue({ preview: ready });
+    vi.mocked(applyFichaWorkbook).mockResolvedValue({ message: 'ok', applied: 1 });
+    const wrapper = await openDialog();
+    button('Aplicar a 1 materias')!.click();
+    await flushPromises();
+
+    expect(wrapper.emitted('applied')).toHaveLength(1);
+    const closing = document.body.querySelector<HTMLElement>('[role="dialog"][data-state="closed"]')!;
+    expect(closing.textContent).toContain('Vista previa del Excel para 1 de 2 materias');
+    expect(closing.className).toContain('sm:max-w-3xl');
+
+    await wrapper.get('button').trigger('click');
+    await flushPromises();
+    const reopened = document.body.querySelector<HTMLElement>('[role="dialog"][data-state="open"]')!;
+    expect(reopened.textContent).toContain('Descargar plantilla Excel');
+    expect(reopened.textContent).not.toContain('Vista previa del Excel');
   });
 });

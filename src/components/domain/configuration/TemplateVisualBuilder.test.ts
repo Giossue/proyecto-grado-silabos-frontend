@@ -57,6 +57,16 @@ const typeInto = async (label: string, value: string) => {
   return input;
 };
 
+// Simula la animación de salida: el modal cerrado sigue en pantalla hasta que termina.
+const keepClosingDialogs = (): void => {
+  const real = window.getComputedStyle.bind(window);
+  vi.spyOn(window, 'getComputedStyle').mockImplementation((element, pseudo) => {
+    const style = real(element, pseudo);
+    return element.getAttribute('data-state') === 'closed' ? new Proxy(style, { get: (target, key) => (key === 'animationName' ? 'exit' : Reflect.get(target, key)) }) : style;
+  });
+};
+const closingDialog = (): HTMLElement | null => body().querySelector<HTMLElement>('[role="dialog"][data-state="closed"]');
+
 describe('TemplateVisualBuilder', () => {
   enableAutoUnmount(afterEach);
   beforeEach(() => {
@@ -65,7 +75,7 @@ describe('TemplateVisualBuilder', () => {
     document.body.innerHTML = '';
     vi.mocked(templateApi.importTemplateJson).mockResolvedValue({ message: 'ok' });
   });
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
   it('muestra cada sección y cada campo editables sobre la hoja, sin modales', async () => {
     await mountBuilder();
@@ -335,5 +345,32 @@ describe('TemplateVisualBuilder', () => {
     await mountBuilder();
     expect(await advancedItems()).not.toContain('Listas');
     expect(body().textContent).not.toContain('Empieza con');
+  });
+
+  it('al eliminar una sección, el modal sigue diciendo qué sección mientras se cierra', async () => {
+    keepClosingDialogs();
+    await mountBuilder();
+    await selectSection('Uno');
+    await click(body().querySelector('[aria-label="Eliminar la sección Uno"]'));
+    await click([...body().querySelectorAll<HTMLElement>('[role="dialog"][data-state="open"] button')].find((el) => el.textContent?.trim() === 'Eliminar'));
+
+    const closing = [...body().querySelectorAll<HTMLElement>('[role="dialog"][data-state="closed"]')].find((el) => el.textContent?.includes('Eliminar'))!;
+    expect(closing.textContent).toContain('Eliminar sección');
+    expect(closing.textContent).toContain('Se quitará «Uno» con sus 2 campos');
+  });
+
+  it('la frase para editar se borra al volver a abrir el aviso, no mientras se cierra', async () => {
+    keepClosingDialogs();
+    const wrapper = mount(TemplateVisualBuilder, { props: { template, presets }, attachTo: document.body });
+    (wrapper.vm as unknown as { askEdit: () => void }).askEdit();
+    await flushPromises();
+    typeConfirmation('template-edit-confirm', 'editar plantilla');
+    await flushPromises();
+    await click(byText('button', 'Cancelar'));
+
+    expect(closingDialog()?.querySelector<HTMLInputElement>('#template-edit-confirm')?.value).toBe('editar plantilla');
+    (wrapper.vm as unknown as { askEdit: () => void }).askEdit();
+    await flushPromises();
+    expect(body().querySelector<HTMLInputElement>('[role="dialog"][data-state="open"] #template-edit-confirm')?.value).toBe('');
   });
 });

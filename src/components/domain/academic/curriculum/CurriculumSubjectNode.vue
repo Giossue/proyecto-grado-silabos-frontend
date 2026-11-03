@@ -19,6 +19,7 @@ import {
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { afterDialogExit } from "@/lib/dialogExit";
 import { formatNumericDisplay } from "@/lib/numberDisplay";
 import { useFocusReturn } from "@/lib/focusReturn";
 import { cn } from "@/lib/utils";
@@ -66,6 +67,8 @@ const deleteSubject = async (): Promise<void> => {
       subject.id,
     );
     deleteOpen.value = false;
+    // La malla quita el nodo al refrescar: se avisa cuando el modal ya se cerró.
+    await afterDialogExit();
     props.data.onSaved(result.message);
   } catch (reason) {
     deleteError.value =

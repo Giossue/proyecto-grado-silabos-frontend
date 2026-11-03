@@ -31,7 +31,8 @@ const total = (subject: FichaWorkbookSubject): number => subject.coverage?.total
 const stateText = (subject: FichaWorkbookSubject): string => `${found(subject)} de ${total(subject)} campos con contenido`;
 const missing = (subject: FichaWorkbookSubject) => subject.missing ?? (current.value?.fields ?? []).filter((field) => !(field.key in subject.values)).map((field) => ({ ...field, reason: 'no_encontrado' as const }));
 const reset = (): void => { current.value = null; file.value = null; chosen.value = new Set(); excluded.value = {}; expanded.value = new Set(); error.value = null; };
-watch(open, () => { reset(); });
+// Se reinicia al abrir: al cerrar, el modal se desvanece con el paso y el ancho que tenía.
+watch(open, (value) => { if (value) reset(); });
 
 const run = async (action: () => Promise<unknown>, fallback: string): Promise<boolean> => {
   busy.value = true; error.value = null;

@@ -18,6 +18,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { useShownWhileClosing } from '@/lib/dialogExit';
 import { toast } from '@/lib/toast';
 
 const props = defineProps<{
@@ -36,6 +37,8 @@ const selectedRequirement = defineModel<CurriculumRequirement | null>(
     'selectedRequirement',
     { required: true },
 );
+// Al cerrar, el modal sigue mostrando la relación que tenía.
+const shownRequirement = useShownWhileClosing(() => selectedRequirement.value);
 const savingRequirement = ref(false);
 const deletingRequirement = ref(false);
 
@@ -108,7 +111,7 @@ const deleteRequirement = async (): Promise<void> => {
             <DialogHeader>
                 <DialogTitle>
                     {{
-                        selectedRequirement?.type === 'correquisito'
+                        shownRequirement?.type === 'correquisito'
                             ? 'Correquisito'
                             : 'Prerrequisito'
                     }}
@@ -116,10 +119,10 @@ const deleteRequirement = async (): Promise<void> => {
                 <DialogDescription>
                     «{{
                         subjectName(
-                            selectedRequirement?.requirement_id,
+                            shownRequirement?.requirement_id,
                         )
                     }}» → «{{
-                        subjectName(selectedRequirement?.subject_id)
+                        subjectName(shownRequirement?.subject_id)
                     }}». Si la relación se creó por error, puede
                     eliminarla; las materias no se modifican
                 </DialogDescription>

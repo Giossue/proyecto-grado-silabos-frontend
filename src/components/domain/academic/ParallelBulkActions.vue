@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Spinner } from '@/components/ui/spinner';
+import { afterDialogExit } from '@/lib/dialogExit';
 import { nextParallelCode } from '@/lib/parallelCodes';
 
 type Row = ScheduledSubjects['scheduledSubjects'][number];
@@ -46,7 +47,7 @@ const label = computed(() => {
 const chosen = (item: Row) => item.parallels.filter((parallel) => props.parallelIds.includes(parallel.id));
 const assignmentOf = (parallelId: string) => props.assignments.find((item) => item.parallel_id === parallelId && item.active) ?? null;
 
-const run = async (steps: Array<() => Promise<unknown>>, done: string, nothing: string): Promise<void> => {
+const run = async (steps: Array<() => Promise<unknown>>, done: string, nothing: string, closing?: Promise<void>): Promise<void> => {
   if (steps.length === 0) {
     emit('changed', nothing);
     return;
@@ -69,6 +70,8 @@ const run = async (steps: Array<() => Promise<unknown>>, done: string, nothing: 
     emit('failed', `${steps.length - failures} de ${steps.length} cambios aplicados. ${firstError}`);
     emit('changed', 'Se aplicaron los cambios posibles');
   }
+  // Quitar la selección retira esta barra: si se abrió desde el modal, se espera a que termine de cerrarse.
+  await closing;
   emit('clear');
 };
 
@@ -91,6 +94,7 @@ const addParallel = async (): Promise<void> => {
     props.items.map((item) => () => createParallels({ subject_id: item.subject_id, codes: [nextParallelCode(item.parallels)], shift, user_id: userId })),
     `Paralelo agregado a ${props.items.length} ${props.items.length === 1 ? 'materia' : 'materias'}`,
     'No hay materias seleccionadas',
+    afterDialogExit(),
   );
 };
 const setShift = (shift: string) => run(

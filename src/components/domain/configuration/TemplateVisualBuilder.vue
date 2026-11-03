@@ -27,6 +27,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ConfirmPhrase from '@/components/domain/ConfirmPhrase.vue';
 import { matchesPhrase } from '@/lib/confirmPhrase';
+import { useShownWhileClosing } from '@/lib/dialogExit';
 import { toast } from '@/lib/toast';
 import { templateEditorState } from '@/state/templateEditor';
 import { cn } from '@/lib/utils';
@@ -46,7 +47,8 @@ watch(preview, (value) => {
 const editWarningOpen = ref(false);
 const EDIT_PHRASE = 'editar plantilla';
 const editTyped = ref('');
-watch(editWarningOpen, () => { editTyped.value = ''; });
+// Se borra al abrir: al cerrar, el aviso se desvanece con lo que tenía.
+watch(editWarningOpen, (open) => { if (open) editTyped.value = ''; });
 const selectedField = ref<string | null>(null);
 const selectedSection = ref<string | null>(null);
 const activeEditor = shallowRef<Editor | null>(null);
@@ -302,6 +304,7 @@ const usedSectionKeys = computed(() => source.value.map((section) => section.key
 const usedFieldKeys = computed(() => sections.value.flatMap((entry) => entry.fields.map((field) => field.key)));
 
 const removal = ref<{ kind: 'section' | 'field'; id: string; name: string; count: number } | null>(null);
+const removalShown = useShownWhileClosing(() => removal.value);
 
 const moved = <T,>(items: T[], index: number, direction: -1 | 1): T[] => {
     const next = [...items];
@@ -581,9 +584,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     <Dialog :open="removal !== null" @update:open="(value: boolean) => { if (!value) removal = null }">
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{{ removal?.kind === 'section' ? 'Eliminar sección' : 'Eliminar campo' }}</DialogTitle>
+          <DialogTitle>{{ removalShown?.kind === 'section' ? 'Eliminar sección' : 'Eliminar campo' }}</DialogTitle>
           <DialogDescription>
-            {{ removal?.kind === 'section' ? `Se quitará «${removal?.name}» con sus ${removal?.count} campos de la plantilla` : `Se quitará «${removal?.name}» de la plantilla` }}
+            {{ removalShown?.kind === 'section' ? `Se quitará «${removalShown?.name}» con sus ${removalShown?.count} campos de la plantilla` : `Se quitará «${removalShown?.name}» de la plantilla` }}
             Se aplica al guardar la plantilla
           </DialogDescription>
         </DialogHeader>

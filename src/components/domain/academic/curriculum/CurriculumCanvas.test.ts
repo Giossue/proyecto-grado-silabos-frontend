@@ -167,4 +167,41 @@ describe('CurriculumCanvas', () => {
         await nextTick();
         expect(wrapper.findComponent({ name: 'CurriculumRelationPicker' }).props('picker')).toEqual({ subjectId: 'b', mode: 'requires' });
     });
+
+    it('al cerrar el editor, el modal sigue mostrando la materia y se rehace al volver a abrirlo', async () => {
+        const wrapper = shallowMount(CurriculumCanvas, {
+            props: {
+                career: { id: 'career', name: 'Software', modality: null },
+                curriculum: { id: 'career', cycle_count: 1, editable: true, lock_reason: null },
+                editing: true,
+                fixedFields: [],
+                fixedFieldTotals: [],
+                subjects: [subject('a', 0)],
+                requirements: [],
+                organizationUnits: [],
+                modalityOptions: [],
+            },
+            global: { renderStubDefaultSlot: true },
+        });
+        const flow = wrapper.findComponent({ name: 'VueFlow' });
+        const edit = (id: string) => (flow.props('nodes') as Array<{ id: string; data: { onEdit: (id: string) => void } }>).find((node) => node.id === id)!.data.onEdit(id);
+        const dialog = () => wrapper.findComponent({ name: 'Dialog' });
+        const form = () => wrapper.findComponent({ name: 'CurriculumVisualSubjectForm' });
+
+        edit('a');
+        await nextTick();
+        const opened = form().vm;
+        dialog().vm.$emit('update:open', false);
+        await nextTick();
+
+        expect(dialog().props('open')).toBe(false);
+        expect(dialog().text()).toContain('Editar materia');
+        expect(form().props('subject')).toMatchObject({ id: 'a' });
+        expect(form().vm).toBe(opened);
+
+        edit('a');
+        await nextTick();
+        expect(form().props('subject')).toMatchObject({ id: 'a' });
+        expect(form().vm).not.toBe(opened);
+    });
 });
