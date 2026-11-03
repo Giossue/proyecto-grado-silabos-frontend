@@ -16,10 +16,11 @@ const CHECKLIST = '.driver-checklist-launcher';
 const shell = {
   menu: step('[data-sidebar="sidebar"]', 'Menú', 'Aquí están los módulos de su rol. Se oculta con el botón de arriba a la izquierda', 'right'),
   notifications: step('[aria-label^="Notificaciones"]', 'Notificaciones', 'Los avisos del período en curso. Pulse uno para ir a la pantalla relacionada', 'bottom'),
+  theme: step('[aria-label^="Tema visual"]', 'Tema', 'Cambia entre claro y oscuro. Se recuerda en este navegador', 'bottom'),
   user: step('[aria-label="Menú de usuario"]', 'Su cuenta', 'Desde aquí cambia de carrera o de rol, abre su perfil y cierra la sesión', 'bottom'),
   accessibility: step('[aria-label="Accesibilidad"]', 'Accesibilidad', 'Tamaño del texto, contraste, sin animaciones y más. Se guarda en su cuenta', 'bottom'),
 };
-const basics = [shell.menu, shell.notifications, shell.user, shell.accessibility];
+const basics = [shell.menu, shell.notifications, shell.theme, shell.accessibility, shell.user];
 
 const checklist = step(CHECKLIST, 'Antes de empezar', 'Los pasos previos para abrir la convocatoria. Pulse uno y le mostramos dónde se hace', 'left');
 
@@ -81,6 +82,7 @@ export const screenTours: Record<string, TourStep[]> = {
     step(FILTERS, 'Filtrar', 'Por facultad si se reparten el trabajo; el sistema recuerda su elección', 'bottom'),
     step(TABLE, 'En revisión', 'Los sílabos que Coordinación ya aprobó. Pulse uno para revisar su bibliografía y firmar, o devolverlo al docente', 'top'),
     shell.notifications,
+    shell.theme,
     shell.user,
   ],
   '/biblioteca/historial': [
