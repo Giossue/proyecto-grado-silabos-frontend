@@ -172,7 +172,7 @@ onBeforeUnmount(() => {
             <ProcessLockAlert v-if="payload?.processLock" banner :lock="payload.processLockDetail" />
         </template>
         <template v-if="!editing" #actions>
-            <Button type="button" :disabled="Boolean(payload?.processLock)" @click="builder?.askEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
+            <Button type="button" data-tour="template-edit" :disabled="Boolean(payload?.processLock)" @click="builder?.askEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
         </template>
         <div class="mx-auto flex flex-col gap-4 empty:hidden" :style="{ width: `${SHEET_WIDTH}px`, maxWidth: '100%' }">
             <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>

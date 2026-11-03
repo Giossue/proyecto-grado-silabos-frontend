@@ -46,7 +46,7 @@ export const screenTours: Record<string, TourStep[]> = {
     step(TABLE, 'Cuentas', 'Pulse una fila para ver el detalle. El «+1» junto al rol indica que la persona tiene otros roles', 'top'),
   ],
   '/admin/plantilla': [
-    step(ACTIONS, 'Editar', 'Abre el editor de la plantilla. Pide escribir «editar plantilla». Con una convocatoria abierta está bloqueado: pause la convocatoria para cambiarla', 'left'),
+    step('[data-tour="template-edit"]', 'Editar', 'Abre el editor de la plantilla. Pide escribir «editar plantilla». Con una convocatoria abierta está bloqueado: pause la convocatoria para cambiarla', 'left'),
     // Pasos del editor: solo aparecen mientras se edita.
     step('[data-tour="template-back"]', 'Volver a la vista', 'Sale del editor. Si hay cambios sin guardar, le pregunta antes de descartarlos', 'bottom'),
     step('[aria-label="Formato del texto"]', 'Formato del texto', 'Negrita, color, alineación, listas y tablas. Se activa al escribir dentro de un campo', 'bottom'),
@@ -55,7 +55,6 @@ export const screenTours: Record<string, TourStep[]> = {
     step('[data-tour="template-save"]', 'Guardar', 'Guarda los cambios y vuelve a la vista. Un punto en el botón avisa que hay cambios sin guardar. También con Ctrl+S', 'bottom'),
     step('[data-sheet]', 'La hoja', 'Así se verá el sílabo. Escriba directo en los títulos y campos. Pase el ratón entre campos para agregar un campo o una sección. Pulse el logo de la universidad para cambiarlo; ese cambio se guarda al instante', 'left'),
     step('[data-tour="template-assistant"]', 'Asistente', 'Pídale cambios con sus palabras. Revise cada propuesta y aplíquela; después pulse «Guardar»', 'left'),
-    shell.theme,
   ],
   '/admin/auditoria': [
     step(FILTERS, 'Filtros', 'Acote por fecha, persona, acción o resultado', 'bottom'),
