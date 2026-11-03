@@ -7,8 +7,6 @@ import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 
 vi.mock('@/api/career-academics', () => ({
     removeCareerTeacher: vi.fn(),
-    resendCareerTeacherInvitation: vi.fn(),
-    updateCareerTeacher: vi.fn(),
 }));
 
 // Simula la animación de salida: el modal cerrado sigue en pantalla hasta que termina.
@@ -192,15 +190,14 @@ describe('TeacherAssignmentsPanel', () => {
         expect(text).not.toContain('Reenviar invitación');
     });
 
-    it('abre la ficha del docente con su menú de acciones arriba a la derecha', async () => {
+    it('abre la ficha del docente pendiente con «Quitar de la carrera» arriba a la derecha', async () => {
         const wrapper = mount(TeacherAssignmentsPanel, { props: { data }, attachTo: document.body });
         const row = wrapper.findAll('tbody tr').find((item) => item.text().includes('Docente pendiente'))!;
         await row.trigger('click');
         await flushPromises();
 
-        expect(document.body.textContent).toContain('Editar docente');
-        const menu = document.body.querySelector('button[aria-label="Acciones para Docente pendiente"]');
-        expect(menu).not.toBeNull();
+        expect(document.body.querySelector('[role="dialog"]')?.textContent).toContain('Docente');
+        expect(document.body.querySelector('button[aria-label="Quitar de la carrera"]')).not.toBeNull();
         wrapper.unmount();
     });
 
@@ -213,6 +210,23 @@ describe('TeacherAssignmentsPanel', () => {
         expect(document.body.querySelector('button[aria-label="Quitar de la carrera"]')).not.toBeNull();
         expect(document.body.querySelector('button[aria-label="Acciones para Docente activo"]')).toBeNull();
         expect(document.body.querySelector('[data-slot="tooltip-content"]')).toBeNull();
+        wrapper.unmount();
+    });
+
+    it('con la cuenta pendiente no deja editar nombre ni correo ni reenviar la invitación', async () => {
+        const wrapper = mount(TeacherAssignmentsPanel, { props: { data }, attachTo: document.body });
+        await wrapper.findAll('tbody tr').find((item) => item.text().includes('Docente pendiente'))!.trigger('click');
+        await flushPromises();
+
+        const dialog = document.body.querySelector('[role="dialog"]')!;
+        const inputs = [...dialog.querySelectorAll<HTMLInputElement>('input')];
+        expect(inputs.length).toBeGreaterThan(0);
+        expect(inputs.every((input) => input.disabled)).toBe(true);
+        expect(inputs.map((input) => input.value)).toContain('pendiente@example.test');
+        const buttons = [...dialog.querySelectorAll('button')].map((button) => button.textContent?.trim());
+        expect(buttons).not.toContain('Guardar cambios');
+        expect(dialog.textContent).not.toContain('Reenviar invitación');
+        expect(dialog.querySelector('button[aria-label="Acciones para Docente pendiente"]')).toBeNull();
         wrapper.unmount();
     });
 
