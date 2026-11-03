@@ -42,7 +42,7 @@ const isNotificationsPage = computed(() => (route.path.endsWith('/notificaciones
 const LIBRARY_NOTICES = ['coordinacion.aprobado', 'silabo.reenviado_biblioteca'];
 
 const iconFor = (tipo: string): Component => {
-    if (LIBRARY_NOTICES.includes(tipo)) return Library;
+    if (LIBRARY_NOTICES.includes(tipo) || tipo.startsWith('biblioteca')) return Library;
     if (tipo.startsWith('documento')) return FileText;
     if (tipo.startsWith('proceso') || tipo.startsWith('convocatoria')) return CalendarClock;
     if (tipo.startsWith('silabo')) return ClipboardCheck;
