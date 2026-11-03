@@ -16,7 +16,7 @@ const button = defineComponent({
   template: '<button class="button" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
 });
 
-const process = (state: SyllabusProcess['state']): SyllabusProcess => ({
+const process = (state: SyllabusProcess['state'], blockReason: string | null = null): SyllabusProcess => ({
   id: 'process-1',
   name: 'Octubre-Enero 2026-2027',
   state,
@@ -28,15 +28,19 @@ const process = (state: SyllabusProcess['state']): SyllabusProcess => ({
   convocations_count: 1,
   configurable: state === 'pausado',
   deletable: state !== 'cerrado',
+  extensions_used: blockReason ? 2 : 0,
+  extensions_max: 2,
+  extension_limit_on: '2027-03-01',
+  extension_block_reason: blockReason,
 });
 
-const mountDialog = (state: SyllabusProcess['state']) => mount(ConvocationOptionsDialog, {
+const mountDialog = (state: SyllabusProcess['state'], blockReason: string | null = null) => mount(ConvocationOptionsDialog, {
   props: {
     open: true,
     row: {
       id: 'period-1', code: 'Octubre-Enero 2026-2027', starts_on: '2026-10-01', ends_on: '2027-03-01',
       teaching_weeks: 16, status: 'proximo', status_label: 'Próximo', institutional_process: null, lock_reason: null,
-      process: process(state),
+      process: process(state, blockReason),
     } as never,
   },
   global: {
@@ -72,6 +76,20 @@ describe('ConvocationOptionsDialog', () => {
     expect(labels(wrapper)).toContain('Finalizar');
     expect(labels(wrapper)).not.toContain('Cerrar');
     expect(labels(mountDialog('pausado'))).toContain('Finalizar');
+  });
+
+  it('ofrece prorrogar mientras queden prórrogas', () => {
+    const extend = mountDialog('abierto').findAll('ul .button').find((item) => item.text() === 'Prorrogar plazo');
+
+    expect(extend?.attributes('disabled')).toBeUndefined();
+  });
+
+  it('sin prórrogas disponibles desactiva prorrogar y muestra el motivo', () => {
+    const wrapper = mountDialog('pausado', 'El plazo ya llega al último día de clases (01/03/2027).');
+    const extend = wrapper.findAll('ul .button').find((item) => item.text() === 'Prorrogar plazo');
+
+    expect(extend?.attributes('disabled')).toBeDefined();
+    expect(wrapper.find('#option-reason-prorrogar').text()).toBe('El plazo ya llega al último día de clases (01/03/2027)');
   });
 
   it('una convocatoria cerrada no ofrece finalizar', () => {

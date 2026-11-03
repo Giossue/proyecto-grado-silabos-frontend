@@ -12,6 +12,10 @@ export type SyllabusProcess = {
   convocations_count: number;
   configurable: boolean;
   deletable: boolean;
+  extensions_used: number;
+  extensions_max: number;
+  extension_limit_on: string;
+  extension_block_reason: string | null;
 };
 
 export type Processes = {

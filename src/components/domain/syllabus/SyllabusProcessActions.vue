@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { matchesPhrase } from '@/lib/confirmPhrase';
+import { withoutFinalPeriod } from '@/lib/utils';
 
 type Transition = 'pausar' | 'reanudar' | 'cerrar';
 
@@ -181,7 +182,10 @@ const remove = async (): Promise<void> => {
     <slot />
     <DropdownMenuItem v-if="process.state === 'abierto'" @select="pending = 'pausar'"><Pause />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'pausado'" @select="pending = 'reanudar'"><Play />Reanudar</DropdownMenuItem>
-    <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" @select="deadlineOpen = true"><CalendarClock />Prorrogar plazo</DropdownMenuItem>
+    <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" :disabled="Boolean(process.extension_block_reason)" @select="deadlineOpen = true">
+      <CalendarClock />
+      <span class="flex flex-col">Prorrogar plazo<span v-if="process.extension_block_reason" class="text-xs text-muted-foreground">{{ withoutFinalPeriod(process.extension_block_reason) }}</span></span>
+    </DropdownMenuItem>
     <DropdownMenuSeparator v-if="process.state !== 'cerrado'" />
     <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" variant="destructive" @select="pending = 'cerrar'"><Lock />Finalizar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.deletable && process.state !== 'cerrado'" variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
@@ -236,5 +240,5 @@ const remove = async (): Promise<void> => {
       </DialogFooter>
     </DialogContent>
   </Dialog>
-  <DeadlineExtensionSheet v-model:open="deadlineOpen" :process-id="process.id" display="menu" @saved="emit('completed', $event)" />
+  <DeadlineExtensionSheet v-model:open="deadlineOpen" :process="process" display="menu" @saved="emit('completed', $event)" />
 </template>

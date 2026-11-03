@@ -39,6 +39,10 @@ const process = (): SyllabusProcess => ({
   convocations_count: 1,
   configurable: false,
   deletable: false,
+  extensions_used: 0,
+  extensions_max: 2,
+  extension_limit_on: '2027-02-26',
+  extension_block_reason: null,
 });
 
 const pausedProcess = () => ({ ...process(), state: 'pausado' as const, deletable: true });
@@ -222,6 +226,21 @@ describe('SyllabusProcessActions', () => {
     const wrapper = mountActions();
     expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Finalizar'))).toBe(false);
     expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Eliminar'))).toBe(false);
+  });
+
+  it('ofrece prorrogar mientras queden prórrogas', () => {
+    const wrapper = mountActions(openProcess());
+    const extend = wrapper.findAll('.menu-item').find((item) => item.text().includes('Prorrogar plazo'));
+
+    expect(extend?.attributes('disabled')).toBeUndefined();
+  });
+
+  it('sin prórrogas disponibles desactiva prorrogar y dice por qué', () => {
+    const wrapper = mountActions({ ...openProcess(), extensions_used: 2, extension_block_reason: 'Ya se usaron las 2 prórrogas de esta convocatoria.' });
+    const extend = wrapper.findAll('.menu-item').find((item) => item.text().includes('Prorrogar plazo'));
+
+    expect(extend?.attributes('disabled')).toBeDefined();
+    expect(extend?.text()).toContain('Ya se usaron las 2 prórrogas de esta convocatoria');
   });
 
   it('una convocatoria en curso ofrece eliminar aunque tenga sílabos enviados', () => {

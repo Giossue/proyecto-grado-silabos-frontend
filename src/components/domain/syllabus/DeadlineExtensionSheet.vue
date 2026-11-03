@@ -1,26 +1,29 @@
 <script setup lang="ts">
 import { CalendarClock } from '@lucide/vue';
-import { ref } from 'vue';
-import { extendProcessDeadline } from '@/api/processes';
+import { computed, ref } from 'vue';
+import { extendProcessDeadline, type SyllabusProcess } from '@/api/processes';
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
 import FormSheet from '@/components/domain/FormSheet.vue';
 import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Button } from '@/components/ui/button';
-import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { formatDateDisplay } from '@/lib/dateDisplay';
 
-const props = withDefaults(defineProps<{ processId: string; display?: 'button' | 'menu' }>(), { display: 'button' });
+const props = withDefaults(defineProps<{ process: SyllabusProcess; display?: 'button' | 'menu' }>(), { display: 'button' });
 const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
 const form = ref({ due_at: '' });
+const ordinal = computed(() => `Prórroga ${Math.min(props.process.extensions_used + 1, props.process.extensions_max)} de ${props.process.extensions_max}`);
+const limit = computed(() => formatDateDisplay(props.process.extension_limit_on, { dateStyle: 'medium' }));
 
 const submit = async (): Promise<void> => {
   processing.value = true;
   errors.value = {};
   try {
-    const result = await extendProcessDeadline(props.processId, form.value);
+    const result = await extendProcessDeadline(props.process.id, form.value);
     open.value = false;
     form.value = { due_at: '' };
     emit('saved', result.message);
@@ -44,10 +47,12 @@ const submit = async (): Promise<void> => {
     <template #default="{ close }">
       <form @submit.prevent="submit">
         <FieldGroup>
+          <p class="text-sm font-medium">{{ ordinal }}</p>
           <Field :data-invalid="Boolean(errors.due_at)">
             <FieldLabel for="extension-due" required>Nueva fecha límite de entrega</FieldLabel>
-            <DatePicker id="extension-due" v-model="form.due_at" required :aria-invalid="Boolean(errors.due_at)" />
-            <p class="text-sm text-muted-foreground">Debe ser posterior a la fecha límite vigente</p>
+            <DatePicker id="extension-due" v-model="form.due_at" required :max-value="process.extension_limit_on" :aria-invalid="Boolean(errors.due_at)" />
+            <FieldDescription>Debe ser posterior a la fecha límite vigente</FieldDescription>
+            <FieldDescription>Hasta el último día de clases: {{ limit }}</FieldDescription>
             <FieldError :errors="[...(errors.due_at ?? []), ...(errors.process ?? [])]" />
           </Field>
           <FormSheetActions :close="close" :processing="processing" :icon="CalendarClock" label="Prorrogar entrega" />
