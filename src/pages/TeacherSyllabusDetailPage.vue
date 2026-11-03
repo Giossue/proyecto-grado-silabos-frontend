@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
 import { ruleFailures } from '@/lib/blocks/rules';
@@ -523,6 +524,7 @@ onBeforeUnmount(() => {
     <span class="flex-1" />
     <AppearanceToggle />
   </header>
+  <RoleDeadlineBanner />
   <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="(!syllabus || canStart) && !error" :actions-skeleton="(!syllabus || canStart) && !error && !previewHint ? ['w-9', 'w-24'] : []" header-class="syllabus-editor-header" :header-width="documentHeaderWidth" hide-icon>
     <template v-if="syllabus" #title-badge><SyllabusStateBadge :state="syllabus.state" /></template>
     <template #actions>

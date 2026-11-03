@@ -1,3 +1,4 @@
+import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import type { DocumentNode } from '@/lib/templateDocument';
 import { setTemplateRuntime } from '@/lib/blocks/runtime';
 import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
@@ -512,6 +513,14 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();
     expect(wrapper.text()).not.toContain("Listo para iniciar");
     expect(wrapper.findComponent(FreeTextEditor).exists()).toBe(true);
+  });
+
+  it("muestra la franja de plazo y pausa bajo la barra, como el resto de pantallas", async () => {
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.findComponent(RoleDeadlineBanner).exists()).toBe(true);
   });
 
   it("en pausa no ofrece iniciar ni repite el motivo: lo explica la franja", async () => {

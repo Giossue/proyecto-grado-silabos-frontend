@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import { ArrowLeft, FileSignature, FileText, GitCompareArrows, Highlighter, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
@@ -172,6 +173,7 @@ onMounted(load);
     <span class="flex-1" />
     <AppearanceToggle />
   </header>
+  <RoleDeadlineBanner />
   <PageFrame v-if="data && !loadError" header-class="syllabus-editor-header" :header-width="sheetWidth" hide-icon :title="data.syllabus.subject" :description="`${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
     <template #status>
       <SyllabusStateBadge :state="data.syllabus.state" />

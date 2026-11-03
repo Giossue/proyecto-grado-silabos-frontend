@@ -1,3 +1,4 @@
+import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import { flushPromises, mount } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -150,6 +151,7 @@ describe("CoordinationReviewDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
+    expect(wrapper.findComponent(RoleDeadlineBanner).exists()).toBe(true);
     expect(wrapper.text()).not.toContain("está en pausa");
     expect(wrapper.text()).not.toContain("Convocatoria cerrada");
     expect(headerButton(wrapper, "Firmar y enviar a biblioteca")).toBeUndefined();

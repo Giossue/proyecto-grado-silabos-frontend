@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { ArrowLeft, Highlighter } from '@lucide/vue';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
@@ -159,6 +160,7 @@ watch(() => route.params.revision, (current, before) => { if (current !== before
     </TooltipProvider>
     <AppearanceToggle />
   </header>
+  <RoleDeadlineBanner />
   <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
   <div v-else class="flex min-h-[calc(100dvh-3.5rem)] flex-col lg:flex-row">
     <div class="relative min-w-0 flex-1">
