@@ -97,9 +97,6 @@ const resendVerification = async (): Promise<void> => {
                         :aria-invalid="Boolean(errors.nombre)"
                         :aria-describedby="errors.nombre ? 'name-error' : undefined"
                     />
-                    <p class="text-sm text-muted-foreground">
-                        Primero los nombres y luego los apellidos
-                    </p>
                     <InputError id="name-error" class="mt-2" :message="errors.nombre" />
                 </div>
 
