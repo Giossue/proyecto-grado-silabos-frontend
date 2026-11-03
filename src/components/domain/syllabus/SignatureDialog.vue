@@ -27,8 +27,9 @@ const errors = ref<{ certificate?: string; password?: string; general?: string }
 
 const CERTIFICATE_CODES = ['invalid_file', 'no_key', 'expired', 'not_yet_valid'];
 
+// Se reinicia al abrir: al cerrar, el modal sigue mostrando lo elegido mientras se desvanece.
 watch(open, (value) => {
-  if (value) return;
+  if (!value) return;
   certificate.value = null;
   password.value = '';
   errors.value = {};

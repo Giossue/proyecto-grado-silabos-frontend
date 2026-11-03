@@ -4,6 +4,7 @@ import { defineComponent } from 'vue';
 import { deleteAcademicRecord } from '@/api/academic';
 import { ApiError } from '@/api/client';
 import ConvocationRowActions from '@/components/domain/syllabus/ConvocationRowActions.vue';
+import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 
 vi.mock('@/api/academic', () => ({
   deleteAcademicRecord: vi.fn(),
@@ -29,6 +30,8 @@ const button = defineComponent({
   emits: ['click'],
   template: '<button class="button" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
 });
+
+const processSheet = defineComponent({ name: 'SyllabusProcessSheet', emits: ['saved'], template: '<div />' });
 
 const period = (lockReason: string | null = null) => ({
   id: 'period-1',
@@ -64,7 +67,7 @@ const mountActions = (row = period()) => mount(ConvocationRowActions, {
       CalendarPlus: true,
       LockKeyhole: true,
       SyllabusProcessActions: true,
-      SyllabusProcessSheet: true,
+      SyllabusProcessSheet: processSheet,
     },
   },
 });
@@ -73,6 +76,36 @@ describe('ConvocationRowActions', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('avisa que eliminó el período cuando el modal terminó de cerrarse', async () => {
+    vi.useFakeTimers();
+    vi.mocked(deleteAcademicRecord).mockResolvedValue({ message: 'Periodo eliminado.' } as never);
+    const wrapper = mountActions();
+    await wrapper.findAll('.menu-item').find((item) => item.text().includes('Eliminar periodo'))!.trigger('click');
+    await wrapper.findAll('.button').find((item) => item.text().includes('Eliminar periodo'))!.trigger('click');
+    await flushPromises();
+
+    expect(wrapper.find('[data-dialog]').exists()).toBe(false);
+    expect(wrapper.emitted('changed')).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(DIALOG_EXIT_MS);
+    expect(wrapper.emitted('changed')).toEqual([['Periodo eliminado.']]);
+
+    wrapper.unmount();
+  });
+
+  it('avisa que abrió la convocatoria cuando el formulario terminó de cerrarse', async () => {
+    vi.useFakeTimers();
+    const wrapper = mountActions();
+    wrapper.getComponent(processSheet).vm.$emit('saved', 'Convocatoria abierta.');
+    await flushPromises();
+
+    expect(wrapper.emitted('changed')).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(DIALOG_EXIT_MS);
+    expect(wrapper.emitted('changed')).toEqual([['Convocatoria abierta.']]);
+
+    wrapper.unmount();
   });
 
   it('explica que al eliminar el período no se borran materias, paralelos ni docentes', async () => {

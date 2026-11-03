@@ -24,6 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { matchesPhrase } from '@/lib/confirmPhrase';
+import { afterDialogExit, useShownWhileClosing } from '@/lib/dialogExit';
 import { withoutFinalPeriod } from '@/lib/utils';
 
 type Transition = 'pausar' | 'reanudar' | 'cerrar';
@@ -34,6 +35,8 @@ const emit = defineEmits<{
 }>();
 
 const pending = ref<Transition | null>(null);
+// Lo que muestra el modal: no cambia mientras se desvanece al cerrar.
+const shownPending = useShownWhileClosing(() => pending.value);
 const processing = ref(false);
 const error = ref<string | null>(null);
 const templateImpact = ref<SyllabusStateCounts | null>(null);
@@ -71,12 +74,12 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
 
 const typed = ref('');
 const phrase = computed((): string | null => {
-  if (pending.value === 'cerrar') return 'finalizar convocatoria';
-  if (pending.value === 'reanudar' && templateImpact.value) return 'rehacer sílabos';
+  if (shownPending.value === 'cerrar') return 'finalizar convocatoria';
+  if (shownPending.value === 'reanudar' && templateImpact.value) return 'rehacer sílabos';
   return null;
 });
 const phraseReady = computed(() => phrase.value === null || matchesPhrase(typed.value, phrase.value));
-const transitionReady = computed(() => phraseReady.value && (pending.value !== 'cerrar' || impact.value !== null));
+const transitionReady = computed(() => phraseReady.value && (shownPending.value !== 'cerrar' || impact.value !== null));
 const unapproved = computed((): SyllabusStateCounts => Object.fromEntries(
   Object.entries(impact.value?.syllabi ?? {}).filter(([state, count]) => state !== 'aprobado' && count > 0),
 ));
@@ -102,15 +105,20 @@ const loadImpact = async (failure: string): Promise<void> => {
   }
 };
 
+// Se reinicia al abrir: al cerrar, el modal sigue mostrando lo escrito mientras se desvanece.
 watch(deleteOpen, (open) => {
+  if (!open) return;
   deleteTyped.value = '';
   deleteMessage.value = '';
   deleteErrors.value = {};
-  impact.value = null;
-  if (open) void loadImpact('No se pudo saber cuántos sílabos se borran. Inténtelo de nuevo');
+  void loadImpact('No se pudo saber cuántos sílabos se borran. Inténtelo de nuevo');
 });
 
 watch(pending, (value) => {
+  if (!value) return;
+  templateImpact.value = null;
+  error.value = null;
+  typed.value = '';
   if (value === 'cerrar') void loadImpact('No se pudo saber cuántos sílabos quedan sin aprobar. Inténtelo de nuevo');
 });
 
@@ -125,7 +133,6 @@ const confirm = async (): Promise<void> => {
       templateImpact.value ? { confirmar_rehacer: true } : undefined,
     );
     pending.value = null;
-    templateImpact.value = null;
     emit('completed', response.message);
   } catch (cause) {
     if (cause instanceof ApiError && cause.payload.code === 'plantilla_cambiada' && pending.value === 'reanudar') {
@@ -162,6 +169,8 @@ const remove = async (): Promise<void> => {
   try {
     const response = await deleteProcess(props.process.id, { mensaje: deleteMessage.value.trim() });
     deleteOpen.value = false;
+    // El padre quita esta convocatoria al refrescar: se avisa cuando el modal ya se cerró.
+    await afterDialogExit();
     emit('completed', response.message);
   } catch (cause) {
     if (cause instanceof ApiError && cause.errors.mensaje) {
@@ -191,30 +200,32 @@ const remove = async (): Promise<void> => {
     <DropdownMenuItem v-if="process.deletable && process.state !== 'cerrado'" variant="destructive" @select="openDelete"><Trash2 aria-hidden="true" />Eliminar</DropdownMenuItem>
   </TableActionsMenu>
 
-  <Dialog :open="pending !== null" @update:open="(value) => { if (!value) { pending = null; templateImpact = null; error = null; } }">
-    <DialogContent v-if="pending">
-      <DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader>
-      <form class="flex flex-col gap-4" @submit.prevent="confirm">
-        <template v-if="templateImpact">
-          <p>El administrador cambió la plantilla durante la pausa. Al reanudar se rehacen desde cero todos los sílabos de este período y se elimina su historial</p>
-          <SyllabusStateCountsTable :counts="templateImpact" caption="Cantidad de sílabos que se rehacen, por estado" />
-        </template>
-        <template v-if="pending === 'cerrar'">
-          <Skeleton v-if="impactLoading" class="h-24 w-full" />
-          <Alert v-else-if="impactError" variant="destructive"><AlertDescription>{{ impactError }}</AlertDescription></Alert>
-          <template v-else-if="impact">
-            <p v-if="impact.total === 0">La convocatoria no tiene sílabos</p>
-            <p v-else-if="unapprovedTotal === 0">Todos los sílabos están aprobados</p>
-            <template v-else>
-              <p>Lo que no esté aprobado quedará solo para consulta</p>
-              <SyllabusStateCountsTable :counts="unapproved" :total="unapprovedTotal" caption="Sílabos sin aprobar, por estado" />
+  <Dialog :open="pending !== null" @update:open="(value) => { if (!value) pending = null; }">
+    <DialogContent>
+      <template v-if="shownPending">
+        <DialogHeader><DialogTitle>{{ dialogs[shownPending].title }}</DialogTitle><DialogDescription>{{ dialogs[shownPending].description }}</DialogDescription></DialogHeader>
+        <form class="flex flex-col gap-4" @submit.prevent="confirm">
+          <template v-if="templateImpact">
+            <p>El administrador cambió la plantilla durante la pausa. Al reanudar se rehacen desde cero todos los sílabos de este período y se elimina su historial</p>
+            <SyllabusStateCountsTable :counts="templateImpact" caption="Cantidad de sílabos que se rehacen, por estado" />
+          </template>
+          <template v-if="shownPending === 'cerrar'">
+            <Skeleton v-if="impactLoading" class="h-24 w-full" />
+            <Alert v-else-if="impactError" variant="destructive"><AlertDescription>{{ impactError }}</AlertDescription></Alert>
+            <template v-else-if="impact">
+              <p v-if="impact.total === 0">La convocatoria no tiene sílabos</p>
+              <p v-else-if="unapprovedTotal === 0">Todos los sílabos están aprobados</p>
+              <template v-else>
+                <p>Lo que no esté aprobado quedará solo para consulta</p>
+                <SyllabusStateCountsTable :counts="unapproved" :total="unapprovedTotal" caption="Sílabos sin aprobar, por estado" />
+              </template>
             </template>
           </template>
-        </template>
-        <ConfirmPhrase v-if="phrase" id="process-transition-confirm" v-model="typed" :phrase="phrase" />
-        <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
-        <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="templateImpact || dialogs[pending].destructive ? 'destructive' : 'default'" :disabled="processing || !transitionReady"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[pending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ templateImpact ? 'Reanudar y rehacer sílabos' : dialogs[pending].label }}</Button></DialogFooter>
-      </form>
+          <ConfirmPhrase v-if="phrase" id="process-transition-confirm" v-model="typed" :phrase="phrase" />
+          <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
+          <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose><Button type="submit" :variant="templateImpact || dialogs[shownPending].destructive ? 'destructive' : 'default'" :disabled="processing || !transitionReady"><Spinner v-if="processing" data-icon="inline-start" /><component :is="dialogs[shownPending].icon" v-else data-icon="inline-start" aria-hidden="true" />{{ templateImpact ? 'Reanudar y rehacer sílabos' : dialogs[shownPending].label }}</Button></DialogFooter>
+        </form>
+      </template>
     </DialogContent>
   </Dialog>
   <Dialog v-model:open="deleteOpen">

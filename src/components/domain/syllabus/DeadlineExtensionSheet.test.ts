@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent } from 'vue';
 import { extendProcessDeadline, type SyllabusProcess } from '@/api/processes';
 import DatePicker from '@/components/DatePicker.vue';
 import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
@@ -31,6 +32,13 @@ const mountSheet = (value = process()) => mount(DeadlineExtensionSheet, {
   props: { process: value, open: true },
 });
 
+// Como reka-ui: el contenido sigue montado mientras el panel se desliza al cerrar.
+const slidingSheet = defineComponent({
+  props: { open: Boolean },
+  emits: ['update:open'],
+  template: '<div data-sheet :data-state="open ? \'open\' : \'closed\'"><slot :close="() => $emit(\'update:open\', false)" /></div>',
+});
+
 describe('DeadlineExtensionSheet', () => {
   beforeEach(() => {
     vi.mocked(extendProcessDeadline).mockReset().mockResolvedValue({ message: 'Plazo prorrogado.' });
@@ -56,6 +64,23 @@ describe('DeadlineExtensionSheet', () => {
 
     expect(extendProcessDeadline).toHaveBeenCalledWith('process-1', { due_at: '2027-02-15' });
     expect(wrapper.emitted('saved')).toEqual([['Plazo prorrogado.']]);
+    wrapper.unmount();
+  });
+
+  it('al guardar cierra sin borrar la fecha, y la borra al volver a abrir', async () => {
+    const wrapper = mount(DeadlineExtensionSheet, { attachTo: document.body, props: { process: process(), open: true }, global: { stubs: { FormSheet: slidingSheet } } });
+    await flushPromises();
+    wrapper.findComponent(DatePicker).vm.$emit('update:modelValue', '2027-02-15');
+    await flushPromises();
+    document.body.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
+    await flushPromises();
+
+    expect(wrapper.getComponent(slidingSheet).attributes('data-state')).toBe('closed');
+    expect(wrapper.findComponent(DatePicker).props('modelValue')).toBe('2027-02-15');
+    await wrapper.setProps({ open: false });
+    await wrapper.setProps({ open: true });
+    await flushPromises();
+    expect(wrapper.findComponent(DatePicker).props('modelValue')).toBe('');
     wrapper.unmount();
   });
 

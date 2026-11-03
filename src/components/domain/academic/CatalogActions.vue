@@ -10,6 +10,7 @@ import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSh
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
+import { afterDialogExit } from '@/lib/dialogExit';
 import type { CatalogRecord, GovernanceCatalogEntity } from '@/types/academic';
 
 const props = defineProps<{
@@ -22,6 +23,11 @@ const props = defineProps<{
     faculties: CatalogRecord[]; lockReason?: string | null; deactivateBlockedReason?: string | null;
 }>();
 const emit = defineEmits<{ changed: [message: string] }>();
+// Al refrescar, el registro cambia (Desactivar pasa a Reactivar) o desaparece: se avisa cuando el modal ya se cerró.
+const changedAfterExit = async (message: string): Promise<void> => {
+    await afterDialogExit();
+    emit('changed', message);
+};
 const editOpen = ref(false);
 const edit = (): void => { editOpen.value = true; };
 defineExpose({ edit });
@@ -54,7 +60,7 @@ const changeStatus = async (): Promise<void> => {
     try {
         const result = await setAcademicRecordStatus(props.entity, props.recordId, !props.active);
         statusOpen.value = false;
-        emit('changed', result.message);
+        await changedAfterExit(result.message);
     } catch (reason) { error.value = reason instanceof ApiError ? reason.message : `No se pudo cambiar el estado de la ${noun.value}`; }
     finally { changingStatus.value = false; }
 };
@@ -69,7 +75,7 @@ const remove = async (): Promise<void> => {
     try {
         const result = await deleteAcademicRecord(props.entity, props.recordId);
         deleteOpen.value = false;
-        emit('changed', result.message);
+        await changedAfterExit(result.message);
     } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo eliminar el registro'; }
     finally { deleting.value = false; }
 };
@@ -77,7 +83,7 @@ const remove = async (): Promise<void> => {
 
 <template>
     <div class="contents">
-        <SyllabusProcessSheet v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName, starts_on: startsOn ?? undefined, ends_on: endsOn ?? undefined }" display="menu" trigger-label="Abrir convocatoria" @saved="emit('changed', $event)" />
+        <SyllabusProcessSheet v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName, starts_on: startsOn ?? undefined, ends_on: endsOn ?? undefined }" display="menu" trigger-label="Abrir convocatoria" @saved="changedAfterExit" />
         <CatalogEditSheet :key="recordId" v-model:open="editOpen" :lock-reason="lockReason ?? null" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :catalog-libraries="catalogLibraries ?? []" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" :actions="sheetActions" @action="runAction" @saved="emit('changed', $event)" />
 
         <Dialog v-if="entity === 'periodo'" v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar período</DialogTitle><DialogDescription>Se eliminará «{{ recordName }}». Se rechazará si ya tiene una convocatoria</DialogDescription></DialogHeader>

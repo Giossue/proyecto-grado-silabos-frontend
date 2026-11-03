@@ -18,7 +18,8 @@ const PHRASE = 'devolver a borrador';
 const { open, message, confirm, cancel } = usePurgeConfirmation();
 const typed = ref('');
 const ready = computed(() => matchesPhrase(typed.value, PHRASE));
-watch(open, () => { typed.value = ''; });
+// Se borra al abrir: al cerrar, la frase sigue escrita mientras el modal se desvanece.
+watch(open, (isOpen) => { if (isOpen) typed.value = ''; });
 </script>
 
 <template>

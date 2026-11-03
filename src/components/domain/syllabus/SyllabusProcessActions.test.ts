@@ -1,9 +1,10 @@
 import { flushPromises, mount } from '@vue/test-utils';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import { deleteProcess, getProcessImpact, transitionProcess, type SyllabusProcess } from '@/api/processes';
 import { ApiError } from '@/api/client';
 import SyllabusProcessActions from '@/components/domain/syllabus/SyllabusProcessActions.vue';
+import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 
 vi.mock('@/api/processes', () => ({
   deleteProcess: vi.fn(),
@@ -21,6 +22,12 @@ const dialog = defineComponent({
   props: { open: Boolean },
   emits: ['update:open'],
   template: '<div v-if="open" data-dialog><slot /></div>',
+});
+// Como reka-ui: el contenido sigue montado mientras se desvanece.
+const fadingDialog = defineComponent({
+  props: { open: Boolean },
+  emits: ['update:open'],
+  template: '<div data-modal :data-state="open ? \'open\' : \'closed\'"><slot /></div>',
 });
 const button = defineComponent({
   props: { disabled: Boolean, type: String },
@@ -48,14 +55,14 @@ const process = (): SyllabusProcess => ({
 const pausedProcess = () => ({ ...process(), state: 'pausado' as const, deletable: true });
 const openProcess = () => ({ ...process(), state: 'abierto' as const, deletable: true });
 
-const mountActions = (value = process()) => mount(SyllabusProcessActions, {
+const mountActions = (value = process(), dialogStub = dialog) => mount(SyllabusProcessActions, {
   props: { process: value },
   global: {
     stubs: {
       TableActionsMenu: passthrough,
       DropdownMenuItem: menuItem,
       DropdownMenuSeparator: passthrough,
-      Dialog: dialog,
+      Dialog: dialogStub,
       DialogClose: passthrough,
       DialogContent: passthrough,
       DialogDescription: passthrough,
@@ -75,6 +82,8 @@ const mountActions = (value = process()) => mount(SyllabusProcessActions, {
 });
 
 describe('SyllabusProcessActions', () => {
+  afterEach(() => vi.useRealTimers());
+
   beforeEach(() => {
     vi.mocked(deleteProcess).mockReset().mockResolvedValue({ message: 'Convocatoria institucional eliminada.' });
     vi.mocked(getProcessImpact).mockReset().mockResolvedValue({
@@ -85,6 +94,7 @@ describe('SyllabusProcessActions', () => {
   });
 
   it('antes de eliminar muestra cuántos sílabos se borran y pide el mensaje y la frase', async () => {
+    vi.useFakeTimers();
     const wrapper = mountActions(openProcess());
 
     const remove = wrapper.findAll('.menu-item').find((item) => item.text().includes('Eliminar'));
@@ -112,7 +122,46 @@ describe('SyllabusProcessActions', () => {
     await flushPromises();
 
     expect(deleteProcess).toHaveBeenCalledWith('process-1', { mensaje: 'Se abrirá otra con las fechas correctas.' });
+    // El padre quita la fila al refrescar: avisa cuando el modal terminó de cerrarse.
+    expect(wrapper.emitted('completed')).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(DIALOG_EXIT_MS);
     expect(wrapper.emitted('completed')).toEqual([['Convocatoria institucional eliminada.']]);
+  });
+
+  it('al cerrar, el modal de pausar sigue mostrando su contenido mientras se desvanece', async () => {
+    const wrapper = mountActions({ ...process(), state: 'abierto' }, fadingDialog);
+
+    await wrapper.findAll('.menu-item').find((item) => item.text().includes('Pausar'))!.trigger('click');
+    const transition = wrapper.findAllComponents(fadingDialog)[0]!;
+    expect(transition.attributes('data-state')).toBe('open');
+    transition.vm.$emit('update:open', false);
+    await flushPromises();
+
+    expect(transition.attributes('data-state')).toBe('closed');
+    expect(transition.text()).toContain('Pausar la convocatoria');
+    expect(transition.text()).toContain('Se detienen los envíos');
+  });
+
+  it('el mensaje y la frase de eliminar se borran al volver a abrir, no al cerrar', async () => {
+    const wrapper = mountActions(openProcess(), fadingDialog);
+
+    wrapper.vm.run('eliminar');
+    await flushPromises();
+    await wrapper.get('#process-delete-message').setValue('Fechas equivocadas');
+    await wrapper.get('#process-delete-confirm').setValue('eliminar convocatoria');
+    const removal = wrapper.findAllComponents(fadingDialog)[1]!;
+    removal.vm.$emit('update:open', false);
+    await flushPromises();
+
+    expect(removal.attributes('data-state')).toBe('closed');
+    expect((wrapper.get('#process-delete-message').element as HTMLTextAreaElement).value).toBe('Fechas equivocadas');
+    expect((wrapper.get('#process-delete-confirm').element as HTMLInputElement).value).toBe('eliminar convocatoria');
+    expect(removal.findAll('tbody tr')).not.toHaveLength(0);
+
+    wrapper.vm.run('eliminar');
+    await flushPromises();
+    expect((wrapper.get('#process-delete-message').element as HTMLTextAreaElement).value).toBe('');
+    expect((wrapper.get('#process-delete-confirm').element as HTMLInputElement).value).toBe('');
   });
 
   it('muestra el error del mensaje que devuelve el servidor', async () => {

@@ -10,12 +10,15 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { withoutFinalPeriod } from '@/lib/utils';
+import { afterDialogExit, useShownWhileClosing } from '@/lib/dialogExit';
 import ConvocationOpeningDialog from '@/components/domain/syllabus/ConvocationOpeningDialog.vue';
 
 type Transition = 'pausar' | 'reanudar';
 const props = defineProps<{ convocation: CoordinationConvocation; blockedReason?: string }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 const pending = ref<Transition | null>(null);
+// Lo que muestra el modal: no cambia mientras se desvanece al cerrar.
+const shownPending = useShownWhileClosing(() => pending.value);
 const processing = ref(false);
 const error = ref<string | null>(null);
 const openingOpen = ref(false);
@@ -40,7 +43,11 @@ const submit = async (): Promise<void> => {
     error.value = failure instanceof ApiError ? failure.message : 'No se pudo cambiar la convocatoria';
   } finally { processing.value = false; }
 };
-const opened = (message: string): void => emit('changed', message);
+// Al refrescar, la convocatoria ya existe y el modal de apertura se quita: se avisa cuando ya se cerró.
+const opened = async (message: string): Promise<void> => {
+  await afterDialogExit();
+  emit('changed', message);
+};
 </script>
 
 <template>
@@ -55,8 +62,8 @@ const opened = (message: string): void => emit('changed', message);
     :period="convocation.period"
     @opened="opened"
   />
-  <Dialog :open="pending !== null" @update:open="(open) => { if (!open && !processing) pending = null; }"><DialogContent v-if="pending"><DialogHeader><DialogTitle>{{ dialogs[pending].title }}</DialogTitle><DialogDescription>{{ dialogs[pending].description }}</DialogDescription></DialogHeader><form class="flex flex-col gap-4" @submit.prevent="submit">
+  <Dialog :open="pending !== null" @update:open="(open) => { if (!open && !processing) pending = null; }"><DialogContent><template v-if="shownPending"><DialogHeader><DialogTitle>{{ dialogs[shownPending].title }}</DialogTitle><DialogDescription>{{ dialogs[shownPending].description }}</DialogDescription></DialogHeader><form class="flex flex-col gap-4" @submit.prevent="submit">
     <FeedbackAlert v-if="error" :message="error" />
-    <DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose><Button type="button" :disabled="processing" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><Pause v-else-if="pending === 'pausar'" data-icon="inline-start" aria-hidden="true" /><Play v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[pending].label }}</Button></DialogFooter>
-  </form></DialogContent></Dialog>
+    <DialogFooter><DialogClose as-child><Button type="button" variant="outline" :disabled="processing">Cancelar</Button></DialogClose><Button type="button" :disabled="processing" @click="submit"><Spinner v-if="processing" data-icon="inline-start" /><Pause v-else-if="shownPending === 'pausar'" data-icon="inline-start" aria-hidden="true" /><Play v-else data-icon="inline-start" aria-hidden="true" />{{ dialogs[shownPending].label }}</Button></DialogFooter>
+  </form></template></DialogContent></Dialog>
 </template>

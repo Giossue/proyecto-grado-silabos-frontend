@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { typeConfirmation } from '@/test/confirmPhrase';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent } from 'vue';
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
 import ConvocationPeriodSheet from '@/components/domain/syllabus/ConvocationPeriodSheet.vue';
@@ -10,6 +11,15 @@ vi.mock('@/api/academic', async (importOriginal) => ({ ...(await importOriginal<
 vi.mock('@/api/processes', async (importOriginal) => ({ ...(await importOriginal<object>()), createProcess: api.createProcess }));
 
 afterEach(() => { document.body.innerHTML = ''; vi.clearAllMocks(); });
+
+const passthrough = defineComponent({ template: '<div><slot /></div>' });
+// Como reka-ui: el contenido sigue montado mientras se desvanece.
+const fadingDialog = defineComponent({
+  props: { open: Boolean },
+  emits: ['update:open'],
+  template: '<div data-modal :data-state="open ? \'open\' : \'closed\'"><slot /></div>',
+});
+const dialogStubs = { Dialog: fadingDialog, DialogContent: passthrough, DialogHeader: passthrough, DialogTitle: passthrough, DialogDescription: passthrough, DialogFooter: passthrough, DialogClose: passthrough };
 
 const confirmSubmit = async (): Promise<void> => {
   document.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -103,6 +113,26 @@ describe('ConvocationPeriodSheet', () => {
     await confirmSubmit();
 
     expect(api.createAcademicRecord).toHaveBeenLastCalledWith('periodo', { starts_on: '2026-10-05', ends_on: '2027-02-26' });
+    wrapper.unmount();
+  });
+
+  it('la frase de confirmación se borra al volver a abrir, no al cerrar', async () => {
+    const wrapper = mount(ConvocationPeriodSheet, { attachTo: document.body, props: { open: true }, global: { stubs: dialogStubs } });
+    await flushPromises();
+    const modal = wrapper.getComponent(fadingDialog);
+    modal.vm.$emit('update:open', true);
+    await flushPromises();
+    typeConfirmation('convocation-open-confirm', 'abrir convocatoria');
+    await flushPromises();
+    modal.vm.$emit('update:open', false);
+    await flushPromises();
+
+    expect(modal.attributes('data-state')).toBe('closed');
+    expect(document.body.querySelector<HTMLInputElement>('#convocation-open-confirm')!.value).toBe('abrir convocatoria');
+    modal.vm.$emit('update:open', true);
+    await flushPromises();
+    expect(document.body.querySelector<HTMLInputElement>('#convocation-open-confirm')!.value).toBe('');
+
     wrapper.unmount();
   });
 });

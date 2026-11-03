@@ -1,12 +1,15 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import CatalogActions from '@/components/domain/academic/CatalogActions.vue';
+import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
+import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 
 import { setAcademicRecordStatus } from '@/api/academic';
 
 vi.mock('@/api/academic', () => ({ deleteAcademicRecord: vi.fn().mockResolvedValue({ message: 'Eliminado.' }), setAcademicRecordStatus: vi.fn().mockResolvedValue({ message: 'Registro desactivado sin borrar su historial.' }), updateAcademicRecord: vi.fn() }));
 
 enableAutoUnmount(afterEach);
+afterEach(() => vi.useRealTimers());
 
 const base = { entity: 'facultad' as const, recordId: 'r1', recordName: 'Software', modalityOptions: [], campusOptions: [], faculties: [], active: true };
 
@@ -26,10 +29,14 @@ describe('CatalogActions', () => {
     expect(document.body.querySelector('button[aria-label^="Acciones para"]')).toBeNull();
     (document.body.querySelector('button[aria-label="Desactivar facultad"]') as HTMLButtonElement).click();
     await flushPromises();
+    vi.useFakeTimers();
     ([...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Desactivar') as HTMLButtonElement).click();
     await flushPromises();
 
     expect(setAcademicRecordStatus).toHaveBeenCalledWith('facultad', 'r1', false);
+    // Al refrescar, Desactivar pasa a Reactivar: avisa cuando el modal terminó de cerrarse.
+    expect(wrapper.emitted('changed')).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(DIALOG_EXIT_MS);
     expect(wrapper.emitted('changed')?.[0]).toEqual(['Registro desactivado sin borrar su historial.']);
   });
 
@@ -56,6 +63,17 @@ describe('CatalogActions', () => {
     expect(document.body.querySelector('button[aria-label="Desactivar facultad"]')).toBeNull();
   });
 
+  it('avisa que abrió la convocatoria del período cuando el formulario terminó de cerrarse', async () => {
+    const wrapper = await open({ entity: 'periodo', recordName: '2026-2027' });
+    vi.useFakeTimers();
+    wrapper.getComponent(SyllabusProcessSheet).vm.$emit('saved', 'Convocatoria abierta.');
+    await flushPromises();
+
+    expect(wrapper.emitted('changed')).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(DIALOG_EXIT_MS);
+    expect(wrapper.emitted('changed')).toEqual([['Convocatoria abierta.']]);
+  });
+
   it('un período sigue teniendo Eliminar', async () => {
     await open({ entity: 'periodo', recordName: '2026-2027' });
 
@@ -68,9 +86,12 @@ describe('CatalogActions', () => {
 
     (document.body.querySelector('button[aria-label="Desactivar carrera"]') as HTMLButtonElement).click();
     await flushPromises();
+    vi.useFakeTimers();
     const confirm = [...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Desactivar') as HTMLButtonElement;
     confirm.click();
     await flushPromises();
+    await vi.advanceTimersByTimeAsync(DIALOG_EXIT_MS);
+    vi.useRealTimers();
 
     expect(setAcademicRecordStatus).toHaveBeenCalledWith('carrera', 'r1', false);
     expect(wrapper.emitted('changed')?.[0]).toEqual(['Registro desactivado sin borrar su historial.']);

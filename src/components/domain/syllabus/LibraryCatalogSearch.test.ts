@@ -1,5 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent } from 'vue';
 import { searchLibraryCatalog, type CatalogBook } from '@/api/libraryCatalog';
 import LibraryCatalogSearch from '@/components/domain/syllabus/LibraryCatalogSearch.vue';
 import { catalogResults } from '@/test/libraryCatalog';
@@ -8,6 +9,14 @@ vi.mock('@/api/libraryCatalog');
 const search = vi.mocked(searchLibraryCatalog);
 
 const book: CatalogBook = { id: '10525', title: 'Proyectos de inversión', author: 'Sapag Chain, Nassir', year: '2011', place: 'Santiago de Chile', publisher: 'Pearson Educación', isbn: '9789563431063', call_number: '658.404 S2411p', format: 'Libro físico', kind: 'Libro' };
+const passthrough = defineComponent({ template: '<div><slot /></div>' });
+// Como reka-ui: el contenido sigue montado mientras se desvanece.
+const fadingDialog = defineComponent({
+    props: { open: Boolean },
+    emits: ['update:open'],
+    template: '<div data-modal :data-state="open ? \'open\' : \'closed\'"><slot /></div>',
+});
+const dialogStubs = { Dialog: fadingDialog, DialogContent: passthrough, DialogHeader: passthrough, DialogTitle: passthrough, DialogDescription: passthrough, DialogFooter: passthrough, DialogClose: passthrough, DialogTrigger: passthrough };
 const wrappers: Array<ReturnType<typeof mount>> = [];
 const body = (): HTMLElement => document.body;
 const buttonWith = (text: string): HTMLButtonElement => [...body().querySelectorAll('button')].find((item) => item.textContent?.includes(text)) as HTMLButtonElement;
@@ -137,5 +146,25 @@ describe('búsqueda en la biblioteca', () => {
             expect(search).toHaveBeenLastCalledWith('any', 'nada', 1);
             expect(body().querySelector('[aria-label="Paginación de los libros"]')).toBeNull();
         });
+    });
+
+    it('al cerrar conserva la búsqueda mientras se desvanece y la limpia al volver a abrir', async () => {
+        search.mockResolvedValue(catalogResults([book]));
+        const wrapper = mount(LibraryCatalogSearch, { attachTo: document.body, global: { stubs: dialogStubs } });
+        wrappers.push(wrapper);
+        const modal = wrapper.getComponent(fadingDialog);
+        modal.vm.$emit('update:open', true);
+        await flushPromises();
+        await searchFor('Sapag');
+        modal.vm.$emit('update:open', false);
+        await flushPromises();
+
+        expect(modal.attributes('data-state')).toBe('closed');
+        expect(body().querySelector<HTMLInputElement>('[aria-label="Texto a buscar"]')!.value).toBe('Sapag');
+        expect(body().textContent).toContain('Proyectos de inversión');
+        modal.vm.$emit('update:open', true);
+        await flushPromises();
+        expect(body().querySelector<HTMLInputElement>('[aria-label="Texto a buscar"]')!.value).toBe('');
+        expect(body().textContent).not.toContain('Proyectos de inversión');
     });
 });

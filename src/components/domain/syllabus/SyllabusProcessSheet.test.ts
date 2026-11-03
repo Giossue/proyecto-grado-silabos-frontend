@@ -1,12 +1,22 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { typeConfirmation } from '@/test/confirmPhrase';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { defineComponent } from 'vue';
 import DatePicker from '@/components/DatePicker.vue';
 import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
 import { sessionState } from '@/state/session';
 
 const api = vi.hoisted(() => ({ createProcess: vi.fn() }));
 vi.mock('@/api/processes', async (importOriginal) => ({ ...(await importOriginal<object>()), createProcess: api.createProcess }));
+
+const passthrough = defineComponent({ template: '<div><slot /></div>' });
+// Como reka-ui: el contenido sigue montado mientras se desvanece.
+const fadingDialog = defineComponent({
+  props: { open: Boolean },
+  emits: ['update:open'],
+  template: '<div data-modal :data-state="open ? \'open\' : \'closed\'"><slot /></div>',
+});
+const dialogStubs = { Dialog: fadingDialog, DialogContent: passthrough, DialogHeader: passthrough, DialogTitle: passthrough, DialogDescription: passthrough, DialogFooter: passthrough, DialogClose: passthrough };
 
 afterEach(() => {
   vi.useRealTimers();
@@ -103,6 +113,26 @@ describe('syllabus process dates', () => {
     confirm().click();
     await flushPromises();
     expect(api.createProcess).toHaveBeenCalledOnce();
+
+    wrapper.unmount();
+  });
+
+  it('la frase de confirmación se borra al volver a abrir, no al cerrar', async () => {
+    const wrapper = mount(SyllabusProcessSheet, { attachTo: document.body, props: { open: true, template: null, periods: [], period: { id: 'period-1', codigo: 'Septiembre-Enero 2026-2027' } }, global: { stubs: dialogStubs } });
+    await flushPromises();
+    const modal = wrapper.getComponent(fadingDialog);
+    modal.vm.$emit('update:open', true);
+    await flushPromises();
+    typeConfirmation('process-open-confirm', 'abrir convocatoria');
+    await flushPromises();
+    modal.vm.$emit('update:open', false);
+    await flushPromises();
+
+    expect(modal.attributes('data-state')).toBe('closed');
+    expect(document.body.querySelector<HTMLInputElement>('#process-open-confirm')!.value).toBe('abrir convocatoria');
+    modal.vm.$emit('update:open', true);
+    await flushPromises();
+    expect(document.body.querySelector<HTMLInputElement>('#process-open-confirm')!.value).toBe('');
 
     wrapper.unmount();
   });

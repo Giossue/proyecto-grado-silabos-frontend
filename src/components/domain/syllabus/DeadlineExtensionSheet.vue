@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { CalendarClock } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { extendProcessDeadline, type SyllabusProcess } from '@/api/processes';
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
@@ -18,6 +18,12 @@ const errors = ref<Record<string, string[]>>({});
 const form = ref({ due_at: '' });
 const ordinal = computed(() => `Prórroga ${Math.min(props.process.extensions_used + 1, props.process.extensions_max)} de ${props.process.extensions_max}`);
 const limit = computed(() => formatDateDisplay(props.process.extension_limit_on, { dateStyle: 'medium' }));
+// Se reinicia al abrir: al cerrar, la fecha elegida sigue visible mientras el panel se desliza.
+watch(open, (value) => {
+  if (!value) return;
+  form.value = { due_at: '' };
+  errors.value = {};
+});
 
 const submit = async (): Promise<void> => {
   processing.value = true;
@@ -25,7 +31,6 @@ const submit = async (): Promise<void> => {
   try {
     const result = await extendProcessDeadline(props.process.id, form.value);
     open.value = false;
-    form.value = { due_at: '' };
     emit('saved', result.message);
   } catch (reason) {
     errors.value = reason instanceof ApiError ? reason.errors : {};

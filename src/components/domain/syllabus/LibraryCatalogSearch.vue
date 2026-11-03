@@ -27,8 +27,9 @@ const added = ref<Set<string>>(new Set());
 const busy = ref(false);
 const error = ref<string | null>(null);
 
+// Se reinicia al abrir: al cerrar, el modal sigue mostrando la búsqueda mientras se desvanece.
 watch(open, (isOpen) => {
-    if (isOpen) return;
+    if (!isOpen) return;
     text.value = '';
     results.value = null;
     meta.value = null;

@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import forge from 'node-forge';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { defineComponent } from 'vue';
 import { ApiError } from '@/api/client';
 import type { SignaturePayload } from '@/api/signatures';
 import SignatureDialog, { type StatementSigner } from '@/components/domain/syllabus/SignatureDialog.vue';
@@ -13,6 +14,15 @@ const mountDialog = (run: (sign: StatementSigner) => Promise<void>) => mount(Sig
   attachTo: document.body,
   props: { open: true, title: 'Firmar y enviar a biblioteca', confirmLabel: 'Firmar y enviar', run },
 });
+
+const passthrough = defineComponent({ template: '<div><slot /></div>' });
+// Como reka-ui: el contenido sigue montado mientras se desvanece.
+const fadingDialog = defineComponent({
+  props: { open: Boolean },
+  emits: ['update:open'],
+  template: '<div data-modal :data-state="open ? \'open\' : \'closed\'"><slot /></div>',
+});
+const dialogStubs = { Dialog: fadingDialog, DialogContent: passthrough, DialogHeader: passthrough, DialogTitle: passthrough, DialogDescription: passthrough, DialogFooter: passthrough, DialogClose: passthrough, DialogTrigger: passthrough };
 
 const dialogText = (): string => document.querySelector('[role="dialog"]')?.textContent ?? '';
 
@@ -78,6 +88,28 @@ describe('SignatureDialog', () => {
 
     expect(dialogText()).toContain('El titular del certificado no coincide con su cuenta');
     expect(wrapper.emitted('update:open')).toBeUndefined();
+    wrapper.unmount();
+  });
+
+  it('al cerrar conserva el archivo y la clave mientras se desvanece, y los borra al volver a abrir', async () => {
+    const wrapper = mount(SignatureDialog, {
+      attachTo: document.body,
+      props: { open: true, title: 'Firmar y enviar a biblioteca', confirmLabel: 'Firmar y enviar', run: vi.fn(), 'onUpdate:open': (value: boolean) => wrapper.setProps({ open: value }) },
+      global: { stubs: dialogStubs },
+    });
+    await flushPromises();
+    await fillSignatureDialog(p12, 'clave');
+    wrapper.getComponent(fadingDialog).vm.$emit('update:open', false);
+    await flushPromises();
+
+    const submit = (): HTMLButtonElement => document.querySelector<HTMLButtonElement>('[data-testid="signature-form"] button[type="submit"]')!;
+    expect(wrapper.getComponent(fadingDialog).attributes('data-state')).toBe('closed');
+    expect(document.querySelector<HTMLInputElement>('#signature-password')!.value).toBe('clave');
+    expect(submit().disabled).toBe(false);
+    await wrapper.setProps({ open: true });
+    await flushPromises();
+    expect(document.querySelector<HTMLInputElement>('#signature-password')!.value).toBe('');
+    expect(submit().disabled).toBe(true);
     wrapper.unmount();
   });
 });

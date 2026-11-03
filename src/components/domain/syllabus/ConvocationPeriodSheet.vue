@@ -23,7 +23,8 @@ const processing = ref(false);
 const confirmOpen = ref(false);
 const OPEN_PHRASE = 'abrir convocatoria';
 const openingTyped = ref('');
-watch(confirmOpen, () => { openingTyped.value = ''; });
+// Se borra al abrir: al cerrar, la frase sigue escrita mientras el modal se desvanece.
+watch(confirmOpen, (value) => { if (value) openingTyped.value = ''; });
 const errors = ref<Record<string, string[]>>({});
 const form = ref({ starts_on: '', ends_on: '', starts_at: '', due_at: '' });
 const createdPeriodId = ref<string | null>(null);

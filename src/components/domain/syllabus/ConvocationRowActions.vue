@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { withoutFinalPeriod } from '@/lib/utils';
+import { afterDialogExit } from '@/lib/dialogExit';
 import { CalendarPlus, LockKeyhole, Trash2 } from '@lucide/vue';
 import { ref, useTemplateRef } from 'vue';
 import { deleteAcademicRecord } from '@/api/academic';
@@ -29,12 +30,18 @@ const run = (key: string): void => {
 };
 defineExpose({ run });
 
+// Al refrescar, la fila cambia o desaparece y se lleva el modal: se avisa cuando ya se cerró.
+const changedAfterExit = async (message: string): Promise<void> => {
+    await afterDialogExit();
+    emit('changed', message);
+};
+
 const remove = async (): Promise<void> => {
     deleting.value = true; error.value = null;
     try {
         const result = await deleteAcademicRecord('periodo', props.row.id);
         deleteOpen.value = false;
-        emit('changed', result.message);
+        await changedAfterExit(result.message);
     } catch (reason) { error.value = reason instanceof ApiError ? reason.message : 'No se pudo eliminar el periodo'; }
     finally { deleting.value = false; }
 };
@@ -49,7 +56,7 @@ const remove = async (): Promise<void> => {
             <DropdownMenuItem v-if="!row.lock_reason" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />Eliminar periodo</DropdownMenuItem>
         </TableActionsMenu>
 
-        <SyllabusProcessSheet v-if="!row.process" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: row.id, codigo: row.code, starts_on: row.starts_on, ends_on: row.ends_on }" display="menu" trigger-label="Abrir convocatoria" @saved="emit('changed', $event)" />
+        <SyllabusProcessSheet v-if="!row.process" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: row.id, codigo: row.code, starts_on: row.starts_on, ends_on: row.ends_on }" display="menu" trigger-label="Abrir convocatoria" @saved="changedAfterExit" />
 
         <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar periodo</DialogTitle><DialogDescription>Se eliminará el período «{{ row.code }}»: sus fechas y sus semanas lectivas. Las materias, los paralelos y los docentes de las carreras no se borran. Si el período ya tiene una convocatoria, el sistema no permitirá eliminarlo. Esta acción no se puede deshacer</DialogDescription></DialogHeader>
             <FeedbackAlert v-if="error" :message="error" />
