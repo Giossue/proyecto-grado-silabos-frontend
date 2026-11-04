@@ -55,7 +55,7 @@ const view = async (document: SupportDocument): Promise<void> => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Documentos de apoyo</DialogTitle>
-          <DialogDescription>Material que Coordinación comparte con los docentes de la carrera. Cada documento se abre en una ventana aparte</DialogDescription>
+          <DialogDescription>Material que Coordinación comparte con los docentes de la carrera</DialogDescription>
         </DialogHeader>
         <p v-if="documents.length === 0" class="text-sm text-muted-foreground">Coordinación ya no tiene documentos compartidos</p>
         <ul v-else class="flex flex-col divide-y rounded-md border">
