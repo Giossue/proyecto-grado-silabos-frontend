@@ -63,7 +63,7 @@ const defaultSheetWidth = sheetPixels(null).portrait;
 const statusNotes = computed(() => {
   if (!data.value) return [];
   const notes: string[] = [];
-  if (data.value.convocation_closed) notes.push('Convocatoria cerrada · solo consulta');
+  if (data.value.convocation_closed) notes.push('Convocatoria finalizada · solo consulta');
   if (!data.value.revision.is_current) notes.push(`Versión ${data.value.revision.number} (anterior) · solo consulta`);
   if (data.value.syllabus.state === 'en_revision' && stageLabel.value) notes.push(stageLabel.value);
   if (data.value.correction_request?.stage === 'biblioteca') notes.push('Corrección solicitada por biblioteca');

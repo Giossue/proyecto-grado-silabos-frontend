@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import { deleteProcess, getProcessImpact, transitionProcess, type SyllabusProcess } from '@/api/processes';
 import { ApiError } from '@/api/client';
+import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
 import SyllabusProcessActions from '@/components/domain/syllabus/SyllabusProcessActions.vue';
 import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 
@@ -207,6 +208,8 @@ describe('SyllabusProcessActions', () => {
     expect(dialog.text()).toContain('Finalizar la convocatoria');
     expect(dialog.text()).toContain('ya no se editan, envían, revisan ni firman');
     expect(dialog.text()).toContain('un cambio de docente no los borra');
+    expect(dialog.text()).toContain('Puede volver a abrirla con una prórroga mientras no hayan terminado las clases');
+    expect(dialog.text()).not.toContain('no se deshace');
     expect(dialog.text()).toContain('Lo que no esté aprobado quedará solo para consulta');
     expect(dialog.findAll('tbody tr').map((row) => row.text())).toEqual(['Sin iniciar12', 'Borrador3', 'En revisión5', 'Total20']);
 
@@ -275,6 +278,41 @@ describe('SyllabusProcessActions', () => {
     const wrapper = mountActions();
     expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Finalizar'))).toBe(false);
     expect(wrapper.findAll('.menu-item').some((item) => item.text().includes('Eliminar'))).toBe(false);
+  });
+
+  it('una convocatoria finalizada ofrece prorrogar el plazo para reabrirla', async () => {
+    const wrapper = mountActions();
+    const extend = wrapper.findAll('.menu-item').find((item) => item.text().includes('Prorrogar plazo'));
+
+    expect(extend).toBeDefined();
+    expect(extend!.attributes('disabled')).toBeUndefined();
+    await extend!.trigger('click');
+    expect(wrapper.findComponent(DeadlineExtensionSheet).props('open')).toBe(true);
+    expect(wrapper.findComponent(DeadlineExtensionSheet).props('process')).toMatchObject({ id: 'process-1', state: 'cerrado' });
+  });
+
+  it('una convocatoria finalizada que no se puede reabrir desactiva prorrogar y dice por qué', () => {
+    const wrapper = mountActions({ ...process(), extension_block_reason: 'Hay otra convocatoria en curso; finalícela o elimínela antes de reabrir esta.' });
+    const extend = wrapper.findAll('.menu-item').find((item) => item.text().includes('Prorrogar plazo'));
+
+    expect(extend?.attributes('disabled')).toBeDefined();
+    expect(extend?.text()).toContain('Hay otra convocatoria en curso; finalícela o elimínela antes de reabrir esta');
+    expect(extend?.text()).not.toContain('reabrir esta.');
+  });
+
+  it('tras prorrogar avisa con el mensaje del servidor cuando el panel ya se cerró', async () => {
+    vi.useFakeTimers();
+    const wrapper = mountActions();
+
+    wrapper.vm.run('prorrogar');
+    await flushPromises();
+    wrapper.findComponent(DeadlineExtensionSheet).vm.$emit('saved', 'Plazo prorrogado. La convocatoria se volvió a abrir.');
+    await flushPromises();
+
+    // La lista se refresca al avisar: con el panel aún visible, cambiaría lo que muestra.
+    expect(wrapper.emitted('completed')).toBeUndefined();
+    await vi.advanceTimersByTimeAsync(DIALOG_EXIT_MS);
+    expect(wrapper.emitted('completed')).toEqual([['Plazo prorrogado. La convocatoria se volvió a abrir.']]);
   });
 
   it('ofrece prorrogar mientras queden prórrogas', () => {

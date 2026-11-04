@@ -49,7 +49,7 @@ const notice = computed((): { headline: string; detail: string | null } => {
   const { task, upcoming, until } = tasks[props.audience];
   const due = formatDate(props.deadline.due_at);
   if (state === 'paused') return pausedNotice(props.audience, props.deadline.paused_by);
-  if (state === 'closed') return { headline: 'La convocatoria está cerrada', detail: closedNotice[props.audience] };
+  if (state === 'closed') return { headline: 'La convocatoria finalizó', detail: closedNotice[props.audience] };
   if (state === 'overdue') return overdueNotice[props.audience](due);
   if (state === 'upcoming') {
     const when = toStart === 0 ? 'hoy' : toStart === 1 ? 'mañana' : `en ${toStart} días`;

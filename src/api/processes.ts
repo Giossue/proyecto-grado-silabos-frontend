@@ -62,5 +62,11 @@ export const transitionProcess = (
   ...(payload ? { body: JSON.stringify(payload) } : {}),
 });
 
-export const extendProcessDeadline = (processId: string, payload: { due_at: string }) =>
+export type DeadlineExtensionPayload = {
+  due_at: string;
+  /** Reabrir una convocatoria finalizada cuya plantilla cambió: confirma que sus sílabos se adapten. */
+  confirmar_rehacer?: boolean;
+};
+
+export const extendProcessDeadline = (processId: string, payload: DeadlineExtensionPayload) =>
   api<{ message: string }>(`/admin/processes/${processId}/deadline`, { method: 'POST', body: JSON.stringify(payload) });

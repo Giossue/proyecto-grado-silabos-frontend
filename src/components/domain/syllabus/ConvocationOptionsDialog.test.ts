@@ -119,4 +119,22 @@ describe('ConvocationOptionsDialog', () => {
   it('una convocatoria cerrada no ofrece finalizar', () => {
     expect(labels(mountDialog('cerrado'))).not.toContain('Finalizar');
   });
+
+  it('una convocatoria finalizada ofrece prorrogar el plazo para reabrirla', async () => {
+    const wrapper = mountDialog('cerrado');
+    const extend = wrapper.findAll('ul .button').find((item) => item.text() === 'Prorrogar plazo');
+
+    expect(labels(wrapper)).toEqual(['Prorrogar plazo']);
+    expect(extend?.attributes('disabled')).toBeUndefined();
+    await extend!.trigger('click');
+    expect(wrapper.emitted('action')).toEqual([['prorrogar']]);
+  });
+
+  it('una convocatoria finalizada que no se puede reabrir desactiva prorrogar y muestra el motivo', () => {
+    const wrapper = mountDialog('cerrado', 'Hay otra convocatoria en curso; finalícela o elimínela antes de reabrir esta.');
+    const extend = wrapper.findAll('ul .button').find((item) => item.text() === 'Prorrogar plazo');
+
+    expect(extend?.attributes('disabled')).toBeDefined();
+    expect(wrapper.find('#option-reason-prorrogar').text()).toBe('Hay otra convocatoria en curso; finalícela o elimínela antes de reabrir esta');
+  });
 });

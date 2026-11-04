@@ -29,19 +29,20 @@ const actions = computed<SheetAction[]>(() => {
     return [
         ...(process.state === 'abierto' ? [{ key: 'pausar', label: 'Pausar', icon: Pause }] : []),
         ...(process.state === 'pausado' ? [{ key: 'reanudar', label: 'Reanudar', icon: Play }] : []),
-        ...(active ? [{
+        // También finalizada: la prórroga la vuelve a abrir.
+        {
             key: 'prorrogar',
             label: 'Prorrogar plazo',
             icon: CalendarClock,
             disabled: Boolean(process.extension_block_reason),
             disabledReason: process.extension_block_reason ?? undefined,
-        }] : []),
+        },
         ...(active ? [{ key: 'cerrar', label: 'Finalizar', icon: Lock, destructive: true }] : []),
         ...(active ? [{ key: 'eliminar', label: 'Eliminar', icon: Trash2, destructive: true }] : []),
     ];
 });
 
-// Lo habitual a la vista; lo que no se deshace (finalizar, eliminar) va en el menú «Más opciones» de la esquina.
+// Lo habitual a la vista; lo delicado (finalizar, eliminar) va en el menú «Más opciones» de la esquina.
 const regular = computed(() => actions.value.filter((action) => !action.destructive));
 const sensitive = computed(() => actions.value.filter((action) => action.destructive));
 

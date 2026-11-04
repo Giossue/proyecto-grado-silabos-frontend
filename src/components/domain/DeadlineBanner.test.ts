@@ -56,8 +56,8 @@ describe('DeadlineBanner', () => {
     expect(text({}).get('[role="status"]').classes()).toContain('bg-notice');
   });
 
-  it('cerrada dice que los sílabos quedan para consulta, sin conteo', () => {
-    expect(text({ state: 'closed', days_until_due: 0 }).text()).toBe('La convocatoria está cerradaSus sílabos quedan guardados solo para consulta');
+  it('finalizada dice que los sílabos quedan para consulta, sin conteo', () => {
+    expect(text({ state: 'closed', days_until_due: 0 }).text()).toBe('La convocatoria finalizóSus sílabos quedan guardados solo para consulta');
   });
 
   it.each([

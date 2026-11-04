@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent, h } from 'vue';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { toast } from '@/lib/toast';
 import AdminProcessesPage from './AdminProcessesPage.vue';
 
 const api = vi.hoisted(() => ({ getAcademicGovernance: vi.fn(), getProcesses: vi.fn(), getSession: vi.fn(), getDashboard: vi.fn() }));
@@ -10,16 +11,24 @@ vi.mock('@/api/processes', async (importOriginal) => ({ ...(await importOriginal
 vi.mock('@/api/session', () => ({ getSession: api.getSession }));
 vi.mock('@/api/dashboard', () => ({ getDashboard: api.getDashboard }));
 vi.mock('vue-router', () => ({ useRouter: () => ({ replace: vi.fn() }), RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } }));
+vi.mock('@/lib/toast', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/state/session', () => ({ sessionState: { current: { value: { active_role: { code: 'administrador' } } } } }));
 
 const period = (id: string, code: string, process: { id: string; state: 'abierto' | 'pausado' | 'cerrado' } | null, lockReason: string | null = null) => ({
   id, code, starts_on: '2026-09-29', ends_on: '2027-03-01', teaching_weeks: 23, status: 'en_curso', status_label: 'En curso', institutional_process: process, lock_reason: lockReason,
 });
 const WithTooltips = defineComponent({ setup: () => () => h(TooltipProvider, () => h(AdminProcessesPage)) });
-const mountPage = () => mount(WithTooltips, { attachTo: document.body, global: { stubs: {
+const passthrough = { template: '<div><slot /></div>' };
+// Las opciones del filtro se dibujan en línea para leer sus etiquetas.
+const inlineSelect = {
+  Select: passthrough, SelectTrigger: passthrough, SelectValue: true, SelectContent: passthrough, SelectGroup: passthrough,
+  SelectItem: { props: ['value'], template: '<div data-option :data-value="value"><slot /></div>' },
+};
+const mountPage = (stubs: Record<string, unknown> = {}) => mount(WithTooltips, { attachTo: document.body, global: { stubs: {
   PageFrame: { props: ['title'], template: '<main><slot name="banner" /><h1>{{ title }}</h1><slot name="actions" /><slot /></main>' },
-  ConvocationPeriodSheet: true, ConvocationRowActions: true,
+  ConvocationPeriodSheet: true, ConvocationRowActions: true, ...stubs,
 } } });
+const closedProcess = { id: 'pr1', name: 'Convocatoria', state: 'cerrado', template: 'x', period_id: 'p1', period_name: 'Septiembre-Marzo 2026-2027', starts_at: '2026-10-01', due_at: '2026-10-20', convocations_count: 0, configurable: true, deletable: true, extensions_used: 0, extensions_max: 2, extension_limit_on: '2027-03-31', extension_block_reason: null };
 
 beforeEach(() => { api.getDashboard.mockResolvedValue({ metrics: [], setup: null, deadline: null, coordination_convocation: null }); });
 afterEach(() => { document.body.innerHTML = ''; vi.clearAllMocks(); });
@@ -68,9 +77,38 @@ describe('AdminProcessesPage', () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Cerrado');
+    expect(wrapper.find('tbody tr').text()).toContain('Finalizado');
+    expect(wrapper.text()).not.toContain('Cerrado');
     expect(wrapper.text()).not.toContain('Convocatoria en curso');
     expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('false');
+    wrapper.unmount();
+  });
+
+  it('el filtro de estado llama «Finalizados» a las convocatorias cerradas', async () => {
+    api.getSession.mockResolvedValue({ active_role: { code: 'administrador' } });
+    api.getAcademicGovernance.mockResolvedValue({ lock_reason: null, catalogs: { faculties: [], careers: [], periods: [period('p1', 'Septiembre-Marzo 2026-2027', { id: 'pr1', state: 'cerrado' })] }, options: {} });
+    api.getProcesses.mockResolvedValue({ processes: [closedProcess], template: null, periods: [], active_process: null });
+    const wrapper = mountPage(inlineSelect);
+    await flushPromises();
+
+    expect(wrapper.get('[data-option][data-value="cerrado"]').text()).toBe('Finalizados');
+    expect(wrapper.findAll('[data-option]').map((option) => option.text())).not.toContain('Cerrados');
+    wrapper.unmount();
+  });
+
+  it('al prorrogar una convocatoria finalizada avisa con el mensaje del servidor y vuelve a cargar la lista', async () => {
+    api.getSession.mockResolvedValue({ active_role: { code: 'administrador' } });
+    api.getAcademicGovernance.mockResolvedValue({ lock_reason: null, catalogs: { faculties: [], careers: [], periods: [period('p1', 'Septiembre-Marzo 2026-2027', { id: 'pr1', state: 'cerrado' })] }, options: {} });
+    api.getProcesses.mockResolvedValue({ processes: [closedProcess], template: null, periods: [], active_process: null });
+    const wrapper = mountPage({ ConvocationOptionsDialog: true });
+    await flushPromises();
+
+    await wrapper.get('tbody tr').trigger('click');
+    wrapper.findComponent({ name: 'ConvocationRowActions' }).vm.$emit('changed', 'Plazo prorrogado. La convocatoria se volvió a abrir.');
+    await flushPromises();
+
+    expect(toast.success).toHaveBeenCalledWith('Plazo prorrogado. La convocatoria se volvió a abrir.');
+    expect(api.getProcesses).toHaveBeenCalledTimes(2);
     wrapper.unmount();
   });
 });

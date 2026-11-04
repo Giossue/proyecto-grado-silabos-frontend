@@ -14,6 +14,8 @@ withDefaults(
         processing?: boolean;
         icon?: Component;
         disabled?: boolean;
+        /** Para un envío que borra o rehace datos. */
+        destructive?: boolean;
     }>(),
     {
         processing: false,
@@ -21,6 +23,7 @@ withDefaults(
         disabled: false,
         label: '',
         closeOnly: false,
+        destructive: false,
     },
 );
 </script>
@@ -33,7 +36,7 @@ withDefaults(
             <Button type="button" variant="outline" @click="close">
                 {{ closeOnly ? 'Cerrar' : 'Cancelar' }}
             </Button>
-            <Button v-if="!closeOnly" type="submit" :disabled="processing || disabled">
+            <Button v-if="!closeOnly" type="submit" :variant="destructive ? 'destructive' : undefined" :disabled="processing || disabled">
                 <Spinner v-if="processing" data-icon="inline-start" />
                 <component
                     :is="icon"

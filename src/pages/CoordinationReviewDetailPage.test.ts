@@ -167,16 +167,17 @@ describe("CoordinationReviewDetailPage", () => {
 
     expect(wrapper.findComponent(RoleDeadlineBanner).exists()).toBe(true);
     expect(wrapper.text()).not.toContain("está en pausa");
-    expect(wrapper.text()).not.toContain("Convocatoria cerrada");
+    expect(wrapper.text()).not.toContain("Convocatoria finalizada");
     expect(headerButton(wrapper, "Firmar y enviar a biblioteca")).toBeUndefined();
   });
 
-  it("deja la revisión solo para consulta con la convocatoria cerrada", async () => {
+  it("deja la revisión solo para consulta con la convocatoria finalizada", async () => {
     vi.mocked(getReview).mockResolvedValue(detail(false));
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Convocatoria cerrada");
+    expect(wrapper.text()).toContain("Convocatoria finalizada · solo consulta");
+    expect(wrapper.text()).not.toContain("Convocatoria cerrada");
     expect(headerButton(wrapper, "Solicitar corrección")).toBeUndefined();
     expect(headerButton(wrapper, "Firmar y enviar a biblioteca")).toBeUndefined();
     wrapper.unmount();

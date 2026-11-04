@@ -65,7 +65,7 @@ const dialogs: Record<Transition, { title: string; description: string; label: s
   },
   cerrar: {
     title: 'Finalizar la convocatoria',
-    description: 'Los sílabos del período quedan guardados solo para consulta: ya no se editan, envían, revisan ni firman, y un cambio de docente no los borra. Esta acción no se deshace',
+    description: 'Los sílabos del período quedan guardados solo para consulta: ya no se editan, envían, revisan ni firman, y un cambio de docente no los borra. Puede volver a abrirla con una prórroga mientras no hayan terminado las clases',
     label: 'Finalizar',
     icon: Lock,
     destructive: true,
@@ -154,6 +154,12 @@ const openDelete = (event: Event): void => {
   deleteOpen.value = true;
 };
 
+// La prórroga cambia lo que muestra el panel (cuántas quedan; si estaba finalizada, deja de estarlo): se avisa cuando ya se cerró.
+const extended = async (message: string): Promise<void> => {
+  await afterDialogExit();
+  emit('completed', message);
+};
+
 const run = (key: 'pausar' | 'reanudar' | 'cerrar' | 'prorrogar' | 'eliminar'): void => {
   if (key === 'prorrogar') deadlineOpen.value = true;
   else if (key === 'eliminar') { deleteError.value = null; deleteOpen.value = true; }
@@ -191,7 +197,7 @@ const remove = async (): Promise<void> => {
     <slot />
     <DropdownMenuItem v-if="process.state === 'abierto'" @select="pending = 'pausar'"><Pause />Pausar</DropdownMenuItem>
     <DropdownMenuItem v-if="process.state === 'pausado'" @select="pending = 'reanudar'"><Play />Reanudar</DropdownMenuItem>
-    <DropdownMenuItem v-if="process.state === 'abierto' || process.state === 'pausado'" :disabled="Boolean(process.extension_block_reason)" @select="deadlineOpen = true">
+    <DropdownMenuItem :disabled="Boolean(process.extension_block_reason)" @select="deadlineOpen = true">
       <CalendarClock />
       <span class="flex flex-col">Prorrogar plazo<span v-if="process.extension_block_reason" class="text-xs text-muted-foreground">{{ withoutFinalPeriod(process.extension_block_reason) }}</span></span>
     </DropdownMenuItem>
@@ -251,5 +257,5 @@ const remove = async (): Promise<void> => {
       </DialogFooter>
     </DialogContent>
   </Dialog>
-  <DeadlineExtensionSheet v-model:open="deadlineOpen" :process="process" display="menu" @saved="emit('completed', $event)" />
+  <DeadlineExtensionSheet v-model:open="deadlineOpen" :process="process" display="menu" @saved="extended" />
 </template>
