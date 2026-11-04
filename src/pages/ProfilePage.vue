@@ -2,7 +2,7 @@
 import { GraduationCap, Save, UserRound } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
-import { resendEmailVerification, updateProfile } from '@/api/session';
+import { resendActivation, updateProfile } from '@/api/session';
 import SettingsAccordionSection from '@/components/domain/SettingsAccordionSection.vue';
 import { Accordion } from '@/components/ui/accordion';
 import InputError from '@/components/InputError.vue';
@@ -62,10 +62,10 @@ const resendVerification = async (): Promise<void> => {
     resending.value = true;
     errors.value = {};
     try {
-        const response = await resendEmailVerification();
+        const response = await resendActivation();
         toast.success(response.message);
     } catch (reason) {
-        errors.value.request = reason instanceof ApiError ? reason.message : 'No se pudo reenviar la verificación';
+        errors.value.request = reason instanceof ApiError ? reason.message : 'No se pudo reenviar el enlace de activación';
     } finally {
         resending.value = false;
     }
@@ -121,9 +121,9 @@ const openSection = ref<string | undefined>('cuenta');
 
                 <div v-if="!user.email_verified">
                     <p class="-mt-4 text-sm text-muted-foreground">
-                        Su correo electrónico no está verificado.
+                        Su cuenta aún no está activada.
                         <TextLink as="button" :tabindex="0" :disabled="resending" @click="resendVerification">
-                            Reenviar el correo de verificación
+                            Reenviar el enlace de activación
                         </TextLink>
                     </p>
                 </div>

@@ -63,7 +63,6 @@ export const router = createRouter({
     // Se puede abrir con la sesión iniciada: al terminar, el servidor la cierra en todos los dispositivos.
     { path: "/restablecer-contrasena", component: ResetPasswordPage },
     { path: "/activar-cuenta", component: ActivateAccountPage, meta: { shell: false } },
-    { path: "/api/v1/authentication/email-verification/:user/:hash", component: VerifyEmailPage, meta: { shell: false } },
     { path: "/verificar-correo", component: VerifyEmailPage, meta: { requiresAuth: true, shell: false } },
     { path: "/verificar-dos-factores", component: TwoFactorChallengePage, meta: { guest: true } },
     { path: "/", redirect: "/ingresar" },

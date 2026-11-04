@@ -10,8 +10,6 @@ export const paths = {
   passwordRecovery: '/recuperar-contrasena',
   passwordReset: '/restablecer-contrasena',
   accountActivation: '/activar-cuenta',
-  emailVerification: (user: string, hash: string): string =>
-    `/api/v1/authentication/email-verification/${segment(user)}/${segment(hash)}`,
   emailVerificationRequired: '/verificar-correo',
   twoFactorChallenge: '/verificar-dos-factores',
   roleSelection: '/rol',
@@ -189,7 +187,6 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'login', path: paths.login, component: 'LoginPage', guest: true },
   { name: 'password-recovery', path: paths.passwordRecovery, component: 'PasswordRecoveryPage', guest: true },
   { name: 'password-reset', path: paths.passwordReset, component: 'ResetPasswordPage' },
-  { name: 'email-verification-callback', path: '/api/v1/authentication/email-verification/:user/:hash', component: 'VerifyEmailPage' },
   { name: 'email-verification-required', path: paths.emailVerificationRequired, component: 'VerifyEmailPage', ...authenticated },
   { name: 'two-factor-challenge', path: paths.twoFactorChallenge, component: 'TwoFactorChallengePage', guest: true },
   { name: 'role-selection', path: paths.roleSelection, component: 'WorkspacePage', ...authenticated },

@@ -48,9 +48,7 @@ export const activateAccount = (token: string, password: string, passwordConfirm
     method: 'POST',
     body: JSON.stringify({ token, password, password_confirmation: passwordConfirmation }),
   });
-export const verifyEmail = (userId: string, hash: string, query: URLSearchParams): Promise<{ message: string }> =>
-  api<{ message: string }>(`/authentication/email-verification/${userId}/${hash}?${query.toString()}`, { method: 'POST' });
-export const resendEmailVerification = () => api<{ message: string }>('/authentication/email-verification/resend', { method: 'POST' });
+export const resendActivation = () => api<{ message: string }>('/authentication/account-activation/resend', { method: 'POST' });
 export const getTwoFactorStatus = () => api<TwoFactorStatus>('/authentication/two-factor');
 export const enableTwoFactor = (currentPassword: string) =>
   api<TwoFactorStatus & { qr_code_svg: string }>('/authentication/two-factor', { method: 'POST', body: JSON.stringify({ current_password: currentPassword }) });

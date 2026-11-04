@@ -10,7 +10,7 @@ vi.mock('@/api/session', () => ({
     getTwoFactorStatus: vi.fn(),
     updatePassword: vi.fn(),
     updateProfile: vi.fn(),
-    resendEmailVerification: vi.fn(),
+    resendActivation: vi.fn(),
     confirmTwoFactor: vi.fn(),
     disableTwoFactor: vi.fn(),
     enableTwoFactor: vi.fn(),

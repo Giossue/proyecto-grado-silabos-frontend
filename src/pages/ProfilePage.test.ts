@@ -8,7 +8,7 @@ import { sessionState } from '@/state/session';
 vi.mock('@/api/session', () => ({
   updateProfile: vi.fn(),
   updateFormation: vi.fn(),
-  resendEmailVerification: vi.fn(),
+  resendActivation: vi.fn(),
 }));
 
 const layout = defineComponent({ template: '<div><slot /></div>' });
