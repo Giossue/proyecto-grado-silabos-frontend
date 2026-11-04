@@ -56,26 +56,19 @@ describe('AcademicGovernancePage', () => {
     wrapper.unmount();
   });
 
-  it('el aviso distingue una convocatoria abierta de una finalizada y sin ninguna no sale', async () => {
+  it('el aviso de cambios solo sale con una convocatoria en curso, no con una finalizada', async () => {
     const base = { lock_reason: 'Convocatoria cerrada', catalogs: { faculties: [], careers: [], periods: [] }, options: {} };
-    api.getAcademicGovernance.mockResolvedValue({ ...base, convocation_notice: 'finalized' });
+    api.getAcademicGovernance.mockResolvedValue({ ...base, convocation_in_progress: false });
     const finalized = mountPage();
     await flushPromises();
-    expect(finalized.text()).toContain('La convocatoria finalizó');
-    expect(finalized.text()).not.toContain('Hay una convocatoria abierta');
+    expect(finalized.text()).not.toContain('vuelven a Borrador');
     finalized.unmount();
 
-    api.getAcademicGovernance.mockResolvedValue({ ...base, convocation_notice: 'open' });
-    const open = mountPage();
+    api.getAcademicGovernance.mockResolvedValue({ ...base, convocation_in_progress: true });
+    const inProgress = mountPage();
     await flushPromises();
-    expect(open.text()).toContain('Hay una convocatoria abierta');
-    open.unmount();
-
-    api.getAcademicGovernance.mockResolvedValue({ ...base, convocation_notice: null });
-    const none = mountPage();
-    await flushPromises();
-    expect(none.text()).not.toContain('Hay una convocatoria abierta');
-    expect(none.text()).not.toContain('La convocatoria finalizó');
-    none.unmount();
+    expect(inProgress.text()).toContain('Hay una convocatoria en curso');
+    expect(inProgress.text()).toContain('vuelven a Borrador');
+    inProgress.unmount();
   });
 });

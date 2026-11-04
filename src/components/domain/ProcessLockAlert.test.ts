@@ -49,7 +49,7 @@ describe('ProcessLockAlert', () => {
     await wrapper.findAll('button').find((button) => button.text() === '¿Por qué?')!.trigger('click');
 
     expect(document.body.textContent).toContain('Administración pausó la convocatoria institucional, pero la de su carrera sigue abierta');
-    expect(document.body.textContent).toContain('se rehacen');
+    expect(document.body.textContent).toContain('volverán a Borrador');
   });
 
   it('un aviso propio puede traer su «¿Por qué?»', async () => {
