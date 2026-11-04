@@ -4,7 +4,7 @@ import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { Check, Pencil, Plus, Trash2, X } from "@lucide/vue";
 import { computed, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
-import { createCareerRecord, createParallels, deleteCareerRecord, deleteParallel, updateParallel } from "@/api/career-academics";
+import { createCareerRecord, createParallels, deleteCareerRecord, deleteParallel, replaceParallelTeacher, updateParallel } from "@/api/career-academics";
 import FormDialog from "@/components/domain/FormDialog.vue";
 import TeacherSelect from "@/components/domain/academic/TeacherSelect.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -124,10 +124,10 @@ const showActions = computed(() => editingId.value !== null
   || props.parallels.some((parallel) => canEditRow(parallel) || canRemoveTeacher(parallel.id) || canDeleteParallel(parallel)));
 const replaceTeacher = async (parallelId: string, value: string): Promise<{ message: string }> => {
   const current = assignmentOf(parallelId);
-  let result: { message: string } = { message: "Docente retirado del paralelo" };
-  if (current) result = await deleteCareerRecord("asignacion_docente", current.id);
-  if (value !== NO_TEACHER) result = await createCareerRecord("asignacion_docente", { user_id: value, parallel_id: parallelId });
-  return result;
+  if (current && value !== NO_TEACHER) return replaceParallelTeacher(parallelId, value);
+  if (current) return deleteCareerRecord("asignacion_docente", current.id);
+  if (value !== NO_TEACHER) return createCareerRecord("asignacion_docente", { user_id: value, parallel_id: parallelId });
+  return { message: "Docente retirado del paralelo" };
 };
 const removeTeacher = (parallelId: string) => runRowAction(() => replaceTeacher(parallelId, NO_TEACHER), "No se pudo quitar el docente del paralelo");
 const newTeacher = ref("");

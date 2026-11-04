@@ -2,7 +2,7 @@
 import { ChevronDown, Plus, X } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
-import { askFinalizedNoticeOnce, createCareerRecord, createParallels, deleteCareerRecord, updateParallel, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
+import { askFinalizedNoticeOnce, createCareerRecord, createParallels, deleteCareerRecord, replaceParallelTeacher, updateParallel, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
 import { Button } from '@/components/ui/button';
 import TeacherSelect from '@/components/domain/academic/TeacherSelect.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -111,8 +111,9 @@ const setTeacher = (userId: string) => run(
     .filter((parallel) => assignmentOf(parallel.id)?.editable !== false && (assignmentOf(parallel.id)?.user_id ?? NO_TEACHER) !== userId)
     .map((parallel) => async () => {
       const current = assignmentOf(parallel.id);
-      if (current) await deleteCareerRecord('asignacion_docente', current.id);
-      if (userId !== NO_TEACHER) await createCareerRecord('asignacion_docente', { user_id: userId, parallel_id: parallel.id });
+      if (current && userId !== NO_TEACHER) await replaceParallelTeacher(parallel.id, userId);
+      else if (current) await deleteCareerRecord('asignacion_docente', current.id);
+      else await createCareerRecord('asignacion_docente', { user_id: userId, parallel_id: parallel.id });
     })),
   userId === NO_TEACHER ? 'Docente retirado de los paralelos seleccionados' : 'Docente asignado a los paralelos seleccionados',
   'Los paralelos seleccionados ya tenían ese docente',

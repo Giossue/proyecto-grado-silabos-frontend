@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({
     updateParallel: vi.fn(),
     deleteCareerRecord: vi.fn(),
     createCareerRecord: vi.fn(),
+    replaceParallelTeacher: vi.fn(),
     askFinalizedNoticeOnce: <T>(run: () => Promise<T>): Promise<T> => run(),
 }));
 vi.mock('@/api/career-academics', () => api);
@@ -81,14 +82,13 @@ describe('ParallelBulkActions', () => {
     });
 
     it('reemplaza el docente solo donde cambia y avisa los fallos parciales', async () => {
-        api.deleteCareerRecord.mockResolvedValue({ message: 'ok' });
-        api.createCareerRecord.mockRejectedValue(new Error('x'));
+        api.replaceParallelTeacher.mockRejectedValue(new Error('x'));
         const wrapper = mountBar();
         await (wrapper.vm as unknown as { $: { setupState: { setTeacher: (id: string) => Promise<void> } } }).$.setupState.setTeacher('t1');
         await flushPromises();
 
-        expect(api.deleteCareerRecord).toHaveBeenCalledWith('asignacion_docente', 'as1');
-        expect(api.createCareerRecord).toHaveBeenCalledWith('asignacion_docente', { user_id: 't1', parallel_id: 'p1' });
+        expect(api.replaceParallelTeacher).toHaveBeenCalledWith('p1', 't1');
+        expect(api.deleteCareerRecord).not.toHaveBeenCalled();
         expect(wrapper.emitted('failed')?.[0]?.[0]).toContain('0 de 1 cambios aplicados');
         wrapper.unmount();
     });

@@ -8,7 +8,7 @@ vi.mock('@/api/client', async (importOriginal) => ({
 }));
 
 import { ApiError } from '@/api/client';
-import { PURGE_CANCELLED_MESSAGE, askFinalizedNoticeOnce, createParallels, deleteCurriculumSubject, getSubjectProfile, saveSubjectProfile, updateCurriculumConfiguration, updateParallel } from '@/api/career-academics';
+import { PURGE_CANCELLED_MESSAGE, askFinalizedNoticeOnce, createParallels, replaceParallelTeacher, deleteCurriculumSubject, getSubjectProfile, saveSubjectProfile, updateCurriculumConfiguration, updateParallel } from '@/api/career-academics';
 import { updateManagedUser } from '@/api/admin-users';
 import { FINALIZED_NOTICE, usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
 
@@ -59,6 +59,25 @@ describe('aviso de convocatoria finalizada', () => {
     await dialog.confirm();
     await updated;
     expect(JSON.parse(String(api.mock.lastCall?.[1].body))).toMatchObject({ replace_coordinator: true, confirm_purge: true });
+  });
+
+  it('reemplazar el docente es una sola petición: cancelar no borra nada y confirmar la reenvía', async () => {
+    const dialog = usePurgeConfirmation();
+
+    api.mockRejectedValueOnce(noticeError());
+    const cancelled = replaceParallelTeacher('p1', 'u2');
+    await vi.waitFor(() => expect(dialog.open.value).toBe(true));
+    dialog.cancel();
+    await expect(cancelled).rejects.toThrow(PURGE_CANCELLED_MESSAGE);
+    expect(api).toHaveBeenCalledTimes(1);
+    expect(api).toHaveBeenCalledWith('/coordination/academic/parallels/p1/teacher', { method: 'PUT', body: JSON.stringify({ user_id: 'u2' }) });
+
+    api.mockRejectedValueOnce(noticeError()).mockResolvedValueOnce({ message: 'ok' });
+    const confirmed = replaceParallelTeacher('p1', 'u2');
+    await vi.waitFor(() => expect(dialog.open.value).toBe(true));
+    await dialog.confirm();
+    await expect(confirmed).resolves.toEqual({ message: 'ok' });
+    expect(api).toHaveBeenLastCalledWith('/coordination/academic/parallels/p1/teacher', { method: 'PUT', body: JSON.stringify({ user_id: 'u2', confirm_purge: true }) });
   });
 
   it('un cambio en lote pregunta una sola vez y aplica la respuesta a todos', async () => {

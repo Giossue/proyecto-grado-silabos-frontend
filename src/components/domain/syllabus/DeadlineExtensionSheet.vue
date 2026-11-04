@@ -36,7 +36,7 @@ const pendingLines = computed(() => {
   if (!counts) return [];
   return [
     { label: 'Vuelven a borrador, sin su historial ni sus firmas', total: counts.to_draft },
-    { label: 'Vuelven a empezar desde cero', total: counts.restarted },
+    { label: 'Se rehacen o se quitan, sin su contenido', total: counts.restarted },
     { label: 'Vuelven a Coordinación, sin sus aprobaciones', total: counts.to_coordination },
   ].filter((line) => line.total > 0);
 });

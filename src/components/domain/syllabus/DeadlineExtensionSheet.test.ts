@@ -224,7 +224,7 @@ describe('DeadlineExtensionSheet', () => {
     await submit();
 
     expect(document.body.textContent).toContain('los sílabos de este período se adaptan a la plantilla nueva');
-    expect(document.body.textContent).toContain('Vuelven a empezar desde cero');
+    expect(document.body.textContent).toContain('Se rehacen o se quitan, sin su contenido');
     expect(submitButton().textContent).toContain('Prorrogar y adaptar sílabos');
     const phrase = document.body.querySelector<HTMLInputElement>('#extension-template-confirm')!;
     phrase.value = 'adaptar sílabos';

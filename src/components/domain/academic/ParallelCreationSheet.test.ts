@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({
   deleteParallel: vi.fn(),
   createCareerRecord: vi.fn(),
   deleteCareerRecord: vi.fn(),
+  replaceParallelTeacher: vi.fn(),
 }));
 vi.mock('@/api/career-academics', () => api);
 
@@ -121,8 +122,7 @@ describe('ParallelCreationSheet', () => {
   });
 
   it('busca al editar, conserva al docente actual fuera de la lista y guarda solo al confirmar', async () => {
-    api.deleteCareerRecord.mockResolvedValue({ message: 'Retirado.' });
-    api.createCareerRecord.mockResolvedValue({ message: 'Asignado.' });
+    api.replaceParallelTeacher.mockResolvedValue({ message: 'Asignado.' });
     const wrapper = mountSheet();
     await wrapper.setProps({
       teacherUsers: [{ id: 'teacher-new', name: 'MARÍA PÉREZ', email: 'maria@example.test' }],
@@ -145,13 +145,13 @@ describe('ParallelCreationSheet', () => {
     await flushPromises();
 
     expect(button('Docente del paralelo A')?.textContent).toContain('MARÍA PÉREZ');
-    expect(api.createCareerRecord).not.toHaveBeenCalled();
-    expect(api.deleteCareerRecord).not.toHaveBeenCalled();
+    expect(api.replaceParallelTeacher).not.toHaveBeenCalled();
     button('Guardar paralelo A')!.click();
     await flushPromises();
 
-    expect(api.deleteCareerRecord).toHaveBeenCalledWith('asignacion_docente', 'assignment-1');
-    expect(api.createCareerRecord).toHaveBeenCalledWith('asignacion_docente', { user_id: 'teacher-new', parallel_id: 'p-a' });
+    expect(api.replaceParallelTeacher).toHaveBeenCalledWith('p-a', 'teacher-new');
+    expect(api.deleteCareerRecord).not.toHaveBeenCalled();
+    expect(api.createCareerRecord).not.toHaveBeenCalled();
     expect(wrapper.emitted('changed')?.[0]).toEqual(['Asignado.']);
     wrapper.unmount();
   });

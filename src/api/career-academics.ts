@@ -289,6 +289,13 @@ export const updateParallel = (id: string, payload: { code: string; shift: strin
       body: jsonBody(payload, confirm),
     }),
   );
+export const replaceParallelTeacher = (parallelId: string, userId: string) =>
+  withPurgeConfirmation((confirm) =>
+    api<{ message: string }>(`/coordination/academic/parallels/${parallelId}/teacher`, {
+      method: "PUT",
+      body: jsonBody({ user_id: userId }, confirm),
+    }),
+  );
 export const deleteParallel = (id: string) =>
   api<{ message: string }>(`/coordination/academic/parallels/${id}`, {
     method: "DELETE",
