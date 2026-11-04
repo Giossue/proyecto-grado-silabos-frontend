@@ -47,6 +47,7 @@ export const paths = {
     reviews: '/coordinacion/revisiones',
     review: (revision: string): string => `/coordinacion/revisiones/${segment(revision)}`,
     history: (revision: string): string => `/coordinacion/revisiones/${segment(revision)}/historial`,
+    periodHistory: '/coordinacion/historial',
     academic: '/coordinacion/estructura-academica',
     curriculum: '/coordinacion/malla',
     scheduledSubjects: '/coordinacion/materias-asignaciones',

@@ -34,6 +34,8 @@ import { toast } from '@/lib/toast';
 const route = useRoute();
 const router = useRouter();
 const area = reviewAreaPaths();
+const previousPage: unknown = window.history.state?.back;
+const fromHistory = typeof previousPage === 'string' && previousPage.split('?')[0] === area.periodHistory;
 const data = ref<ReviewDetail | null>(null);
 const loading = ref(true);
 const loadError = ref('');
@@ -171,7 +173,7 @@ onMounted(load);
 
 <template>
   <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 backdrop-blur sm:px-5" aria-label="Herramientas de la revisión">
-    <Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, area.reviews)"><ArrowLeft aria-hidden="true" />Volver a la cola</Button>
+    <Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, fromHistory ? area.periodHistory : area.reviews)"><ArrowLeft aria-hidden="true" />{{ fromHistory ? 'Volver al historial' : 'Volver a la cola' }}</Button>
     <span class="flex-1" />
     <AppearanceToggle />
   </header>

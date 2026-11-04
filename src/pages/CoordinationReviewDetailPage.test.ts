@@ -183,6 +183,18 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
+  it("si se llegó desde el historial de la carrera, el enlace de arriba vuelve al historial", async () => {
+    window.history.replaceState({ back: "/coordinacion/historial?period=p1" }, "");
+    vi.mocked(getReview).mockResolvedValue(detail(false));
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.text()).toContain("Volver al historial");
+    expect(wrapper.text()).not.toContain("Volver a la cola");
+    window.history.replaceState(null, "");
+    wrapper.unmount();
+  });
+
   it("de una devolución de biblioteca solo dice quién devolvió, sin su comentario", async () => {
     vi.mocked(getReview).mockResolvedValue({ ...detail(), correction_request: { justification: null, requested_at: "2026-10-30T10:00:00Z", stage: "biblioteca", requested_by: null } });
     const wrapper = mountPage();

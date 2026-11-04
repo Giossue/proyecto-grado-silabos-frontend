@@ -120,7 +120,7 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     const sidebar = wrapper.find('[data-sidebar="sidebar"]');
-    expect(sidebar.findAll('[data-sidebar="content"] a').map((link) => link.text())).toEqual(['Revisión', 'Materias y asignaciones', 'Docentes', 'Proyecto de carrera', 'Malla']);
+    expect(sidebar.findAll('[data-sidebar="content"] a').map((link) => link.text())).toEqual(['Revisión', 'Historial', 'Materias y asignaciones', 'Docentes', 'Proyecto de carrera', 'Malla']);
     expect(sidebar.text()).not.toContain('Antes de empezar');
     expect(sidebar.text()).not.toContain('Fuentes académicas');
     expect(sidebar.find('a[href="/coordinacion/fuentes"]').exists()).toBe(false);

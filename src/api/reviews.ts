@@ -2,6 +2,7 @@ import { api } from "@/api/client";
 import type { DocumentPresentation } from "@/api/syllabi";
 import type { SignaturePayload, SignatureSummary } from "@/api/signatures";
 import type { DocumentField, FieldResponsible } from "@/types/configuration";
+import type { PaginationMeta } from "@/types/pagination";
 
 export type ReviewStage = "biblioteca" | "coordinacion";
 export const REVIEW_STAGE_LABELS: Record<ReviewStage, string> = { biblioteca: "En biblioteca", coordinacion: "En coordinación" };
@@ -141,3 +142,26 @@ export const approveReview = (revisionId: string, signature: SignaturePayload) =
   });
 export const resetSyllabus = (syllabusId: string, reason: string) =>
   api<{ message: string }>(`/coordination/syllabi/${syllabusId}/reset`, { method: "POST", body: JSON.stringify({ reason }) });
+
+export type CoordinationHistoryItem = {
+  id: string;
+  revision_id: string;
+  period: string;
+  subject: string;
+  code: string;
+  parallels: string[];
+  author: string | null;
+  approved_at: string | null;
+};
+export type CoordinationHistoryPage = {
+  filters: { q: string | null; period: string | null };
+  periods: Array<{ id: string; code: string }>;
+  syllabi: PaginationMeta & { data: CoordinationHistoryItem[] };
+};
+export const getCoordinationHistory = (filters: { q?: string; period?: string; page?: number } = {}) => {
+  const query = new URLSearchParams();
+  if (filters.q) query.set("q", filters.q);
+  if (filters.period && filters.period !== "all") query.set("period", filters.period);
+  if (filters.page && filters.page > 1) query.set("page", String(filters.page));
+  return api<CoordinationHistoryPage>(`/coordination/history${query.size ? `?${query}` : ""}`);
+};

@@ -100,6 +100,10 @@ export const screenTours: Record<string, TourStep[]> = {
     step('[data-tour="career-subjects"]', 'Materias por ciclo', 'Pulse una materia para llenar su proyecto. El docente lo recibe ya escrito', 'top'),
     step(TABLE, 'Documentos de apoyo', 'Archivos para que sus docentes conozcan mejor sus materias. Pulse uno para verlo', 'top'),
   ],
+  '/coordinacion/historial': [
+    step(FILTERS, 'Buscar', 'Busque por materia o código, o elija un período', 'bottom'),
+    step(TABLE, 'Sílabos aprobados', 'Pulse uno para verlo o use «Ver PDF» para abrir el documento firmado', 'top'),
+  ],
   '/coordinacion/malla': [
     step(ACTIONS, 'Editar malla', 'Cambie ciclos, materias y requisitos. También puede subir la malla con un Excel', 'left'),
     step('[data-tour="curriculum-relations"]', 'Relaciones', 'Vea en una lista qué materia es requisito de cuál', 'right'),
