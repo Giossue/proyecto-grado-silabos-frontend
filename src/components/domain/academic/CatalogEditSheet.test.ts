@@ -4,7 +4,7 @@ import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue'
 import { updateAcademicRecord } from '@/api/academic';
 import { getCatalogLibraries } from '@/api/libraryCatalog';
 import { ApiError } from '@/api/client';
-import { usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
+import { FINALIZED_NOTICE, usePurgeConfirmation } from '@/composables/usePurgeConfirmation';
 
 vi.mock('@/api/academic', () => ({ updateAcademicRecord: vi.fn() }));
 vi.mock('@/api/libraryCatalog', () => ({ getCatalogLibraries: vi.fn() }));
@@ -74,6 +74,28 @@ describe('CatalogEditSheet · convocatoria activa', () => {
 });
 
 describe('CatalogEditSheet · cambios que devuelven sílabos enviados', () => {
+  it('con una convocatoria finalizada abre el aviso sin frase y reenvía con confirm_purge', async () => {
+    vi.mocked(updateAcademicRecord)
+      .mockRejectedValueOnce(new ApiError('Aviso', 422, { purge_required: ['La convocatoria 2026-2027 ya finalizó.'], purge_count: ['0'], purge_mode: [FINALIZED_NOTICE] }))
+      .mockResolvedValueOnce({ message: 'Actualizado' });
+    const wrapper = mountSheet();
+    const dialog = usePurgeConfirmation();
+    await flushPromises();
+    const name = document.querySelector<HTMLInputElement>('input[aria-required="true"]')!;
+    name.value = 'Facultad con otro nombre';
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+    await flushPromises();
+    button('Guardar cambios')!.click();
+    await flushPromises();
+
+    expect(dialog.mode.value).toBe(FINALIZED_NOTICE);
+    await dialog.confirm();
+    await flushPromises();
+
+    expect((vi.mocked(updateAcademicRecord).mock.calls[1]![2] as FormData).get('confirm_purge')).toBe('1');
+    wrapper.unmount();
+  });
+
   it('al cambiar el nombre pide confirmar y, al confirmar, reenvía con confirm_purge', async () => {
     vi.mocked(updateAcademicRecord)
       .mockRejectedValueOnce(new ApiError('Confirme', 422, { purge_required: ['Este cambio devolverá 1 sílabo enviado o aprobado a borrador'], purge_count: ['1'] }))

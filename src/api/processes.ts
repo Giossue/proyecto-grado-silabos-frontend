@@ -51,6 +51,7 @@ export const deleteProcess = (processId: string, payload: { mensaje: string }) =
 
 export type ProcessTransitionPayload = {
   confirmar_rehacer?: boolean;
+  confirmar_cambios?: boolean;
 };
 
 export const transitionProcess = (
@@ -66,7 +67,10 @@ export type DeadlineExtensionPayload = {
   due_at: string;
   /** Reabrir una convocatoria finalizada cuya plantilla cambió: confirma que sus sílabos se adapten. */
   confirmar_rehacer?: boolean;
+  confirmar_cambios?: boolean;
 };
+
+export type PendingChangeCounts = { to_draft: number; restarted: number; to_coordination: number };
 
 export const extendProcessDeadline = (processId: string, payload: DeadlineExtensionPayload) =>
   api<{ message: string }>(`/admin/processes/${processId}/deadline`, { method: 'POST', body: JSON.stringify(payload) });

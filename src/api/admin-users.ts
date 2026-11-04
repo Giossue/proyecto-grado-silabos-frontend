@@ -1,3 +1,4 @@
+import { jsonBody, withPurgeConfirmation } from '@/api/career-academics';
 import { api } from '@/api/client';
 import type { RoleCode } from '@/api/session';
 
@@ -29,10 +30,10 @@ export const getManagedUsers = (filters: { q?: string; status?: string; role?: s
 };
 
 export const createManagedUser = (payload: { primer_nombre: string; segundo_nombre: string; primer_apellido: string; segundo_apellido: string; correo_electronico: string; role_code: string; career_id: string | null; replace_coordinator?: boolean }) =>
-  api<{ message: string }>('/admin/users', { method: 'POST', body: JSON.stringify(payload) });
+  withPurgeConfirmation((confirm) => api<{ message: string }>('/admin/users', { method: 'POST', body: jsonBody(payload, confirm) }));
 export const resendManagedUserInvitation = (userId: string) =>
   api<{ message: string }>(`/admin/users/${userId}/resend-activation`, { method: 'POST' });
 export const removeManagedUserRole = (userId: string, assignmentId: string) => api<{ message: string }>(`/admin/users/${userId}/roles/${assignmentId}`, { method: 'DELETE' });
 export const deleteManagedUser = (userId: string) => api<{ message: string }>(`/admin/users/${userId}`, { method: 'DELETE' });
 export const updateManagedUser = (userId: string, payload: { nombre: string; correo_electronico: string; active?: boolean; role_code?: string; career_id?: string | null; replace_coordinator?: boolean }) =>
-  api<{ message: string }>(`/admin/users/${userId}`, { method: 'PATCH', body: JSON.stringify(payload) });
+  withPurgeConfirmation((confirm) => api<{ message: string }>(`/admin/users/${userId}`, { method: 'PATCH', body: jsonBody(payload, confirm) }));

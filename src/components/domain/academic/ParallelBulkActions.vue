@@ -2,7 +2,7 @@
 import { ChevronDown, Plus, X } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
-import { createCareerRecord, createParallels, deleteCareerRecord, updateParallel, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
+import { askFinalizedNoticeOnce, createCareerRecord, createParallels, deleteCareerRecord, updateParallel, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
 import { Button } from '@/components/ui/button';
 import TeacherSelect from '@/components/domain/academic/TeacherSelect.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -55,14 +55,16 @@ const run = async (steps: Array<() => Promise<unknown>>, done: string, nothing: 
   busy.value = true;
   let failures = 0;
   let firstError = '';
-  for (const step of steps) {
-    try {
-      await step();
-    } catch (reason) {
-      failures++;
-      firstError ||= reason instanceof ApiError ? reason.message : 'No se pudo completar el cambio';
+  await askFinalizedNoticeOnce(async () => {
+    for (const step of steps) {
+      try {
+        await step();
+      } catch (reason) {
+        failures++;
+        firstError ||= reason instanceof ApiError ? reason.message : 'No se pudo completar el cambio';
+      }
     }
-  }
+  });
   busy.value = false;
   if (failures === 0) {
     emit('changed', done);

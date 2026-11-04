@@ -178,6 +178,64 @@ describe('DeadlineExtensionSheet', () => {
     wrapper.unmount();
   });
 
+  it('si hay cambios pendientes que devuelven sílabos, pide confirmar con los conteos y reenvía con confirmar_cambios', async () => {
+    vi.mocked(extendProcessDeadline)
+      .mockRejectedValueOnce(new ApiError('Hubo cambios.', 422, {}, {
+        code: 'cambios_pendientes',
+        counts: { to_draft: 2, restarted: 0, to_coordination: 1 },
+      }))
+      .mockResolvedValueOnce({ message: 'Plazo prorrogado. La convocatoria se volvió a abrir.' });
+    const wrapper = mountSheet(process(0, 'cerrado'));
+    await flushPromises();
+    wrapper.findComponent(DatePicker).vm.$emit('update:modelValue', '2027-02-15');
+    await submit();
+
+    expect(wrapper.emitted('saved')).toBeUndefined();
+    expect([...document.body.querySelectorAll('li')].map((item) => item.textContent)).toEqual([
+      'Vuelven a borrador, sin su historial ni sus firmas2',
+      'Vuelven a Coordinación, sin sus aprobaciones1',
+    ]);
+    expect(submitButton().textContent).toContain('Prorrogar y aplicar cambios');
+    expect(submitButton().dataset.variant).toBe('destructive');
+    expect(submitButton().disabled).toBe(true);
+
+    const phrase = document.body.querySelector<HTMLInputElement>('#extension-template-confirm')!;
+    phrase.value = 'aplicar cambios';
+    phrase.dispatchEvent(new Event('input'));
+    await flushPromises();
+    await submit();
+
+    expect(extendProcessDeadline).toHaveBeenNthCalledWith(2, 'process-1', { due_at: '2027-02-15', confirmar_cambios: true });
+    expect(wrapper.emitted('saved')).toEqual([['Plazo prorrogado. La convocatoria se volvió a abrir.']]);
+    wrapper.unmount();
+  });
+
+  it('si cambiaron la plantilla y otros datos, una sola confirmación manda las dos marcas', async () => {
+    vi.mocked(extendProcessDeadline)
+      .mockRejectedValueOnce(new ApiError('La plantilla cambió.', 422, {}, {
+        code: 'plantilla_cambiada',
+        counts: { sin_iniciar: 0, borrador: 1, en_revision: 0, correccion_solicitada: 0, aprobado: 1 },
+        pending_counts: { to_draft: 0, restarted: 1, to_coordination: 0 },
+      }))
+      .mockResolvedValueOnce({ message: 'Plazo prorrogado. La convocatoria se volvió a abrir.' });
+    const wrapper = mountSheet(process(0, 'cerrado'));
+    await flushPromises();
+    wrapper.findComponent(DatePicker).vm.$emit('update:modelValue', '2027-02-15');
+    await submit();
+
+    expect(document.body.textContent).toContain('los sílabos de este período se adaptan a la plantilla nueva');
+    expect(document.body.textContent).toContain('Vuelven a empezar desde cero');
+    expect(submitButton().textContent).toContain('Prorrogar y adaptar sílabos');
+    const phrase = document.body.querySelector<HTMLInputElement>('#extension-template-confirm')!;
+    phrase.value = 'adaptar sílabos';
+    phrase.dispatchEvent(new Event('input'));
+    await flushPromises();
+    await submit();
+
+    expect(extendProcessDeadline).toHaveBeenNthCalledWith(2, 'process-1', { due_at: '2027-02-15', confirmar_rehacer: true, confirmar_cambios: true });
+    wrapper.unmount();
+  });
+
   it('el aviso de la plantilla se borra al volver a abrir, no al cerrar', async () => {
     vi.mocked(extendProcessDeadline).mockRejectedValueOnce(new ApiError('La plantilla cambió.', 422, {}, {
       code: 'plantilla_cambiada',

@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({
     updateParallel: vi.fn(),
     deleteCareerRecord: vi.fn(),
     createCareerRecord: vi.fn(),
+    askFinalizedNoticeOnce: <T>(run: () => Promise<T>): Promise<T> => run(),
 }));
 vi.mock('@/api/career-academics', () => api);
 

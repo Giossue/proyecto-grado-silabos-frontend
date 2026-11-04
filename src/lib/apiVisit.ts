@@ -95,6 +95,8 @@ export const visitApi = async (
                     purgeMessage,
                     Number(errors.purge_count ?? 0),
                     () => visitApi(url, { ...options, data: withConfirmation(data) }),
+                    undefined,
+                    errors.purge_mode,
                 );
             }
 

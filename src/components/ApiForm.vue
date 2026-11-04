@@ -33,6 +33,8 @@ const send = async (form: HTMLFormElement, confirmed = false): Promise<void> => 
                     errors.value.purge_required,
                     Number(errors.value.purge_count ?? 0),
                     () => send(form, true),
+                    undefined,
+                    errors.value.purge_mode,
                 );
             }
         } else {

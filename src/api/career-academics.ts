@@ -3,9 +3,20 @@ import type { TemplateDefinitionPayload } from "@/lib/blocks/types";
 import type { LockDetail } from '@/api/locks';
 import type { DocumentNode } from '@/lib/templateDocument';
 import { api, ApiError } from "@/api/client";
-import { requestPurgeConfirmation } from "@/composables/usePurgeConfirmation";
+import { FINALIZED_NOTICE, requestPurgeConfirmation } from "@/composables/usePurgeConfirmation";
 
 export const PURGE_CANCELLED_MESSAGE = "Cambio cancelado. No se guardó nada";
+
+let noticeBatch: { answer: boolean | null } | null = null;
+
+export async function askFinalizedNoticeOnce<T>(run: () => Promise<T>): Promise<T> {
+  noticeBatch = { answer: null };
+  try {
+    return await run();
+  } finally {
+    noticeBatch = null;
+  }
+}
 
 export function withPurgeConfirmation<T>(
   send: (confirmPurge: boolean) => Promise<T>,
@@ -14,19 +25,30 @@ export function withPurgeConfirmation<T>(
     const purgeMessage =
       reason instanceof ApiError ? reason.errors.purge_required?.[0] : undefined;
     if (!(reason instanceof ApiError) || !purgeMessage) throw reason;
+    const purgeMode = reason.errors.purge_mode?.[0];
+    const batch = purgeMode === FINALIZED_NOTICE ? noticeBatch : null;
+    if (batch?.answer === true) return send(true);
+    if (batch?.answer === false) throw new ApiError(PURGE_CANCELLED_MESSAGE, 409);
 
     return new Promise<T>((resolve, reject) => {
       requestPurgeConfirmation(
         purgeMessage,
         Number(reason.errors.purge_count?.[0] ?? 0),
-        () => send(true).then(resolve, reject),
-        () => reject(new ApiError(PURGE_CANCELLED_MESSAGE, 409)),
+        () => {
+          if (batch) batch.answer = true;
+          return send(true).then(resolve, reject);
+        },
+        () => {
+          if (batch) batch.answer = false;
+          reject(new ApiError(PURGE_CANCELLED_MESSAGE, 409));
+        },
+        purgeMode,
       );
     });
   });
 }
 
-const jsonBody = (payload: object, confirmPurge: boolean): string =>
+export const jsonBody = (payload: object, confirmPurge: boolean): string =>
   JSON.stringify(confirmPurge ? { ...payload, confirm_purge: true } : payload);
 
 export type Curriculum = {
@@ -242,9 +264,11 @@ export const deleteCurriculumSubject = (
   curriculumId: string,
   subjectId: string,
 ) =>
-  api<{ message: string }>(
-    `/coordination/academic/curriculum/${curriculumId}/subjects/${subjectId}`,
-    { method: "DELETE" },
+  withPurgeConfirmation((confirm) =>
+    api<{ message: string }>(
+      `/coordination/academic/curriculum/${curriculumId}/subjects/${subjectId}`,
+      { method: "DELETE", ...(confirm ? { body: jsonBody({}, true) } : {}) },
+    ),
   );
 export const createParallels = (payload: {
   subject_id: string;
@@ -252,10 +276,12 @@ export const createParallels = (payload: {
   shift: string;
   user_id: string;
 }) =>
-  api<{ message: string }>("/coordination/academic/parallels", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+  withPurgeConfirmation((confirm) =>
+    api<{ message: string }>("/coordination/academic/parallels", {
+      method: "POST",
+      body: jsonBody(payload, confirm),
+    }),
+  );
 export const updateParallel = (id: string, payload: { code: string; shift: string }) =>
   withPurgeConfirmation((confirm) =>
     api<{ message: string }>(`/coordination/academic/parallels/${id}`, {

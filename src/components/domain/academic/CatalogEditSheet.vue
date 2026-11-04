@@ -137,6 +137,8 @@ const submit = async (confirmPurge = false): Promise<void> => {
                 purgeMessage,
                 Number(errors.value.purge_count?.[0] ?? 0),
                 () => void submit(true),
+                undefined,
+                errors.value.purge_mode?.[0],
             );
         }
     }
