@@ -69,7 +69,7 @@ const stateTone = (row: ConvocationRow): StatusTone => row.process
 const filter = useClientFilter(rows, (row) => [row.code], {
   estado: { matches: (row, value) => (value === 'sin_iniciar' ? row.process === null : row.process?.state === value) },
 });
-const inProgress = computed(() => Boolean(governance.value?.lock_reason) || rows.value.some((row) => row.process?.state === 'abierto' || row.process?.state === 'pausado'));
+const inProgress = computed(() => rows.value.some((row) => row.process?.state === 'abierto' || row.process?.state === 'pausado'));
 const { items: page, meta, setPage } = useClientPagination(() => filter.items.value, 20, filter.criteria);
 const formatDate = (value: string): string => formatDateDisplay(value, { dateStyle: 'medium' });
 
