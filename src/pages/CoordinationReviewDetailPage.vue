@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
+import { deadlineState } from '@/state/deadline';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import { ArrowLeft, FileSignature, FileText, GitCompareArrows, Highlighter, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
@@ -178,7 +179,7 @@ onMounted(load);
     <AppearanceToggle />
   </header>
   <RoleDeadlineBanner />
-  <ProcessLockAlert v-if="data?.convocation_closed" banner title="Convocatoria finalizada" message="Este sílabo queda solo para consulta" hide-action />
+  <ProcessLockAlert v-if="data?.convocation_closed && deadlineState.deadline.value?.state !== 'closed'" banner title="Convocatoria finalizada" message="Este sílabo queda solo para consulta" hide-action />
   <PageFrame v-if="data && !loadError" header-class="syllabus-editor-header" :header-width="sheetWidth" hide-icon :title="data.syllabus.subject" :description="`${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
     <template #title-badge>
       <SyllabusStateBadge :state="data.syllabus.state" />

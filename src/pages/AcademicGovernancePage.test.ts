@@ -9,7 +9,7 @@ vi.mock('vue-router', () => ({ useRoute: () => api.route, useRouter: () => ({ re
 vi.mock('@/state/session', () => ({ sessionState: { current: { value: { active_role: { code: 'administrador' } } } } }));
 
 const mountPage = () => mount(AcademicGovernancePage, { attachTo: document.body, global: { stubs: {
-  PageFrame: { props: ['title'], template: '<main><h1>{{ title }}</h1><slot name="actions" /><slot /></main>' },
+  PageFrame: { props: ['title'], template: '<main><slot name="banner" /><h1>{{ title }}</h1><slot name="actions" /><slot /></main>' },
   CatalogRecordSheet: true, CatalogSection: true, RouterLink: { template: '<a><slot /></a>' },
 } } });
 
@@ -54,5 +54,28 @@ describe('AcademicGovernancePage', () => {
     expect(wrapper.find('[role="tablist"]').exists()).toBe(true);
     expect(wrapper.find('[data-skeleton="table-tabs"]').exists()).toBe(false);
     wrapper.unmount();
+  });
+
+  it('el aviso distingue una convocatoria abierta de una finalizada y sin ninguna no sale', async () => {
+    const base = { lock_reason: 'Convocatoria cerrada', catalogs: { faculties: [], careers: [], periods: [] }, options: {} };
+    api.getAcademicGovernance.mockResolvedValue({ ...base, convocation_notice: 'finalized' });
+    const finalized = mountPage();
+    await flushPromises();
+    expect(finalized.text()).toContain('La convocatoria finalizó');
+    expect(finalized.text()).not.toContain('Hay una convocatoria abierta');
+    finalized.unmount();
+
+    api.getAcademicGovernance.mockResolvedValue({ ...base, convocation_notice: 'open' });
+    const open = mountPage();
+    await flushPromises();
+    expect(open.text()).toContain('Hay una convocatoria abierta');
+    open.unmount();
+
+    api.getAcademicGovernance.mockResolvedValue({ ...base, convocation_notice: null });
+    const none = mountPage();
+    await flushPromises();
+    expect(none.text()).not.toContain('Hay una convocatoria abierta');
+    expect(none.text()).not.toContain('La convocatoria finalizó');
+    none.unmount();
   });
 });

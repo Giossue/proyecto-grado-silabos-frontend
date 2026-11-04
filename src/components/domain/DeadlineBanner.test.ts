@@ -11,7 +11,7 @@ const deadline: DashboardDeadline = {
   days_until_start: 0,
   days_until_due: 2,
   convocation_id: 'c1',
-  paused_by: null,
+  paused_by: null, classes_ended: false, career_pending: false,
 };
 
 const text = (value: Partial<DashboardDeadline>, audience: 'docente' | 'coordinador' | 'bibliotecario' | 'administrador' = 'docente') => mount(DeadlineBanner, { props: { deadline: { ...deadline, ...value }, audience } });
@@ -57,7 +57,19 @@ describe('DeadlineBanner', () => {
   });
 
   it('finalizada dice que los sílabos quedan para consulta, sin conteo', () => {
-    expect(text({ state: 'closed', days_until_due: 0 }).text()).toBe('La convocatoria finalizóSus sílabos quedan guardados solo para consulta');
+    expect(text({ state: 'closed', days_until_due: 0 }).text()).toBe('La convocatoria finalizóSus sílabos quedan solo para consulta');
+    expect(text({ state: 'closed' }, 'coordinador').text()).toBe('La convocatoria finalizóLos sílabos de la carrera quedan solo para consulta');
+    expect(text({ state: 'closed' }, 'bibliotecario').text()).toBe('La convocatoria finalizóLos sílabos quedan solo para consulta');
+  });
+
+  it('Administración sabe qué puede hacer con la convocatoria finalizada', () => {
+    expect(text({ state: 'closed', classes_ended: false }, 'administrador').text()).toBe('La convocatoria finalizóPuede reabrirla con una prórroga o abrir una nueva');
+    expect(text({ state: 'closed', classes_ended: true }, 'administrador').text()).toBe('La convocatoria finalizóPuede abrir una nueva');
+  });
+
+  it('Coordinación ve que aún no abre la convocatoria de su carrera', () => {
+    expect(text({ state: 'active', career_pending: true }, 'coordinador').text()).toContain('Aún no abre la convocatoria de su carrera');
+    expect(text({ state: 'paused', paused_by: 'administracion', career_pending: true }, 'coordinador').text()).not.toContain('Aún no abre');
   });
 
   it.each([

@@ -38,10 +38,10 @@ const pausedNotice = (audience: Audience, pausedBy: DashboardDeadline['paused_by
 };
 
 const closedNotice: Record<Audience, string> = {
-  docente: 'Sus sílabos quedan guardados solo para consulta',
-  coordinador: 'Los sílabos de la carrera quedan guardados solo para consulta',
-  bibliotecario: 'Los sílabos quedan guardados solo para consulta',
-  administrador: 'Los sílabos del período quedan guardados solo para consulta',
+  docente: 'Sus sílabos quedan solo para consulta',
+  coordinador: 'Los sílabos de la carrera quedan solo para consulta',
+  bibliotecario: 'Los sílabos quedan solo para consulta',
+  administrador: 'Puede reabrirla con una prórroga o abrir una nueva',
 };
 
 const notice = computed((): { headline: string; detail: string | null } => {
@@ -49,7 +49,8 @@ const notice = computed((): { headline: string; detail: string | null } => {
   const { task, upcoming, until } = tasks[props.audience];
   const due = formatDate(props.deadline.due_at);
   if (state === 'paused') return pausedNotice(props.audience, props.deadline.paused_by);
-  if (state === 'closed') return { headline: 'La convocatoria finalizó', detail: closedNotice[props.audience] };
+  if (state === 'closed') return { headline: 'La convocatoria finalizó', detail: props.audience === 'administrador' && props.deadline.classes_ended ? 'Puede abrir una nueva' : closedNotice[props.audience] };
+  if (props.audience === 'coordinador' && props.deadline.career_pending) return { headline: 'Aún no abre la convocatoria de su carrera', detail: until(due) };
   if (state === 'overdue') return overdueNotice[props.audience](due);
   if (state === 'upcoming') {
     const when = toStart === 0 ? 'hoy' : toStart === 1 ? 'mañana' : `en ${toStart} días`;

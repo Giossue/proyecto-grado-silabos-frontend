@@ -59,7 +59,7 @@ describe('LibraryReviewsPage', () => {
         { key: 'library_commented', label: 'Corrección solicitada', value: 1, suffix: null, hint: 'Con observaciones para el docente' },
       ],
       setup: null,
-      deadline: { period: '2026-2027', starts_at: '2026-10-01', due_at: '2026-11-15', state: 'active', days_until_start: 0, days_until_due: 19, convocation_id: null , paused_by: null },
+      deadline: { period: '2026-2027', starts_at: '2026-10-01', due_at: '2026-11-15', state: 'active', days_until_start: 0, days_until_due: 19, convocation_id: null , paused_by: null, classes_ended: false, career_pending: false },
       coordination_convocation: null,
     });
   });

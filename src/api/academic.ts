@@ -3,6 +3,7 @@ import type { AcademicStructureProps } from '@/types/academic';
 
 export type AcademicGovernance = Pick<AcademicStructureProps, 'lock_reason' | 'catalogs' | 'options'> & {
   lock_reason: string | null;
+  convocation_notice?: 'open' | 'finalized' | null;
   section: 'faculties' | 'careers' | 'academic-periods';
 };
 
