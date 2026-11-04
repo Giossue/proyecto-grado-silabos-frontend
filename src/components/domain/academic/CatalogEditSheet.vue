@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import IconTooltip from '@/components/domain/IconTooltip.vue';
-import { Check, X } from '@lucide/vue';
+import { Check, Pencil, X } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { updateAcademicRecord } from '@/api/academic';
 import { ApiError } from '@/api/client';
@@ -13,6 +13,7 @@ import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { SheetFooter } from '@/components/ui/sheet';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -35,6 +36,8 @@ const errors = ref<Record<string, string[]>>({});
 const logo = ref<File | null>(null);
 const removeLogo = ref(false);
 const locked = computed(() => Boolean(props.lockReason));
+const viewing = ref(true);
+const readOnly = computed(() => locked.value || viewing.value);
 const currentLogo = computed(() => Boolean(props.logoUrl) && !removeLogo.value);
 const form = ref({ nombre: '', code: '', faculty_id: '', campus: '', modality: '', starts_on: '', ends_on: '' });
 
@@ -68,9 +71,11 @@ const generalError = computed((): string | null => {
     return key === undefined ? null : (errors.value[key]?.[0] ?? null);
 });
 const entityLabel = computed(() => ({ facultad: 'facultad', carrera: 'carrera', periodo: 'periodo académico' })[props.entity]);
+const capitalizedLabel = computed(() => entityLabel.value.charAt(0).toUpperCase() + entityLabel.value.slice(1));
 const facultyOptions = computed(() => props.faculties.filter((faculty) => faculty.activo || faculty.id === props.facultyId));
 
 const reset = (): void => {
+    viewing.value = true;
     form.value = {
         nombre: props.recordName, code: props.recordCode ?? '', faculty_id: props.facultyId ?? '',
         campus: props.campus ?? '', modality: props.modality ?? '', starts_on: props.startsOn ?? '',
@@ -103,6 +108,7 @@ const logoValidationError = (message: string | null): void => {
     errors.value = nextErrors;
 };
 const submit = async (confirmPurge = false): Promise<void> => {
+    if (readOnly.value) return;
     errors.value = {};
     if (props.entity === 'facultad' && !currentLogo.value && !logo.value) {
         errors.value = { logo: ['El logo de la facultad es obligatorio'] };
@@ -147,31 +153,37 @@ const submit = async (confirmPurge = false): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" trigger-label="Editar" :title="`Editar ${entityLabel}`" :show-trigger="showTrigger">
-        <template v-if="actions.length > 0" #header-actions><SheetActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
+    <FormSheet v-model:open="open" trigger-label="Editar" :title="viewing ? capitalizedLabel : `Editar ${entityLabel}`" :show-trigger="showTrigger">
+        <template v-if="viewing && actions.length > 0" #header-actions><SheetActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
         <template #default="{ close }">
             <form @submit.prevent="submit()"><FieldGroup>
                 <Alert v-if="generalError" variant="destructive"><AlertDescription>{{ generalError }}</AlertDescription></Alert>
                 <Tabs v-if="entity === 'facultad'" v-model="tab" class="gap-4">
                     <TabsList aria-label="Secciones de la facultad"><TabsTrigger value="datos">Datos</TabsTrigger><TabsTrigger value="bibliotecas">Bibliotecas</TabsTrigger></TabsList>
                     <TabsContent value="datos" class="flex flex-col gap-7">
-                      <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" aria-required="true" :disabled="locked" /><FieldError :errors="errors.nombre" /></Field>
-                      <Field :data-invalid="Boolean(errors.campus)"><FieldLabel :for="`edit-campus-${recordId}`" required>Campus</FieldLabel><Select v-model="form.campus" required :disabled="locked"><SelectTrigger :id="`edit-campus-${recordId}`"><SelectValue placeholder="Seleccione el campus de la facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in campusOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.campus" /></Field>
-                      <Field :data-invalid="Boolean(errors.logo)"><FieldLabel :for="`edit-faculty-logo-${recordId}`" required>Logo de la facultad</FieldLabel><div v-if="currentLogo" class="flex items-center gap-3"><img :src="logoUrl ?? ''" alt="Logo actual de la facultad" class="h-24 min-w-0 flex-1 rounded-md border bg-background object-contain p-2"><IconTooltip label="Quitar logo"><Button type="button" variant="outline" size="icon-sm" aria-label="Quitar logo" :disabled="processing || locked" @click="removeLogo = true"><X aria-hidden="true" /></Button></IconTooltip></div><FacultyLogoField v-else v-model="logo" :input-id="`edit-faculty-logo-${recordId}`" :disabled="processing || locked" :invalid="Boolean(errors.logo)" required @validation-error="logoValidationError" /><FieldDescription v-if="!currentLogo">PNG, JPG o WebP. Se ajusta a 600 × 180 px con fondo transparente</FieldDescription><FieldError :errors="errors.logo" /></Field>
+                      <Field :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" aria-required="true" :disabled="readOnly" /><FieldError :errors="errors.nombre" /></Field>
+                      <Field :data-invalid="Boolean(errors.campus)"><FieldLabel :for="`edit-campus-${recordId}`" required>Campus</FieldLabel><Select v-model="form.campus" required :disabled="readOnly"><SelectTrigger :id="`edit-campus-${recordId}`"><SelectValue placeholder="Seleccione el campus de la facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in campusOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.campus" /></Field>
+                      <Field :data-invalid="Boolean(errors.logo)"><FieldLabel :for="`edit-faculty-logo-${recordId}`" required>Logo de la facultad</FieldLabel><div v-if="currentLogo" class="flex items-center gap-3"><img :src="logoUrl ?? ''" alt="Logo actual de la facultad" class="h-24 min-w-0 flex-1 rounded-md border bg-background object-contain p-2"><IconTooltip label="Quitar logo"><Button type="button" variant="outline" size="icon-sm" aria-label="Quitar logo" :disabled="processing || readOnly" @click="removeLogo = true"><X aria-hidden="true" /></Button></IconTooltip></div><FacultyLogoField v-else v-model="logo" :input-id="`edit-faculty-logo-${recordId}`" :disabled="processing || readOnly" :invalid="Boolean(errors.logo)" required @validation-error="logoValidationError" /><FieldDescription v-if="!currentLogo">PNG, JPG o WebP. Se ajusta a 600 × 180 px con fondo transparente</FieldDescription><FieldError :errors="errors.logo" /></Field>
                     </TabsContent>
                     <TabsContent value="bibliotecas">
-                        <FacultyLibraryChecks v-model="chosenLibraries" :libraries="koha" :error="kohaError" :saved="catalogLibraries" :id-prefix="`edit-library-${recordId}`" :invalid="errors.catalog_libraries" :disabled="locked" />
+                        <FacultyLibraryChecks v-model="chosenLibraries" :libraries="koha" :error="kohaError" :saved="catalogLibraries" :id-prefix="`edit-library-${recordId}`" :invalid="errors.catalog_libraries" :disabled="readOnly" />
                     </TabsContent>
                 </Tabs>
-                <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.faculty_id)"><FieldLabel :for="`edit-faculty-${recordId}`" required>Facultad</FieldLabel><Select v-model="form.faculty_id" required :disabled="locked"><SelectTrigger :id="`edit-faculty-${recordId}`"><SelectValue placeholder="Seleccione una facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="faculty in facultyOptions" :key="faculty.id" :value="faculty.id">{{ faculty.nombre }} {{ faculty.activo ? '' : '(inactiva)' }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.faculty_id" /></Field>
-                <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.modality)"><FieldLabel :for="`edit-modality-${recordId}`" required>Modalidad</FieldLabel><Select v-model="form.modality" required :disabled="locked"><SelectTrigger :id="`edit-modality-${recordId}`"><SelectValue placeholder="Seleccione la modalidad aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in modalityOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.modality" /></Field>
-                <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" aria-required="true" :disabled="locked" /><FieldError :errors="errors.nombre" /></Field>
-                <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.code)"><FieldLabel :for="`edit-code-${recordId}`" required>Código de carrera</FieldLabel><Input :id="`edit-code-${recordId}`" v-model="form.code" aria-required="true" :disabled="locked" /><FieldError :errors="errors.code" /></Field>
+                <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.faculty_id)"><FieldLabel :for="`edit-faculty-${recordId}`" required>Facultad</FieldLabel><Select v-model="form.faculty_id" required :disabled="readOnly"><SelectTrigger :id="`edit-faculty-${recordId}`"><SelectValue placeholder="Seleccione una facultad" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="faculty in facultyOptions" :key="faculty.id" :value="faculty.id">{{ faculty.nombre }} {{ faculty.activo ? '' : '(inactiva)' }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.faculty_id" /></Field>
+                <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.modality)"><FieldLabel :for="`edit-modality-${recordId}`" required>Modalidad</FieldLabel><Select v-model="form.modality" required :disabled="readOnly"><SelectTrigger :id="`edit-modality-${recordId}`"><SelectValue placeholder="Seleccione la modalidad aprobada" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="item in modalityOptions" :key="item.value" :value="item.value">{{ item.label }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.modality" /></Field>
+                <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`edit-name-${recordId}`" required>Nombre</FieldLabel><Input :id="`edit-name-${recordId}`" v-model="form.nombre" aria-required="true" :disabled="readOnly" /><FieldError :errors="errors.nombre" /></Field>
+                <Field v-if="entity === 'carrera'" :data-invalid="Boolean(errors.code)"><FieldLabel :for="`edit-code-${recordId}`" required>Código de carrera</FieldLabel><Input :id="`edit-code-${recordId}`" v-model="form.code" aria-required="true" :disabled="readOnly" /><FieldError :errors="errors.code" /></Field>
                 <div v-if="entity === 'periodo'" class="grid grid-cols-2 items-start gap-4">
-                    <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel :for="`edit-starts-on-${recordId}`" required>Fecha de inicio</FieldLabel><DatePicker :id="`edit-starts-on-${recordId}`" v-model="form.starts_on" required :disabled="locked" /><FieldError :errors="errors.starts_on" /></Field>
-                    <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required :disabled="locked" /><FieldError :errors="errors.ends_on" /></Field>
+                    <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel :for="`edit-starts-on-${recordId}`" required>Fecha de inicio</FieldLabel><DatePicker :id="`edit-starts-on-${recordId}`" v-model="form.starts_on" required :disabled="readOnly" /><FieldError :errors="errors.starts_on" /></Field>
+                    <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required :disabled="readOnly" /><FieldError :errors="errors.ends_on" /></Field>
                 </div>
-                <FormSheetActions :close="close" :processing="processing" :disabled="unchanged || Boolean(lockReason) || (entity === 'facultad' && noLibraryChosen)" :icon="Check" label="Guardar cambios" />
+                <SheetFooter v-if="viewing" class="absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
+                    <Field orientation="horizontal" class="justify-end">
+                        <Button type="button" variant="outline" @click="close">Cerrar</Button>
+                        <Button type="button" :disabled="locked" @click="viewing = false"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
+                    </Field>
+                </SheetFooter>
+                <FormSheetActions v-else :close="reset" :processing="processing" :disabled="unchanged || Boolean(lockReason) || (entity === 'facultad' && noLibraryChosen)" :icon="Check" label="Guardar cambios" />
             </FieldGroup></form>
         </template>
     </FormSheet>

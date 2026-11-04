@@ -25,9 +25,38 @@ const mountSheet = (extra: Record<string, unknown> = {}) => mount(CatalogEditShe
 });
 const button = (label: string) => Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((item) => item.getAttribute('aria-label') === label || item.textContent?.trim() === label);
 
+const editingSheet = async (extra: Record<string, unknown> = {}) => {
+  const wrapper = mountSheet(extra);
+  await flushPromises();
+  Array.from(document.body.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Editar')?.click();
+  await flushPromises();
+  return wrapper;
+};
+
 describe('CatalogEditSheet · logo de la facultad', () => {
-  it('con logo muestra la imagen con una X y no la zona de arrastre; al quitarlo aparece la zona', async () => {
+  it('abre primero los datos en solo lectura, con Editar; al editar permite cambiar y Cancelar vuelve a los datos', async () => {
     const wrapper = mountSheet();
+    await flushPromises();
+    const button = (label: string) => Array.from(document.body.querySelectorAll('button')).find((item) => item.textContent?.trim() === label);
+    const name = () => document.body.querySelector<HTMLInputElement>('input[id^="edit-name-"]')!;
+
+    expect(name().disabled).toBe(true);
+    expect(button('Guardar cambios')).toBeUndefined();
+
+    button('Editar')!.click();
+    await flushPromises();
+    expect(name().disabled).toBe(false);
+    expect(button('Guardar cambios')).toBeDefined();
+
+    button('Cancelar')!.click();
+    await flushPromises();
+    expect(name().disabled).toBe(true);
+    expect(button('Editar')).toBeDefined();
+    wrapper.unmount();
+  });
+
+  it('con logo muestra la imagen con una X y no la zona de arrastre; al quitarlo aparece la zona', async () => {
+    const wrapper = await editingSheet();
     await flushPromises();
 
     expect(document.body.querySelector('img[alt="Logo actual de la facultad"]')).not.toBeNull();
@@ -41,7 +70,7 @@ describe('CatalogEditSheet · logo de la facultad', () => {
   });
 
   it('quitar el logo sin subir otro no deja guardar, y cancelar vuelve a mostrar el logo', async () => {
-    const wrapper = mountSheet();
+    const wrapper = await editingSheet();
     await flushPromises();
     button('Quitar logo')!.click();
     await flushPromises();
@@ -62,13 +91,13 @@ describe('CatalogEditSheet · logo de la facultad', () => {
 
 describe('CatalogEditSheet · convocatoria activa', () => {
   it('con la convocatoria activa deja los campos y el botón deshabilitados, sin aviso dentro del diálogo', async () => {
-    const wrapper = mountSheet({ lockReason: 'Convocatoria activa' });
+    const wrapper = await editingSheet({ lockReason: 'Convocatoria activa' });
     await flushPromises();
 
     expect(document.body.textContent).not.toContain('Hay una convocatoria activa');
     expect([...document.body.querySelectorAll<HTMLInputElement>('input[id^="edit-"]')].every((input) => input.disabled)).toBe(true);
     expect(document.body.querySelector<HTMLButtonElement>('button[id^="edit-campus-"]')?.disabled).toBe(true);
-    expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
+    expect(button('Editar')!.hasAttribute('disabled')).toBe(true);
     wrapper.unmount();
   });
 });
@@ -78,7 +107,7 @@ describe('CatalogEditSheet · cambios que devuelven sílabos enviados', () => {
     vi.mocked(updateAcademicRecord)
       .mockRejectedValueOnce(new ApiError('Aviso', 422, { purge_required: ['La convocatoria 2026-2027 ya finalizó.'], purge_count: ['0'], purge_mode: [FINALIZED_NOTICE] }))
       .mockResolvedValueOnce({ message: 'Actualizado' });
-    const wrapper = mountSheet();
+    const wrapper = await editingSheet();
     const dialog = usePurgeConfirmation();
     await flushPromises();
     const name = document.querySelector<HTMLInputElement>('input[aria-required="true"]')!;
@@ -100,7 +129,7 @@ describe('CatalogEditSheet · cambios que devuelven sílabos enviados', () => {
     vi.mocked(updateAcademicRecord)
       .mockRejectedValueOnce(new ApiError('Confirme', 422, { purge_required: ['Este cambio devolverá 1 sílabo enviado o aprobado a borrador'], purge_count: ['1'] }))
       .mockResolvedValueOnce({ message: 'Facultad actualizada.' });
-    const wrapper = mountSheet();
+    const wrapper = await editingSheet();
     await flushPromises();
     const name = document.querySelector<HTMLInputElement>('input[aria-required="true"]')!;
     name.value = 'Facultad con otro nombre';
@@ -130,7 +159,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   const save = async (): Promise<void> => { button('Guardar cambios')!.click(); await flushPromises(); };
 
   it('tiene una pestaña Bibliotecas, aparte de los datos, que solo lista las bibliotecas disponibles con casillas', async () => {
-    const wrapper = mountSheet();
+    const wrapper = await editingSheet();
     await flushPromises();
 
     expect(Array.from(document.querySelectorAll('[role="tab"]')).map((item) => item.textContent?.trim())).toEqual(['Datos', 'Bibliotecas']);
@@ -144,7 +173,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('tiene un ícono de ayuda junto al título de las bibliotecas, solo en la pestaña de bibliotecas', async () => {
-    const wrapper = mountSheet();
+    const wrapper = await editingSheet();
     await flushPromises();
 
     expect(document.querySelector('[aria-label="Qué significa esto"]')).toBeNull();
@@ -154,7 +183,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('sin bibliotecas guardadas muestra todas marcadas, y sin tocarlas no se puede guardar', async () => {
-    const wrapper = mountSheet();
+    const wrapper = await editingSheet();
     await flushPromises();
     await tab('Bibliotecas');
 
@@ -167,7 +196,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   it('si Koha no responde o no publica bibliotecas, sin cambios tampoco se puede guardar, y cambiar un dato sí', async () => {
     for (const koha of [() => vi.mocked(getCatalogLibraries).mockRejectedValueOnce(new Error('Koha caído')), () => vi.mocked(getCatalogLibraries).mockResolvedValueOnce([])]) {
       koha();
-      const wrapper = mountSheet();
+      const wrapper = await editingSheet();
       await flushPromises();
 
       expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
@@ -181,7 +210,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('desmarcar bibliotecas guarda los códigos de las que quedan', async () => {
-    const wrapper = mountSheet();
+    const wrapper = await editingSheet();
     await flushPromises();
     await tab('Bibliotecas');
     await tick('LAGUACOTO');
@@ -192,7 +221,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('con bibliotecas guardadas abre con solo esas marcadas, y marcar todas se guarda vacío para que entren las nuevas', async () => {
-    const wrapper = mountSheet({ catalogLibraries: ['BGEN'] });
+    const wrapper = await editingSheet({ catalogLibraries: ['BGEN'] });
     await flushPromises();
     await tab('Bibliotecas');
 
@@ -206,7 +235,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('si la facultad ya tenía guardadas todas, se ven todas marcadas, sin cambios no se guarda y al guardar otro dato queda vacío', async () => {
-    const wrapper = mountSheet({ catalogLibraries: ['BFCCA', 'BGEN', 'BHTM'] });
+    const wrapper = await editingSheet({ catalogLibraries: ['BFCCA', 'BGEN', 'BHTM'] });
     await flushPromises();
     await tab('Bibliotecas');
 
@@ -226,7 +255,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('sin ninguna marcada «Guardar cambios» queda deshabilitado', async () => {
-    const wrapper = mountSheet();
+    const wrapper = await editingSheet();
     await flushPromises();
     await tab('Bibliotecas');
     await tick('LAGUACOTO');
@@ -239,7 +268,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('una biblioteca guardada que Koha ya no publica se muestra para poder quitarla', async () => {
-    const wrapper = mountSheet({ catalogLibraries: ['BVIEJA', 'BGEN'] });
+    const wrapper = await editingSheet({ catalogLibraries: ['BVIEJA', 'BGEN'] });
     await flushPromises();
     await tab('Bibliotecas');
 
@@ -248,7 +277,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('las carreras y los períodos no tienen pestañas ni consultan Koha', async () => {
-    const wrapper = mountSheet({ entity: 'carrera', recordName: 'Software', facultyId: 'f1', faculties: [{ id: 'f1', nombre: 'Facultad', activo: true }], modalityOptions: [{ value: 'presencial', label: 'Presencial' }] });
+    const wrapper = await editingSheet({ entity: 'carrera', recordName: 'Software', facultyId: 'f1', faculties: [{ id: 'f1', nombre: 'Facultad', activo: true }], modalityOptions: [{ value: 'presencial', label: 'Presencial' }] });
     await flushPromises();
 
     expect(document.querySelector('[role="tab"]')).toBeNull();
