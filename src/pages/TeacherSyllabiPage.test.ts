@@ -31,20 +31,16 @@ const syllabi: SyllabiResponse = {
 describe('TeacherSyllabiPage', () => {
   beforeEach(() => {
     vi.mocked(getTeacherSyllabi).mockResolvedValue(syllabi);
-    vi.mocked(getTeacherSupportDocuments).mockResolvedValue({ data: [] });
   });
 
-  it('muestra «Documentos de apoyo» junto al historial solo si Coordinación compartió documentos', async () => {
-    const empty = mountPage();
-    await flushPromises();
-    expect(empty.find('[aria-label="Documentos de apoyo"]').exists()).toBe(false);
-    expect(empty.find('[aria-label="Historial"]').exists()).toBe(true);
-    empty.unmount();
-
+  it('deja «Documentos de apoyo» para el sílabo: la lista solo ofrece el historial', async () => {
     vi.mocked(getTeacherSupportDocuments).mockResolvedValue({ data: [{ id: 'd1', title: 'Proyecto de carrera', size: 2048, view: 'lista', uploaded_at: '2026-11-02T15:00:00Z' }] });
     const wrapper = mountPage();
     await flushPromises();
-    expect(wrapper.find('[aria-label="Documentos de apoyo"]').exists()).toBe(true);
+
+    expect(wrapper.find('[aria-label="Documentos de apoyo"]').exists()).toBe(false);
+    expect(wrapper.find('[aria-label="Historial"]').exists()).toBe(true);
+    expect(getTeacherSupportDocuments).not.toHaveBeenCalled();
   });
 
   it('muestra los sílabos sin indicadores arriba', async () => {
