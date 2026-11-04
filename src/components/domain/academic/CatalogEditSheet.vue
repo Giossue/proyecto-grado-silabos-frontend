@@ -154,7 +154,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
 
 <template>
     <FormSheet v-model:open="open" trigger-label="Editar" :title="viewing ? capitalizedLabel : `Editar ${entityLabel}`" :show-trigger="showTrigger">
-        <template v-if="viewing && actions.length > 0" #header-actions><SheetActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
+        <template v-if="(!viewing || locked) && actions.length > 0" #header-actions><SheetActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
         <template #default="{ close }">
             <form @submit.prevent="submit()"><FieldGroup>
                 <Alert v-if="generalError" variant="destructive"><AlertDescription>{{ generalError }}</AlertDescription></Alert>

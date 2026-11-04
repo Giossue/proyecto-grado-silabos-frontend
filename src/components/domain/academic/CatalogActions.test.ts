@@ -17,6 +17,8 @@ const open = async (props: Record<string, unknown>) => {
   const wrapper = mount(CatalogActions, { attachTo: document.body, props: { ...base, ...props } as never });
   (wrapper.vm as unknown as { edit: () => void }).edit();
   await flushPromises();
+  [...document.body.querySelectorAll('button')].find((button) => button.textContent?.trim() === 'Editar')?.click();
+  await flushPromises();
 
   return wrapper;
 };

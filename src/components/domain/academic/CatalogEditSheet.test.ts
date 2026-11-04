@@ -34,6 +34,18 @@ const editingSheet = async (extra: Record<string, unknown> = {}) => {
 };
 
 describe('CatalogEditSheet · logo de la facultad', () => {
+  it('las acciones de la esquina solo aparecen al editar', async () => {
+    const wrapper = mountSheet({ actions: [{ key: 'status', label: 'Desactivar facultad' }] });
+    await flushPromises();
+    const action = () => document.body.querySelector('[aria-label="Desactivar facultad"]');
+    expect(action()).toBeNull();
+
+    Array.from(document.body.querySelectorAll('button')).find((item) => item.textContent?.trim() === 'Editar')!.click();
+    await flushPromises();
+    expect(action()).not.toBeNull();
+    wrapper.unmount();
+  });
+
   it('abre primero los datos en solo lectura, con Editar; al editar permite cambiar y Cancelar vuelve a los datos', async () => {
     const wrapper = mountSheet();
     await flushPromises();
