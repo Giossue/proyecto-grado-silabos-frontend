@@ -551,6 +551,21 @@ describe("TeacherSyllabusDetailPage", () => {
     }
   });
 
+  it("un borrador de una convocatoria finalizada se ve como formulario, sin poder editarlo", async () => {
+    const draft = syllabus("borrador");
+    draft.editable = false;
+    draft.edit_block_reason = "La convocatoria finalizó";
+    draft.edit_blocked_by_convocation = true;
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: draft });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.find("#field-field-1").exists()).toBe(true);
+    expect(wrapper.find("section.teacher-form").exists()).toBe(true);
+    expect(buttonNamed(wrapper, "Firmar y enviar")).toBeUndefined();
+    wrapper.unmount();
+  });
+
   it("un bloqueo que no es de la convocatoria sí muestra su motivo", async () => {
     const draft = syllabus("borrador");
     draft.editable = false;
