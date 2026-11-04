@@ -176,7 +176,9 @@ describe("CoordinationReviewDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain("Convocatoria finalizada · solo consulta");
+    const banner = wrapper.findAll('[role="status"]').find((item) => item.text().includes("Convocatoria finalizada"));
+    expect(banner?.text()).toContain("Este sílabo queda solo para consulta");
+    expect(wrapper.text()).not.toContain("Convocatoria finalizada · solo consulta");
     expect(wrapper.text()).not.toContain("Convocatoria cerrada");
     expect(headerButton(wrapper, "Solicitar corrección")).toBeUndefined();
     expect(headerButton(wrapper, "Firmar y enviar a biblioteca")).toBeUndefined();

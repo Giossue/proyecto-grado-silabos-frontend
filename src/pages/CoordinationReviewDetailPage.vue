@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
@@ -65,7 +66,6 @@ const defaultSheetWidth = sheetPixels(null).portrait;
 const statusNotes = computed(() => {
   if (!data.value) return [];
   const notes: string[] = [];
-  if (data.value.convocation_closed) notes.push('Convocatoria finalizada · solo consulta');
   if (!data.value.revision.is_current) notes.push(`Versión ${data.value.revision.number} (anterior) · solo consulta`);
   if (data.value.syllabus.state === 'en_revision' && stageLabel.value) notes.push(stageLabel.value);
   if (data.value.correction_request?.stage === 'biblioteca') notes.push('Corrección solicitada por biblioteca');
@@ -178,6 +178,7 @@ onMounted(load);
     <AppearanceToggle />
   </header>
   <RoleDeadlineBanner />
+  <ProcessLockAlert v-if="data?.convocation_closed" banner title="Convocatoria finalizada" message="Este sílabo queda solo para consulta" hide-action />
   <PageFrame v-if="data && !loadError" header-class="syllabus-editor-header" :header-width="sheetWidth" hide-icon :title="data.syllabus.subject" :description="`${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
     <template #title-badge>
       <SyllabusStateBadge :state="data.syllabus.state" />
