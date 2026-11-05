@@ -1059,3 +1059,11 @@ tbody tr:nth-child(odd) > [data-sticky-end] {
 tbody tr:nth-child(even) > [data-sticky-end] {
     background-color: color-mix(in oklab, var(--muted) 50%, var(--card));
 }
+
+@media (hover: none) and (pointer: coarse) {
+    [data-slot="tooltip-trigger"] {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+}

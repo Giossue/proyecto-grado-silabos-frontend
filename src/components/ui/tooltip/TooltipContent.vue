@@ -14,6 +14,7 @@ const props = withDefaults(defineProps<TooltipContentProps & {
   paper?: boolean
 }>(), {
   sideOffset: 4,
+  collisionPadding: 8,
   paper: false,
 })
 

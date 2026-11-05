@@ -54,7 +54,7 @@ const start = (): void => {
     stagePadding: 6,
     stageRadius: 8,
     overlayOpacity: 0.55,
-    onDestroyed: () => { tour = null; button.value?.$el.focus(); },
+    onDestroyed: () => { tour = null; button.value?.$el.focus({ focusVisible: false } as FocusOptions); },
   });
   tour.drive();
 };
