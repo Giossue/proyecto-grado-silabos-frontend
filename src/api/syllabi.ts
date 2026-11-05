@@ -4,7 +4,6 @@ import type { DocumentNode } from "@/lib/templateDocument";
 import { api } from "@/api/client";
 import type { TemplateAppearance } from "@/api/template";
 import type { DocumentField } from "@/types/configuration";
-import type { AgentAvatarHint } from "@/components/domain/ai/avatar/types";
 import type { SignaturePayload, SignatureSummary } from "@/api/signatures";
 
 export type DocumentPresentation = {
@@ -99,39 +98,6 @@ export type SyllabusField = DocumentField & {
   teacher_editable: boolean;
 };
 
-export type AiChatCitation = {
-  id: string;
-  type: "seccion_silabo" | "contexto_academico" | "fuente_academica";
-  field_id: string | null;
-  source_id: string | null;
-  label: string;
-  excerpt: string;
-};
-
-export type AiChatMessage = {
-  id: string;
-  role: "usuario" | "asistente";
-  status: "completado" | "pendiente" | "en_ejecucion" | "fallido";
-  content: string;
-  draft_version: number;
-  error: string | null;
-  created_at: string;
-  citations: AiChatCitation[];
-  avatar?: AgentAvatarHint | null;
-};
-
-export type AiChat = {
-  conversation: {
-    id: string;
-    hidden: boolean;
-    messages: AiChatMessage[];
-  } | null;
-  suggested_questions: string[];
-  available: boolean;
-  limits?: { messages_used: number; messages_max: number; sessions_used: number; sessions_max: number };
-};
-
-
 export const getTeacherSyllabi = (
   filters: { q?: string; state?: string; page?: number } = {},
 ) => {
@@ -215,21 +181,6 @@ export const submitTeacherSyllabus = (
       }),
     },
   );
-export const getAiChat = (syllabusId: string) =>
-  api<AiChat>(`/teacher/syllabi/${syllabusId}/ai-chat`);
-export const sendAiChatMessage = (syllabusId: string, message: string, idempotencyKey: string = crypto.randomUUID()) =>
-  api<{ message: string; assistant_message_id: string }>(
-    `/teacher/syllabi/${syllabusId}/ai-chat/messages`,
-    {
-      method: "POST",
-      body: JSON.stringify({ message, idempotency_key: idempotencyKey }),
-    },
-  );
-export const clearAiChat = (syllabusId: string) =>
-  api<{ message: string }>(`/teacher/syllabi/${syllabusId}/ai-chat`, {
-    method: "DELETE",
-  });
-
 export type HistoryCareer = { id: string; name: string; syllabi_count: number };
 
 export type HistorySyllabus = {

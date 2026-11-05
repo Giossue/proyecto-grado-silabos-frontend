@@ -144,7 +144,6 @@ export const screenTours: Record<string, TourStep[]> = {
     step('.teacher-form', 'Su parte', 'Llene los campos con asterisco. Lo demás ya viene escrito. Todo se guarda solo mientras escribe', 'top'),
     step('[aria-label="Vista previa"]', 'Vista previa', 'Vea cómo queda el sílabo terminado', 'bottom'),
     step('[data-tour="syllabus-submit"]', 'Enviar', 'Cuando termine, envíelo a revisión. La primera vez lo firma con su archivo de firma electrónica', 'bottom'),
-    step('[data-tour="syllabus-assistant"]', 'Asistente', 'Pídale ayuda para escribir sus unidades', 'left'),
   ],
   '/docente/historial': [
     step(TABLE, 'Carreras', 'Pulse una carrera para ver sus sílabos de períodos anteriores', 'top'),

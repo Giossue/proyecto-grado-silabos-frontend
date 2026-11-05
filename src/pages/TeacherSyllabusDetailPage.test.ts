@@ -113,7 +113,6 @@ const mountPage = () => mount(PageWithTooltips, {
   global: {
     stubs: {
       RouterLink: { template: "<a><slot /></a>" },
-      SyllabusUnitAssistant: { template: "<div />" },
       FreeTextEditor: { props: ["modelValue"], emits: ["update:modelValue"], template: "<div />" },
     },
   },
@@ -493,20 +492,13 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("el asistente es un botón flotante que abre el chat, habilitado sin validación previa", async () => {
+  it("el docente no tiene asistente de IA", async () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
-    const wrapper = mount(PageWithTooltips, {
-      global: { stubs: { SyllabusUnitAssistant: { props: ["enabled"], template: '<div class="ai" :data-enabled="String(enabled)" />' } } },
-    });
+    const wrapper = mount(PageWithTooltips);
     await flushPromises();
-    expect(wrapper.find(".ai").exists()).toBe(false);
 
-    await buttonNamed(wrapper, "Asistente")!.trigger("click");
-    expect(wrapper.get(".ai").attributes("data-enabled")).toBe("true");
-    expect(buttonNamed(wrapper, "Cerrar asistente")!.attributes("aria-expanded")).toBe("true");
-
-    await buttonNamed(wrapper, "Cerrar asistente")!.trigger("click");
-    expect(wrapper.get('aside[aria-label="Asistente de unidades"]').isVisible()).toBe(false);
+    expect(buttonNamed(wrapper, "Asistente")).toBeUndefined();
+    expect(wrapper.find('aside[aria-label="Asistente de unidades"]').exists()).toBe(false);
   });
 
   it("al abrir un sílabo sin iniciar, inicia el borrador solo y muestra el formulario", async () => {

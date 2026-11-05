@@ -25,7 +25,6 @@ import {
   type SyllabusDetail,
   type SyllabusField,
 } from "@/api/syllabi";
-import SyllabusUnitAssistant from '@/components/domain/ai/SyllabusUnitAssistant.vue';
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
@@ -53,7 +52,7 @@ import { attemptKey } from '@/lib/attemptKey';
 import { afterDialogExit, useShownWhileClosing } from '@/lib/dialogExit';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
-import { ArrowLeft, ArrowRight, Bot, Copy, Eye, FileSignature, FileText, Send, X } from '@lucide/vue';
+import { ArrowLeft, ArrowRight, Copy, Eye, FileSignature, FileText, Send } from '@lucide/vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
@@ -67,12 +66,6 @@ const openPdf = async (revisionId: string): Promise<void> => {
   const failure = await openRevisionPdf(revisionId);
   openingPdf.value = false;
   if (failure) toast.error(failure);
-};
-const assistantOpen = ref(false);
-const assistantLoaded = ref(false);
-const toggleAssistant = (): void => {
-  assistantLoaded.value = true;
-  assistantOpen.value = !assistantOpen.value;
 };
 const error = ref<string | null>(null);
 const starting = ref(false);
@@ -600,18 +593,6 @@ onBeforeUnmount(() => {
 
         </div>
 
-        <template v-if="canEdit && !pausedEdit">
-          <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-7rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de unidades">
-            <SyllabusUnitAssistant
-              :syllabus-id="syllabus.id"
-              :enabled="canEdit && !conflict"
-              :saving="processingAction || savingFieldId !== null || hasUnsavedChanges()"
-            />
-          </aside>
-          <Button type="button" data-tour="syllabus-assistant" class="fixed right-6 bottom-6 z-40 h-12 rounded-full px-5 shadow-menu max-sm:right-auto max-sm:left-4" :aria-expanded="assistantOpen" @click="toggleAssistant">
-            <X v-if="assistantOpen" data-icon="inline-start" aria-hidden="true" /><Bot v-else data-icon="inline-start" aria-hidden="true" />{{ assistantOpen ? 'Cerrar asistente' : 'Asistente' }}
-          </Button>
-        </template>
       </template>
     </template>
 

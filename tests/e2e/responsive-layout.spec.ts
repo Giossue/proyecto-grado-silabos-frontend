@@ -349,7 +349,6 @@ test('el sílabo cargado conserva pestañas, matriz editable y asistente al camb
                 { id: 'sec2', key: 'evaluacion', title: 'Evaluación y seguimiento de resultados', fields: [field('f2', 'Evaluación')] },
             ],
         } },
-        '/teacher/syllabi/s1/ai-chat': { available: false, conversation: null, suggested_questions: [] },
     });
     const cell = page.getByRole('textbox', { name: 'Contenido, fila 1' });
     await expect(cell).toBeVisible();

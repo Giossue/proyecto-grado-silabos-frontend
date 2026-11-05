@@ -11,10 +11,10 @@ describe('screenTours', () => {
     expect(screenTours['/docente/configuracion/notificaciones']?.[0]?.selector).toBe('[data-tour="email-notices"]');
   });
 
-  it('el editor del sílabo del docente tiene su propia guía, que termina en el asistente', () => {
+  it('el editor del sílabo del docente tiene su propia guía, que termina en «Enviar»', () => {
     const steps = screenTours['/docente/mis-silabos/:syllabus'] ?? [];
     expect(steps.map((item) => item.title)).toContain('Enviar');
-    expect(steps.at(-1)?.selector).toBe('[data-tour="syllabus-assistant"]');
+    expect(steps.at(-1)?.selector).toBe('[data-tour="syllabus-submit"]');
   });
 
   it('«Mis sílabos» resalta la lista de tarjetas, no una tabla que no existe', () => {
