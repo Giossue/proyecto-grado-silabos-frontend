@@ -161,7 +161,7 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
             </SettingsAccordionSection>
 
 
-            <SettingsAccordionSection value="ia" data-tour="settings-ai" title="Asistente de IA" description="Proveedor que responde al asistente del sílabo y de la plantilla" :icon="Bot">
+            <SettingsAccordionSection value="ia" data-tour="settings-ai" title="Asistente de IA" description="Proveedor que responde al asistente de la plantilla" :icon="Bot">
                 <Field :data-invalid="Boolean(errors.driver)">
                     <FieldLabel for="settings-ai-driver" required>Proveedor</FieldLabel>
                     <Select v-model="ai.driver">
