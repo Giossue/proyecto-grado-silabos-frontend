@@ -893,9 +893,20 @@
 .driver-active .driver-checklist.setup-checklist {
     display: flex;
 }
-@media (width <= 480px) {
+@media (width < 40rem) {
     .driver-checklist.setup-checklist {
-        --driver-checklist-offset-y: 5rem;
+        left: calc(1rem + env(safe-area-inset-left));
+        right: calc(1rem + env(safe-area-inset-right));
+        max-width: none;
+        align-items: flex-start;
+        pointer-events: none;
+        --driver-checklist-offset-y: calc(var(--page-mobile-actions-bottom) + 3.75rem);
+    }
+    .driver-checklist.setup-checklist > * {
+        pointer-events: auto;
+    }
+    .driver-checklist.setup-checklist .driver-checklist-panel {
+        width: min(100%, 22rem);
     }
 }
 /* El botón es solo un check, rojo y con un latido suave mientras falten pasos; el texto queda para lectores de pantalla. */
