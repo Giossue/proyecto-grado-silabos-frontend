@@ -169,8 +169,6 @@ const test = async (section: 'ia' | 'biblioteca'): Promise<void> => {
                         <SelectContent><SelectGroup>
                             <SelectItem value="disabled">Desactivado</SelectItem>
                             <SelectItem value="deepseek">DeepSeek</SelectItem>
-                            <SelectItem value="openai">OpenAI</SelectItem>
-                            <SelectItem value="anthropic">Anthropic</SelectItem>
                         </SelectGroup></SelectContent>
                     </Select>
                 </Field>

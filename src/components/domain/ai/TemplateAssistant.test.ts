@@ -6,7 +6,7 @@ import TemplateAssistant from './TemplateAssistant.vue';
 vi.mock('@/api/templateAssistant', () => ({ getTemplateAssistant: vi.fn(), sendTemplateAssistantMessage: vi.fn(), clearTemplateAssistant: vi.fn() }));
 vi.mock('@/components/domain/ai/avatar/useAvatarController', async () => {
   const { ref } = await import('vue');
-  return { useAvatarController: () => ({ state: ref({}), applyAgentHint: vi.fn() }) };
+  return { useAvatarController: () => ({ state: ref({}) }) };
 });
 
 const empty: TemplateAssistantChat = { available: true, locked: false, suggestions: ['¿Qué campos llena Coordinación?'], messages: [] };

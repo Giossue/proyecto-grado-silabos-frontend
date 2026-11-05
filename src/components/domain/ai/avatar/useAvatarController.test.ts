@@ -47,16 +47,4 @@ describe('useAvatarController', () => {
         await nextTick();
         expect(controller.state.value.mode).toBe('idle');
     });
-
-    it('usa solo emociones válidas declaradas por el agente', () => {
-        const { controller } = setup();
-        controller.applyAgentHint({ emotion: 'happy', intensity: 2 });
-        expect(controller.state.value).toMatchObject({ emotion: 'happy', intensity: 1 });
-
-        controller.applyAgentHint({ emotion: 'furioso' });
-        expect(controller.state.value.emotion).toBe('happy');
-
-        vi.advanceTimersByTime(6100);
-        expect(controller.state.value.emotion).toBe('neutral');
-    });
 });

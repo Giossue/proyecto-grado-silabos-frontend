@@ -1,8 +1,6 @@
 import { onBeforeUnmount, readonly, ref, watch, type Ref } from 'vue';
 import {
-    AVATAR_EMOTIONS,
     clampIntensity,
-    type AgentAvatarHint,
     type AvatarEmotion,
     type AvatarMode,
     type AvatarState,
@@ -54,12 +52,6 @@ export function useAvatarController(signals: ChatLifecycleSignals) {
         }
     };
 
-    const applyAgentHint = (hint: AgentAvatarHint | null | undefined): void => {
-        const emotion = hint?.emotion;
-        if (!emotion || !AVATAR_EMOTIONS.includes(emotion as AvatarEmotion)) return;
-        setEmotion(emotion as AvatarEmotion, hint?.intensity ?? undefined);
-    };
-
     watch(signals.awaitingModel, (awaiting, wasAwaiting) => {
         if (awaiting) {
             setEmotion('neutral');
@@ -80,5 +72,5 @@ export function useAvatarController(signals: ChatLifecycleSignals) {
 
     settle();
 
-    return { state: readonly(state), applyAgentHint, setEmotion };
+    return { state: readonly(state), setEmotion };
 }

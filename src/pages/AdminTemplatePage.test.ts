@@ -25,7 +25,7 @@ vi.mock("@/api/templateAssistant", async (importOriginal) => ({
 }));
 vi.mock("@/components/domain/ai/avatar/useAvatarController", async () => {
   const { ref } = await import("vue");
-  return { useAvatarController: () => ({ state: ref({}), applyAgentHint: vi.fn() }) };
+  return { useAvatarController: () => ({ state: ref({}) }) };
 });
 
 vi.mock("@/api/template", async (importOriginal) => ({
