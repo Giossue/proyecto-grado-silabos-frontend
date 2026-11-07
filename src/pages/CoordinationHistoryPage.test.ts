@@ -65,6 +65,17 @@ describe('CoordinationHistoryPage', () => {
     wrapper.unmount();
   });
 
+  it('ofrece volver a Revisión', async () => {
+    const wrapper = mount(CoordinationHistoryPageView, { attachTo: document.body });
+    await flushPromises();
+    const back = wrapper.findAll('button').find((button) => button.text() === 'Volver a revisión');
+
+    expect(back).toBeDefined();
+    await back!.trigger('click');
+    expect(push).toHaveBeenCalledWith('/coordinacion/revisiones');
+    wrapper.unmount();
+  });
+
   it('«Ver PDF» abre el PDF de esa revisión sin abrir la fila', async () => {
     const wrapper = mount(CoordinationHistoryPageView, { attachTo: document.body });
     await flushPromises();

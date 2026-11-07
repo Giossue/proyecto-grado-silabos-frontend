@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FileText } from '@lucide/vue';
+import { ArrowLeft, FileText } from '@lucide/vue';
 import { computed, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateDisplay } from '@/lib/dateDisplay';
+import { goBack } from '@/lib/goBack';
 import { latestRequest } from '@/lib/latestRequest';
 import { openRevisionPdf } from '@/lib/openPdf';
 import { paths } from '@/lib/routes';
@@ -93,6 +94,7 @@ onMounted(() => { void load(initialPage); });
 
 <template>
   <PageFrame title="Historial" description="Sílabos aprobados de períodos anteriores de su carrera, en solo lectura" size="wide" :loading="!data && !error">
+    <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.coordination.reviews)"><ArrowLeft aria-hidden="true" />Volver a revisión</Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="6" :filters="1" :actions="false" />
     <div v-if="data" class="flex flex-col gap-4">
