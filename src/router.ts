@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory, type RouteLocationNormalized } from "vue-router";
 import { sessionState } from "@/state/session";
 import { trackSettingsReturn } from "@/state/settingsReturn";
+import { trackLeaving } from "@/lib/urlFilters";
 import { rememberIntendedRoute } from "@/lib/intended-route";
 import {
   paths,
@@ -129,6 +130,7 @@ export const router = createRouter({
 });
 
 router.afterEach(trackSettingsReturn);
+trackLeaving(router);
 
 router.beforeEach(async (to) => {
   const needsSession = to.meta.requiresAuth === true || to.meta.guest === true;

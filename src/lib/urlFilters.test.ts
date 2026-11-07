@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Router } from 'vue-router';
-import { queryPage, queryText, syncFilters } from '@/lib/urlFilters';
+import { createMemoryHistory, createRouter, type Router } from 'vue-router';
+import { queryPage, queryText, syncFilters, trackLeaving } from '@/lib/urlFilters';
 
 describe('urlFilters', () => {
   it('lee texto y página con valores por omisión', () => {
@@ -17,5 +17,38 @@ describe('urlFilters', () => {
 
     expect(replace).toHaveBeenNthCalledWith(1, { query: { q: 'ana' } });
     expect(replace).toHaveBeenNthCalledWith(2, { query: { page: '2' } });
+  });
+});
+
+describe('syncFilters mientras se cambia de pantalla', () => {
+  it('no cancela la navegación en curso ni lleva el filtro a la otra pantalla', async () => {
+    let finishLoading!: () => void;
+    const slowPage = new Promise<{ template: string }>((resolve) => { finishLoading = () => resolve({ template: '<div />' }); });
+    const router = createRouter({ history: createMemoryHistory(), routes: [
+      { path: '/usuarios', component: { template: '<div />' } },
+      { path: '/facultades', component: () => slowPage },
+    ] });
+    trackLeaving(router);
+    await router.push('/usuarios');
+
+    const leaving = router.push('/facultades');
+    await new Promise((resolve) => setTimeout(resolve));
+    syncFilters(router, { q: 'ana' }, 1);
+    finishLoading();
+    await leaving;
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(router.currentRoute.value.fullPath).toBe('/facultades');
+  });
+
+  it('en la misma pantalla sigue guardando el filtro en la URL', async () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/usuarios', component: { template: '<div />' } }] });
+    trackLeaving(router);
+    await router.push('/usuarios');
+
+    syncFilters(router, { q: 'ana' }, 2);
+    await new Promise((resolve) => setTimeout(resolve));
+
+    expect(router.currentRoute.value.fullPath).toBe('/usuarios?q=ana&page=2');
   });
 });
