@@ -908,6 +908,14 @@
     .driver-checklist.setup-checklist .driver-checklist-panel {
         width: min(100%, 22rem);
     }
+    .driver-checklist.setup-checklist .driver-checklist-launcher {
+        transition: translate 200ms ease-out, opacity 200ms ease-out;
+    }
+    .driver-checklist.setup-checklist[data-scroll-hidden]:not(:has(.driver-checklist-panel:not([hidden]))) .driver-checklist-launcher {
+        translate: 0 6rem;
+        opacity: 0;
+        pointer-events: none;
+    }
 }
 /* El botón es solo un check, rojo y con un latido suave mientras falten pasos; el texto queda para lectores de pantalla. */
 .setup-checklist .driver-checklist-launcher {

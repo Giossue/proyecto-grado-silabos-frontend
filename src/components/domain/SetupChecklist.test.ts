@@ -47,6 +47,35 @@ describe('SetupChecklist', () => {
     expect(document.body.querySelector('.driver-checklist')).toBeNull();
   });
 
+  it('en móvil se marca para esconderse al bajar y reaparece al subir, como los botones principales', async () => {
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { callback(0); return 0; });
+    const area = document.createElement('div');
+    area.setAttribute('data-app-scroll', '');
+    const viewport = document.createElement('div');
+    viewport.setAttribute('data-slot', 'scroll-area-viewport');
+    area.append(viewport);
+    document.body.append(area);
+    const scrollTo = async (top: number): Promise<void> => {
+      viewport.scrollTop = top;
+      viewport.dispatchEvent(new Event('scroll'));
+      await flushPromises();
+    };
+    setupChecklistState.update(setup([true, true, true, true]));
+    const wrapper = mount(SetupChecklist);
+    await flushPromises();
+    const root = document.body.querySelector('.driver-checklist.setup-checklist')!;
+    expect(root.hasAttribute('data-scroll-hidden')).toBe(false);
+
+    await scrollTo(300);
+    expect(root.hasAttribute('data-scroll-hidden')).toBe(true);
+
+    await scrollTo(200);
+    expect(root.hasAttribute('data-scroll-hidden')).toBe(false);
+
+    wrapper.unmount();
+    vi.unstubAllGlobals();
+  });
+
   it('con todo completo deja de verse pendiente', async () => {
     setupChecklistState.update(setup([true, true, true, true]));
     const wrapper = mount(SetupChecklist);

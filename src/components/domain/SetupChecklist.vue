@@ -3,6 +3,7 @@ import { driver, type Driver } from 'driver.js';
 import { checklist, type Checklist } from 'driver.js/checklist';
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useScrollDirection } from '@/composables/useScrollDirection';
 import { setupRoutes } from '@/lib/setupRoutes';
 import { sessionState } from '@/state/session';
 import { setupChecklistState } from '@/state/setupChecklist';
@@ -17,6 +18,7 @@ const setup = setupChecklistState.setup;
 const steps = computed(() => (setup.value?.steps ?? []).filter((step) => step.key !== setupChecklistState.startKey.value));
 const doneCount = computed(() => steps.value.filter((step) => step.done).length);
 const plain = (text: string): string => text.replace(/\.$/, '');
+const { hidden } = useScrollDirection();
 
 let panel: Checklist | null = null;
 let titleGuard: MutationObserver | null = null;
@@ -40,6 +42,11 @@ const point = (key: string, label: string, hint: string): void => {
     return;
   }
   void router.push(target);
+};
+
+/** Driver dibuja el botón fuera de Vue; el estilo lo esconde en móvil con este atributo. */
+const syncScrollHidden = (): void => {
+  document.querySelector('.driver-checklist.setup-checklist')?.toggleAttribute('data-scroll-hidden', hidden.value);
 };
 
 /** Driver pone un `title` nativo al botón; se sustituye por la ayuda propia (CSS, atributo `data-tip`). */
@@ -80,6 +87,7 @@ const build = (): void => {
   });
   panel.show();
   guardTooltip();
+  syncScrollHidden();
   const firstTime = doneCount.value < steps.value.length && !localStorage.getItem(seenKey());
   if (firstTime) localStorage.setItem(seenKey(), '1');
   if (firstTime || wasOpen) panel.open();
@@ -88,6 +96,7 @@ const build = (): void => {
 const stopAfterEach = router.afterEach(clearHighlight);
 onMounted(() => { build(); void setupChecklistState.refresh(); });
 watch(setup, build, { deep: true });
+watch(hidden, syncScrollHidden);
 watch(() => route.fullPath, () => { void setupChecklistState.refresh(); });
 onBeforeUnmount(() => { titleGuard?.disconnect(); stopAfterEach(); clearHighlight(); panel?.hide(); });
 </script>
