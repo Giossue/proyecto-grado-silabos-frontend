@@ -4,8 +4,8 @@ import { computed, ref, watch } from 'vue';
 import { createProcess } from '@/api/processes';
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
-import FormSheet from '@/components/domain/FormSheet.vue';
-import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import FormModal from '@/components/domain/FormModal.vue';
+import FormDialogActions from '@/components/domain/FormDialogActions.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -73,7 +73,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-  <FormSheet
+  <FormModal
     v-model:open="open"
     :disabled="props.disabled"
     :trigger-label="triggerLabel"
@@ -110,7 +110,7 @@ const submit = async (): Promise<void> => {
             <p class="text-sm text-muted-foreground">Esta fecha se heredará en la convocatoria de cada carrera</p>
             <FieldError :errors="errors.due_at" />
           </Field>
-          <FormSheetActions :close="close" :processing="processing" :icon="CalendarPlus" label="Abrir convocatoria" />
+          <FormDialogActions :close="close" :processing="processing" :icon="CalendarPlus" label="Abrir convocatoria" />
         </FieldGroup>
       </form>
       <Dialog v-model:open="confirmOpen">
@@ -127,5 +127,5 @@ const submit = async (): Promise<void> => {
         </DialogContent>
       </Dialog>
     </template>
-  </FormSheet>
+  </FormModal>
 </template>

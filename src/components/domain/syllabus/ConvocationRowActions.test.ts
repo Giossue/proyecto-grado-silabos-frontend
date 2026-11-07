@@ -31,7 +31,7 @@ const button = defineComponent({
   template: '<button class="button" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
 });
 
-const processSheet = defineComponent({ name: 'SyllabusProcessSheet', emits: ['saved'], template: '<div />' });
+const processSheet = defineComponent({ name: 'SyllabusProcessDialog', emits: ['saved'], template: '<div />' });
 
 const period = (lockReason: string | null = null) => ({
   id: 'period-1',
@@ -67,7 +67,7 @@ const mountActions = (row = period()) => mount(ConvocationRowActions, {
       CalendarPlus: true,
       LockKeyhole: true,
       SyllabusProcessActions: true,
-      SyllabusProcessSheet: processSheet,
+      SyllabusProcessDialog: processSheet,
     },
   },
 });

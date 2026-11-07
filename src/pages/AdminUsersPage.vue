@@ -8,9 +8,9 @@ import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import ManagedUserAccessAction from '@/components/domain/identity/ManagedUserAccessAction.vue';
-import ManagedUserDetailSheet from '@/components/domain/identity/ManagedUserDetailSheet.vue';
+import ManagedUserDetailDialog from '@/components/domain/identity/ManagedUserDetailDialog.vue';
 import ManagedUserPendingActions from '@/components/domain/identity/ManagedUserPendingActions.vue';
-import ManagedUserSheet from '@/components/domain/identity/ManagedUserSheet.vue';
+import ManagedUserDialog from '@/components/domain/identity/ManagedUserDialog.vue';
 import ImportSpreadsheetDialog from '@/components/domain/ImportSpreadsheetDialog.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -69,7 +69,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
 
 <template>
     <PageFrame title="Usuarios y roles" description="Cuentas de coordinación, docencia y biblioteca" size="wide" :loading="!result && !error" :actions-skeleton="loading && !result ? ['w-44', 'w-32'] : []">
-        <template #actions><template v-if="result"><ImportSpreadsheetDialog title="Importar cuentas" kind="users" template-name="plantilla-usuarios.xlsx" :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }, { key: 'rol', label: 'Rol' }, { key: 'carrera', label: 'Carrera' }]" @imported="changed" /><ManagedUserSheet :roles="result.roles" :careers="result.careers" @saved="changed" /></template></template>
+        <template #actions><template v-if="result"><ImportSpreadsheetDialog title="Importar cuentas" kind="users" template-name="plantilla-usuarios.xlsx" :columns="[{ key: 'nombre', label: 'Nombre' }, { key: 'correo', label: 'Correo' }, { key: 'rol', label: 'Rol' }, { key: 'carrera', label: 'Carrera' }]" @imported="changed" /><ManagedUserDialog :roles="result.roles" :careers="result.careers" @saved="changed" /></template></template>
         <LoadErrorState v-if="error" :message="error" @retry="load" />
         <LoadingSkeleton v-if="loading && !result" variant="table" :columns="4" :filters="3" :actions="false" :cell-lines="[2, 1, 1, 1]" :badges="[4]" />
 
@@ -93,7 +93,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
                     
                 </TableRow>
             </TableBody></Table>
-            <ManagedUserDetailSheet v-if="viewing" :key="viewing.id" v-model:open="viewOpen" :user="viewing" :roles="result.roles" :careers="result.careers" :can-edit="viewing.id !== currentUserId" @saved="changed" @action="(key) => { dialog = key; }" />
+            <ManagedUserDetailDialog v-if="viewing" :key="viewing.id" v-model:open="viewOpen" :user="viewing" :roles="result.roles" :careers="result.careers" :can-edit="viewing.id !== currentUserId" @saved="changed" @action="(key) => { dialog = key; }" />
             <ManagedUserAccessAction v-if="viewing" v-model:open="accessOpen" :user="viewing" @changed="changed" />
             <ManagedUserPendingActions v-if="viewing" v-model:resend-open="resendOpen" v-model:delete-open="deleteOpen" :user-id="viewing.id" :user-name="viewing.nombre" :user-email="viewing.correo_electronico" @changed="changed" />
             <TablePagination :meta="result.users" label="Paginación de usuarios" @update:page="load" />

@@ -4,8 +4,8 @@ import { Settings2 } from "@lucide/vue";
 import { reactive, ref, watch } from "vue";
 import { ApiError } from "@/api/client";
 import { updateCurriculumConfiguration, type Curriculum } from "@/api/career-academics";
-import FormSheet from "@/components/domain/FormSheet.vue";
-import FormSheetActions from "@/components/domain/FormSheetActions.vue";
+import FormModal from "@/components/domain/FormModal.vue";
+import FormDialogActions from "@/components/domain/FormDialogActions.vue";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -30,11 +30,11 @@ const submit = async (close: () => void) => {
 };
 </script>
 <template>
-  <FormSheet v-model:open="open" trigger-label="Configurar ciclos" title="Configurar ciclos" :show-trigger="false" narrow>
+  <FormModal v-model:open="open" trigger-label="Configurar ciclos" title="Configurar ciclos" :show-trigger="false" narrow>
     <template #default="{ close }"><form class="contents" @submit.prevent="submit(close)"><FieldGroup>
       <Alert v-if="error" variant="destructive"><AlertDescription>{{ error }}</AlertDescription></Alert>
       <Field><FieldLabel for="curriculum-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="curriculum-cycle-count" v-model.number="form.cycle_count" type="number" min="1" :max="VALIDATION_LIMITS.cycleCount" aria-required="true" /></Field>
-      <FormSheetActions :close="close" :processing="saving" :icon="Settings2" label="Guardar configuración" />
+      <FormDialogActions :close="close" :processing="saving" :icon="Settings2" label="Guardar configuración" />
     </FieldGroup></form></template>
-  </FormSheet>
+  </FormModal>
 </template>

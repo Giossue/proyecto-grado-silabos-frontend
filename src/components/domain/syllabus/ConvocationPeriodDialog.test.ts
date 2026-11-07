@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
-import ConvocationPeriodSheet from '@/components/domain/syllabus/ConvocationPeriodSheet.vue';
+import ConvocationPeriodDialog from '@/components/domain/syllabus/ConvocationPeriodDialog.vue';
 
 const api = vi.hoisted(() => ({ createAcademicRecord: vi.fn(), createProcess: vi.fn() }));
 vi.mock('@/api/academic', async (importOriginal) => ({ ...(await importOriginal<object>()), createAcademicRecord: api.createAcademicRecord }));
@@ -30,7 +30,7 @@ const confirmSubmit = async (): Promise<void> => {
   (confirm as HTMLButtonElement).click();
   await flushPromises();
 };
-const fillSteps = async (wrapper: Awaited<ReturnType<typeof mountSheet>>): Promise<void> => {
+const fillSteps = async (wrapper: Awaited<ReturnType<typeof mountDialog>>): Promise<void> => {
   const [starts, ends] = wrapper.findAllComponents(DatePicker);
   starts.vm.$emit('update:modelValue', '2026-10-05');
   ends.vm.$emit('update:modelValue', '2027-02-26');
@@ -42,15 +42,15 @@ const fillSteps = async (wrapper: Awaited<ReturnType<typeof mountSheet>>): Promi
   due.vm.$emit('update:modelValue', '2026-10-30');
   await flushPromises();
 };
-const mountSheet = async () => {
-  const wrapper = mount(ConvocationPeriodSheet, { attachTo: document.body, props: { open: true } });
+const mountDialog = async () => {
+  const wrapper = mount(ConvocationPeriodDialog, { attachTo: document.body, props: { open: true } });
   await flushPromises();
   return wrapper;
 };
 
-describe('ConvocationPeriodSheet', () => {
+describe('ConvocationPeriodDialog', () => {
   it('pide el periodo primero, no avanza sin fechas y luego pide la elaboración', async () => {
-    const wrapper = await mountSheet();
+    const wrapper = await mountDialog();
     let pickers = wrapper.findAllComponents(DatePicker);
     expect(pickers).toHaveLength(2);
     expect(pickers.every((picker) => picker.props('required'))).toBe(true);
@@ -75,7 +75,7 @@ describe('ConvocationPeriodSheet', () => {
   it('si la apertura falla, el reintento no vuelve a crear el periodo', async () => {
     api.createAcademicRecord.mockResolvedValue({ message: 'Registro institucional creado.', id: 'p1' });
     api.createProcess.mockRejectedValueOnce(new ApiError('Error', 422, { process: ['Ya hay una convocatoria en curso.'] })).mockResolvedValueOnce({ message: 'Convocatoria institucional abierta.' });
-    const wrapper = await mountSheet();
+    const wrapper = await mountDialog();
     await fillSteps(wrapper);
     await confirmSubmit();
     expect(document.body.textContent).toContain('El periodo ya quedó creado');
@@ -90,7 +90,7 @@ describe('ConvocationPeriodSheet', () => {
   it('crea el periodo y abre la convocatoria con el id devuelto', async () => {
     api.createAcademicRecord.mockResolvedValue({ message: 'Registro institucional creado.', id: 'p1' });
     api.createProcess.mockResolvedValue({ message: 'Convocatoria institucional abierta.' });
-    const wrapper = await mountSheet();
+    const wrapper = await mountDialog();
     await fillSteps(wrapper);
     await confirmSubmit();
 
@@ -102,7 +102,7 @@ describe('ConvocationPeriodSheet', () => {
   it('muestra las semanas entre las fechas sin permitir editarlas', async () => {
     api.createAcademicRecord.mockResolvedValue({ message: 'Registro institucional creado.', id: 'p1' });
     api.createProcess.mockResolvedValue({ message: 'Convocatoria institucional abierta.' });
-    const wrapper = await mountSheet();
+    const wrapper = await mountDialog();
     const [starts, ends] = wrapper.findAllComponents(DatePicker);
     starts.vm.$emit('update:modelValue', '2026-10-05');
     ends.vm.$emit('update:modelValue', '2027-02-26');
@@ -117,7 +117,7 @@ describe('ConvocationPeriodSheet', () => {
   });
 
   it('la frase de confirmación se borra al volver a abrir, no al cerrar', async () => {
-    const wrapper = mount(ConvocationPeriodSheet, { attachTo: document.body, props: { open: true }, global: { stubs: dialogStubs } });
+    const wrapper = mount(ConvocationPeriodDialog, { attachTo: document.body, props: { open: true }, global: { stubs: dialogStubs } });
     await flushPromises();
     const modal = wrapper.findAllComponents(fadingDialog).at(-1)!;
     modal.vm.$emit('update:open', true);

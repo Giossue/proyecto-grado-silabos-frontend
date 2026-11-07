@@ -1,7 +1,7 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { removeManagedUserRole, type ManagedUser } from '@/api/admin-users';
-import ManagedUserDetailSheet from '@/components/domain/identity/ManagedUserDetailSheet.vue';
+import ManagedUserDetailDialog from '@/components/domain/identity/ManagedUserDetailDialog.vue';
 
 vi.mock('@/api/admin-users', () => ({ updateManagedUser: vi.fn(), removeManagedUserRole: vi.fn() }));
 
@@ -19,9 +19,9 @@ const user = {
 } as unknown as ManagedUser;
 const props = { user, roles: [{ codigo: 'docente', nombre: 'Docente' }], careers: [{ id: 'c1', nombre: 'Software' }], open: true };
 
-describe('ManagedUserDetailSheet', () => {
+describe('ManagedUserDetailDialog', () => {
   it('muestra la ficha y pasa a editar dentro de la misma hoja', async () => {
-    mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...props, canEdit: true } });
+    mount(ManagedUserDetailDialog, { attachTo: document.body, props: { ...props, canEdit: true } });
     await flushPromises();
 
     expect(document.body.textContent).toContain('Datos de la cuenta');
@@ -41,14 +41,14 @@ describe('ManagedUserDetailSheet', () => {
   });
 
   it('no ofrece editar cuando no corresponde, como en la propia cuenta', async () => {
-    mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...props, canEdit: false } });
+    mount(ManagedUserDetailDialog, { attachTo: document.body, props: { ...props, canEdit: false } });
     await flushPromises();
 
     expect([...document.body.querySelectorAll('button')].some((button) => button.textContent?.includes('Editar'))).toBe(false);
   });
 
   it('con una sola acción muestra el icono directo, y con varias, el menú', async () => {
-    const wrapper = mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...props, canEdit: true } });
+    const wrapper = mount(ManagedUserDetailDialog, { attachTo: document.body, props: { ...props, canEdit: true } });
     await flushPromises();
 
     expect(document.body.querySelector('button[aria-label="Deshabilitar acceso"]')).not.toBeNull();
@@ -60,21 +60,21 @@ describe('ManagedUserDetailSheet', () => {
     wrapper.unmount();
 
     const pending = { ...props, user: { ...user, pending_activation: true, invitation_expired: false } as ManagedUser };
-    const fresh = mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...pending, canEdit: true } });
+    const fresh = mount(ManagedUserDetailDialog, { attachTo: document.body, props: { ...pending, canEdit: true } });
     await flushPromises();
     expect(document.body.querySelector('button[aria-label="Eliminar cuenta pendiente"]')).not.toBeNull();
     expect(document.body.textContent).not.toContain('Reenviar invitación');
     fresh.unmount();
 
     const expired = { ...props, user: { ...user, pending_activation: true, invitation_expired: true } as ManagedUser };
-    mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...expired, canEdit: true } });
+    mount(ManagedUserDetailDialog, { attachTo: document.body, props: { ...expired, canEdit: true } });
     await flushPromises();
     expect(document.body.querySelector('button[aria-label="Acciones para Ana Pérez"]')).not.toBeNull();
     expect(document.body.textContent).toContain('Invitación vencida');
   });
 
   it('no ofrece acciones en la propia cuenta', async () => {
-    mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...props, canEdit: false } });
+    mount(ManagedUserDetailDialog, { attachTo: document.body, props: { ...props, canEdit: false } });
     await flushPromises();
 
     expect(document.body.querySelector('button[aria-label="Deshabilitar acceso"]')).toBeNull();
@@ -84,7 +84,7 @@ describe('ManagedUserDetailSheet', () => {
   it('al guardar se cierra con el formulario y su aviso a la vista, y al abrir de nuevo muestra la ficha', async () => {
     vi.mocked(removeManagedUserRole).mockResolvedValue({ message: 'Rol quitado' });
     const two = { ...user, roles: [...user.roles, { id: 'r2', code: 'coordinador', name: 'Coordinador', career_name: 'Software' }] } as unknown as ManagedUser;
-    const wrapper = mount(ManagedUserDetailSheet, { attachTo: document.body, props: { ...props, user: two, canEdit: true } });
+    const wrapper = mount(ManagedUserDetailDialog, { attachTo: document.body, props: { ...props, user: two, canEdit: true } });
     await flushPromises();
     button('Editar').click();
     await flushPromises();

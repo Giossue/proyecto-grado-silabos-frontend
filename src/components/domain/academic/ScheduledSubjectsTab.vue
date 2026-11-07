@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
 import { type ScheduledSubjects, type TeacherAssignments } from "@/api/career-academics";
-import ParallelCreationSheet from "@/components/domain/academic/ParallelCreationSheet.vue";
+import ParallelCreationDialog from "@/components/domain/academic/ParallelCreationDialog.vue";
 import { activateRow } from "@/lib/rowActivation";
 import ClientFilterBar from "@/components/domain/ClientFilterBar.vue";
 import StatusBadge from "@/components/domain/StatusBadge.vue";
@@ -163,7 +163,7 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
         </TableBody>
       </Table>
       <TablePagination :meta="meta" mode="client" label="Paginación de materias programadas" @update:page="setPage" />
-      <ParallelCreationSheet
+      <ParallelCreationDialog
         v-if="planning"
         :key="`parallel-${planning.subject_id}`"
         v-model:open="planningOpen"

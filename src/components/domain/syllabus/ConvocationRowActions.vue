@@ -8,7 +8,7 @@ import { ApiError } from '@/api/client';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import SyllabusProcessActions from '@/components/domain/syllabus/SyllabusProcessActions.vue';
-import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
+import SyllabusProcessDialog from '@/components/domain/syllabus/SyllabusProcessDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -56,7 +56,7 @@ const remove = async (): Promise<void> => {
             <DropdownMenuItem v-if="!row.lock_reason" variant="destructive" @select="deleteOpen = true"><Trash2 aria-hidden="true" />Eliminar periodo</DropdownMenuItem>
         </TableActionsMenu>
 
-        <SyllabusProcessSheet v-if="!row.process" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: row.id, codigo: row.code, starts_on: row.starts_on, ends_on: row.ends_on }" display="menu" trigger-label="Abrir convocatoria" @saved="changedAfterExit" />
+        <SyllabusProcessDialog v-if="!row.process" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: row.id, codigo: row.code, starts_on: row.starts_on, ends_on: row.ends_on }" display="menu" trigger-label="Abrir convocatoria" @saved="changedAfterExit" />
 
         <Dialog v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar periodo</DialogTitle><DialogDescription>Se eliminará el período «{{ row.code }}»: sus fechas y sus semanas lectivas. Las materias, los paralelos y los docentes de las carreras no se borran. Si el período ya tiene una convocatoria, el sistema no permitirá eliminarlo. Esta acción no se puede deshacer</DialogDescription></DialogHeader>
             <FeedbackAlert v-if="error" :message="error" />

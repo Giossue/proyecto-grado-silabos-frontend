@@ -3,8 +3,8 @@ import { getLocalTimeZone, today } from '@internationalized/date';
 import { nextTick } from 'vue';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import DatePicker from '@/components/DatePicker.vue';
-import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
-import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
+import CatalogEditDialog from '@/components/domain/academic/CatalogEditDialog.vue';
+import CatalogRecordDialog from '@/components/domain/academic/CatalogRecordDialog.vue';
 import { createAcademicRecord } from '@/api/academic';
 
 vi.mock('@/api/libraryCatalog', () => ({ getCatalogLibraries: vi.fn().mockResolvedValue([]) }));
@@ -38,7 +38,7 @@ afterEach(() => {
 
 describe('academic catalog code fields', () => {
   it('omits faculty code and requires career code on creation', async () => {
-    const faculty = mount(CatalogRecordSheet, {
+    const faculty = mount(CatalogRecordDialog, {
       attachTo: document.body,
       props: { entity: 'facultad', options, open: true },
     });
@@ -48,7 +48,7 @@ describe('academic catalog code fields', () => {
     expect(document.body.textContent).not.toContain('Código de facultad');
     faculty.unmount();
 
-    const career = mount(CatalogRecordSheet, {
+    const career = mount(CatalogRecordDialog, {
       attachTo: document.body,
       props: { entity: 'carrera', options, open: true },
     });
@@ -63,7 +63,7 @@ describe('academic catalog code fields', () => {
   });
 
   it('orders faculty name, campus, and logo fields', async () => {
-    const faculty = mount(CatalogRecordSheet, {
+    const faculty = mount(CatalogRecordDialog, {
       attachTo: document.body,
       props: { entity: 'facultad', options, open: true },
     });
@@ -86,7 +86,7 @@ describe('academic catalog code fields', () => {
   });
 
   it('does not ask for a period code or teaching weeks', async () => {
-    const period = mount(CatalogRecordSheet, {
+    const period = mount(CatalogRecordDialog, {
       attachTo: document.body,
       props: { entity: 'periodo', options, open: true },
     });
@@ -100,7 +100,7 @@ describe('academic catalog code fields', () => {
   });
 
   it('limits a new period to today and keeps its end after its start', async () => {
-    const period = mount(CatalogRecordSheet, {
+    const period = mount(CatalogRecordDialog, {
       attachTo: document.body,
       props: { entity: 'periodo', options, open: true },
     });
@@ -122,7 +122,7 @@ describe('academic catalog code fields', () => {
   });
 
   it('omits faculty code on edit', async () => {
-    const wrapper = mount(CatalogEditSheet, {
+    const wrapper = mount(CatalogEditDialog, {
       attachTo: document.body,
       props: {
         entity: 'facultad',
@@ -141,7 +141,7 @@ describe('academic catalog code fields', () => {
   });
 
   it('requires a faculty logo only when no current logo is configured', async () => {
-    const withoutLogo = mount(CatalogEditSheet, {
+    const withoutLogo = mount(CatalogEditDialog, {
       attachTo: document.body,
       props: {
         entity: 'facultad',
@@ -159,7 +159,7 @@ describe('academic catalog code fields', () => {
     expect(document.body.querySelector<HTMLInputElement>('#edit-faculty-logo-faculty-without-logo')?.required).toBe(true);
     withoutLogo.unmount();
 
-    const withLogo = mount(CatalogEditSheet, {
+    const withLogo = mount(CatalogEditDialog, {
       attachTo: document.body,
       props: {
         entity: 'facultad',
@@ -180,7 +180,7 @@ describe('academic catalog code fields', () => {
   });
 
   it('does not ask for a period code on edit', async () => {
-    const wrapper = mount(CatalogEditSheet, {
+    const wrapper = mount(CatalogEditDialog, {
       attachTo: document.body,
       props: {
         entity: 'periodo',
@@ -206,7 +206,7 @@ describe('salida del formulario de creación', () => {
   it('al crear, el formulario se cierra con lo escrito y se limpia al volver a abrirlo', async () => {
     keepClosingDialogs();
     vi.mocked(createAcademicRecord).mockResolvedValue({ message: 'Carrera creada.' } as never);
-    const wrapper = mount(CatalogRecordSheet, {
+    const wrapper = mount(CatalogRecordDialog, {
       attachTo: document.body,
       props: { entity: 'carrera' as const, options, open: true, 'onUpdate:open': (value: boolean) => wrapper.setProps({ open: value }) },
     });

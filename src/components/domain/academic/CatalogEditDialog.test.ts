@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
+import CatalogEditDialog from '@/components/domain/academic/CatalogEditDialog.vue';
 import { updateAcademicRecord } from '@/api/academic';
 import { getCatalogLibraries } from '@/api/libraryCatalog';
 import { ApiError } from '@/api/client';
@@ -15,7 +15,7 @@ beforeEach(() => {
 });
 afterEach(() => { document.body.innerHTML = ''; vi.clearAllMocks(); });
 
-const mountSheet = (extra: Record<string, unknown> = {}) => mount(CatalogEditSheet, {
+const mountDialog = (extra: Record<string, unknown> = {}) => mount(CatalogEditDialog, {
   attachTo: document.body,
   props: {
     entity: 'facultad', recordId: 'faculty-1', recordName: 'Facultad de Ciencias', campus: 'matriz',
@@ -25,17 +25,17 @@ const mountSheet = (extra: Record<string, unknown> = {}) => mount(CatalogEditShe
 });
 const button = (label: string) => Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((item) => item.getAttribute('aria-label') === label || item.textContent?.trim() === label);
 
-const editingSheet = async (extra: Record<string, unknown> = {}) => {
-  const wrapper = mountSheet(extra);
+const editingDialog = async (extra: Record<string, unknown> = {}) => {
+  const wrapper = mountDialog(extra);
   await flushPromises();
   Array.from(document.body.querySelectorAll('button')).find((button) => button.textContent?.trim() === 'Editar')?.click();
   await flushPromises();
   return wrapper;
 };
 
-describe('CatalogEditSheet · logo de la facultad', () => {
+describe('CatalogEditDialog · logo de la facultad', () => {
   it('las acciones de la esquina solo aparecen al editar', async () => {
-    const wrapper = mountSheet({ actions: [{ key: 'status', label: 'Desactivar facultad' }] });
+    const wrapper = mountDialog({ actions: [{ key: 'status', label: 'Desactivar facultad' }] });
     await flushPromises();
     const action = () => document.body.querySelector('[aria-label="Desactivar facultad"]');
     expect(action()).toBeNull();
@@ -47,7 +47,7 @@ describe('CatalogEditSheet · logo de la facultad', () => {
   });
 
   it('abre primero los datos en solo lectura, con Editar; al editar permite cambiar y Cancelar vuelve a los datos', async () => {
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await flushPromises();
     const button = (label: string) => Array.from(document.body.querySelectorAll('button')).find((item) => item.textContent?.trim() === label);
     const name = () => document.body.querySelector<HTMLInputElement>('input[id^="edit-name-"]')!;
@@ -68,7 +68,7 @@ describe('CatalogEditSheet · logo de la facultad', () => {
   });
 
   it('con logo muestra la imagen con una X y no la zona de arrastre; al quitarlo aparece la zona', async () => {
-    const wrapper = await editingSheet();
+    const wrapper = await editingDialog();
     await flushPromises();
 
     expect(document.body.querySelector('img[alt="Logo actual de la facultad"]')).not.toBeNull();
@@ -82,7 +82,7 @@ describe('CatalogEditSheet · logo de la facultad', () => {
   });
 
   it('quitar el logo sin subir otro no deja guardar, y cancelar vuelve a mostrar el logo', async () => {
-    const wrapper = await editingSheet();
+    const wrapper = await editingDialog();
     await flushPromises();
     button('Quitar logo')!.click();
     await flushPromises();
@@ -101,9 +101,9 @@ describe('CatalogEditSheet · logo de la facultad', () => {
   });
 });
 
-describe('CatalogEditSheet · convocatoria activa', () => {
+describe('CatalogEditDialog · convocatoria activa', () => {
   it('con la convocatoria activa deja los campos y el botón deshabilitados, sin aviso dentro del diálogo', async () => {
-    const wrapper = await editingSheet({ lockReason: 'Convocatoria activa' });
+    const wrapper = await editingDialog({ lockReason: 'Convocatoria activa' });
     await flushPromises();
 
     expect(document.body.textContent).not.toContain('Hay una convocatoria activa');
@@ -114,12 +114,12 @@ describe('CatalogEditSheet · convocatoria activa', () => {
   });
 });
 
-describe('CatalogEditSheet · cambios que devuelven sílabos enviados', () => {
+describe('CatalogEditDialog · cambios que devuelven sílabos enviados', () => {
   it('con una convocatoria finalizada abre el aviso sin frase y reenvía con confirm_purge', async () => {
     vi.mocked(updateAcademicRecord)
       .mockRejectedValueOnce(new ApiError('Aviso', 422, { purge_required: ['La convocatoria 2026-2027 ya finalizó.'], purge_count: ['0'], purge_mode: [FINALIZED_NOTICE] }))
       .mockResolvedValueOnce({ message: 'Actualizado' });
-    const wrapper = await editingSheet();
+    const wrapper = await editingDialog();
     const dialog = usePurgeConfirmation();
     await flushPromises();
     const name = document.querySelector<HTMLInputElement>('input[aria-required="true"]')!;
@@ -141,7 +141,7 @@ describe('CatalogEditSheet · cambios que devuelven sílabos enviados', () => {
     vi.mocked(updateAcademicRecord)
       .mockRejectedValueOnce(new ApiError('Confirme', 422, { purge_required: ['Este cambio devolverá 1 sílabo enviado o aprobado a borrador'], purge_count: ['1'] }))
       .mockResolvedValueOnce({ message: 'Facultad actualizada.' });
-    const wrapper = await editingSheet();
+    const wrapper = await editingDialog();
     await flushPromises();
     const name = document.querySelector<HTMLInputElement>('input[aria-required="true"]')!;
     name.value = 'Facultad con otro nombre';
@@ -162,7 +162,7 @@ describe('CatalogEditSheet · cambios que devuelven sílabos enviados', () => {
   });
 });
 
-describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
+describe('CatalogEditDialog · bibliotecas de Koha de la facultad', () => {
   const sentLibraries = (): string | null => (vi.mocked(updateAcademicRecord).mock.calls[0]![2] as FormData).get('catalog_libraries') as string | null;
   const row = (name: string): HTMLElement => Array.from(document.querySelectorAll<HTMLElement>('[data-slot="field"]')).find((item) => item.textContent?.trim() === name)!;
   const isChecked = (name: string): boolean => row(name).querySelector('[role="checkbox"]')!.getAttribute('aria-checked') === 'true';
@@ -171,7 +171,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   const save = async (): Promise<void> => { button('Guardar cambios')!.click(); await flushPromises(); };
 
   it('tiene una pestaña Bibliotecas, aparte de los datos, que solo lista las bibliotecas disponibles con casillas', async () => {
-    const wrapper = await editingSheet();
+    const wrapper = await editingDialog();
     await flushPromises();
 
     expect(Array.from(document.querySelectorAll('[role="tab"]')).map((item) => item.textContent?.trim())).toEqual(['Datos', 'Bibliotecas']);
@@ -185,7 +185,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('tiene un ícono de ayuda junto al título de las bibliotecas, solo en la pestaña de bibliotecas', async () => {
-    const wrapper = await editingSheet();
+    const wrapper = await editingDialog();
     await flushPromises();
 
     expect(document.querySelector('[aria-label="Qué significa esto"]')).toBeNull();
@@ -195,7 +195,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('sin bibliotecas guardadas muestra todas marcadas, y sin tocarlas no se puede guardar', async () => {
-    const wrapper = await editingSheet();
+    const wrapper = await editingDialog();
     await flushPromises();
     await tab('Bibliotecas');
 
@@ -208,7 +208,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   it('si Koha no responde o no publica bibliotecas, sin cambios tampoco se puede guardar, y cambiar un dato sí', async () => {
     for (const koha of [() => vi.mocked(getCatalogLibraries).mockRejectedValueOnce(new Error('Koha caído')), () => vi.mocked(getCatalogLibraries).mockResolvedValueOnce([])]) {
       koha();
-      const wrapper = await editingSheet();
+      const wrapper = await editingDialog();
       await flushPromises();
 
       expect(button('Guardar cambios')!.hasAttribute('disabled')).toBe(true);
@@ -222,7 +222,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('desmarcar bibliotecas guarda los códigos de las que quedan', async () => {
-    const wrapper = await editingSheet();
+    const wrapper = await editingDialog();
     await flushPromises();
     await tab('Bibliotecas');
     await tick('LAGUACOTO');
@@ -233,7 +233,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('con bibliotecas guardadas abre con solo esas marcadas, y marcar todas se guarda vacío para que entren las nuevas', async () => {
-    const wrapper = await editingSheet({ catalogLibraries: ['BGEN'] });
+    const wrapper = await editingDialog({ catalogLibraries: ['BGEN'] });
     await flushPromises();
     await tab('Bibliotecas');
 
@@ -247,7 +247,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('si la facultad ya tenía guardadas todas, se ven todas marcadas, sin cambios no se guarda y al guardar otro dato queda vacío', async () => {
-    const wrapper = await editingSheet({ catalogLibraries: ['BFCCA', 'BGEN', 'BHTM'] });
+    const wrapper = await editingDialog({ catalogLibraries: ['BFCCA', 'BGEN', 'BHTM'] });
     await flushPromises();
     await tab('Bibliotecas');
 
@@ -267,7 +267,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('sin ninguna marcada «Guardar cambios» queda deshabilitado', async () => {
-    const wrapper = await editingSheet();
+    const wrapper = await editingDialog();
     await flushPromises();
     await tab('Bibliotecas');
     await tick('LAGUACOTO');
@@ -280,7 +280,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('una biblioteca guardada que Koha ya no publica se muestra para poder quitarla', async () => {
-    const wrapper = await editingSheet({ catalogLibraries: ['BVIEJA', 'BGEN'] });
+    const wrapper = await editingDialog({ catalogLibraries: ['BVIEJA', 'BGEN'] });
     await flushPromises();
     await tab('Bibliotecas');
 
@@ -289,7 +289,7 @@ describe('CatalogEditSheet · bibliotecas de Koha de la facultad', () => {
   });
 
   it('las carreras y los períodos no tienen pestañas ni consultan Koha', async () => {
-    const wrapper = await editingSheet({ entity: 'carrera', recordName: 'Software', facultyId: 'f1', faculties: [{ id: 'f1', nombre: 'Facultad', activo: true }], modalityOptions: [{ value: 'presencial', label: 'Presencial' }] });
+    const wrapper = await editingDialog({ entity: 'carrera', recordName: 'Software', facultyId: 'f1', faculties: [{ id: 'f1', nombre: 'Facultad', activo: true }], modalityOptions: [{ value: 'presencial', label: 'Presencial' }] });
     await flushPromises();
 
     expect(document.querySelector('[role="tab"]')).toBeNull();

@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getScheduledSubjects, type ScheduledSubjects } from '@/api/career-academics';
 import { getSession } from '@/api/session';
-import SubjectProfileSheet from '@/components/domain/academic/SubjectProfileSheet.vue';
+import SubjectProfileDialog from '@/components/domain/academic/SubjectProfileDialog.vue';
 import SupportDocumentsPanel from '@/components/domain/academic/SupportDocumentsPanel.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import CoordinationCareerProjectPage from '@/pages/CoordinationCareerProjectPage.vue';
@@ -17,7 +17,7 @@ vi.mock('@/api/session', () => ({ getSession: vi.fn() }));
 
 const subject = (id: string, nombre: string, ciclo: number, extra: Record<string, unknown> = {}) => ({ id, nombre, ciclo, generates_syllabus: true, profile_complete: true, ...extra });
 const scheduled = (subjects: unknown[]) => ({ career: { lock_reason: null, lock: null }, options: { activeSubjects: subjects } }) as unknown as ScheduledSubjects;
-const mountPage = () => mount(CoordinationCareerProjectPage, { attachTo: document.body, global: { stubs: { SubjectProfileSheet: true, FichaImportDialog: true, SupportDocumentsPanel: true, ProcessLockAlert: true } } });
+const mountPage = () => mount(CoordinationCareerProjectPage, { attachTo: document.body, global: { stubs: { SubjectProfileDialog: true, FichaImportDialog: true, SupportDocumentsPanel: true, ProcessLockAlert: true } } });
 
 describe('Proyecto de carrera', () => {
   beforeEach(() => {
@@ -52,10 +52,10 @@ describe('Proyecto de carrera', () => {
     await flushPromises();
 
     await wrapper.get('[aria-label="Abrir el proyecto de carrera de Matemática Discreta"]').trigger('click');
-    expect(wrapper.findComponent(SubjectProfileSheet).props()).toMatchObject({ subjectId: 'm2', subjectName: 'Matemática Discreta' });
+    expect(wrapper.findComponent(SubjectProfileDialog).props()).toMatchObject({ subjectId: 'm2', subjectName: 'Matemática Discreta' });
 
     await wrapper.get('[aria-label="Abrir el proyecto de carrera de Estructuras de Datos"]').trigger('keydown.enter');
-    expect(wrapper.findComponent(SubjectProfileSheet).props()).toMatchObject({ subjectId: 'm3' });
+    expect(wrapper.findComponent(SubjectProfileDialog).props()).toMatchObject({ subjectId: 'm3' });
     wrapper.unmount();
   });
 

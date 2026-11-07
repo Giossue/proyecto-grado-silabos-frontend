@@ -35,7 +35,7 @@ const mountTab = (value: ScheduledSubjects = data) => mount(ScheduledSubjectsTab
     props: { data: value, assignments: [], teacherUsers: [] },
     global: {
         stubs: {
-            Card: passthrough, CardContent: passthrough, ParallelCreationSheet: { props: ['open', 'subjectLabel'], template: '<div class="parallel-sheet">{{ subjectLabel }}</div>' }, ClientFilterBar: passthrough,
+            Card: passthrough, CardContent: passthrough, ParallelCreationDialog: { props: ['open', 'subjectLabel'], template: '<div class="parallel-sheet">{{ subjectLabel }}</div>' }, ClientFilterBar: passthrough,
             Field: passthrough, FieldLabel: passthrough, Select: SelectStub, SelectContent: passthrough, SelectGroup: passthrough,
             SelectItem: passthrough, SelectTrigger: passthrough, SelectValue: passthrough, Badge: passthrough, Alert: passthrough,
             AlertDescription: passthrough, Table: passthrough, TableBody: passthrough, TableCell: passthrough, TableEmpty: passthrough,

@@ -26,7 +26,7 @@ const inlineSelect = {
 };
 const mountPage = (stubs: Record<string, unknown> = {}) => mount(WithTooltips, { attachTo: document.body, global: { stubs: {
   PageFrame: { props: ['title'], template: '<main><slot name="banner" /><h1>{{ title }}</h1><slot name="actions" /><slot /></main>' },
-  ConvocationPeriodSheet: true, ConvocationRowActions: true, ...stubs,
+  ConvocationPeriodDialog: true, ConvocationRowActions: true, ...stubs,
 } } });
 const closedProcess = { id: 'pr1', name: 'Convocatoria', state: 'cerrado', template: 'x', period_id: 'p1', period_name: 'Septiembre-Marzo 2026-2027', starts_at: '2026-10-01', due_at: '2026-10-20', convocations_count: 0, configurable: true, deletable: true, extensions_used: 0, extensions_max: 2, extension_limit_on: '2027-03-31', extension_block_reason: null };
 
@@ -49,7 +49,7 @@ describe('AdminProcessesPage', () => {
     expect(rows[1].text()).toContain('Sin iniciar');
     expect(rows[1].text()).toContain('Sin fechas');
     expect(wrapper.text()).toContain('Convocatoria en curso');
-    expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('true');
+    expect(wrapper.find('convocation-period-dialog-stub').attributes('disabled')).toBe('true');
     wrapper.unmount();
   });
 
@@ -67,7 +67,7 @@ describe('AdminProcessesPage', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Carreras sin convocar');
-    expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('true');
+    expect(wrapper.find('convocation-period-dialog-stub').attributes('disabled')).toBe('true');
   });
 
   it('con todo finalizado permite abrir una nueva convocatoria', async () => {
@@ -81,7 +81,7 @@ describe('AdminProcessesPage', () => {
     expect(wrapper.find('tbody tr').text()).toContain('Finalizado');
     expect(wrapper.text()).not.toContain('Cerrado');
     expect(wrapper.text()).not.toContain('Convocatoria en curso');
-    expect(wrapper.find('convocation-period-sheet-stub').attributes('disabled')).toBe('false');
+    expect(wrapper.find('convocation-period-dialog-stub').attributes('disabled')).toBe('false');
     wrapper.unmount();
   });
 

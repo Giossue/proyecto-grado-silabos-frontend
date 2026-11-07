@@ -4,7 +4,7 @@ import { computed, ref, watch, type Component } from 'vue';
 import { ApiError } from '@/api/client';
 import { deleteProcess, getProcessImpact, transitionProcess, type ProcessImpact, type SyllabusProcess, type SyllabusStateCounts } from '@/api/processes';
 import ConfirmPhrase from '@/components/domain/ConfirmPhrase.vue';
-import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
+import DeadlineExtensionDialog from '@/components/domain/syllabus/DeadlineExtensionDialog.vue';
 import SyllabusStateCountsTable from '@/components/domain/syllabus/SyllabusStateCountsTable.vue';
 import TableActionsMenu from '@/components/domain/TableActionsMenu.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -257,5 +257,5 @@ const remove = async (): Promise<void> => {
       </DialogFooter>
     </DialogContent>
   </Dialog>
-  <DeadlineExtensionSheet v-model:open="deadlineOpen" :process="process" display="menu" @saved="extended" />
+  <DeadlineExtensionDialog v-model:open="deadlineOpen" :process="process" display="menu" @saved="extended" />
 </template>

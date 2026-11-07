@@ -6,7 +6,7 @@ import { computed, ref, watch } from "vue";
 import { removeCareerTeacher, resendCareerTeacherInvitation, type TeacherAssignments } from "@/api/career-academics";
 import { toast } from "@/lib/toast";
 import { ApiError } from "@/api/client";
-import CareerTeacherEditSheet from "@/components/domain/academic/CareerTeacherEditSheet.vue";
+import CareerTeacherEditDialog from "@/components/domain/academic/CareerTeacherEditDialog.vue";
 import ClientFilterBar from "@/components/domain/ClientFilterBar.vue";
 import { afterDialogExit, useShownWhileClosing } from "@/lib/dialogExit";
 import { activateRow } from "@/lib/rowActivation";
@@ -100,7 +100,7 @@ const removeFromCareer = async (): Promise<void> => {
         </TableRow>
       </TableBody>
     </Table>
-    <CareerTeacherEditSheet v-if="editing" :key="editing.id" :teacher="editing" v-model:open="sheetOpen" :remove-disabled="Boolean(data.career.lock_reason)" @remove="askRemoval(editing)" @resend="resendInvitation(editing)" />
+    <CareerTeacherEditDialog v-if="editing" :key="editing.id" :teacher="editing" v-model:open="sheetOpen" :remove-disabled="Boolean(data.career.lock_reason)" @remove="askRemoval(editing)" @resend="resendInvitation(editing)" />
     <TablePagination :meta="meta" mode="client" label="Paginación de docentes" @update:page="setPage" />
     <Dialog :open="removing !== null" @update:open="(value) => { if (!value) removing = null; }">
       <DialogContent>

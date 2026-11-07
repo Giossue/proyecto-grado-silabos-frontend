@@ -5,7 +5,7 @@ import { getAcademicGovernance, type AcademicGovernance, type AcademicEntity } f
 import { ApiError } from '@/api/client';
 import { getSession } from '@/api/session';
 import ImportSpreadsheetDialog from '@/components/domain/ImportSpreadsheetDialog.vue';
-import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
+import CatalogRecordDialog from '@/components/domain/academic/CatalogRecordDialog.vue';
 import CatalogSection from '@/components/domain/academic/CatalogSection.vue';
 import { Building2, GraduationCap, Plus, TriangleAlert } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,7 @@ const sectionContent = computed(() => ({
     carrera: { title: 'Carreras', description: 'Las carreras y a qué facultad pertenece cada una' },
 })[entity.value]);
 const createLabel = computed(() => entity.value === 'facultad' ? 'Crear facultad' : 'Crear carrera');
-const openCreationSheet = (): void => {
+const openCreationDialog = (): void => {
     if (entity.value === 'facultad') facultyOpen.value = true;
     else careerOpen.value = true;
 };
@@ -85,7 +85,7 @@ onMounted(load);
                 type="button"
                 class="w-full max-sm:size-14 max-sm:rounded-full max-sm:p-0 sm:w-auto"
                 :aria-label="createLabel"
-                @click="openCreationSheet"
+                @click="openCreationDialog"
             >
                 <Plus data-icon="inline-start" aria-hidden="true" />
                 <span class="max-sm:hidden">{{ createLabel }}</span>
@@ -108,6 +108,6 @@ onMounted(load);
 
         <CatalogSection v-if="data" :section="section" :catalogs="data.catalogs" :options="data.options" @changed="changed" />
     </PageFrame>
-    <CatalogRecordSheet v-if="data" v-model:open="facultyOpen" :show-trigger="false" entity="facultad" :options="data.options" @saved="changed" />
-    <CatalogRecordSheet v-if="data" v-model:open="careerOpen" :show-trigger="false" entity="carrera" :options="data.options" @saved="changed" />
+    <CatalogRecordDialog v-if="data" v-model:open="facultyOpen" :show-trigger="false" entity="facultad" :options="data.options" @saved="changed" />
+    <CatalogRecordDialog v-if="data" v-model:open="careerOpen" :show-trigger="false" entity="carrera" :options="data.options" @saved="changed" />
 </template>

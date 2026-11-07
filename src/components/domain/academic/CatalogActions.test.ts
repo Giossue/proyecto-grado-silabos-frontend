@@ -1,7 +1,7 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import CatalogActions from '@/components/domain/academic/CatalogActions.vue';
-import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
+import SyllabusProcessDialog from '@/components/domain/syllabus/SyllabusProcessDialog.vue';
 import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 
 import { setAcademicRecordStatus } from '@/api/academic';
@@ -68,7 +68,7 @@ describe('CatalogActions', () => {
   it('avisa que abrió la convocatoria del período cuando el formulario terminó de cerrarse', async () => {
     const wrapper = await open({ entity: 'periodo', recordName: '2026-2027' });
     vi.useFakeTimers();
-    wrapper.getComponent(SyllabusProcessSheet).vm.$emit('saved', 'Convocatoria abierta.');
+    wrapper.getComponent(SyllabusProcessDialog).vm.$emit('saved', 'Convocatoria abierta.');
     await flushPromises();
 
     expect(wrapper.emitted('changed')).toBeUndefined();

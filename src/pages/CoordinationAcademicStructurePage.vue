@@ -16,10 +16,10 @@ import { getSession } from "@/api/session";
 import PageFrame from "@/components/domain/PageFrame.vue";
 import LoadingSkeleton from "@/components/domain/LoadingSkeleton.vue";
 import LoadErrorState from "@/components/domain/LoadErrorState.vue";
-import ManagedUserSheet from "@/components/domain/identity/ManagedUserSheet.vue";
+import ManagedUserDialog from "@/components/domain/identity/ManagedUserDialog.vue";
 import CurriculumActions from "@/components/domain/academic/CurriculumActions.vue";
 import CurriculumCanvas from "@/components/domain/academic/curriculum/CurriculumCanvas.vue";
-import CurriculumConfigurationSheet from "@/components/domain/academic/curriculum/CurriculumConfigurationSheet.vue";
+import CurriculumConfigurationDialog from "@/components/domain/academic/curriculum/CurriculumConfigurationDialog.vue";
 import ScheduledSubjectsTab from "@/components/domain/academic/ScheduledSubjectsTab.vue";
 import ImportSpreadsheetDialog from "@/components/domain/ImportSpreadsheetDialog.vue";
 import TeacherAssignmentsPanel from "@/components/domain/academic/TeacherAssignmentsPanel.vue";
@@ -175,7 +175,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
     <div class="min-w-0 flex-1 p-3 sm:p-4">
       <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
       <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" :editing="true" :full-screen="true" @changed="handleCurriculumChanged" />
-      <CurriculumConfigurationSheet v-model:open="configurationOpen" :curriculum="curriculum.curriculum" @saved="handleCurriculumChanged" />
+      <CurriculumConfigurationDialog v-model:open="configurationOpen" :curriculum="curriculum.curriculum" @saved="handleCurriculumChanged" />
     </div>
   </div>
   <PageFrame
@@ -232,7 +232,7 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
     >
     <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading" variant="academic-structure" :mode="mode" />
-    <ManagedUserSheet
+    <ManagedUserDialog
       v-if="mode === 'teachers'"
       v-model:open="teacherOpen"
       :teacher-career="assignments?.career ?? null"

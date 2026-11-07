@@ -29,7 +29,7 @@ const curriculum = (editable = true): Curriculum => ({
 const stubs = {
   PageFrame: { template: '<main><slot name="banner" /><slot name="actions" /><slot /></main>' },
   CurriculumCanvas: { name: 'CurriculumCanvas', props: { editing: Boolean, fullScreen: Boolean }, template: '<div data-testid="canvas" :data-editing="editing" />' },
-  CurriculumConfigurationSheet: { template: '<div />' },
+  CurriculumConfigurationDialog: { template: '<div />' },
   ProcessLockAlert: { template: '<div>Pause la convocatoria para editar</div>' },
 };
 

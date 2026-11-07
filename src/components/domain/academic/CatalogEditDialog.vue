@@ -7,9 +7,9 @@ import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
 import FacultyLibraryChecks from '@/components/domain/academic/FacultyLibraryChecks.vue';
 import FacultyLogoField from '@/components/domain/academic/FacultyLogoField.vue';
-import FormSheet from '@/components/domain/FormSheet.vue';
-import SheetActions, { type SheetAction } from '@/components/domain/SheetActions.vue';
-import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import FormModal from '@/components/domain/FormModal.vue';
+import DialogActions, { type DialogAction } from '@/components/domain/DialogActions.vue';
+import FormDialogActions from '@/components/domain/FormDialogActions.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -27,7 +27,7 @@ const props = withDefaults(defineProps<{
     startsOn?: string | null; endsOn?: string | null;
     modalityOptions: Array<{ value: string; label: string }>;
     faculties: CatalogRecord[]; campusOptions: Array<{ value: string; label: string }>;
-    lockReason?: string | null; logoUrl?: string | null; showTrigger?: boolean; actions?: SheetAction[]; catalogLibraries?: string[];
+    lockReason?: string | null; logoUrl?: string | null; showTrigger?: boolean; actions?: DialogAction[]; catalogLibraries?: string[];
 }>(), { showTrigger: true, actions: () => [], catalogLibraries: () => [] });
 const emit = defineEmits<{ saved: [message: string]; action: [key: string] }>();
 const open = defineModel<boolean>('open', { default: false });
@@ -153,8 +153,8 @@ const submit = async (confirmPurge = false): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" trigger-label="Editar" :title="viewing ? capitalizedLabel : `Editar ${entityLabel}`" :show-trigger="showTrigger">
-        <template v-if="(!viewing || locked) && actions.length > 0" #header-actions><SheetActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
+    <FormModal v-model:open="open" trigger-label="Editar" :title="viewing ? capitalizedLabel : `Editar ${entityLabel}`" :show-trigger="showTrigger">
+        <template v-if="(!viewing || locked) && actions.length > 0" #header-actions><DialogActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
         <template #default="{ close }">
             <form @submit.prevent="submit()"><FieldGroup>
                 <Alert v-if="generalError" variant="destructive"><AlertDescription>{{ generalError }}</AlertDescription></Alert>
@@ -183,8 +183,8 @@ const submit = async (confirmPurge = false): Promise<void> => {
                         <Button type="button" :disabled="locked" @click="viewing = false"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
                     </Field>
                 </DialogFooter>
-                <FormSheetActions v-else :close="reset" :processing="processing" :disabled="unchanged || Boolean(lockReason) || (entity === 'facultad' && noLibraryChosen)" :icon="Check" label="Guardar cambios" />
+                <FormDialogActions v-else :close="reset" :processing="processing" :disabled="unchanged || Boolean(lockReason) || (entity === 'facultad' && noLibraryChosen)" :icon="Check" label="Guardar cambios" />
             </FieldGroup></form>
         </template>
-    </FormSheet>
+    </FormModal>
 </template>

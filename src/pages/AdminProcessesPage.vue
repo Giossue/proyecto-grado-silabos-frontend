@@ -23,7 +23,7 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
-import ConvocationPeriodSheet from '@/components/domain/syllabus/ConvocationPeriodSheet.vue';
+import ConvocationPeriodDialog from '@/components/domain/syllabus/ConvocationPeriodDialog.vue';
 import ConvocationOptionsDialog from '@/components/domain/syllabus/ConvocationOptionsDialog.vue';
 import ConvocationRowActions from '@/components/domain/syllabus/ConvocationRowActions.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
@@ -93,8 +93,8 @@ onMounted(load);
       <ProcessLockAlert banner title="Convocatoria en curso" message="Hay una convocatoria abierta o pausada. Finalícela o elimínela antes de abrir otra" hide-action />
     </template>
     <template #actions>
-      <Tooltip v-if="loaded && !setupReady"><TooltipTrigger as-child><span class="inline-flex" tabindex="0"><ConvocationPeriodSheet disabled @saved="changed" /></span></TooltipTrigger><TooltipContent>Complete «Antes de empezar» para abrir una convocatoria</TooltipContent></Tooltip>
-      <ConvocationPeriodSheet v-else-if="loaded" :disabled="inProgress" @saved="changed" />
+      <Tooltip v-if="loaded && !setupReady"><TooltipTrigger as-child><span class="inline-flex" tabindex="0"><ConvocationPeriodDialog disabled @saved="changed" /></span></TooltipTrigger><TooltipContent>Complete «Antes de empezar» para abrir una convocatoria</TooltipContent></Tooltip>
+      <ConvocationPeriodDialog v-else-if="loaded" :disabled="inProgress" @saved="changed" />
     </template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !loaded" variant="table" metrics :columns="4" :filters="1" filter-width="lg:w-44" :actions="false" :badges="[4]" />

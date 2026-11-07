@@ -5,7 +5,7 @@ import { managedUserStatus } from '@/lib/managedUserStatus';
 import { Ban, CircleCheck, MailCheck, Pencil, Trash2 } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import type { ManagedUser } from '@/api/admin-users';
-import SheetActions, { type SheetAction } from '@/components/domain/SheetActions.vue';
+import DialogActions, { type DialogAction } from '@/components/domain/DialogActions.vue';
 import ManagedUserEditForm from '@/components/domain/identity/ManagedUserEditForm.vue';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
@@ -48,7 +48,7 @@ const emit = defineEmits<{ saved: [message: string]; action: [key: 'access' | 'r
 
 const open = defineModel<boolean>('open', { default: false });
 const editing = ref(false);
-const actions = computed<SheetAction[]>(() => {
+const actions = computed<DialogAction[]>(() => {
     if (!props.canEdit) return [];
     if (props.user.pending_activation) {
         // Reenviar solo cuando la invitación venció sin aceptarse.
@@ -140,7 +140,7 @@ const currentAssignments = computed(() =>
             </ScrollArea>
 
             <div v-if="!editing && actions.length > 0" class="absolute top-3 right-12 flex items-center gap-1">
-                <SheetActions :actions="actions" :menu-label="`Acciones para ${props.user.nombre}`" @select="runAction" />
+                <DialogActions :actions="actions" :menu-label="`Acciones para ${props.user.nombre}`" @select="runAction" />
             </div>
 
             <DialogFooter v-if="!editing" class="mx-0 flex-col sm:flex-col sm:justify-start p-4 absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">

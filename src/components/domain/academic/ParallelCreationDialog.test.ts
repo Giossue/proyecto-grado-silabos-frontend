@@ -1,6 +1,6 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import ParallelCreationSheet from '@/components/domain/academic/ParallelCreationSheet.vue';
+import ParallelCreationDialog from '@/components/domain/academic/ParallelCreationDialog.vue';
 
 const api = vi.hoisted(() => ({
   createParallels: vi.fn(),
@@ -21,7 +21,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-const mountSheet = () => mount(ParallelCreationSheet, {
+const mountDialog = () => mount(ParallelCreationDialog, {
   attachTo: document.body,
   props: {
     open: true,
@@ -36,10 +36,10 @@ const mountSheet = () => mount(ParallelCreationSheet, {
 });
 const button = (label: string) => document.body.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`);
 
-describe('ParallelCreationSheet', () => {
+describe('ParallelCreationDialog', () => {
   it('propone la jornada matutina y la envía siempre al crear', async () => {
     api.createParallels.mockResolvedValue({ message: 'Creado' });
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await flushPromises();
 
     expect(document.body.textContent).not.toContain('Sin jornada');
@@ -63,7 +63,7 @@ describe('ParallelCreationSheet', () => {
   });
 
   it('no crea un paralelo con código y jornada completos si falta el docente', async () => {
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await flushPromises();
     [...document.body.querySelectorAll('button')].find((item) => item.textContent?.includes('Agregar paralelo'))!.click();
     await flushPromises();
@@ -84,7 +84,7 @@ describe('ParallelCreationSheet', () => {
 
   it('edita en línea un paralelo registrado y solo ofrece eliminar el que no tiene actividad', async () => {
     api.updateParallel.mockResolvedValue({ message: 'Paralelo actualizado.' });
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await flushPromises();
 
     expect(button('Eliminar paralelo A')).toBeNull();
@@ -105,7 +105,7 @@ describe('ParallelCreationSheet', () => {
   });
 
   it('no guarda un paralelo sin código', async () => {
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await flushPromises();
     button('Editar paralelo A')!.click();
     await flushPromises();
@@ -123,7 +123,7 @@ describe('ParallelCreationSheet', () => {
 
   it('busca al editar, conserva al docente actual fuera de la lista y guarda solo al confirmar', async () => {
     api.replaceParallelTeacher.mockResolvedValue({ message: 'Asignado.' });
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await wrapper.setProps({
       teacherUsers: [{ id: 'teacher-new', name: 'MARÍA PÉREZ', email: 'maria@example.test' }],
       assignments: [{ id: 'assignment-1', parallel_id: 'p-a', user_id: 'teacher-current', user_name: 'DOCENTE ACTUAL', active: true, editable: true }],

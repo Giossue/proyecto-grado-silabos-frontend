@@ -7,8 +7,8 @@ import { createAcademicRecord } from '@/api/academic';
 import DatePicker from '@/components/DatePicker.vue';
 import FacultyLibraryChecks from '@/components/domain/academic/FacultyLibraryChecks.vue';
 import FacultyLogoField from '@/components/domain/academic/FacultyLogoField.vue';
-import FormSheet from '@/components/domain/FormSheet.vue';
-import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import FormModal from '@/components/domain/FormModal.vue';
+import FormDialogActions from '@/components/domain/FormDialogActions.vue';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -118,7 +118,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" :disabled="props.disabled" :show-trigger="props.showTrigger" :trigger-label="labels.trigger" :title="labels.title">
+    <FormModal v-model:open="open" :disabled="props.disabled" :show-trigger="props.showTrigger" :trigger-label="labels.trigger" :title="labels.title">
         <template #default="{ close }">
             <form @submit.prevent="submit">
                 <FieldGroup>
@@ -170,11 +170,11 @@ const submit = async (): Promise<void> => {
                             </Button>
                         </Field>
                     </DialogFooter>
-                    <FormSheetActions v-else :close="close" :processing="processing" :icon="Plus" :label="submitLabel" />
+                    <FormDialogActions v-else :close="close" :processing="processing" :icon="Plus" :label="submitLabel" />
                 </FieldGroup>
             </form>
         </template>
-    </FormSheet>
+    </FormModal>
 </template>
 
 <style scoped>

@@ -4,8 +4,8 @@ import { ref, watch } from 'vue';
 import { createManagedUser } from '@/api/admin-users';
 import { createCareerTeacher } from '@/api/career-academics';
 import { ApiError } from '@/api/client';
-import FormSheet from '@/components/domain/FormSheet.vue';
-import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import FormModal from '@/components/domain/FormModal.vue';
+import FormDialogActions from '@/components/domain/FormDialogActions.vue';
 import CoordinatorReplacementConfirm from '@/components/domain/identity/CoordinatorReplacementConfirm.vue';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -47,7 +47,7 @@ const submit = async (replaceCoordinator = false): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? 'Crear docente' : 'Crear cuenta institucional'" :show-trigger="showTrigger">
+    <FormModal v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? 'Crear docente' : 'Crear cuenta institucional'" :show-trigger="showTrigger">
         <template #default="{ close }"><form @submit.prevent="submit()"><FieldGroup>
             <div class="grid grid-cols-2 items-start gap-4">
                 <Field v-for="part in nameParts" :key="part.key" :data-invalid="Boolean(errors[part.key])"><FieldLabel :for="`managed-user-${part.key}`" required>{{ part.label }}</FieldLabel><Input :id="`managed-user-${part.key}`" :model-value="form[part.key]" lang="es" autocapitalize="characters" :placeholder="part.placeholder" aria-required="true" @update:model-value="setPart(part.key, $event)" /><FieldError :errors="errors[part.key]" /></Field>
@@ -55,8 +55,8 @@ const submit = async (replaceCoordinator = false): Promise<void> => {
             <Field :data-invalid="Boolean(errors.correo_electronico)"><FieldLabel for="managed-user-email" required>Correo institucional</FieldLabel><Input id="managed-user-email" v-model="form.correo_electronico" type="email" placeholder="Ej. ana.perez@ueb.edu.ec" aria-required="true" /><FieldError :errors="errors.correo_electronico" /></Field>
             <Field v-if="!teacherCareer" :data-invalid="Boolean(errors.role_code)"><FieldLabel for="managed-user-role" required>Rol inicial</FieldLabel><Select v-model="form.role_code" required><SelectTrigger id="managed-user-role"><SelectValue placeholder="Seleccione" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="role in roles" :key="role.codigo" :value="role.codigo">{{ role.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.role_code" /></Field>
             <Field v-if="!teacherCareer && roleNeedsCareer(form.role_code)" :data-invalid="Boolean(errors.career_id)"><FieldLabel for="managed-user-career" required>Carrera</FieldLabel><Select v-model="form.career_id" required><SelectTrigger id="managed-user-career"><SelectValue placeholder="Seleccione" /></SelectTrigger><SelectContent><SelectGroup><SelectItem v-for="career in careers" :key="career.id" :value="career.id">{{ career.nombre }}</SelectItem></SelectGroup></SelectContent></Select><FieldError :errors="errors.career_id" /></Field>
-            <FormSheetActions :close="close" :processing="processing" :icon="UserPlus" :label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" />
+            <FormDialogActions :close="close" :processing="processing" :icon="UserPlus" :label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" />
         </FieldGroup></form></template>
-    </FormSheet>
+    </FormModal>
     <CoordinatorReplacementConfirm :message="replacement" :processing="processing" @confirm="submit(true)" @cancel="replacement = null" />
 </template>

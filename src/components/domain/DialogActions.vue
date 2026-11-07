@@ -7,7 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn, withoutFinalPeriod } from '@/lib/utils';
 
-export type SheetAction = {
+export type DialogAction = {
     key: string;
     label: string;
     icon: Component;
@@ -17,7 +17,7 @@ export type SheetAction = {
     loading?: boolean;
 };
 
-withDefaults(defineProps<{ actions: SheetAction[]; menuLabel: string; inline?: boolean }>(), { inline: false });
+withDefaults(defineProps<{ actions: DialogAction[]; menuLabel: string; inline?: boolean }>(), { inline: false });
 const emit = defineEmits<{ select: [key: string] }>();
 </script>
 
@@ -34,7 +34,7 @@ const emit = defineEmits<{ select: [key: string] }>();
                             size="icon-sm"
                             :class="cn(action.destructive && 'text-destructive hover:bg-destructive/10 hover:text-destructive')"
                             :aria-label="action.label"
-                            :aria-describedby="action.disabled && action.disabledReason ? `sheet-action-reason-${action.key}` : undefined"
+                            :aria-describedby="action.disabled && action.disabledReason ? `dialog-action-reason-${action.key}` : undefined"
                             :disabled="action.disabled || action.loading"
                             @click="emit('select', action.key)"
                         >
@@ -46,7 +46,7 @@ const emit = defineEmits<{ select: [key: string] }>();
                 <TooltipContent>{{ action.disabled && action.disabledReason ? withoutFinalPeriod(action.disabledReason) : action.label }}</TooltipContent>
             </Tooltip>
         </TooltipProvider>
-        <span v-if="action.disabled && action.disabledReason" :id="`sheet-action-reason-${action.key}`" class="sr-only">{{ action.disabledReason }}</span>
+        <span v-if="action.disabled && action.disabledReason" :id="`dialog-action-reason-${action.key}`" class="sr-only">{{ action.disabledReason }}</span>
       </template>
     </template>
     <TableActionsMenu v-else-if="actions.length > 1" :label="menuLabel">

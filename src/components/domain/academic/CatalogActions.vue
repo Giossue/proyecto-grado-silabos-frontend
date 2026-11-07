@@ -4,9 +4,9 @@ import { CalendarPlus, Power, PowerOff, Trash2 } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { deleteAcademicRecord, setAcademicRecordStatus } from '@/api/academic';
 import { ApiError } from '@/api/client';
-import CatalogEditSheet from '@/components/domain/academic/CatalogEditSheet.vue';
-import type { SheetAction } from '@/components/domain/SheetActions.vue';
-import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
+import CatalogEditDialog from '@/components/domain/academic/CatalogEditDialog.vue';
+import type { DialogAction } from '@/components/domain/DialogActions.vue';
+import SyllabusProcessDialog from '@/components/domain/syllabus/SyllabusProcessDialog.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
@@ -33,9 +33,9 @@ const edit = (): void => { editOpen.value = true; };
 defineExpose({ edit });
 const statusEntity = computed(() => props.entity === 'facultad' || props.entity === 'carrera');
 const noun = computed(() => props.entity === 'facultad' ? 'facultad' : 'carrera');
-const sheetActions = computed<SheetAction[]>(() => {
+const sheetActions = computed<DialogAction[]>(() => {
     if (props.lockReason) return [];
-    const list: SheetAction[] = [];
+    const list: DialogAction[] = [];
     if (props.entity === 'periodo' && !props.institutionalProcess) list.push({ key: 'process', label: 'Abrir convocatoria', icon: CalendarPlus });
     // Facultades y carreras no se eliminan: se desactivan y conservan su historial.
     if (statusEntity.value) list.push(props.active ? { key: 'status', label: `Desactivar ${noun.value}`, icon: PowerOff, destructive: true, disabled: Boolean(props.deactivateBlockedReason), disabledReason: props.deactivateBlockedReason ?? undefined } : { key: 'status', label: `Reactivar ${noun.value}`, icon: Power });
@@ -83,8 +83,8 @@ const remove = async (): Promise<void> => {
 
 <template>
     <div class="contents">
-        <SyllabusProcessSheet v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName, starts_on: startsOn ?? undefined, ends_on: endsOn ?? undefined }" display="menu" trigger-label="Abrir convocatoria" @saved="changedAfterExit" />
-        <CatalogEditSheet :key="recordId" v-model:open="editOpen" :lock-reason="lockReason ?? null" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :catalog-libraries="catalogLibraries ?? []" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" :actions="sheetActions" @action="runAction" @saved="emit('changed', $event)" />
+        <SyllabusProcessDialog v-if="entity === 'periodo' && !institutionalProcess" v-model:open="processOpen" :template="null" :periods="[]" :period="{ id: recordId, codigo: recordName, starts_on: startsOn ?? undefined, ends_on: endsOn ?? undefined }" display="menu" trigger-label="Abrir convocatoria" @saved="changedAfterExit" />
+        <CatalogEditDialog :key="recordId" v-model:open="editOpen" :lock-reason="lockReason ?? null" :entity="entity" :record-id="recordId" :record-name="recordName" :record-code="recordCode ?? null" :faculty-id="facultyId" :modality="modality" :campus="campus" :catalog-libraries="catalogLibraries ?? []" :campus-options="campusOptions" :modality-options="modalityOptions" :logo-url="logoUrl" :starts-on="startsOn" :ends-on="endsOn" :faculties="faculties" :show-trigger="false" :actions="sheetActions" @action="runAction" @saved="emit('changed', $event)" />
 
         <Dialog v-if="entity === 'periodo'" v-model:open="deleteOpen"><DialogContent><DialogHeader><DialogTitle>Eliminar período</DialogTitle><DialogDescription>Se eliminará «{{ recordName }}». Se rechazará si ya tiene una convocatoria</DialogDescription></DialogHeader>
             <FeedbackAlert v-if="error" :message="error" />

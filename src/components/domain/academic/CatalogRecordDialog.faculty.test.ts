@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAcademicRecord } from '@/api/academic';
 import { getCatalogLibraries } from '@/api/libraryCatalog';
-import CatalogRecordSheet from '@/components/domain/academic/CatalogRecordSheet.vue';
+import CatalogRecordDialog from '@/components/domain/academic/CatalogRecordDialog.vue';
 import FacultyLogoField from '@/components/domain/academic/FacultyLogoField.vue';
 
 vi.mock('@/api/academic', () => ({ createAcademicRecord: vi.fn() }));
@@ -16,7 +16,7 @@ const row = (name: string): HTMLElement => Array.from(body().querySelectorAll<HT
 const isChecked = (name: string): boolean => row(name).querySelector('[role="checkbox"]')!.getAttribute('aria-checked') === 'true';
 
 const firstStep = async () => {
-    const wrapper = mount(CatalogRecordSheet, { attachTo: document.body, props: { entity: 'facultad', options, open: false } });
+    const wrapper = mount(CatalogRecordDialog, { attachTo: document.body, props: { entity: 'facultad', options, open: false } });
     await wrapper.setProps({ open: true });
     await flushPromises();
     const state = (wrapper.vm as unknown as { $: { setupState: { form: { nombre: string; campus: string } } } }).$.setupState;
@@ -57,7 +57,7 @@ describe('Nueva facultad · paso de bibliotecas', () => {
     });
 
     it('sin los datos obligatorios no pasa al segundo paso', async () => {
-        const wrapper = mount(CatalogRecordSheet, { attachTo: document.body, props: { entity: 'facultad', options, open: false } });
+        const wrapper = mount(CatalogRecordDialog, { attachTo: document.body, props: { entity: 'facultad', options, open: false } });
         await wrapper.setProps({ open: true });
         await flushPromises();
         await next();
@@ -117,7 +117,7 @@ describe('Nueva facultad · paso de bibliotecas', () => {
     });
 
     it('las carreras se crean en un solo paso', async () => {
-        const wrapper = mount(CatalogRecordSheet, { attachTo: document.body, props: { entity: 'carrera', options, open: false } });
+        const wrapper = mount(CatalogRecordDialog, { attachTo: document.body, props: { entity: 'carrera', options, open: false } });
         await wrapper.setProps({ open: true });
         await flushPromises();
 

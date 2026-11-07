@@ -4,7 +4,7 @@ import { defineComponent } from 'vue';
 import { ApiError } from '@/api/client';
 import { extendProcessDeadline, type SyllabusProcess } from '@/api/processes';
 import DatePicker from '@/components/DatePicker.vue';
-import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
+import DeadlineExtensionDialog from '@/components/domain/syllabus/DeadlineExtensionDialog.vue';
 
 vi.mock('@/api/processes', () => ({
   extendProcessDeadline: vi.fn(),
@@ -34,19 +34,19 @@ const submit = async (): Promise<void> => {
   await flushPromises();
 };
 
-const mountSheet = (value = process()) => mount(DeadlineExtensionSheet, {
+const mountDialog = (value = process()) => mount(DeadlineExtensionDialog, {
   attachTo: document.body,
   props: { process: value, open: true },
 });
 
 // Como reka-ui: el contenido sigue montado mientras el panel se desliza al cerrar.
-const slidingSheet = defineComponent({
+const slidingDialog = defineComponent({
   props: { open: Boolean },
   emits: ['update:open'],
-  template: '<div data-sheet :data-state="open ? \'open\' : \'closed\'"><slot :close="() => $emit(\'update:open\', false)" /></div>',
+  template: '<div data-modal :data-state="open ? \'open\' : \'closed\'"><slot :close="() => $emit(\'update:open\', false)" /></div>',
 });
 
-describe('DeadlineExtensionSheet', () => {
+describe('DeadlineExtensionDialog', () => {
   beforeEach(() => {
     vi.mocked(extendProcessDeadline).mockReset().mockResolvedValue({ message: 'Plazo prorrogado.' });
   });
@@ -56,7 +56,7 @@ describe('DeadlineExtensionSheet', () => {
   });
 
   it('extends only the delivery deadline without asking for a stage', async () => {
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await flushPromises();
 
     expect(document.body.textContent).toContain('Nueva fecha límite de entrega');
@@ -75,14 +75,14 @@ describe('DeadlineExtensionSheet', () => {
   });
 
   it('al guardar cierra sin borrar la fecha, y la borra al volver a abrir', async () => {
-    const wrapper = mount(DeadlineExtensionSheet, { attachTo: document.body, props: { process: process(), open: true }, global: { stubs: { FormSheet: slidingSheet } } });
+    const wrapper = mount(DeadlineExtensionDialog, { attachTo: document.body, props: { process: process(), open: true }, global: { stubs: { FormModal: slidingDialog } } });
     await flushPromises();
     wrapper.findComponent(DatePicker).vm.$emit('update:modelValue', '2027-02-15');
     await flushPromises();
     document.body.querySelector<HTMLFormElement>('form')!.dispatchEvent(new Event('submit'));
     await flushPromises();
 
-    expect(wrapper.getComponent(slidingSheet).attributes('data-state')).toBe('closed');
+    expect(wrapper.getComponent(slidingDialog).attributes('data-state')).toBe('closed');
     expect(wrapper.findComponent(DatePicker).props('modelValue')).toBe('2027-02-15');
     await wrapper.setProps({ open: false });
     await wrapper.setProps({ open: true });
@@ -92,20 +92,20 @@ describe('DeadlineExtensionSheet', () => {
   });
 
   it('dice qué prórroga es de las dos', async () => {
-    const first = mountSheet(process(0));
+    const first = mountDialog(process(0));
     await flushPromises();
     expect(document.body.textContent).toContain('Prórroga 1 de 2');
     first.unmount();
     document.body.innerHTML = '';
 
-    const second = mountSheet(process(1));
+    const second = mountDialog(process(1));
     await flushPromises();
     expect(document.body.textContent).toContain('Prórroga 2 de 2');
     second.unmount();
   });
 
   it('no deja elegir después del último día de clases y lo dice', async () => {
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await flushPromises();
 
     expect(wrapper.findComponent(DatePicker).props('maxValue')).toBe('2027-02-26');
@@ -114,19 +114,19 @@ describe('DeadlineExtensionSheet', () => {
   });
 
   it('en una convocatoria abierta no habla de reabrir', async () => {
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await flushPromises();
 
     expect(document.body.textContent).not.toContain('se vuelve a abrir');
     expect(submitButton().textContent).toContain('Prorrogar entrega');
-    // FormSheetActions sin `destructive` deja el botón principal como antes, sin variante.
+    // FormDialogActions sin `destructive` deja el botón principal como antes, sin variante.
     expect(submitButton().dataset.variant).toBeUndefined();
     wrapper.unmount();
   });
 
   it('en una convocatoria finalizada avisa que prorrogar la vuelve a abrir y pasa el mensaje del servidor', async () => {
     vi.mocked(extendProcessDeadline).mockResolvedValueOnce({ message: 'Plazo prorrogado. La convocatoria se volvió a abrir.' });
-    const wrapper = mountSheet(process(0, 'cerrado'));
+    const wrapper = mountDialog(process(0, 'cerrado'));
     await flushPromises();
 
     expect(document.body.textContent).toContain('Al prorrogar, la convocatoria se vuelve a abrir con la nueva fecha');
@@ -146,7 +146,7 @@ describe('DeadlineExtensionSheet', () => {
         counts: { sin_iniciar: 1, borrador: 2, en_revision: 1, correccion_solicitada: 0, aprobado: 3 },
       }))
       .mockResolvedValueOnce({ message: 'Plazo prorrogado. La convocatoria se volvió a abrir.' });
-    const wrapper = mountSheet(process(0, 'cerrado'));
+    const wrapper = mountDialog(process(0, 'cerrado'));
     await flushPromises();
     wrapper.findComponent(DatePicker).vm.$emit('update:modelValue', '2027-02-15');
     await submit();
@@ -185,7 +185,7 @@ describe('DeadlineExtensionSheet', () => {
         counts: { to_draft: 2, restarted: 0, to_coordination: 1 },
       }))
       .mockResolvedValueOnce({ message: 'Plazo prorrogado. La convocatoria se volvió a abrir.' });
-    const wrapper = mountSheet(process(0, 'cerrado'));
+    const wrapper = mountDialog(process(0, 'cerrado'));
     await flushPromises();
     wrapper.findComponent(DatePicker).vm.$emit('update:modelValue', '2027-02-15');
     await submit();
@@ -218,7 +218,7 @@ describe('DeadlineExtensionSheet', () => {
         pending_counts: { to_draft: 0, restarted: 1, to_coordination: 0 },
       }))
       .mockResolvedValueOnce({ message: 'Plazo prorrogado. La convocatoria se volvió a abrir.' });
-    const wrapper = mountSheet(process(0, 'cerrado'));
+    const wrapper = mountDialog(process(0, 'cerrado'));
     await flushPromises();
     wrapper.findComponent(DatePicker).vm.$emit('update:modelValue', '2027-02-15');
     await submit();
@@ -241,7 +241,7 @@ describe('DeadlineExtensionSheet', () => {
       code: 'plantilla_cambiada',
       counts: { sin_iniciar: 0, borrador: 1, en_revision: 0, correccion_solicitada: 0, aprobado: 0 },
     }));
-    const wrapper = mount(DeadlineExtensionSheet, { attachTo: document.body, props: { process: process(0, 'cerrado'), open: true }, global: { stubs: { FormSheet: slidingSheet } } });
+    const wrapper = mount(DeadlineExtensionDialog, { attachTo: document.body, props: { process: process(0, 'cerrado'), open: true }, global: { stubs: { FormModal: slidingDialog } } });
     await flushPromises();
     wrapper.findComponent(DatePicker).vm.$emit('update:modelValue', '2027-02-15');
     await submit();

@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { getSubjectProfile, saveSubjectProfile, type SubjectProfileField } from '@/api/career-academics';
 import FormDialog from '@/components/domain/FormDialog.vue';
-import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import FormDialogActions from '@/components/domain/FormDialogActions.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
 import { responseEmpty } from '@/lib/fieldResponses';
@@ -102,7 +102,7 @@ const save = async (close: () => void) => {
               </fieldset>
             </div>
           </template>
-          <FormSheetActions :close="close" :processing="saving" :disabled="!canSave" label="Guardar proyecto de carrera" />
+          <FormDialogActions :close="close" :processing="saving" :disabled="!canSave" label="Guardar proyecto de carrera" />
         </FieldGroup>
       </form>
     </template>

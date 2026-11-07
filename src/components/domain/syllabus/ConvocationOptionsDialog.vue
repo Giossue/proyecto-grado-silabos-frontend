@@ -2,7 +2,7 @@
 import { withoutFinalPeriod } from '@/lib/utils';
 import { CalendarClock, CalendarPlus, Lock, MoreHorizontal, Pause, Play, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
-import type { SheetAction } from '@/components/domain/SheetActions.vue';
+import type { DialogAction } from '@/components/domain/DialogActions.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -13,7 +13,7 @@ const props = defineProps<{ row: ConvocationRow }>();
 const emit = defineEmits<{ action: [key: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 
-const actions = computed<SheetAction[]>(() => {
+const actions = computed<DialogAction[]>(() => {
     const process = props.row.process;
     if (!process) {
         const reason = props.row.lock_reason ?? undefined;

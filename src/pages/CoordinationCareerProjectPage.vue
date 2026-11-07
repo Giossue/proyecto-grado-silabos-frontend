@@ -6,7 +6,7 @@ import { ApiError } from '@/api/client';
 import { getScheduledSubjects, type ScheduledSubjects } from '@/api/career-academics';
 import { getSession } from '@/api/session';
 import FichaImportDialog from '@/components/domain/academic/FichaImportDialog.vue';
-import SubjectProfileSheet from '@/components/domain/academic/SubjectProfileSheet.vue';
+import SubjectProfileDialog from '@/components/domain/academic/SubjectProfileDialog.vue';
 import SupportDocumentsPanel from '@/components/domain/academic/SupportDocumentsPanel.vue';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -156,6 +156,6 @@ onMounted(() => { void load(); });
         <SupportDocumentsPanel v-model:upload-open="uploadOpen" :manages="true" />
       </TabsContent>
     </Tabs>
-    <SubjectProfileSheet v-if="selected" v-model:open="profileOpen" :subject-id="selected.id" :subject-name="selected.nombre" :disabled="Boolean(data?.career.lock_reason)" @saved="saved" />
+    <SubjectProfileDialog v-if="selected" v-model:open="profileOpen" :subject-id="selected.id" :subject-name="selected.nombre" :disabled="Boolean(data?.career.lock_reason)" @saved="saved" />
   </PageFrame>
 </template>

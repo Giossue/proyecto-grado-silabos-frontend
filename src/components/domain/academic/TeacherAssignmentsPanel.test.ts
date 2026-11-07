@@ -294,10 +294,10 @@ describe('TeacherAssignmentsPanel', () => {
         const close = [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find((button) => button.textContent?.trim() === 'Cerrar')!;
         close.click();
         await flushPromises();
-        expect(wrapper.findComponent({ name: 'CareerTeacherEditSheet' }).exists()).toBe(true);
+        expect(wrapper.findComponent({ name: 'CareerTeacherEditDialog' }).exists()).toBe(true);
 
         await vi.advanceTimersByTimeAsync(DIALOG_EXIT_MS);
-        expect(wrapper.findComponent({ name: 'CareerTeacherEditSheet' }).exists()).toBe(false);
+        expect(wrapper.findComponent({ name: 'CareerTeacherEditDialog' }).exists()).toBe(false);
         wrapper.unmount();
     });
 });

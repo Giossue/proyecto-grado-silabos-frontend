@@ -3,7 +3,7 @@ import { typeConfirmation } from '@/test/confirmPhrase';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import DatePicker from '@/components/DatePicker.vue';
-import SyllabusProcessSheet from '@/components/domain/syllabus/SyllabusProcessSheet.vue';
+import SyllabusProcessDialog from '@/components/domain/syllabus/SyllabusProcessDialog.vue';
 import { sessionState } from '@/state/session';
 
 const api = vi.hoisted(() => ({ createProcess: vi.fn() }));
@@ -26,7 +26,7 @@ afterEach(() => {
 
 describe('syllabus process dates', () => {
   it('requires the administrator to choose dates instead of copying the period dates', async () => {
-    const wrapper = mount(SyllabusProcessSheet, {
+    const wrapper = mount(SyllabusProcessDialog, {
       attachTo: document.body,
       props: {
         open: false,
@@ -67,7 +67,7 @@ describe('syllabus process dates', () => {
       institution: { today: '2026-10-21', timezone: 'America/Guayaquil' },
     });
 
-    const wrapper = mount(SyllabusProcessSheet, {
+    const wrapper = mount(SyllabusProcessDialog, {
       attachTo: document.body,
       props: {
         open: true,
@@ -93,7 +93,7 @@ describe('syllabus process dates', () => {
   it('confirma la apertura solo después de escribir la frase', async () => {
     vi.useFakeTimers();
     api.createProcess.mockResolvedValue({ message: 'Convocatoria abierta.' });
-    const wrapper = mount(SyllabusProcessSheet, {
+    const wrapper = mount(SyllabusProcessDialog, {
       attachTo: document.body,
       props: { open: true, template: null, periods: [], period: { id: 'period-1', codigo: '2026-2027', starts_on: '2026-09-22', ends_on: '2027-01-02' } },
     });
@@ -118,7 +118,7 @@ describe('syllabus process dates', () => {
   });
 
   it('la frase de confirmación se borra al volver a abrir, no al cerrar', async () => {
-    const wrapper = mount(SyllabusProcessSheet, { attachTo: document.body, props: { open: true, template: null, periods: [], period: { id: 'period-1', codigo: 'Septiembre-Enero 2026-2027' } }, global: { stubs: dialogStubs } });
+    const wrapper = mount(SyllabusProcessDialog, { attachTo: document.body, props: { open: true, template: null, periods: [], period: { id: 'period-1', codigo: 'Septiembre-Enero 2026-2027' } }, global: { stubs: dialogStubs } });
     await flushPromises();
     const modal = wrapper.findAllComponents(fadingDialog).at(-1)!;
     modal.vm.$emit('update:open', true);

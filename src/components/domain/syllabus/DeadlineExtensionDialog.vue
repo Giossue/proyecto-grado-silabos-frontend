@@ -5,8 +5,8 @@ import { extendProcessDeadline, type PendingChangeCounts, type SyllabusProcess, 
 import { ApiError } from '@/api/client';
 import DatePicker from '@/components/DatePicker.vue';
 import ConfirmPhrase from '@/components/domain/ConfirmPhrase.vue';
-import FormSheet from '@/components/domain/FormSheet.vue';
-import FormSheetActions from '@/components/domain/FormSheetActions.vue';
+import FormModal from '@/components/domain/FormModal.vue';
+import FormDialogActions from '@/components/domain/FormDialogActions.vue';
 import SyllabusStateCountsTable from '@/components/domain/syllabus/SyllabusStateCountsTable.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -86,7 +86,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-  <FormSheet
+  <FormModal
     v-model:open="open"
     trigger-label="Prorrogar plazo"
     :show-trigger="display !== 'menu'"
@@ -117,9 +117,9 @@ const submit = async (): Promise<void> => {
             </ul>
           </template>
           <ConfirmPhrase v-if="needsPhrase" id="extension-template-confirm" v-model="typed" :phrase="phrase" />
-          <FormSheetActions :close="close" :processing="processing" :icon="CalendarClock" :label="submitLabel" :destructive="needsPhrase" :disabled="!phraseReady" />
+          <FormDialogActions :close="close" :processing="processing" :icon="CalendarClock" :label="submitLabel" :destructive="needsPhrase" :disabled="!phraseReady" />
         </FieldGroup>
       </form>
     </template>
-  </FormSheet>
+  </FormModal>
 </template>

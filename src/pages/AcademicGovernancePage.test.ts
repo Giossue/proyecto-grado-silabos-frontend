@@ -10,7 +10,7 @@ vi.mock('@/state/session', () => ({ sessionState: { current: { value: { active_r
 
 const mountPage = () => mount(AcademicGovernancePage, { attachTo: document.body, global: { stubs: {
   PageFrame: { props: ['title'], template: '<main><slot name="banner" /><h1>{{ title }}</h1><slot name="actions" /><slot /></main>' },
-  CatalogRecordSheet: true, CatalogSection: true, RouterLink: { template: '<a><slot /></a>' },
+  CatalogRecordDialog: true, CatalogSection: true, RouterLink: { template: '<a><slot /></a>' },
 } } });
 
 afterEach(() => { document.body.innerHTML = ''; vi.clearAllMocks(); });

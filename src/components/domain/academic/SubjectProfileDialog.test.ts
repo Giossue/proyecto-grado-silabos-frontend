@@ -2,7 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { defineComponent } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getSubjectProfile, saveSubjectProfile } from '@/api/career-academics';
-import SubjectProfileSheet from './SubjectProfileSheet.vue';
+import SubjectProfileDialog from './SubjectProfileDialog.vue';
 
 vi.mock('@/api/career-academics', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/career-academics')>()),
@@ -10,7 +10,7 @@ vi.mock('@/api/career-academics', async (importOriginal) => ({
   saveSubjectProfile: vi.fn(),
 }));
 
-const formSheet = defineComponent({
+const formModal = defineComponent({
   setup: () => ({ close: () => undefined }),
   template: '<div><slot :close="close" /></div>',
 });
@@ -22,15 +22,15 @@ const editor = defineComponent({
   template: '<button type="button" :data-id="id" @click="$emit(\'update:modelValue\', { type: \'doc\', content: [] })">{{ label }}</button>',
 });
 
-const mountSheet = () => mount(SubjectProfileSheet, {
+const mountDialog = () => mount(SubjectProfileDialog, {
   props: { subjectId: 'subject-1', subjectName: 'Arquitectura', open: false },
   global: { stubs: {
-    FormDialog: formSheet, FormSheetActions: actions, FreeTextEditor: editor,
+    FormDialog: formModal, FormDialogActions: actions, FreeTextEditor: editor,
     FieldGroup: passthrough, Field: passthrough, FieldLabel: passthrough, FieldDescription: passthrough,
   } },
 });
 
-describe('SubjectProfileSheet', () => {
+describe('SubjectProfileDialog', () => {
   beforeEach(() => {
     vi.mocked(getSubjectProfile).mockReset();
     vi.mocked(saveSubjectProfile).mockReset();
@@ -46,7 +46,7 @@ describe('SubjectProfileSheet', () => {
       complete: false,
     });
     vi.mocked(saveSubjectProfile).mockResolvedValue({ fields: [], values: {}, complete: true });
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await wrapper.setProps({ open: true });
     await flushPromises();
     expect(getSubjectProfile).toHaveBeenCalledWith('subject-1');
@@ -67,7 +67,7 @@ describe('SubjectProfileSheet', () => {
       values: { f1: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Texto de ejemplo' }] }] } },
       complete: true,
     });
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await wrapper.setProps({ open: true });
     await flushPromises();
     const save = () => wrapper.get('button[type="submit"]');
@@ -88,7 +88,7 @@ describe('SubjectProfileSheet', () => {
       values: {},
       complete: false,
     });
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await wrapper.setProps({ open: true });
     await flushPromises();
 
@@ -114,7 +114,7 @@ describe('SubjectProfileSheet', () => {
       complete: false,
     });
     vi.mocked(saveSubjectProfile).mockResolvedValue({ fields: [], values: {}, complete: false });
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await wrapper.setProps({ open: true });
     await flushPromises();
 
@@ -128,7 +128,7 @@ describe('SubjectProfileSheet', () => {
 
   it('explains that the template has no profile fields yet', async () => {
     vi.mocked(getSubjectProfile).mockResolvedValue({ fields: [], values: {}, complete: false });
-    const wrapper = mountSheet();
+    const wrapper = mountDialog();
     await wrapper.setProps({ open: true });
     await flushPromises();
     expect(wrapper.text()).toContain('campos de Coordinación');

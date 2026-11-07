@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { defineComponent } from 'vue';
 import { deleteProcess, getProcessImpact, transitionProcess, type SyllabusProcess } from '@/api/processes';
 import { ApiError } from '@/api/client';
-import DeadlineExtensionSheet from '@/components/domain/syllabus/DeadlineExtensionSheet.vue';
+import DeadlineExtensionDialog from '@/components/domain/syllabus/DeadlineExtensionDialog.vue';
 import SyllabusProcessActions from '@/components/domain/syllabus/SyllabusProcessActions.vue';
 import { DIALOG_EXIT_MS } from '@/lib/dialogExit';
 
@@ -76,8 +76,8 @@ const mountActions = (value = process(), dialogStub = dialog) => mount(SyllabusP
       Spinner: passthrough,
       Trash2: passthrough,
       Lock: passthrough,
-      SyllabusProcessSheet: true,
-      DeadlineExtensionSheet: true,
+      SyllabusProcessDialog: true,
+      DeadlineExtensionDialog: true,
     },
   },
 });
@@ -287,8 +287,8 @@ describe('SyllabusProcessActions', () => {
     expect(extend).toBeDefined();
     expect(extend!.attributes('disabled')).toBeUndefined();
     await extend!.trigger('click');
-    expect(wrapper.findComponent(DeadlineExtensionSheet).props('open')).toBe(true);
-    expect(wrapper.findComponent(DeadlineExtensionSheet).props('process')).toMatchObject({ id: 'process-1', state: 'cerrado' });
+    expect(wrapper.findComponent(DeadlineExtensionDialog).props('open')).toBe(true);
+    expect(wrapper.findComponent(DeadlineExtensionDialog).props('process')).toMatchObject({ id: 'process-1', state: 'cerrado' });
   });
 
   it('una convocatoria finalizada que no se puede reabrir desactiva prorrogar y dice por qué', () => {
@@ -306,7 +306,7 @@ describe('SyllabusProcessActions', () => {
 
     wrapper.vm.run('prorrogar');
     await flushPromises();
-    wrapper.findComponent(DeadlineExtensionSheet).vm.$emit('saved', 'Plazo prorrogado. La convocatoria se volvió a abrir.');
+    wrapper.findComponent(DeadlineExtensionDialog).vm.$emit('saved', 'Plazo prorrogado. La convocatoria se volvió a abrir.');
     await flushPromises();
 
     // La lista se refresca al avisar: con el panel aún visible, cambiaría lo que muestra.

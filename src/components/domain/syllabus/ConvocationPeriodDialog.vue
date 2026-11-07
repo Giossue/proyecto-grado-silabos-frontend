@@ -5,7 +5,7 @@ import { createAcademicRecord } from '@/api/academic';
 import { ApiError } from '@/api/client';
 import { createProcess } from '@/api/processes';
 import DatePicker from '@/components/DatePicker.vue';
-import FormSheet from '@/components/domain/FormSheet.vue';
+import FormModal from '@/components/domain/FormModal.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
@@ -100,7 +100,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormSheet
+    <FormModal
         v-model:open="open"
         :disabled="props.disabled"
         trigger-label="Nueva convocatoria"
@@ -179,7 +179,7 @@ const submit = async (): Promise<void> => {
                 </DialogContent>
             </Dialog>
         </template>
-    </FormSheet>
+    </FormModal>
 </template>
 
 <style scoped>
