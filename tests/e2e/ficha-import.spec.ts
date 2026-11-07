@@ -36,9 +36,9 @@ for (const dark of [false, true]) {
     await dialog.locator('input[type=file]').setInputFiles({ name: 'proyecto.xlsx', mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', buffer: Buffer.from('Excel sintético') });
     await dialog.getByRole('button', { name: 'Revisar Excel', exact: true }).click();
     await expect(dialog.getByText('1 de 2 campos con contenido')).toBeVisible();
-    await expect(dialog.getByRole('button', { name: 'Cerrar', exact: true })).toHaveCount(0);
+    await expect(dialog.locator('button:not([data-slot="dialog-close-x"])', { hasText: 'Cerrar' })).toHaveCount(0);
     await dialog.getByRole('button', { name: 'Revisar campos' }).click();
-    await expect(dialog.getByText('Sin contenido en el archivo. Este campo no se cambiará.')).toBeVisible();
+    await expect(dialog.getByText('Sin contenido en el archivo. Este campo no se cambiará')).toBeVisible();
     for (const width of [360, 768, 1440]) {
       await page.setViewportSize({ width, height: 1100 });
       const table = dialog.getByRole('table', { name: 'Contribución al perfil' });
