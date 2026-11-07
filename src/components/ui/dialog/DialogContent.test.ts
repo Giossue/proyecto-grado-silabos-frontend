@@ -50,4 +50,17 @@ describe('DialogContent', () => {
     expect((wrapper.vm as unknown as { open: boolean }).open).toBe(true);
     wrapper.unmount();
   });
+
+  it('ofrece una X para cerrar arriba a la derecha', async () => {
+    const wrapper = mount(Harness, { attachTo: document.body });
+    await flushPromises();
+    const close = document.body.querySelector<HTMLButtonElement>('[data-slot="dialog-close-x"]')!;
+    expect(close.textContent).toContain('Cerrar');
+
+    close.click();
+    await flushPromises();
+
+    expect((wrapper.vm as unknown as { open: boolean }).open).toBe(false);
+    wrapper.unmount();
+  });
 });

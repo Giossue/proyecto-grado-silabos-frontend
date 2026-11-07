@@ -59,7 +59,7 @@ describe('FichaImportDialog', () => {
     expect(document.body.textContent).toContain('Vista previa del Excel para 1 de 2 materias');
     expect(document.body.textContent).toContain('1 de 1 campos con contenido');
     expect(document.body.textContent).toContain('0 de 1 campos con contenido');
-    expect(button('Cerrar')).toBeUndefined();
+    expect([...document.body.querySelectorAll('button:not([data-slot="dialog-close-x"])')].some((item) => item.textContent?.includes('Cerrar'))).toBe(false);
     expect(button('Descartar')).toBeTruthy();
     button('Aplicar a 1 materias')!.click();
     await flushPromises();

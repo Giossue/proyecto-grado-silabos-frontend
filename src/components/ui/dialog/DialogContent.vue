@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import type { DialogContentEmits, DialogContentProps } from "reka-ui"
+import { X } from "@lucide/vue"
 import { ref, type HTMLAttributes } from "vue"
 import { reactiveOmit } from "@vueuse/core"
 import {
+  DialogClose,
   DialogContent,
   DialogPortal,
   useForwardPropsEmits,
@@ -18,10 +20,11 @@ const props = defineProps<DialogContentProps & {
   class?: HTMLAttributes["class"]
   overlayClass?: HTMLAttributes["class"]
   layer?: "default" | "confirmation"
+  hideClose?: boolean
 }>()
 const emits = defineEmits<DialogContentEmits>()
 
-const delegatedProps = reactiveOmit(props, "class", "overlayClass", "layer")
+const delegatedProps = reactiveOmit(props, "class", "overlayClass", "layer", "hideClose")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
@@ -59,6 +62,14 @@ const onEscapeKeyDown = (event: KeyboardEvent): void => {
       <div class="contents" @input.capture="markChanged" @change.capture="markChanged">
         <slot />
       </div>
+      <DialogClose
+        v-if="!hideClose"
+        data-slot="dialog-close-x"
+        class="focus-visible:ring-ring/50 focus-visible:ring-3 outline-hidden absolute top-4 right-4 inline-flex size-8 items-center justify-center rounded-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none"
+      >
+        <X class="size-4" aria-hidden="true" />
+        <span class="sr-only">Cerrar</span>
+      </DialogClose>
     </DialogContent>
   </DialogPortal>
 </template>
