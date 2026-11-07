@@ -100,10 +100,23 @@ const expectLoading = async (page: Page): Promise<void> => {
 
 const expectPasswordForm = async (page: Page): Promise<void> => {
     await expect(page.getByRole('status')).toHaveCount(0);
-    await expect(page.getByLabel(/^Contraseña actual/)).toBeVisible();
-    await expect(page.getByLabel(/^Contraseña nueva/)).toBeVisible();
-    await expect(page.getByLabel(/^Confirmar contraseña/)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Guardar', exact: true })).toBeEnabled();
+    await page.locator('[data-test="open-password-dialog"]').click();
+    const dialog = page.getByRole('dialog', { name: 'Actualizar contraseña' });
+    await expect(dialog.getByLabel(/^Contraseña actual/)).toBeVisible();
+    await expect(dialog.getByLabel(/^Contraseña nueva/)).toBeVisible();
+    await expect(dialog.getByLabel(/^Confirmar contraseña/)).toBeVisible();
+    const save = dialog.locator('[data-test="update-password-button"]');
+    await expect(save).toBeDisabled();
+    await dialog.getByLabel(/^Contraseña actual/).fill('Actual-2026!');
+    await dialog.getByLabel(/^Contraseña nueva/).fill('Nueva-2026!');
+    await dialog.getByLabel(/^Confirmar contraseña/).fill('Nueva-2026!');
+    await expect(save).toBeEnabled();
+    await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
+    await expect(dialog).toBeHidden();
+};
+
+const openTwoFactor = async (page: Page): Promise<void> => {
+    await page.getByRole('button', { name: /Verificación en dos pasos/ }).click();
 };
 
 const expectNoOverflow = async (page: Page): Promise<void> => {
@@ -140,6 +153,7 @@ for (const width of [360, 768, 1440]) {
 
                 fixture.respond(disabledTwoFactor);
                 await expectPasswordForm(page);
+                await openTwoFactor(page);
                 await expect(page.getByRole('button', { name: 'Activar 2FA', exact: true })).toBeEnabled();
                 await expectNoOverflow(page);
                 expect(fixture.requestCount()).toBe(1);
@@ -164,7 +178,8 @@ test('Seguridad permite cambiar contraseña y avisa si no consigue consultar el 
         await expectLoading(page);
         fixture.respond({ status: 503, body: { message: 'No se pudo consultar el segundo factor.' } });
         await expectPasswordForm(page);
-        await expect(page.getByRole('alert')).toHaveText('No se pudo consultar el segundo factor.');
+        await openTwoFactor(page);
+        await expect(page.getByRole('alert')).toHaveText('No se pudo consultar el segundo factor');
         await expect(page.getByRole('button', { name: 'Activar 2FA', exact: true })).toHaveCount(0);
         await expect(page.getByRole('button', { name: 'Desactivar 2FA', exact: true })).toHaveCount(0);
         expect(fixture.requestCount()).toBe(1);
