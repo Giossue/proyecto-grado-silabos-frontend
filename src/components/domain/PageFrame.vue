@@ -117,7 +117,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
     >
         <header
             data-tour="page-header"
-            :class="cn('flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between', headerWidth && 'mx-auto', headerClass)"
+            :class="cn('flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between', inlineActions && 'max-sm:flex-row max-sm:items-start', headerWidth && 'mx-auto', headerClass)"
             :style="headerStyle"
         >
             <div class="flex min-w-0 flex-1 flex-col gap-2">
@@ -177,6 +177,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 :class="
                     cn(
                         'flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end',
+                        inlineActions && 'max-sm:w-auto',
                         floating && 'max-sm:fixed max-sm:z-40 max-sm:w-auto max-sm:flex-col max-sm:items-end',
                         floating && 'max-sm:right-(--page-mobile-actions-right) max-sm:bottom-(--page-mobile-actions-bottom)',
                         floating && 'max-sm:transition-all max-sm:duration-200 max-sm:ease-out',
@@ -192,7 +193,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                             needsTrigger &&
                                 !expanded &&
                                 'max-sm:hidden max-sm:[&>*]:hidden',
-                            'max-sm:[&>*]:shadow-menu',
+                            floating && 'max-sm:[&>*]:shadow-menu',
                             floating && !needsTrigger &&
                                 'max-sm:[&_button]:size-14 max-sm:[&_button]:rounded-full max-sm:[&_button]:gap-0 max-sm:[&_button]:p-0 max-sm:[&_button]:text-[length:0] max-sm:[&_button]:[&_svg]:size-5',
                         )
