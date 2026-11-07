@@ -88,7 +88,7 @@ const currentAssignments = computed(() =>
 <template>
     <Dialog v-model:open="open">
         <DialogContent :aria-describedby="undefined" class="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-            <DialogHeader class="p-4 pb-0 text-left">
+            <DialogHeader class="p-4 pb-0">
                 <DialogTitle>{{ editing ? 'Editar usuario' : 'Datos de la cuenta' }}</DialogTitle>
             </DialogHeader>
 

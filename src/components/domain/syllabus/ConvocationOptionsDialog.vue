@@ -55,9 +55,10 @@ const run = (key: string): void => {
 <template>
     <Dialog v-model:open="open">
         <DialogContent :aria-describedby="undefined" class="sm:max-w-lg">
-            <DialogHeader class="flex-row items-center justify-between gap-2 pr-0">
+            <DialogHeader class="relative">
                 <DialogTitle>Convocatoria {{ row.code }}</DialogTitle>
-                <MenuTooltip v-if="sensitive.length" label="Más opciones">
+                <div v-if="sensitive.length" class="absolute -top-1 right-8">
+                <MenuTooltip label="Más opciones">
                     <DropdownMenu>
                         <DropdownMenuTrigger as-child>
                             <Button type="button" variant="ghost" size="icon-sm" aria-label="Más opciones"><MoreHorizontal aria-hidden="true" /></Button>
@@ -70,6 +71,7 @@ const run = (key: string): void => {
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </MenuTooltip>
+                </div>
             </DialogHeader>
             <ul class="grid grid-cols-2 items-start gap-2" aria-label="Opciones de la convocatoria">
                 <li v-for="action in regular" :key="action.key" class="flex flex-col gap-1">

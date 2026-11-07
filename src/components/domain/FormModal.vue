@@ -73,7 +73,7 @@ const close = (): void => {
                 })
             "
         >
-            <DialogHeader v-if="title" class="p-4 pb-0 text-left">
+            <DialogHeader v-if="title" class="p-4 pb-0">
                 <DialogTitle>{{ title }}</DialogTitle>
             </DialogHeader>
             <ScrollArea class="min-h-0 flex-1">
