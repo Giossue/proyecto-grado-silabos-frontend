@@ -9,7 +9,6 @@ import FormSheet from '@/components/domain/FormSheet.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/components/ui/field';
-import { SheetFooter } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
 import ConfirmPhrase from '@/components/domain/ConfirmPhrase.vue';
 import { matchesPhrase } from '@/lib/confirmPhrase';
@@ -147,7 +146,7 @@ const submit = async (): Promise<void> => {
                     </FieldSet>
                     </Transition>
                     </div>
-                    <SheetFooter class="absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
+                    <DialogFooter class="mx-0 flex-col sm:flex-col sm:justify-start p-4 absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
                         <Field orientation="horizontal" class="justify-end">
                             <Button v-if="step === 1" type="button" variant="outline" @click="close">Cancelar</Button>
                             <Button v-else type="button" variant="outline" @click="goTo(1)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
@@ -158,7 +157,7 @@ const submit = async (): Promise<void> => {
                                 Abrir convocatoria
                             </Button>
                         </Field>
-                    </SheetFooter>
+                    </DialogFooter>
                 </FieldGroup>
             </form>
             <Dialog v-model:open="confirmOpen">

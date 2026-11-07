@@ -3,7 +3,7 @@ import { Check } from '@lucide/vue';
 import type { Component } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
-import { SheetFooter } from '@/components/ui/sheet';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 
 withDefaults(
@@ -29,8 +29,8 @@ withDefaults(
 </script>
 
 <template>
-    <SheetFooter
-        class="absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)"
+    <DialogFooter
+        class="mx-0 flex-col sm:flex-col sm:justify-start p-4 absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)"
     >
         <Field orientation="horizontal" class="justify-end">
             <Button type="button" variant="outline" @click="close">
@@ -47,6 +47,6 @@ withDefaults(
                 {{ label }}
             </Button>
         </Field>
-    </SheetFooter>
+    </DialogFooter>
 </template>
 

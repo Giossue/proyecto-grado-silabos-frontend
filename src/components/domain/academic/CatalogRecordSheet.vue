@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SheetFooter } from '@/components/ui/sheet';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { initialLibraries, librariesToStore, useCatalogLibraries } from '@/composables/useCatalogLibraries';
 import type { AcademicStructureProps, GovernanceCatalogEntity } from '@/types/academic';
@@ -158,7 +158,7 @@ const submit = async (): Promise<void> => {
                         <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" :min-value="minimumPeriodDate" :aria-invalid="Boolean(errors.starts_on)" required /><FieldDescription>Debe ser hoy o una fecha posterior</FieldDescription><FieldError :errors="errors.starts_on" /></Field>
                         <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel for="catalog-ends-on" required>Fecha de fin</FieldLabel><DatePicker id="catalog-ends-on" v-model="form.ends_on" :min-value="minimumPeriodEndDate" :aria-invalid="Boolean(errors.ends_on)" required /><FieldError :errors="errors.ends_on" /></Field>
                     </div>
-                    <SheetFooter v-if="entity === 'facultad'" class="absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
+                    <DialogFooter v-if="entity === 'facultad'" class="mx-0 flex-col sm:flex-col sm:justify-start p-4 absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
                         <Field orientation="horizontal" class="justify-end">
                             <Button v-if="step === 1" type="button" variant="outline" @click="close">Cancelar</Button>
                             <Button v-else type="button" variant="outline" @click="goTo(1)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
@@ -169,7 +169,7 @@ const submit = async (): Promise<void> => {
                                 {{ submitLabel }}
                             </Button>
                         </Field>
-                    </SheetFooter>
+                    </DialogFooter>
                     <FormSheetActions v-else :close="close" :processing="processing" :icon="Plus" :label="submitLabel" />
                 </FieldGroup>
             </form>

@@ -16,7 +16,7 @@ const fadingDialog = defineComponent({
   emits: ['update:open'],
   template: '<div data-modal :data-state="open ? \'open\' : \'closed\'"><slot /></div>',
 });
-const dialogStubs = { Dialog: fadingDialog, DialogContent: passthrough, DialogHeader: passthrough, DialogTitle: passthrough, DialogDescription: passthrough, DialogFooter: passthrough, DialogClose: passthrough };
+const dialogStubs = { Dialog: fadingDialog, DialogContent: passthrough, DialogHeader: passthrough, DialogTitle: passthrough, DialogDescription: passthrough, DialogFooter: passthrough, DialogClose: passthrough, DialogTrigger: passthrough };
 
 afterEach(() => {
   vi.useRealTimers();
@@ -120,7 +120,7 @@ describe('syllabus process dates', () => {
   it('la frase de confirmación se borra al volver a abrir, no al cerrar', async () => {
     const wrapper = mount(SyllabusProcessSheet, { attachTo: document.body, props: { open: true, template: null, periods: [], period: { id: 'period-1', codigo: 'Septiembre-Enero 2026-2027' } }, global: { stubs: dialogStubs } });
     await flushPromises();
-    const modal = wrapper.getComponent(fadingDialog);
+    const modal = wrapper.findAllComponents(fadingDialog).at(-1)!;
     modal.vm.$emit('update:open', true);
     await flushPromises();
     typeConfirmation('process-open-confirm', 'abrir convocatoria');

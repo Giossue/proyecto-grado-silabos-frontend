@@ -13,7 +13,7 @@ import FormSheetActions from '@/components/domain/FormSheetActions.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
-import { SheetFooter } from '@/components/ui/sheet';
+import { DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -177,12 +177,12 @@ const submit = async (confirmPurge = false): Promise<void> => {
                     <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel :for="`edit-starts-on-${recordId}`" required>Fecha de inicio</FieldLabel><DatePicker :id="`edit-starts-on-${recordId}`" v-model="form.starts_on" required :disabled="readOnly" /><FieldError :errors="errors.starts_on" /></Field>
                     <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required :disabled="readOnly" /><FieldError :errors="errors.ends_on" /></Field>
                 </div>
-                <SheetFooter v-if="viewing" class="absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
+                <DialogFooter v-if="viewing" class="mx-0 flex-col sm:flex-col sm:justify-start p-4 absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
                     <Field orientation="horizontal" class="justify-end">
                         <Button type="button" variant="outline" @click="close">Cerrar</Button>
                         <Button type="button" :disabled="locked" @click="viewing = false"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
                     </Field>
-                </SheetFooter>
+                </DialogFooter>
                 <FormSheetActions v-else :close="reset" :processing="processing" :disabled="unchanged || Boolean(lockReason) || (entity === 'facultad' && noLibraryChosen)" :icon="Check" label="Guardar cambios" />
             </FieldGroup></form>
         </template>

@@ -19,7 +19,7 @@ const fadingDialog = defineComponent({
   emits: ['update:open'],
   template: '<div data-modal :data-state="open ? \'open\' : \'closed\'"><slot /></div>',
 });
-const dialogStubs = { Dialog: fadingDialog, DialogContent: passthrough, DialogHeader: passthrough, DialogTitle: passthrough, DialogDescription: passthrough, DialogFooter: passthrough, DialogClose: passthrough };
+const dialogStubs = { Dialog: fadingDialog, DialogContent: passthrough, DialogHeader: passthrough, DialogTitle: passthrough, DialogDescription: passthrough, DialogFooter: passthrough, DialogClose: passthrough, DialogTrigger: passthrough };
 
 const confirmSubmit = async (): Promise<void> => {
   document.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -119,7 +119,7 @@ describe('ConvocationPeriodSheet', () => {
   it('la frase de confirmación se borra al volver a abrir, no al cerrar', async () => {
     const wrapper = mount(ConvocationPeriodSheet, { attachTo: document.body, props: { open: true }, global: { stubs: dialogStubs } });
     await flushPromises();
-    const modal = wrapper.getComponent(fadingDialog);
+    const modal = wrapper.findAllComponents(fadingDialog).at(-1)!;
     modal.vm.$emit('update:open', true);
     await flushPromises();
     typeConfirmation('convocation-open-confirm', 'abrir convocatoria');

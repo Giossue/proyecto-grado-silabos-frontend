@@ -11,12 +11,12 @@ import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import { Separator } from '@/components/ui/separator';
 import {
-    Sheet,
-    SheetContent,
-    SheetFooter,
-    SheetHeader,
-    SheetTitle,
-} from '@/components/ui/sheet';
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 export type ManagedUserRoleAssignment = {
     id: string;
@@ -86,11 +86,11 @@ const currentAssignments = computed(() =>
 </script>
 
 <template>
-    <Sheet v-model:open="open">
-        <SheetContent :aria-describedby="undefined" class="sm:max-w-lg">
-            <SheetHeader class="pb-0">
-                <SheetTitle>{{ editing ? 'Editar usuario' : 'Datos de la cuenta' }}</SheetTitle>
-            </SheetHeader>
+    <Dialog v-model:open="open">
+        <DialogContent :aria-describedby="undefined" class="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+            <DialogHeader class="p-4 pb-0 text-left">
+                <DialogTitle>{{ editing ? 'Editar usuario' : 'Datos de la cuenta' }}</DialogTitle>
+            </DialogHeader>
 
             <ScrollArea v-if="editing" class="min-h-0 flex-1">
                 <div class="px-4 pt-1 pb-28">
@@ -139,11 +139,11 @@ const currentAssignments = computed(() =>
                 </div>
             </ScrollArea>
 
-            <div v-if="!editing && actions.length > 0" class="absolute top-3 right-3 flex items-center gap-1">
+            <div v-if="!editing && actions.length > 0" class="absolute top-3 right-12 flex items-center gap-1">
                 <SheetActions :actions="actions" :menu-label="`Acciones para ${props.user.nombre}`" @select="runAction" />
             </div>
 
-            <SheetFooter v-if="!editing" class="absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
+            <DialogFooter v-if="!editing" class="mx-0 flex-col sm:flex-col sm:justify-start p-4 absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
                 <Field orientation="horizontal" class="justify-end">
                     <Button type="button" variant="outline" @click="open = false">Cerrar</Button>
                     <Button v-if="canEdit" type="button" @click="editing = true">
@@ -151,7 +151,7 @@ const currentAssignments = computed(() =>
                         Editar
                     </Button>
                 </Field>
-            </SheetFooter>
-        </SheetContent>
-    </Sheet>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>
