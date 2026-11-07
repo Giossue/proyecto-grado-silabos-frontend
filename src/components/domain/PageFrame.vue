@@ -32,10 +32,12 @@ const props = withDefaults(
         hideIcon?: boolean;
         loading?: boolean;
         actionsSkeleton?: string[];
+        inlineActions?: boolean;
     }>(),
     {
         size: 'full',
         loading: false,
+        inlineActions: false,
         actionsSkeleton: () => [],
     },
 );
@@ -83,7 +85,8 @@ const countActions = (nodes: VNode[]): number =>
 
 const actionCount = computed(() => props.loading ? 0 : countActions(slots.actions?.() ?? []));
 
-const needsTrigger = computed(() => actionCount.value > 1);
+const floating = computed(() => actionCount.value > 0 && !props.inlineActions);
+const needsTrigger = computed(() => floating.value && actionCount.value > 1);
 
 const expanded = ref(false);
 const { hidden } = useScrollDirection();
@@ -106,7 +109,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
         :class="
             cn(
                 'flex min-w-0 flex-col gap-6 overflow-x-clip p-4 sm:p-6',
-                actionCount > 0 &&
+                floating &&
                     'max-sm:pb-(--page-mobile-actions-inset)',
                 widthClass,
             )
@@ -174,10 +177,10 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 :class="
                     cn(
                         'flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end',
-                        'max-sm:fixed max-sm:z-40 max-sm:w-auto max-sm:flex-col max-sm:items-end',
-                        'max-sm:right-(--page-mobile-actions-right) max-sm:bottom-(--page-mobile-actions-bottom)',
-                        'max-sm:transition-all max-sm:duration-200 max-sm:ease-out',
-                        floatingHidden &&
+                        floating && 'max-sm:fixed max-sm:z-40 max-sm:w-auto max-sm:flex-col max-sm:items-end',
+                        floating && 'max-sm:right-(--page-mobile-actions-right) max-sm:bottom-(--page-mobile-actions-bottom)',
+                        floating && 'max-sm:transition-all max-sm:duration-200 max-sm:ease-out',
+                        floating && floatingHidden &&
                             'max-sm:pointer-events-none max-sm:translate-y-24 max-sm:opacity-0',
                     )
                 "
@@ -190,7 +193,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                                 !expanded &&
                                 'max-sm:hidden max-sm:[&>*]:hidden',
                             'max-sm:[&>*]:shadow-menu',
-                            !needsTrigger &&
+                            floating && !needsTrigger &&
                                 'max-sm:[&_button]:size-14 max-sm:[&_button]:rounded-full max-sm:[&_button]:gap-0 max-sm:[&_button]:p-0 max-sm:[&_button]:text-[length:0] max-sm:[&_button]:[&_svg]:size-5',
                         )
                     "
