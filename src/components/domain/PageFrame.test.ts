@@ -78,4 +78,18 @@ describe('PageFrame', () => {
 
     expect(wrapper.get('header').classes()).toContain('syllabus-editor-header');
   });
+
+  it('las herramientas van en el encabezado y no flotan como los botones principales', () => {
+    const wrapper = mount(PageFrame, {
+      props: { title: 'Mis sílabos', description: 'Los sílabos de sus materias' },
+      slots: { tools: '<button type="button">Historial</button>', actions: '<button type="button">Nuevo</button>' },
+    });
+    const tools = wrapper.get('[data-tour="page-tools"]');
+    const actions = wrapper.get('[data-tour="page-actions"]');
+
+    expect(tools.text()).toBe('Historial');
+    expect(tools.classes().join(' ')).not.toContain('fixed');
+    expect(actions.classes()).toContain('max-sm:fixed');
+    expect(actions.text()).toBe('Nuevo');
+  });
 });

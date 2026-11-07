@@ -17,7 +17,7 @@ vi.mock('@/api/syllabi', () => ({ getTeacherSyllabi: vi.fn() }));
 vi.mock('@/api/support-documents', () => ({ getTeacherSupportDocuments: vi.fn(), viewSupportDocument: vi.fn() }));
 
 const mountPage = () => mount(TeacherSyllabiPage, {
-  global: { stubs: { PageFrame: { template: '<div><slot name="banner" /><slot name="actions" /><slot /></div>' } } },
+  global: { stubs: { PageFrame: { template: '<div><slot name="banner" /><slot name="tools" /><slot name="actions" /><slot /></div>' } } },
 });
 
 const syllabi: SyllabiResponse = {

@@ -91,8 +91,8 @@ onMounted(() => { void load(initialPage, true); });
 </script>
 
 <template>
-  <PageFrame inline-actions :title="title" description="Bibliografía de los sílabos enviados" size="wide" :loading="!data && !error" :actions-skeleton="!data && !error ? ['w-9'] : []">
-    <template #actions><TooltipProvider><Tooltip><TooltipTrigger as-child><Button as-child variant="ghost" size="icon"><RouterLink :to="paths.library.history" aria-label="Historial"><History aria-hidden="true" /></RouterLink></Button></TooltipTrigger><TooltipContent>Historial</TooltipContent></Tooltip></TooltipProvider></template>
+  <PageFrame :title="title" description="Bibliografía de los sílabos enviados" size="wide" :loading="!data && !error" :actions-skeleton="!data && !error ? ['w-9'] : []">
+    <template #tools><TooltipProvider><Tooltip><TooltipTrigger as-child><Button as-child variant="ghost" size="icon"><RouterLink :to="paths.library.history" aria-label="Historial"><History aria-hidden="true" /></RouterLink></Button></TooltipTrigger><TooltipContent>Historial</TooltipContent></Tooltip></TooltipProvider></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="5" :filters="2" :actions="false" :badges="[5]" metrics />
     <MetricTiles v-if="data && summary?.metrics.length" :metrics="summary.metrics" />

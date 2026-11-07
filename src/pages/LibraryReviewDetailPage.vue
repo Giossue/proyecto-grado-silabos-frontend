@@ -161,8 +161,11 @@ onMounted(load);
       <StatusBadge :label="outcomeBadge.label" :tone="outcomeBadge.tone" />
       <span v-if="review.outcome === 'reemplazado'" class="text-sm text-muted-foreground">Hay un envío más reciente · solo consulta</span>
     </template>
-    <template #actions>
+    <template #tools>
       <IconTooltip v-if="review.verified_at" label="Ver PDF"><Button type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button></IconTooltip>
+    </template>
+    <template #actions>
+      
       <Button v-if="review.can_comment" type="button" variant="outline" @click="act('return')">Devolver al docente</Button>
       <Button v-if="canSign" type="button" @click="act('sign')"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
     </template>

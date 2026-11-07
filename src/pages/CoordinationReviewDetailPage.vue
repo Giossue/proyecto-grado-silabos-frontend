@@ -185,7 +185,7 @@ onMounted(load);
       <SyllabusStateBadge :state="data.syllabus.state" />
       <span v-for="note in statusNotes" :key="note" class="text-sm text-muted-foreground">{{ note }}</span>
     </template>
-    <template #actions>
+    <template #tools>
       <IconTooltip v-if="approvedCurrent" label="Ver PDF"><Button type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf(data.revision.id)"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button></IconTooltip>
       <TooltipProvider>
         <Tooltip>
@@ -219,6 +219,11 @@ onMounted(load);
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu></MenuTooltip>
+    </template>
+    <template #actions>
+      
+      
+      
       <Button v-if="canReviewCurrent" type="button" variant="outline" @click="openCorrection">Solicitar corrección</Button>
       <Button v-if="canSign" type="button" @click="signOpen = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y enviar a biblioteca</Button>
     </template>

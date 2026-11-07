@@ -32,12 +32,10 @@ const props = withDefaults(
         hideIcon?: boolean;
         loading?: boolean;
         actionsSkeleton?: string[];
-        inlineActions?: boolean;
     }>(),
     {
         size: 'full',
         loading: false,
-        inlineActions: false,
         actionsSkeleton: () => [],
     },
 );
@@ -85,8 +83,7 @@ const countActions = (nodes: VNode[]): number =>
 
 const actionCount = computed(() => props.loading ? 0 : countActions(slots.actions?.() ?? []));
 
-const floating = computed(() => actionCount.value > 0 && !props.inlineActions);
-const needsTrigger = computed(() => floating.value && actionCount.value > 1);
+const needsTrigger = computed(() => actionCount.value > 1);
 
 const expanded = ref(false);
 const { hidden } = useScrollDirection();
@@ -109,7 +106,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
         :class="
             cn(
                 'flex min-w-0 flex-col gap-6 overflow-x-clip p-4 sm:p-6',
-                floating &&
+                actionCount > 0 &&
                     'max-sm:pb-(--page-mobile-actions-inset)',
                 widthClass,
             )
@@ -117,7 +114,7 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
     >
         <header
             data-tour="page-header"
-            :class="cn('flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between', inlineActions && 'max-sm:flex-row max-sm:items-start', headerWidth && 'mx-auto', headerClass)"
+            :class="cn('flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between', $slots.tools && 'max-sm:flex-row max-sm:items-start', headerWidth && 'mx-auto', headerClass)"
             :style="headerStyle"
         >
             <div class="flex min-w-0 flex-1 flex-col gap-2">
@@ -162,6 +159,10 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 </div>
             </div>
 
+            <div v-if="$slots.tools && !loading" data-tour="page-tools" class="flex shrink-0 items-center gap-1 sm:-mr-2 sm:gap-2">
+                <slot name="tools" />
+            </div>
+
             <div
                 v-if="actionCount === 0 && actionsSkeleton.length > 0"
                 data-skeleton="page-actions"
@@ -177,11 +178,10 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                 :class="
                     cn(
                         'flex w-full shrink-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end',
-                        inlineActions && 'max-sm:w-auto',
-                        floating && 'max-sm:fixed max-sm:z-40 max-sm:w-auto max-sm:flex-col max-sm:items-end',
-                        floating && 'max-sm:right-(--page-mobile-actions-right) max-sm:bottom-(--page-mobile-actions-bottom)',
-                        floating && 'max-sm:transition-all max-sm:duration-200 max-sm:ease-out',
-                        floating && floatingHidden &&
+                        'max-sm:fixed max-sm:z-40 max-sm:w-auto max-sm:flex-col max-sm:items-end',
+                        'max-sm:right-(--page-mobile-actions-right) max-sm:bottom-(--page-mobile-actions-bottom)',
+                        'max-sm:transition-all max-sm:duration-200 max-sm:ease-out',
+                        floatingHidden &&
                             'max-sm:pointer-events-none max-sm:translate-y-24 max-sm:opacity-0',
                     )
                 "
@@ -193,8 +193,8 @@ const floatingHidden = computed(() => hidden.value && !expanded.value);
                             needsTrigger &&
                                 !expanded &&
                                 'max-sm:hidden max-sm:[&>*]:hidden',
-                            floating && 'max-sm:[&>*]:shadow-menu',
-                            floating && !needsTrigger &&
+                            'max-sm:[&>*]:shadow-menu',
+                            !needsTrigger &&
                                 'max-sm:[&_button]:size-14 max-sm:[&_button]:rounded-full max-sm:[&_button]:gap-0 max-sm:[&_button]:p-0 max-sm:[&_button]:text-[length:0] max-sm:[&_button]:[&_svg]:size-5',
                         )
                     "
