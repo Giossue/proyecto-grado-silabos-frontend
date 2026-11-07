@@ -80,8 +80,11 @@ test.describe('frontera distribuida de identidad', () => {
 
     await openSection(page, 'Plantilla', 'Plantilla de sílabo');
     await page.getByRole('button', { name: 'Editar', exact: true }).click();
-    await page.getByRole('dialog', { name: 'Editar la plantilla' }).getByRole('button', { name: 'Continuar', exact: true }).click({ timeout: 10_000 });
+    const templateWarning = page.getByRole('dialog', { name: 'Editar la plantilla' });
+    await templateWarning.locator('#template-edit-confirm').fill('editar plantilla');
+    await templateWarning.getByRole('button', { name: 'Continuar', exact: true }).click({ timeout: 10_000 });
     await expect(page.getByRole('button', { name: 'Opciones avanzadas' })).toBeVisible();
+    await page.getByRole('button', { name: 'Volver a la vista', exact: true }).click();
 
     await page.getByRole('button', { name: 'Menú de usuario' }).click();
     await page.getByRole('menuitem', { name: 'Configuración' }).click();
@@ -109,13 +112,12 @@ test.describe('frontera distribuida de identidad', () => {
   test('carga los módulos de Coordinación de su carrera', async ({ page }) => {
     const serverErrors = captureServerErrors(page);
     await login(page, 'coordinador@silabos.test');
-    // Coordinación elige su carrera al entrar, aunque tenga una sola.
-    await expect(page).toHaveURL(/\/rol$/);
-    await page.getByRole('button', { name: 'Entrar a esta carrera' }).click();
     await expect(page).toHaveURL(/\/coordinacion\/revisiones$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Revisión' })).toBeVisible();
     await expect(page.getByRole('tab', { name: 'Cola de revisión' })).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Antes de empezar' })).toBeVisible();
+    // El lanzador dice «Antes de empezar» o, con los pasos hechos, «Todo listo».
+    const setupLauncher = page.getByRole('button', { name: /Antes de empezar|Todo listo/ });
+    await expect(setupLauncher).toBeVisible();
     await expectNavigation(page, [
       'Revisión',
       'Materias y asignaciones',
@@ -134,8 +136,8 @@ test.describe('frontera distribuida de identidad', () => {
     await expect(page.getByRole('button', { name: /Editar malla|Comprobando/ })).toBeVisible();
 
     await openSection(page, 'Revisión', 'Revisión');
-    await page.getByRole('button', { name: 'Antes de empezar' }).click();
-    await expect(page.getByRole('dialog', { name: 'Antes de empezar' })).toBeVisible();
+    await setupLauncher.click();
+    await expect(page.getByRole('dialog', { name: /Antes de empezar|Todo listo/ })).toBeVisible();
     await page.keyboard.press('Escape');
 
     await page.goto('/admin/convocatorias');
@@ -148,7 +150,8 @@ test.describe('frontera distribuida de identidad', () => {
     await login(page, 'docente@silabos.test');
     await expect(page).toHaveURL(/\/docente\/mis-silabos$/);
     await expect(page.getByRole('heading', { level: 1, name: /^(Mis sílabos|Sílabos - Período .+)$/ })).toBeVisible();
-    await expectNavigation(page, ['Mis sílabos']);
+    // Docencia tiene una sola sección: trabaja sin menú lateral.
+    await expect(mainNavigation(page)).toHaveCount(0);
     await expect(page.getByText('Sílabos por entregar')).toHaveCount(0);
     await expect(
       page.getByRole('list', { name: 'Mis sílabos' }).or(page.getByText('No tiene sílabos asignados')),
@@ -167,8 +170,9 @@ test.describe('frontera distribuida de identidad', () => {
     await login(page, 'bibliotecario@silabos.test');
     await expect(page).toHaveURL(/\/biblioteca\/revisiones$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Revisiones de biblioteca' })).toBeVisible();
-    await expectNavigation(page, ['Revisiones de biblioteca']);
-    await expect(page.getByText('Por revisar', { exact: true }).first()).toBeVisible();
+    // Biblioteca tiene una sola sección: trabaja sin menú lateral.
+    await expect(mainNavigation(page)).toHaveCount(0);
+    await expect(page.getByRole('searchbox', { name: 'Buscar por asignatura, código, carrera o docente' })).toBeVisible();
 
     await page.goto('/admin/usuarios');
     await expect(page).toHaveURL(/\/biblioteca\/revisiones$/);
