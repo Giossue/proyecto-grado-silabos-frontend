@@ -86,13 +86,13 @@ onMounted(() => { void load(queryPage(route.query.page)); });
             <Table label="Usuarios y roles"><TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Roles</TableHead><TableHead>Carrera</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader><TableBody>
                 <TableEmpty v-if="result.users.data.length === 0" :colspan="4">No se encontraron cuentas con estos filtros</TableEmpty>
                 <TableRow v-for="user in result.users.data" v-else :key="user.id" class="cursor-pointer" tabindex="0" :aria-label="`Ver ${user.nombre}`" @click="activateRow($event, () => openUser(user))" @keydown.enter.self.prevent="openUser(user)" @keydown.space.self.prevent="openUser(user)">
-                    <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span></div></TableCell>
-                    <TableCell class="h-px py-0"><ul v-if="user.roles.length" class="-mx-2 flex h-full min-h-11 flex-col"><li v-for="(item, index) in user.roles" :key="index" class="flex min-h-9 flex-1 items-center border-border px-2 not-first:border-t">{{ item.name }}</li></ul><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span></TableCell>
+                    <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="flex flex-wrap items-center gap-x-2 gap-y-1"><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span><StatusBadge class="sm:hidden" :label="statusOf(user)" :tone="statusTone(user)" /></span></div></TableCell>
+                    <TableCell classTableCell class="h-px py-0"><ul v-if="user.roles.length" class="-mx-2 flex h-full min-h-11 flex-col"><li v-for="(item, index) in user.roles" :key="index" class="flex min-h-9 flex-1 items-center border-border px-2 not-first:border-t">{{ item.name }}</li></ul><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span></TableCell>
                     <TableCell class="h-px py-0"><ul v-if="user.roles.length" class="-mx-2 flex h-full min-h-11 flex-col text-sm"><li v-for="(item, index) in user.roles" :key="index" class="flex min-h-9 flex-1 items-center border-border px-2 not-first:border-t" :class="item.career_name ? '' : 'text-muted-foreground'">{{ careerOf(item) }}</li></ul><span v-else class="text-sm text-muted-foreground">—</span></TableCell>
-                    <TableCell class="text-center"><StatusBadge :label="statusOf(user)" :tone="statusTone(user)" /></TableCell>
+                    <TableCell class="text-center" data-car"text-center" data-cad-hide="true"><StatusBadge :label="statusOf(user)" :tone="statusTone(user)" /></TableCell>
                     
-                </TableRow>
-            </TableBody></Table>
+                </TableRow>TableCell class
+            </TableBody></Table>Table>
             <ManagedUserDetailDialog v-if="viewing" :key="viewing.id" v-model:open="viewOpen" :user="viewing" :roles="result.roles" :careers="result.careers" :can-edit="viewing.id !== currentUserId" @saved="changed" @action="(key) => { dialog = key; }" />
             <ManagedUserAccessAction v-if="viewing" v-model:open="accessOpen" :user="viewing" @changed="changed" />
             <ManagedUserPendingActions v-if="viewing" v-model:resend-open="resendOpen" v-model:delete-open="deleteOpen" :user-id="viewing.id" :user-name="viewing.nombre" :user-email="viewing.correo_electronico" @changed="changed" />
