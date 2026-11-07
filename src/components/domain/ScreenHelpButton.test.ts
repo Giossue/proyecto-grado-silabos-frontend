@@ -89,4 +89,29 @@ describe('ScreenHelpButton', () => {
     expect(classes).not.toContain('sm:right-4');
     expect(classes).toContain('max-sm:bottom-20');
   });
+
+  it('en móvil se esconde al bajar y reaparece al subir, como los botones principales', async () => {
+    vi.mocked(listAvailableScreenHelp).mockResolvedValue({ help: [help] });
+    signIn();
+    document.body.innerHTML = '<div data-app-scroll><div data-slot="scroll-area-viewport"></div></div>';
+    const viewport = document.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]')!;
+    vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { callback(0); return 0; });
+    const wrapper = mountButton();
+    await flushPromises();
+    const button = () => wrapper.get('[aria-label="Ayuda de esta pantalla"]');
+
+    expect(button().classes()).not.toContain('max-sm:translate-y-24');
+    viewport.scrollTop = 400;
+    viewport.dispatchEvent(new Event('scroll'));
+    await flushPromises();
+    expect(button().classes()).toContain('max-sm:translate-y-24');
+    expect(button().classes()).toContain('max-sm:opacity-0');
+
+    viewport.scrollTop = 300;
+    viewport.dispatchEvent(new Event('scroll'));
+    await flushPromises();
+    expect(button().classes()).not.toContain('max-sm:translate-y-24');
+    vi.unstubAllGlobals();
+    wrapper.unmount();
+  });
 });

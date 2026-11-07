@@ -5,6 +5,7 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useScrollDirection } from '@/composables/useScrollDirection';
 import { helpScreens } from '@/lib/helpScreens';
 import { screenTours } from '@/lib/screenTours';
 import { cn } from '@/lib/utils';
@@ -14,6 +15,7 @@ import 'driver.js/dist/driver.css';
 const props = withDefaults(defineProps<{ editorMode?: boolean; corner?: 'left' | 'right' }>(), { editorMode: false, corner: 'right' });
 
 const route = useRoute();
+const { hidden } = useScrollDirection();
 const button = ref<{ $el: HTMLElement } | null>(null);
 const screen = computed(() => route.matched.at(-1)?.path ?? '');
 const help = computed(() => screenHelpState.forScreen(screen.value));
@@ -76,6 +78,8 @@ onBeforeUnmount(stop);
             'fixed z-40 size-12 rounded-full bg-ring text-background shadow-menu hover:bg-ring/90 [&_svg]:size-5',
             'max-sm:left-4', props.editorMode ? 'max-sm:bottom-20' : 'max-sm:bottom-(--page-mobile-actions-bottom)', props.corner === 'left' ? 'sm:left-4' : 'sm:right-4',
             props.editorMode ? 'sm:bottom-4' : 'sm:bottom-20',
+            'max-sm:transition-all max-sm:duration-200 max-sm:ease-out',
+            hidden && 'max-sm:pointer-events-none max-sm:translate-y-24 max-sm:opacity-0',
           )"
           aria-label="Ayuda de esta pantalla"
           @click="start"
