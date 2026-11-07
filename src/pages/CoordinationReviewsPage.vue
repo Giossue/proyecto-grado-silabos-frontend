@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { activateRow } from '@/lib/rowActivation';
-import { ChartNoAxesColumn, Inbox } from '@lucide/vue';
+import { ChartNoAxesColumn, History, Inbox } from '@lucide/vue';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -15,6 +15,7 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import ConvocationActions from '@/components/domain/syllabus/ConvocationActions.vue';
 import ConvocationTrackingTable from '@/components/domain/syllabus/ConvocationTrackingTable.vue';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -83,6 +84,9 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
 
 <template>
   <PageFrame title="Revisión" description="Lo que envían los docentes de su carrera y el avance de cada sílabo" size="wide" :loading="!data && !error" :actions-skeleton="loading && !data ? ['w-48'] : []">
+    <template #tools>
+      <TooltipProvider><Tooltip><TooltipTrigger as-child><Button as-child variant="ghost" size="icon"><RouterLink :to="paths.coordination.periodHistory" aria-label="Historial"><History aria-hidden="true" /></RouterLink></Button></TooltipTrigger><TooltipContent>Historial</TooltipContent></Tooltip></TooltipProvider>
+    </template>
     <template #actions>
       <ConvocationActions v-if="summary?.coordination_convocation" :convocation="summary.coordination_convocation" :blocked-reason="openHint" @changed="changed" />
     </template>

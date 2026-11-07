@@ -6,7 +6,6 @@ import {
     FileStack,
     FileText,
     FolderOpen,
-    History,
     Library,
     ScrollText,
     UsersRound,
@@ -41,7 +40,6 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
         ...(activeRole.value?.code === 'coordinador'
             ? [
                   { title: 'Revisión', href: paths.coordination.reviews, icon: ClipboardCheck },
-                  { title: 'Historial', href: paths.coordination.periodHistory, icon: History },
                   { title: 'Materias y asignaciones', href: paths.coordination.scheduledSubjects, icon: Building2 },
                   { title: 'Docentes', href: paths.coordination.teachers, icon: UsersRound },
                   { title: 'Proyecto de carrera', href: paths.coordination.careerProject, icon: FolderOpen },
