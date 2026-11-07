@@ -39,6 +39,8 @@ const statusTone = (user: ManagedUser): StatusTone => managedUserStatus(user).to
 const statusOf = (user: ManagedUser): string => managedUserStatus(user).label;
 const careerOf = (role: ManagedUser['roles'][number]): string =>
     role.code === 'administrador' ? '-' : (role.career_name ?? 'Todas las carreras');
+const roleLine = (role: ManagedUser['roles'][number]): string =>
+    role.career_name ? `${role.name} · ${role.career_name}` : role.name;
 const load = async (page = 1): Promise<void> => {
     const ticket = requests.begin();
     loading.value = true; error.value = null;
@@ -86,9 +88,9 @@ onMounted(() => { void load(queryPage(route.query.page)); });
             <Table label="Usuarios y roles"><TableHeader><TableRow><TableHead>Usuario</TableHead><TableHead>Roles</TableHead><TableHead>Carrera</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader><TableBody>
                 <TableEmpty v-if="result.users.data.length === 0" :colspan="4">No se encontraron cuentas con estos filtros</TableEmpty>
                 <TableRow v-for="user in result.users.data" v-else :key="user.id" class="cursor-pointer" tabindex="0" :aria-label="`Ver ${user.nombre}`" @click="activateRow($event, () => openUser(user))" @keydown.enter.self.prevent="openUser(user)" @keydown.space.self.prevent="openUser(user)">
-                    <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="flex flex-wrap items-center gap-x-2 gap-y-1"><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span><StatusBadge class="sm:hidden" :label="statusOf(user)" :tone="statusTone(user)" /></span></div></TableCell>
-                    <TableCell class="h-px py-0"><ul v-if="user.roles.length" class="-mx-2 flex h-full min-h-11 flex-col"><li v-for="(item, index) in user.roles" :key="index" class="flex min-h-9 flex-1 items-center border-border px-2 not-first:border-t">{{ item.name }}</li></ul><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span></TableCell>
-                    <TableCell class="h-px py-0"><ul v-if="user.roles.length" class="-mx-2 flex h-full min-h-11 flex-col text-sm"><li v-for="(item, index) in user.roles" :key="index" class="flex min-h-9 flex-1 items-center border-border px-2 not-first:border-t" :class="item.career_name ? '' : 'text-muted-foreground'">{{ careerOf(item) }}</li></ul><span v-else class="text-sm text-muted-foreground">—</span></TableCell>
+                    <TableCell><div class="flex flex-col"><span>{{ user.nombre }}</span><span class="flex flex-wrap items-center gap-x-2 gap-y-1"><span class="text-sm text-muted-foreground">{{ user.correo_electronico }}</span><StatusBadge class="sm:hidden" :label="statusOf(user)" :tone="statusTone(user)" /></span><div class="mt-3 flex flex-col gap-1 text-sm font-normal sm:hidden"><span data-user-roles-label class="text-xs font-medium text-muted-foreground">Roles</span><ul v-if="user.roles.length" class="flex flex-col gap-1"><li v-for="item in user.roles" :key="item.id" data-user-role-line>{{ roleLine(item) }}</li></ul><span v-else class="text-muted-foreground">Sin rol vigente</span></div></div></TableCell>
+                    <TableCell class="h-px py-0" data-card-hide="true"><ul v-if="user.roles.length" class="-mx-2 flex h-full min-h-11 flex-col"><li v-for="(item, index) in user.roles" :key="index" class="flex min-h-9 flex-1 items-center border-border px-2 not-first:border-t">{{ item.name }}</li></ul><span v-else class="text-sm text-muted-foreground">Sin rol vigente</span></TableCell>
+                    <TableCell class="h-px py-0" data-card-hide="true"><ul v-if="user.roles.length" class="-mx-2 flex h-full min-h-11 flex-col text-sm"><li v-for="(item, index) in user.roles" :key="index" class="flex min-h-9 flex-1 items-center border-border px-2 not-first:border-t" :class="item.career_name ? '' : 'text-muted-foreground'">{{ careerOf(item) }}</li></ul><span v-else class="text-sm text-muted-foreground">—</span></TableCell>
                     <TableCell class="text-center" data-card-hide="true"><StatusBadge :label="statusOf(user)" :tone="statusTone(user)" /></TableCell>
                     
                 </TableRow>

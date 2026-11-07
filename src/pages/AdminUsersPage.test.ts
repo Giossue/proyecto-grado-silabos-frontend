@@ -37,4 +37,24 @@ describe('AdminUsersPage', () => {
 
     wrapper.unmount();
   });
+
+  it('en móvil une rol y carrera en una línea, y sin carrera muestra solo el rol', async () => {
+    api.getSession.mockResolvedValue({ active_role: { code: 'administrador' }, user: { id: 'admin' } });
+    api.getManagedUsers.mockResolvedValue({
+      users: { data: [{ ...user, roles: [...user.roles, { id: 'r2', code: 'administrador', name: 'Administrador', career_name: null }] }], current_page: 1, last_page: 1, per_page: 15, from: 1, to: 1, total: 1 },
+      filters: { q: null, status: null, role: null, career: null }, roles: [], careers: [],
+    });
+    const wrapper = mount(WithTooltips, { attachTo: document.body, global: { stubs: {
+      PageFrame: { template: '<main><slot /></main>' }, ImportSpreadsheetDialog: true, ManagedUserDialog: true,
+    } } });
+    await flushPromises();
+
+    const cells = wrapper.findAll('tbody td');
+    expect(cells[0].findAll('[data-user-roles-label]').map((label) => label.text())).toEqual(['Roles']);
+    expect(cells[0].findAll('[data-user-role-line]').map((line) => line.text())).toEqual(['Docente · Software', 'Administrador']);
+    expect(cells[1].attributes('data-card-hide')).toBe('true');
+    expect(cells[2].attributes('data-card-hide')).toBe('true');
+
+    wrapper.unmount();
+  });
 });
