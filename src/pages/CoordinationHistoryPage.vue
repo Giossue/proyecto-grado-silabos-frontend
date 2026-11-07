@@ -16,6 +16,7 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
+import TableCardLine from '@/components/domain/TableCardLine.vue';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { goBack } from '@/lib/goBack';
@@ -144,12 +145,12 @@ onMounted(() => { void load(initialPage); });
           </TableHeader>
           <TableBody>
             <TableRow v-for="item in group.items" :key="item.revision_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir sílabo de ${item.subject}`" @click="activateRow($event, () => open(item))" @keydown.enter.self.prevent="open(item)" @keydown.space.self.prevent="open(item)">
-              <TableCell>{{ item.subject }}</TableCell>
-              <TableCell>{{ item.code }}</TableCell>
-              <TableCell>{{ item.parallels.join(', ') }}</TableCell>
+              <TableCell>{{ item.subject }}<TableCardLine>{{ item.code }} · {{ item.parallels.length === 1 ? 'Paralelo' : 'Paralelos' }} {{ item.parallels.join(', ') }}</TableCardLine></TableCell>
+              <TableCell data-card-hide="true">{{ item.code }}</TableCell>
+              <TableCell data-card-hide="true">{{ item.parallels.join(', ') }}</TableCell>
               <TableCell>{{ item.author ?? '—' }}</TableCell>
               <TableCell>{{ formatApprovedAt(item.approved_at) }}</TableCell>
-              <TableCell class="text-center">
+              <TableCell class="text-center" data-card-no-label="true">
                 <IconTooltip label="Ver PDF"><Button type="button" variant="ghost" size="icon" :aria-label="`Ver PDF de ${item.subject}`" :disabled="openingPdf === item.revision_id" @click="openPdf(item)"><Spinner v-if="openingPdf === item.revision_id" /><FileText v-else aria-hidden="true" /></Button></IconTooltip>
               </TableCell>
             </TableRow>

@@ -294,7 +294,9 @@ test('Biblioteca conserva su listado completo y abre la revisión por teclado en
         await page.evaluate(enabled => document.documentElement.classList.toggle('dark', enabled), dark);
         for (const width of [320, 360, 768, 1440, 720]) {
             await page.setViewportSize({ width, height: 900 });
-            await expect(row.locator('td:visible')).toHaveCount(3);
+            // En la tarjeta quedan el título, con carrera, docente y estado, y «Responsable» con su etiqueta.
+            await expect(row.locator('td:visible')).toHaveCount(width < 640 ? 2 : 5);
+            await expect(row.locator('[data-card-line]:visible')).toHaveCount(width < 640 ? 2 : 0);
             await expectNoOverflow(page);
         }
     }

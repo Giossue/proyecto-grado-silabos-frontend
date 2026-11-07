@@ -30,6 +30,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import TableCardLine from '@/components/domain/TableCardLine.vue';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
 import type {
@@ -292,6 +293,7 @@ const {
                         <TableCell>
                             {{ career.name }}
                             <StatusBadge v-if="!career.active" class="ml-2" label="Inactiva" tone="neutral" />
+                            <TableCardLine>{{ career.modality_label ?? 'Sin modalidad' }} · {{ career.campus_name ?? 'Sin campus' }}</TableCardLine>
                             <CatalogActions
                                 :ref="(actions) => setActions(career.id, actions)"
                                 entity="carrera"
@@ -311,10 +313,10 @@ const {
                         <TableCell>
                             {{ facultyName(career.faculty_id) }}
                         </TableCell>
-                        <TableCell>
+                        <TableCell data-card-hide="true">
                             {{ career.modality_label ?? 'Sin modalidad' }}
                         </TableCell>
-                        <TableCell>
+                        <TableCell data-card-hide="true">
                             {{ career.campus_name ?? 'Sin campus' }}
                         </TableCell>
                     </TableRow>

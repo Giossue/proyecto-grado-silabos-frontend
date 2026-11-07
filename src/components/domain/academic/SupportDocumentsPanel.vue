@@ -22,6 +22,7 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
+import TableCardLine from '@/components/domain/TableCardLine.vue';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { formatDateDisplay } from '@/lib/dateDisplay';
@@ -172,10 +173,10 @@ onMounted(() => { void load(); });
             @keydown.enter.self.prevent="view(document)"
             @keydown.space.self.prevent="view(document)"
           >
-            <TableCell><span class="font-medium">{{ document.title }}</span><span v-if="document.view === 'pendiente'" class="flex items-center gap-1 text-xs text-muted-foreground"><Spinner aria-hidden="true" />Preparando vista</span><span v-else-if="document.view === 'sin_vista'" class="block text-xs text-muted-foreground">No se pudo preparar la vista</span></TableCell>
-            <TableCell class="text-center">{{ sizeOf(document.size) }}</TableCell>
-            <TableCell>{{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}</TableCell>
-            <TableCell v-if="manages" class="text-center">
+            <TableCell><span class="font-medium">{{ document.title }}</span><span v-if="document.view === 'pendiente'" class="flex items-center gap-1 text-xs text-muted-foreground"><Spinner aria-hidden="true" />Preparando vista</span><span v-else-if="document.view === 'sin_vista'" class="block text-xs text-muted-foreground">No se pudo preparar la vista</span><TableCardLine>{{ sizeOf(document.size) }} · {{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}</TableCardLine></TableCell>
+            <TableCell class="text-center" data-card-hide="true">{{ sizeOf(document.size) }}</TableCell>
+            <TableCell data-card-hide="true">{{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}</TableCell>
+            <TableCell v-if="manages" class="text-center" data-card-no-label="true">
               <IconTooltip label="Eliminar"><Button type="button" variant="ghost" size="icon-sm" class="text-destructive hover:text-destructive" :aria-label="`Eliminar ${document.title}`" @click="askRemoval(document)"><Trash2 aria-hidden="true" /></Button></IconTooltip>
             </TableCell>
           </TableRow>

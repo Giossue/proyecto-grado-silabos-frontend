@@ -30,6 +30,7 @@ import TablePagination from '@/components/domain/TablePagination.vue';
 import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import TableCardLine from '@/components/domain/TableCardLine.vue';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
@@ -115,11 +116,11 @@ onMounted(load);
         <TableBody>
           <TableEmpty v-if="page.length === 0" :colspan="4">{{ filter.active.value ? 'Ningún período coincide con los filtros' : 'No hay periodos registrados. Cree el primero con «Nueva convocatoria»' }}</TableEmpty>
           <TableRow v-for="row in page" v-else :key="row.id" class="cursor-pointer" tabindex="0" :aria-label="`Opciones de ${row.code}`" @click="activateRow($event, () => select(row))" @keydown.enter.self.prevent="select(row)" @keydown.space.self.prevent="select(row)">
-            <TableCell>{{ row.code }}</TableCell>
+            <TableCell>{{ row.code }}<TableCardLine><StatusBadge :label="stateLabel(row)" :tone="stateTone(row)" /></TableCardLine></TableCell>
             <TableCell><time :datetime="row.starts_on">{{ formatDate(row.starts_on) }}</time> → <time :datetime="row.ends_on">{{ formatDate(row.ends_on) }}</time></TableCell>
             <TableCell v-if="row.process"><time :datetime="row.process.starts_at">{{ formatDate(row.process.starts_at) }}</time> → <time :datetime="row.process.due_at">{{ formatDate(row.process.due_at) }}</time></TableCell>
             <TableCell v-else class="text-muted-foreground">Sin fechas</TableCell>
-            <TableCell class="text-center"><StatusBadge :label="stateLabel(row)" :tone="stateTone(row)" /></TableCell>
+            <TableCell class="text-center" data-card-hide="true"><StatusBadge :label="stateLabel(row)" :tone="stateTone(row)" /></TableCell>
           </TableRow>
         </TableBody>
       </Table>

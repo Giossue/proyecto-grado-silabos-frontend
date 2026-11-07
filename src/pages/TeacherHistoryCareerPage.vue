@@ -8,6 +8,7 @@ import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import { Skeleton } from '@/components/ui/skeleton';
+import TableCardLine from '@/components/domain/TableCardLine.vue';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { activateRow } from '@/lib/rowActivation';
@@ -59,10 +60,10 @@ onMounted(load);
           <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos</TableHead><TableHead class="text-center">Estado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
           <TableBody>
             <TableRow v-for="syllabus in group.items" :key="syllabus.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir sílabo de ${syllabus.subject}`" @click="activateRow($event, () => open(syllabus.id))" @keydown.enter.self.prevent="open(syllabus.id)" @keydown.space.self.prevent="open(syllabus.id)">
-              <TableCell>{{ syllabus.subject }}</TableCell>
-              <TableCell>{{ syllabus.parallels.join(', ') }}</TableCell>
-              <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /></TableCell>
-              <TableCell>{{ formatSavedAt(syllabus.guardado_en) }}</TableCell>
+              <TableCell>{{ syllabus.subject }}<TableCardLine>{{ syllabus.parallels.length === 1 ? 'Paralelo' : 'Paralelos' }} {{ syllabus.parallels.join(', ') }} · {{ formatSavedAt(syllabus.guardado_en) }}</TableCardLine><TableCardLine><SyllabusStateBadge :state="syllabus.state" /></TableCardLine></TableCell>
+              <TableCell data-card-hide="true">{{ syllabus.parallels.join(', ') }}</TableCell>
+              <TableCell class="text-center" data-card-hide="true"><SyllabusStateBadge :state="syllabus.state" /></TableCell>
+              <TableCell data-card-hide="true">{{ formatSavedAt(syllabus.guardado_en) }}</TableCell>
             </TableRow>
           </TableBody>
         </Table>

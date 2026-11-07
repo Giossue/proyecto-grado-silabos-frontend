@@ -16,6 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import TableCardLine from '@/components/domain/TableCardLine.vue';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useClientFilter } from "@/composables/useClientFilter";
 import { useClientPagination } from "@/composables/useClientPagination";
@@ -94,9 +95,9 @@ const removeFromCareer = async (): Promise<void> => {
       <TableBody>
         <TableEmpty v-if="!items.length" :colspan="3">{{ filter.active.value ? "Ningún docente coincide con la búsqueda" : "No existen docentes en esta carrera" }}</TableEmpty>
         <TableRow v-for="item in items" v-else :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Editar ${item.name}`" @click="activateRow($event, () => openEditor(item))" @keydown.enter.self.prevent="openEditor(item)" @keydown.space.self.prevent="openEditor(item)">
-          <TableCell>{{ item.name }}</TableCell>
-          <TableCell>{{ item.email }}</TableCell>
-          <TableCell class="text-center"><StatusBadge :label="statusOf(item)" :tone="item.pending_activation ? 'warning' : 'success'" /></TableCell>
+          <TableCell>{{ item.name }}<TableCardLine>{{ item.email }}<StatusBadge :label="statusOf(item)" :tone="item.pending_activation ? 'warning' : 'success'" /></TableCardLine></TableCell>
+          <TableCell data-card-hide="true">{{ item.email }}</TableCell>
+          <TableCell class="text-center" data-card-hide="true"><StatusBadge :label="statusOf(item)" :tone="item.pending_activation ? 'warning' : 'success'" /></TableCell>
         </TableRow>
       </TableBody>
     </Table>

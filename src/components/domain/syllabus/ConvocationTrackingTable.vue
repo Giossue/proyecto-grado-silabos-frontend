@@ -96,11 +96,11 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
             <div>{{ syllabus.subject }}</div>
             <div class="text-sm text-muted-foreground">{{ syllabus.code }}</div>
           </TableCell>
-          <TableCell>
+          <TableCell data-card-no-label="true">
             <div>{{ syllabus.parallels.length === 1 ? 'Paralelo' : 'Paralelos' }} {{ syllabus.parallels.join(', ') }}</div>
             <div class="text-sm text-muted-foreground">{{ syllabus.teachers.join(', ') }}</div>
           </TableCell>
-          <TableCell class="text-center"><SyllabusStateBadge :state="syllabus.state" /><div v-if="syllabus.state === 'en_revision' && syllabus.stage" class="mt-1 text-xs text-muted-foreground">{{ reviewStageLabel(syllabus.stage) }}</div><div v-else-if="syllabus.state === 'correccion_solicitada' && syllabus.returned_by" class="mt-1 text-xs text-muted-foreground">Devuelto por {{ syllabus.returned_by === 'biblioteca' ? 'biblioteca' : 'coordinación' }}</div></TableCell>
+          <TableCell class="text-center" data-card-no-label="true"><SyllabusStateBadge :state="syllabus.state" /><div v-if="syllabus.state === 'en_revision' && syllabus.stage" class="mt-1 text-xs text-muted-foreground">{{ reviewStageLabel(syllabus.stage) }}</div><div v-else-if="syllabus.state === 'correccion_solicitada' && syllabus.returned_by" class="mt-1 text-xs text-muted-foreground">Devuelto por {{ syllabus.returned_by === 'biblioteca' ? 'biblioteca' : 'coordinación' }}</div></TableCell>
         </TableRow>
       </TableBody>
     </Table>

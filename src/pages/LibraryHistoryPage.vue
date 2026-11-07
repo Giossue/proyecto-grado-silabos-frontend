@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import TableCardLine from '@/components/domain/TableCardLine.vue';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { rememberLibraryFaculty, savedLibraryFaculty } from '@/lib/libraryFaculty';
 import { paths } from '@/lib/routes';
@@ -144,9 +145,9 @@ onMounted(() => { void load(initialPage); });
           </TableHeader>
           <TableBody>
             <TableRow v-for="item in data.reviews.data" :key="item.revision_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(paths.library.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(paths.library.review(item.revision_id))" @keydown.space.self.prevent="router.push(paths.library.review(item.revision_id))">
-              <TableCell>{{ item.period }}</TableCell>
-              <TableCell>{{ item.career }}</TableCell>
-              <TableCell>{{ item.teachers.join(', ') }}</TableCell>
+              <TableCell>{{ item.period }}<TableCardLine>{{ item.career }} · {{ item.teachers.join(', ') }}</TableCardLine></TableCell>
+              <TableCell data-card-hide="true">{{ item.career }}</TableCell>
+              <TableCell data-card-hide="true">{{ item.teachers.join(', ') }}</TableCell>
               <TableCell>{{ item.signed_by ?? '—' }}</TableCell>
             </TableRow>
             <TableEmpty v-if="data.reviews.data.length === 0" :colspan="4">{{ filters.who === 'mine' ? 'No hay sílabos revisados por usted con estos filtros' : 'No hay sílabos de períodos terminados con estos filtros' }}</TableEmpty>

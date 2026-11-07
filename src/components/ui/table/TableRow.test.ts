@@ -27,4 +27,25 @@ describe('TableRow', () => {
         expect(cells.map((cell) => cell.attributes('data-card-role'))).toEqual(['select', 'title', 'data']);
         expect(cells[2].attributes('data-card-wide')).toBe('true');
     });
+
+    it('una celda marcada no lleva etiqueta en la tarjeta y las demás conservan su encabezado', async () => {
+        const wrapper = mount({
+            components: { Table, TableBody, TableCell, TableHead, TableHeader, TableRow },
+            template: `
+                <Table label="Expedientes">
+                    <TableHeader><TableRow><TableHead>Materia</TableHead><TableHead>Docente</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                        <TableRow>
+                            <TableCell>Álgebra Lineal</TableCell>
+                            <TableCell>Ana Pérez</TableCell>
+                            <TableCell data-card-no-label="true">Aprobado</TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            `,
+        });
+        await nextTick();
+
+        expect(wrapper.findAll('tbody td').map((cell) => cell.attributes('data-label'))).toEqual(['', 'Docente', '']);
+    });
 });
