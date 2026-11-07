@@ -900,7 +900,7 @@
         max-width: none;
         align-items: flex-start;
         pointer-events: none;
-        --driver-checklist-offset-y: calc(var(--page-mobile-actions-bottom) + 4.25rem);
+        --driver-checklist-offset-y: calc(var(--page-mobile-actions-bottom) + 3.75rem);
     }
     .driver-checklist.setup-checklist > * {
         pointer-events: auto;
