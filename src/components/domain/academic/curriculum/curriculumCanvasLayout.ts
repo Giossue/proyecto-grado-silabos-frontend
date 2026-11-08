@@ -59,6 +59,12 @@ export const addSubjectOffset = Math.round(
     (laneHeight - laneInset - addSubjectHeight) / 2,
 );
 export const laneStart = 109;
+
+// Vue Flow describe nodos y conexiones en inglés para lectores de pantalla; se reemplaza en español.
+const spanishRole = (role: string) => ({
+    'aria-roledescription': role,
+    'aria-describedby': undefined,
+});
 export const subjectStep = subjectWidth + subjectGap;
 export const navigationPadding = 48;
 
@@ -87,6 +93,7 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
         nodes.push({
             id: `cycle-${cycle}`,
             type: 'cycle',
+            domAttributes: spanishRole('nivel'),
             position: { x: 0, y: (cycle - 1) * laneHeight },
             data: {
                 cycle,
@@ -114,6 +121,7 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
             nodes.push({
                 id: subject.id,
                 type: 'subject',
+                domAttributes: spanishRole('materia'),
                 position: {
                     x,
                     y: cycleY,
@@ -153,6 +161,7 @@ export const buildCurriculumNodes = (options: CurriculumNodeOptions): Node[] => 
         nodes.push({
             id: `add-subject-${cycle}`,
             type: 'addSubject',
+            domAttributes: spanishRole('acción'),
             position: {
                 x,
                 y: (cycle - 1) * laneHeight + addSubjectOffset,
@@ -343,12 +352,17 @@ export const buildRequirementEdges = (
                 : 'var(--curriculum-prerequisite)';
         const sameLevel = sameLevelIds.has(requirement.id);
         const offset = geometry.get(requirement.id);
+        const label =
+            requirement.type === 'correquisito' ? 'Correquisito' : 'Prerrequisito';
+        const nameOf = (id: string) => subjectById.get(id)?.name ?? 'materia';
 
         return {
             id: requirement.id,
             source: requirement.requirement_id,
             target: requirement.subject_id,
             type: 'requirement',
+            ariaLabel: `${label}: ${nameOf(requirement.requirement_id)} → ${nameOf(requirement.subject_id)}`,
+            domAttributes: spanishRole('conexión'),
             markerEnd: {
                 type: MarkerType.ArrowClosed,
                 color,
@@ -367,10 +381,7 @@ export const buildRequirementEdges = (
                 : {}),
             style: { stroke: color, strokeWidth: 2 },
             data: {
-                label:
-                    requirement.type === 'correquisito'
-                        ? 'Correquisito'
-                        : 'Prerrequisito',
+                label,
                 sourceOffset: offset?.source ?? 0,
                 targetOffset: offset?.target ?? 0,
                 sameLevel,

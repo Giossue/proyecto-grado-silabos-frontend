@@ -8,7 +8,7 @@ vi.mock('vue-router', () => ({ useRoute: () => ({ query: {} }), useRouter: () =>
 vi.mock('@/api/reports', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/api/reports')>()), getProcessReport: vi.fn(), downloadProcessReport: vi.fn() }));
 // Las gráficas dibujan SVG con medidas reales: aquí solo importa que la pantalla las arme.
 vi.mock('@unovis/vue/containers/xy-container', () => ({ default: { name: 'VisXYContainer', props: ['data'], template: '<div data-chart><slot /></div>' } }));
-vi.mock('@unovis/vue/components/axis', () => ({ default: { template: '<i />' } }));
+vi.mock('@unovis/vue/components/axis', () => ({ default: { props: ['type', 'tickValues'], template: '<i :data-axis="type" :data-ticks="tickValues?.join(\',\')" />' } }));
 vi.mock('@unovis/vue/components/grouped-bar', () => ({ default: { template: '<i />' } }));
 vi.mock('@unovis/vue/components/line', () => ({ default: { template: '<i />' } }));
 vi.mock('@unovis/vue/components/stacked-bar', () => ({ default: { template: '<i />' } }));
@@ -51,6 +51,15 @@ describe('AdminReportsPage', () => {
     expect(table).toContain('50 %');
     expect(wrapper.get('table[aria-label="Sílabos pendientes por docente"]').text()).toContain('ANA PÉREZ');
     expect(wrapper.text()).toContain('(atrasado)');
+  });
+
+  it('marca solo números enteros en el eje vertical de las gráficas', async () => {
+    const wrapper = mount(AdminReportsPage, { global: { stubs } });
+    await flushPromises();
+
+    const ticks = wrapper.findAll('[data-axis="y"]').map((axis) => axis.attributes('data-ticks'));
+    // 12 sílabos en la carrera y como máximo 2 devoluciones: nada de 1,2 o 1,4.
+    expect(ticks).toEqual(['0,3,6,9,12', '0,1,2']);
   });
 
   it('exporta a Excel la convocatoria elegida', async () => {

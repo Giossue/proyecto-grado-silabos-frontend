@@ -51,55 +51,55 @@ const copy = computed(() => props.kind === 'document' ? {
   label: 'Documento',
   invalid: 'Seleccione un PDF, Word o Excel',
   maxError: `Cada archivo puede pesar hasta ${formatLimit(props.maxBytes)}`,
-  emptyTitle: 'Arrastra tu PDF, Word o Excel aquí',
+  emptyTitle: 'Arrastre su PDF, Word o Excel aquí',
   chooseLabel: 'Cargar documento PDF, Word o Excel',
   removeLabel: 'Quitar documento',
-  dropAnnouncement: 'Suelta los documentos para adjuntarlos',
+  dropAnnouncement: 'Suelte los documentos para adjuntarlos',
 } : props.kind === 'certificate' ? {
   accept: '.p12,.pfx,application/x-pkcs12',
   label: 'Firma',
   invalid: 'Seleccione un archivo de firma (.p12 o .pfx)',
   maxError: `El archivo no puede superar los ${formatLimit(props.maxBytes)}`,
-  emptyTitle: 'Arrastra tu archivo de firma aquí',
+  emptyTitle: 'Arrastre su archivo de firma aquí',
   chooseLabel: 'Cargar archivo de firma',
   removeLabel: 'Quitar archivo de firma',
-  dropAnnouncement: 'Suelta el archivo de firma para seleccionarlo',
+  dropAnnouncement: 'Suelte el archivo de firma para seleccionarlo',
 } : props.kind === 'xlsx' ? {
   accept: '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   label: 'Excel',
   invalid: 'Seleccione un archivo Excel (.xlsx)',
   maxError: `El archivo no puede superar los ${formatLimit(props.maxBytes)}`,
-  emptyTitle: 'Arrastra tu Excel aquí',
+  emptyTitle: 'Arrastre su Excel aquí',
   chooseLabel: 'Cargar archivo Excel',
   removeLabel: 'Quitar Excel',
-  dropAnnouncement: 'Suelta el Excel para seleccionarlo',
+  dropAnnouncement: 'Suelte el Excel para seleccionarlo',
 } : props.kind === 'image' ? {
   accept: 'image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp',
   label: 'Imagen',
   invalid: 'Seleccione una imagen PNG, JPG o WebP',
   maxError: `La imagen no puede superar los ${formatLimit(props.maxBytes)}`,
-  emptyTitle: 'Arrastra tu imagen aquí',
+  emptyTitle: 'Arrastre su imagen aquí',
   chooseLabel: 'Cargar imagen',
   removeLabel: 'Quitar imagen',
-  dropAnnouncement: 'Suelta la imagen para seleccionarla',
+  dropAnnouncement: 'Suelte la imagen para seleccionarla',
 } : props.kind === 'png' ? {
   accept: 'image/png,.png',
   label: 'PNG',
   invalid: 'Seleccione un archivo PNG',
   maxError: `El PNG no puede superar los ${formatLimit(props.maxBytes)}`,
-  emptyTitle: 'Arrastra tu PNG aquí',
+  emptyTitle: 'Arrastre su PNG aquí',
   chooseLabel: 'Cargar archivo PNG',
   removeLabel: 'Quitar PNG',
-  dropAnnouncement: 'Suelta el PNG para seleccionarlo',
+  dropAnnouncement: 'Suelte el PNG para seleccionarlo',
 } : {
   accept: 'application/pdf,.pdf',
   label: 'PDF',
   invalid: 'Seleccione un archivo PDF',
   maxError: `El PDF no puede superar los ${formatLimit(props.maxBytes)}`,
-  emptyTitle: 'Arrastra tu PDF aquí',
+  emptyTitle: 'Arrastre su PDF aquí',
   chooseLabel: 'Cargar archivo PDF',
   removeLabel: 'Quitar PDF',
-  dropAnnouncement: 'Suelta el PDF para seleccionarlo',
+  dropAnnouncement: 'Suelte el PDF para seleccionarlo',
 });
 const fileDescription = computed(() => props.modelValue ? `${copy.value.label} · ${formatBytes(props.modelValue.size)}` : '');
 const chooseFile = (): void => {
@@ -210,7 +210,7 @@ onBeforeUnmount(releasePreview);
         <Upload class="size-8 text-muted-foreground" aria-hidden="true" />
         <div>
           <p class="font-medium">{{ copy.emptyTitle }}</p>
-          <p class="text-sm text-muted-foreground">{{ multiple ? 'o haz clic para adjuntarlos' : 'o haz clic para seleccionarlo' }}</p>
+          <p class="text-sm text-muted-foreground">{{ multiple ? 'o haga clic para adjuntarlos' : 'o haga clic para seleccionarlo' }}</p>
         </div>
       </div>
     </Button>

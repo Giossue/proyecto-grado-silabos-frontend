@@ -48,6 +48,15 @@ const returnsConfig = { coordinacion: { label: 'Coordinación', color: 'var(--pr
 
 type CareerRow = ProcessReport['careers'][number];
 type DayRow = ProcessReport['daily'][number];
+// Las gráficas cuentan sílabos: el eje vertical solo marca números enteros (nunca 1,2 o 1,4).
+const integerTicks = (values: number[]): number[] => {
+  const top = Math.max(1, Math.ceil(Math.max(0, ...values)));
+  const step = Math.ceil(top / 4);
+  return Array.from({ length: Math.floor(top / step) + 1 }, (_, index) => index * step);
+};
+const statesTicks = computed(() => integerTicks((report.value?.careers ?? []).map((row) => STATES.reduce((sum, state) => sum + row.states[state], 0))));
+const dailyTicks = computed(() => integerTicks((report.value?.daily ?? []).flatMap((row) => [row.first, row.resubmitted])));
+const returnsTicks = computed(() => integerTicks((report.value?.careers ?? []).flatMap((row) => [row.returns.coordinacion, row.returns.biblioteca])));
 const careerName = (index: number): string => report.value?.careers[index]?.career ?? '';
 const dayName = (index: number): string => {
   const day = report.value?.daily[index]?.day;
@@ -129,7 +138,7 @@ onMounted(() => { void load(); });
               <VisXYContainer :data="report.careers" :padding="{ top: 8 }">
                 <VisStackedBar :x="(_: CareerRow, index: number) => index" :y="STATES.map((state) => (row: CareerRow) => row.states[state])" :color="STATES.map((state) => STATE_COLORS[state])" :rounded-corners="4" :bar-padding="0.25" />
                 <VisAxis type="x" :tick-format="careerName" :num-ticks="report.careers.length" :grid-line="false" :domain-line="false" />
-                <VisAxis type="y" :num-ticks="4" :domain-line="false" />
+                <VisAxis type="y" :tick-values="statesTicks" :domain-line="false" />
                 <ChartTooltip />
                 <ChartCrosshair :template="statesTooltip" color="transparent" />
               </VisXYContainer>
@@ -146,7 +155,7 @@ onMounted(() => { void load(); });
               <VisXYContainer :data="report.daily" :padding="{ top: 8 }">
                 <VisLine :x="(_: DayRow, index: number) => index" :y="[(row: DayRow) => row.first, (row: DayRow) => row.resubmitted]" :color="[dailyConfig.first.color, dailyConfig.resubmitted.color]" :curve-type="CurveType.MonotoneX" />
                 <VisAxis type="x" :tick-format="dayName" :grid-line="false" :domain-line="false" />
-                <VisAxis type="y" :num-ticks="4" :domain-line="false" />
+                <VisAxis type="y" :tick-values="dailyTicks" :domain-line="false" />
                 <ChartTooltip />
                 <ChartCrosshair :template="dailyTooltip" :color="[dailyConfig.first.color, dailyConfig.resubmitted.color]" />
               </VisXYContainer>
@@ -163,7 +172,7 @@ onMounted(() => { void load(); });
             <VisXYContainer :data="report.careers" :padding="{ top: 8 }">
               <VisGroupedBar :x="(_: CareerRow, index: number) => index" :y="[(row: CareerRow) => row.returns.coordinacion, (row: CareerRow) => row.returns.biblioteca]" :color="[returnsConfig.coordinacion.color, returnsConfig.biblioteca.color]" :rounded-corners="4" :group-padding="0.3" />
               <VisAxis type="x" :tick-format="careerName" :num-ticks="report.careers.length" :grid-line="false" :domain-line="false" />
-              <VisAxis type="y" :num-ticks="4" :domain-line="false" />
+              <VisAxis type="y" :tick-values="returnsTicks" :domain-line="false" />
               <ChartTooltip />
               <ChartCrosshair :template="returnsTooltip" color="transparent" />
             </VisXYContainer>

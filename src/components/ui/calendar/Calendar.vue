@@ -14,6 +14,8 @@ import { CalendarCell, CalendarCellTrigger, CalendarGrid, CalendarGridBody, Cale
 const props = withDefaults(defineProps<CalendarRootProps & { class?: HTMLAttributes["class"], layout?: LayoutTypes, yearRange?: DateValue[] }>(), {
   modelValue: undefined,
   layout: undefined,
+  locale: "es-EC",
+  calendarLabel: "Calendario",
 })
 const emits = defineEmits<CalendarRootEmits>()
 
@@ -26,7 +28,7 @@ const placeholder = useVModel(props, "placeholder", emits, {
   defaultValue: props.defaultPlaceholder ?? institutionToday.value,
 }) as Ref<DateValue>
 
-const formatter = useDateFormatter(props.locale ?? "en")
+const formatter = useDateFormatter(props.locale ?? "es-EC")
 
 const yearRange = computed(() => {
   return props.yearRange ?? createYearRange({

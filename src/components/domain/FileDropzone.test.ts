@@ -14,7 +14,7 @@ describe('FileDropzone', () => {
       props: { modelValue: null, inputId: 'faculty-logo', kind: 'png', required: true },
     });
 
-    expect(wrapper.text()).toContain('Arrastra tu PNG aquí');
+    expect(wrapper.text()).toContain('Arrastre su PNG aquí');
     expect(wrapper.get('input').attributes('accept')).toBe('image/png,.png');
     expect(wrapper.get('input').attributes('required')).toBeDefined();
     expect(wrapper.get('input').attributes('aria-required')).toBe('true');
@@ -31,7 +31,7 @@ describe('FileDropzone', () => {
       props: { modelValue: null, inputId: 'signature-certificate', kind: 'certificate' },
     });
 
-    expect(wrapper.text()).toContain('Arrastra tu archivo de firma aquí');
+    expect(wrapper.text()).toContain('Arrastre su archivo de firma aquí');
     expect(wrapper.get('input').attributes('accept')).toBe('.p12,.pfx,application/x-pkcs12');
 
     const file = new File(['p12'], 'firma.p12');

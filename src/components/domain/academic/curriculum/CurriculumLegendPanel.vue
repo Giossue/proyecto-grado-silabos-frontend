@@ -2,7 +2,6 @@
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { ChevronDown, ChevronUp } from '@lucide/vue';
 import type { CSSProperties } from 'vue';
-import { ref } from 'vue';
 import CurriculumLegend from '@/components/domain/academic/curriculum/CurriculumLegend.vue';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +14,8 @@ defineProps<{
     rows: { id: string; label: string; value: string }[];
 }>();
 
-const open = ref(true);
+// El lienzo lee si está abierta para dejarle sitio y que no tape la malla.
+const open = defineModel<boolean>('open', { default: true });
 const contentId = 'curriculum-legend-content';
 </script>
 

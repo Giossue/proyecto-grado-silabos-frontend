@@ -23,6 +23,7 @@ const forwardedProps = useForwardProps(delegatedProps)
       props.class,
     )"
     v-bind="forwardedProps"
+    aria-label="Mes siguiente"
   >
     <slot>
       <ChevronRight class="size-4" />

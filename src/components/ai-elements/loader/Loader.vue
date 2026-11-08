@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
                 props.class,
             )
         "
-        aria-label="Loading"
+        aria-label="Cargando"
         aria-live="polite"
         role="status"
         v-bind="$attrs"

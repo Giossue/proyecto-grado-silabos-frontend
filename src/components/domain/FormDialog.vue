@@ -60,10 +60,11 @@ const close = (): void => {
             </slot>
         </DialogTrigger>
         <DialogContent v-bind="description ? {} : { 'aria-describedby': undefined }" :class="['flex flex-col gap-0 overflow-hidden p-0', compact ? 'sm:max-w-3xl' : wide ? 'sm:max-w-7xl' : 'sm:max-w-5xl', compact || fit ? 'max-h-[calc(100dvh-2rem)]' : 'h-[calc(100dvh-2rem)]']">
-            <div v-if="$slots.headerActions" class="absolute top-4 right-14 z-10 flex items-center gap-1"><slot name="headerActions" /></div>
-            <!-- Con botones en la esquina, el título deja espacio a los dos lados para no quedar debajo -->
-            <DialogHeader :class="['pt-6 pb-4', $slots.headerActions ? 'px-24' : 'px-6']">
-                <DialogTitle>{{ title }}</DialogTitle>
+            <!-- La X va al final de la fila del título; las acciones quedan a su izquierda -->
+            <div v-if="$slots.headerActions" data-slot="form-dialog-header-actions" class="absolute top-4 right-14 z-10 flex items-center gap-1"><slot name="headerActions" /></div>
+            <DialogHeader class="px-6 pt-6 pb-4">
+                <!-- Con acciones, el título deja espacio a los dos lados para seguir centrado sin quedar debajo -->
+                <DialogTitle :class="$slots.headerActions ? 'px-20' : undefined">{{ title }}</DialogTitle>
                 <DialogDescription v-if="description">{{ description }}</DialogDescription>
             </DialogHeader>
             <div class="relative flex min-h-0 flex-1 flex-col">
