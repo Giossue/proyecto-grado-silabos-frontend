@@ -176,7 +176,7 @@ onMounted(() => { void load(); });
             @keydown.enter.self.prevent="view(document)"
             @keydown.space.self.prevent="view(document)"
           >
-            <TableCell><span class="font-medium">{{ document.title }}</span><span v-if="document.view === 'pendiente'" class="flex items-center gap-1 text-xs text-muted-foreground"><Spinner aria-hidden="true" />Preparando vista</span><span v-else-if="document.view === 'sin_vista'" class="block text-xs text-muted-foreground">No se pudo preparar la vista</span><TableCardLine>{{ sizeOf(document.size) }} · {{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}</TableCardLine></TableCell>
+            <TableCell><span>{{ document.title }}</span><span v-if="document.view === 'pendiente'" class="flex items-center gap-1 text-xs text-muted-foreground"><Spinner aria-hidden="true" />Preparando vista</span><span v-else-if="document.view === 'sin_vista'" class="block text-xs text-muted-foreground">No se pudo preparar la vista</span><TableCardLine>{{ sizeOf(document.size) }} · {{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}</TableCardLine></TableCell>
             <TableCell class="text-center" data-card-hide="true">{{ sizeOf(document.size) }}</TableCell>
             <TableCell data-card-hide="true">{{ formatDateDisplay(document.uploaded_at, { dateStyle: 'medium' }) }}</TableCell>
             <TableCell v-if="manages" class="text-center" data-card-no-label="true">
