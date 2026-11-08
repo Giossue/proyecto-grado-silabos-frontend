@@ -87,7 +87,7 @@ onMounted(() => { void load(); });
 </script>
 
 <template>
-  <PageFrame title="Proyecto de carrera" description="Datos de cada materia que heredan los sílabos" size="wide" :loading="!data && !loadError" :actions-skeleton="!data && !loadError ? [tab === 'documentos' ? 'w-40' : 'w-44'] : []">
+  <PageFrame :title="tab === 'documentos' ? 'Documentos de apoyo' : 'Proyecto de carrera por materia'" :description="tab === 'documentos' ? 'Material de la carrera que sus docentes pueden consultar' : 'Contenido de cada materia que se copia en sus sílabos'" size="wide" :loading="!data && !loadError" :actions-skeleton="!data && !loadError ? [tab === 'documentos' ? 'w-40' : 'w-44'] : []">
     <template v-if="data?.career.lock_reason && tab !== 'documentos'" #banner><ProcessLockAlert banner :lock="data.career.lock" /></template>
     <template #actions>
       <Button v-if="tab === 'documentos'" type="button" @click="uploadOpen = true"><Plus data-icon="inline-start" aria-hidden="true" />Subir documento</Button>
