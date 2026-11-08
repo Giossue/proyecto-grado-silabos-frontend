@@ -188,7 +188,7 @@ watch(open, (value) => value && reset());
           <Alert v-if="error" variant="destructive">
             <AlertDescription>{{ error }}</AlertDescription>
           </Alert>
-          <section class="flex flex-col gap-2">
+          <section class="flex flex-col gap-4">
             <Alert v-if="rowError" variant="destructive"><AlertDescription>{{ rowError }}</AlertDescription></Alert>
             <div class="overflow-hidden rounded-md ring-1 ring-surface-ring">
               <Table label="Paralelos de la materia">
