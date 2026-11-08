@@ -111,6 +111,15 @@
     }
 }
 
+/* Las barras de scroll nativas (tablas anchas, editores, listas) siempre visibles y del mismo
+   tono que la barra global: así se nota que hay más contenido al lado o abajo. */
+@layer base {
+    * {
+        scrollbar-color: color-mix(in oklab, var(--muted-foreground) 45%, transparent) transparent;
+        scrollbar-width: thin;
+    }
+}
+
 @layer utilities {
     body,
     html {
