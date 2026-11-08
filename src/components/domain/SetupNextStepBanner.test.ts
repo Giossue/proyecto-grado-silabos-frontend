@@ -47,6 +47,9 @@ describe('SetupNextStepBanner', () => {
 
     expect(wrapper.text()).toContain('Paso 2 de 5');
     expect(wrapper.find('a').exists()).toBe(false);
+    // Mismo alto con o sin «Ir»: la franja no salta al cambiar de pantalla.
+    expect(wrapper.get('[data-setup-next-step]').classes()).toContain('h-11');
+    expect(wrapper.get('[data-setup-next-step]').classes()).not.toContain('flex-wrap');
   });
 
   it('el último paso es abrir la convocatoria y lleva a Revisión', async () => {
