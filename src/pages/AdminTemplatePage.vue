@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
-import { ArrowLeft, Bot, Pencil, RotateCcw, X } from '@lucide/vue';
+import { ArrowLeft, Bot, Pencil, RotateCcw, UserPen, X } from '@lucide/vue';
 import { ApiError } from '@/api/client';
-import { createTemplate, getTemplate, type TemplatePayload } from '@/api/template';
+import { createTemplate, getTemplate, getTemplateTeacherPreview, type TemplatePayload } from '@/api/template';
+import type { SyllabusDetail, SyllabusField } from '@/api/syllabi';
+import IconTooltip from '@/components/domain/IconTooltip.vue';
+import SyllabusTeacherForm from '@/components/domain/syllabus/SyllabusTeacherForm.vue';
+import type { DocumentNode } from '@/lib/templateDocument';
 import { getSession } from '@/api/session';
 import { applyTemplateAssistantProposal, discardTemplateAssistantProposal, getTemplateAssistantProposal } from '@/api/templateAssistant';
 import TemplateAssistant from '@/components/domain/ai/TemplateAssistant.vue';
@@ -27,6 +31,26 @@ const loadError = ref<string | null>(null);
 const SHEET_WIDTH = 794;
 const actionError = ref<string | null>(null);
 const template = computed(() => payload.value?.template ?? null);
+// «Ver como docente»: el formulario que llenará el docente con la plantilla guardada. Lo que se escriba para probar no se guarda.
+const teacherView = ref(false);
+const teacherSections = ref<SyllabusDetail['sections'] | null>(null);
+const teacherError = ref<string | null>(null);
+const teacherSection = ref('');
+const teacherCollapsed = ref<Set<string>>(new Set());
+const toggleTeacherView = async (): Promise<void> => {
+    teacherView.value = !teacherView.value;
+    if (!teacherView.value || !template.value) return;
+    teacherSections.value = null;
+    teacherError.value = null;
+    try {
+        teacherSections.value = (await getTemplateTeacherPreview(template.value.id)).sections;
+    } catch (reason) {
+        teacherError.value = reason instanceof ApiError ? reason.message : 'No se pudo armar la vista del docente';
+    }
+};
+const tryValue = (field: SyllabusField, value: DocumentNode): void => {
+    teacherSections.value = (teacherSections.value ?? []).map((section) => ({ ...section, fields: section.fields.map((item) => (item.id === field.id ? { ...item, value } : item)) }));
+};
 
 const load = async ({ silent = false }: { silent?: boolean } = {}): Promise<void> => {
     if (!silent) {
@@ -172,13 +196,22 @@ onBeforeUnmount(() => {
             <ProcessLockAlert v-if="payload?.processLock" banner :lock="payload.processLockDetail" />
         </template>
         <template v-if="!editing" #actions>
-            <Button type="button" data-tour="template-edit" :disabled="Boolean(payload?.processLock)" @click="builder?.askEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
+            <IconTooltip :label="teacherView ? 'Volver a la plantilla' : 'Ver como docente'"><Button type="button" :variant="teacherView ? 'secondary' : 'ghost'" size="icon" aria-label="Ver como docente" :aria-pressed="teacherView" @click="toggleTeacherView"><UserPen aria-hidden="true" /></Button></IconTooltip>
+            <Button v-if="!teacherView" type="button" data-tour="template-edit" :disabled="Boolean(payload?.processLock)" @click="builder?.askEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
         </template>
         <div class="mx-auto flex flex-col gap-4 empty:hidden" :style="{ width: `${SHEET_WIDTH}px`, maxWidth: '100%' }">
             <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
         </div>
 
-        <TemplateVisualBuilder ref="builder" :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" @dirty="unsaved = $event" @editing="editing = $event" />
+        <div v-if="teacherView" class="mx-auto flex w-full max-w-4xl flex-col gap-6">
+            <Alert v-if="teacherError" variant="destructive"><AlertDescription>{{ teacherError }}</AlertDescription></Alert>
+            <LoadingSkeleton v-else-if="!teacherSections" variant="syllabus" />
+            <template v-else>
+                <Alert><AlertDescription>Vista de prueba: así verá el formulario el docente. Lo que escriba aquí no se guarda</AlertDescription></Alert>
+                <SyllabusTeacherForm v-model:active="teacherSection" v-model:collapsed="teacherCollapsed" :sections="teacherSections" @update:value="tryValue" />
+            </template>
+        </div>
+        <TemplateVisualBuilder v-show="!teacherView" ref="builder" :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" @dirty="unsaved = $event" @editing="editing = $event" />
         <template v-if="editing">
             <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-7rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de plantilla">
                 <TemplateAssistant :refresh="assistantRefresh" :draft-version="draftVersion" :snapshot="draftSnapshot" :busy="deciding" @apply="applyProposal" @discard="discardProposal" />

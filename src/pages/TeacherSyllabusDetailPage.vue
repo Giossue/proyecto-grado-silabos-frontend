@@ -32,26 +32,21 @@ import SignatureDialog, { type StatementSigner } from '@/components/domain/sylla
 import ReviewCommentNotice from '@/components/domain/syllabus/ReviewCommentNotice.vue';
 import TeacherFormationDialog from '@/components/domain/identity/TeacherFormationDialog.vue';
 import { sessionState } from '@/state/session';
-import { responsibleLabel } from '@/types/configuration';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Spinner } from '@/components/ui/spinner';
-import FieldView from '@/components/domain/syllabus/FieldView.vue';
-import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
 import { goBack } from '@/lib/goBack';
 import { openRevisionPdf } from '@/lib/openPdf';
 import { sheetPixels } from '@/lib/documentLayout';
 import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
+import SyllabusTeacherForm from '@/components/domain/syllabus/SyllabusTeacherForm.vue';
+import { isTeacherField } from '@/lib/syllabusForm';
 import { attemptKey } from '@/lib/attemptKey';
 import { afterDialogExit, useShownWhileClosing } from '@/lib/dialogExit';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
-import { ArrowLeft, ArrowRight, Copy, Eye, FileSignature, FileText, Send } from '@lucide/vue';
+import { ArrowLeft, Copy, Eye, FileSignature, FileText, Send } from '@lucide/vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
 const route = useRoute();
@@ -108,7 +103,6 @@ const pausedEdit = computed(() =>
 const showEditor = computed(() => canEdit.value || pausedEdit.value);
 const allFields = computed(() => (syllabus.value?.sections ?? []).flatMap((section) => section.fields));
 const editableFieldIds = computed(() => new Set(allFields.value.map((field) => field.id)));
-const isTeacherField = (field: SyllabusField): boolean => field.quien_llena !== 'institucional' && field.teacher_editable === true;
 const reviewComments = computed(() =>
   [...(syllabus.value?.review_comments ?? [])].sort(
     (left, right) => new Date(right.commented_at).getTime() - new Date(left.commented_at).getTime(),
@@ -195,15 +189,6 @@ const goToPart = async (fieldId: string | null): Promise<void> => {
 };
 // Cada campo es un acordeón que arranca abierto; se guardan solo los que el docente cerró.
 const collapsedFields = ref<Set<string>>(new Set());
-const openFields = (section: { fields: Array<{ id: string }> }): string[] => section.fields.map((field) => field.id).filter((id) => !collapsedFields.value.has(id));
-const setOpenFields = (section: { fields: Array<{ id: string }> }, open: string[]): void => {
-  const next = new Set(collapsedFields.value);
-  for (const { id } of section.fields) {
-    if (open.includes(id)) next.delete(id); else next.add(id);
-  }
-  collapsedFields.value = next;
-};
-const fieldTitle = (field: { label: string }, section: { title: string }): string => field.label.trim() || section.title;
 const clearFieldValidation = (fieldId: string): void => {
   if (validationResults.value.some((result) => result.field_id === fieldId)) {
     validationResults.value = validationResults.value.filter((result) => result.field_id !== fieldId);
@@ -480,15 +465,6 @@ const activeSectionId = computed<string>({
   get: () => visibleSections.value.find((section) => section.id === chosenSectionId.value)?.id ?? visibleSections.value[0]?.id ?? "",
   set: (value) => { chosenSectionId.value = value; },
 });
-const shownSections = computed(() => visibleSections.value.filter((section) => section.id === activeSectionId.value));
-const sectionPosition = computed(() => visibleSections.value.findIndex((section) => section.id === activeSectionId.value));
-const previousSection = computed(() => visibleSections.value[sectionPosition.value - 1] ?? null);
-const nextSection = computed(() => visibleSections.value[sectionPosition.value + 1] ?? null);
-const goToSection = async (id: string): Promise<void> => {
-  activeSectionId.value = id;
-  await nextTick();
-  document.getElementById(`section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-};
 
 const warnBeforeUnload = (event: BeforeUnloadEvent): void => {
   if (!hasUnsavedChanges() && savingFieldId.value === null) return;
@@ -549,44 +525,7 @@ onBeforeUnmount(() => {
 
           <ReviewCommentNotice v-if="syllabus.state === 'correccion_solicitada' && reviewComments.length" :comments="reviewComments" />
 
-          <Tabs v-if="showEditor && !previewing && visibleSections.length > 1" v-model="activeSectionId" class="w-full shrink-0">
-            <TabsList class="h-auto w-full flex-wrap justify-start" aria-label="Secciones del sílabo">
-              <Tooltip v-for="section in visibleSections" :key="section.id"><TooltipTrigger as-child><TabsTrigger :value="section.id" class="h-10 max-w-64 flex-none px-4 data-[state=active]:font-semibold"><span class="truncate">{{ section.title }}</span></TabsTrigger></TooltipTrigger><TooltipContent>{{ section.title }}</TooltipContent></Tooltip>
-            </TabsList>
-          </Tabs>
-          <template v-if="showEditor && !previewing">
-            <section v-for="section in shownSections" :id="`section-${section.id}`" :key="section.id" class="teacher-form flex scroll-mt-6 flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring">
-              <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
-              <FieldGroup>
-                <Accordion type="multiple" class="-mx-1" :model-value="openFields(section)" @update:model-value="setOpenFields(section, $event as string[])">
-                  <AccordionItem v-for="field in section.fields" :key="field.id" :value="field.id">
-                    <!-- Un campo sin nombre en la plantilla se muestra sin título, igual que en la plantilla. -->
-                    <AccordionTrigger v-if="field.label.trim()" class="items-center px-1 hover:no-underline">
-                      <span class="flex flex-wrap items-center gap-2">
-                        <span class="text-base font-semibold">{{ fieldTitle(field, section) }}</span>
-                        <span v-if="isTeacherField(field)" class="text-destructive" aria-hidden="true">*</span>
-                        <Badge v-else variant="outline" class="font-normal">{{ responsibleLabel(field.quien_llena) }}</Badge>
-                      </span>
-                    </AccordionTrigger>
-                    <AccordionContent class="flex flex-col gap-3 px-1 pt-1">
-                      <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="validationFor(field.id).length > 0">
-                        <FieldLabel :for="`input-${field.id}`" required class="sr-only">{{ fieldTitle(field, section) }}</FieldLabel>
-                        <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene del proyecto de carrera; puede ajustarlo</FieldDescription>
-                        <FieldResponseEditor required :template="field.template" :label="fieldTitle(field, section)" :model-value="field.value" :id="`input-${field.id}`" :disabled="conflict || pausedEdit" @update:model-value="updateValue(field, $event)" />
-                      </Field>
-                      <FieldView v-else :id="`field-${field.id}`" :field="field" bare />
-                      <FieldError :errors="visibleValidationMessages(field.id)" />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </FieldGroup>
-            </section>
-            <nav v-if="previousSection || nextSection" class="-mt-4 flex items-center justify-between gap-2" aria-label="Secciones anterior y siguiente">
-              <Button v-if="previousSection" type="button" variant="outline" @click="goToSection(previousSection.id)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Anterior</Button>
-              <span v-else />
-              <Button v-if="nextSection" type="button" variant="outline" @click="goToSection(nextSection.id)">Siguiente<ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
-            </nav>
-          </template>
+          <SyllabusTeacherForm v-if="showEditor && !previewing" v-model:active="activeSectionId" v-model:collapsed="collapsedFields" :sections="syllabus.sections" :disabled="conflict || pausedEdit" :errors="visibleValidationMessages" @update:value="updateValue" />
           <SyllabusDocumentPreview v-else :presentation="syllabus.presentation" :sections="syllabus.sections" />
 
         </div>

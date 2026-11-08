@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { getSession } from "@/api/session";
-import { createTemplate, getTemplate, getTemplateJson, type TemplatePayload } from "@/api/template";
+import { createTemplate, getTemplate, getTemplateJson, getTemplateTeacherPreview, type TemplatePayload } from "@/api/template";
 import { applyTemplateAssistantProposal, discardTemplateAssistantProposal, getTemplateAssistant, getTemplateAssistantProposal, sendTemplateAssistantMessage } from "@/api/templateAssistant";
 
 vi.mock("vue-router", async (importOriginal) => ({
@@ -33,6 +33,7 @@ vi.mock("@/api/template", async (importOriginal) => ({
   getTemplate: vi.fn(),
   createTemplate: vi.fn(),
   getTemplateJson: vi.fn(),
+  getTemplateTeacherPreview: vi.fn(),
 
 }));
 
@@ -77,6 +78,29 @@ describe("AdminTemplatePage", () => {
     vi.mocked(sendTemplateAssistantMessage).mockResolvedValue({ message: 'El pedido quedó registrado.', assistant_message_id: 'a-1' });
     vi.mocked(applyTemplateAssistantProposal).mockResolvedValue({ message: 'Propuesta aplicada en el editor.' });
     vi.mocked(discardTemplateAssistantProposal).mockResolvedValue({ message: 'Propuesta descartada.' });
+  });
+
+  it('«Ver como docente» cambia la hoja por el formulario del docente con la plantilla guardada, y se puede volver', async () => {
+    const doc = { type: 'doc' as const, content: [{ type: 'paragraph' }] };
+    vi.mocked(getTemplateTeacherPreview).mockResolvedValue({ sections: [{
+      id: 'section-1', key: 'descripcion', title: 'Descripción de la asignatura', description: null, orientation: 'portrait',
+      fields: [{ id: 'field-1', key: 'descripcion', label: 'Descripción', quien_llena: 'docente', teacher_editable: true, required: true, value: doc, document: doc }],
+    }] } as never);
+    const wrapper = mountPage();
+    await flushPromises();
+    const toggle = () => wrapper.get('button[aria-label="Ver como docente"]');
+
+    await toggle().trigger('click');
+    await flushPromises();
+    expect(getTemplateTeacherPreview).toHaveBeenCalledWith('template-1');
+    expect(wrapper.text()).toContain('Vista de prueba: así verá el formulario el docente. Lo que escriba aquí no se guarda');
+    expect(wrapper.find('section.teacher-form').text()).toContain('Descripción');
+    expect(wrapper.findAll('button').some((button) => button.text() === 'Editar')).toBe(false);
+
+    await toggle().trigger('click');
+    await flushPromises();
+    expect(wrapper.find('section.teacher-form').exists()).toBe(false);
+    expect(wrapper.findAll('button').some((button) => button.text() === 'Editar')).toBe(true);
   });
 
   const proposal = (version: string) => ({

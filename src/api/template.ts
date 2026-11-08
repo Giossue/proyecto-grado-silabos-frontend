@@ -1,3 +1,4 @@
+import type { SyllabusDetail } from '@/api/syllabi';
 import { setTemplateRuntime } from '@/lib/blocks/runtime';
 import type { TemplateDefinitionPayload } from '@/lib/blocks/types';
 import type { LockDetail } from '@/api/locks';
@@ -12,6 +13,10 @@ export type TemplateAppearance = { font_family: string; body_font_size: number; 
 export type TemplateSectionPayload = { id: string; key: string; title: string; orientation: 'portrait' | 'landscape'; fields: TemplateField[] };
 export type TemplatePayload = { processLock: string | null; processLockDetail?: LockDetail | null; templateChangedDuringPause?: boolean; variables?: TemplateVariable[]; presets?: TemplatePreset[]; definition?: TemplateDefinitionPayload; template: null | { id: string; name: string; description: string | null; titleBlock: { text: string }; layout?: DocumentLayout; layoutOptions?: DocumentLayoutOptions; sections: TemplateSectionPayload[] }; logos?: { institution: string; faculty: string; institution_size: { width: number; height: number }; faculty_size: { width: number; height: number } } };
 export type TemplatePreset = { key: string; field_key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode };
+/** El formulario que verá el docente con la plantilla guardada (datos de muestra; nada se guarda). */
+export const getTemplateTeacherPreview = (templateId: string) =>
+    api<{ sections: SyllabusDetail['sections'] }>(`/admin/template/${templateId}/teacher-preview`);
+
 export const getTemplate = () => api<TemplatePayload>('/admin/template').then((payload) => {
     setTemplateRuntime(payload.definition, Object.fromEntries((payload.variables ?? []).map((variable) => [variable.key, ''])));
 
