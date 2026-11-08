@@ -13,6 +13,7 @@ export type LibraryReviewItem = {
   syllabus_id: string;
   subject: string;
   code: string;
+  faculty?: string | null;
   career: string;
   period: string;
   parallels: string[];

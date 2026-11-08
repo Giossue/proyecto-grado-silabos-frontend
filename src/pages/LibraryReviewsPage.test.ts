@@ -90,7 +90,7 @@ describe('LibraryReviewsPage', () => {
     const row = wrapper.findAll('tbody tr')[0]!;
     const headers = wrapper.findAll('thead th').map((header) => header.text());
     expect(wrapper.get('#library-search').attributes('placeholder')).toBe('Buscar por asignatura, código, carrera o docente');
-    expect(headers).toEqual(['Asignatura', 'Carrera', 'Docente', 'Responsable', 'Estado']);
+    expect(headers).toEqual(['Facultad', 'Carrera', 'Asignatura', 'Docente', 'Responsable', 'Estado']);
     expect(row.text()).not.toContain('SW-601');
     expect(row.text()).toContain('Arquitectura de Software');
     expect(row.text()).toContain('Sin asignar');
