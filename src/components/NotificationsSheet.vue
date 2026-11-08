@@ -190,7 +190,8 @@ onMounted(refreshCount);
                         </div>
                     </div>
                     <FeedbackAlert v-else-if="error" :message="error" class="mx-6" />
-                    <EmptyState v-else-if="items.length === 0" class="mx-6" :title="status === 'unread' ? 'No tiene notificaciones sin leer en este período' : 'No tiene notificaciones en este período'" />
+                    <!-- Margen arriba y abajo: el área de scroll recorta el borde de la card si queda pegada -->
+                    <EmptyState v-else-if="items.length === 0" class="mx-6 my-1" :title="status === 'unread' ? 'No tiene notificaciones sin leer en este período' : 'No tiene notificaciones en este período'" />
                     <ul v-else class="flex flex-col divide-y border-t">
                         <li v-for="notification in items" :key="notification.id">
                             <Button
