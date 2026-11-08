@@ -849,7 +849,7 @@
 
 /* Los fondos de la plantilla son claros: el texto queda oscuro también en tema oscuro. */
 .field-response-editor .free-text-table :is(td, th)[style*='background'] {
-    color: #1f2937;
+    color: var(--document-editor-foreground);
 }
 
 .dark .field-response-editor .free-text-table :is(td, th) {
@@ -947,7 +947,7 @@
 .setup-checklist.setup-pending .driver-checklist-launcher {
     background-color: var(--destructive);
     border-color: var(--destructive);
-    color: #fff;
+    color: var(--destructive-foreground);
     animation: setup-pulse 2.4s ease-in-out infinite;
 }
 @keyframes setup-pulse {
