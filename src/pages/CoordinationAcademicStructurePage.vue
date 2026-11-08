@@ -172,8 +172,8 @@ onBeforeUnmount(() => curriculumEditorState.setOpen(false));
       <CurriculumActions :curriculum="curriculum.curriculum" @configure="configurationOpen = true" />
       <AppearanceToggle />
     </header>
-    <div class="min-w-0 flex-1 p-3 sm:p-4">
-      <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
+    <div class="min-w-0 flex-1">
+      <Alert v-if="actionError" variant="destructive" class="m-3 w-auto"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
       <CurriculumCanvas :career="curriculum.career" :modality-options="curriculum.modalityOptions" :curriculum="curriculum.curriculum" :fixed-fields="curriculum.fixedFields" :fixed-field-totals="curriculum.fixedFieldTotals" :subjects="curriculum.subjects" :requirements="curriculum.requirements" :organization-units="curriculum.organizationUnitOptions" :editing="true" :full-screen="true" @changed="handleCurriculumChanged" />
       <CurriculumConfigurationDialog v-model:open="configurationOpen" :curriculum="curriculum.curriculum" @saved="handleCurriculumChanged" />
     </div>

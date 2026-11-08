@@ -18,7 +18,7 @@ withDefaults(
     <div
         v-if="mode === 'curriculum'"
         data-skeleton="curriculum-canvas"
-        class="curriculum-canvas relative h-(--curriculum-canvas-height) min-h-136 overflow-hidden rounded-md ring-1 ring-surface-ring bg-(--curriculum-canvas-background) shadow-surface"
+        class="curriculum-canvas relative h-(--curriculum-canvas-height) min-h-136 overflow-hidden bg-(--curriculum-canvas-background)"
     >
         <div class="absolute inset-0 flex flex-col gap-4 overflow-hidden p-4">
             <div v-for="level in 4" :key="level" data-skeleton="curriculum-level" class="flex h-40 shrink-0 overflow-hidden rounded-md bg-(--curriculum-lane) ring-1 ring-surface-ring">

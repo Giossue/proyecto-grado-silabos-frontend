@@ -36,7 +36,6 @@ import CurriculumCycleNode from "@/components/domain/academic/curriculum/Curricu
 import CurriculumLegend from "@/components/domain/academic/curriculum/CurriculumLegend.vue";
 import CurriculumLegendPanel from "@/components/domain/academic/curriculum/CurriculumLegendPanel.vue";
 import CurriculumRelationPicker from "@/components/domain/academic/curriculum/CurriculumRelationPicker.vue";
-import CurriculumRequirementList from "@/components/domain/academic/curriculum/CurriculumRequirementList.vue";
 import CurriculumRequirementDialogs from "@/components/domain/academic/curriculum/CurriculumRequirementDialogs.vue";
 import CurriculumRequirementEdge from "@/components/domain/academic/curriculum/CurriculumRequirementEdge.vue";
 import CurriculumSubjectNode from "@/components/domain/academic/curriculum/CurriculumSubjectNode.vue";
@@ -518,19 +517,13 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
 <template>
   <div
     ref="canvasElement"
-    class="curriculum-canvas relative min-h-136 overflow-hidden rounded-md ring-1 ring-surface-ring bg-background shadow-surface"
+    class="curriculum-canvas relative min-h-136 overflow-hidden bg-background"
     :class="cn(fullScreen && 'h-(--curriculum-canvas-full-height)', !fullScreen && 'h-(--curriculum-canvas-height)')"
     :aria-label="editing ? 'Editor interactivo de la malla' : 'Vista de la malla'"
   >
     <div class="absolute top-3 right-3 z-10 max-sm:hidden">
       <CurriculumLegendPanel :units="legendUnits" :rows="summaryRows" />
     </div>
-    <CurriculumRequirementList
-      :requirements="requirements"
-      :editable="editable && !hasOpenEditor"
-      :subject-name="subjectName"
-      @select="(requirement) => (selectedRequirement = requirement)"
-    />
     <CurriculumRelationPicker
       v-model:picker="relationPicker"
       :subjects="subjects"

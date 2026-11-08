@@ -125,7 +125,7 @@
     --notifications-width: min(24rem, calc(100vw - 1rem));
     --notifications-max-height: min(26rem, 60vh);
     --curriculum-canvas-height: 76vh;
-    --curriculum-canvas-full-height: calc(100dvh - 5.5rem);
+    --curriculum-canvas-full-height: calc(100dvh - 3.5rem - 1px);
     --document-table-border: #333333;
     --overlay-max-height: calc(100dvh - 2rem);
     --filter-sheet-max-height: 85vh;
@@ -243,7 +243,7 @@
     --curriculum-unit-5-foreground: hsl(152 45% 14%);
     --curriculum-lane: color-mix(in srgb, var(--card) 50%, var(--muted));
     --curriculum-cycle-chrome: color-mix(in srgb, var(--primary) 10%, var(--card));
-    --curriculum-canvas-background: color-mix(in srgb, var(--background) 90%, black);
+    --curriculum-canvas-background: var(--background);
     --curriculum-prerequisite: var(--destructive);
     --curriculum-corequisite: var(--primary);
 }
@@ -308,7 +308,6 @@
 }
 
 .dark .curriculum-canvas {
-    --curriculum-canvas-background: #1a1d20;
     --curriculum-lane: #1d2023;
 }
 
