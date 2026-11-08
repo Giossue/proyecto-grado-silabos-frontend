@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyState from '@/components/domain/EmptyState.vue';
 import { CalendarClock, Mail, Save } from '@lucide/vue';
 import { computed, onMounted, ref } from 'vue';
 import { ApiError } from '@/api/client';
@@ -73,7 +74,7 @@ const save = async (): Promise<void> => {
         <LoadingSkeleton v-else-if="!options" variant="settings" settings-section="email" :rows="optionRows" />
         <div v-else data-tour="email-notices" class="flex flex-col gap-6">
             <FeedbackAlert v-if="saveError" :message="saveError" />
-            <p v-if="options.length === 0" class="text-sm text-muted-foreground">Su rol no recibe avisos por correo</p>
+            <EmptyState v-if="options.length === 0" title="Su rol no recibe avisos por correo" />
             <!-- Secciones en acordeón como en Sistema; en el sistema los avisos se ven siempre. -->
             <Accordion v-else v-model="openSection" type="single" collapsible :unmount-on-hide="false" class="-mt-2">
                 <SettingsAccordionSection v-for="group in groups" :key="group.value" :value="group.value" :title="group.title" :description="group.description" :icon="group.icon">

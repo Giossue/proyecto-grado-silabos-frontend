@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyState from '@/components/domain/EmptyState.vue';
 import { SYLLABUS_STATE_OPTIONS } from '@/lib/syllabusStates';
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
@@ -11,10 +12,9 @@ import { paths } from '@/lib/routes';
 import { latestRequest } from '@/lib/latestRequest';
 import { queryPage, queryText, syncFilters } from '@/lib/urlFilters';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
-import { History, Inbox } from '@lucide/vue';
+import { History } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -73,14 +73,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
       </CardContent>
     </Card>
     <LoadingSkeleton v-if="!result && !error" variant="syllabus-cards" :rows="3" />
-    <Card v-else-if="result && result.syllabi.data.length === 0">
-      <Empty class="gap-3 border-0 p-6 md:p-10">
-        <EmptyHeader class="gap-3">
-          <EmptyMedia class="text-muted-foreground [&_svg]:size-6"><Inbox aria-hidden="true" /></EmptyMedia>
-          <EmptyTitle class="text-sm text-muted-foreground">{{ result.filters.q || result.filters.state ? 'Ningún sílabo coincide con la búsqueda' : 'No tiene sílabos asignados' }}</EmptyTitle>
-        </EmptyHeader>
-      </Empty>
-    </Card>
+    <EmptyState v-else-if="result && result.syllabi.data.length === 0" :title="result.filters.q || result.filters.state ? 'Ningún sílabo coincide con la búsqueda' : 'No tiene sílabos asignados'" />
     <ul v-else-if="result" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Mis sílabos">
       <li v-for="syllabus in result.syllabi.data" :key="syllabus.id">
         <Card

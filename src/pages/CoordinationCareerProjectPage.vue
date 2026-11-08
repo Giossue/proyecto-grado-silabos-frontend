@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import EmptyState from '@/components/domain/EmptyState.vue';
 import StatusBadge from '@/components/domain/StatusBadge.vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -120,7 +121,7 @@ onMounted(() => { void load(); });
           </ClientFilterBar>
           </CardContent></Card>
           <div data-tour="career-subjects" class="flex flex-col gap-2">
-            <p v-if="!groups.length" class="py-6 text-center text-sm text-muted-foreground">{{ filter.active.value ? 'Ninguna materia coincide con la búsqueda' : 'La malla todavía no tiene materias' }}</p>
+            <EmptyState v-if="!groups.length" :title="filter.active.value ? 'Ninguna materia coincide con la búsqueda' : 'La malla todavía no tiene materias'" />
             <Collapsible v-for="group in groups" :key="`${group.cycle}-${filter.active.value}`" :default-open="filter.active.value" class="group/cycle rounded-md ring-1 ring-surface-ring bg-card">
               <CollapsibleTrigger class="flex w-full items-center gap-2 px-4 py-3 text-left font-semibold">
                 <span class="flex-1">{{ group.cycle === 'Sin ciclo' ? group.cycle : `Ciclo ${group.cycle}` }}</span>
