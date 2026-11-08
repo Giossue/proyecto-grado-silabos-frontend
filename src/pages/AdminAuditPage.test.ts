@@ -1,6 +1,6 @@
 import { enableAutoUnmount, flushPromises, mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getAuditEvents, type AuditPayload } from '@/api/operations';
+import { downloadAuditWorkbook, getAuditEvents, type AuditPayload } from '@/api/operations';
 import { getSession } from '@/api/session';
 import AdminAuditPage from '@/pages/AdminAuditPage.vue';
 
@@ -14,6 +14,7 @@ vi.mock('@/api/session', () => ({ getSession: vi.fn() }));
 vi.mock('@/api/operations', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/operations')>()),
   getAuditEvents: vi.fn(),
+  downloadAuditWorkbook: vi.fn(),
 }));
 
 const payload: AuditPayload = {
@@ -55,7 +56,7 @@ describe('AdminAuditPage', () => {
     vi.mocked(getAuditEvents).mockResolvedValue(payload);
   });
 
-  it('presenta un único registro resumido sin procesos ni detalles técnicos', async () => {
+  it('presenta un único registro con qué cambió y sobre qué registro, sin procesos', async () => {
     const wrapper = mount(AdminAuditPage, { global: { stubs: { RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } } } });
     await flushPromises();
 
@@ -68,20 +69,30 @@ describe('AdminAuditPage', () => {
     expect(wrapper.text()).toContain('Cuenta desactivada');
     expect(wrapper.text()).toContain('Ada Administradora');
     expect(wrapper.text()).not.toContain('Procesos');
-    expect(wrapper.text()).not.toContain('Activo');
+    // Lo que cambió va bajo la actividad, en palabras.
+    expect(wrapper.text()).toContain('Activo: No');
     expect(wrapper.find('[role="tablist"]').exists()).toBe(false);
     expect(wrapper.find('[data-slot="badge"]').exists()).toBe(false);
   });
 
-  it('filtra por período, rol, carrera, actividad y resultado, sin búsqueda de texto libre', async () => {
+  it('filtra por período, rol, carrera, actividad, resultado y tipo de actividad, sin búsqueda de texto libre', async () => {
     const wrapper = mount(AdminAuditPage, { global: { stubs: { RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } } } });
     await flushPromises();
 
     expect(wrapper.find('input[type="search"]').exists()).toBe(false);
     expect(wrapper.findAll('[data-slot="select-trigger"]').map((trigger) => trigger.attributes('id'))).toEqual([
-      'audit-period', 'audit-role', 'audit-career', 'audit-action', 'audit-result',
+      'audit-period', 'audit-role', 'audit-career', 'audit-action', 'audit-result', 'audit-technical',
     ]);
     expect(wrapper.find('td').classes()).not.toContain('text-xs');
     expect(wrapper.find('td .text-xs').exists()).toBe(false);
+  });
+  it('«Exportar a Excel» descarga los eventos con los filtros elegidos', async () => {
+    vi.mocked(downloadAuditWorkbook).mockResolvedValue();
+    const wrapper = mount(AdminAuditPage, { global: { stubs: { RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } } } });
+    await flushPromises();
+
+    await wrapper.findAll('button').find((button) => button.text() === 'Exportar a Excel')!.trigger('click');
+    await flushPromises();
+    expect(downloadAuditWorkbook).toHaveBeenCalledWith({}, expect.stringMatching(/^auditoria-.*\.xlsx$/));
   });
 });
