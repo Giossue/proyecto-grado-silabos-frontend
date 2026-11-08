@@ -46,7 +46,7 @@ const plainText = computed(() => {
           <EmptyMedia class="text-muted-foreground [&_svg]:size-6">
             <Inbox aria-hidden="true" />
           </EmptyMedia>
-          <EmptyTitle class="text-sm text-muted-foreground">
+          <EmptyTitle class="text-sm font-normal text-muted-foreground">
             <template v-if="plainText !== null">{{ plainText }}</template>
             <slot v-else />
           </EmptyTitle>
