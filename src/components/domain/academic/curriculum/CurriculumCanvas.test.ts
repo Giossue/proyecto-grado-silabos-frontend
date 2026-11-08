@@ -226,6 +226,8 @@ describe('CurriculumCanvas', () => {
         }
         expect(flow.attributes('translate-extent')).toBeUndefined();
         expect(wrapper.get('[data-curriculum-scroll]').classes()).toContain('overflow-auto');
+        // Los controles de zoom van en una franja propia y no tapan la malla.
+        expect(wrapper.get('[data-curriculum-scroll]').classes()).toContain('top-14');
 
         const board = () => wrapper.get('[data-curriculum-board]').element as HTMLElement;
         const controls = wrapper.findComponent({ name: 'CurriculumNavigationControls' });

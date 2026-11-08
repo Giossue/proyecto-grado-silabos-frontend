@@ -535,7 +535,8 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
       </PopoverContent>
     </Popover>
     <CurriculumNavigationControls :choice="zoomChoice" @update:choice="chooseZoom" />
-    <div data-curriculum-scroll class="absolute inset-0 overflow-auto">
+    <!-- La malla empieza bajo la franja de los controles de zoom, que así no la tapan -->
+    <div data-curriculum-scroll class="absolute inset-x-0 top-14 bottom-0 overflow-auto">
     <div data-curriculum-board class="relative mx-auto" :style="{ width: `${boardWidth * zoom}px`, height: `${boardHeight * zoom}px` }">
     <VueFlow
       :id="flowId"
