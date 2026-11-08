@@ -27,7 +27,7 @@ const curriculum = (editable = true): Curriculum => ({
 });
 
 const stubs = {
-  PageFrame: { template: '<main><slot name="banner" /><slot name="actions" /><slot /></main>' },
+  PageFrame: { template: '<main><slot name="banner" /><header data-tour="page-header"><slot name="eyebrow" /><slot name="actions" /></header><slot /></main>' },
   CurriculumCanvas: { name: 'CurriculumCanvas', props: { editing: Boolean, fullScreen: Boolean }, template: '<div data-testid="canvas" :data-editing="editing" />' },
   CurriculumConfigurationDialog: { template: '<div />' },
   ProcessLockAlert: { template: '<div>Pause la convocatoria para editar</div>' },
@@ -66,16 +66,15 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     await flushPromises();
     expect(getCurriculum).toHaveBeenCalledTimes(2);
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(true);
-    expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('fullScreen')).toBe(true);
     expect(wrapper.find('button[aria-label="Configurar ciclos"]').exists()).toBe(true);
-    expect(curriculumEditorState.open.value).toBe(true);
-    expect(wrapper.find('[aria-label="Herramientas del editor de malla"]').exists()).toBe(true);
+    // Como el sílabo del docente: se queda el encabezado de la app y Volver va sobre el título.
+    expect(curriculumEditorState.open.value).toBe(false);
+    expect(wrapper.find('[aria-label="Herramientas del editor de malla"]').exists()).toBe(false);
+    const pageHeader = wrapper.get('[data-tour="page-header"]');
+    expect(pageHeader.text()).toContain('Volver a la vista');
+    expect(pageHeader.find('button[aria-label="Configurar ciclos"]').exists()).toBe(true);
 
-    await wrapper.get('[aria-label="Tema visual: Claro. Cambiar a Oscuro"]').trigger('click');
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(localStorage.getItem('appearance')).toBe('dark');
-
-    await wrapper.findAll('button').find((button) => button.text().includes('Volver a la vista'))!.trigger('click');
+    await pageHeader.findAll('button').find((button) => button.text().includes('Volver a la vista'))!.trigger('click');
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(false);
     expect(curriculumEditorState.open.value).toBe(false);
     wrapper.unmount();
