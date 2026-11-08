@@ -45,6 +45,7 @@ const select = (value: string): void => {
           </CommandGroup>
         </CommandList>
       </Command>
+      <p class="border-t px-3 py-2 text-xs text-muted-foreground">Solo aparecen los docentes que ya activaron su cuenta</p>
     </PopoverContent>
   </Popover>
 </template>

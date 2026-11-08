@@ -30,8 +30,14 @@ const inputType = computed(() =>
         ? 'number'
         : 'text',
 );
+// Topes del servidor; sin `max`, los lectores de pantalla anuncian un máximo de 0.
+const maxValue = computed((): number | undefined => {
+    if (inputType.value !== 'number') return undefined;
+    if (props.field.system_key === 'horas_totales') return 32767;
+    return props.field.type === 'numero' ? 9999.99 : 9999;
+});
 const isCalculatedTotal = computed(
-    () => props.field.system_key === 'total_hours',
+    () => props.field.system_key === 'horas_totales',
 );
 </script>
 
@@ -66,6 +72,7 @@ const isCalculatedTotal = computed(
             :type="inputType"
             :step="field.type === 'numero' ? '0.01' : undefined"
             :min="inputType === 'number' ? 0 : undefined"
+            :max="maxValue"
             :model-value="value"
             :placeholder="
                 field.type === 'texto' ? `Ej. ${field.label}` : undefined

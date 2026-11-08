@@ -109,4 +109,13 @@ describe('TeacherSelect', () => {
     expect(options()).toHaveLength(2);
     wrapper.unmount();
   });
+
+  it('explica que solo aparecen los docentes que ya activaron su cuenta', async () => {
+    const wrapper = mountSelect();
+    trigger().click();
+    await flushPromises();
+
+    expect(document.body.textContent).toContain('Solo aparecen los docentes que ya activaron su cuenta');
+    wrapper.unmount();
+  });
 });

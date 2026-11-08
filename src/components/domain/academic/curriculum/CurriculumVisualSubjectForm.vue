@@ -78,6 +78,18 @@ watch(
     organizationUnit.value = value ?? "";
   },
 );
+// Un error del servidor se quita en cuanto se cambia ese campo.
+const clearError = (key: string): void => {
+  if (errors.value[key] === undefined) return;
+  errors.value = { ...errors.value, [key]: undefined };
+};
+const clearInputError = (event: Event): void => {
+  if (event.target instanceof HTMLInputElement && event.target.name) clearError(event.target.name);
+};
+watch(organizationUnit, () => clearError("organization_unit"));
+watch(modality, () => clearError("modality"));
+watch(generatesSyllabus, () => clearError("generates_syllabus"));
+
 const submit = async (event: Event): Promise<void> => {
   const target = event.currentTarget;
   if (!(target instanceof HTMLFormElement)) return;
@@ -94,7 +106,12 @@ const submit = async (event: Event): Promise<void> => {
       errors.value = Object.fromEntries(
         Object.entries(reason.errors).map(([key, values]) => [key, values[0]]),
       );
-      errors.value.record ??= reason.message;
+      // El aviso general solo va si ningún campo visible muestra el error; así no se repite.
+      const shown = new Set(["code", "nombre", "organization_unit", "modality", "generates_syllabus", ...props.fixedFields.map(errorKey)]);
+      const hidden = Object.entries(errors.value).find(([key]) => !shown.has(key));
+      if (hidden !== undefined || Object.keys(errors.value).length === 0) {
+        errors.value.record ??= hidden?.[1] ?? reason.message;
+      }
     } else {
       errors.value.record = "No se pudo guardar la materia";
     }
@@ -108,6 +125,7 @@ const submit = async (event: Event): Promise<void> => {
   <form
     :key="subject?.id ?? `new-${cycle}-${position}`"
     @submit.prevent="submit"
+    @input="clearInputError"
   >
     <input type="hidden" name="cycle" :value="cycle" />
     <input type="hidden" name="position" :value="position" />

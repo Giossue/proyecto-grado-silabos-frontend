@@ -15,6 +15,8 @@ const button = (label: string): HTMLButtonElement | undefined => Array.from(body
 const row = (name: string): HTMLElement => Array.from(body().querySelectorAll<HTMLElement>('[data-slot="field"]')).find((item) => item.textContent?.trim() === name)!;
 const isChecked = (name: string): boolean => row(name).querySelector('[role="checkbox"]')!.getAttribute('aria-checked') === 'true';
 
+// Avisa al formulario de que se escribió (el botón revisa los campos en cada evento `input`).
+const typed = (): void => { body().querySelector('#catalog-name')?.dispatchEvent(new Event('input')); };
 const firstStep = async () => {
     const wrapper = mount(CatalogRecordDialog, { attachTo: document.body, props: { entity: 'facultad', options, open: false } });
     await wrapper.setProps({ open: true });
@@ -23,6 +25,8 @@ const firstStep = async () => {
     state.form.nombre = 'Facultad de Salud';
     state.form.campus = campus;
     wrapper.findComponent(FacultyLogoField).vm.$emit('update:modelValue', new File(['x'], 'logo.png', { type: 'image/png' }));
+    await flushPromises();
+    typed();
     await flushPromises();
 
     return wrapper;
@@ -124,6 +128,28 @@ describe('Nueva facultad · paso de bibliotecas', () => {
         expect(button('Siguiente')).toBeUndefined();
         expect(button('Crear carrera')).toBeDefined();
         expect(getCatalogLibraries).not.toHaveBeenCalled();
+        wrapper.unmount();
+    });
+
+    it('el logo es opcional: sin logo pasa a las bibliotecas y crea la facultad', async () => {
+        const wrapper = mount(CatalogRecordDialog, { attachTo: document.body, props: { entity: 'facultad', options, open: false } });
+        await wrapper.setProps({ open: true });
+        await flushPromises();
+        const state = (wrapper.vm as unknown as { $: { setupState: { form: { nombre: string; campus: string } } } }).$.setupState;
+        state.form.nombre = 'Facultad de Salud';
+        state.form.campus = campus;
+        await flushPromises();
+        typed();
+        await flushPromises();
+
+        expect(body().querySelector<HTMLInputElement>('#faculty-logo')?.required).toBe(false);
+        expect(body().textContent).toContain('Puede cargarlo después');
+        await next();
+        button('Crear facultad')!.click();
+        await flushPromises();
+
+        expect(sent().get('logo')).toBeNull();
+        expect(wrapper.emitted('saved')).toEqual([['Facultad creada.']]);
         wrapper.unmount();
     });
 });

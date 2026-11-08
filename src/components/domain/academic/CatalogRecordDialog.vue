@@ -60,6 +60,25 @@ const labels = computed(() => ({
 })[props.entity]);
 const submitLabel = computed(() => ({ facultad: 'Crear facultad', carrera: 'Crear carrera', periodo: 'Crear periodo' })[props.entity]);
 
+// Lo obligatorio de cada formulario: sin esto, el botón de crear queda deshabilitado.
+const missingRequired = computed((): boolean => {
+    const { nombre, code, faculty_id, campus, modality, cycle_count, starts_on, ends_on } = form.value;
+    const filled = (...values: string[]): boolean => values.every((value) => String(value).trim() !== '');
+
+    return !({
+        facultad: filled(nombre, campus),
+        carrera: filled(faculty_id, modality, nombre, code, cycle_count),
+        periodo: filled(starts_on, ends_on),
+    })[props.entity];
+});
+
+// Un error del servidor se quita en cuanto se cambia ese campo.
+watch(() => ({ ...form.value }), (now, before) => {
+    const changed = Object.keys(now).filter((key) => now[key as keyof typeof now] !== before[key as keyof typeof before]);
+    if (!changed.some((key) => key in errors.value)) return;
+    errors.value = Object.fromEntries(Object.entries(errors.value).filter(([key]) => !changed.includes(key)));
+});
+
 const logoValidationError = (message: string | null): void => {
     const nextErrors = { ...errors.value };
     if (message) nextErrors.logo = [message];
@@ -82,10 +101,6 @@ watch(open, (value) => {
 const submit = async (): Promise<void> => {
     if (props.disabled) return;
     errors.value = {};
-    if (props.entity === 'facultad' && !logo.value) {
-        errors.value = { logo: ['El logo de la facultad es obligatorio'] };
-        return;
-    }
     if (props.entity === 'facultad' && step.value === 1) {
         goTo(2);
         return;
@@ -131,9 +146,9 @@ const submit = async (): Promise<void> => {
                             <FieldError :errors="errors.campus" />
                         </Field>
                         <Field :data-invalid="Boolean(errors.logo)">
-                            <FieldLabel for="faculty-logo" required>Logo de la facultad</FieldLabel>
-                            <FacultyLogoField v-model="logo" input-id="faculty-logo" :disabled="processing" :invalid="Boolean(errors.logo)" required @validation-error="logoValidationError" />
-                            <FieldDescription>PNG, JPG o WebP. Se ajusta a 600 × 180 px con fondo transparente</FieldDescription>
+                            <FieldLabel for="faculty-logo">Logo de la facultad</FieldLabel>
+                            <FacultyLogoField v-model="logo" input-id="faculty-logo" :disabled="processing" :invalid="Boolean(errors.logo)" @validation-error="logoValidationError" />
+                            <FieldDescription>PNG, JPG o WebP. Se ajusta a 600 × 180 px con fondo transparente. Puede cargarlo después, pero Coordinación no podrá abrir la convocatoria sin él</FieldDescription>
                             <FieldError :errors="errors.logo" />
                         </Field>
                         </FieldGroup>
@@ -155,14 +170,14 @@ const submit = async (): Promise<void> => {
                         <Field :data-invalid="Boolean(errors.cycle_count)"><FieldLabel for="catalog-cycle-count" required>Cantidad de ciclos</FieldLabel><Input id="catalog-cycle-count" v-model="form.cycle_count" type="number" min="1" :max="VALIDATION_LIMITS.cycleCount" step="1" aria-required="true" /><FieldError :errors="errors.cycle_count" /></Field>
                     </div>
                     <div v-if="entity === 'periodo'" class="grid grid-cols-2 items-start gap-4">
-                        <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" :min-value="minimumPeriodDate" :aria-invalid="Boolean(errors.starts_on)" required /><FieldDescription>Debe ser hoy o una fecha posterior</FieldDescription><FieldError :errors="errors.starts_on" /></Field>
+                        <Field :data-invalid="Boolean(errors.starts_on)"><FieldLabel for="catalog-starts-on" required>Fecha de inicio</FieldLabel><DatePicker id="catalog-starts-on" v-model="form.starts_on" :aria-invalid="Boolean(errors.starts_on)" required /><FieldError :errors="errors.starts_on" /></Field>
                         <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel for="catalog-ends-on" required>Fecha de fin</FieldLabel><DatePicker id="catalog-ends-on" v-model="form.ends_on" :min-value="minimumPeriodEndDate" :aria-invalid="Boolean(errors.ends_on)" required /><FieldError :errors="errors.ends_on" /></Field>
                     </div>
                     <DialogFooter v-if="entity === 'facultad'" class="mx-0 flex-col sm:flex-col sm:justify-start p-4 absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
                         <Field orientation="horizontal" class="justify-end">
                             <Button v-if="step === 1" type="button" variant="outline" @click="close">Cancelar</Button>
                             <Button v-else type="button" variant="outline" @click="goTo(1)"><ArrowLeft data-icon="inline-start" aria-hidden="true" />Atrás</Button>
-                            <Button v-if="step === 1" type="submit">Siguiente<ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
+                            <Button v-if="step === 1" type="submit" :disabled="missingRequired">Siguiente<ArrowRight data-icon="inline-end" aria-hidden="true" /></Button>
                             <Button v-else type="submit" :disabled="processing || (koha !== null && chosenLibraries.length === 0)">
                                 <Spinner v-if="processing" data-icon="inline-start" />
                                 <Plus v-else data-icon="inline-start" aria-hidden="true" />
@@ -170,7 +185,7 @@ const submit = async (): Promise<void> => {
                             </Button>
                         </Field>
                     </DialogFooter>
-                    <FormDialogActions v-else :close="close" :processing="processing" :icon="Plus" :label="submitLabel" />
+                    <FormDialogActions v-else :close="close" :processing="processing" :disabled="missingRequired" :icon="Plus" :label="submitLabel" />
                 </FieldGroup>
             </form>
         </template>

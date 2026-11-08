@@ -75,7 +75,6 @@ describe('academic catalog code fields', () => {
     expect(nameLabel).not.toBeNull();
     expect(campusLabel).not.toBeNull();
     expect(logoLabel).not.toBeNull();
-    expect(document.body.querySelector<HTMLInputElement>('#faculty-logo')?.required).toBe(true);
     expect(document.body.textContent).toContain('Se ajusta a 600 × 180 px');
     expect(document.body.textContent).toContain('fondo transparente');
     expect(document.body.textContent).not.toContain('fondo sólido');
@@ -99,7 +98,7 @@ describe('academic catalog code fields', () => {
     period.unmount();
   });
 
-  it('limits a new period to today and keeps its end after its start', async () => {
+  it('allows a period that already started and keeps its end after its start', async () => {
     const period = mount(CatalogRecordDialog, {
       attachTo: document.body,
       props: { entity: 'periodo', options, open: true },
@@ -109,7 +108,7 @@ describe('academic catalog code fields', () => {
     const datePickers = period.findAllComponents(DatePicker);
     const localToday = today(getLocalTimeZone()).toString();
     expect(datePickers).toHaveLength(2);
-    expect(datePickers[0].props('minValue')).toBe(localToday);
+    expect(datePickers[0].props('minValue')).toBeUndefined();
     expect(datePickers[1].props('minValue')).toBe(localToday);
 
     datePickers[1].vm.$emit('update:modelValue', '2029-12-18');
@@ -140,7 +139,7 @@ describe('academic catalog code fields', () => {
     wrapper.unmount();
   });
 
-  it('requires a faculty logo only when no current logo is configured', async () => {
+  it('does not require a faculty logo when none is configured and shows the current one', async () => {
     const withoutLogo = mount(CatalogEditDialog, {
       attachTo: document.body,
       props: {
@@ -156,7 +155,7 @@ describe('academic catalog code fields', () => {
     await flushPromises();
 
     expect(document.body.querySelector('img[alt="Logo actual de la facultad"]')).toBeNull();
-    expect(document.body.querySelector<HTMLInputElement>('#edit-faculty-logo-faculty-without-logo')?.required).toBe(true);
+    expect(document.body.querySelector<HTMLInputElement>('#edit-faculty-logo-faculty-without-logo')?.required).toBe(false);
     withoutLogo.unmount();
 
     const withLogo = mount(CatalogEditDialog, {
@@ -226,6 +225,46 @@ describe('salida del formulario de creación', () => {
     await wrapper.setProps({ open: true });
     await flushPromises();
     expect(name().value).toBe('');
+    wrapper.unmount();
+  });
+});
+
+describe('botón de crear y errores de campo', () => {
+  it('«Crear carrera» sigue deshabilitado mientras falte la facultad o la modalidad', async () => {
+    const wrapper = mount(CatalogRecordDialog, { attachTo: document.body, props: { entity: 'carrera' as const, options, open: true } });
+    await flushPromises();
+    const state = (wrapper.vm as unknown as { $: { setupState: { form: Record<string, string> } } }).$.setupState;
+    Object.assign(state.form, { nombre: 'Software', code: 'SW', cycle_count: '8' });
+    await flushPromises();
+    document.body.querySelector('#catalog-name')!.dispatchEvent(new Event('input'));
+    await flushPromises();
+    const create = (): HTMLButtonElement => Array.from(document.body.querySelectorAll('button')).find((item) => item.textContent?.trim() === 'Crear carrera')!;
+
+    expect(create().disabled).toBe(true);
+    Object.assign(state.form, { faculty_id: 'faculty-1', modality: 'Presencial' });
+    await flushPromises();
+    document.body.querySelector('#catalog-name')!.dispatchEvent(new Event('input'));
+    await flushPromises();
+    expect(create().disabled).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('el error del servidor de un campo se quita al cambiar ese campo', async () => {
+    const { ApiError } = await import('@/api/client');
+    vi.mocked(createAcademicRecord).mockRejectedValue(new ApiError('Datos no válidos', 422, { code: ['Ya existe una carrera con ese código.'], nombre: ['Revise el nombre.'] }));
+    const wrapper = mount(CatalogRecordDialog, { attachTo: document.body, props: { entity: 'carrera' as const, options, open: true } });
+    await flushPromises();
+    document.body.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await flushPromises();
+    expect(document.body.textContent).toContain('Ya existe una carrera con ese código');
+
+    const code = document.body.querySelector<HTMLInputElement>('#catalog-code')!;
+    code.value = 'SW-2';
+    code.dispatchEvent(new Event('input'));
+    await flushPromises();
+
+    expect(document.body.textContent).not.toContain('Ya existe una carrera con ese código');
+    expect(document.body.textContent).toContain('Revise el nombre');
     wrapper.unmount();
   });
 });

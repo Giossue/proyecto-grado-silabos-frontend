@@ -66,4 +66,16 @@ describe('CurriculumVisualSubjectForm', () => {
 
         expect(updateCareerRecord).toHaveBeenCalledWith('asignatura', 's1', expect.objectContaining({ generates_syllabus: '0' }));
     });
+
+    it('el código repetido se muestra una sola vez y se quita al corregir el código', async () => {
+        const { ApiError } = await import('@/api/client');
+        vi.mocked(createCareerRecord).mockRejectedValue(new ApiError('Ya existe una materia con ese código.', 422, { code: ['Ya existe una materia con ese código.'] }));
+        const wrapper = mountForm(null);
+        await wrapper.get('form').trigger('submit');
+        await flushPromises();
+
+        expect(wrapper.text().split('Ya existe una materia con ese código')).toHaveLength(2);
+        await wrapper.get('input[name="code"]').setValue('SW-802');
+        expect(wrapper.text()).not.toContain('Ya existe una materia con ese código');
+    });
 });

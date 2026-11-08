@@ -72,12 +72,12 @@ describe('CatalogEditDialog · logo de la facultad', () => {
     await flushPromises();
 
     expect(document.body.querySelector('img[alt="Logo actual de la facultad"]')).not.toBeNull();
-    expect(document.body.textContent).not.toContain('Arrastra tu imagen aquí');
+    expect(document.body.textContent).not.toContain('Arrastre su imagen aquí');
 
     button('Quitar logo')!.click();
     await flushPromises();
     expect(document.body.querySelector('img[alt="Logo actual de la facultad"]')).toBeNull();
-    expect(document.body.textContent).toContain('Arrastra tu imagen aquí');
+    expect(document.body.textContent).toContain('Arrastre su imagen aquí');
     wrapper.unmount();
   });
 
@@ -96,7 +96,7 @@ describe('CatalogEditDialog · logo de la facultad', () => {
     await wrapper.setProps({ open: true });
     await flushPromises();
     expect(document.body.querySelector('img[alt="Logo actual de la facultad"]')).not.toBeNull();
-    expect(document.body.textContent).not.toContain('Arrastra tu imagen aquí');
+    expect(document.body.textContent).not.toContain('Arrastre su imagen aquí');
     wrapper.unmount();
   });
 });
