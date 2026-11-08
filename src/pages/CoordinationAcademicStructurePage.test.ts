@@ -67,8 +67,8 @@ describe('CoordinationAcademicStructurePage, edición de malla', () => {
     expect(getCurriculum).toHaveBeenCalledTimes(2);
     expect(wrapper.findComponent({ name: 'CurriculumCanvas' }).props('editing')).toBe(true);
     expect(wrapper.find('button[aria-label="Configurar ciclos"]').exists()).toBe(true);
-    // Como el sílabo del docente: se queda el encabezado de la app y Volver va sobre el título.
-    expect(curriculumEditorState.open.value).toBe(false);
+    // Como el sílabo del docente: sin menú lateral, con el encabezado de la app y Volver sobre el título.
+    expect(curriculumEditorState.open.value).toBe(true);
     expect(wrapper.find('[aria-label="Herramientas del editor de malla"]').exists()).toBe(false);
     const pageHeader = wrapper.get('[data-tour="page-header"]');
     expect(pageHeader.text()).toContain('Volver a la vista');

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { ArrowLeft, Pencil, UserPlus } from "@lucide/vue";
 import { useRouter } from "vue-router";
 import { ApiError } from "@/api/client";
@@ -18,6 +18,7 @@ import LoadErrorState from "@/components/domain/LoadErrorState.vue";
 import ManagedUserDialog from "@/components/domain/identity/ManagedUserDialog.vue";
 import CurriculumActions from "@/components/domain/academic/CurriculumActions.vue";
 import CurriculumCanvas from "@/components/domain/academic/curriculum/CurriculumCanvas.vue";
+import { curriculumEditorState } from "@/state/curriculumEditor";
 import CurriculumConfigurationDialog from "@/components/domain/academic/curriculum/CurriculumConfigurationDialog.vue";
 import ScheduledSubjectsTab from "@/components/domain/academic/ScheduledSubjectsTab.vue";
 import ImportSpreadsheetDialog from "@/components/domain/ImportSpreadsheetDialog.vue";
@@ -51,6 +52,9 @@ const teacherOpen = ref(false);
 const configurationOpen = ref(false);
 const editingCurriculum = ref(false);
 const openingEditor = ref(false);
+// Al editar se esconde el menú lateral y queda el encabezado de la app, como en el sílabo del docente.
+watch(editingCurriculum, (editing) => curriculumEditorState.setOpen(editing), { immediate: true });
+onUnmounted(() => curriculumEditorState.setOpen(false));
 watch(() => curriculum.value?.curriculum, (current) => {
   if (current && (!current.editable || current.lock_reason)) {
     editingCurriculum.value = false;

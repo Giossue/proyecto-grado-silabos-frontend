@@ -30,23 +30,25 @@ const props = withDefaults(defineProps<Props>(), {
 provide(breadcrumbsKey, toRef(props, 'breadcrumbs'));
 
 const pageTitle = ref('');
+const showsSidebar = useShowsSidebar();
 const templateEditorOpen = templateEditorState.open;
 const curriculumEditorOpen = curriculumEditorState.open;
-const editorOpen = computed(() => templateEditorOpen.value || curriculumEditorOpen.value);
+// El editor de plantillas ocupa toda la pantalla; el de malla solo esconde el menú lateral.
+const editorOpen = templateEditorOpen;
+const sidebarVisible = computed(() => showsSidebar.value && !curriculumEditorOpen.value);
 
 provide(pageTitleKey, pageTitle);
-const showsSidebar = useShowsSidebar();
 </script>
 
 <template>
     <AppShell variant="sidebar" class="h-dvh min-h-0">
-        <AppSidebar v-if="!editorOpen && showsSidebar" />
+        <AppSidebar v-if="!editorOpen && sidebarVisible" />
         <AppContent variant="sidebar" :class="editorOpen ? 'min-h-0 overflow-clip' : 'min-h-0 overflow-clip max-sm:pb-(--mobile-nav-height)'">
             <AppSidebarHeader
                 v-if="!editorOpen"
                 :breadcrumbs="breadcrumbs"
                 :page-title="pageTitle"
-                :sidebar="showsSidebar"
+                :sidebar="sidebarVisible"
             />
             <!-- El desplazamiento empieza bajo el encabezado -->
             <ScrollArea data-app-scroll class="min-h-0 flex-1">

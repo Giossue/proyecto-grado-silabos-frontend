@@ -186,7 +186,7 @@ describe('AppSidebarLayout', () => {
     expect(localStorage.getItem('appearance')).toBe('dark');
   });
 
-  it('oculta sidebar y encabezado global durante la edición de malla', async () => {
+  it('oculta el sidebar pero deja el encabezado global durante la edición de malla', async () => {
     const wrapper = await mountShell();
     expect(wrapper.find('[data-sidebar="sidebar"]').exists()).toBe(true);
     expect(wrapper.find('[data-sidebar="trigger"]').exists()).toBe(true);
@@ -195,6 +195,8 @@ describe('AppSidebarLayout', () => {
     await wrapper.vm.$nextTick();
     expect(wrapper.find('[data-sidebar="sidebar"]').exists()).toBe(false);
     expect(wrapper.find('[data-sidebar="trigger"]').exists()).toBe(false);
+    expect(wrapper.find('header [aria-label="Menú de usuario"]').exists()).toBe(true);
+    expect(wrapper.find('header [aria-label="Ir al inicio"]').exists()).toBe(true);
     expect(wrapper.text()).toContain('Contenido');
 
     curriculumEditorState.setOpen(false);
