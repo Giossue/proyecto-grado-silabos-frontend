@@ -18,8 +18,8 @@ const plain = (text: string): string => text.replace(/\.$/, '');
     <ListChecks class="size-4 shrink-0 text-primary" aria-hidden="true" />
     <span class="shrink-0 font-medium max-sm:min-w-0 max-sm:shrink max-sm:truncate">Paso {{ index + 1 }} de {{ steps.length }}: {{ plain(next.label) }}</span>
     <TooltipProvider><Tooltip><TooltipTrigger as-child>
-      <span class="min-w-0 flex-1 truncate text-muted-foreground max-sm:hidden">{{ plain(next.hint) }}</span>
+      <span class="min-w-0 truncate text-muted-foreground max-sm:hidden">{{ plain(next.hint) }}</span>
     </TooltipTrigger><TooltipContent class="max-w-sm">{{ plain(next.hint) }}</TooltipContent></Tooltip></TooltipProvider>
-    <Button type="button" variant="link" size="sm" class="ml-auto h-auto shrink-0 px-0" @click="setupChecklistState.requestOpen()">Ver los pasos</Button>
+    <Button type="button" variant="link" size="sm" class="h-auto shrink-0 px-0" @click="setupChecklistState.requestOpen()">Ver los pasos</Button>
   </div>
 </template>
