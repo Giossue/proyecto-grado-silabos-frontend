@@ -8,7 +8,6 @@ import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getReviews, type ReviewsPage } from '@/api/reviews';
 import { getSession } from '@/api/session';
-import EmptyState from '@/components/domain/EmptyState.vue';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -109,8 +108,7 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
         <TablePagination :meta="data.syllabi" label="Paginación de expedientes en revisión" @update:page="load" />
       </TabsContent>
       <TabsContent value="seguimiento" class="flex flex-col gap-4">
-        <ConvocationTrackingTable v-if="convocationId" :convocation-id="convocationId" />
-        <EmptyState v-else :icon="ChartNoAxesColumn" title="Aún no hay convocatoria abierta en su carrera" description="Cuando la abra, aquí verá el avance de cada sílabo" />
+        <ConvocationTrackingTable :convocation-id="convocationId" />
       </TabsContent>
     </Tabs>
   </PageFrame>

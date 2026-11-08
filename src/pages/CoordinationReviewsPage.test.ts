@@ -120,6 +120,11 @@ describe('CoordinationReviewsPage', () => {
     await flushPromises();
     expect(tracking.get('[role="tab"][data-state="active"]').text()).toContain('Seguimiento');
     expect(tracking.text()).toContain('Aún no hay convocatoria abierta en su carrera');
+    // Se ve como siempre: buscador, filtro de estado y tabla, solo que vacía y sin consultar al servidor.
+    expect(tracking.find('#convocation-syllabi-search-none').exists()).toBe(true);
+    expect(tracking.find('#convocation-syllabi-search-state-none').exists()).toBe(true);
+    expect(tracking.find('table').exists()).toBe(true);
+    expect(getConvocation).not.toHaveBeenCalled();
     tracking.unmount();
   });
 

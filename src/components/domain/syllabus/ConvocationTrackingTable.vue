@@ -20,7 +20,8 @@ import { syllabusStateLabel } from '@/lib/syllabusStates';
 import { useClientFilter } from '@/composables/useClientFilter';
 import { useClientPagination } from '@/composables/useClientPagination';
 
-const props = defineProps<{ convocationId: string }>();
+// Sin convocatoria se ve igual que siempre (buscador, filtros y tabla), solo que vacía.
+const props = defineProps<{ convocationId: string | null }>();
 const router = useRouter();
 const area = reviewAreaPaths();
 const open = (revisionId: string): void => { void router.push(area.review(revisionId)); };
@@ -39,6 +40,10 @@ const load = async (): Promise<void> => {
   loading.value = true;
   error.value = null;
   data.value = null;
+  if (props.convocationId === null) {
+    loading.value = false;
+    return;
+  }
   try {
     data.value = await getConvocation(props.convocationId);
   } catch (reason) {
@@ -54,18 +59,18 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
 <template>
   <LoadErrorState v-if="error" :message="error" @retry="load" />
   <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" filter-width="lg:w-44" :actions="false" :cell-lines="[2, 2, 1]" :badges="[3]" />
-  <div v-else-if="data" class="flex flex-col gap-4">
+  <div v-else-if="data || convocationId === null" class="flex flex-col gap-4">
     <Card class="py-3"><CardContent class="px-3"><ClientFilterBar
       :filter="syllabusFilter"
-      :input-id="`convocation-syllabi-search-${convocationId}`"
+      :input-id="`convocation-syllabi-search-${convocationId ?? 'none'}`"
       label="Buscar expediente"
       placeholder="Buscar por asignatura o código"
     >
       <template #filters>
         <Field>
-          <FieldLabel :for="`convocation-syllabi-search-state-${convocationId}`" class="sr-only">Estado</FieldLabel>
+          <FieldLabel :for="`convocation-syllabi-search-state-${convocationId ?? 'none'}`" class="sr-only">Estado</FieldLabel>
           <Select v-model="syllabusFilter.values.estado.value">
-            <SelectTrigger :id="`convocation-syllabi-search-state-${convocationId}`">
+            <SelectTrigger :id="`convocation-syllabi-search-state-${convocationId ?? 'none'}`">
               <SelectValue placeholder="Todos los estados" />
             </SelectTrigger>
             <SelectContent>
@@ -89,7 +94,7 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
       </TableHeader>
       <TableBody>
         <TableEmpty v-if="syllabusPage.length === 0" :colspan="3">
-          {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros' : 'Los expedientes aparecerán después de abrir la convocatoria' }}
+          {{ syllabusFilter.active.value ? 'Ningún expediente coincide con los filtros' : convocationId === null ? 'Aún no hay convocatoria abierta en su carrera' : 'Los expedientes aparecerán después de abrir la convocatoria' }}
         </TableEmpty>
         <TableRow v-for="syllabus in syllabusPage" v-else :key="syllabus.id" :class="syllabus.revision_id ? 'cursor-pointer' : ''" :tabindex="syllabus.revision_id ? 0 : undefined" :aria-label="syllabus.revision_id ? `Abrir revisión de ${syllabus.subject}` : undefined" @click="syllabus.revision_id && activateRow($event, () => open(syllabus.revision_id!))" @keydown.enter.self.prevent="syllabus.revision_id && open(syllabus.revision_id)" @keydown.space.self.prevent="syllabus.revision_id && open(syllabus.revision_id)">
           <TableCell>
