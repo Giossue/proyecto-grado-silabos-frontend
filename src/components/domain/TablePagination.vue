@@ -26,7 +26,7 @@ const changePage = (page: number): void => {
 </script>
 
 <template>
-  <div class="-mt-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div class="-mt-2 flex items-center justify-between gap-3">
     <p class="text-pagination text-muted-foreground" aria-live="polite">
       {{ meta.from ?? 0 }}–{{ meta.to ?? 0 }} de {{ meta.total }}
     </p>
@@ -37,7 +37,7 @@ const changePage = (page: number): void => {
       :sibling-count="1"
       show-edges
       :aria-label="label"
-      class="mx-0 w-auto justify-start sm:justify-end"
+      class="mx-0 w-auto justify-end"
       @update:page="changePage"
     >
       <PaginationContent v-slot="{ items }" class="flex-wrap">
