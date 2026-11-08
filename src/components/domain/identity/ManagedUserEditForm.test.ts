@@ -36,19 +36,19 @@ describe('ManagedUserEditForm', () => {
     expect(wrapper.emitted('saved')).toEqual([['Cuenta actualizada']]);
   });
 
-  it('muestra el nombre en sus cuatro campos, sin el texto de ayuda, y guarda el nombre completo', async () => {
+  it('muestra el nombre en Nombres y Apellidos, sin el texto de ayuda, y guarda el nombre completo', async () => {
     update.mockResolvedValue({ message: 'Cuenta actualizada' });
     const full: ManagedUser = { ...user, nombre: 'ANA MARÍA PÉREZ LÓPEZ' };
     const wrapper = mount(ManagedUserEditForm, { attachTo: document.body, props: { user: full, roles, careers: [] } });
     await flushPromises();
     const field = (key: string): HTMLInputElement => document.body.querySelector<HTMLInputElement>(`#managed-edit-${key}-u1`)!;
 
-    expect([field('primer_nombre').value, field('segundo_nombre').value, field('primer_apellido').value, field('segundo_apellido').value]).toEqual(['ANA', 'MARÍA', 'PÉREZ', 'LÓPEZ']);
+    expect([field('nombres').value, field('apellidos').value]).toEqual(['ANA MARÍA', 'PÉREZ LÓPEZ']);
     expect(document.body.textContent).not.toContain('Primer y segundo nombre, primer y segundo apellido');
     expect(document.body.querySelector('#managed-edit-name-u1')).toBeNull();
 
-    field('segundo_apellido').value = 'gómez';
-    field('segundo_apellido').dispatchEvent(new Event('input'));
+    field('apellidos').value = 'pérez gómez';
+    field('apellidos').dispatchEvent(new Event('input'));
     await flushPromises();
     await wrapper.get('form').trigger('submit');
     await flushPromises();

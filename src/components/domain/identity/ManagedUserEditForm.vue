@@ -12,7 +12,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { joinName, NAME_PARTS, splitName, upperName, type NamePartKey } from '@/lib/personName';
+import { joinName, NAME_PARTS, nameErrors, splitName, upperName, type NamePartKey } from '@/lib/personName';
 import { useShownWhileClosing } from '@/lib/dialogExit';
 import { roleNeedsCareer } from '@/lib/roles';
 
@@ -30,7 +30,6 @@ const assignableRoles = computed(() => props.user.roles.some((role) => role.code
 const setPart = (key: NamePartKey, value: string | number): void => { form.value[key] = upperName(value); };
 const fullName = computed(() => joinName(form.value));
 // Los nombres antiguos con menos de cuatro palabras se pueden dejar como están; uno nuevo o corregido exige las cuatro partes.
-const requiresAllParts = computed(() => props.user.nombre.trim().split(/\s+/u).length >= 4);
 const reset = (): void => { form.value = { ...splitName(props.user.nombre), correo_electronico: props.user.correo_electronico, role_code: '', career_id: '' }; errors.value = {}; };
 reset();
 watch(() => props.user.id, reset);
@@ -48,6 +47,9 @@ const removeRole = async (): Promise<void> => {
 };
 const replacement = ref<string | null>(null);
 const submit = async (replaceCoordinator = false): Promise<void> => {
+    // Un nombre antiguo que no cumple se puede dejar como está; si se cambia, se revisa como en el alta.
+    const invalid = fullName.value === joinName(splitName(props.user.nombre)) ? {} : nameErrors(form.value);
+    if (Object.keys(invalid).length > 0) { errors.value = { nombre: Object.values(invalid).flat() }; return; }
     processing.value = true; errors.value = {};
     const payload: { nombre: string; correo_electronico: string; role_code?: string; career_id?: string | null; replace_coordinator?: boolean } = { nombre: fullName.value, correo_electronico: form.value.correo_electronico };
     if (form.value.role_code) { payload.role_code = form.value.role_code; payload.career_id = roleNeedsCareer(form.value.role_code) ? form.value.career_id : null; }
@@ -65,7 +67,7 @@ const submit = async (replaceCoordinator = false): Promise<void> => {
 <template>
     <form @submit.prevent="submit()"><FieldGroup>
             <div class="grid grid-cols-2 items-start gap-4">
-                <Field v-for="part in NAME_PARTS" :key="part.key" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`managed-edit-${part.key}-${user.id}`" required>{{ part.label }}</FieldLabel><Input :id="`managed-edit-${part.key}-${user.id}`" :model-value="form[part.key]" lang="es" autocapitalize="characters" :placeholder="part.placeholder" :aria-required="requiresAllParts" @update:model-value="setPart(part.key, $event)" /></Field>
+                <Field v-for="part in NAME_PARTS" :key="part.key" :data-invalid="Boolean(errors.nombre)"><FieldLabel :for="`managed-edit-${part.key}-${user.id}`" required>{{ part.label }}</FieldLabel><Input :id="`managed-edit-${part.key}-${user.id}`" :model-value="form[part.key]" lang="es" autocapitalize="characters" :placeholder="part.placeholder"  aria-required="true" @update:model-value="setPart(part.key, $event)" /></Field>
             </div>
             <FieldError :errors="errors.nombre" />
             <Field :data-invalid="Boolean(errors.correo_electronico)"><FieldLabel :for="`managed-edit-email-${user.id}`" required>Correo institucional</FieldLabel><Input :id="`managed-edit-email-${user.id}`" v-model="form.correo_electronico" type="email" aria-required="true" :disabled="!user.pending_activation" /><FieldError :errors="errors.correo_electronico" /></Field>

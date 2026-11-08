@@ -29,7 +29,7 @@ export const getManagedUsers = (filters: { q?: string; status?: string; role?: s
   return api<ManagedUsersResponse>(`/admin/users${query.size ? `?${query}` : ''}`);
 };
 
-export const createManagedUser = (payload: { primer_nombre: string; segundo_nombre: string; primer_apellido: string; segundo_apellido: string; correo_electronico: string; role_code: string; career_id: string | null; replace_coordinator?: boolean }) =>
+export const createManagedUser = (payload: { nombres: string; apellidos: string; correo_electronico: string; role_code: string; career_id: string | null; replace_coordinator?: boolean }) =>
   withPurgeConfirmation((confirm) => api<{ message: string }>('/admin/users', { method: 'POST', body: jsonBody(payload, confirm) }));
 export const resendManagedUserInvitation = (userId: string) =>
   api<{ message: string }>(`/admin/users/${userId}/resend-activation`, { method: 'POST' });

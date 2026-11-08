@@ -10,7 +10,7 @@ import CoordinatorReplacementConfirm from '@/components/domain/identity/Coordina
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { NAME_PARTS, upperName, type NamePartKey } from '@/lib/personName';
+import { cleanParts, NAME_PARTS, nameErrors, upperName, type NamePartKey } from '@/lib/personName';
 import { roleNeedsCareer } from '@/lib/roles';
 
 const props = withDefaults(defineProps<{
@@ -23,7 +23,7 @@ const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
-const emptyForm = () => ({ primer_nombre: '', segundo_nombre: '', primer_apellido: '', segundo_apellido: '', correo_electronico: '', role_code: 'docente', career_id: '' });
+const emptyForm = () => ({ nombres: '', apellidos: '', correo_electronico: '', role_code: 'docente', career_id: '' });
 const form = ref(emptyForm());
 const nameParts = NAME_PARTS;
 const setPart = (key: NamePartKey, value: string | number): void => { form.value[key] = upperName(value); };
@@ -31,11 +31,14 @@ const reset = (): void => { form.value = emptyForm(); errors.value = {}; };
 watch(open, (value) => { if (value) reset(); });
 const replacement = ref<string | null>(null);
 const submit = async (replaceCoordinator = false): Promise<void> => {
+    const invalid = nameErrors(form.value);
+    if (Object.keys(invalid).length > 0) { errors.value = invalid as Record<string, string[]>; return; }
     processing.value = true; errors.value = {};
+    const names = cleanParts(form.value);
     try {
         const result = props.teacherCareer
-            ? await createCareerTeacher({ primer_nombre: form.value.primer_nombre, segundo_nombre: form.value.segundo_nombre, primer_apellido: form.value.primer_apellido, segundo_apellido: form.value.segundo_apellido, correo_electronico: form.value.correo_electronico })
-            : await createManagedUser({ primer_nombre: form.value.primer_nombre, segundo_nombre: form.value.segundo_nombre, primer_apellido: form.value.primer_apellido, segundo_apellido: form.value.segundo_apellido, correo_electronico: form.value.correo_electronico, role_code: form.value.role_code, career_id: roleNeedsCareer(form.value.role_code) ? form.value.career_id : null, ...(replaceCoordinator ? { replace_coordinator: true } : {}) });
+            ? await createCareerTeacher({ ...names, correo_electronico: form.value.correo_electronico })
+            : await createManagedUser({ ...names, correo_electronico: form.value.correo_electronico, role_code: form.value.role_code, career_id: roleNeedsCareer(form.value.role_code) ? form.value.career_id : null, ...(replaceCoordinator ? { replace_coordinator: true } : {}) });
         replacement.value = null; open.value = false; emit('saved', result.message);
     } catch (reason) {
         const failed = reason instanceof ApiError ? reason.errors : {};
