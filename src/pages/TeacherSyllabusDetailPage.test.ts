@@ -510,20 +510,21 @@ describe("TeacherSyllabusDetailPage", () => {
     await flushPromises();
 
     expect(startTeacherSyllabus).toHaveBeenCalledWith(pending.id);
-    expect(wrapper.get("header").text()).toContain("Volver a mis sílabos");
+    expect(wrapper.get('[data-tour="page-header"]').text()).toContain("Volver a mis sílabos");
 
-    expect(wrapper.get("header").text()).not.toContain("Inteligencia Artificial");
     expect(buttonNamed(wrapper, "Iniciar borrador")).toBeUndefined();
     expect(wrapper.text()).not.toContain("Listo para iniciar");
     expect(wrapper.findComponent(FreeTextEditor).exists()).toBe(true);
   });
 
-  it("muestra la franja de plazo y pausa bajo la barra, como el resto de pantallas", async () => {
+  it("usa el encabezado normal de la app: sin barra propia, sin repetir la franja de plazo y con Volver sobre el título", async () => {
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: syllabus("borrador") });
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.findComponent(RoleDeadlineBanner).exists()).toBe(true);
+    expect(wrapper.find('header[aria-label="Herramientas del sílabo"]').exists()).toBe(false);
+    expect(wrapper.findComponent(RoleDeadlineBanner).exists()).toBe(false);
+    expect(wrapper.get('[data-tour="page-header"]').text()).toContain("Volver a mis sílabos");
   });
 
   it("en pausa no ofrece iniciar ni repite el motivo: lo explica la franja", async () => {

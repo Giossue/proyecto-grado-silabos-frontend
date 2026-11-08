@@ -213,7 +213,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-email-notices', path: paths.coordination.emailNotices, component: 'EmailPreferencesPage', breadcrumb: 'Notificaciones', ...coordinator },
 
   { name: 'coordination-reviews', path: paths.coordination.reviews, component: 'CoordinationReviewsPage', breadcrumb: 'Revisión', ...coordinator },
-  { name: 'coordination-review', path: '/coordinacion/revisiones/:revision', component: 'CoordinationReviewDetailPage', breadcrumb: 'Detalle de revisión', layout: 'syllabus-editor', ...coordinator },
+  { name: 'coordination-review', path: '/coordinacion/revisiones/:revision', component: 'CoordinationReviewDetailPage', breadcrumb: 'Detalle de revisión', ...coordinator },
   { name: 'coordination-history', path: '/coordinacion/revisiones/:revision/historial', component: 'CoordinationReviewHistoryPage', breadcrumb: 'Historial de versiones', layout: 'syllabus-editor', ...coordinator },
   { name: 'coordination-curriculum', path: paths.coordination.curriculum, component: 'CoordinationAcademicStructurePage', states: ['curriculum'], breadcrumb: 'Malla', ...coordinator },
   { name: 'coordination-career-project', path: paths.coordination.careerProject, component: 'CoordinationCareerProjectPage', breadcrumb: 'Proyecto de carrera', ...coordinator },
@@ -229,7 +229,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'teacher-history', path: paths.teacher.history, component: 'TeacherHistoryPage', breadcrumb: 'Historial', ...teacher },
   { name: 'teacher-support-documents', path: paths.teacher.supportDocuments, component: 'SupportDocumentsPage', breadcrumb: 'Documentos de apoyo', ...teacher },
   { name: 'teacher-history-career', path: '/docente/historial/:career', component: 'TeacherHistoryCareerPage', breadcrumb: 'Historial', ...teacher },
-  { name: 'teacher-syllabus', path: '/docente/mis-silabos/:syllabus', component: 'TeacherSyllabusDetailPage', states: ['resumen', 'edicion', 'ia', 'envio'], breadcrumb: 'Mis sílabos', layout: 'syllabus-editor', ...teacher },
+  { name: 'teacher-syllabus', path: '/docente/mis-silabos/:syllabus', component: 'TeacherSyllabusDetailPage', states: ['resumen', 'edicion', 'ia', 'envio'], breadcrumb: 'Mis sílabos', ...teacher },
   { name: 'teacher-documents', path: '/docente/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...teacher },
 
   { name: 'library-notifications', path: paths.library.notifications, component: 'NotificationsPage', shortcut: 'notifications', ...librarian },

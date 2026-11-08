@@ -56,10 +56,11 @@ describe('contrato de rutas', () => {
     expect(routeRegistry.find((route) => route.name === 'teacher-syllabus')).toMatchObject({
       component: 'TeacherSyllabusDetailPage',
       states: ['resumen', 'edicion', 'ia', 'envio'],
-      layout: 'syllabus-editor',
       roles: ['docente'],
       requiresAuth: true,
     });
+    expect(routeRegistry.find((route) => route.name === 'teacher-syllabus')?.layout).toBeUndefined();
+    expect(routeRegistry.find((route) => route.name === 'coordination-review')?.layout).toBeUndefined();
     expect(routeRegistry.find((route) => route.name === 'library-review')).toMatchObject({
       path: '/biblioteca/revisiones/:revision',
       component: 'LibraryReviewDetailPage',

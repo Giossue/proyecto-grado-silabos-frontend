@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import SupportDocumentsButton from '@/components/domain/academic/SupportDocumentsButton.vue';
 import { freeTextPlain } from '@/components/domain/syllabus/freeTextRender';
@@ -53,7 +52,6 @@ import { afterDialogExit, useShownWhileClosing } from '@/lib/dialogExit';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
 import { ArrowLeft, ArrowRight, Copy, Eye, FileSignature, FileText, Send } from '@lucide/vue';
-import AppearanceToggle from '@/components/AppearanceToggle.vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
 const route = useRoute();
@@ -518,13 +516,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 backdrop-blur sm:px-5" aria-label="Herramientas del sílabo">
-    <Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.teacher.syllabi)"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</Button>
-    <span class="flex-1" />
-    <AppearanceToggle />
-  </header>
-  <RoleDeadlineBanner />
   <PageFrame :title="syllabus?.subject ?? ''" :description="pageDescription" :loading="(!syllabus || canStart) && !error" :actions-skeleton="(!syllabus || canStart) && !error && !previewHint ? ['w-9', 'w-24'] : []" header-class="syllabus-editor-header" :header-width="documentHeaderWidth" hide-icon>
+    <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.teacher.syllabi)"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</Button></template>
     <template v-if="syllabus" #title-badge><SyllabusStateBadge :state="syllabus.state" /></template>
     <template #tools>
       <SupportDocumentsButton v-if="syllabus" />

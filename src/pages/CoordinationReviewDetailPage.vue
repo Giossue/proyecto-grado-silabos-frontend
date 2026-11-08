@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
-import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import { deadlineState } from '@/state/deadline';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
@@ -9,7 +8,6 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { approveReview, compareReviews, getReview, requestCorrection, reviewStageLabel, type ReviewDetail } from '@/api/reviews';
-import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import ChangeMarks from '@/components/domain/syllabus/ChangeMarks.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -173,14 +171,9 @@ onMounted(load);
 </script>
 
 <template>
-  <header class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 backdrop-blur sm:px-5" aria-label="Herramientas de la revisión">
-    <Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, fromHistory ? area.periodHistory : area.reviews)"><ArrowLeft aria-hidden="true" />{{ fromHistory ? 'Volver al historial' : 'Volver a la cola' }}</Button>
-    <span class="flex-1" />
-    <AppearanceToggle />
-  </header>
-  <RoleDeadlineBanner />
   <ProcessLockAlert v-if="data?.convocation_closed && deadlineState.deadline.value?.state !== 'closed'" banner title="Convocatoria finalizada" message="Este sílabo queda solo para consulta" hide-action />
   <PageFrame v-if="data && !loadError" header-class="syllabus-editor-header" :header-width="sheetWidth" hide-icon :title="data.syllabus.subject" :description="`${data.syllabus.period} · ${data.syllabus.teachers.join(', ')}`">
+    <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, fromHistory ? area.periodHistory : area.reviews)"><ArrowLeft aria-hidden="true" />{{ fromHistory ? 'Volver al historial' : 'Volver a la cola' }}</Button></template>
     <template #title-badge>
       <SyllabusStateBadge :state="data.syllabus.state" />
       <span v-for="note in statusNotes" :key="note" class="text-sm text-muted-foreground">{{ note }}</span>
@@ -277,5 +270,5 @@ onMounted(load);
     <SignatureDialog v-model:open="signOpen" title="Firmar y enviar a biblioteca" confirm-label="Firmar y enviar" :run="approve" />
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
-  <PageFrame v-else-if="loading" title="" description="" loading :actions-skeleton="['w-9', 'w-44', 'w-64']" header-class="syllabus-editor-header" :header-width="defaultSheetWidth" hide-icon><LoadingSkeleton variant="preview" /></PageFrame>
+  <PageFrame v-else-if="loading" title="" description="" loading :actions-skeleton="['w-9', 'w-44', 'w-64']" header-class="syllabus-editor-header" :header-width="defaultSheetWidth" hide-icon><template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, fromHistory ? area.periodHistory : area.reviews)"><ArrowLeft aria-hidden="true" />{{ fromHistory ? 'Volver al historial' : 'Volver a la cola' }}</Button></template><LoadingSkeleton variant="preview" /></PageFrame>
 </template>

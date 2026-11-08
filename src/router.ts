@@ -96,7 +96,7 @@ export const router = createRouter({
 
     { path: "/coordinacion/revisiones", component: CoordinationReviewsPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Revisión" } },
     { path: "/coordinacion/historial", component: CoordinationHistoryPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Historial" } },
-    { path: "/coordinacion/revisiones/:revision", component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión", layout: "syllabus-editor" } },
+    { path: "/coordinacion/revisiones/:revision", component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión" } },
     { path: "/coordinacion/revisiones/:revision/historial", component: CoordinationReviewHistoryPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Historial de versiones", layout: "syllabus-editor" } },
     { path: "/coordinacion/proyecto-carrera", component: CoordinationCareerProjectPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Proyecto de carrera" } },
     { path: "/coordinacion/documentos-apoyo", redirect: { path: "/coordinacion/proyecto-carrera", query: { tab: "documentos" } } },
@@ -113,7 +113,7 @@ export const router = createRouter({
     { path: "/docente/historial", component: TeacherHistoryPage, meta: { requiresAuth: true, roles: ["docente"], title: "Historial" } },
     { path: "/docente/documentos-apoyo", component: SupportDocumentsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos de apoyo" } },
     { path: "/docente/historial/:career", component: TeacherHistoryCareerPage, meta: { requiresAuth: true, roles: ["docente"], title: "Historial" } },
-    { path: "/docente/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos", layout: "syllabus-editor" } },
+    { path: "/docente/mis-silabos/:syllabus", component: TeacherSyllabusDetailPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" } },
     { path: "/docente/revisiones/:revision/documentos", component: DocumentsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Documentos" } },
 
     { path: "/biblioteca/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["bibliotecario"], title: "Notificaciones" } },

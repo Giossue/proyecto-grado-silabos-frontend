@@ -165,7 +165,7 @@ describe("CoordinationReviewDetailPage", () => {
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.findComponent(RoleDeadlineBanner).exists()).toBe(true);
+    expect(wrapper.findComponent(RoleDeadlineBanner).exists()).toBe(false);
     expect(wrapper.text()).not.toContain("está en pausa");
     expect(wrapper.text()).not.toContain("Convocatoria finalizada");
     expect(headerButton(wrapper, "Firmar y enviar a biblioteca")).toBeUndefined();
