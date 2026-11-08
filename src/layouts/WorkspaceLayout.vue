@@ -4,6 +4,7 @@ import { computed, provide, ref } from 'vue';
 import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import logo from '@/assets/logo-ueb-horizontal.webp';
 import logoLight from '@/assets/logo-ueb-horizontal-claro.webp';
+import LogoutConfirmDialog from '@/components/LogoutConfirmDialog.vue';
 import NotificationsSheet from '@/components/NotificationsSheet.vue';
 import UserMenuContent from '@/components/UserMenuContent.vue';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -71,5 +72,6 @@ const user = computed<User>(() => ({
             <slot />
         </main>
     </div>
+    <LogoutConfirmDialog />
     <Toaster />
 </template>

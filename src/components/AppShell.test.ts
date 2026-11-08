@@ -39,6 +39,7 @@ const mountShell = async () => {
     routes: [
       { path: '/panel', component: { template: '<div />' } },
       { path: '/rol', component: { template: '<div />' } },
+      { path: '/ingresar', component: { template: '<div />' } },
       { path: '/admin/convocatorias', component: { template: '<div />' } },
       { path: '/docente/mis-silabos', component: { template: '<div />' } },
       { path: '/notificaciones', component: { template: '<div />' } },
@@ -232,5 +233,36 @@ describe('AppSidebarLayout', () => {
 
     const accountButton = wrapper.get('header [aria-label="Menú de usuario"]');
     expect(accountButton.text()).not.toContain('Administrador');
+  });
+
+  it('pide confirmación antes de cerrar sesión y no sale si se cancela', async () => {
+    logout.mockClear();
+    const wrapper = await mountShell();
+    await flushPromises();
+    const openLogout = async () => {
+      await wrapper.get('header [aria-label="Menú de usuario"]').trigger('click');
+      await flushPromises();
+      document.body.querySelector<HTMLElement>('[data-test="logout-button"]')!.click();
+      await flushPromises();
+    };
+    const dialog = () => document.body.querySelector<HTMLElement>('[role="dialog"]');
+    const button = (name: string) => [...dialog()!.querySelectorAll<HTMLButtonElement>('button')].find((item) => item.textContent?.trim() === name);
+
+    await openLogout();
+    expect(dialog()?.textContent).toContain('¿Cerrar sesión?');
+    expect(logout).not.toHaveBeenCalled();
+
+    button('Cancelar')!.click();
+    await flushPromises();
+    expect(dialog()).toBeNull();
+    expect(logout).not.toHaveBeenCalled();
+    expect(wrapper.vm.$router.currentRoute.value.path).toBe('/admin/convocatorias');
+
+    await openLogout();
+    button('Cerrar sesión')!.click();
+    await flushPromises();
+    expect(logout).toHaveBeenCalledTimes(1);
+    expect(sessionState.current.value).toBeNull();
+    expect(wrapper.vm.$router.currentRoute.value.path).toBe('/ingresar');
   });
 });

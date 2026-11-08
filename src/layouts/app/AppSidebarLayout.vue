@@ -6,6 +6,7 @@ import AppShell from '@/components/AppShell.vue';
 import AppSidebar from '@/components/AppSidebar.vue';
 import AppSidebarHeader from '@/components/AppSidebarHeader.vue';
 import InstallAppDialog from '@/components/InstallAppDialog.vue';
+import LogoutConfirmDialog from '@/components/LogoutConfirmDialog.vue';
 import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import ScreenHelpButton from '@/components/domain/ScreenHelpButton.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
@@ -58,5 +59,6 @@ const showsSidebar = useShowsSidebar();
         </AppContent>
     </AppShell>
     <InstallAppDialog v-if="!showsSidebar" v-model:open="installAppOpen" />
+    <LogoutConfirmDialog />
     <Toaster />
 </template>

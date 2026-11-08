@@ -8,15 +8,14 @@ import {
     DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import UserInfo from '@/components/UserInfo.vue';
-import { leaveActiveRole, logout } from '@/api/session';
+import { leaveActiveRole } from '@/api/session';
 import { useAppearance } from '@/composables/useAppearance';
 import { useShowsSidebar } from '@/composables/useShowsSidebar';
 import { installAppState } from '@/state/installApp';
-import { installAppOpen } from '@/state/shellDialogs';
+import { installAppOpen, logoutConfirmOpen } from '@/state/shellDialogs';
 import { accessibilityDialogOpen } from '@/state/accessibilityDialog';
 import { sessionState } from '@/state/session';
 import type { User } from '@/types';
-import { clearIntendedRoute } from '@/lib/intended-route';
 import { paths, roleSetting } from '@/lib/routes';
 
 defineProps<{ user: User }>();
@@ -34,12 +33,6 @@ const settingsHref = computed(() => {
 const switchScope = async (): Promise<void> => {
     sessionState.replace(await leaveActiveRole());
     await router.push(paths.roleSelection);
-};
-const handleLogout = async (): Promise<void> => {
-    await logout();
-    sessionState.clear();
-    clearIntendedRoute();
-    await router.replace(paths.login);
 };
 </script>
 
@@ -78,7 +71,7 @@ const handleLogout = async (): Promise<void> => {
         variant="destructive"
         class="w-full"
         data-test="logout-button"
-        @select="handleLogout"
+        @select="logoutConfirmOpen = true"
     >
         <LogOut data-icon="inline-start" aria-hidden="true" />
         Cerrar sesión
