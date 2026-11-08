@@ -43,6 +43,8 @@ export type SyllabusPage = {
 export type SyllabiResponse = {
   filters: { q: string | null; state: string | null };
   syllabi: SyllabusPage;
+  /** La carrera tiene una convocatoria abierta o en pausa. */
+  convocation_open?: boolean;
 };
 
 export type SyllabusDetail = {
@@ -83,6 +85,8 @@ export type SyllabusDetail = {
   signatures?: SignatureSummary[];
   teacher_signature_required?: boolean;
   teacher_formation_required?: boolean;
+  /** En corrección solicitada: el docente no ha cambiado nada desde que se la pidieron. */
+  unchanged_since_correction?: boolean;
   review_comments?: Array<{
     stage: "biblioteca" | "coordinacion";
     comment: string;

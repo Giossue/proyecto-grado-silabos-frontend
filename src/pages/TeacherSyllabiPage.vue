@@ -53,6 +53,11 @@ const clearFilters = (): void => {
   state.value = 'all';
   void load();
 };
+const emptyCopy = computed((): { title: string; description?: string } => {
+  if (result.value?.filters.q || result.value?.filters.state) return { title: 'Ningún sílabo coincide con la búsqueda' };
+  if (result.value?.convocation_open === false) return { title: 'Todavía no hay una convocatoria abierta', description: 'Cuando Coordinación la abra, aquí verá sus sílabos' };
+  return { title: 'No tiene sílabos asignados' };
+});
 const SENT_STATES = ['en_revision', 'aprobado'];
 const openSyllabus = (id: string, state: string): void => { void router.push({ path: paths.teacher.syllabus(id), state: { syllabusPreview: SENT_STATES.includes(state) } }); };
 onMounted(() => { void load(queryPage(route.query.page)); });
@@ -73,7 +78,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
       </CardContent>
     </Card>
     <LoadingSkeleton v-if="!result && !error" variant="syllabus-cards" :rows="3" />
-    <EmptyState v-else-if="result && result.syllabi.data.length === 0" :title="result.filters.q || result.filters.state ? 'Ningún sílabo coincide con la búsqueda' : 'No tiene sílabos asignados'" />
+    <EmptyState v-else-if="result && result.syllabi.data.length === 0" v-bind="emptyCopy" />
     <ul v-else-if="result" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Mis sílabos">
       <li v-for="syllabus in result.syllabi.data" :key="syllabus.id">
         <Card

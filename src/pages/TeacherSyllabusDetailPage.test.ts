@@ -290,6 +290,75 @@ describe("TeacherSyllabusDetailPage", () => {
     expect(buttonNamed(wrapper, "Enviar")!.attributes("disabled")).toBeUndefined();
   });
 
+  it("al reenviar sin cambios desde la corrección, la confirmación lo advierte sin impedir el envío", async () => {
+    vi.useFakeTimers();
+    const detail = { ...syllabus("correccion_solicitada"), unchanged_since_correction: true };
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null, document: doc("") });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await buttonNamed(wrapper, "Enviar")!.trigger("click");
+    await flushPromises();
+    expect(document.body.textContent).toContain("No ha cambiado nada desde que pidieron la corrección");
+    const send = [...document.body.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].find((button) => button.textContent?.trim() === "Enviar")!;
+    expect(send.disabled).toBe(false);
+    wrapper.unmount();
+
+    const edited = mountPage();
+    await flushPromises();
+    await typeText(edited, "Arreglo pedido");
+    await buttonNamed(edited, "Enviar")!.trigger("click");
+    await flushPromises();
+    expect(document.body.textContent).not.toContain("No ha cambiado nada desde que pidieron la corrección");
+    edited.unmount();
+  });
+
+  it("el motivo por el que no se puede enviar se ve junto al botón, sin pasar el mouse", async () => {
+    const detail = syllabus("borrador");
+    detail.sections[0]!.fields[0]!.value = null;
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    const submit = buttonNamed(wrapper, "Enviar")!;
+    expect(submit.attributes("disabled")).toBeDefined();
+    const hint = wrapper.get("#submit-hint");
+    expect(hint.text()).toBe("Falta 1 campo por completar");
+    expect(submit.attributes("aria-describedby")).toBe("submit-hint");
+    wrapper.unmount();
+  });
+
+  it("dos celdas de la misma fila de unidades se guardan aunque el primer guardado siga en curso", async () => {
+    vi.useFakeTimers();
+    setTemplateRuntime(definition as unknown as TemplateDefinitionPayload, { horas_docencia: '64', horas_practicas: '0', horas_autonomas: '0', semanas_periodo: '16' });
+    const week = () => ({ contenidos: "", acd_h: "", ape_h: "", aa_h: "", acd: "", ape: "", aa: "", evaluacion: "" });
+    const units = Array.from({ length: 4 }, () => ({ nombre: "U", resultado: "R", semanas: Array.from({ length: 4 }, week) }));
+    const detail = syllabus("borrador");
+    detail.sections[0]!.fields[0]!.value = { type: "doc", content: [{ type: "documentBlock", attrs: { kind: "unidades", props: {}, value: { units } } }] };
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    let finishFirst: () => void = () => undefined;
+    vi.mocked(saveTeacherField)
+      .mockImplementationOnce(() => new Promise((resolve) => { finishFirst = () => resolve({ version_bloqueo: 3, guardado_en: null, document: doc("") }); }))
+      .mockResolvedValue({ version_bloqueo: 4, guardado_en: null, document: doc("") });
+    const wrapper = mountPage();
+    await flushPromises();
+    const weekOf = (call: unknown[]) => ((call[3] as DocumentNode).content![0]!.attrs!.value as { units: Array<{ semanas: Array<Record<string, string>> }> }).units[0]!.semanas[0]!;
+
+    await wrapper.get("#input-field-1-0-units-0-semanas-0-contenidos").setValue("Introducción");
+    await vi.advanceTimersByTimeAsync(700);
+    await wrapper.get("#input-field-1-0-units-0-semanas-0-acd_h").setValue("4");
+    await vi.advanceTimersByTimeAsync(700);
+    finishFirst();
+    await flushPromises();
+    await vi.advanceTimersByTimeAsync(0);
+
+    const last = vi.mocked(saveTeacherField).mock.calls.at(-1)!;
+    expect(last[2]).toBe(3);
+    expect(weekOf(last)).toMatchObject({ contenidos: "Introducción", acd_h: "4" });
+    wrapper.unmount();
+  });
+
   it("no deja enviar mientras las horas de las unidades no sumen las de la asignatura", async () => {
     const week = (acd: string) => ({ contenidos: "", acd_h: acd, ape_h: "", aa_h: "", acd: "", ape: "", aa: "", evaluacion: "" });
     const units = (acd: string) => Array.from({ length: 4 }, (_, index) => ({ nombre: "U", resultado: "R", semanas: Array.from({ length: 4 }, (__, number) => week(index === 0 && number === 0 ? acd : "")) }));

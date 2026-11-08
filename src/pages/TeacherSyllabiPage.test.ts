@@ -87,6 +87,21 @@ describe('TeacherSyllabiPage', () => {
     expect(wrapper.find('[aria-label="Paginación de mis sílabos"]').exists()).toBe(true);
   });
 
+  it('sin convocatoria abierta explica por qué no hay sílabos', async () => {
+    const empty = { ...syllabi.syllabi, data: [], total: 0, from: null, to: null };
+    vi.mocked(getTeacherSyllabi).mockResolvedValue({ ...syllabi, syllabi: empty, convocation_open: false });
+    const closed = mountPage();
+    await flushPromises();
+    expect(closed.text()).toContain('Todavía no hay una convocatoria abierta');
+    expect(closed.text()).not.toContain('No tiene sílabos asignados');
+
+    vi.mocked(getTeacherSyllabi).mockResolvedValue({ ...syllabi, syllabi: empty, convocation_open: true });
+    const open = mountPage();
+    await flushPromises();
+    expect(open.text()).toContain('No tiene sílabos asignados');
+    expect(open.text()).not.toContain('Todavía no hay una convocatoria abierta');
+  });
+
   it('vuelve a pedir los sílabos al filtrar', async () => {
     const wrapper = mountPage();
     await flushPromises();

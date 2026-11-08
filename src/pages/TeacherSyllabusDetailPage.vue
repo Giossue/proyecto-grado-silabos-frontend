@@ -116,6 +116,9 @@ const submitNote = computed(() => {
     ? 'El sílabo pasa a revisión. Asegúrese de que esté completo'
     : `El sílabo pasa a revisión. Asegúrese de haber hecho los arreglos que pidió ${reviewer}`;
 });
+// El servidor dice si hubo cambios desde la corrección; lo que se escribe en esta visita también cuenta.
+const editedHere = ref(false);
+const unchangedSinceCorrection = computed(() => syllabus.value?.unchanged_since_correction === true && !editedHere.value);
 const mustSign = computed(() => syllabus.value?.teacher_signature_required === true);
 const submitLabel = computed(() => (mustSign.value ? 'Firmar y enviar' : 'Enviar'));
 const previewHint = window.history.state?.syllabusPreview === true;
@@ -330,6 +333,7 @@ const scheduleSave = (field: SyllabusField): void => {
 const updateValue = (field: SyllabusField, value: DocumentNode): void => {
   if (!isTeacherField(field) || !canEdit.value || conflict.value) return;
   field.value = value;
+  editedHere.value = true;
   clearFieldValidation(field.id);
   scheduleSave(field);
 };
@@ -508,7 +512,11 @@ onBeforeUnmount(() => {
       <span v-if="saveFailed && canEdit" class="save-status flex items-center gap-2 text-sm text-destructive">Sin guardar<Button type="button" size="sm" variant="outline" :disabled="conflict" @click="retrySave">Reintentar</Button></span>
       <Button v-for="source in copySources" :key="source.id" type="button" variant="outline" :disabled="processingAction || conflict" @click="copySource = source"><Copy aria-hidden="true" />Copiar desde paralelo {{ source.parallel }}</Button>
       
-      <span v-if="syllabus && canEdit" data-tour="syllabus-submit" class="flex items-center gap-2"><Tooltip><TooltipTrigger as-child><span class="inline-flex"><Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== ''" @click="askSubmit"><Spinner v-if="processingAction" /><FileSignature v-else-if="mustSign" aria-hidden="true" /><Send v-else aria-hidden="true" />{{ submitLabel }}</Button></span></TooltipTrigger><TooltipContent>{{ withoutFinalPeriod(submitHint || submitLabel) }}</TooltipContent></Tooltip></span>
+      <!-- El motivo se lee sin pasar el mouse y se ajusta al ancho disponible. -->
+      <span v-if="syllabus && canEdit" data-tour="syllabus-submit" class="flex min-w-0 items-center gap-2">
+        <span v-if="submitHint" id="submit-hint" class="min-w-0 max-w-64 text-right text-sm text-muted-foreground break-words">{{ withoutFinalPeriod(submitHint) }}</span>
+        <Button :disabled="processingAction || conflict || emptyParts > 0 || blockIssue !== ''" :aria-describedby="submitHint ? 'submit-hint' : undefined" @click="askSubmit"><Spinner v-if="processingAction" /><FileSignature v-else-if="mustSign" aria-hidden="true" /><Send v-else aria-hidden="true" />{{ submitLabel }}</Button>
+      </span>
     </template>
 
     <span class="sr-only" role="status" aria-live="polite">{{ saveFailed && canEdit ? 'Los últimos cambios no se guardaron' : '' }}</span>
@@ -539,6 +547,7 @@ onBeforeUnmount(() => {
           <DialogTitle>¿Enviar a revisión?</DialogTitle>
           <DialogDescription>{{ submitNote }}</DialogDescription>
         </DialogHeader>
+        <Alert v-if="unchangedSinceCorrection" class="unchanged-warning"><AlertDescription>No ha cambiado nada desde que pidieron la corrección</AlertDescription></Alert>
         <DialogFooter>
           <Button type="button" variant="outline" @click="confirmSubmitOpen = false">Cancelar</Button>
           <Button type="button" :disabled="processingAction || conflict" @click="confirmSubmit"><Send data-icon="inline-start" aria-hidden="true" />Enviar</Button>
