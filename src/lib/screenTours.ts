@@ -106,7 +106,7 @@ export const screenTours: Record<string, TourStep[]> = {
   ],
   '/coordinacion/malla': [
     step(ACTIONS, 'Editar malla', 'Cambie ciclos, materias y requisitos. También puede subir la malla con un Excel', 'left'),
-    step('[aria-label="Zoom de la malla"]', 'Acercar y alejar', 'Agrande o achique la malla para verla mejor', 'left'),
+    step('[aria-label="Zoom de la malla"]', 'Acercar y alejar', 'Agrande o achique la malla para verla mejor', 'right'),
     // Pasos del editor: solo aparecen mientras se edita.
     step('[data-tour="curriculum-back"]', 'Volver', 'Sale del editor', 'bottom'),
     step('[aria-label="Configurar ciclos"]', 'Ciclos', 'Cambie cuántos ciclos tiene la carrera', 'bottom'),
