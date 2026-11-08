@@ -30,10 +30,32 @@ export function signStatement(input: SignStatementInput): SignStatementResult {
     ],
   });
   message.sign({ detached: true });
-  const der = forge.asn1.toDer(message.toAsn1()).getBytes();
+  const der = forge.asn1.toDer(withOriginalIssuer(message.toAsn1(), signer.x509)).getBytes();
 
   return {
     signature: { statement: input.statement, cms: forge.util.encode64(der) },
     certificate: signer.certificate,
   };
+}
+
+type Asn1 = forge.asn1.Asn1;
+
+/**
+ * forge rearma el emisor del firmante desde sus campos y codifica dos veces los UTF8String
+ * («MARÍA» → «MARÃ\u008dA»): el verificador no encuentra el certificado. Se pone el emisor
+ * tal como viene en el certificado; no forma parte de lo firmado.
+ */
+function withOriginalIssuer(contentInfo: Asn1, certificate: forge.pki.Certificate): Asn1 {
+  const tbs = (certificate as forge.pki.Certificate & { tbsCertificate?: Asn1 }).tbsCertificate;
+  if (!tbs) return contentInfo;
+  const fields = tbs.value as Asn1[];
+  const issuer = fields[fields[0]?.tagClass === forge.asn1.Class.CONTEXT_SPECIFIC ? 3 : 2];
+  const signedData = ((contentInfo.value as Asn1[])[1]?.value as Asn1[] | undefined)?.[0];
+  const signerInfos = (signedData?.value as Asn1[] | undefined)?.at(-1);
+  if (!issuer || !signerInfos) return contentInfo;
+  for (const signerInfo of signerInfos.value as Asn1[]) {
+    const issuerAndSerial = (signerInfo.value as Asn1[])[1];
+    if (issuerAndSerial) (issuerAndSerial.value as Asn1[])[0] = issuer;
+  }
+  return contentInfo;
 }

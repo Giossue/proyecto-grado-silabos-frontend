@@ -37,8 +37,17 @@ const toBinary = (bytes: Uint8Array): string => {
   return binary;
 };
 
-const attribute = (subject: forge.pki.Certificate['subject'], name: string): string =>
-  String(subject.getField(name)?.value ?? '').trim();
+// forge entrega los UTF8String como bytes: «MARÃ\u008dA» en vez de «MARÍA».
+const attribute = (subject: forge.pki.Certificate['subject'], name: string): string => {
+  const field = subject.getField(name) as { value?: unknown; valueTagClass?: number } | null;
+  const value = String(field?.value ?? '');
+  if (field?.valueTagClass !== forge.asn1.Type.UTF8) return value.trim();
+  try {
+    return forge.util.decodeUtf8(value).trim();
+  } catch {
+    return value.trim();
+  }
+};
 
 export type SignerMaterial = {
   certificate: SignerCertificate;
