@@ -2,7 +2,9 @@
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { getSubjectProfile, getSubjectProfilePreview, saveSubjectProfile, type SubjectProfileField, type SubjectProfilePreview } from '@/api/career-academics';
-import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
+import { Eye } from '@lucide/vue';
+import IconTooltip from '@/components/domain/IconTooltip.vue';
+import { Button } from '@/components/ui/button';
 import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
 import FormDialog from '@/components/domain/FormDialog.vue';
 import FormDialogActions from '@/components/domain/FormDialogActions.vue';
@@ -39,7 +41,6 @@ const loaded = ref('');
 const changed = computed(() => JSON.stringify(values.value) !== loaded.value);
 // Vista previa: el sílabo de la materia con los datos de la malla y lo que va escribiendo (aunque no esté guardado).
 const view = ref<'editar' | 'vista-previa'>('editar');
-const viewOptions = [{ value: 'editar', label: 'Editar' }, { value: 'vista-previa', label: 'Vista previa' }];
 const preview = ref<SubjectProfilePreview | null>(null);
 const previewLoading = ref(false);
 const previewError = ref<string | null>(null);
@@ -65,8 +66,8 @@ const previewSections = computed(() => (preview.value?.sections ?? []).map((sect
     return { ...field, value: document, document } as typeof field;
   }),
 })));
-const chooseView = (value: string): void => {
-  view.value = value === 'vista-previa' ? 'vista-previa' : 'editar';
+const toggleView = (): void => {
+  view.value = view.value === 'vista-previa' ? 'editar' : 'vista-previa';
   if (view.value === 'vista-previa' && !preview.value && !previewLoading.value) void loadPreview();
 };
 
@@ -109,6 +110,10 @@ const save = async (close: () => void) => {
 
 <template>
   <FormDialog v-model:open="open" fit :show-trigger="false" :title="`Proyecto de carrera de ${subjectName}`" trigger-label="Proyecto de carrera" description="Contenido de la materia que se copia en sus sílabos">
+    <!-- Como el sílabo del docente: un ojo que alterna entre editar y ver cómo queda -->
+    <template v-if="!loading && fields.length > 0" #headerActions>
+      <IconTooltip :label="view === 'vista-previa' ? 'Volver a editar' : 'Vista previa'"><Button type="button" :variant="view === 'vista-previa' ? 'secondary' : 'ghost'" size="icon-sm" aria-label="Vista previa" :aria-pressed="view === 'vista-previa'" @click="toggleView"><Eye aria-hidden="true" /></Button></IconTooltip>
+    </template>
     <template #default="{ close }">
       <form class="contents" @submit.prevent="save(close)">
         <FieldGroup>
@@ -116,7 +121,6 @@ const save = async (close: () => void) => {
           <LoadingSkeleton v-if="loading" variant="form" :rows="4" sidebar />
           <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos de Coordinación. Pídale a Administración que los agregue</AlertDescription></Alert>
           <template v-else>
-            <ChoiceGroup :model-value="view" :options="viewOptions" label="Ver el proyecto de carrera" @update:model-value="chooseView" />
             <template v-if="view === 'vista-previa'">
               <Alert v-if="previewError" variant="destructive"><AlertDescription>{{ previewError }}</AlertDescription></Alert>
               <LoadingSkeleton v-else-if="previewLoading || !preview" variant="preview" />

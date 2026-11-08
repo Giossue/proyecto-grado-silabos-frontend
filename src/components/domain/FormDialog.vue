@@ -37,6 +37,8 @@ withDefaults(
 
 defineSlots<{
     trigger?(): VNode[];
+    /** Botones de ícono en la esquina, a la izquierda de la X (p. ej. «Vista previa»). */
+    headerActions?(): VNode[];
     default(props: { close: () => void }): VNode[];
 }>();
 
@@ -58,7 +60,9 @@ const close = (): void => {
             </slot>
         </DialogTrigger>
         <DialogContent v-bind="description ? {} : { 'aria-describedby': undefined }" :class="['flex flex-col gap-0 overflow-hidden p-0', compact ? 'sm:max-w-3xl' : wide ? 'sm:max-w-7xl' : 'sm:max-w-5xl', compact || fit ? 'max-h-[calc(100dvh-2rem)]' : 'h-[calc(100dvh-2rem)]']">
-            <DialogHeader class="px-6 pt-6 pb-4">
+            <div v-if="$slots.headerActions" class="absolute top-4 right-14 z-10 flex items-center gap-1"><slot name="headerActions" /></div>
+            <!-- Con botones en la esquina, el título deja espacio a los dos lados para no quedar debajo -->
+            <DialogHeader :class="['pt-6 pb-4', $slots.headerActions ? 'px-24' : 'px-6']">
                 <DialogTitle>{{ title }}</DialogTitle>
                 <DialogDescription v-if="description">{{ description }}</DialogDescription>
             </DialogHeader>

@@ -13,7 +13,7 @@ vi.mock('@/api/career-academics', async (importOriginal) => ({
 
 const formModal = defineComponent({
   setup: () => ({ close: () => undefined }),
-  template: '<div><slot :close="close" /></div>',
+  template: '<div><slot name="headerActions" /><slot :close="close" /></div>',
 });
 const passthrough = defineComponent({ template: '<div><slot /></div>' });
 const actions = defineComponent({ props: { disabled: Boolean }, template: '<button type="submit" :disabled="disabled">Guardar proyecto de carrera</button>' });
@@ -152,7 +152,7 @@ describe('SubjectProfileDialog', () => {
     await flushPromises();
 
     expect(getSubjectProfilePreview).not.toHaveBeenCalled();
-    await wrapper.get('[role="radio"][value="vista-previa"]').trigger('click');
+    await wrapper.get('button[aria-label="Vista previa"]').trigger('click');
     await flushPromises();
 
     expect(getSubjectProfilePreview).toHaveBeenCalledWith('subject-1');
