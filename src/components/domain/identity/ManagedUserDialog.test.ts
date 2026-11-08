@@ -53,6 +53,17 @@ describe('ManagedUserDialog', () => {
     wrapper.unmount();
   });
 
+  it('en Administración el rol inicial propuesto es Coordinador', async () => {
+    const roles = [{ codigo: 'coordinador', nombre: 'Coordinador' }, { codigo: 'docente', nombre: 'Docente' }, { codigo: 'bibliotecario', nombre: 'Bibliotecario' }];
+    const wrapper = mount(ManagedUserDialog, { attachTo: document.body, props: { open: true, roles, careers: [] } as never });
+    await flushPromises();
+
+    expect(document.querySelector('#managed-user-role')?.textContent).toContain('Coordinador');
+    expect(document.querySelector('#managed-user-career')).not.toBeNull();
+
+    wrapper.unmount();
+  });
+
   it('revisa nombres y apellidos antes de enviar y manda los dos campos en mayúsculas', async () => {
     createCareerTeacher.mockResolvedValue({ message: 'Docente creado' });
     const wrapper = mount(ManagedUserDialog, { attachTo: document.body, props: { open: true, teacherCareer: { id: 'career-1', name: 'Software' } } });

@@ -23,7 +23,7 @@ const emit = defineEmits<{ saved: [message: string] }>();
 const open = defineModel<boolean>('open', { default: false });
 const processing = ref(false);
 const errors = ref<Record<string, string[]>>({});
-const emptyForm = () => ({ nombres: '', apellidos: '', correo_electronico: '', role_code: 'docente', career_id: '' });
+const emptyForm = () => ({ nombres: '', apellidos: '', correo_electronico: '', role_code: 'coordinador', career_id: '' });
 const form = ref(emptyForm());
 const nameParts = NAME_PARTS;
 const setPart = (key: NamePartKey, value: string | number): void => { form.value[key] = upperName(value); };
