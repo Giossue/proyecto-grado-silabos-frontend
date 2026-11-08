@@ -30,6 +30,17 @@ describe('intérprete de bloques', () => {
         ]);
     });
 
+    it('cada unidad necesita al menos una semana para enviar, como en el backend', () => {
+        const units = official.blocks.unidades!;
+        const value = { units: [{ nombre: 'U', resultado: 'R', semanas: [{ acd_h: '2' }, { acd_h: '2' }] }, { nombre: 'U', resultado: 'R', semanas: [] }] };
+        const variables = { horas_docencia: '4', horas_practicas: '0', horas_autonomas: '0', semanas_periodo: '2' };
+
+        expect(ruleFailures(units.rules, value, variables, 'submit')).toEqual([
+            { code: 'unidades_sin_semanas', message: 'Cada unidad necesita al menos una semana: Unidades con semanas 1 de 2.' },
+        ]);
+        expect(ruleFailures(units.rules, value, variables, 'save')).toEqual([]);
+    });
+
     it('con tres unidades basta que las tres tengan nombre y resultado, y las semanas sean las del período', () => {
         const units = official.blocks.unidades!;
         const unit = (nombre: string) => ({ nombre, resultado: 'R', semanas: [{ acd_h: '1' }] });

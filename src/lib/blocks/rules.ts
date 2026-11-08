@@ -9,7 +9,8 @@ export const ruleResults = (rule: BlockRule, value: Record<string, unknown>, var
         const actual = check.count !== undefined
             ? countOf(scope.collect(check.count))
             : check.filled !== undefined
-                ? scope.collect(check.filled).filter((item) => (typeof item === 'string' || typeof item === 'number') && String(item).trim() !== '').length
+                // «filled» cuenta textos o números escritos y listas con algo (una unidad con semanas), como el backend.
+                ? scope.collect(check.filled).filter((item) => Array.isArray(item) ? item.length > 0 : (typeof item === 'string' || typeof item === 'number') && String(item).trim() !== '').length
                 : scope.collect(check.sum ?? '').reduce<number>((sum, item) => sum + parseNumber(item), 0);
         const comparison = check.equals !== undefined ? 'equals' : check.max !== undefined ? 'max' : 'min';
         const target = check[comparison];
