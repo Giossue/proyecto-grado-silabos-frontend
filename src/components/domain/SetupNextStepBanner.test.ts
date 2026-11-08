@@ -26,7 +26,8 @@ describe('SetupNextStepBanner', () => {
     const wrapper = mount(SetupNextStepBanner);
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Paso 2 de 5: Paso scheduled_subjects');
+    // Cuenta los mismos pasos que el panel: abrir la convocatoria es el botón de la pantalla, no un paso numerado.
+    expect(wrapper.text()).toContain('Paso 2 de 4: Paso scheduled_subjects');
     expect(wrapper.text()).toContain('Pista scheduled_subjects');
     expect(wrapper.get('[data-setup-next-step]').classes()).toContain('h-11');
     expect(wrapper.get('[data-setup-next-step]').classes()).not.toContain('flex-wrap');

@@ -44,6 +44,11 @@ const notifyUnauthorized = (): void => {
   window.dispatchEvent(new CustomEvent('silabos:unauthorized'));
 };
 
+/** Una mutación terminó bien: lo que depende de los datos (la guía «Antes de empezar») se refresca sin recargar. */
+const notifyMutated = (method: string): void => {
+  if (!isReadOnlyRequest(method)) window.dispatchEvent(new CustomEvent('silabos:mutated'));
+};
+
 const ROLE_REQUIRED_MESSAGE = 'Seleccione un rol vigente';
 
 const notifyRoleRequired = (): void => {
@@ -83,6 +88,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (response.status === 401) notifyUnauthorized();
 
   if (response.status === 204) {
+    notifyMutated(method);
     return undefined as T;
   }
 
@@ -97,6 +103,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     throw new ApiError(payload.message ?? 'No se pudo completar la solicitud', response.status, payload.errors, payload);
   }
 
+  notifyMutated(method);
   return payload as T;
 }
 

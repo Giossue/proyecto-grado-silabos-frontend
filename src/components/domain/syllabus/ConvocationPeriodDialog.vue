@@ -104,6 +104,8 @@ const submit = async (): Promise<void> => {
         v-model:open="open"
         :disabled="props.disabled"
         trigger-label="Nueva convocatoria"
+        title="Nueva convocatoria"
+        description="Primero el periodo lectivo y después las fechas de los sílabos"
     >
         <template #default="{ close }">
             <form @submit.prevent="askConfirmation">
@@ -117,7 +119,7 @@ const submit = async (): Promise<void> => {
                         <div class="grid grid-cols-2 items-start gap-4">
                             <Field :data-invalid="Boolean(errors.starts_on)">
                                 <FieldLabel for="convocation-period-starts" required>Inicio de clases</FieldLabel>
-                                <DatePicker id="convocation-period-starts" v-model="form.starts_on" :min-value="todayIso" :disabled="periodCreated" required :aria-invalid="Boolean(errors.starts_on)" />
+                                <DatePicker id="convocation-period-starts" v-model="form.starts_on" :disabled="periodCreated" required :aria-invalid="Boolean(errors.starts_on)" />
                                 <FieldError :errors="errors.starts_on" />
                             </Field>
                             <Field :data-invalid="Boolean(errors.ends_on)">
@@ -167,8 +169,8 @@ const submit = async (): Promise<void> => {
                         <DialogDescription>Al abrirla:</DialogDescription>
                         <ul class="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
                             <li>El periodo y sus fechas ya no se pueden editar</li>
-                            <li>Los docentes conservan lo que escribieron en el período anterior</li>
-                            <li>Si la plantilla cambió, empiezan de cero</li>
+                            <li>Cada Coordinación abre después la convocatoria de su carrera</li>
+                            <li>Los sílabos parten del proyecto de carrera de cada materia</li>
                         </ul>
                     </DialogHeader>
                     <ConfirmPhrase id="convocation-open-confirm" v-model="openingTyped" :phrase="OPEN_PHRASE" />

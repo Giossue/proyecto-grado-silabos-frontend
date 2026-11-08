@@ -13,9 +13,17 @@ const router = useRouter();
 const route = useRoute();
 const role = computed(() => sessionState.current.value?.active_role?.code ?? '');
 const setup = setupChecklistState.setup;
-const steps = computed(() => (setup.value?.steps ?? []).filter((step) => step.key !== setupChecklistState.startKey.value));
-const doneCount = computed(() => steps.value.filter((step) => step.done).length);
 const plain = (text: string): string => text.replace(/\.$/, '');
+const steps = setupChecklistState.steps;
+/** Con los pasos hechos, el panel solo invita a abrir cuando de verdad se puede; si no, dice qué falta o que ya está abierta. */
+const complete = computed(() => {
+  const start = setupChecklistState.start.value;
+  if (start?.done) return { title: 'Todo listo', description: 'La convocatoria ya está abierta' };
+  if (!start || start.action) return { title: 'Todo listo', description: 'Ya puede abrir la convocatoria' };
+
+  return { title: 'Pasos completos', description: plain(start.hint) };
+});
+const doneCount = computed(() => steps.value.filter((step) => step.done).length);
 const { hidden } = useScrollDirection();
 
 let panel: Checklist | null = null;
@@ -61,9 +69,9 @@ const build = (): void => {
     launcherText: 'Antes de empezar',
     progressText: '{{done}} de {{total}}',
     launcherProgressText: '{{done}}/{{total}}',
-    completeTitle: 'Todo listo',
-    completeDescription: 'Ya puede abrir la convocatoria',
-    completeLauncherText: 'Todo listo',
+    completeTitle: complete.value.title,
+    completeDescription: complete.value.description,
+    completeLauncherText: complete.value.title,
     className: doneCount.value < steps.value.length ? 'setup-checklist setup-pending' : 'setup-checklist setup-done',
     completed: steps.value.filter((step) => step.done).map((step) => step.key),
     items: steps.value.map((step) => ({

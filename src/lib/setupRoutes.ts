@@ -12,7 +12,8 @@ export const setupRoutes: Record<string, Record<string, string>> = {
     coordinador: {
         curriculum: paths.coordination.curriculum,
         scheduled_subjects: paths.coordination.scheduledSubjects,
-        parallels: paths.coordination.scheduledSubjects,
         teachers: paths.coordination.teachers,
+        parallels: paths.coordination.scheduledSubjects,
+        career_project: paths.coordination.careerProject,
     },
 };

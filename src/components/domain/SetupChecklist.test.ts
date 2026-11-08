@@ -103,6 +103,29 @@ describe('SetupChecklist', () => {
     vi.unstubAllGlobals();
   });
 
+  it('solo dice «Ya puede abrir la convocatoria» cuando se puede, y tras abrirla lo dice', async () => {
+    const complete = (convocation: { done: boolean; action: string | null }): SetupData => ({
+      ...setup([true, true, true, true]),
+      steps: [...setup([true, true, true, true]).steps.slice(0, 4), { ...step('convocation', convocation.done), hint: 'Espera a que Administración abra la convocatoria institucional.', action: convocation.action }],
+    });
+    const panelText = () => document.body.querySelector('.driver-checklist')!.textContent ?? '';
+    setupChecklistState.update(complete({ done: false, action: null }));
+    const wrapper = mount(SetupChecklist);
+    await flushPromises();
+    expect(panelText()).not.toContain('Ya puede abrir');
+    expect(panelText()).toContain('Espera a que Administración abra la convocatoria institucional');
+
+    setupChecklistState.update(complete({ done: false, action: 'open_convocation' }));
+    await flushPromises();
+    expect(panelText()).toContain('Ya puede abrir la convocatoria');
+
+    setupChecklistState.update(complete({ done: true, action: null }));
+    await flushPromises();
+    expect(panelText()).not.toContain('Ya puede abrir');
+    expect(panelText()).toContain('La convocatoria ya está abierta');
+    wrapper.unmount();
+  });
+
   it('con todo completo deja de verse pendiente', async () => {
     setupChecklistState.update(setup([true, true, true, true]));
     const wrapper = mount(SetupChecklist);

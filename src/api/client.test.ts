@@ -93,4 +93,17 @@ describe('cliente API', () => {
     await expect(api('/resource', { method: 'POST', body: '{}' })).rejects.toMatchObject({ status: 419 });
     expect(fetchMock).toHaveBeenCalledTimes(3);
   });
+
+  it('avisa cuando una mutación termina bien, para refrescar lo que depende de ella; una lectura no avisa', async () => {
+    document.cookie = 'XSRF-TOKEN=token; path=/';
+    const listener = vi.fn();
+    window.addEventListener('silabos:mutated', listener);
+    vi.stubGlobal('fetch', vi.fn(async () => jsonResponse(200, { saved: true })));
+
+    await api('/resource');
+    expect(listener).not.toHaveBeenCalled();
+    await api('/resource', { method: 'POST', body: '{}' });
+    expect(listener).toHaveBeenCalledOnce();
+    window.removeEventListener('silabos:mutated', listener);
+  });
 });

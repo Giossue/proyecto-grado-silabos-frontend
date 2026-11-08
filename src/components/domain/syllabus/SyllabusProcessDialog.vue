@@ -117,7 +117,7 @@ const submit = async (): Promise<void> => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Abrir convocatoria</DialogTitle>
-            <DialogDescription>Una vez abierta, sus fechas no se pueden editar. Los docentes conservarán lo que escribieron en el período anterior, salvo que la plantilla haya cambiado: en ese caso empiezan de cero</DialogDescription>
+            <DialogDescription>Una vez abierta, sus fechas no se pueden editar. Cada Coordinación abre después la convocatoria de su carrera y los sílabos parten del proyecto de carrera de cada materia</DialogDescription>
           </DialogHeader>
           <ConfirmPhrase id="process-open-confirm" v-model="openingTyped" :phrase="OPEN_PHRASE" />
           <DialogFooter>

@@ -102,7 +102,7 @@ describe('syllabus process dates', () => {
     await flushPromises();
 
     const confirm = (): HTMLButtonElement => [...document.querySelectorAll<HTMLButtonElement>('[role="dialog"] button')].reverse().find((button) => button.textContent?.includes('Abrir convocatoria'))!;
-    expect(document.body.textContent).toContain('conservarán lo que escribieron en el período anterior');
+    expect(document.body.textContent).toContain('los sílabos parten del proyecto de carrera de cada materia');
     expect(confirm().disabled).toBe(true);
     typeConfirmation('process-open-confirm', 'abrir');
     await flushPromises();
