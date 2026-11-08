@@ -10,6 +10,7 @@ import LogoutConfirmDialog from '@/components/LogoutConfirmDialog.vue';
 import RoleDeadlineBanner from '@/components/domain/RoleDeadlineBanner.vue';
 import ScreenHelpButton from '@/components/domain/ScreenHelpButton.vue';
 import SetupChecklist from '@/components/domain/SetupChecklist.vue';
+import SetupNextStepBanner from '@/components/domain/SetupNextStepBanner.vue';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Toaster } from '@/components/ui/sonner';
 import { breadcrumbsKey, pageTitleKey } from '@/composables/usePageBreadcrumbs';
@@ -52,6 +53,7 @@ provide(pageTitleKey, pageTitle);
             />
             <!-- El desplazamiento empieza bajo el encabezado -->
             <ScrollArea data-app-scroll class="min-h-0 flex-1">
+                <SetupNextStepBanner v-if="!editorOpen" />
                 <RoleDeadlineBanner v-if="!editorOpen" />
                 <slot />
             </ScrollArea>

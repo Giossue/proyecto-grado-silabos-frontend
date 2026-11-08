@@ -5,11 +5,11 @@ import SetupChecklist from '@/components/domain/SetupChecklist.vue';
 import { sessionState } from '@/state/session';
 import { setupChecklistState } from '@/state/setupChecklist';
 
-const afterEachHook = vi.hoisted(() => ({ callbacks: [] as Array<() => void> }));
+const afterEachHook = vi.hoisted(() => ({ callbacks: [] as Array<() => void>, push: vi.fn() }));
 vi.mock('vue-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
   useRoute: () => ({ fullPath: '/coordinacion/revisiones' }),
-  useRouter: () => ({ push: vi.fn(), afterEach: (callback: () => void) => { afterEachHook.callbacks.push(callback); return () => undefined; } }),
+  useRouter: () => ({ push: afterEachHook.push, afterEach: (callback: () => void) => { afterEachHook.callbacks.push(callback); return () => undefined; } }),
 }));
 vi.mock('@/api/dashboard', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/dashboard')>()),
@@ -45,6 +45,19 @@ describe('SetupChecklist', () => {
     expect(panel.querySelector('.driver-checklist-panel')!.hasAttribute('hidden')).toBe(false);
     wrapper.unmount();
     expect(document.body.querySelector('.driver-checklist')).toBeNull();
+  });
+
+  it('cada paso lleva directo a la pantalla donde se completa', async () => {
+    afterEachHook.push.mockClear();
+    setupChecklistState.update(setup([true, false, false, false]));
+    const wrapper = mount(SetupChecklist);
+    await flushPromises();
+
+    const items = [...document.body.querySelectorAll<HTMLElement>('.driver-checklist-item')];
+    (items[1]!.querySelector<HTMLElement>('button, [role="button"]') ?? items[1]!).click();
+    await flushPromises();
+    expect(afterEachHook.push).toHaveBeenCalledWith('/coordinacion/materias-asignaciones');
+    wrapper.unmount();
   });
 
   it('en móvil se marca para esconderse al bajar y reaparece al subir, como los botones principales', async () => {

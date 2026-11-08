@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { driver, type Driver } from 'driver.js';
 import { checklist, type Checklist } from 'driver.js/checklist';
 import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -7,7 +6,6 @@ import { useScrollDirection } from '@/composables/useScrollDirection';
 import { setupRoutes } from '@/lib/setupRoutes';
 import { sessionState } from '@/state/session';
 import { setupChecklistState } from '@/state/setupChecklist';
-import 'driver.js/dist/driver.css';
 import 'driver.js/dist/checklist.css';
 
 /** Checklist «Antes de empezar» del Administrador y de Coordinación; sale en todas las pantallas con menú. */
@@ -22,26 +20,17 @@ const { hidden } = useScrollDirection();
 
 let panel: Checklist | null = null;
 let titleGuard: MutationObserver | null = null;
-let highlight: Driver | null = null;
-const clearHighlight = (): void => { highlight?.destroy(); highlight = null; };
 const seenKey = (): string => {
   const session = sessionState.current.value;
 
   return `setup-checklist-seen:${session?.user?.id}:${session?.active_role?.id}`;
 };
 
-const point = (key: string, label: string, hint: string): void => {
+/** Cada paso lleva directo a la pantalla donde se completa. */
+const point = (key: string): void => {
   const target = setupRoutes[role.value]?.[key];
   panel?.close();
-  if (!target) return;
-  const link = document.querySelector<HTMLElement>(`a[href="${target}"]`);
-  if (link && link.offsetParent !== null) {
-    clearHighlight();
-    highlight = driver({ popoverClass: 'setup-popover', showButtons: ['close'] });
-    highlight.highlight({ element: link, popover: { title: label, description: hint, side: 'right', align: 'center' } });
-    return;
-  }
-  void router.push(target);
+  if (target) void router.push(target);
 };
 
 /** Driver dibuja el botón fuera de Vue; el estilo lo esconde en móvil con este atributo. */
@@ -81,7 +70,7 @@ const build = (): void => {
       id: step.key,
       title: plain(step.label),
       description: step.done ? undefined : plain(step.hint),
-      action: () => point(step.key, plain(step.label), plain(step.hint)),
+      action: () => point(step.key),
       completeWhen: () => step.done,
     })),
   });
@@ -93,12 +82,11 @@ const build = (): void => {
   if (firstTime || wasOpen) panel.open();
 };
 
-const stopAfterEach = router.afterEach(clearHighlight);
 onMounted(() => { build(); void setupChecklistState.refresh(); });
 watch(setup, build, { deep: true });
 watch(hidden, syncScrollHidden);
 watch(() => route.fullPath, () => { void setupChecklistState.refresh(); });
-onBeforeUnmount(() => { titleGuard?.disconnect(); stopAfterEach(); clearHighlight(); panel?.hide(); });
+onBeforeUnmount(() => { titleGuard?.disconnect(); panel?.hide(); });
 </script>
 
 <template><span hidden data-setup-checklist /></template>
