@@ -538,12 +538,10 @@
         display: none;
     }
 }
-.vue-flow .vue-flow__pane.draggable {
-    cursor: grab;
-}
-
+/* La malla se recorre con el scroll, no arrastrando el fondo: cursor normal */
+.vue-flow .vue-flow__pane.draggable,
 .vue-flow .vue-flow__pane.dragging {
-    cursor: grabbing;
+    cursor: default;
 }
 
 @keyframes skeleton-shimmer {

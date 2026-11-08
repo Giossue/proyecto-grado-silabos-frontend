@@ -13,7 +13,7 @@ defineProps<{
 
 <template>
     <section
-        class="size-full cursor-grab overflow-hidden rounded-md ring-1 ring-surface-ring bg-[var(--curriculum-lane)] active:cursor-grabbing"
+        class="size-full cursor-default overflow-hidden rounded-md ring-1 ring-surface-ring bg-[var(--curriculum-lane)]"
         :aria-label="`Nivel ${data.level}`"
     >
         <div class="flex h-full">
