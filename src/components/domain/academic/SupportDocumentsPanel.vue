@@ -25,6 +25,8 @@ import { Spinner } from '@/components/ui/spinner';
 import TableCardLine from '@/components/domain/TableCardLine.vue';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useClientFilter } from '@/composables/useClientFilter';
+import { useClientPagination } from '@/composables/useClientPagination';
+import TablePagination from '@/components/domain/TablePagination.vue';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { useShownWhileClosing } from '@/lib/dialogExit';
 import { openPdfWindow, showInPdfWindow } from '@/lib/openPdf';
@@ -68,6 +70,7 @@ watch(pending, (value) => {
 onBeforeUnmount(() => window.clearInterval(poll));
 
 const filter = useClientFilter(() => documents.value, (document) => [document.title]);
+const { items: pagedDocuments, meta, setPage } = useClientPagination(() => filter.items.value, 20, filter.criteria);
 
 const sizeOf = (bytes: number): string => (bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`);
 
@@ -153,7 +156,7 @@ onMounted(() => { void load(); });
 <template>
   <div class="flex flex-col gap-4">
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
-    <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :rows="4" :columns="manages ? 4 : 3" :actions="manages" :pagination="false" :cell-lines="[2, 1, 1]" />
+    <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :rows="4" :columns="manages ? 4 : 3" :actions="manages" :cell-lines="[2, 1, 1]" />
     <div v-else class="flex flex-col gap-4">
       <Card class="py-3"><CardContent class="px-3">
         <ClientFilterBar :filter="filter" input-id="support-documents-search" label="Buscar documento" placeholder="Buscar documento" />
@@ -163,7 +166,7 @@ onMounted(() => { void load(); });
         <TableBody>
           <TableEmpty v-if="!filter.items.value.length" :colspan="manages ? 4 : 3">{{ filter.active.value ? 'Ningún documento coincide con la búsqueda' : manages ? 'Todavía no hay documentos' : 'Coordinación todavía no ha subido documentos' }}</TableEmpty>
           <TableRow
-            v-for="document in filter.items.value"
+            v-for="document in pagedDocuments"
             v-else
             :key="document.id"
             :class="document.view === 'lista' ? 'cursor-pointer' : undefined"
@@ -182,6 +185,7 @@ onMounted(() => { void load(); });
           </TableRow>
         </TableBody>
       </Table>
+      <TablePagination :meta="meta" label="Paginación de documentos de apoyo" @update:page="setPage" />
     </div>
 
     <Dialog v-if="manages" v-model:open="uploadOpen">

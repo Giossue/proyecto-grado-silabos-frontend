@@ -6,6 +6,8 @@ import { getTeacherHistory, type HistoryCareer } from '@/api/syllabi';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { useClientPagination } from '@/composables/useClientPagination';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
@@ -17,6 +19,7 @@ const router = useRouter();
 const careers = ref<HistoryCareer[] | null>(null);
 const error = ref<string | null>(null);
 const loading = computed(() => careers.value === null && error.value === null);
+const { items: pagedCareers, meta, setPage } = useClientPagination(() => careers.value ?? [], 20);
 
 const load = async (): Promise<void> => {
   error.value = null;
@@ -34,18 +37,19 @@ onMounted(load);
   <PageFrame title="Historial" description="Sílabos de períodos anteriores de esta carrera" size="wide" :loading="loading">
     <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.teacher.syllabi)"><ArrowLeft aria-hidden="true" />Volver a mis sílabos</Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading" variant="table-body" :columns="2" :actions="false" :pagination="false" />
+    <LoadingSkeleton v-else-if="loading" variant="table-body" :columns="2" :actions="false" />
     <template v-else-if="careers">
       <Table label="Carreras con historial">
         <TableHeader><TableRow><TableHead>Carrera</TableHead><TableHead class="text-center">Sílabos</TableHead></TableRow></TableHeader>
         <TableBody>
           <TableEmpty v-if="careers.length === 0" :colspan="2">Todavía no tiene sílabos de períodos anteriores</TableEmpty>
-          <TableRow v-for="career in careers" v-else :key="career.id" class="cursor-pointer" tabindex="0" :aria-label="`Ver el historial de ${career.name}`" @click="activateRow($event, () => open(career))" @keydown.enter.self.prevent="open(career)" @keydown.space.self.prevent="open(career)">
+          <TableRow v-for="career in pagedCareers" v-else :key="career.id" class="cursor-pointer" tabindex="0" :aria-label="`Ver el historial de ${career.name}`" @click="activateRow($event, () => open(career))" @keydown.enter.self.prevent="open(career)" @keydown.space.self.prevent="open(career)">
             <TableCell>{{ career.name }}</TableCell>
             <TableCell class="text-center">{{ career.syllabi_count }}</TableCell>
           </TableRow>
         </TableBody>
       </Table>
+      <TablePagination :meta="meta" label="Paginación del historial" @update:page="setPage" />
     </template>
   </PageFrame>
 </template>

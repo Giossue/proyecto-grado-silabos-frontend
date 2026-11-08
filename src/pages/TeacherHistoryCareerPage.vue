@@ -7,9 +7,11 @@ import { getTeacherHistoryCareer, type HistorySyllabus } from '@/api/syllabi';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { useClientPagination } from '@/composables/useClientPagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import TableCardLine from '@/components/domain/TableCardLine.vue';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDateDisplay } from '@/lib/dateDisplay';
 import { activateRow } from '@/lib/rowActivation';
 import { paths } from '@/lib/routes';
@@ -23,9 +25,11 @@ const careerName = ref<string | null>(null);
 const syllabi = ref<HistorySyllabus[] | null>(null);
 const error = ref<string | null>(null);
 const loading = computed(() => syllabi.value === null && error.value === null);
+// Se pagina la lista completa y la página se agrupa por período: una sola paginación para todos los grupos.
+const { items: pagedSyllabi, meta, setPage } = useClientPagination(() => syllabi.value ?? [], 20);
 const groups = computed(() => {
   const byPeriod = new Map<string, HistorySyllabus[]>();
-  for (const syllabus of syllabi.value ?? []) byPeriod.set(syllabus.period, [...(byPeriod.get(syllabus.period) ?? []), syllabus]);
+  for (const syllabus of pagedSyllabi.value) byPeriod.set(syllabus.period, [...(byPeriod.get(syllabus.period) ?? []), syllabus]);
 
   return [...byPeriod.entries()].map(([period, items]) => ({ period, items }));
 });
@@ -52,7 +56,7 @@ onMounted(load);
     <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.teacher.history)"><ArrowLeft aria-hidden="true" />Volver al historial</Button></template>
     <template v-if="careerName || loading" #meta><Skeleton v-if="loading" class="h-5 w-40" /><span v-else class="text-sm font-semibold">{{ careerName }}</span></template>
     <LoadErrorState v-if="error" :message="error" @retry="load" />
-    <LoadingSkeleton v-else-if="loading" variant="table-body" :columns="4" :rows="3" :actions="false" :pagination="false" :badges="[3]" heading />
+    <LoadingSkeleton v-else-if="loading" variant="table-body" :columns="4" :rows="3" :actions="false" :badges="[3]" heading />
     <template v-else>
       <div v-for="group in groups" :key="group.period" class="flex flex-col gap-3">
         <h2 class="text-sm font-semibold">Período {{ group.period }}</h2>
@@ -68,6 +72,11 @@ onMounted(load);
           </TableBody>
         </Table>
       </div>
+      <Table v-if="groups.length === 0" label="Sílabos de la carrera">
+        <TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Paralelos</TableHead><TableHead class="text-center">Estado</TableHead><TableHead>Último guardado</TableHead></TableRow></TableHeader>
+        <TableBody><TableEmpty :colspan="4">Todavía no tiene sílabos de períodos anteriores en esta carrera</TableEmpty></TableBody>
+      </Table>
+      <TablePagination :meta="meta" label="Paginación del historial de la carrera" @update:page="setPage" />
     </template>
   </PageFrame>
 </template>

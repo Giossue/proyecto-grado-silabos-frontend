@@ -135,7 +135,7 @@ describe('búsqueda en la biblioteca', () => {
             expect(search).toHaveBeenLastCalledWith('any', 'Sapag', 2);
         });
 
-        it('una búsqueda nueva vuelve a la página 1 y sin resultados no hay paginación', async () => {
+        it('una búsqueda nueva vuelve a la página 1 y sin resultados la paginación dice 0–0 de 0', async () => {
             search.mockResolvedValue(catalogResults(Array.from({ length: 20 }, (_, index) => ({ ...book, id: String(index) })), 45));
             await open();
             await searchFor('Sapag');
@@ -144,7 +144,8 @@ describe('búsqueda en la biblioteca', () => {
             await searchFor('nada');
 
             expect(search).toHaveBeenLastCalledWith('any', 'nada', 1);
-            expect(body().querySelector('[aria-label="Paginación de los libros"]')).toBeNull();
+            expect(body().querySelector('[aria-label="Paginación de los libros"]')).not.toBeNull();
+            expect(body().textContent).toContain('0–0 de 0');
         });
     });
 

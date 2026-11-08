@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { useClientPagination } from '@/composables/useClientPagination';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { VALIDATION_LIMITS } from '@/lib/validationLimits';
 import { Check, Pencil, Plus, Trash2, X } from "@lucide/vue";
@@ -118,6 +120,7 @@ const teacherChoices = (parallelId: string) => {
 };
 const teacherEditable = (parallelId: string): boolean => Boolean(props.teacherUsers) && assignmentOf(parallelId)?.editable !== false;
 const canEditRow = (parallel: { id: string; editable?: boolean }): boolean => parallel.editable !== false || teacherEditable(parallel.id);
+const { items: pagedParallels, meta, setPage } = useClientPagination(() => props.parallels, 20);
 const canDeleteParallel = (parallel: { deletable?: boolean }): boolean => parallel.deletable !== false && props.parallels.length > 1;
 const canRemoveTeacher = (parallelId: string): boolean => assignmentOf(parallelId) !== null && teacherEditable(parallelId);
 const showActions = computed(() => editingId.value !== null
@@ -191,7 +194,7 @@ watch(open, (value) => value && reset());
                 <TableHeader><TableRow><TableHead>Paralelo</TableHead><TableHead>Jornada</TableHead><TableHead>Docente</TableHead><TableHead v-if="showActions || adding" class="text-right">Acciones</TableHead></TableRow></TableHeader>
                 <TableBody>
                   <TableEmpty v-if="parallels.length === 0 && !adding" :colspan="showActions ? 4 : 3">Sin paralelos registrados</TableEmpty>
-                  <TableRow v-for="parallel in parallels" v-else :key="parallel.id">
+                  <TableRow v-for="parallel in pagedParallels" v-else :key="parallel.id">
                     <template v-if="editingId === parallel.id">
                       <TableCell v-if="parallel.editable === false">{{ parallel.code }}</TableCell>
                       <TableCell v-else><Input v-model="editCode" :maxlength="VALIDATION_LIMITS.parallelCode" class="w-20" :aria-label="`Código del paralelo ${parallel.code}`" :aria-invalid="!editCode.trim()" /></TableCell>
@@ -242,6 +245,7 @@ watch(open, (value) => value && reset());
                 </TableBody>
               </Table>
             </div>
+            <TablePagination :meta="meta" label="Paginación de paralelos" @update:page="setPage" />
             <Button type="button" size="sm" variant="outline" class="self-start" :disabled="adding || rowBusy" @click="startAdd"><Plus aria-hidden="true" /> Agregar paralelo</Button>
           </section>
           <DialogFooter><Button type="button" variant="outline" @click="close">Cerrar</Button></DialogFooter>

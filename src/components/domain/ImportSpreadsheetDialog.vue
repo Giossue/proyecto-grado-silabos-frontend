@@ -6,6 +6,8 @@ import { ApiError } from '@/api/client';
 import { downloadImportTemplate, sendImport, type ImportKind, type ImportResult } from '@/api/spreadsheet-import';
 import FileDropzone from '@/components/domain/FileDropzone.vue';
 import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
+import TablePagination from '@/components/domain/TablePagination.vue';
+import { useClientPagination } from '@/composables/useClientPagination';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
@@ -24,6 +26,7 @@ const file = ref<File | null>(null);
 const result = ref<ImportResult | null>(null);
 const processing = ref(false);
 const error = ref<string | null>(null);
+const { items: pagedRows, meta, setPage } = useClientPagination(() => result.value?.rows ?? [], 20, () => result.value);
 const failedRows = computed(() => result.value?.rows.filter((row) => row.errors.length > 0).length ?? 0);
 
 watch(open, (value) => { if (value) { file.value = null; result.value = null; error.value = null; } });
@@ -71,13 +74,14 @@ const download = async (): Promise<void> => {
                             <Table label="Vista previa de la importación">
                                 <TableHeader><TableRow><TableHead>Fila</TableHead><TableHead v-for="column in columns" :key="column.key">{{ column.label }}</TableHead><TableHead>Resultado</TableHead></TableRow></TableHeader>
                                 <TableBody>
-                                    <TableRow v-for="row in result.rows" :key="row.line">
+                                    <TableRow v-for="row in pagedRows" :key="row.line">
                                         <TableCell>{{ row.line }}</TableCell>
                                         <TableCell v-for="column in columns" :key="column.key">{{ row.values[column.key] }}</TableCell>
                                         <TableCell :class="row.errors.length ? 'text-destructive' : 'text-muted-foreground'">{{ row.errors.length ? row.errors.join(' ') : 'Válida' }}</TableCell>
                                     </TableRow>
                                 </TableBody>
                             </Table>
+                            <TablePagination :meta="meta" label="Paginación de la vista previa" @update:page="setPage" />
                         </template>
                         <DialogFooter>
                             <Button type="button" variant="outline" :disabled="processing" @click="open = false">Cancelar</Button>

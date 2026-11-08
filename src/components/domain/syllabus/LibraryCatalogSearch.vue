@@ -22,6 +22,7 @@ const field = ref<CatalogSearchField>('any');
 const text = ref('');
 const results = ref<CatalogBook[] | null>(null);
 const meta = ref<PaginationMeta | null>(null);
+const emptyMeta: PaginationMeta = { current_page: 1, last_page: 1, per_page: 20, from: null, to: null, total: 0 };
 const searched = ref<{ field: CatalogSearchField; text: string } | null>(null);
 const added = ref<Set<string>>(new Set());
 const busy = ref(false);
@@ -129,7 +130,7 @@ const pick = (book: CatalogBook): void => {
                     </TableBody>
                 </Table>
             </ScrollArea>
-            <TablePagination v-if="meta && meta.total > 0 && !error" class="shrink-0" :meta="meta" label="Paginación de los libros" @update:page="goTo" />
+            <TablePagination v-if="results !== null && !error" class="shrink-0" :meta="meta ?? emptyMeta" label="Paginación de los libros" @update:page="goTo" />
             <DialogFooter class="shrink-0">
                 <DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose>
             </DialogFooter>

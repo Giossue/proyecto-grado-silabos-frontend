@@ -31,5 +31,6 @@ describe('TeacherHistoryPage', () => {
     await flushPromises();
 
     expect(wrapper.text()).toContain('Todavía no tiene sílabos de períodos anteriores');
+    expect(wrapper.text()).toContain('0–0 de 0');
   });
 });

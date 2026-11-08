@@ -185,7 +185,7 @@ describe('Documentos de apoyo', () => {
 
     expect(wrapper.emitted('update:loading')?.at(-1)).toEqual([true]);
     expect(wrapper.findAll('[data-skeleton="table-row"]')).toHaveLength(4);
-    expect(wrapper.find('[data-skeleton="table-pagination"]').exists()).toBe(false);
+    expect(wrapper.find('[data-skeleton="table-pagination"]').exists()).toBe(true);
 
     resolve({ data: [doc('1', 'Reglamento')] });
     await flushPromises();
