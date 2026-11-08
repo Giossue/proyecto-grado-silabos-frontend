@@ -6,7 +6,7 @@ import { ApiError } from '@/api/client';
 import { getTemplateJson, importTemplateJson } from '@/api/template';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
@@ -78,9 +78,10 @@ const readFile = async (event: Event): Promise<void> => {
 
 <template>
   <Dialog v-model:open="open">
-    <DialogContent :aria-describedby="undefined" class="sm:max-w-4xl">
+    <DialogContent class="sm:max-w-4xl">
       <DialogHeader>
         <DialogTitle>Plantilla como JSON</DialogTitle>
+        <DialogDescription>Descargue la plantilla o cargue una desde un archivo</DialogDescription>
       </DialogHeader>
       <div class="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" size="sm" :disabled="loading || text.trim() === ''" @click="downloadJson(text, 'plantilla-silabo.json')"><Download data-icon="inline-start" aria-hidden="true" />Descargar</Button>

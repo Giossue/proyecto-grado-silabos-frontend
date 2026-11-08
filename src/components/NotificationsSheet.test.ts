@@ -38,6 +38,7 @@ const mountOpen = async () => {
                 Sheet: { template: '<div><slot /></div>' },
                 SheetContent: { template: '<div><slot /></div>' },
                 SheetTitle: { template: '<h2><slot /></h2>' },
+                SheetDescription: { template: '<p><slot /></p>' },
                 SheetClose: { template: '<div><slot /></div>' },
                 DropdownMenu: { template: '<div />' },
             },

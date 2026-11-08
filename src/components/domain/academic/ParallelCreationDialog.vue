@@ -180,6 +180,7 @@ watch(open, (value) => value && reset());
     :show-trigger="false"
     trigger-label="Agregar paralelo"
     title="Paralelos y docentes de la materia"
+    description="Agregue paralelos y asigne el docente de cada uno"
   >
     <template #default="{ close }">
       <div class="contents">

@@ -24,7 +24,7 @@ const parts = computed(() => splitName(props.teacher.name));
 </script>
 
 <template>
-    <FormModal v-model:open="open" trigger-label="Docente" title="Docente" :show-trigger="false">
+    <FormModal v-model:open="open" trigger-label="Docente" title="Docente" description="Datos del docente en su carrera" :show-trigger="false">
         <template #default="{ close }"><form @submit.prevent><FieldGroup>
             <div class="grid grid-cols-2 items-start gap-4">
                 <Field v-for="part in NAME_PARTS" :key="part.key"><FieldLabel :for="`career-teacher-${part.key}-${teacher.id}`">{{ part.label }}</FieldLabel><Input :id="`career-teacher-${part.key}-${teacher.id}`" :model-value="parts[part.key]" disabled /></Field>

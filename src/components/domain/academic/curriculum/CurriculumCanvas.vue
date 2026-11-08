@@ -44,6 +44,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -599,7 +600,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         }
       "
     >
-      <DialogContent :aria-describedby="undefined"
+      <DialogContent
         class="max-h-(--overlay-max-height) flex flex-col gap-0 overflow-hidden p-0 sm:max-w-2xl"
       >
           <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
@@ -608,6 +609,9 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
                   <DialogTitle>{{
                     editorSubject ? "Editar materia" : "Agregar materia"
                   }}</DialogTitle>
+                  <DialogDescription>{{
+                    editorSubject ? "Cambie los datos de la materia" : "Complete los datos de la nueva materia"
+                  }}</DialogDescription>
                 </DialogHeader>
                 <CurriculumVisualSubjectForm
                   :key="`${editorSubject?.id ?? `new-${editorCycle}`}-${editorOpenings}`"

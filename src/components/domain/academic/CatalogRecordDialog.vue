@@ -54,9 +54,9 @@ watch(() => form.value.starts_on, (startsOn) => {
 });
 
 const labels = computed(() => ({
-    facultad: { trigger: 'Nueva facultad', title: 'Nueva facultad' },
-    carrera: { trigger: 'Nueva carrera', title: 'Nueva carrera' },
-    periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico' },
+    facultad: { trigger: 'Nueva facultad', title: 'Nueva facultad', description: 'Complete los datos de la facultad' },
+    carrera: { trigger: 'Nueva carrera', title: 'Nueva carrera', description: 'Complete los datos de la carrera' },
+    periodo: { trigger: 'Nuevo periodo académico', title: 'Nuevo periodo académico', description: 'Complete los datos del periodo académico' },
 })[props.entity]);
 const submitLabel = computed(() => ({ facultad: 'Crear facultad', carrera: 'Crear carrera', periodo: 'Crear periodo' })[props.entity]);
 
@@ -118,7 +118,7 @@ const submit = async (): Promise<void> => {
 </script>
 
 <template>
-    <FormModal v-model:open="open" :disabled="props.disabled" :show-trigger="props.showTrigger" :trigger-label="labels.trigger" :title="labels.title">
+    <FormModal v-model:open="open" :disabled="props.disabled" :show-trigger="props.showTrigger" :trigger-label="labels.trigger" :title="labels.title" :description="labels.description">
         <template #default="{ close }">
             <form @submit.prevent="submit">
                 <FieldGroup>

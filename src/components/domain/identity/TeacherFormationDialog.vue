@@ -30,10 +30,10 @@ const submit = async (): Promise<void> => {
 
 <template>
     <Dialog :open="open" @update:open="(value) => { if (value || !required) open = value; }">
-        <DialogContent :aria-describedby="undefined" class="sm:max-w-2xl" @escape-key-down="keepOpen">
+        <DialogContent class="sm:max-w-2xl" @escape-key-down="keepOpen">
             <DialogHeader>
                 <DialogTitle>{{ required ? 'Complete su formación y experiencia' : 'Formación y experiencia' }}</DialogTitle>
-                <DialogDescription v-if="required">La necesita para abrir sus sílabos</DialogDescription>
+                <DialogDescription>{{ required ? 'La necesita para abrir sus sílabos' : 'Sus títulos y su experiencia como docente' }}</DialogDescription>
             </DialogHeader>
             <form class="flex flex-col gap-4" @submit.prevent="submit">
                 <TeacherFormationField id="dialog-formation" v-model="formation" :error="error" hide-hint />

@@ -153,7 +153,7 @@ const submit = async (confirmPurge = false): Promise<void> => {
 </script>
 
 <template>
-    <FormModal v-model:open="open" trigger-label="Editar" :title="viewing ? capitalizedLabel : `Editar ${entityLabel}`" :show-trigger="showTrigger">
+    <FormModal v-model:open="open" trigger-label="Editar" :title="viewing ? capitalizedLabel : `Editar ${entityLabel}`" :description="viewing ? 'Datos registrados' : 'Cambie los datos y guarde'" :show-trigger="showTrigger">
         <template #default="{ close }">
             <form @submit.prevent="submit()"><FieldGroup>
                 <Alert v-if="generalError" variant="destructive"><AlertDescription>{{ generalError }}</AlertDescription></Alert>

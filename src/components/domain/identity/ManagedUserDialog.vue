@@ -50,7 +50,7 @@ const submit = async (replaceCoordinator = false): Promise<void> => {
 </script>
 
 <template>
-    <FormModal v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? 'Crear docente' : 'Crear cuenta institucional'" :show-trigger="showTrigger">
+    <FormModal v-model:open="open" :trigger-label="teacherCareer ? 'Crear docente' : 'Crear cuenta'" :title="teacherCareer ? 'Crear docente' : 'Crear cuenta institucional'" description="Le llegará un correo para activar su cuenta" :show-trigger="showTrigger">
         <template #default="{ close }"><form @submit.prevent="submit()"><FieldGroup>
             <div class="grid grid-cols-2 items-start gap-4">
                 <Field v-for="part in nameParts" :key="part.key" :data-invalid="Boolean(errors[part.key])"><FieldLabel :for="`managed-user-${part.key}`" required>{{ part.label }}</FieldLabel><Input :id="`managed-user-${part.key}`" :model-value="form[part.key]" lang="es" autocapitalize="characters" :placeholder="part.placeholder" aria-required="true" @update:model-value="setPart(part.key, $event)" /><FieldError :errors="errors[part.key]" /></Field>

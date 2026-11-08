@@ -53,6 +53,7 @@ const mountDialog = (state: SyllabusProcess['state'], blockReason: string | null
       DialogFooter: footer,
       DialogHeader: passthrough,
       DialogTitle: passthrough,
+      DialogDescription: passthrough,
       Button: button,
     },
   },

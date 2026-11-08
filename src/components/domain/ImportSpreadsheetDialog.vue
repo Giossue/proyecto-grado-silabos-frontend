@@ -9,7 +9,7 @@ import FeedbackAlert from '@/components/domain/FeedbackAlert.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { useClientPagination } from '@/composables/useClientPagination';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -56,10 +56,10 @@ const download = async (): Promise<void> => {
 <template>
     <Dialog v-model:open="open">
         <DialogTrigger as-child><Button type="button" variant="success"><FileSpreadsheet data-icon="inline-start" aria-hidden="true" />Importar desde Excel</Button></DialogTrigger>
-        <DialogContent :aria-describedby="undefined" :class="['max-h-screen flex flex-col gap-0 overflow-hidden p-0', result ? 'sm:max-w-3xl' : 'sm:max-w-md']">
+        <DialogContent :class="['max-h-screen flex flex-col gap-0 overflow-hidden p-0', result ? 'sm:max-w-3xl' : 'sm:max-w-md']">
             <ScrollArea class="min-h-0 flex-1 [&>[data-slot=scroll-area-viewport]]:max-h-[calc(100dvh-2rem)]">
                 <div class="grid gap-4 p-6">
-                    <DialogHeader><DialogTitle>{{ title }}</DialogTitle></DialogHeader>
+                    <DialogHeader><DialogTitle>{{ title }}</DialogTitle><DialogDescription>Registre varios a la vez con la plantilla de Excel</DialogDescription></DialogHeader>
                     <div class="flex flex-col gap-4">
                         <div class="flex flex-col gap-2 text-sm">
                             <p>1. Descargue la plantilla y complete una fila por registro</p>

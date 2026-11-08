@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -15,6 +16,8 @@ withDefaults(
     defineProps<{
         triggerLabel: string;
         title: string;
+        /** Frase corta bajo el título que dice para qué sirve el modal. */
+        description?: string;
         showTrigger?: boolean;
         disabled?: boolean;
         compact?: boolean;
@@ -54,9 +57,10 @@ const close = (): void => {
                 </Button>
             </slot>
         </DialogTrigger>
-        <DialogContent :aria-describedby="undefined" :class="['flex flex-col gap-0 overflow-hidden p-0', compact ? 'sm:max-w-3xl' : wide ? 'sm:max-w-7xl' : 'sm:max-w-5xl', compact || fit ? 'max-h-[calc(100dvh-2rem)]' : 'h-[calc(100dvh-2rem)]']">
+        <DialogContent v-bind="description ? {} : { 'aria-describedby': undefined }" :class="['flex flex-col gap-0 overflow-hidden p-0', compact ? 'sm:max-w-3xl' : wide ? 'sm:max-w-7xl' : 'sm:max-w-5xl', compact || fit ? 'max-h-[calc(100dvh-2rem)]' : 'h-[calc(100dvh-2rem)]']">
             <DialogHeader class="px-6 pt-6 pb-4">
                 <DialogTitle>{{ title }}</DialogTitle>
+                <DialogDescription v-if="description">{{ description }}</DialogDescription>
             </DialogHeader>
             <div class="relative flex min-h-0 flex-1 flex-col">
                 <ScrollArea class="min-h-0 flex-1">

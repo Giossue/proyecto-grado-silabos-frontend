@@ -11,7 +11,7 @@ import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
     Select,
@@ -334,6 +334,7 @@ const {
         <DialogContent class="sm:max-w-3xl">
             <DialogHeader>
                 <DialogTitle>Logo de {{ logoPreview?.name }}</DialogTitle>
+                <DialogDescription>Así se verá en los sílabos</DialogDescription>
             </DialogHeader>
             <img
                 v-if="logoPreview"

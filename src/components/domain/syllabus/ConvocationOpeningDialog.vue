@@ -5,7 +5,7 @@ import { ApiError } from '@/api/client';
 import { createConvocation } from '@/api/convocations';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 
 const props = defineProps<{
@@ -52,9 +52,10 @@ const submit = async (): Promise<void> => {
 
 <template>
   <Dialog :open="open" @update:open="(value) => { if (!processing) emit('update:open', value); }">
-    <DialogContent :aria-describedby="undefined">
+    <DialogContent>
       <DialogHeader>
         <DialogTitle>Abrir convocatoria de la carrera</DialogTitle>
+        <DialogDescription>Los docentes podrán elaborar sus sílabos hasta la fecha de entrega</DialogDescription>
       </DialogHeader>
       <form class="flex flex-col gap-4" @submit.prevent="submit">
         <Alert v-if="error" variant="destructive">

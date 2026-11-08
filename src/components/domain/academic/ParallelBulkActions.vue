@@ -7,7 +7,7 @@ import { askFinalizedNoticeOnce, createCareerRecord, createParallels, deleteCare
 import { Button } from '@/components/ui/button';
 import TeacherSelect from '@/components/domain/academic/TeacherSelect.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
@@ -151,8 +151,8 @@ const setTeacher = (userId: string) => run(
     </DropdownMenu>
     <Button type="button" size="sm" variant="ghost" :disabled="busy" @click="emit('clear')"><X data-icon="inline-start" aria-hidden="true" />Quitar selección</Button>
     <Dialog v-model:open="addOpen">
-      <DialogContent :aria-describedby="undefined">
-        <DialogHeader><DialogTitle>Agregar un paralelo a las materias seleccionadas</DialogTitle></DialogHeader>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Agregar un paralelo a las materias seleccionadas</DialogTitle><DialogDescription>Se crea el mismo paralelo en cada materia</DialogDescription></DialogHeader>
         <form class="contents" @submit.prevent="addParallel">
           <Alert v-if="addError" variant="destructive"><AlertDescription>{{ addError }}</AlertDescription></Alert>
           <FieldGroup>

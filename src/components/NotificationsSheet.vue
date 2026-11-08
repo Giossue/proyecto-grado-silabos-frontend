@@ -13,7 +13,7 @@ import { getNotifications, markAllNotificationsRead, markNotificationRead, type 
 import { useOpenNotification } from '@/composables/useOpenNotification';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetClose, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { paths, roleNotifications } from '@/lib/routes';
@@ -146,12 +146,11 @@ onMounted(refreshCount);
     </TooltipProvider>
     <Sheet v-model:open="open">
         <SheetContent
-            :aria-describedby="undefined"
             @interact-outside="open = false"
             class="top-0 right-0 left-auto h-dvh max-h-none w-full translate-x-0 translate-y-0 gap-0 rounded-none border-y-0 border-r-0 duration-300 data-[state=closed]:zoom-out-100 data-[state=open]:zoom-in-100 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-md"
         >
             <div class="flex items-center justify-between gap-2 border-b px-6 py-4">
-                <SheetTitle class="text-lg font-semibold">Notificaciones</SheetTitle>
+                <div class="flex min-w-0 flex-col gap-0.5"><SheetTitle class="text-lg font-semibold">Notificaciones</SheetTitle><SheetDescription>Avisos sobre sus sílabos y convocatorias</SheetDescription></div>
                 <TooltipProvider :delay-duration="150">
                 <div class="flex items-center gap-1">
                     <Tooltip>

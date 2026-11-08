@@ -70,7 +70,7 @@ const save = async (close: () => void) => {
 </script>
 
 <template>
-  <FormDialog v-model:open="open" fit :show-trigger="false" :title="`Proyecto de carrera de ${subjectName}`" trigger-label="Proyecto de carrera">
+  <FormDialog v-model:open="open" fit :show-trigger="false" :title="`Proyecto de carrera de ${subjectName}`" trigger-label="Proyecto de carrera" description="Contenido de la materia que se copia en sus sílabos">
     <template #default="{ close }">
       <form class="contents" @submit.prevent="save(close)">
         <FieldGroup>

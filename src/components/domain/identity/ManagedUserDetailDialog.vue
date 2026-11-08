@@ -14,6 +14,7 @@ import {
     Dialog,
     DialogContent,
     DialogFooter,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
@@ -87,9 +88,10 @@ const currentAssignments = computed(() =>
 
 <template>
     <Dialog v-model:open="open">
-        <DialogContent :aria-describedby="undefined" class="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+        <DialogContent class="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
             <DialogHeader class="p-4">
                 <DialogTitle>{{ editing ? 'Editar usuario' : 'Datos de la cuenta' }}</DialogTitle>
+                <DialogDescription>{{ editing ? 'Cambie los datos y guarde' : 'Datos, roles y estado de la cuenta' }}</DialogDescription>
             </DialogHeader>
 
             <ScrollArea v-if="editing" class="min-h-0 flex-1">

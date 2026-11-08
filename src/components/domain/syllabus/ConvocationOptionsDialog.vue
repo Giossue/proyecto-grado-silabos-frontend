@@ -4,7 +4,7 @@ import { CalendarClock, CalendarPlus, Lock, Pause, Play, Trash2 } from '@lucide/
 import { computed } from 'vue';
 import DialogActions, { type DialogAction } from '@/components/domain/DialogActions.vue';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { ConvocationRow } from '@/pages/AdminProcessesPage.vue';
 
 const props = defineProps<{ row: ConvocationRow }>();
@@ -52,9 +52,10 @@ const run = (key: string): void => {
 
 <template>
     <Dialog v-model:open="open">
-        <DialogContent :aria-describedby="undefined" class="sm:max-w-lg">
+        <DialogContent class="sm:max-w-lg">
             <DialogHeader>
                 <DialogTitle>Convocatoria {{ row.code }}</DialogTitle>
+                <DialogDescription>Elija qué hacer con la convocatoria</DialogDescription>
             </DialogHeader>
             <ul class="grid grid-cols-2 items-start gap-2" aria-label="Opciones de la convocatoria">
                 <li v-for="action in regular" :key="action.key" class="flex flex-col gap-1">

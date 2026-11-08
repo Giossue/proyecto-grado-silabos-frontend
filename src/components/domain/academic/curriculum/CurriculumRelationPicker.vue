@@ -3,7 +3,7 @@ import { Plus } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import type { RelationMode } from '@/components/domain/academic/curriculum/curriculumCanvasLayout';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { CurriculumBuilderSubject } from '@/types/academic';
@@ -49,9 +49,10 @@ const confirm = (): void => {
 
 <template>
     <Dialog :open="picker !== null" @update:open="(open) => { if (!open) picker = null; }">
-        <DialogContent :aria-describedby="undefined">
+        <DialogContent>
             <DialogHeader>
                 <DialogTitle>Nueva relación académica</DialogTitle>
+                <DialogDescription>Elija cómo se relacionan las dos materias</DialogDescription>
             </DialogHeader>
             <Field>
                 <FieldLabel for="curriculum-relation-subject">{{ question }}</FieldLabel>
