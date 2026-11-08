@@ -96,6 +96,8 @@ describe("AdminTemplatePage", () => {
     expect(wrapper.text()).toContain('Vista de prueba: así verá el formulario el docente. Lo que escriba aquí no se guarda');
     expect(wrapper.find('section.teacher-form').text()).toContain('Descripción');
     expect(wrapper.findAll('button').some((button) => button.text() === 'Editar')).toBe(false);
+    // La hoja de la plantilla queda oculta mientras se ve el formulario.
+    expect((wrapper.find('[data-sheet]').element.closest('[style*="display: none"]'))).not.toBeNull();
 
     await toggle().trigger('click');
     await flushPromises();

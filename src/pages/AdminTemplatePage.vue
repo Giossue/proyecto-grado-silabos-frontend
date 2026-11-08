@@ -211,7 +211,10 @@ onBeforeUnmount(() => {
                 <SyllabusTeacherForm v-model:active="teacherSection" v-model:collapsed="teacherCollapsed" :sections="teacherSections" @update:value="tryValue" />
             </template>
         </div>
-        <TemplateVisualBuilder v-show="!teacherView" ref="builder" :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" @dirty="unsaved = $event" @editing="editing = $event" />
+        <!-- El editor tiene varias raíces: se oculta su contenedor (v-show en el componente no tendría efecto) -->
+        <div v-show="!teacherView" class="contents">
+            <TemplateVisualBuilder ref="builder" :template="template" :process-lock="payload?.processLock" :logos="payload?.logos" :variables="payload?.variables" :presets="payload?.presets" @changed="reloadFromMutation" @dirty="unsaved = $event" @editing="editing = $event" />
+        </div>
         <template v-if="editing">
             <aside v-if="assistantLoaded" v-show="assistantOpen" class="fixed right-6 bottom-24 z-40 h-[min(var(--layout-assistant-height),calc(100dvh-7rem))] w-(--layout-syllabus-aside-width) max-w-[calc(100vw-2rem)] max-sm:inset-x-4 max-sm:top-20 max-sm:right-4 max-sm:h-auto max-sm:w-auto" aria-label="Asistente de plantilla">
                 <TemplateAssistant :refresh="assistantRefresh" :draft-version="draftVersion" :snapshot="draftSnapshot" :busy="deciding" @apply="applyProposal" @discard="discardProposal" />
