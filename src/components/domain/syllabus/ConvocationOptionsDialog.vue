@@ -2,9 +2,11 @@
 import { withoutFinalPeriod } from '@/lib/utils';
 import { CalendarClock, CalendarPlus, Lock, Pause, Play, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
-import DialogActions, { type DialogAction } from '@/components/domain/DialogActions.vue';
+import type { DialogAction } from '@/components/domain/DialogActions.vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import type { ConvocationRow } from '@/pages/AdminProcessesPage.vue';
 
 const props = defineProps<{ row: ConvocationRow }>();
@@ -40,9 +42,20 @@ const actions = computed<DialogAction[]>(() => {
     ];
 });
 
-// Lo habitual arriba; lo delicado (finalizar, eliminar) va en el pie, junto a «Cancelar».
+// Qué hace cada opción, en una línea, para elegir sin abrir la confirmación.
+const effects: Record<string, string> = {
+    abrir: 'Fije las fechas de elaboración y entrega del período',
+    'eliminar-periodo': 'Borra el período y sus fechas',
+    pausar: 'Nadie edita, envía ni revisa hasta que la reanude',
+    reanudar: 'Se vuelve a editar, enviar y revisar',
+    prorrogar: 'Mueve la fecha de entrega hacia adelante',
+    cerrar: 'Los sílabos quedan solo para consulta',
+    eliminar: 'Borra la convocatoria y sus sílabos',
+};
+// Lo habitual arriba; lo delicado (finalizar, eliminar) abajo, separado y en rojo.
 const regular = computed(() => actions.value.filter((action) => !action.destructive));
 const sensitive = computed(() => actions.value.filter((action) => action.destructive));
+const groups = computed(() => [regular.value, sensitive.value].filter((group) => group.length > 0));
 
 const run = (key: string): void => {
     open.value = false;
@@ -57,24 +70,30 @@ const run = (key: string): void => {
                 <DialogTitle>Convocatoria {{ row.code }}</DialogTitle>
                 <DialogDescription>Elija qué hacer con la convocatoria</DialogDescription>
             </DialogHeader>
-            <ul class="grid grid-cols-2 items-start gap-2" aria-label="Opciones de la convocatoria">
-                <li v-for="action in regular" :key="action.key" class="flex flex-col gap-1">
-                    <Button
-                        type="button"
-                        variant="outline"
-                        class="w-full"
-                        :disabled="action.disabled"
-                        :aria-describedby="action.disabled && action.disabledReason ? `option-reason-${action.key}` : undefined"
-                        @click="run(action.key)"
-                    >
-                        <component :is="action.icon" data-icon="inline-start" aria-hidden="true" />
-                        {{ action.label }}
-                    </Button>
-                    <p v-if="action.disabled && action.disabledReason" :id="`option-reason-${action.key}`" class="text-sm text-muted-foreground">{{ withoutFinalPeriod(action.disabledReason) }}</p>
-                </li>
-            </ul>
-            <DialogFooter class="flex-wrap">
-                <DialogActions :actions="sensitive" @select="run" />
+            <div class="flex flex-col gap-2">
+                <template v-for="(group, groupIndex) in groups" :key="groupIndex">
+                    <Separator v-if="groupIndex > 0" />
+                    <ul class="flex flex-col gap-1" :aria-label="groupIndex === 0 ? 'Opciones de la convocatoria' : 'Opciones delicadas'">
+                        <li v-for="action in group" :key="action.key">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                :class="cn('h-auto w-full items-start justify-start gap-3 whitespace-normal px-3 py-2.5 text-left font-normal', action.destructive && 'text-destructive hover:bg-destructive/10 hover:text-destructive')"
+                                :disabled="action.disabled"
+                                :aria-describedby="`option-effect-${action.key}`"
+                                @click="run(action.key)"
+                            >
+                                <component :is="action.icon" class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                                <span class="flex min-w-0 flex-col gap-0.5">
+                                    <span class="font-medium">{{ action.label }}</span>
+                                    <span :id="`option-effect-${action.key}`" :class="cn('text-sm', action.destructive ? 'text-destructive/80' : 'text-muted-foreground')">{{ action.disabled && action.disabledReason ? withoutFinalPeriod(action.disabledReason) : effects[action.key] }}</span>
+                                </span>
+                            </Button>
+                        </li>
+                    </ul>
+                </template>
+            </div>
+            <DialogFooter>
                 <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
             </DialogFooter>
         </DialogContent>

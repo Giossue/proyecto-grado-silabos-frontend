@@ -60,18 +60,22 @@ const mountDialog = (state: SyllabusProcess['state'], blockReason: string | null
 });
 
 const footerButtons = (wrapper: ReturnType<typeof mountDialog>) => wrapper.findAll('[data-footer] .button');
-const labels = (wrapper: ReturnType<typeof mountDialog>): string[] =>
-  [...wrapper.findAll('ul .button'), ...footerButtons(wrapper)].map((item) => item.text()).filter((text) => text !== 'Cancelar');
+const options = (wrapper: ReturnType<typeof mountDialog>) => wrapper.findAll('ul .button');
+const optionLabel = (item: ReturnType<ReturnType<typeof mountDialog>['find']>): string => item.find('.font-medium').text();
+const labels = (wrapper: ReturnType<typeof mountDialog>): string[] => options(wrapper).map(optionLabel);
+const option = (wrapper: ReturnType<typeof mountDialog>, label: string) => options(wrapper).find((item) => optionLabel(item) === label);
 
 describe('ConvocationOptionsDialog', () => {
-  it('lo habitual va con botones; Finalizar y Eliminar van en el pie, con texto, junto a Cancelar', async () => {
+  it('lista cada opción con lo que hace; Finalizar y Eliminar van al final, separadas y en rojo; el pie solo tiene Cancelar', async () => {
     const wrapper = mountDialog('abierto');
 
-    expect(wrapper.findAll('ul .button').map((item) => item.text())).toEqual(['Pausar', 'Prorrogar plazo']);
-    expect(wrapper.find('[aria-label="Más opciones"]').exists()).toBe(false);
-    expect(footerButtons(wrapper).map((item) => item.text())).toEqual(['Finalizar', 'Eliminar', 'Cancelar']);
+    expect(labels(wrapper)).toEqual(['Pausar', 'Prorrogar plazo', 'Finalizar', 'Eliminar']);
+    expect(option(wrapper, 'Pausar')!.text()).toContain('Nadie edita, envía ni revisa hasta que la reanude');
+    expect(option(wrapper, 'Eliminar')!.classes().join(' ')).toContain('text-destructive');
+    expect(option(wrapper, 'Pausar')!.classes().join(' ')).not.toContain('text-destructive');
+    expect(footerButtons(wrapper).map((item) => item.text())).toEqual(['Cancelar']);
 
-    await footerButtons(wrapper)[1]!.trigger('click');
+    await option(wrapper, 'Eliminar')!.trigger('click');
     expect(wrapper.emitted('action')).toEqual([['eliminar']]);
     expect(wrapper.emitted('update:open')).toEqual([[false]]);
   });
@@ -94,17 +98,17 @@ describe('ConvocationOptionsDialog', () => {
   });
 
   it('ofrece prorrogar mientras queden prórrogas', () => {
-    const extend = mountDialog('abierto').findAll('ul .button').find((item) => item.text() === 'Prorrogar plazo');
+    const extend = option(mountDialog('abierto'), 'Prorrogar plazo');
 
     expect(extend?.attributes('disabled')).toBeUndefined();
   });
 
   it('sin prórrogas disponibles desactiva prorrogar y muestra el motivo', () => {
     const wrapper = mountDialog('pausado', 'El plazo ya llega al último día de clases (01/03/2027).');
-    const extend = wrapper.findAll('ul .button').find((item) => item.text() === 'Prorrogar plazo');
+    const extend = option(wrapper, 'Prorrogar plazo');
 
     expect(extend?.attributes('disabled')).toBeDefined();
-    expect(wrapper.find('#option-reason-prorrogar').text()).toBe('El plazo ya llega al último día de clases (01/03/2027)');
+    expect(wrapper.find('#option-effect-prorrogar').text()).toBe('El plazo ya llega al último día de clases (01/03/2027)');
   });
 
   it('una convocatoria cerrada no ofrece finalizar', () => {
@@ -113,7 +117,7 @@ describe('ConvocationOptionsDialog', () => {
 
   it('una convocatoria finalizada ofrece prorrogar el plazo para reabrirla', async () => {
     const wrapper = mountDialog('cerrado');
-    const extend = wrapper.findAll('ul .button').find((item) => item.text() === 'Prorrogar plazo');
+    const extend = option(wrapper, 'Prorrogar plazo');
 
     expect(labels(wrapper)).toEqual(['Prorrogar plazo']);
     expect(extend?.attributes('disabled')).toBeUndefined();
@@ -123,9 +127,9 @@ describe('ConvocationOptionsDialog', () => {
 
   it('una convocatoria finalizada que no se puede reabrir desactiva prorrogar y muestra el motivo', () => {
     const wrapper = mountDialog('cerrado', 'Hay otra convocatoria en curso; finalícela o elimínela antes de reabrir esta.');
-    const extend = wrapper.findAll('ul .button').find((item) => item.text() === 'Prorrogar plazo');
+    const extend = option(wrapper, 'Prorrogar plazo');
 
     expect(extend?.attributes('disabled')).toBeDefined();
-    expect(wrapper.find('#option-reason-prorrogar').text()).toBe('Hay otra convocatoria en curso; finalícela o elimínela antes de reabrir esta');
+    expect(wrapper.find('#option-effect-prorrogar').text()).toBe('Hay otra convocatoria en curso; finalícela o elimínela antes de reabrir esta');
   });
 });
