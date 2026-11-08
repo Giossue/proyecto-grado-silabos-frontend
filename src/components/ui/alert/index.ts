@@ -16,7 +16,7 @@ export const alertVariants = cva(
       },
       appearance: {
         default: "",
-        plain: "rounded-none border-0 bg-transparent p-0",
+        plain: "rounded-none border-0 bg-transparent p-0 ring-0 shadow-none",
       },
     },
     defaultVariants: {
