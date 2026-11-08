@@ -191,7 +191,7 @@ describe('TeacherAssignmentsPanel', () => {
         expect(text).not.toContain('Reenviar invitación');
     });
 
-    it('abre la ficha del docente pendiente con «Quitar de la carrera» arriba a la derecha', async () => {
+    it('abre la ficha del docente pendiente con «Quitar de la carrera» en el pie', async () => {
         const wrapper = mount(TeacherAssignmentsPanel, { props: { data }, attachTo: document.body });
         const row = wrapper.findAll('tbody tr').find((item) => item.text().includes('Docente pendiente'))!;
         await row.trigger('click');
@@ -202,13 +202,13 @@ describe('TeacherAssignmentsPanel', () => {
         wrapper.unmount();
     });
 
-    it('con una sola acción muestra el icono directo en lugar del menú', async () => {
+    it('cada acción es un botón con texto, sin menú', async () => {
         const wrapper = mount(TeacherAssignmentsPanel, { props: { data }, attachTo: document.body });
         const row = wrapper.findAll('tbody tr').find((item) => item.text().includes('Docente activo'))!;
         await row.trigger('click');
         await flushPromises();
 
-        expect(document.body.querySelector('button[aria-label="Quitar de la carrera"]')).not.toBeNull();
+        expect(document.body.querySelector('button[aria-label="Quitar de la carrera"]')?.textContent?.trim()).toBe('Quitar de la carrera');
         expect(document.body.querySelector('button[aria-label="Acciones para Docente activo"]')).toBeNull();
         expect(document.body.querySelector('[data-slot="tooltip-content"]')).toBeNull();
         wrapper.unmount();
@@ -240,10 +240,7 @@ describe('TeacherAssignmentsPanel', () => {
         await row.trigger('click');
         await flushPromises();
 
-        (document.body.querySelector('button[aria-label="Acciones para Docente pendiente"]') as HTMLButtonElement).dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-        await flushPromises();
-        const item = [...document.body.querySelectorAll<HTMLElement>('[role="menuitem"]')].find((entry) => entry.textContent?.includes('Reenviar invitación'))!;
-        item.click();
+        (document.body.querySelector('button[aria-label="Reenviar invitación"]') as HTMLButtonElement).click();
         await flushPromises();
         await new Promise((resolve) => setTimeout(resolve, 250));
         await flushPromises();

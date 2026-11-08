@@ -154,7 +154,6 @@ const submit = async (confirmPurge = false): Promise<void> => {
 
 <template>
     <FormModal v-model:open="open" trigger-label="Editar" :title="viewing ? capitalizedLabel : `Editar ${entityLabel}`" :show-trigger="showTrigger">
-        <template v-if="(!viewing || locked) && actions.length > 0" #header-actions><DialogActions inline :actions="actions" :menu-label="`Acciones para ${recordName}`" @select="(key) => emit('action', key)" /></template>
         <template #default="{ close }">
             <form @submit.prevent="submit()"><FieldGroup>
                 <Alert v-if="generalError" variant="destructive"><AlertDescription>{{ generalError }}</AlertDescription></Alert>
@@ -178,12 +177,15 @@ const submit = async (confirmPurge = false): Promise<void> => {
                     <Field :data-invalid="Boolean(errors.ends_on)"><FieldLabel :for="`edit-ends-on-${recordId}`" required>Fecha de fin</FieldLabel><DatePicker :id="`edit-ends-on-${recordId}`" v-model="form.ends_on" required :disabled="readOnly" /><FieldError :errors="errors.ends_on" /></Field>
                 </div>
                 <DialogFooter v-if="viewing" class="mx-0 flex-col sm:flex-col sm:justify-start p-4 absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
-                    <Field orientation="horizontal" class="justify-end">
+                    <Field orientation="horizontal" class="flex-wrap justify-end">
+                        <DialogActions v-if="locked" :actions="actions" @select="(key) => emit('action', key)" />
                         <Button type="button" variant="outline" @click="close">Cerrar</Button>
                         <Button type="button" :disabled="locked" @click="viewing = false"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
                     </Field>
                 </DialogFooter>
-                <FormDialogActions v-else :close="reset" :processing="processing" :disabled="unchanged || Boolean(lockReason) || (entity === 'facultad' && noLibraryChosen)" :icon="Check" label="Guardar cambios" />
+                <FormDialogActions v-else :close="reset" :processing="processing" :disabled="unchanged || Boolean(lockReason) || (entity === 'facultad' && noLibraryChosen)" :icon="Check" label="Guardar cambios">
+                    <template #secondary><DialogActions :actions="actions" @select="(key) => emit('action', key)" /></template>
+                </FormDialogActions>
             </FieldGroup></form>
         </template>
     </FormModal>

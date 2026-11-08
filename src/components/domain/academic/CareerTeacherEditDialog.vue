@@ -25,15 +25,14 @@ const parts = computed(() => splitName(props.teacher.name));
 
 <template>
     <FormModal v-model:open="open" trigger-label="Docente" title="Docente" :show-trigger="false">
-        <template #header-actions>
-            <DialogActions :actions="actions" :menu-label="`Acciones para ${teacher.name}`" @select="(key: string) => key === 'resend' ? emit('resend') : emit('remove')" />
-        </template>
         <template #default="{ close }"><form @submit.prevent><FieldGroup>
             <div class="grid grid-cols-2 items-start gap-4">
                 <Field v-for="part in NAME_PARTS" :key="part.key"><FieldLabel :for="`career-teacher-${part.key}-${teacher.id}`">{{ part.label }}</FieldLabel><Input :id="`career-teacher-${part.key}-${teacher.id}`" :model-value="parts[part.key]" disabled /></Field>
             </div>
             <Field><FieldLabel :for="`career-teacher-email-${teacher.id}`">Correo institucional</FieldLabel><Input :id="`career-teacher-email-${teacher.id}`" :model-value="teacher.email" type="email" disabled /><FieldDescription>Para corregir el nombre o el correo, solicítelo a Administración</FieldDescription></Field>
-            <FormDialogActions :close="close" close-only />
+            <FormDialogActions :close="close" close-only>
+                <template #secondary><DialogActions :actions="actions" @select="(key: string) => key === 'resend' ? emit('resend') : emit('remove')" /></template>
+            </FormDialogActions>
         </FieldGroup></form></template>
     </FormModal>
 </template>

@@ -32,7 +32,8 @@ withDefaults(
     <DialogFooter
         class="mx-0 flex-col sm:flex-col sm:justify-start p-4 absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)"
     >
-        <Field orientation="horizontal" class="justify-end">
+        <Field orientation="horizontal" class="flex-wrap justify-end">
+            <slot name="secondary" />
             <Button type="button" variant="outline" @click="close">
                 {{ closeOnly ? 'Cerrar' : 'Cancelar' }}
             </Button>

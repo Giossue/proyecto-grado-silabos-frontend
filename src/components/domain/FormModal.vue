@@ -36,7 +36,6 @@ withDefaults(
 defineSlots<{
     trigger?(): VNode[];
     default(props: { close: () => void }): VNode[];
-    'header-actions'?(): VNode[];
 }>();
 
 const open = defineModel<boolean>('open', { default: false });
@@ -73,7 +72,7 @@ const close = (): void => {
                 })
             "
         >
-            <DialogHeader v-if="title" class="p-4 pb-0">
+            <DialogHeader v-if="title" class="p-4">
                 <DialogTitle>{{ title }}</DialogTitle>
             </DialogHeader>
             <ScrollArea class="min-h-0 flex-1">
@@ -81,9 +80,6 @@ const close = (): void => {
                     <slot :close="close" />
                 </div>
             </ScrollArea>
-            <div v-if="$slots['header-actions']" class="absolute top-3 right-12 flex items-center gap-1">
-                <slot name="header-actions" />
-            </div>
         </DialogContent>
     </Dialog>
 </template>

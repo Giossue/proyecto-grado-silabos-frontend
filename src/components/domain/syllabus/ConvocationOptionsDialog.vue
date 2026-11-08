@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { withoutFinalPeriod } from '@/lib/utils';
-import { CalendarClock, CalendarPlus, Lock, MoreHorizontal, Pause, Play, Trash2 } from '@lucide/vue';
+import { CalendarClock, CalendarPlus, Lock, Pause, Play, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
-import type { DialogAction } from '@/components/domain/DialogActions.vue';
-import MenuTooltip from '@/components/domain/MenuTooltip.vue';
+import DialogActions, { type DialogAction } from '@/components/domain/DialogActions.vue';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { ConvocationRow } from '@/pages/AdminProcessesPage.vue';
 
@@ -42,7 +40,7 @@ const actions = computed<DialogAction[]>(() => {
     ];
 });
 
-// Lo habitual a la vista; lo delicado (finalizar, eliminar) va en el menú «Más opciones» de la esquina.
+// Lo habitual arriba; lo delicado (finalizar, eliminar) va en el pie, junto a «Cancelar».
 const regular = computed(() => actions.value.filter((action) => !action.destructive));
 const sensitive = computed(() => actions.value.filter((action) => action.destructive));
 
@@ -55,23 +53,8 @@ const run = (key: string): void => {
 <template>
     <Dialog v-model:open="open">
         <DialogContent :aria-describedby="undefined" class="sm:max-w-lg">
-            <DialogHeader class="relative">
+            <DialogHeader>
                 <DialogTitle>Convocatoria {{ row.code }}</DialogTitle>
-                <div v-if="sensitive.length" class="absolute -top-1 right-8">
-                <MenuTooltip label="Más opciones">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger as-child>
-                            <Button type="button" variant="ghost" size="icon-sm" aria-label="Más opciones"><MoreHorizontal aria-hidden="true" /></Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem v-for="action in sensitive" :key="action.key" variant="destructive" :disabled="action.disabled" @select="run(action.key)">
-                                <component :is="action.icon" aria-hidden="true" />
-                                <span class="flex flex-col">{{ action.label }}<span v-if="action.disabled && action.disabledReason" class="text-xs text-muted-foreground">{{ withoutFinalPeriod(action.disabledReason) }}</span></span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </MenuTooltip>
-                </div>
             </DialogHeader>
             <ul class="grid grid-cols-2 items-start gap-2" aria-label="Opciones de la convocatoria">
                 <li v-for="action in regular" :key="action.key" class="flex flex-col gap-1">
@@ -89,7 +72,8 @@ const run = (key: string): void => {
                     <p v-if="action.disabled && action.disabledReason" :id="`option-reason-${action.key}`" class="text-sm text-muted-foreground">{{ withoutFinalPeriod(action.disabledReason) }}</p>
                 </li>
             </ul>
-            <DialogFooter>
+            <DialogFooter class="flex-wrap">
+                <DialogActions :actions="sensitive" @select="run" />
                 <DialogClose as-child><Button type="button" variant="outline">Cancelar</Button></DialogClose>
             </DialogFooter>
         </DialogContent>

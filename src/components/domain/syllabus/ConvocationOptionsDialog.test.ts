@@ -16,12 +16,7 @@ const button = defineComponent({
   template: '<button class="button" :data-variant="variant" :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
 });
 
-const menu = defineComponent({ template: '<div data-menu><slot /></div>' });
-const menuItem = defineComponent({
-  props: { disabled: Boolean, variant: String },
-  emits: ['select'],
-  template: '<div data-menu-item :data-disabled="disabled || undefined" @click="!disabled && $emit(\'select\', $event)"><slot /></div>',
-});
+const footer = defineComponent({ template: '<div data-footer><slot /></div>' });
 
 const process = (state: SyllabusProcess['state'], blockReason: string | null = null): SyllabusProcess => ({
   id: 'process-1',
@@ -55,30 +50,27 @@ const mountDialog = (state: SyllabusProcess['state'], blockReason: string | null
       Dialog: dialog,
       DialogClose: passthrough,
       DialogContent: passthrough,
-      DialogFooter: passthrough,
+      DialogFooter: footer,
       DialogHeader: passthrough,
       DialogTitle: passthrough,
       Button: button,
-      MenuTooltip: passthrough,
-      DropdownMenu: menu,
-      DropdownMenuTrigger: passthrough,
-      DropdownMenuContent: passthrough,
-      DropdownMenuItem: menuItem,
     },
   },
 });
 
-const labels = (wrapper: ReturnType<typeof mountDialog>): string[] => wrapper.findAll('ul .button, [data-menu-item]').map((item) => item.text());
+const footerButtons = (wrapper: ReturnType<typeof mountDialog>) => wrapper.findAll('[data-footer] .button');
+const labels = (wrapper: ReturnType<typeof mountDialog>): string[] =>
+  [...wrapper.findAll('ul .button'), ...footerButtons(wrapper)].map((item) => item.text()).filter((text) => text !== 'Cancelar');
 
 describe('ConvocationOptionsDialog', () => {
-  it('lo habitual va con botones; Finalizar y Eliminar quedan en el menú de tres puntos de la esquina', async () => {
+  it('lo habitual va con botones; Finalizar y Eliminar van en el pie, con texto, junto a Cancelar', async () => {
     const wrapper = mountDialog('abierto');
 
     expect(wrapper.findAll('ul .button').map((item) => item.text())).toEqual(['Pausar', 'Prorrogar plazo']);
-    expect(wrapper.find('[data-menu] [aria-label="Más opciones"]').exists()).toBe(true);
-    expect(wrapper.findAll('[data-menu-item]').map((item) => item.text())).toEqual(['Finalizar', 'Eliminar']);
+    expect(wrapper.find('[aria-label="Más opciones"]').exists()).toBe(false);
+    expect(footerButtons(wrapper).map((item) => item.text())).toEqual(['Finalizar', 'Eliminar', 'Cancelar']);
 
-    await wrapper.findAll('[data-menu-item]')[1]!.trigger('click');
+    await footerButtons(wrapper)[1]!.trigger('click');
     expect(wrapper.emitted('action')).toEqual([['eliminar']]);
     expect(wrapper.emitted('update:open')).toEqual([[false]]);
   });
@@ -94,9 +86,7 @@ describe('ConvocationOptionsDialog', () => {
 
   it('la acción manual se llama Finalizar, abierta o pausada, y el botón del pie dice Cancelar', () => {
     const wrapper = mountDialog('abierto');
-    const footer = wrapper.findAll('.button').filter((item) => item.text() !== '' && !labels(wrapper).includes(item.text()));
-
-    expect(footer.map((item) => item.text())).toEqual(['Cancelar']);
+    expect(footerButtons(wrapper).at(-1)?.text()).toBe('Cancelar');
     expect(labels(wrapper)).toContain('Finalizar');
     expect(labels(wrapper)).not.toContain('Cerrar');
     expect(labels(mountDialog('pausado'))).toContain('Finalizar');

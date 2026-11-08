@@ -47,7 +47,7 @@ describe('ManagedUserDetailDialog', () => {
     expect([...document.body.querySelectorAll('button')].some((button) => button.textContent?.includes('Editar'))).toBe(false);
   });
 
-  it('con una sola acción muestra el icono directo, y con varias, el menú', async () => {
+  it('las acciones van en el pie como botones con texto, sin menú', async () => {
     const wrapper = mount(ManagedUserDetailDialog, { attachTo: document.body, props: { ...props, canEdit: true } });
     await flushPromises();
 
@@ -69,7 +69,9 @@ describe('ManagedUserDetailDialog', () => {
     const expired = { ...props, user: { ...user, pending_activation: true, invitation_expired: true } as ManagedUser };
     mount(ManagedUserDetailDialog, { attachTo: document.body, props: { ...expired, canEdit: true } });
     await flushPromises();
-    expect(document.body.querySelector('button[aria-label="Acciones para Ana Pérez"]')).not.toBeNull();
+    expect(document.body.querySelector('button[aria-label^="Acciones para"]')).toBeNull();
+    expect(document.body.querySelector('button[aria-label="Reenviar invitación"]')?.textContent).toContain('Reenviar invitación');
+    expect(document.body.querySelector('button[aria-label="Eliminar cuenta pendiente"]')?.textContent).toContain('Eliminar cuenta pendiente');
     expect(document.body.textContent).toContain('Invitación vencida');
   });
 

@@ -88,7 +88,7 @@ const currentAssignments = computed(() =>
 <template>
     <Dialog v-model:open="open">
         <DialogContent :aria-describedby="undefined" class="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-            <DialogHeader class="p-4 pb-0">
+            <DialogHeader class="p-4">
                 <DialogTitle>{{ editing ? 'Editar usuario' : 'Datos de la cuenta' }}</DialogTitle>
             </DialogHeader>
 
@@ -139,12 +139,9 @@ const currentAssignments = computed(() =>
                 </div>
             </ScrollArea>
 
-            <div v-if="!editing && actions.length > 0" class="absolute top-3 right-12 flex items-center gap-1">
-                <DialogActions :actions="actions" :menu-label="`Acciones para ${props.user.nombre}`" @select="runAction" />
-            </div>
-
             <DialogFooter v-if="!editing" class="mx-0 flex-col sm:flex-col sm:justify-start p-4 absolute inset-x-0 bottom-0 bg-card pb-(--safe-footer-inset)">
-                <Field orientation="horizontal" class="justify-end">
+                <Field orientation="horizontal" class="flex-wrap justify-end">
+                    <DialogActions :actions="actions" @select="runAction" />
                     <Button type="button" variant="outline" @click="open = false">Cerrar</Button>
                     <Button v-if="canEdit" type="button" @click="editing = true">
                         <Pencil data-icon="inline-start" aria-hidden="true" />

@@ -34,7 +34,7 @@ const editingDialog = async (extra: Record<string, unknown> = {}) => {
 };
 
 describe('CatalogEditDialog · logo de la facultad', () => {
-  it('las acciones de la esquina solo aparecen al editar', async () => {
+  it('las acciones del pie solo aparecen al editar', async () => {
     const wrapper = mountDialog({ actions: [{ key: 'status', label: 'Desactivar facultad' }] });
     await flushPromises();
     const action = () => document.body.querySelector('[aria-label="Desactivar facultad"]');
