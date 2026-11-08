@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Card } from "@/components/ui/card";
 import { ChevronDown, Plus, X } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
@@ -121,7 +122,7 @@ const setTeacher = (userId: string) => run(
 </script>
 
 <template>
-  <div class="flex flex-wrap items-center gap-2 rounded-md ring-1 ring-surface-ring bg-muted/40 px-3 py-2" role="region" aria-label="Acciones masivas de materias">
+  <Card class="flex-row flex-wrap items-center gap-2 px-3 py-2" role="region" aria-label="Acciones masivas de materias">
     <span class="text-sm font-medium">{{ label }}</span>
     <DropdownMenu>
       <DropdownMenuTrigger as-child>
@@ -174,5 +175,5 @@ const setTeacher = (userId: string) => run(
         </form>
       </DialogContent>
     </Dialog>
-  </div>
+  </Card>
 </template>
