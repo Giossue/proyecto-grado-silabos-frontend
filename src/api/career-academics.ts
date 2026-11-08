@@ -121,7 +121,7 @@ export type ScheduledSubjects = {
     generates_syllabus: boolean;
     campus_name: string | null;
     modality_name: string | null;
-    parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean; sent_syllabus?: boolean }>;
+    parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean; sent_syllabus?: boolean; started_syllabus?: boolean }>;
     editable: boolean;
   }>;
   options: {

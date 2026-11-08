@@ -147,4 +147,35 @@ describe('ParallelBulkActions', () => {
         expect(purge.requestPurgeConfirmation).toHaveBeenCalledTimes(2);
         wrapper.unmount();
     });
+    it('asignar otro docente donde el sílabo ya tiene trabajo pregunta una sola vez; si cancela, no cambia ningún paralelo', async () => {
+        const wrapper = mount(ParallelBulkActions, {
+            props: {
+                parallelIds: ['p1', 'p2'],
+                items: [item('s1', [{ id: 'p1', code: 'A', shift: 'matutina', started_syllabus: true } as never, { id: 'p2', code: 'B', shift: 'matutina' }])],
+                shiftOptions: [],
+                teacherUsers: [{ id: 't1', name: 'Docente Uno', email: 'a@b.c' }],
+                assignments: [],
+            },
+        });
+        const setTeacher = (wrapper.vm as unknown as { $: { setupState: { setTeacher: (id: string) => Promise<void> } } }).$.setupState.setTeacher;
+
+        purge.requestPurgeConfirmation.mockImplementationOnce((message: string, count: number, _confirmed: () => void, cancelled: () => void) => {
+            expect(count).toBe(1);
+            expect(message).toContain('el nuevo docente lo empieza de cero');
+            cancelled();
+        });
+        await setTeacher('t1');
+        await flushPromises();
+        expect(api.createCareerRecord).not.toHaveBeenCalled();
+
+        api.createCareerRecord.mockResolvedValue({ message: 'ok' });
+        purge.requestPurgeConfirmation.mockImplementationOnce((_message: string, _count: number, confirmed: () => void) => confirmed());
+        await setTeacher('t1');
+        await flushPromises();
+        expect(api.createCareerRecord.mock.calls).toEqual([
+            ['asignacion_docente', { user_id: 't1', parallel_id: 'p1' }, 'confirmed'],
+            ['asignacion_docente', { user_id: 't1', parallel_id: 'p2' }, 'unconfirmed'],
+        ]);
+        wrapper.unmount();
+    });
 });
