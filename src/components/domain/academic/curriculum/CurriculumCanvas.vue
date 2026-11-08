@@ -511,7 +511,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     :class="cn(fullScreen && 'h-(--curriculum-canvas-full-height)', !fullScreen && 'h-(--curriculum-canvas-height)')"
     :aria-label="editing ? 'Editor interactivo de la malla' : 'Vista de la malla'"
   >
-    <div class="absolute top-3 right-3 z-10 max-sm:hidden">
+    <div class="absolute top-16 left-3 z-10 max-sm:hidden">
       <CurriculumLegendPanel :units="legendUnits" :rows="summaryRows" />
     </div>
     <CurriculumRelationPicker
