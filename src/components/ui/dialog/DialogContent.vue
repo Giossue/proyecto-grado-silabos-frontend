@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import type { DialogContentEmits, DialogContentProps } from "reka-ui"
-import { X } from "@lucide/vue"
-import { ref, type HTMLAttributes } from "vue"
+import { computed, provide, ref, type HTMLAttributes } from "vue"
 import { reactiveOmit } from "@vueuse/core"
 import {
-  DialogClose,
   DialogContent,
   DialogPortal,
   useForwardPropsEmits,
 } from "reka-ui"
 import { cn } from "@/lib/utils"
+import DialogCloseButton from "./DialogCloseButton.vue"
 import DialogOverlay from "./DialogOverlay.vue"
+import { dialogCloseKey } from "./closeContext"
 
 defineOptions({
   inheritAttrs: false,
@@ -27,6 +27,21 @@ const emits = defineEmits<DialogContentEmits>()
 const delegatedProps = reactiveOmit(props, "class", "overlayClass", "layer", "hideClose")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
+
+const titles = ref(0)
+provide(dialogCloseKey, { enabled: computed(() => !props.hideClose), titles })
+
+// La X ahora va junto al título, antes que los campos: al abrir, el foco salta la X y va al primer control.
+const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [contenteditable="true"]'
+const onOpenAutoFocus = (event: Event): void => {
+  const content = event.currentTarget instanceof HTMLElement ? event.currentTarget : null
+  if (event.defaultPrevented || !content) return
+  const first = [...content.querySelectorAll<HTMLElement>(FOCUSABLE)].find((element) =>
+    element.dataset.slot !== "dialog-close-x" && !element.closest('[hidden], [inert], [aria-hidden="true"]'))
+  if (!first) return
+  event.preventDefault()
+  first.focus({ preventScroll: true })
+}
 
 const preventImplicitDismiss = (event: Event): void => {
   event.preventDefault()
@@ -50,6 +65,7 @@ const onEscapeKeyDown = (event: KeyboardEvent): void => {
       data-slot="dialog-content"
       v-bind="{ ...$attrs, ...forwarded }"
       @escape-key-down="onEscapeKeyDown"
+      @open-auto-focus="onOpenAutoFocus"
       @interact-outside="preventImplicitDismiss"
       @pointer-down-outside="preventImplicitDismiss"
       :class="
@@ -62,14 +78,7 @@ const onEscapeKeyDown = (event: KeyboardEvent): void => {
       <div class="contents" @input.capture="markChanged" @change.capture="markChanged">
         <slot />
       </div>
-      <DialogClose
-        v-if="!hideClose"
-        data-slot="dialog-close-x"
-        class="focus-visible:ring-ring/50 focus-visible:ring-3 outline-hidden absolute top-4 right-4 inline-flex size-8 items-center justify-center rounded-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:pointer-events-none"
-      >
-        <X class="size-4" aria-hidden="true" />
-        <span class="sr-only">Cerrar</span>
-      </DialogClose>
+      <DialogCloseButton v-if="!hideClose && titles === 0" class="top-4 right-4" />
     </DialogContent>
   </DialogPortal>
 </template>
