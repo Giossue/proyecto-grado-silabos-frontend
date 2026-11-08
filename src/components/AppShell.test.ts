@@ -139,7 +139,10 @@ describe('AppSidebarLayout', () => {
 
     expect(wrapper.find('[data-sidebar="sidebar"]').exists()).toBe(false);
     expect(wrapper.find('[data-sidebar="trigger"]').exists()).toBe(false);
-    expect(wrapper.get('header a[aria-label="Ir al inicio"]').attributes('href')).toBe('/biblioteca/revisiones');
+    // El logo es decorativo: se ve, pero no es un enlace.
+    expect(wrapper.find('header [data-app-logo] img').exists()).toBe(true);
+    expect(wrapper.find('header [data-app-logo]').element.closest('a')).toBeNull();
+    expect(wrapper.find('header [aria-label="Ir al inicio"]').exists()).toBe(false);
     expect(wrapper.get('header [aria-label="Menú de usuario"]').text()).not.toContain('Bibliotecario');
   });
 
@@ -164,7 +167,10 @@ describe('AppSidebarLayout', () => {
     await flushPromises();
 
     expect(wrapper.find('[data-sidebar="sidebar"]').exists()).toBe(false);
-    expect(wrapper.get('header a[aria-label="Ir al inicio"]').attributes('href')).toBe('/docente/mis-silabos');
+    // El logo es decorativo: se ve, pero no es un enlace.
+    expect(wrapper.find('header [data-app-logo] img').exists()).toBe(true);
+    expect(wrapper.find('header [data-app-logo]').element.closest('a')).toBeNull();
+    expect(wrapper.find('header [aria-label="Ir al inicio"]').exists()).toBe(false);
     expect(wrapper.find('header [role="progressbar"]').exists()).toBe(false);
 
     await wrapper.get('header [aria-label="Menú de usuario"]').trigger('click');
@@ -196,7 +202,7 @@ describe('AppSidebarLayout', () => {
     expect(wrapper.find('[data-sidebar="sidebar"]').exists()).toBe(false);
     expect(wrapper.find('[data-sidebar="trigger"]').exists()).toBe(false);
     expect(wrapper.find('header [aria-label="Menú de usuario"]').exists()).toBe(true);
-    expect(wrapper.find('header [aria-label="Ir al inicio"]').exists()).toBe(true);
+    expect(wrapper.find('header [data-app-logo]').exists()).toBe(true);
     expect(wrapper.text()).toContain('Contenido');
 
     curriculumEditorState.setOpen(false);
