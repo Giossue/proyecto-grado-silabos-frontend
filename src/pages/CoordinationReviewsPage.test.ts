@@ -104,30 +104,33 @@ describe('CoordinationReviewsPage', () => {
     wrapper.unmount();
   });
 
-  it('sin convocatoria ofrece abrirla y deja el seguimiento deshabilitado', async () => {
+  it('sin convocatoria ofrece abrirla y el seguimiento se puede abrir y dice que aún no hay datos', async () => {
     vi.mocked(getDashboard).mockResolvedValue(summary(null));
     const wrapper = mountPage();
     await flushPromises();
 
     expect(wrapper.get('.actions').text()).toContain('Abrir convocatoria');
-    expect(wrapper.findAll('[role="tab"]').find((tab) => tab.text() === 'Seguimiento')!.attributes('data-disabled')).toBeDefined();
+    const seguimiento = wrapper.findAll('[role="tab"]').find((tab) => tab.text() === 'Seguimiento')!;
+    expect(seguimiento.attributes('data-disabled')).toBeUndefined();
+    expect(wrapper.text()).not.toContain('Disponible cuando abra la convocatoria');
     wrapper.unmount();
+
+    query.tab = 'seguimiento';
+    const tracking = mountPage();
+    await flushPromises();
+    expect(tracking.get('[role="tab"][data-state="active"]').text()).toContain('Seguimiento');
+    expect(tracking.text()).toContain('Aún no hay convocatoria abierta en su carrera');
+    tracking.unmount();
   });
 
-  it('con convocatoria la pestaña Seguimiento recibe clics; sin ella el aviso se muestra sobre el envoltorio', async () => {
+  it('con convocatoria la pestaña Seguimiento recibe clics', async () => {
     const wrapper = mountPage();
     await flushPromises();
-    const seguimiento = () => wrapper.findAll('[role="tab"]').find((tab) => tab.text() === 'Seguimiento')!;
+    const seguimiento = wrapper.findAll('[role="tab"]').find((tab) => tab.text() === 'Seguimiento')!;
 
-    expect(seguimiento().attributes('data-disabled')).toBeUndefined();
-    expect(seguimiento().element.parentElement!.className).not.toContain('pointer-events');
+    expect(seguimiento.attributes('data-disabled')).toBeUndefined();
+    expect(wrapper.text()).not.toContain('Aún no hay convocatoria abierta');
     wrapper.unmount();
-
-    vi.mocked(getDashboard).mockResolvedValue(summary(null));
-    const closed = mountPage();
-    await flushPromises();
-    expect(closed.findAll('[role="tab"]').find((tab) => tab.text() === 'Seguimiento')!.element.parentElement!.className).toContain('[&_button]:pointer-events-none');
-    closed.unmount();
   });
 
   it('muestra un ícono en cada pestaña', async () => {

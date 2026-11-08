@@ -8,6 +8,7 @@ import { ApiError } from '@/api/client';
 import { getDashboard, type Dashboard } from '@/api/dashboard';
 import { getReviews, type ReviewsPage } from '@/api/reviews';
 import { getSession } from '@/api/session';
+import EmptyState from '@/components/domain/EmptyState.vue';
 import FilterToolbar from '@/components/domain/FilterToolbar.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -95,16 +96,7 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
     <Tabs v-if="data" v-model="tab" class="gap-4">
       <TabsList class="h-11 justify-start" aria-label="Vistas de revisión">
         <TabsTrigger value="cola" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><Inbox aria-hidden="true" />Cola de revisión</TabsTrigger>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <span class="flex-none" :class="convocationId ? '' : '[&_button]:pointer-events-none'" tabindex="-1">
-                <TabsTrigger value="seguimiento" :disabled="!convocationId" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><ChartNoAxesColumn aria-hidden="true" />Seguimiento</TabsTrigger>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent v-if="!convocationId">Disponible cuando abra la convocatoria de su carrera</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <TabsTrigger value="seguimiento" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><ChartNoAxesColumn aria-hidden="true" />Seguimiento</TabsTrigger>
       </TabsList>
       <TabsContent value="cola" class="flex flex-col gap-4">
         <Card class="py-3"><CardContent class="px-3">
@@ -118,6 +110,7 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
       </TabsContent>
       <TabsContent value="seguimiento" class="flex flex-col gap-4">
         <ConvocationTrackingTable v-if="convocationId" :convocation-id="convocationId" />
+        <EmptyState v-else :icon="ChartNoAxesColumn" title="Aún no hay convocatoria abierta en su carrera" description="Cuando la abra, aquí verá el avance de cada sílabo" />
       </TabsContent>
     </Tabs>
   </PageFrame>
