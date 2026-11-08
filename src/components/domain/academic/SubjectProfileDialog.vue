@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
-import { getSubjectProfile, saveSubjectProfile, type SubjectProfileField } from '@/api/career-academics';
+import { getSubjectProfile, getSubjectProfilePreview, saveSubjectProfile, type SubjectProfileField, type SubjectProfilePreview } from '@/api/career-academics';
+import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
+import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
 import FormDialog from '@/components/domain/FormDialog.vue';
 import FormDialogActions from '@/components/domain/FormDialogActions.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
@@ -35,10 +37,46 @@ const shownFields = computed(() => fields.value.filter((field) => sectionOf(fiel
 // Lo cargado al abrir: sin cambios no hay nada que guardar, como en los demás formularios.
 const loaded = ref('');
 const changed = computed(() => JSON.stringify(values.value) !== loaded.value);
+// Vista previa: el sílabo de la materia con los datos de la malla y lo que va escribiendo (aunque no esté guardado).
+const view = ref<'editar' | 'vista-previa'>('editar');
+const viewOptions = [{ value: 'editar', label: 'Editar' }, { value: 'vista-previa', label: 'Vista previa' }];
+const preview = ref<SubjectProfilePreview | null>(null);
+const previewLoading = ref(false);
+const previewError = ref<string | null>(null);
+const loadPreview = async (): Promise<void> => {
+  previewLoading.value = true;
+  previewError.value = null;
+  try {
+    preview.value = await getSubjectProfilePreview(props.subjectId);
+  } catch (reason) {
+    previewError.value = reason instanceof ApiError ? reason.message : 'No se pudo armar la vista previa';
+  } finally {
+    previewLoading.value = false;
+  }
+};
+const previewSections = computed(() => (preview.value?.sections ?? []).map((section) => ({
+  ...section,
+  fields: section.fields.map((field) => {
+    const profileField = fields.value.find((item) => item.id === field.id);
+    if (!profileField) return field;
+    // Como al generar el sílabo: si está vacío, queda el contenido inicial de la plantilla.
+    const document = isEmpty(field.id) ? profileField.content : values.value[field.id];
+
+    return { ...field, value: document, document } as typeof field;
+  }),
+})));
+const chooseView = (value: string): void => {
+  view.value = value === 'vista-previa' ? 'vista-previa' : 'editar';
+  if (view.value === 'vista-previa' && !preview.value && !previewLoading.value) void loadPreview();
+};
+
 const canSave = computed(() => !loading.value && !saving.value && !props.disabled && fields.value.length > 0 && changed.value);
 
 watch(open, async (value) => {
   if (!value) return;
+  view.value = 'editar';
+  preview.value = null;
+  previewError.value = null;
   loading.value = true;
   error.value = null;
   try {
@@ -78,7 +116,16 @@ const save = async (close: () => void) => {
           <LoadingSkeleton v-if="loading" variant="form" :rows="4" sidebar />
           <Alert v-else-if="fields.length === 0"><AlertDescription>La plantilla no tiene campos de Coordinación. Pídale a Administración que los agregue</AlertDescription></Alert>
           <template v-else>
-            <div class="flex flex-col gap-6 md:min-h-96 md:flex-row md:items-start">
+            <ChoiceGroup :model-value="view" :options="viewOptions" label="Ver el proyecto de carrera" @update:model-value="chooseView" />
+            <template v-if="view === 'vista-previa'">
+              <Alert v-if="previewError" variant="destructive"><AlertDescription>{{ previewError }}</AlertDescription></Alert>
+              <LoadingSkeleton v-else-if="previewLoading || !preview" variant="preview" />
+              <template v-else>
+                <p class="text-sm text-muted-foreground">Así recibirán el sílabo los docentes de esta materia, antes de llenarlo</p>
+                <SyllabusDocumentPreview :presentation="preview.presentation" :sections="previewSections" />
+              </template>
+            </template>
+            <div v-show="view === 'editar'" class="flex flex-col gap-6 md:min-h-96 md:flex-row md:items-start">
               <Tabs v-if="sections.length > 1" v-model="activeSection" orientation="vertical" class="w-full shrink-0 md:w-72">
                 <TabsList class="h-auto w-full flex-col items-stretch justify-start gap-1" aria-label="Secciones del proyecto de carrera">
                   <TabsTrigger v-for="section in sections" :key="section" :value="section" class="h-auto flex-none justify-start whitespace-normal border-b-0 border-l-2 py-2 text-left">{{ section }}<span v-if="sectionHasEmpty(section)" class="ml-1 text-warning" aria-hidden="true">●</span><span v-if="sectionHasEmpty(section)" class="sr-only"> (con campos sin llenar)</span></TabsTrigger>

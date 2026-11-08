@@ -1,12 +1,13 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { defineComponent } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { getSubjectProfile, saveSubjectProfile } from '@/api/career-academics';
+import { getSubjectProfile, getSubjectProfilePreview, saveSubjectProfile } from '@/api/career-academics';
 import SubjectProfileDialog from './SubjectProfileDialog.vue';
 
 vi.mock('@/api/career-academics', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/career-academics')>()),
   getSubjectProfile: vi.fn(),
+  getSubjectProfilePreview: vi.fn(),
   saveSubjectProfile: vi.fn(),
 }));
 
@@ -26,6 +27,7 @@ const mountDialog = () => mount(SubjectProfileDialog, {
   props: { subjectId: 'subject-1', subjectName: 'Arquitectura', open: false },
   global: { stubs: {
     FormDialog: formModal, FormDialogActions: actions, FreeTextEditor: editor,
+    SyllabusDocumentPreview: { name: 'SyllabusDocumentPreview', props: ['presentation', 'sections'], template: '<div data-preview />' },
     FieldGroup: passthrough, Field: passthrough, FieldLabel: passthrough, FieldDescription: passthrough,
   } },
 });
@@ -132,5 +134,30 @@ describe('SubjectProfileDialog', () => {
     await wrapper.setProps({ open: true });
     await flushPromises();
     expect(wrapper.text()).toContain('campos de Coordinación');
+  });
+  it('la vista previa muestra el sílabo de la materia con el proyecto de carrera y el resto como en la plantilla', async () => {
+    const empty = { type: 'doc', content: [{ type: 'paragraph' }] };
+    const written = { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Materia de base' }] }] };
+    vi.mocked(getSubjectProfile).mockResolvedValue({
+      fields: [{ id: 'f1', key: 'descripcion', label: 'Descripción de la asignatura', section: 'Descripción', quien_llena: 'coordinacion', content: empty }],
+      values: { f1: written },
+      complete: false,
+    });
+    vi.mocked(getSubjectProfilePreview).mockResolvedValue({
+      presentation: { appearance: {}, title: 'Sílabo', logos: { institution: '', faculty: '' } } as never,
+      sections: [{ id: 's1', title: 'Datos', fields: [{ id: 'f1', label: 'Descripción', value: empty, document: empty }, { id: 'f9', label: 'Docente', value: empty, document: empty }] }],
+    });
+    const wrapper = mountDialog();
+    await wrapper.setProps({ open: true });
+    await flushPromises();
+
+    expect(getSubjectProfilePreview).not.toHaveBeenCalled();
+    await wrapper.get('[role="radio"][value="vista-previa"]').trigger('click');
+    await flushPromises();
+
+    expect(getSubjectProfilePreview).toHaveBeenCalledWith('subject-1');
+    const sections = wrapper.getComponent({ name: 'SyllabusDocumentPreview' }).props('sections') as Array<{ fields: Array<{ id: string; document: unknown }> }>;
+    expect(sections[0]!.fields[0]!.document).toEqual(written);
+    expect(sections[0]!.fields[1]!.document).toEqual(empty);
   });
 });

@@ -1,6 +1,8 @@
 import { setTemplateRuntime } from "@/lib/blocks/runtime";
 import type { TemplateDefinitionPayload } from "@/lib/blocks/types";
 import type { LockDetail } from '@/api/locks';
+import type { DocumentPresentation } from '@/api/syllabi';
+import type { PreviewSection } from '@/components/domain/syllabus/SyllabusDocumentPreview.vue';
 import type { DocumentNode } from '@/lib/templateDocument';
 import { api, ApiError } from "@/api/client";
 import { FINALIZED_NOTICE, requestPurgeConfirmation } from "@/composables/usePurgeConfirmation";
@@ -155,6 +157,12 @@ const rememberDefinition = (profile: SubjectProfile): SubjectProfile => {
 
 export const getSubjectProfile = (subjectId: string) =>
   api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`).then(rememberDefinition);
+
+/** Cómo se verá el sílabo de la materia con los datos de la malla y lo guardado en el proyecto de carrera. */
+export type SubjectProfilePreview = { presentation: DocumentPresentation; sections: PreviewSection[] };
+
+export const getSubjectProfilePreview = (subjectId: string) =>
+  api<SubjectProfilePreview>(`/academic/asignaturas/${subjectId}/ficha/vista-previa`);
 
 export const saveSubjectProfile = (subjectId: string, values: Record<string, DocumentNode | null>) =>
   withPurgeConfirmation((confirmPurge) => api<SubjectProfile>(`/academic/asignaturas/${subjectId}/ficha`, {
