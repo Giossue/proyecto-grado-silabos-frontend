@@ -57,6 +57,12 @@ export const screenTours: Record<string, TourStep[]> = {
     step('[data-sheet]', 'La hoja', 'Así se verá el sílabo. Escriba directo sobre ella. Pase el ratón entre dos campos para agregar uno nuevo', 'left'),
     step('[data-tour="template-assistant"]', 'Asistente', 'Pídale cambios con sus palabras. Si le gusta la propuesta, aplíquela y luego guarde', 'left'),
   ],
+  '/admin/reportes': [
+    step('[data-tour="report-process"]', 'Convocatoria', 'Elija de qué convocatoria quiere el reporte', 'bottom'),
+    step('[data-tour="report-kpis"]', 'Resumen', 'Cuántos sílabos hay, cuántos están aprobados, si se entregan a tiempo y cuánto tarda la revisión', 'bottom'),
+    step('[data-tour="report-careers"]', 'Por carrera', 'Cómo va cada carrera y dónde se acumulan las devoluciones', 'top'),
+    step('[data-tour="report-export"]', 'Excel', 'Descargue el mismo reporte en Excel para compartirlo', 'left'),
+  ],
   '/admin/auditoria': [
     step(FILTERS, 'Filtros', 'Filtre por período, rol, carrera, actividad o si salió bien', 'bottom'),
     step(TABLE, 'Registro', 'Quién hizo qué y cuándo. Solo se puede consultar', 'top'),

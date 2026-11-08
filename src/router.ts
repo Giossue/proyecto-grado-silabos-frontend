@@ -36,6 +36,7 @@ const AcademicGovernancePage = () => import("@/pages/AcademicGovernancePage.vue"
 const AdminProcessesPage = () => import("@/pages/AdminProcessesPage.vue");
 const AdminTemplatePage = () => import("@/pages/AdminTemplatePage.vue");
 const AdminAuditPage = () => import("@/pages/AdminAuditPage.vue");
+const AdminReportsPage = () => import("@/pages/AdminReportsPage.vue");
 
 const CoordinationReviewsPage = () => import("@/pages/CoordinationReviewsPage.vue");
 const CoordinationReviewHistoryPage = () => import("@/pages/CoordinationReviewHistoryPage.vue");
@@ -82,6 +83,7 @@ export const router = createRouter({
     { path: "/admin/estructura-academica/:section", component: AcademicGovernancePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Facultades y carreras" } },
     { path: "/admin/convocatorias", component: AdminProcessesPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Convocatorias" } },
     { path: "/admin/plantilla", component: AdminTemplatePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Plantilla" } },
+    { path: "/admin/reportes", component: AdminReportsPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Reportes" } },
     { path: "/admin/auditoria", component: AdminAuditPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Auditoría" } },
     { path: "/admin/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["administrador"], title: "Perfil" } },
     { path: "/admin/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["administrador"], title: "Seguridad" } },

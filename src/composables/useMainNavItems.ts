@@ -1,4 +1,5 @@
 import {
+    ChartColumn,
     BookOpenCheck,
     Building2,
     CalendarRange,
@@ -30,6 +31,7 @@ export function useMainNavItems(): ComputedRef<NavItem[]> {
                       icon: Building2,
                   },
                   { title: 'Plantilla', href: paths.admin.template, icon: FileStack },
+                  { title: 'Reportes', href: paths.admin.reports, icon: ChartColumn },
                   {
                       title: 'Auditoría',
                       href: paths.admin.audit,

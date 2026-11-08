@@ -25,6 +25,8 @@
     "@tiptap/pm": "3.32.0",
     "@tiptap/starter-kit": "3.32.0",
     "@tiptap/vue-3": "3.32.0",
+    "@unovis/ts": "^1.8.0",
+    "@unovis/vue": "^1.8.0",
     "@vue-flow/core": "^1.48.2",
     "@vue-flow/node-toolbar": "^1.1.1",
     "@vueuse/core": "^12.8.2",
