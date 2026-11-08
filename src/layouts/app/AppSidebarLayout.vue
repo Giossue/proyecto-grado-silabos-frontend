@@ -42,9 +42,10 @@ provide(pageTitleKey, pageTitle);
 </script>
 
 <template>
-    <AppShell variant="sidebar" class="h-dvh min-h-0">
+    <!-- En móvil la página hace scroll en el documento: así funciona el gesto del navegador de deslizar para actualizar -->
+    <AppShell variant="sidebar" class="h-dvh min-h-0 max-sm:h-auto max-sm:min-h-dvh">
         <AppSidebar v-if="!editorOpen && sidebarVisible" />
-        <AppContent variant="sidebar" :class="editorOpen ? 'min-h-0 overflow-clip' : 'min-h-0 overflow-clip max-sm:pb-(--mobile-nav-height)'">
+        <AppContent variant="sidebar" :class="editorOpen ? 'min-h-0 overflow-clip' : 'min-h-0 overflow-clip max-sm:overflow-visible max-sm:pb-(--mobile-nav-height)'">
             <AppSidebarHeader
                 v-if="!editorOpen"
                 :breadcrumbs="breadcrumbs"

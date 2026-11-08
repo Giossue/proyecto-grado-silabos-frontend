@@ -1074,3 +1074,27 @@ tbody tr:nth-child(even) > [data-sticky-end] {
         user-select: none;
     }
 }
+
+/* En móvil el contenido no tiene su propio scroll: lo hace el documento, para que el navegador
+   permita su gesto de deslizar hacia abajo para actualizar. */
+@media (width < 40rem) {
+    body,
+    html {
+        height: auto;
+        overflow: visible;
+    }
+
+    [data-app-scroll] {
+        flex: none;
+        height: auto;
+        overflow: visible;
+    }
+
+    [data-app-scroll] > [data-slot='scroll-area-viewport'] {
+        overflow: visible !important;
+    }
+
+    [data-app-scroll] > [data-slot='scroll-area-scrollbar'] {
+        display: none;
+    }
+}

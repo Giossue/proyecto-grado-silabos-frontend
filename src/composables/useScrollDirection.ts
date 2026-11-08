@@ -20,7 +20,8 @@ export function useScrollDirection(
     let ticking = false;
     let scroller: HTMLElement | null = null;
 
-    const currentY = (): number => Math.max(0, scroller?.scrollTop ?? 0);
+    // En móvil hace scroll el documento; en escritorio, el área de la app.
+    const currentY = (): number => Math.max(0, scroller?.scrollTop ?? 0, window.scrollY);
 
     const evaluate = (): void => {
         const y = currentY();
@@ -58,10 +59,12 @@ export function useScrollDirection(
         );
         lastY = currentY();
         scroller?.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('scroll', onScroll, { passive: true });
     });
 
     onUnmounted(() => {
         scroller?.removeEventListener('scroll', onScroll);
+        window.removeEventListener('scroll', onScroll);
     });
 
     return { hidden };

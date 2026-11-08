@@ -95,7 +95,7 @@ onMounted(() => { void load(initialPage, true); });
   <PageFrame :title="title" description="Bibliografía de los sílabos enviados" size="wide" :loading="!data && !error" :actions-skeleton="!data && !error ? ['w-9'] : []">
     <template #tools><TooltipProvider><Tooltip><TooltipTrigger as-child><Button as-child variant="ghost" size="icon"><RouterLink :to="paths.library.history" aria-label="Historial"><History aria-hidden="true" /></RouterLink></Button></TooltipTrigger><TooltipContent>Historial</TooltipContent></Tooltip></TooltipProvider></template>
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" />
-    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="6" :filters="2" :actions="false" :badges="[6]" metrics />
+    <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="5" :filters="2" :actions="false" :badges="[5]" metrics />
     <MetricTiles v-if="data && summary?.metrics.length" :metrics="summary.metrics" />
     <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
         <form @submit.prevent="load()">
@@ -140,7 +140,6 @@ onMounted(() => { void load(initialPage, true); });
               <TableHead>Facultad</TableHead>
               <TableHead>Carrera</TableHead>
               <TableHead>Asignatura</TableHead>
-              <TableHead>Docente</TableHead>
               <TableHead>Responsable</TableHead>
               <TableHead class="text-center">Estado</TableHead>
             </TableRow>
@@ -149,12 +148,11 @@ onMounted(() => { void load(initialPage, true); });
             <TableRow v-for="item in data.reviews.data" :key="item.revision_id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(paths.library.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(paths.library.review(item.revision_id))" @keydown.space.self.prevent="router.push(paths.library.review(item.revision_id))">
               <TableCell data-card-hide="true">{{ item.faculty ?? '—' }}</TableCell>
               <TableCell data-card-hide="true">{{ item.career }}</TableCell>
-              <TableCell>{{ item.subject }}<TableCardLine>{{ item.faculty ? `${item.faculty} · ` : '' }}{{ item.career }} · {{ item.teachers.join(', ') }}</TableCardLine><TableCardLine><StatusBadge :label="libraryStatusLabel(libraryStatus(item))" :tone="libraryStatusTone(libraryStatus(item))" /></TableCardLine></TableCell>
-              <TableCell data-card-hide="true">{{ item.teachers.join(', ') }}</TableCell>
+              <TableCell>{{ item.subject }}<TableCardLine>{{ item.faculty ? `${item.faculty} · ` : '' }}{{ item.career }}</TableCardLine><TableCardLine><StatusBadge :label="libraryStatusLabel(libraryStatus(item))" :tone="libraryStatusTone(libraryStatus(item))" /></TableCardLine></TableCell>
               <TableCell :class="item.responsible ? '' : 'text-muted-foreground'">{{ item.responsible ?? 'Sin asignar' }}</TableCell>
               <TableCell class="text-center" data-card-hide="true"><StatusBadge :label="libraryStatusLabel(libraryStatus(item))" :tone="libraryStatusTone(libraryStatus(item))" /></TableCell>
             </TableRow>
-            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="6">No hay sílabos para los filtros seleccionados</TableEmpty>
+            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="5">No hay sílabos para los filtros seleccionados</TableEmpty>
           </TableBody>
         </Table>
         <TablePagination :meta="data.reviews" label="Paginación de revisiones de biblioteca" @update:page="load" />
