@@ -121,7 +121,7 @@ export type ScheduledSubjects = {
     generates_syllabus: boolean;
     campus_name: string | null;
     modality_name: string | null;
-    parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean }>;
+    parallels: Array<{ id: string; code: string; shift: string | null; editable?: boolean; deletable?: boolean; sent_syllabus?: boolean }>;
     editable: boolean;
   }>;
   options: {
@@ -199,16 +199,30 @@ export const getScheduledSubjects = () =>
   api<ScheduledSubjects>("/coordination/academic/scheduled-subjects");
 export const getTeacherAssignments = () =>
   api<TeacherAssignments>("/coordination/academic/teacher-assignments");
+/**
+ * Cómo tratar la confirmación de un cambio que afecta sílabos. `ask` (por defecto) pregunta si hace falta.
+ * En un cambio masivo la pantalla pregunta una sola vez antes de empezar: `confirmed` envía la respuesta ya dada y
+ * `unconfirmed` no acepta reiniciar nada (si el estado cambió entretanto, esa petición falla y se informa).
+ */
+export type PurgeHandling = 'ask' | 'confirmed' | 'unconfirmed';
+const sendWith = <T>(send: (confirm: boolean) => Promise<T>, purge: PurgeHandling): Promise<T> => {
+  if (purge === 'confirmed') return send(true);
+  if (purge === 'unconfirmed') return send(false);
+
+  return withPurgeConfirmation(send);
+};
+
 export const createCareerRecord = (
   entity: string,
   payload: Record<string, unknown>,
+  purge: PurgeHandling = 'ask',
 ) =>
-  withPurgeConfirmation((confirm) =>
+  sendWith((confirm) =>
     api<{ message: string }>(`/coordination/academic/${entity}`, {
       method: "POST",
       body: jsonBody(payload, confirm),
     }),
-  );
+  purge);
 export const deleteCareerRecord = (entity: string, id: string) =>
   api<{ message: string }>(`/coordination/academic/${entity}/${id}`, {
     method: "DELETE",
@@ -283,27 +297,25 @@ export const createParallels = (payload: {
   codes: string[];
   shift: string;
   user_id: string;
-}) =>
-  withPurgeConfirmation((confirm) =>
+}, purge: PurgeHandling = 'ask') =>
+  sendWith((confirm) =>
     api<{ message: string }>("/coordination/academic/parallels", {
       method: "POST",
       body: jsonBody(payload, confirm),
     }),
-  );
-export const updateParallel = (id: string, payload: { code: string; shift: string }) =>
-  withPurgeConfirmation((confirm) =>
-    api<{ message: string }>(`/coordination/academic/parallels/${id}`, {
-      method: "PATCH",
-      body: jsonBody(payload, confirm),
-    }),
-  );
-export const replaceParallelTeacher = (parallelId: string, userId: string) =>
-  withPurgeConfirmation((confirm) =>
+  purge);
+export const updateParallel = (id: string, payload: { code: string; shift: string }, purge: PurgeHandling = 'ask') =>
+  sendWith((confirm) => api<{ message: string }>(`/coordination/academic/parallels/${id}`, {
+    method: "PATCH",
+    body: jsonBody(payload, confirm),
+  }), purge);
+export const replaceParallelTeacher = (parallelId: string, userId: string, purge: PurgeHandling = 'ask') =>
+  sendWith((confirm) =>
     api<{ message: string }>(`/coordination/academic/parallels/${parallelId}/teacher`, {
       method: "PUT",
       body: jsonBody({ user_id: userId }, confirm),
     }),
-  );
+  purge);
 export const deleteParallel = (id: string) =>
   api<{ message: string }>(`/coordination/academic/parallels/${id}`, {
     method: "DELETE",

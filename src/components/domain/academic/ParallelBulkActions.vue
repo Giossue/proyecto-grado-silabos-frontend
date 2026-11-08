@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { FINALIZED_NOTICE, requestPurgeConfirmation } from '@/composables/usePurgeConfirmation';
+import { deadlineState } from '@/state/deadline';
 import { Card } from "@/components/ui/card";
 import { ChevronDown, Plus, X } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import { ApiError } from '@/api/client';
-import { askFinalizedNoticeOnce, createCareerRecord, createParallels, deleteCareerRecord, replaceParallelTeacher, updateParallel, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
+import { createCareerRecord, createParallels, deleteCareerRecord, replaceParallelTeacher, updateParallel, type PurgeHandling, type ScheduledSubjects, type TeacherAssignments } from '@/api/career-academics';
 import { Button } from '@/components/ui/button';
 import TeacherSelect from '@/components/domain/academic/TeacherSelect.vue';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -56,16 +58,15 @@ const run = async (steps: Array<() => Promise<unknown>>, done: string, nothing: 
   busy.value = true;
   let failures = 0;
   let firstError = '';
-  await askFinalizedNoticeOnce(async () => {
-    for (const step of steps) {
-      try {
-        await step();
-      } catch (reason) {
-        failures++;
-        firstError ||= reason instanceof ApiError ? reason.message : 'No se pudo completar el cambio';
-      }
+  // Ya se preguntó antes de empezar (confirmBatch): aquí ninguna petición vuelve a preguntar.
+  for (const step of steps) {
+    try {
+      await step();
+    } catch (reason) {
+      failures++;
+      firstError ||= reason instanceof ApiError ? reason.message : 'No se pudo completar el cambio';
     }
-  });
+  }
   busy.value = false;
   if (failures === 0) {
     emit('changed', done);
@@ -93,32 +94,67 @@ const addParallel = async (): Promise<void> => {
   const shift = addShift.value;
   const userId = addTeacher.value;
   addOpen.value = false;
+  const purge = await confirmBatch();
+  if (purge === null) return;
   await run(
-    props.items.map((item) => () => createParallels({ subject_id: item.subject_id, codes: [nextParallelCode(item.parallels)], shift, user_id: userId })),
+    props.items.map((item) => () => createParallels({ subject_id: item.subject_id, codes: [nextParallelCode(item.parallels)], shift, user_id: userId }, purge)),
     `Paralelo agregado a ${props.items.length} ${props.items.length === 1 ? 'materia' : 'materias'}`,
     'No hay materias seleccionadas',
     afterDialogExit(),
   );
 };
-const setShift = (shift: string) => run(
-  props.items.flatMap((item) => chosen(item)
-    .filter((parallel) => parallel.editable !== false && parallel.shift !== shift)
-    .map((parallel) => () => updateParallel(parallel.id, { code: parallel.code, shift }))),
-  'Jornada actualizada en los paralelos seleccionados',
-  'Los paralelos seleccionados ya tenían esa jornada',
-);
-const setTeacher = (userId: string) => run(
-  props.items.flatMap((item) => chosen(item)
-    .filter((parallel) => assignmentOf(parallel.id)?.editable !== false && (assignmentOf(parallel.id)?.user_id ?? NO_TEACHER) !== userId)
-    .map((parallel) => async () => {
+// Un cambio masivo pregunta UNA sola vez y antes de tocar nada: «Cancelar» no cambia ningún paralelo.
+// Pregunta si algún paralelo tiene el sílabo enviado o aprobado (se reinicia), o si la convocatoria ya finalizó (aviso).
+const ask = (message: string, count: number, mode?: string): Promise<boolean> => new Promise((resolve) => {
+  requestPurgeConfirmation(message, count, () => resolve(true), () => resolve(false), mode);
+});
+const finalized = computed(() => deadlineState.deadline.value?.state === 'closed');
+const FINALIZED_MESSAGE = 'La convocatoria de su carrera ya finalizó. Estos cambios no afectan sus sílabos: conservan los datos que tenían. Se aplicarán en la próxima convocatoria, o en esta si la reabre con una prórroga. Si cancela, no se cambia nada.';
+const confirmBatch = async (sentCount = 0): Promise<PurgeHandling | null> => {
+  if (finalized.value) return await ask(FINALIZED_MESSAGE, 0, FINALIZED_NOTICE) ? 'confirmed' : null;
+  if (sentCount === 0) return 'unconfirmed';
+  const message = sentCount === 1
+    ? 'El sílabo de 1 paralelo seleccionado ya está en revisión o aprobado. Cambiar la jornada lo elimina con todo su contenido (revisiones, aprobación, firmas y análisis de IA) y el docente lo empieza de nuevo. Si cancela, no se cambia ningún paralelo.'
+    : `Los sílabos de ${sentCount} paralelos seleccionados ya están en revisión o aprobados. Cambiar la jornada los elimina con todo su contenido (revisiones, aprobación, firmas y análisis de IA) y los docentes los empiezan de nuevo. Si cancela, no se cambia ningún paralelo.`;
+
+  return await ask(message, sentCount) ? 'confirmed' : null;
+};
+const setShift = async (shift: string): Promise<void> => {
+  const targets = props.items.flatMap((item) => chosen(item).filter((parallel) => parallel.editable !== false && parallel.shift !== shift));
+  if (targets.length === 0) {
+    emit('changed', 'Los paralelos seleccionados ya tenían esa jornada');
+    return;
+  }
+  const sent = targets.filter((parallel) => parallel.sent_syllabus);
+  const purge = await confirmBatch(sent.length);
+  if (purge === null) return;
+  await run(
+    // Solo los marcados como enviados se reinician; si otro se envió entretanto, esa petición falla y se informa.
+    targets.map((parallel) => () => updateParallel(parallel.id, { code: parallel.code, shift }, purge === 'confirmed' && (finalized.value || parallel.sent_syllabus) ? 'confirmed' : 'unconfirmed')),
+    'Jornada actualizada en los paralelos seleccionados',
+    'Los paralelos seleccionados ya tenían esa jornada',
+  );
+};
+const setTeacher = async (userId: string): Promise<void> => {
+  const targets = props.items.flatMap((item) => chosen(item)
+    .filter((parallel) => assignmentOf(parallel.id)?.editable !== false && (assignmentOf(parallel.id)?.user_id ?? NO_TEACHER) !== userId));
+  if (targets.length === 0) {
+    emit('changed', 'Los paralelos seleccionados ya tenían ese docente');
+    return;
+  }
+  const purge = await confirmBatch();
+  if (purge === null) return;
+  await run(
+    targets.map((parallel) => async () => {
       const current = assignmentOf(parallel.id);
-      if (current && userId !== NO_TEACHER) await replaceParallelTeacher(parallel.id, userId);
+      if (current && userId !== NO_TEACHER) await replaceParallelTeacher(parallel.id, userId, purge);
       else if (current) await deleteCareerRecord('asignacion_docente', current.id);
-      else await createCareerRecord('asignacion_docente', { user_id: userId, parallel_id: parallel.id });
-    })),
-  userId === NO_TEACHER ? 'Docente retirado de los paralelos seleccionados' : 'Docente asignado a los paralelos seleccionados',
-  'Los paralelos seleccionados ya tenían ese docente',
-);
+      else await createCareerRecord('asignacion_docente', { user_id: userId, parallel_id: parallel.id }, purge);
+    }),
+    userId === NO_TEACHER ? 'Docente retirado de los paralelos seleccionados' : 'Docente asignado a los paralelos seleccionados',
+    'Los paralelos seleccionados ya tenían ese docente',
+  );
+};
 </script>
 
 <template>
