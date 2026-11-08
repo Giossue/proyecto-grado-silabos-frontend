@@ -45,7 +45,10 @@ export const toRoman = (value: number): string => {
 export const laneHeight = 238;
 export const subjectWidth = 274;
 export const subjectGap = 34;
-export const CANVAS_ZOOM = { min: 0.2, max: 1.5 } as const;
+export const CANVAS_ZOOM = { min: 0.2, max: 1 } as const;
+// La malla se ve en niveles fijos y se recorre con scroll normal: así nadie se pierde en el lienzo.
+export const ZOOM_LEVELS = [0.5, 0.75, 1] as const;
+export type ZoomChoice = 'fit' | (typeof ZOOM_LEVELS)[number];
 export const laneInset = 16;
 export const subjectHeight = 158;
 export const addSubjectHeight = 36;

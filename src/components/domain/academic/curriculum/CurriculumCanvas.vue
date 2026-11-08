@@ -6,7 +6,6 @@ import CurriculumNavigationControls from '@/components/domain/academic/curriculu
 import { ConnectionMode, useVueFlow, VueFlow } from "@vue-flow/core";
 import type {
   Connection,
-  CoordinateExtent,
   Edge,
   EdgeMouseEvent,
   Node,
@@ -14,7 +13,7 @@ import type {
   NodeMouseEvent,
 } from "@vue-flow/core";
 import { computed, nextTick, ref, useTemplateRef, watch } from "vue";
-import { useEventListener, useResizeObserver } from "@vueuse/core";
+import { useResizeObserver } from "@vueuse/core";
 import { ApiError } from "@/api/client";
 import { updateSubjectLayout } from "@/api/career-academics";
 import CurriculumAddSubjectNode from "@/components/domain/academic/curriculum/CurriculumAddSubjectNode.vue";
@@ -27,11 +26,12 @@ import {
   laneInset,
   laneStart,
   navigationPadding,
+  ZOOM_LEVELS,
   subjectOffset,
   subjectStep,
   UNIT_PALETTE,
 } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
-import type { CurriculumRequirement, RelationMode } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
+import type { CurriculumRequirement, RelationMode, ZoomChoice } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
 import CurriculumCycleNode from "@/components/domain/academic/curriculum/CurriculumCycleNode.vue";
 import CurriculumLegend from "@/components/domain/academic/curriculum/CurriculumLegend.vue";
 import CurriculumLegendPanel from "@/components/domain/academic/curriculum/CurriculumLegendPanel.vue";
@@ -124,38 +124,13 @@ const summaryRows = computed(() => [
 ]);
 
 const flowId = `curriculum-${props.curriculum.id}`;
-const { setEdges, setNodes, updateNode, setViewport, viewport } = useVueFlow(flowId);
+const { setEdges, setNodes, updateNode, setViewport } = useVueFlow(flowId);
 const canvasElement = useTemplateRef<HTMLElement>("canvasElement");
 const canvasSize = ref({ width: 0, height: 0 });
 useResizeObserver(canvasElement, (entries) => {
   const rect = entries[0]?.contentRect;
   if (rect) canvasSize.value = { width: rect.width, height: rect.height };
 });
-// La malla se centra al medir el lienzo y cada vez que cambia de tamaño (por ejemplo al terminar de acomodarse
-// el menú lateral), hasta que la persona la mueve: así no salta de lugar con el primer clic.
-const userMoved = ref(false);
-useEventListener(canvasElement, ["pointerdown", "wheel"], () => { userMoved.value = true; }, { capture: true });
-// El ajuste inicial usa las mismas medidas que el límite de movimiento, para que el primer movimiento no la
-// acomode de golpe.
-const fitCentered = async (): Promise<void> => {
-  const { width, height } = canvasSize.value;
-  const zoom = Math.min(
-    CANVAS_ZOOM.max,
-    Math.max(CANVAS_ZOOM.min, Math.min(width / (laneWidth.value * 1.08), height / (contentHeight.value * 1.08))),
-  );
-  const target = { x: (width - laneWidth.value * zoom) / 2, y: (height - contentHeight.value * zoom) / 2, zoom };
-  await setViewport(target);
-  // El límite de movimiento depende del zoom: recién ahora se actualiza, y el primer ajuste pudo quedar recortado
-  // por el límite anterior. Se repite ya con el límite nuevo.
-  await nextTick();
-  await setViewport(target);
-};
-watch(canvasSize, async ({ width, height }) => {
-  if (userMoved.value || width === 0 || height === 0) return;
-  await nextTick();
-  await fitCentered();
-});
-
 const editingSubjectId = ref<string | null>(null);
 const draftCycle = ref<number | null>(null);
 const dragPreview = ref<{
@@ -217,16 +192,30 @@ const contentHeight = computed(() =>
   ),
 );
 
-const navigationExtent = computed<CoordinateExtent>(() => {
-  const zoom = Math.max(viewport.value?.zoom ?? 1, CANVAS_ZOOM.min);
-  const slackX = Math.max(0, (canvasSize.value.width / zoom - laneWidth.value - navigationPadding * 2) / 2);
-  const slackY = Math.max(0, (canvasSize.value.height / zoom - contentHeight.value - navigationPadding * 2) / 2);
-
-  return [
-    [-navigationPadding - slackX, -navigationPadding - slackY],
-    [laneWidth.value + navigationPadding + slackX, contentHeight.value + navigationPadding + slackY],
-  ];
+// El tablero se dibuja a su tamaño dentro de una caja con scroll normal; el zoom solo toma niveles fijos.
+const ZOOM_STORAGE_KEY = "curriculum-zoom";
+const storedZoom = (): ZoomChoice => {
+  const saved = localStorage.getItem(ZOOM_STORAGE_KEY);
+  const level = ZOOM_LEVELS.find((value) => String(value) === saved);
+  return level ?? "fit";
+};
+const zoomChoice = ref<ZoomChoice>(storedZoom());
+const chooseZoom = (choice: ZoomChoice): void => {
+  zoomChoice.value = choice;
+  localStorage.setItem(ZOOM_STORAGE_KEY, String(choice));
+};
+const boardWidth = computed(() => laneWidth.value + navigationPadding * 2);
+const boardHeight = computed(() => contentHeight.value + navigationPadding * 2);
+const zoom = computed(() => {
+  if (zoomChoice.value !== "fit") return zoomChoice.value;
+  // «Ajustar» llena el ancho: la malla se lee bajando, como un documento.
+  const { width } = canvasSize.value;
+  if (width === 0) return 1;
+  return Math.min(CANVAS_ZOOM.max, Math.max(CANVAS_ZOOM.min, width / boardWidth.value));
 });
+watch(zoom, (value) => {
+  void setViewport({ x: navigationPadding * value, y: navigationPadding * value, zoom: value });
+}, { immediate: true, flush: "post" });
 
 const subjectById = computed(
   () => new Map(props.subjects.map((subject) => [subject.id, subject])),
@@ -545,18 +534,22 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         <CurriculumLegend :units="legendUnits" :rows="summaryRows" />
       </PopoverContent>
     </Popover>
+    <CurriculumNavigationControls :choice="zoomChoice" @update:choice="chooseZoom" />
+    <div data-curriculum-scroll class="absolute inset-0 overflow-auto">
+    <div data-curriculum-board class="relative mx-auto" :style="{ width: `${boardWidth * zoom}px`, height: `${boardHeight * zoom}px` }">
     <VueFlow
       :id="flowId"
       v-model:nodes="nodes"
       v-model:edges="edges"
       :min-zoom="CANVAS_ZOOM.min"
       :max-zoom="CANVAS_ZOOM.max"
-      :translate-extent="navigationExtent"
       :auto-pan-on-node-drag="false"
-      :pan-on-scroll="true"
-      :pan-on-scroll-speed="1"
+      :pan-on-drag="false"
+      :pan-on-scroll="false"
       :zoom-on-scroll="false"
-      :zoom-on-pinch="true"
+      :zoom-on-pinch="false"
+      :zoom-on-double-click="false"
+      :prevent-scrolling="false"
       :connection-mode="ConnectionMode.Loose"
       :nodes-draggable="editable && !hasOpenEditor"
       :nodes-connectable="editable && !hasOpenEditor"
@@ -585,7 +578,6 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
           @add="beginSubjectCreation"
         />
       </template>
-      <CurriculumNavigationControls :flow-id="flowId" :min-zoom="CANVAS_ZOOM.min" :max-zoom="CANVAS_ZOOM.max" />
       <CurriculumRequirementDialogs
         v-model:pending-connection="pendingConnection"
         v-model:selected-requirement="selectedRequirement"
@@ -596,6 +588,8 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         @changed="(message) => emit('changed', message)"
       />
     </VueFlow>
+    </div>
+    </div>
     <Dialog
       :open="hasOpenEditor"
       @update:open="

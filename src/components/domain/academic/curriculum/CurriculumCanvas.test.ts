@@ -204,4 +204,42 @@ describe('CurriculumCanvas', () => {
         expect(form().props('subject')).toMatchObject({ id: 'a' });
         expect(form().vm).not.toBe(opened);
     });
+
+    it('se recorre con scroll normal, sin arrastrar el fondo, y el zoom es fijo y se recuerda', async () => {
+        localStorage.clear();
+        const wrapper = shallowMount(CurriculumCanvas, {
+            props: {
+                career: { id: 'career', name: 'Software', modality: null },
+                curriculum: { id: 'career', cycle_count: 2, editable: true, lock_reason: null },
+                editing: false,
+                fixedFields: [],
+                fixedFieldTotals: [],
+                subjects: [subject('a', 0)],
+                requirements: [],
+                organizationUnits: [],
+                modalityOptions: [],
+            },
+        });
+        const flow = wrapper.findComponent({ name: 'VueFlow' });
+        for (const name of ['pan-on-drag', 'pan-on-scroll', 'zoom-on-scroll', 'zoom-on-pinch', 'zoom-on-double-click', 'prevent-scrolling']) {
+            expect(flow.attributes(name)).toBe('false');
+        }
+        expect(flow.attributes('translate-extent')).toBeUndefined();
+        expect(wrapper.get('[data-curriculum-scroll]').classes()).toContain('overflow-auto');
+
+        const board = () => wrapper.get('[data-curriculum-board]').element as HTMLElement;
+        const controls = wrapper.findComponent({ name: 'CurriculumNavigationControls' });
+        controls.vm.$emit('update:choice', 1);
+        await nextTick();
+        const fullWidth = parseFloat(board().style.width);
+        controls.vm.$emit('update:choice', 0.5);
+        await nextTick();
+        expect(parseFloat(board().style.width)).toBeCloseTo(fullWidth / 2, 0);
+        expect(controls.props('choice')).toBe(0.5);
+        expect(localStorage.getItem('curriculum-zoom')).toBe('0.5');
+        wrapper.unmount();
+
+        const again = shallowMount(CurriculumCanvas, { props: wrapper.props() });
+        expect(again.findComponent({ name: 'CurriculumNavigationControls' }).props('choice')).toBe(0.5);
+    });
 });
