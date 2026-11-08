@@ -8,6 +8,9 @@ const START_KEYS: Record<string, string> = { administrador: 'process', coordinad
 
 const setup = ref<SetupChecklist | null>(null);
 const loadedAt = ref(0);
+/** Cada pedido abre el panel «Antes de empezar» (la franja del siguiente paso lo usa). */
+const openRequests = ref(0);
+const requestOpen = (): void => { openRequests.value += 1; };
 
 const sessionKey = computed(() => {
     const session = sessionState.current.value;
@@ -43,4 +46,4 @@ watch(sessionKey, (key) => {
     if (key) void load();
 }, { immediate: true });
 
-export const setupChecklistState = { setup: readonly(setup), startKey, load, refresh, update };
+export const setupChecklistState = { setup: readonly(setup), startKey, load, refresh, update, openRequests: readonly(openRequests), requestOpen };

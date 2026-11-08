@@ -8,13 +8,11 @@ export const setupRoutes: Record<string, Record<string, string>> = {
         accounts: paths.admin.users,
         coordinators: paths.admin.academicWithSection('carrera'),
         template: paths.admin.template,
-        process: paths.admin.convocations,
     },
     coordinador: {
         curriculum: paths.coordination.curriculum,
         scheduled_subjects: paths.coordination.scheduledSubjects,
         parallels: paths.coordination.scheduledSubjects,
         teachers: paths.coordination.teachers,
-        convocation: paths.coordination.reviews,
     },
 };

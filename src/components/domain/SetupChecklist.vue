@@ -85,6 +85,7 @@ const build = (): void => {
 onMounted(() => { build(); void setupChecklistState.refresh(); });
 watch(setup, build, { deep: true });
 watch(hidden, syncScrollHidden);
+watch(setupChecklistState.openRequests, () => panel?.open());
 watch(() => route.fullPath, () => { void setupChecklistState.refresh(); });
 onBeforeUnmount(() => { titleGuard?.disconnect(); panel?.hide(); });
 </script>

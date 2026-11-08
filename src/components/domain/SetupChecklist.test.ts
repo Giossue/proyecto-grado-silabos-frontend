@@ -60,6 +60,20 @@ describe('SetupChecklist', () => {
     wrapper.unmount();
   });
 
+  it('la franja del siguiente paso abre el panel', async () => {
+    localStorage.setItem('setup-checklist-seen:u1:r1', '1');
+    setupChecklistState.update(setup([true, false, false, false]));
+    const wrapper = mount(SetupChecklist);
+    await flushPromises();
+    const hidden = () => document.body.querySelector('.driver-checklist-panel')!.hasAttribute('hidden');
+    expect(hidden()).toBe(true);
+
+    setupChecklistState.requestOpen();
+    await flushPromises();
+    expect(hidden()).toBe(false);
+    wrapper.unmount();
+  });
+
   it('en móvil se marca para esconderse al bajar y reaparece al subir, como los botones principales', async () => {
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { callback(0); return 0; });
     const area = document.createElement('div');
