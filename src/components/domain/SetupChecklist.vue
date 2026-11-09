@@ -4,6 +4,7 @@ import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useScrollDirection } from '@/composables/useScrollDirection';
 import { setupRoutes } from '@/lib/setupRoutes';
+import { deadlineState } from '@/state/deadline';
 import { sessionState } from '@/state/session';
 import { setupChecklistState } from '@/state/setupChecklist';
 import 'driver.js/dist/checklist.css';
@@ -15,10 +16,18 @@ const role = computed(() => sessionState.current.value?.active_role?.code ?? '')
 const setup = setupChecklistState.setup;
 const plain = (text: string): string => text.replace(/\.$/, '');
 const steps = setupChecklistState.steps;
-/** Con los pasos hechos, el panel solo invita a abrir cuando de verdad se puede; si no, dice qué falta o que ya está abierta. */
+/** Ya abierta, dice cómo está la convocatoria: el plazo trae si está en pausa o finalizó. */
+const openedDescription = computed(() => {
+  const state = deadlineState.deadline.value?.state;
+  if (state === 'paused') return 'La convocatoria está en pausa';
+  if (state === 'closed') return 'La convocatoria finalizó';
+
+  return 'La convocatoria ya está abierta';
+});
+/** Con los pasos hechos, el panel solo invita a abrir cuando de verdad se puede; si no, dice qué falta o cómo está. */
 const complete = computed(() => {
   const start = setupChecklistState.start.value;
-  if (start?.done) return { title: 'Todo listo', description: 'La convocatoria ya está abierta' };
+  if (start?.done) return { title: 'Todo listo', description: openedDescription.value };
   if (!start || start.action) return { title: 'Todo listo', description: 'Ya puede abrir la convocatoria' };
 
   return { title: 'Pasos completos', description: plain(start.hint) };
@@ -92,6 +101,9 @@ const build = (): void => {
 
 onMounted(() => { build(); void setupChecklistState.refresh(); });
 watch(setup, build, { deep: true });
+// Pausar, reanudar o finalizar no cambia los pasos, pero sí lo que dice el panel completo.
+watch(openedDescription, build);
+watch(() => route.fullPath, () => { void deadlineState.refresh(); });
 watch(hidden, syncScrollHidden);
 watch(setupChecklistState.openRequests, () => panel?.open());
 watch(() => route.fullPath, () => { void setupChecklistState.refresh(); });

@@ -40,6 +40,16 @@ const refresh = async (): Promise<void> => {
     if (Date.now() - loadedAt.value >= FRESH_FOR_MS) await load();
 };
 
+// Pausar, reanudar, prorrogar o finalizar cambian el plazo: se vuelve a pedir tras cada cambio que termina bien.
+let mutationTimer: ReturnType<typeof setTimeout> | undefined;
+if (typeof window !== 'undefined') {
+    window.addEventListener('silabos:mutated', () => {
+        if (!sessionKey.value) return;
+        clearTimeout(mutationTimer);
+        mutationTimer = setTimeout(() => { void load(); }, 400);
+    });
+}
+
 watch(sessionKey, (key) => {
     deadline.value = null;
     loadedAt.value = 0;
