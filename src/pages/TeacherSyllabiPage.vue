@@ -92,6 +92,8 @@ onMounted(() => { void load(queryPage(route.query.page)); });
           <CardHeader>
             <CardTitle>{{ syllabus.subject }}</CardTitle>
             <p class="text-sm text-muted-foreground">{{ syllabus.parallels.length === 1 ? 'Paralelo' : 'Paralelos' }}: {{ syllabus.parallels.join(', ') }}</p>
+            <!-- Con dos períodos a la vez (el actual y el siguiente) cada tarjeta dice el suyo -->
+            <p v-if="periods.length > 1" class="text-sm text-muted-foreground">Período: {{ syllabus.period }}</p>
           </CardHeader>
           <CardContent class="flex flex-col gap-1 text-sm">
             <SyllabusStateBadge :state="syllabus.state" />
