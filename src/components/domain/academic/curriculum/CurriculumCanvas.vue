@@ -49,8 +49,8 @@ import {
 } from "@/components/ui/dialog";
 import {
   Popover,
+  PopoverAnchor,
   PopoverContent,
-  PopoverTrigger,
 } from "@/components/ui/popover";
 import { formatNumericDisplay } from "@/lib/numberDisplay";
 import { useShownWhileClosing } from "@/lib/dialogExit";
@@ -128,6 +128,8 @@ const { setEdges, setNodes, updateNode, setViewport } = useVueFlow(flowId);
 // «Ajustar» mide la zona desplazable.
 const scrollElement = useTemplateRef<HTMLElement>("scrollElement");
 const canvasSize = ref({ width: 0, height: 0 });
+const legendOpen = ref(false);
+const legendAnchor = useTemplateRef<HTMLElement>("legendAnchor");
 useResizeObserver(scrollElement, (entries) => {
   const rect = entries[0]?.contentRect;
   if (rect) canvasSize.value = { width: rect.width, height: rect.height };
@@ -516,14 +518,18 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
       @pick="(connection) => (pendingConnection = connection)"
     />
     <CurriculumNavigationControls :choice="zoomChoice" :zoom="zoom" @update:choice="chooseZoom">
-      <!-- La leyenda y los totales se abren junto a la ayuda: no ocupan espacio al lado de la malla -->
-      <Popover>
-        <IconTooltip label="Ver leyenda y totales de la malla"><PopoverTrigger as-child>
-          <Button type="button" variant="ghost" size="icon-sm" class="bg-card/90" aria-label="Ver leyenda y totales de la malla">
-            <Info aria-hidden="true" />
-          </Button>
-        </PopoverTrigger></IconTooltip>
-        <PopoverContent align="start" class="w-64 p-3">
+      <!-- La leyenda y los totales se abren junto a la ayuda: no ocupan espacio al lado de la malla.
+           El popover se ancla fuera del tooltip: si el botón es a la vez disparador de los dos, el popover
+           pierde su referencia y se abre fuera de la pantalla. -->
+      <Popover v-model:open="legendOpen">
+        <PopoverAnchor as-child><span ref="legendAnchor" class="inline-flex">
+          <IconTooltip label="Ver leyenda y totales de la malla">
+            <Button type="button" variant="ghost" size="icon-sm" class="bg-card/90" aria-label="Ver leyenda y totales de la malla" aria-haspopup="dialog" :aria-expanded="legendOpen" @click="legendOpen = !legendOpen">
+              <Info aria-hidden="true" />
+            </Button>
+          </IconTooltip>
+        </span></PopoverAnchor>
+        <PopoverContent align="start" class="w-64 p-3" @interact-outside="(event) => legendAnchor?.contains(event.target as Element | null) && event.preventDefault()">
           <CurriculumLegend :units="legendUnits" :rows="summaryRows" />
         </PopoverContent>
       </Popover>
