@@ -32,5 +32,6 @@ const smaller = computed(() => [...ZOOM_LEVELS].reverse().find((level) => level 
         <IconTooltip label="Use la rueda o las barras para moverse · Mayús + rueda para ir a los lados">
             <Button type="button" variant="ghost" size="icon-sm" class="bg-card/90" aria-label="Cómo moverse por la malla"><CircleHelp aria-hidden="true" /></Button>
         </IconTooltip>
+        <slot />
     </div>
 </template>

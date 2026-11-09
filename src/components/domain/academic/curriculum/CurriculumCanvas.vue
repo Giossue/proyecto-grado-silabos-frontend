@@ -34,7 +34,6 @@ import {
 import type { CurriculumRequirement, RelationMode, ZoomChoice } from "@/components/domain/academic/curriculum/curriculumCanvasLayout";
 import CurriculumCycleNode from "@/components/domain/academic/curriculum/CurriculumCycleNode.vue";
 import CurriculumLegend from "@/components/domain/academic/curriculum/CurriculumLegend.vue";
-import CurriculumLegendPanel from "@/components/domain/academic/curriculum/CurriculumLegendPanel.vue";
 import CurriculumRelationPicker from "@/components/domain/academic/curriculum/CurriculumRelationPicker.vue";
 import CurriculumRequirementDialogs from "@/components/domain/academic/curriculum/CurriculumRequirementDialogs.vue";
 import CurriculumRequirementEdge from "@/components/domain/academic/curriculum/CurriculumRequirementEdge.vue";
@@ -126,10 +125,9 @@ const summaryRows = computed(() => [
 
 const flowId = `curriculum-${props.curriculum.id}`;
 const { setEdges, setNodes, updateNode, setViewport } = useVueFlow(flowId);
-// «Ajustar» mide la zona desplazable, que ya descuenta el sitio de la leyenda.
+// «Ajustar» mide la zona desplazable.
 const scrollElement = useTemplateRef<HTMLElement>("scrollElement");
 const canvasSize = ref({ width: 0, height: 0 });
-const legendOpen = ref(true);
 useResizeObserver(scrollElement, (entries) => {
   const rect = entries[0]?.contentRect;
   if (rect) canvasSize.value = { width: rect.width, height: rect.height };
@@ -512,33 +510,26 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
     :class="cn(fullScreen && 'h-(--curriculum-canvas-full-height)', !fullScreen && 'h-(--curriculum-canvas-height)')"
     :aria-label="editing ? 'Editor interactivo de la malla' : 'Vista de la malla'"
   >
-    <div class="absolute top-16 left-3 z-10 max-sm:hidden">
-      <CurriculumLegendPanel v-model:open="legendOpen" :units="legendUnits" :rows="summaryRows" />
-    </div>
     <CurriculumRelationPicker
       v-model:picker="relationPicker"
       :subjects="subjects"
       @pick="(connection) => (pendingConnection = connection)"
     />
-    <Popover>
-      <IconTooltip label="Ver leyenda y totales de la malla"><PopoverTrigger as-child>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          class="absolute top-3 right-3 z-10 bg-card sm:hidden"
-          aria-label="Ver leyenda y totales de la malla"
-        >
-          <Info aria-hidden="true" />
-        </Button>
-      </PopoverTrigger></IconTooltip>
-      <PopoverContent align="end" class="w-60 p-3">
-        <CurriculumLegend :units="legendUnits" :rows="summaryRows" />
-      </PopoverContent>
-    </Popover>
-    <CurriculumNavigationControls :choice="zoomChoice" :zoom="zoom" @update:choice="chooseZoom" />
-    <!-- La malla empieza bajo los controles de zoom y a la derecha de la leyenda, que así no la tapan -->
-    <div ref="scrollElement" data-curriculum-scroll class="absolute inset-x-0 top-14 bottom-0 overflow-auto" :class="legendOpen ? 'sm:left-70' : 'sm:left-12'">
+    <CurriculumNavigationControls :choice="zoomChoice" :zoom="zoom" @update:choice="chooseZoom">
+      <!-- La leyenda y los totales se abren junto a la ayuda: no ocupan espacio al lado de la malla -->
+      <Popover>
+        <IconTooltip label="Ver leyenda y totales de la malla"><PopoverTrigger as-child>
+          <Button type="button" variant="ghost" size="icon-sm" class="bg-card/90" aria-label="Ver leyenda y totales de la malla">
+            <Info aria-hidden="true" />
+          </Button>
+        </PopoverTrigger></IconTooltip>
+        <PopoverContent align="start" class="w-64 p-3">
+          <CurriculumLegend :units="legendUnits" :rows="summaryRows" />
+        </PopoverContent>
+      </Popover>
+    </CurriculumNavigationControls>
+    <!-- La malla empieza bajo los controles de zoom, que así no la tapan -->
+    <div ref="scrollElement" data-curriculum-scroll class="absolute inset-x-0 top-14 bottom-0 overflow-auto">
     <div data-curriculum-board class="relative mx-auto" :style="{ width: `${boardWidth * zoom}px`, height: `${boardHeight * zoom}px` }">
     <!-- Sin teclado de Vue Flow: sus flechas moverían materias sin guardar y lo anuncia en inglés -->
     <VueFlow
