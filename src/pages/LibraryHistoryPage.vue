@@ -81,7 +81,7 @@ onMounted(() => { void load(initialPage); });
 </script>
 
 <template>
-  <PageFrame title="Historial" description="Sílabos de períodos terminados, en solo lectura" size="wide" :loading="!data && !error">
+  <PageFrame title="Historial" description="Sílabos de convocatorias anteriores, en solo lectura" size="wide" :loading="!data && !error">
     <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.library.reviews)"><ArrowLeft aria-hidden="true" />Volver a revisiones</Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="3" :actions="false" />
@@ -150,7 +150,7 @@ onMounted(() => { void load(initialPage); });
               <TableCell data-card-hide="true">{{ item.teachers.join(', ') }}</TableCell>
               <TableCell>{{ item.signed_by ?? '—' }}</TableCell>
             </TableRow>
-            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="4">{{ filters.who === 'mine' ? 'No hay sílabos revisados por usted con estos filtros' : 'No hay sílabos de períodos terminados con estos filtros' }}</TableEmpty>
+            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="4">{{ filters.who === 'mine' ? 'No hay sílabos revisados por usted con estos filtros' : 'No hay sílabos de convocatorias anteriores con estos filtros' }}</TableEmpty>
           </TableBody>
         </Table>
         <TablePagination :meta="data.reviews" label="Paginación del historial de biblioteca" @update:page="load" />
