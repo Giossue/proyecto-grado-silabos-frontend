@@ -2,10 +2,8 @@
 import { Download } from '@lucide/vue';
 import VisAxis from '@unovis/vue/components/axis';
 import VisGroupedBar from '@unovis/vue/components/grouped-bar';
-import VisLine from '@unovis/vue/components/line';
 import VisStackedBar from '@unovis/vue/components/stacked-bar';
 import VisXYContainer from '@unovis/vue/containers/xy-container';
-import { CurveType } from '@unovis/ts/types/curve';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -153,8 +151,9 @@ onMounted(() => { void load(); });
             <EmptyState v-if="report.daily.length === 0" class="h-72 justify-center border-0 shadow-none ring-0" title="Todavía no hay envíos" />
             <ChartContainer v-else :config="dailyConfig" class="aspect-auto h-72" cursor>
               <VisXYContainer :data="report.daily" :padding="{ top: 8 }">
-                <VisLine :x="(_: DayRow, index: number) => index" :y="[(row: DayRow) => row.first, (row: DayRow) => row.resubmitted]" :color="[dailyConfig.first.color, dailyConfig.resubmitted.color]" :curve-type="CurveType.MonotoneX" />
-                <VisAxis type="x" :tick-format="dayName" :grid-line="false" :domain-line="false" />
+                <!-- Barras y no línea: con un solo día de envíos una línea no se dibuja -->
+                <VisGroupedBar :x="(_: DayRow, index: number) => index" :y="[(row: DayRow) => row.first, (row: DayRow) => row.resubmitted]" :color="[dailyConfig.first.color, dailyConfig.resubmitted.color]" :rounded-corners="4" :group-padding="0.3" />
+                <VisAxis type="x" :tick-format="dayName" :num-ticks="report.daily.length" :grid-line="false" :domain-line="false" />
                 <VisAxis type="y" :tick-values="dailyTicks" :domain-line="false" />
                 <ChartTooltip />
                 <ChartCrosshair :template="dailyTooltip" :color="[dailyConfig.first.color, dailyConfig.resubmitted.color]" />
