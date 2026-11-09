@@ -536,7 +536,7 @@ const onNodeDragStop = async (event: NodeDragEvent): Promise<void> => {
         <CurriculumLegend :units="legendUnits" :rows="summaryRows" />
       </PopoverContent>
     </Popover>
-    <CurriculumNavigationControls :choice="zoomChoice" @update:choice="chooseZoom" />
+    <CurriculumNavigationControls :choice="zoomChoice" :zoom="zoom" @update:choice="chooseZoom" />
     <!-- La malla empieza bajo los controles de zoom y a la derecha de la leyenda, que así no la tapan -->
     <div ref="scrollElement" data-curriculum-scroll class="absolute inset-x-0 top-14 bottom-0 overflow-auto" :class="legendOpen ? 'sm:left-70' : 'sm:left-12'">
     <div data-curriculum-board class="relative mx-auto" :style="{ width: `${boardWidth * zoom}px`, height: `${boardHeight * zoom}px` }">
