@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
@@ -15,7 +14,6 @@ const props = withDefaults(defineProps<{
     tabs?: number;
     heading?: boolean;
     widths?: string[];
-    plainToolbar?: boolean;
     cellLines?: number | number[];
     badges?: number[];
     filterWidth?: string;
@@ -30,7 +28,6 @@ const props = withDefaults(defineProps<{
     tabs: 0,
     heading: false,
     widths: undefined,
-    plainToolbar: false,
     cellLines: 1,
     badges: () => [],
     filterWidth: 'lg:w-48',
@@ -63,8 +60,8 @@ const hasToolbar = computed(() => props.search || props.filters > 0);
 
         <div v-if="heading" data-skeleton="table-heading" class="-mb-1 flex h-5 items-center"><Skeleton class="h-4 w-28" /></div>
 
-        <component :is="plainToolbar ? 'div' : Card" v-if="hasToolbar" data-skeleton="table-toolbar" :class="plainToolbar ? '' : 'py-3'">
-            <component :is="plainToolbar ? 'div' : CardContent" :class="cn('flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end', !plainToolbar && 'px-3')">
+        <div v-if="hasToolbar" data-skeleton="table-toolbar">
+            <div class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-end">
                 <div v-if="search" class="min-w-0 lg:min-w-64 lg:flex-1">
                     <Skeleton class="h-9 w-full" />
                 </div>
@@ -74,8 +71,8 @@ const hasToolbar = computed(() => props.search || props.filters > 0);
                         <Skeleton class="h-9 w-full" />
                     </div>
                 </div>
-            </component>
-        </component>
+            </div>
+        </div>
 
         <div class="min-w-0" data-skeleton="table-content">
             <div class="hidden overflow-x-auto rounded-md bg-card shadow-surface ring-1 ring-surface-ring sm:block" data-skeleton="table-desktop">

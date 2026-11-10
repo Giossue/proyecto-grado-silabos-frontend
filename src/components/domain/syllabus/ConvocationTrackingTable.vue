@@ -9,7 +9,6 @@ import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
-import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -60,7 +59,7 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
   <LoadErrorState v-if="error" :message="error" @retry="load" />
   <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="3" :filters="1" filter-width="lg:w-44" :actions="false" :cell-lines="[2, 2, 1]" :badges="[3]" />
   <div v-else-if="data || convocationId === null" class="flex flex-col gap-4">
-    <Card class="py-3"><CardContent class="px-3"><ClientFilterBar
+    <ClientFilterBar
       :filter="syllabusFilter"
       :input-id="`convocation-syllabi-search-${convocationId ?? 'none'}`"
       label="Buscar expediente"
@@ -82,7 +81,7 @@ watch(() => props.convocationId, () => { void load(); }, { immediate: true });
           </Select>
         </Field>
       </template>
-    </ClientFilterBar></CardContent></Card>
+    </ClientFilterBar>
 
     <Table label="Seguimiento de la convocatoria">
       <TableHeader>

@@ -15,7 +15,6 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -97,7 +96,7 @@ onMounted(() => { void load(initialPage, true); });
     <LoadErrorState v-if="error" :message="error" @retry="load(1, true)" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="5" :filters="2" :actions="false" :badges="[5]" metrics />
     <MetricTiles v-if="data && summary?.metrics.length" :metrics="summary.metrics" />
-    <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
+    <div v-if="data" class="flex flex-col gap-4">
         <form @submit.prevent="load()">
           <FilterToolbar :active="filtersActive" @clear="clearFilters">
             <template #search>
@@ -133,7 +132,7 @@ onMounted(() => { void load(initialPage, true); });
               </Field>
             </template>
           </FilterToolbar>
-        </form></CardContent></Card>
+        </form>
         <Table label="Revisiones de biblioteca">
           <TableHeader>
             <TableRow>

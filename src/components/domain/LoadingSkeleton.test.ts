@@ -86,10 +86,10 @@ describe('LoadingSkeleton', () => {
     expect(wrapper.get('[data-skeleton="setup"]').findAll('.rounded-md.p-2')).toHaveLength(5);
   });
 
-  it('dibuja la barra de herramientas dentro de una tarjeta y sin acciones cuando la tabla no las tiene', () => {
+  it('dibuja la barra de herramientas sin tarjeta y sin acciones cuando la tabla no las tiene', () => {
     const wrapper = mount(LoadingSkeleton, { props: { variant: 'table', columns: 4, filters: 2, actions: false, rows: 2 } });
 
-    expect(wrapper.get('[data-skeleton="table-toolbar"]').attributes('data-slot')).toBe('card');
+    expect(wrapper.get('[data-skeleton="table-toolbar"]').attributes('data-slot')).toBeUndefined();
     expect(wrapper.findAll('[data-skeleton="table-filters"] [data-slot="skeleton"]')).toHaveLength(2);
     expect(wrapper.get('[data-skeleton="table-row"]').element.children).toHaveLength(4);
   });

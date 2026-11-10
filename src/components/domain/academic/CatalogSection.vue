@@ -10,7 +10,6 @@ import { activateRow } from '@/lib/rowActivation';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldLabel } from '@/components/ui/field';
 import {
@@ -113,7 +112,7 @@ const {
 
 <template>
     <div v-if="section === 'faculties'" class="flex flex-col gap-4">
-        <Card class="py-3"><CardContent class="px-3">
+        
             <ClientFilterBar
                 :filter="facultyFilter"
                 input-id="faculties-search"
@@ -146,7 +145,7 @@ const {
                     </Field>
                 </template>
             </ClientFilterBar>
-        </CardContent></Card>
+        
             <Table label="Listado académico">
                 <TableHeader>
                     <TableRow>
@@ -218,7 +217,7 @@ const {
     </div>
 
     <div v-else class="flex flex-col gap-4">
-        <Card class="py-3"><CardContent class="px-3">
+        
             <ClientFilterBar
                 :filter="careerFilter"
                 input-id="careers-search"
@@ -263,7 +262,7 @@ const {
                     </Field>
                 </template>
             </ClientFilterBar>
-        </CardContent></Card>
+        
             <Table label="Listado académico">
                 <TableHeader>
                     <TableRow>

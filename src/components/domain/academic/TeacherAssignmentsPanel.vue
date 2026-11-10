@@ -12,7 +12,6 @@ import { afterDialogExit, useShownWhileClosing } from "@/lib/dialogExit";
 import { activateRow } from "@/lib/rowActivation";
 import TablePagination from "@/components/domain/TablePagination.vue";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -87,10 +86,10 @@ const removeFromCareer = async (): Promise<void> => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
+  <div class="flex flex-col gap-4">
     <ClientFilterBar :filter="filter" input-id="teacher-assignments-search" label="Buscar docente" placeholder="Buscar por docente o correo">
       <template #filters><Field><FieldLabel for="teacher-assignments-state" class="sr-only">Estado</FieldLabel><Select v-model="filter.values.estado.value"><SelectTrigger id="teacher-assignments-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectGroup><SelectItem value="all">Todos los estados</SelectItem><SelectItem value="active">Activas</SelectItem><SelectItem value="pending">Pendiente</SelectItem></SelectGroup></SelectContent></Select></Field></template>
-    </ClientFilterBar></CardContent></Card>
+    </ClientFilterBar>
     <Table label="Docentes de la carrera"><TableHeader><TableRow><TableHead>Docente</TableHead><TableHead>Correo</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader>
       <TableBody>
         <TableEmpty v-if="!items.length" :colspan="3">{{ filter.active.value ? "Ningún docente coincide con la búsqueda" : "No existen docentes en esta carrera" }}</TableEmpty>

@@ -27,7 +27,6 @@ import ConvocationPeriodDialog from '@/components/domain/syllabus/ConvocationPer
 import ConvocationOptionsDialog from '@/components/domain/syllabus/ConvocationOptionsDialog.vue';
 import ConvocationRowActions from '@/components/domain/syllabus/ConvocationRowActions.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
-import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import TableCardLine from '@/components/domain/TableCardLine.vue';
@@ -100,7 +99,7 @@ onMounted(load);
     <LoadErrorState v-if="error" :message="error" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !loaded" variant="table" metrics :columns="4" :filters="1" filter-width="lg:w-44" :actions="false" :badges="[4]" />
     <MetricTiles v-if="loaded && summary?.metrics.length" :metrics="summary.metrics" />
-    <div v-if="loaded" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
+    <div v-if="loaded" class="flex flex-col gap-4">
       <ClientFilterBar :filter="filter" input-id="processes-search" label="Buscar período" placeholder="Buscar por período">
         <template #filters>
           <Field><FieldLabel for="processes-search-state" class="sr-only">Estado</FieldLabel>
@@ -110,7 +109,7 @@ onMounted(load);
           </Field>
         </template>
       </ClientFilterBar>
-      </CardContent></Card>
+      
       <Table label="Convocatorias" data-cards="true">
         <TableHeader><TableRow><TableHead>Período</TableHead><TableHead>Clases</TableHead><TableHead>Elaboración de sílabos</TableHead><TableHead class="text-center">Estado</TableHead></TableRow></TableHeader>
         <TableBody>

@@ -67,16 +67,14 @@ onMounted(() => { void load(queryPage(route.query.page)); });
   <PageFrame :title="period ? `Sílabos - Período ${period}` : 'Mis sílabos'" description="Los sílabos de las materias que usted dicta" size="wide" :loading="!result && !error" :actions-skeleton="!result && !error ? ['w-9'] : []">
     <template #tools><TooltipProvider><Tooltip><TooltipTrigger as-child><Button as-child variant="ghost" size="icon"><RouterLink :to="paths.teacher.history" aria-label="Historial"><History aria-hidden="true" /></RouterLink></Button></TooltipTrigger><TooltipContent>Historial</TooltipContent></Tooltip></TooltipProvider></template>
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
-    <Card v-if="result" class="py-3">
-      <CardContent class="px-3">
+    <template v-if="result">
         <form @submit.prevent="load()">
           <FilterToolbar :active="filtersActive" @clear="clearFilters">
             <template #search><Field><FieldLabel for="syllabi-search" class="sr-only">Buscar por asignatura o código</FieldLabel><Input id="syllabi-search" v-model="query" type="search" maxlength="120" placeholder="Buscar por asignatura o código" /></Field></template>
             <template #filters><Field><FieldLabel for="syllabi-state" class="sr-only">Estado</FieldLabel><Select v-model="state" name="state"><SelectTrigger id="syllabi-state"><SelectValue placeholder="Todos los estados" /></SelectTrigger><SelectContent><SelectItem value="all">Todos los estados</SelectItem><SelectItem v-for="option in SYLLABUS_STATE_OPTIONS" :key="option.value" :value="option.value">{{ option.label }}</SelectItem></SelectContent></Select></Field></template>
           </FilterToolbar>
         </form>
-      </CardContent>
-    </Card>
+      </template>
     <LoadingSkeleton v-if="!result && !error" variant="syllabus-cards" :rows="3" />
     <EmptyState v-else-if="result && result.syllabi.data.length === 0" v-bind="emptyCopy" />
     <ul v-else-if="result" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="Mis sílabos">

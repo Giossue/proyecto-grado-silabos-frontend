@@ -8,7 +8,6 @@ import StatusBadge from "@/components/domain/StatusBadge.vue";
 import TablePagination from "@/components/domain/TablePagination.vue";
 import ParallelBulkActions from "@/components/domain/academic/ParallelBulkActions.vue";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import {
   Select,
@@ -103,7 +102,7 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
 
 <template>
   <div class="flex flex-col gap-4">
-    <Card class="py-3"><CardContent class="px-3">
+    
       <ClientFilterBar :filter="filter" input-id="scheduled-subjects-search" label="Buscar materia programada" placeholder="Buscar por materia">
         <template #filters>
           <Field><FieldLabel for="scheduled-subject-cycle" class="sr-only">Ciclo</FieldLabel>
@@ -126,7 +125,7 @@ const emptyMessage = computed(() => filter.active.value ? "No hay materias que c
           </Field>
         </template>
       </ClientFilterBar>
-    </CardContent></Card>
+    
       <ParallelBulkActions
         v-if="selectedRows.length"
         :items="selectedRows"

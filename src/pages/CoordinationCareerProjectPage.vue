@@ -104,7 +104,7 @@ onMounted(() => { void load(); });
       <TabsContent value="materias" class="flex flex-col gap-4">
         <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
         <LoadingSkeleton v-else-if="loading && !data" variant="accordion" :rows="3" :filters="2" />
-        <div v-else-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
+        <div v-else-if="data" class="flex flex-col gap-4">
           <ClientFilterBar :filter="filter" input-id="career-project-search" label="Buscar por materia" placeholder="Buscar por materia">
             <template #filters>
               <Field><FieldLabel for="career-project-cycle" class="sr-only">Ciclo</FieldLabel>
@@ -119,7 +119,7 @@ onMounted(() => { void load(); });
               </Field>
             </template>
           </ClientFilterBar>
-          </CardContent></Card>
+          
           <div data-tour="career-subjects" class="flex flex-col gap-2">
             <EmptyState v-if="!groups.length" :title="filter.active.value ? 'Ninguna materia coincide con la búsqueda' : 'La malla todavía no tiene materias'" />
             <Collapsible v-for="group in groups" :key="`${group.cycle}-${filter.active.value}`" :default-open="filter.active.value" class="group/cycle rounded-md ring-1 ring-surface-ring bg-card">

@@ -14,7 +14,6 @@ import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import TablePagination from '@/components/domain/TablePagination.vue';
-import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -97,7 +96,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
     <LoadingSkeleton v-if="loading && !data && !error" variant="table" :columns="3" :search="false" :filters="5" :actions="false" :cell-lines="[1, 2, 2]" :widths="['minmax(0, 1fr)', 'minmax(0, 2fr)', 'minmax(0, 1.5fr)']" />
     <div v-if="data" class="flex flex-col gap-4">
-      <Card class="py-3"><CardContent class="px-3">
+      
         <form @submit.prevent="load()">
           <FilterToolbar :active="filtersActive" @clear="clearFilters">
             <template #filters>
@@ -123,7 +122,7 @@ onMounted(() => { void load(queryPage(route.query.page)); });
             </template>
           </FilterToolbar>
         </form>
-      </CardContent></Card>
+      
       <Table label="Registro de auditoría">
         <TableHeader><TableRow><TableHead>Fecha</TableHead><TableHead>Actividad</TableHead><TableHead>Responsable</TableHead></TableRow></TableHeader>
         <TableBody>

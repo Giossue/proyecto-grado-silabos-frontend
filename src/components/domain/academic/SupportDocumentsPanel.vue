@@ -17,7 +17,6 @@ import FileDropzone from '@/components/domain/FileDropzone.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Field, FieldError, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -158,9 +157,9 @@ onMounted(() => { void load(); });
     <LoadErrorState v-if="loadError" :message="loadError" @retry="load" />
     <LoadingSkeleton v-else-if="loading && !loaded" variant="table" :rows="4" :columns="manages ? 4 : 3" :actions="manages" :cell-lines="[2, 1, 1]" />
     <div v-else class="flex flex-col gap-4">
-      <Card class="py-3"><CardContent class="px-3">
+      
         <ClientFilterBar :filter="filter" input-id="support-documents-search" label="Buscar documento" placeholder="Buscar documento" />
-      </CardContent></Card>
+      
       <Table label="Documentos de apoyo">
         <TableHeader><TableRow><TableHead>Documento</TableHead><TableHead class="text-center">Tamaño</TableHead><TableHead>Subido</TableHead><TableHead v-if="manages" class="text-center">Acciones</TableHead></TableRow></TableHeader>
         <TableBody>

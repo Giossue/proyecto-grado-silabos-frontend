@@ -16,7 +16,6 @@ import TablePagination from '@/components/domain/TablePagination.vue';
 import ConvocationActions from '@/components/domain/syllabus/ConvocationActions.vue';
 import ConvocationTrackingTable from '@/components/domain/syllabus/ConvocationTrackingTable.vue';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import TableCardLine from '@/components/domain/TableCardLine.vue';
@@ -98,9 +97,9 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
         <TabsTrigger value="seguimiento" class="flex-none gap-2 px-4 data-[state=active]:font-semibold"><ChartNoAxesColumn aria-hidden="true" />Seguimiento</TabsTrigger>
       </TabsList>
       <TabsContent value="cola" class="flex flex-col gap-4">
-        <Card class="py-3"><CardContent class="px-3">
+        
           <form @submit.prevent="load()"><FilterToolbar :active="filtersActive" @clear="clearFilters"><template #search><Field><FieldLabel for="review-search" class="sr-only">Buscar por asignatura o código</FieldLabel><Input id="review-search" v-model="filters.search" type="search" maxlength="120" placeholder="Buscar por asignatura o código" /></Field></template></FilterToolbar></form>
-        </CardContent></Card>
+        
         <Table label="Revisiones de coordinación"><TableHeader><TableRow><TableHead>Asignatura</TableHead><TableHead>Docente</TableHead><TableHead class="text-center">Revisión</TableHead><TableHead class="text-center">Enviado</TableHead></TableRow></TableHeader><TableBody>
           <TableRow v-for="item in data.syllabi.data" :key="item.id" class="cursor-pointer" tabindex="0" :aria-label="`Abrir revisión de ${item.subject}`" @click="activateRow($event, () => router.push(area.review(item.revision_id)))" @keydown.enter.self.prevent="router.push(area.review(item.revision_id))" @keydown.space.self.prevent="router.push(area.review(item.revision_id))"><TableCell><div>{{ item.subject }}</div><div class="text-sm text-muted-foreground">{{ item.code }} · {{ item.period }}</div><TableCardLine>{{ item.teachers.join(', ') }}</TableCardLine><TableCardLine>N.º {{ item.revision_number }} · {{ item.submitted_at ? formatDateDisplay(item.submitted_at, { dateStyle: 'medium' }) : '—' }}</TableCardLine></TableCell><TableCell data-card-hide="true">{{ item.teachers.join(', ') }}</TableCell><TableCell class="text-center" data-card-hide="true">N.º {{ item.revision_number }}</TableCell><TableCell class="text-center" data-card-hide="true">{{ item.submitted_at ? formatDateDisplay(item.submitted_at, { dateStyle: 'medium' }) : '—' }}</TableCell></TableRow>
           <TableEmpty v-if="data.syllabi.data.length === 0" :colspan="4">No hay sílabos por revisar</TableEmpty>

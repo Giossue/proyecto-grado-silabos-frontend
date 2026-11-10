@@ -12,7 +12,6 @@ import TablePagination from '@/components/domain/TablePagination.vue';
 import { ArrowLeft } from '@lucide/vue';
 import { Button } from '@/components/ui/button';
 import { goBack } from '@/lib/goBack';
-import { Card, CardContent } from '@/components/ui/card';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -85,7 +84,7 @@ onMounted(() => { void load(initialPage); });
     <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.library.reviews)"><ArrowLeft aria-hidden="true" />Volver a revisiones</Button></template>
     <LoadErrorState v-if="error" :message="error" @retry="load()" />
     <LoadingSkeleton v-else-if="loading && !data" variant="table" :columns="4" :filters="3" :actions="false" />
-    <div v-if="data" class="flex flex-col gap-4"><Card class="py-3"><CardContent class="px-3">
+    <div v-if="data" class="flex flex-col gap-4">
         <form @submit.prevent="load()">
           <FilterToolbar :active="filtersActive" @clear="clearFilters">
             <template #search>
@@ -133,7 +132,7 @@ onMounted(() => { void load(initialPage); });
               </Field>
             </template>
           </FilterToolbar>
-        </form></CardContent></Card>
+        </form>
         <Table label="Historial de biblioteca">
           <TableHeader>
             <TableRow>

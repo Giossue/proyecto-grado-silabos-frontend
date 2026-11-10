@@ -54,7 +54,6 @@ const props = withDefaults(defineProps<{
     heading?: boolean;
     widths?: string[];
     sidebar?: boolean;
-    plainToolbar?: boolean;
     workspaceCount?: number;
     reviewStage?: 'coordination' | 'library';
     readonly?: boolean;
@@ -78,7 +77,6 @@ const props = withDefaults(defineProps<{
     heading: false,
     widths: undefined,
     sidebar: false,
-    plainToolbar: false,
     workspaceCount: 3,
     readonly: false,
     metrics: false,
@@ -99,7 +97,6 @@ const tableProps = computed(() => ({
     tabs: props.tabs,
     heading: props.heading,
     widths: props.widths,
-    plainToolbar: props.plainToolbar,
 }));
 </script>
 
@@ -124,13 +121,11 @@ const tableProps = computed(() => ({
             </Card>
 
             <div v-else-if="variant === 'syllabus-cards'" class="flex min-w-0 flex-col gap-6">
-                <Card data-skeleton="table-toolbar" class="py-3">
-                    <CardContent class="flex flex-col gap-3 px-3 lg:flex-row lg:items-end">
-                        <Skeleton class="h-9 w-full lg:min-w-64 lg:flex-1" />
-                        <Skeleton class="h-9 w-full sm:hidden" />
-                        <Skeleton class="hidden h-9 sm:block lg:w-48" />
-                    </CardContent>
-                </Card>
+                <div data-skeleton="table-toolbar" class="flex flex-col gap-3 lg:flex-row lg:items-end">
+                    <Skeleton class="h-9 w-full lg:min-w-64 lg:flex-1" />
+                    <Skeleton class="h-9 w-full sm:hidden" />
+                    <Skeleton class="hidden h-9 sm:block lg:w-48" />
+                </div>
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     <Card v-for="card in Math.max(1, rows)" :key="card" class="min-w-0" data-skeleton="syllabus-card">
                         <CardHeader class="gap-2">
@@ -154,15 +149,13 @@ const tableProps = computed(() => ({
             </div>
 
             <div v-else-if="variant === 'accordion'" class="flex min-w-0 flex-col gap-4">
-                <Card data-skeleton="table-toolbar" class="py-3">
-                    <CardContent class="flex flex-col gap-3 px-3 lg:flex-row lg:items-end">
-                        <Skeleton class="h-9 w-full lg:min-w-64 lg:flex-1" />
-                        <Skeleton v-if="filters > 0" class="h-9 w-full sm:hidden" />
-                        <div v-if="filters > 0" class="hidden gap-3 sm:grid sm:grid-cols-2 lg:flex lg:items-end">
-                            <Skeleton v-for="filter in filters" :key="filter" class="h-9 w-full lg:w-44" />
-                        </div>
-                    </CardContent>
-                </Card>
+                <div data-skeleton="table-toolbar" class="flex flex-col gap-3 lg:flex-row lg:items-end">
+                    <Skeleton class="h-9 w-full lg:min-w-64 lg:flex-1" />
+                    <Skeleton v-if="filters > 0" class="h-9 w-full sm:hidden" />
+                    <div v-if="filters > 0" class="hidden gap-3 sm:grid sm:grid-cols-2 lg:flex lg:items-end">
+                        <Skeleton v-for="filter in filters" :key="filter" class="h-9 w-full lg:w-44" />
+                    </div>
+                </div>
                 <div class="flex flex-col gap-2">
                     <div v-for="group in Math.max(1, rows)" :key="group" data-skeleton="accordion-row" class="flex items-center gap-2 rounded-md bg-card px-4 py-3 ring-1 ring-surface-ring">
                         <Skeleton class="h-5 w-20" />
