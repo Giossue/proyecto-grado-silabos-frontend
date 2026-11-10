@@ -128,6 +128,36 @@ describe('SubjectProfileDialog', () => {
     expect(saveSubjectProfile).toHaveBeenCalledWith('subject-1', expect.any(Object));
   });
 
+  it('muestra los campos del docente solo para armar su tipo de respuesta y los guarda con el proyecto', async () => {
+    const blank = { type: 'doc', content: [{ type: 'paragraph' }] };
+    vi.mocked(getSubjectProfile).mockResolvedValue({
+      fields: [{ id: 'f1', key: 'descripcion', label: 'Descripción', section: 'Metodología', quien_llena: 'coordinacion', content: blank, position: 4 }],
+      response_fields: [{ id: 'd1', key: 'metodologia', label: 'Métodos', section: 'Metodología', quien_llena: 'docente', content: blank, template: blank, position: 2 }],
+      values: {},
+      complete: false,
+    });
+    vi.mocked(saveSubjectProfile).mockResolvedValue({ fields: [], values: {}, complete: false });
+    const wrapper = mountDialog();
+    await wrapper.setProps({ open: true });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Lo llena el docente');
+    expect(wrapper.text()).toContain('Elija solo el tipo de respuesta de cada espacio');
+    expect(wrapper.text().match(/Sin llenar/g)).toHaveLength(1);
+    expect(wrapper.text().indexOf('Métodos')).toBeLessThan(wrapper.text().indexOf('Descripción'));
+    expect(wrapper.find('[data-id="ficha-d1"]').exists()).toBe(false);
+
+    await wrapper.get('button[aria-label="Métodos: Texto libre"]').trigger('click');
+    await wrapper.get('[role="toolbar"]').findAll('button').find((button) => button.text() === 'Número')!.trigger('click');
+    await wrapper.get('form').trigger('submit');
+    await flushPromises();
+
+    expect(saveSubjectProfile).toHaveBeenCalledWith('subject-1', {
+      f1: blank,
+      d1: { type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'response', attrs: { kind: 'numero', options: [], value: '' } }] }] },
+    });
+  });
+
   it('explains that the template has no profile fields yet', async () => {
     vi.mocked(getSubjectProfile).mockResolvedValue({ fields: [], values: {}, complete: false });
     const wrapper = mountDialog();

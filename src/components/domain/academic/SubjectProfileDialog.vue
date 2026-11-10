@@ -12,7 +12,7 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
 import { responseEmpty } from '@/lib/fieldResponses';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatusBadge from '@/components/domain/StatusBadge.vue';
 import type { DocumentNode } from '@/lib/templateDocument';
@@ -21,6 +21,7 @@ const props = defineProps<{ subjectId: string; subjectName: string; disabled?: b
 const emit = defineEmits<{ saved: [] }>();
 const open = defineModel<boolean>('open', { default: false });
 const fields = ref<SubjectProfileField[]>([]);
+const builds = (field: SubjectProfileField): boolean => field.quien_llena === 'docente';
 const values = ref<Record<string, DocumentNode | null>>({});
 const loading = ref(false);
 const saving = ref(false);
@@ -34,7 +35,7 @@ const activeSection = computed<string>({
   set: (value) => { chosen.value = value; },
 });
 const isEmpty = (fieldId: string): boolean => responseEmpty(fields.value.find((field) => field.id === fieldId)?.template, values.value[fieldId]);
-const sectionHasEmpty = (section: string): boolean => fields.value.some((field) => sectionOf(field) === section && isEmpty(field.id));
+const sectionHasEmpty = (section: string): boolean => fields.value.some((field) => !builds(field) && sectionOf(field) === section && isEmpty(field.id));
 const shownFields = computed(() => fields.value.filter((field) => sectionOf(field) === activeSection.value));
 // Lo cargado al abrir: sin cambios no hay nada que guardar, como en los demás formularios.
 const loaded = ref('');
@@ -61,7 +62,7 @@ const previewSections = computed(() => (preview.value?.sections ?? []).map((sect
     const profileField = fields.value.find((item) => item.id === field.id);
     if (!profileField) return field;
     // Como al generar el sílabo: si está vacío, queda el contenido inicial de la plantilla.
-    const document = isEmpty(field.id) ? profileField.content : values.value[field.id];
+    const document = !builds(profileField) && isEmpty(field.id) ? profileField.content : values.value[field.id];
 
     return { ...field, value: document, document } as typeof field;
   }),
@@ -82,8 +83,8 @@ watch(open, async (value) => {
   error.value = null;
   try {
     const profile = await getSubjectProfile(props.subjectId);
-    fields.value = profile.fields;
-    values.value = Object.fromEntries(profile.fields.map((field) => [field.id, profile.values[field.id] ?? field.content ?? null]));
+    fields.value = [...profile.fields, ...(profile.response_fields ?? [])].sort((first, second) => (first.position ?? 0) - (second.position ?? 0));
+    values.value = Object.fromEntries(fields.value.map((field) => [field.id, profile.values[field.id] ?? (builds(field) ? field.template : null) ?? field.content ?? null]));
     loaded.value = JSON.stringify(values.value);
   } catch (reason) {
     error.value = reason instanceof ApiError ? reason.message : 'No se pudo abrir el proyecto de carrera';
@@ -139,13 +140,17 @@ const save = async (close: () => void) => {
               <Field v-for="field in shownFields" :key="field.id">
                 <div class="flex flex-wrap items-center gap-2">
                   <FieldLabel :for="`ficha-${field.id}`" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || sectionOf(field) }}</FieldLabel>
-                  <StatusBadge v-if="isEmpty(field.id)" label="Sin llenar" tone="warning" />
+                  <StatusBadge v-if="builds(field)" label="Lo llena el docente" tone="info" />
+                  <StatusBadge v-else-if="isEmpty(field.id)" label="Sin llenar" tone="warning" />
                 </div>
+                <FieldDescription v-if="builds(field)">Elija solo el tipo de respuesta de cada espacio: texto libre, número o elegir entre opciones. El docente lo llena en su sílabo</FieldDescription>
                 <FieldResponseEditor
                   :template="field.template"
                   :id="`ficha-${field.id}`"
                   :label="field.label.trim() || sectionOf(field)"
                   :disabled="disabled"
+                  :setup="builds(field)"
+                  ask-for="a Administración"
                   :model-value="values[field.id]"
                   @update:model-value="values[field.id] = $event"
                 />
