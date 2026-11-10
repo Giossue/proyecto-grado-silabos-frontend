@@ -16,8 +16,14 @@ export const responseListTable = (node: DocumentNode): boolean => {
         && last!.content!.every((cell) => responseSlot(cell) && Number(cell.attrs?.rowspan ?? 1) === 1);
 };
 
-export const responseSlot = (cell: DocumentNode): boolean =>
-    blankResponse(cell) || (cell.content ?? []).every((child) => child.type === 'paragraph' && (child.content ?? []).every((inline) => inline.type === RESPONSE_NODE));
+export const responseSlot = (cell: DocumentNode): boolean => {
+    if (blankResponse(cell)) return true;
+    const paragraphs = cell.content ?? [];
+    const inlines = paragraphs.flatMap((child) => child.content ?? []);
+    return cell.type === 'tableCell' && inlines.length > 0
+        && paragraphs.every((child) => child.type === 'paragraph')
+        && inlines.every((inline) => inline.type === RESPONSE_NODE);
+};
 
 export const responseDocument = (template: DocumentNode, value?: DocumentNode | null, setup = false): DocumentNode => {
     if (!value || value.type !== template.type) return cloneResponse(template);
