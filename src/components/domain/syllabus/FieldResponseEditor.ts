@@ -1,16 +1,20 @@
-import { Plus, Trash2 } from '@lucide/vue';
-import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vue';
+import { CircleDot, Hash, ListChecks, Plus, Trash2, Type } from '@lucide/vue';
+import { computed, defineComponent, h, ref, type Component, type PropType, type VNodeChild } from 'vue';
 import BlockForm from '@/components/domain/syllabus/BlockForm';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
+import ResponseAnswer from '@/components/domain/syllabus/ResponseAnswer.vue';
+import ResponseOptionsEditor from '@/components/domain/syllabus/ResponseOptionsEditor.vue';
 import { renderFreeText } from '@/components/domain/syllabus/freeTextRender';
 import { withTooltip } from '@/components/domain/withTooltip';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { blankResponse, cloneResponse, replaceResponse, responseAt, responseDocument, responseListTable, responseText } from '@/lib/fieldResponses';
 import { templateRuntime } from '@/lib/blocks/runtime';
-import type { DocumentNode } from '@/lib/templateDocument';
+import { FREE_TEXT_KIND, FREE_TEXT_LABEL, RESPONSE_KINDS, RESPONSE_NODE, emptyResponse, responseAttrs, responseHasOptions, responseKindOptions, responseNeedsOptions, withinResponse, type ResponseOption } from '@/lib/responseKinds';
+import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 
 const isHeaderRow = (row: DocumentNode): boolean => Boolean(row.content?.length) && row.content!.every((cell) => cell.type === 'tableHeader');
 const headerColumns = (headers: DocumentNode[]): string[] => {
@@ -30,7 +34,9 @@ const headerColumns = (headers: DocumentNode[]): string[] => {
 };
 const onlyBlocks = (document: DocumentNode): boolean => (document.content ?? []).some((node) => node.type === 'documentBlock')
     && (document.content ?? []).every((node) => node.type === 'documentBlock' || blankResponse(node));
-const hasResponse = (node: DocumentNode): boolean => blankResponse(node) || node.type === 'documentBlock' || (node.content ?? []).some(hasResponse);
+const hasResponse = (node: DocumentNode): boolean => blankResponse(node) || node.type === 'documentBlock' || node.type === RESPONSE_NODE || (node.content ?? []).some(hasResponse);
+const KIND_ICONS: Record<string, Component> = { [FREE_TEXT_KIND]: Type, numero: Hash, una: CircleDot, varias: ListChecks };
+const setupKinds = [{ kind: FREE_TEXT_KIND, label: FREE_TEXT_LABEL }, ...responseKindOptions];
 const lineText = (node: DocumentNode): string => (node.content ?? []).map((part) => part.type === 'hardBreak' ? '\n' : part.text ?? '').join('');
 const inline = (text: string): DocumentNode[] => text.split('\n').flatMap((line, index) => [...(index > 0 ? [{ type: 'hardBreak' }] : []), ...(line ? [{ type: 'text', text: line }] : [])]);
 
@@ -43,10 +49,66 @@ export default defineComponent({
         modelValue: { type: Object as PropType<DocumentNode | null>, default: null },
         disabled: { type: Boolean, default: false },
         required: { type: Boolean, default: false },
+        setup: { type: Boolean, default: false },
+        askFor: { type: String, default: 'al coordinador' },
     },
     emits: { 'update:modelValue': (value: DocumentNode) => Boolean(value) },
     setup(props, { emit }) {
-        const document = computed(() => props.template ? responseDocument(props.template, props.modelValue) : props.modelValue);
+        const document = computed(() => props.template ? responseDocument(props.template, props.modelValue, props.setup) : props.modelValue);
+        const selected = ref<number[] | null>(null);
+        const isSelected = (path: number[]): boolean => selected.value !== null && selected.value.join('-') === path.join('-');
+        const builtAt = (path: number[]): DocumentNode | undefined => nodesOfType(responseAt(document.value!, path), RESPONSE_NODE)[0];
+        const kindAt = (path: number[]): string => builtAt(path)?.attrs?.kind as string | undefined ?? FREE_TEXT_KIND;
+        const apply = (kind: string): void => {
+            const path = selected.value;
+            if (!path || !props.template) return;
+            const blank = cloneResponse(responseAt(props.template, path));
+            if (kind === FREE_TEXT_KIND) return update(path, blank);
+            const previous = builtAt(path);
+            const node = emptyResponse(kind, previous ? responseAttrs(previous).options : []);
+            update(path, blank.type === 'paragraph'
+                ? { ...blank, content: [node] }
+                : { ...blank, content: [{ ...(blank.content?.[0] ?? { type: 'paragraph' }), content: [node] }] });
+        };
+        const optionsEditor = (current: DocumentNode, path: number[], label: string): VNodeChild => h(ResponseOptionsEditor, {
+            modelValue: responseAttrs(current).options, label: `Opciones de ${label}`, disabled: props.disabled,
+            'onUpdate:modelValue': (options: ResponseOption[]) => update(path, { ...current, attrs: { ...current.attrs, options } }),
+        });
+        const setupSlot = (path: number[], label: string): VNodeChild => {
+            const kind = kindAt(path);
+            const name = kind === FREE_TEXT_KIND ? FREE_TEXT_LABEL : RESPONSE_KINDS[kind]?.label ?? FREE_TEXT_LABEL;
+            const built = builtAt(path);
+            const inner = built ? [...path, ...(responseAt(document.value!, path).type === 'paragraph' ? [0] : [0, 0])] : path;
+            return h('div', { key: `${props.id}-${path.join('-')}`, class: 'flex min-w-0 flex-col gap-2' }, [
+                h(Button, {
+                    type: 'button', variant: isSelected(path) ? 'secondary' : 'outline', size: 'sm', class: 'w-fit', disabled: props.disabled,
+                    'aria-label': `${label}: ${name}`, 'aria-pressed': isSelected(path), 'data-response-slot': '',
+                    onClick: () => { selected.value = path; },
+                }, () => [h(KIND_ICONS[kind] ?? Type, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), name]),
+                built && responseHasOptions(kind) ? optionsEditor(built, inner, label) : null,
+            ]);
+        };
+        const fixedResponse = (template: DocumentNode, current: DocumentNode, path: number[], label: string): VNodeChild => {
+            const attrs = responseAttrs(current);
+            return h('div', { key: `${props.id}-${path.join('-')}`, class: 'flex min-w-0 flex-col gap-2' }, [
+                h(Badge, { variant: 'secondary', class: 'w-fit font-normal' }, () => `${RESPONSE_KINDS[attrs.kind]?.label ?? 'Respuesta'} (lo definió Administración)`),
+                responseNeedsOptions(responseAttrs(template))
+                    ? optionsEditor(current, path, label)
+                    : attrs.options.length ? h('p', { class: 'text-sm text-muted-foreground' }, attrs.options.map((option) => option.title).join(' · ')) : null,
+            ]);
+        };
+        const response = (template: DocumentNode, path: number[], label: string): VNodeChild => {
+            const current = responseAt(document.value!, path);
+            if (props.setup) return fixedResponse(template, current, path, label);
+            return h(ResponseAnswer, {
+                key: `${props.id}-${path.join('-')}`, attrs: responseAttrs(current), label, disabled: props.disabled, askFor: props.askFor,
+                'onUpdate:value': (value: unknown) => update(path, { ...current, attrs: { ...current.attrs, value: value as never } }),
+            });
+        };
+        const line = (template: DocumentNode, path: number[], label: string): VNodeChild => h('div', { class: 'flex flex-wrap items-start gap-2 text-sm' },
+            (template.content ?? []).map((child, index) => child.type === RESPONSE_NODE
+                ? response(child, [...path, index], label)
+                : h('span', { class: 'py-1 text-muted-foreground' }, [renderFreeText(child, { variable })])));
         const update = (path: number[], value: DocumentNode): void => {
             if (!props.disabled && document.value) emit('update:modelValue', replaceResponse(document.value, path, value));
         };
@@ -76,7 +138,7 @@ export default defineComponent({
             const values = current.content ?? [];
             const headers = rows.filter(isHeaderRow);
             const columns = headerColumns(headers);
-            const list = responseListTable(template);
+            const list = !props.setup && responseListTable(template);
             let position = 0;
             const body = values.map((_, index) => {
                 const rowTemplate = rows[index] ?? rows[rows.length - 1]!;
@@ -89,8 +151,8 @@ export default defineComponent({
                     const span = { colspan: Number(cell.attrs?.colspan ?? 1), rowspan: Number(cell.attrs?.rowspan ?? 1) };
                     column += span.colspan;
                     const cellPath = [...path, index, cellIndex];
-                    if (blankResponse(cell)) return h(TableCell, { ...span, class: 'min-w-40 align-top' }, () => slot(cell, cellPath, `${name}, fila ${number}`, false));
-                    if (hasResponse(cell)) return h(TableCell, { ...span, class: 'min-w-40 align-top' }, () => nodes(cell, cellPath));
+                    if (blankResponse(cell)) return h(TableCell, { ...span, class: 'min-w-40 align-top' }, () => blankSlot(cell, cellPath, `${name}, fila ${number}`));
+                    if (hasResponse(cell)) return h(TableCell, { ...span, class: 'min-w-40 align-top' }, () => nodes(cell, cellPath, `${name}, fila ${number}`));
                     return h(TableCell, { ...span, class: 'align-top text-sm' }, () => responseText(cell).trim());
                 });
                 return h(TableRow, { key: index }, () => [
@@ -119,7 +181,14 @@ export default defineComponent({
             ]);
         };
 
-        const render = (template: DocumentNode, path: number[]): VNodeChild => {
+        const blankSlot = (template: DocumentNode, path: number[], label: string): VNodeChild => {
+            if (props.setup) return setupSlot(path, label);
+            const current = responseAt(document.value!, path);
+            if (withinResponse(current)) return current.type === 'paragraph' ? line(current, path, label) : h('div', { class: 'flex flex-col gap-2' }, nodes(current, path, label));
+            return slot(template, path, label, false);
+        };
+
+        const render = (template: DocumentNode, path: number[], label: string = props.label): VNodeChild => {
             const current = responseAt(document.value!, path);
             if (template.type === 'documentBlock') {
                 return h(BlockForm, {
@@ -132,21 +201,39 @@ export default defineComponent({
                     'onUpdate:value': (value: Record<string, unknown>) => update(path, { ...responseAt(document.value!, path), attrs: { ...current.attrs, value } }),
                 });
             }
-            if (blankResponse(template)) return slot(template, path, props.label, false);
+            if (template.type === RESPONSE_NODE) return response(template, path, label);
+            if (blankResponse(template)) return blankSlot(template, path, label);
+            if (template.type === 'paragraph' && hasResponse(template)) return line(template, path, label);
             if (template.type === 'table' && hasResponse(template)) return table(template, path);
-            if (hasResponse(template)) return h('div', { class: 'flex flex-col gap-4' }, nodes(template, path));
+            if (hasResponse(template)) return h('div', { class: 'flex flex-col gap-4' }, nodes(template, path, label));
             return h('div', { class: 'text-sm text-muted-foreground' }, [renderFreeText(current, { variable })]);
         };
 
-        function nodes(template: DocumentNode, path: number[]): VNodeChild[] {
-            return (template.content ?? []).map((child, index) => render(child, [...path, index]));
+        function nodes(template: DocumentNode, path: number[], label: string = props.label): VNodeChild[] {
+            return (template.content ?? []).map((child, index) => render(child, [...path, index], label));
         }
+
+        const ribbon = (): VNodeChild => h('div', { role: 'toolbar', 'aria-label': `Tipo de respuesta de ${props.label}`, class: 'flex flex-wrap items-center gap-1 border-b p-1.5' }, [
+            ...setupKinds.map((item) => h(Button, {
+                key: item.kind, type: 'button', variant: 'ghost', size: 'sm', disabled: props.disabled || selected.value === null,
+                'aria-pressed': selected.value !== null && kindAt(selected.value) === item.kind,
+                class: selected.value !== null && kindAt(selected.value) === item.kind ? 'bg-accent text-accent-foreground' : undefined,
+                onClick: () => apply(item.kind),
+            }, () => [h(KIND_ICONS[item.kind] ?? Type, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), item.label])),
+            selected.value === null ? h('span', { class: 'px-1 text-sm text-muted-foreground' }, 'Haga clic en un espacio y elija su tipo de respuesta') : null,
+        ]);
 
         return () => {
             const legacy = props.modelValue;
             if ((!props.template || blankResponse(props.template)) && legacy && onlyBlocks(legacy)) {
                 return h('div', { id: props.id, class: 'flex min-w-0 flex-col gap-4', role: 'group', 'aria-label': props.label },
                     (legacy.content ?? []).map((node, index) => node.type === 'documentBlock' ? render(node, [index]) : null));
+            }
+            if (props.setup && props.template) {
+                return h('div', { id: props.id, class: 'flex min-w-0 flex-col rounded-md border border-border bg-background', role: 'group', 'aria-label': props.label }, [
+                    ribbon(),
+                    h('div', { class: 'flex min-w-0 flex-col gap-4 p-3' }, blankResponse(props.template) ? [setupSlot([], props.label)] : nodes(props.template, [])),
+                ]);
             }
             if (!props.template || blankResponse(props.template)) return h(FreeTextEditor, {
                 id: props.id, label: props.label, modelValue: props.modelValue ?? props.template, disabled: props.disabled, allowTables: false,
