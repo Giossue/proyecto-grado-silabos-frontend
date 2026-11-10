@@ -302,6 +302,7 @@ const {
                                 :record-code="career.code"
                                 :active="career.active"
                                 :deactivate-blocked-reason="career.deactivate_block ?? null"
+                                :deactivate-users="career.deactivate_users ?? null"
                                 :lock-reason="career.lock_reason ?? null"
                                 :faculty-id="career.faculty_id"
                                 :modality="career.modality"

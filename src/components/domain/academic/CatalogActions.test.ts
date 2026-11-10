@@ -50,6 +50,15 @@ describe('CatalogActions', () => {
     expect(document.body.textContent).toContain('No se puede desactivar: tiene 2 carreras activas');
   });
 
+  it('al desactivar una carrera avisa cuántos usuarios se retirarán', async () => {
+    await open({ entity: 'carrera', deactivateUsers: { coordinators: 1, teachers: 12 } });
+
+    (document.body.querySelector('button[aria-label="Desactivar carrera"]') as HTMLButtonElement).click();
+    await flushPromises();
+
+    expect(document.body.textContent).toContain('«Software» dejará de participar en nuevas convocatorias. Se retirarán 1 coordinador y 12 docentes de esta carrera; quien tenga rol en otra carrera lo conserva. Su historial se conserva y podrá reactivarla después');
+  });
+
   it('una carrera activa muestra desactivar, sin coordinador, eliminar ni menú', async () => {
     await open({ entity: 'carrera' });
 

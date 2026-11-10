@@ -21,6 +21,7 @@ const props = defineProps<{
     startsOn?: string | null; endsOn?: string | null;
     institutionalProcess?: { id: string; state: 'abierto' | 'pausado' | 'cerrado' } | null;
     faculties: CatalogRecord[]; lockReason?: string | null; deactivateBlockedReason?: string | null;
+    deactivateUsers?: { coordinators: number; teachers: number } | null;
 }>();
 const emit = defineEmits<{ changed: [message: string] }>();
 // Al refrescar, el registro cambia (Desactivar pasa a Reactivar) o desaparece: se avisa cuando el modal ya se cerró.
@@ -68,7 +69,12 @@ const error = ref<string | null>(null);
 const statusDescription = computed(() => {
     if (props.entity === 'facultad') return props.active ? `«${props.recordName}» no se podrá elegir para carreras nuevas. Su historial se conserva y podrá reactivarla después` : `«${props.recordName}» volverá a estar disponible`;
 
-    return props.active ? `«${props.recordName}» dejará de participar en nuevas convocatorias. Su historial se conserva y podrá reactivarla después` : `«${props.recordName}» volverá a participar en las próximas convocatorias`;
+    if (!props.active) return `«${props.recordName}» volverá a participar en las próximas convocatorias`;
+    const { coordinators = 0, teachers = 0 } = props.deactivateUsers ?? {};
+    const people = [coordinators && `${coordinators} ${coordinators === 1 ? 'coordinador' : 'coordinadores'}`, teachers && `${teachers} ${teachers === 1 ? 'docente' : 'docentes'}`].filter(Boolean).join(' y ');
+    const retire = people ? `. Se retirarán ${people} de esta carrera; quien tenga rol en otra carrera lo conserva` : '';
+
+    return `«${props.recordName}» dejará de participar en nuevas convocatorias${retire}. Su historial se conserva y podrá reactivarla después`;
 });
 const remove = async (): Promise<void> => {
     deleting.value = true; error.value = null;

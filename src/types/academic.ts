@@ -57,6 +57,7 @@ export type AcademicStructureProps = {
       name: string;
       active: boolean;
       deactivate_block?: string | null;
+      deactivate_users?: { coordinators: number; teachers: number };
       lock_reason?: string | null;
     }[];
     periods: {
