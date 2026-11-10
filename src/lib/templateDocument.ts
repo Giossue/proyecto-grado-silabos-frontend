@@ -3,7 +3,7 @@ export type DocumentNode = {
     text?: string;
     attrs?: Record<
         string,
-        string | number | boolean | null | number[] | string[] | Record<string, unknown>
+        string | number | boolean | null | number[] | string[] | Record<string, unknown> | Record<string, unknown>[]
     >;
     marks?: { type: string; attrs?: Record<string, string | null> }[];
     content?: DocumentNode[];

@@ -11,7 +11,7 @@ import { Bold, Braces, ChevronDown, Italic, Underline, List, ListOrdered, Plus, 
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { DocumentBlock, DocumentWithBlocks, DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
+import { DocumentBlock, DocumentResponse, DocumentWithBlocks, DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import { emptyDocument } from '@/types/configuration';
@@ -86,6 +86,7 @@ const editor = useEditor({
         PageSpacers,
         DocumentBlock.configure({ mode: props.blocks }),
         DocumentVariable.configure({ labels: Object.fromEntries(props.variables.map((item) => [item.key, item.label])) }),
+        DocumentResponse,
     ],
     onUpdate: ({ editor: current }) => {
         emit('update:modelValue', current.getJSON() as DocumentNode);

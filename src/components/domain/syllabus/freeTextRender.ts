@@ -1,6 +1,7 @@
 import { h } from 'vue';
 import type { VNodeChild } from 'vue';
 import { blockFilledText, expandBlock } from '@/lib/blocks/runtime';
+import { RESPONSE_NODE, responseAttrs, responseLabel, responseLines } from '@/lib/responseKinds';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const TAGS: Record<string, string> = {
@@ -13,12 +14,13 @@ export const isFreeTextDocument = (value: unknown): value is DocumentNode =>
     typeof value === 'object' && value !== null && (value as DocumentNode).type === 'doc';
 
 export const freeTextPlain = (node: DocumentNode): string =>
-    node.type === 'documentBlock' ? blockFilledText(node) : node.type === 'text' ? (node.text ?? '') : node.type === 'variable' ? String(node.attrs?.label || 'Dato del sistema') : (node.content ?? []).map(freeTextPlain).join(' ');
+    node.type === 'documentBlock' ? blockFilledText(node) : node.type === RESPONSE_NODE ? responseLines(responseAttrs(node)).join(' ') : node.type === 'text' ? (node.text ?? '') : node.type === 'variable' ? String(node.attrs?.label || 'Dato del sistema') : (node.content ?? []).map(freeTextPlain).join(' ');
 
 export const freeTextLines = (node: DocumentNode): string => {
     if (node.type === 'documentBlock') return blockFilledText(node);
     if (node.type === 'text') return node.text ?? '';
     if (node.type === 'hardBreak') return '\n';
+    if (node.type === RESPONSE_NODE) return responseLines(responseAttrs(node)).join('\n');
     const children = (node.content ?? []).map(freeTextLines);
     if (node.type === 'paragraph') return children.join('');
     if (node.type === 'tableRow') return children.join(' | ');
@@ -70,6 +72,12 @@ export const renderFreeText = (node: DocumentNode, options?: RenderOptions): VNo
     }
     if (node.type === 'hardBreak') {
         return h('br');
+    }
+    if (node.type === RESPONSE_NODE) {
+        const lines = responseLines(responseAttrs(node));
+        if (lines.length === 0) return h('span', { class: 'document-variable' }, responseLabel(responseAttrs(node)));
+
+        return lines.flatMap((line, index) => index === 0 ? [line] : [h('br'), line]);
     }
     const children = (node.content ?? []).map((child) => renderFreeText(child, options));
     if (node.type === 'doc') {

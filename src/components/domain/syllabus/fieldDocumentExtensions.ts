@@ -3,6 +3,7 @@ import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import DocumentBlockView from '@/components/domain/syllabus/DocumentBlockView.vue';
 import Document from '@tiptap/extension-document';
 import { TableCell, TableHeader } from '@tiptap/extension-table';
+import { RESPONSE_NODE, responseAttrs, responseLabel } from '@/lib/responseKinds';
 
 export const DocumentVariable = Node.create<{ labels: Record<string, string> }>({
     name: 'variable',
@@ -14,6 +15,32 @@ export const DocumentVariable = Node.create<{ labels: Record<string, string> }>(
     parseHTML: () => [{ tag: 'span[data-variable]', getAttrs: (element) => ({ id: element.getAttribute('data-variable') }) }],
     renderHTML({ node, HTMLAttributes }) {
         return ['span', mergeAttributes(HTMLAttributes, { 'data-variable': node.attrs.id, class: 'document-variable', contenteditable: 'false' }), this.options.labels[String(node.attrs.id)] ?? 'Dato del sistema'];
+    },
+});
+
+const parseResponse = (element: HTMLElement): Record<string, unknown> | false => {
+    try {
+        const attrs = JSON.parse(element.getAttribute('data-response') ?? '') as Record<string, unknown>;
+        return { kind: attrs.kind ?? '', options: attrs.options ?? [], value: attrs.value ?? null };
+    } catch {
+        return false;
+    }
+};
+
+export const DocumentResponse = Node.create({
+    name: RESPONSE_NODE,
+    group: 'inline',
+    inline: true,
+    atom: true,
+    selectable: true,
+    addAttributes: () => ({
+        kind: { default: '', rendered: false },
+        options: { default: () => [], rendered: false },
+        value: { default: null, rendered: false },
+    }),
+    parseHTML: () => [{ tag: 'span[data-response]', getAttrs: parseResponse }],
+    renderHTML({ node, HTMLAttributes }) {
+        return ['span', mergeAttributes(HTMLAttributes, { 'data-response': JSON.stringify(node.attrs), class: 'document-variable document-response', contenteditable: 'false' }), responseLabel(responseAttrs({ type: RESPONSE_NODE, attrs: node.attrs }))];
     },
 });
 

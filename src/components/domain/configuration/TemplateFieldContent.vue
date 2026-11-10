@@ -3,10 +3,12 @@ import { computed } from 'vue';
 import type { TemplateField } from '@/api/template';
 import FreeTextContent from '@/components/domain/syllabus/FreeTextContent.vue';
 import { responsibleLabel } from '@/types/configuration';
+import { RESPONSE_NODE, responseAnswered, responseAttrs } from '@/lib/responseKinds';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 
 const props = defineProps<{ field: TemplateField; preview?: boolean; variables?: TemplateVariable[] }>();
 const shown = (node: DocumentNode): DocumentNode[] => {
+    if (node.type === RESPONSE_NODE && props.preview && !responseAnswered(responseAttrs(node))) return [];
     if (node.type !== 'variable') return [{ ...node, ...(node.content ? { content: node.content.flatMap(shown) } : {}) }];
     if (props.preview) return [];
 
