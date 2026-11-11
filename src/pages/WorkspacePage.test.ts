@@ -72,7 +72,8 @@ describe('WorkspacePage', () => {
     await flushPromises();
 
     expect(wrapper.findAll('[data-slot="card"]')).toHaveLength(1);
-    expect(wrapper.text()).toContain('Docencia en Software');
+    expect(wrapper.get('[data-slot="card-title"]').text()).toBe('Software');
+    expect(wrapper.get('[data-slot="card-description"]').text()).toBe('Docencia');
     expect(selectActiveRole).not.toHaveBeenCalled();
     expect(replace).not.toHaveBeenCalled();
     wrapper.unmount();
@@ -87,8 +88,8 @@ describe('WorkspacePage', () => {
     await flushPromises();
 
     expect(wrapper.findAll('[data-slot="card"]')).toHaveLength(2);
-    expect(wrapper.text()).toContain('Docencia en Software');
-    expect(wrapper.text()).toContain('Docencia en Turismo');
+    expect(wrapper.findAll('[data-slot="card-title"]').map((title) => title.text())).toEqual(['Software', 'Turismo']);
+    expect(wrapper.text()).not.toContain('Docencia en');
     expect(wrapper.findAll('button').filter((button) => button.text() === 'Entrar a esta carrera')).toHaveLength(2);
 
     await wrapper.findAll('button').find((button) => button.text() === 'Entrar a esta carrera')?.trigger('click');

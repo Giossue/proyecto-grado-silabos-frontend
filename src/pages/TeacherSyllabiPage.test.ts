@@ -12,6 +12,8 @@ vi.mock('vue-router', () => ({
   RouterLink: { props: ['to'], template: '<a :href="to"><slot /></a>' },
 }));
 
+const deadline = vi.hoisted(() => ({ value: null as { state: string } | null }));
+vi.mock('@/state/deadline', () => ({ deadlineState: { deadline: { get value() { return deadline.value; } } } }));
 vi.mock('@/api/dashboard', () => ({ getDashboard: vi.fn() }));
 vi.mock('@/api/syllabi', () => ({ getTeacherSyllabi: vi.fn() }));
 vi.mock('@/api/support-documents', () => ({ getTeacherSupportDocuments: vi.fn(), viewSupportDocument: vi.fn() }));
@@ -30,6 +32,7 @@ const syllabi: SyllabiResponse = {
 
 describe('TeacherSyllabiPage', () => {
   beforeEach(() => {
+    deadline.value = null;
     vi.mocked(getTeacherSyllabi).mockResolvedValue(syllabi);
   });
 
@@ -100,6 +103,16 @@ describe('TeacherSyllabiPage', () => {
     await flushPromises();
     expect(open.text()).toContain('No tiene sílabos asignados');
     expect(open.text()).not.toContain('Todavía no hay una convocatoria abierta');
+  });
+
+  it('con la convocatoria en pausa y sin sílabos dice que está en pausa', async () => {
+    deadline.value = { state: 'paused' };
+    vi.mocked(getTeacherSyllabi).mockResolvedValue({ ...syllabi, syllabi: { ...syllabi.syllabi, data: [], total: 0, from: null, to: null }, convocation_open: false });
+    const wrapper = mountPage();
+    await flushPromises();
+    expect(wrapper.text()).toContain('La convocatoria está en pausa');
+    expect(wrapper.text()).toContain('Cuando se reanude, aquí verá sus sílabos');
+    expect(wrapper.text()).not.toContain('Todavía no hay una convocatoria abierta');
   });
 
   it('vuelve a pedir los sílabos al filtrar', async () => {

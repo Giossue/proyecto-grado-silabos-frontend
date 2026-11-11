@@ -5,6 +5,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getTeacherSyllabi, type SyllabiResponse } from '@/api/syllabi';
+import { deadlineState } from '@/state/deadline';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import SyllabusStateBadge from '@/components/domain/SyllabusStateBadge.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -55,6 +56,7 @@ const clearFilters = (): void => {
 };
 const emptyCopy = computed((): { title: string; description?: string } => {
   if (result.value?.filters.q || result.value?.filters.state) return { title: 'Ningún sílabo coincide con la búsqueda' };
+  if (deadlineState.deadline.value?.state === 'paused') return { title: 'La convocatoria está en pausa', description: 'Cuando se reanude, aquí verá sus sílabos' };
   if (result.value?.convocation_open === false) return { title: 'Todavía no hay una convocatoria abierta', description: 'Cuando Coordinación la abra, aquí verá sus sílabos' };
   return { title: 'No tiene sílabos asignados' };
 });
