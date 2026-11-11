@@ -1,9 +1,10 @@
-import { CircleDot, Hash, ListChecks, Plus, Trash2, Type } from '@lucide/vue';
-import { computed, defineComponent, h, ref, type Component, type PropType, type VNodeChild } from 'vue';
+import { Plus, Trash2 } from '@lucide/vue';
+import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vue';
 import BlockForm from '@/components/domain/syllabus/BlockForm';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import ResponseAnswer from '@/components/domain/syllabus/ResponseAnswer.vue';
 import ResponseOptionsEditor from '@/components/domain/syllabus/ResponseOptionsEditor.vue';
+import ResponseSlotSetup from '@/components/domain/syllabus/ResponseSlotSetup.vue';
 import { renderFreeText } from '@/components/domain/syllabus/freeTextRender';
 import { withTooltip } from '@/components/domain/withTooltip';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { blankResponse, cloneResponse, replaceResponse, responseAt, responseDocument, responseListTable, responseText } from '@/lib/fieldResponses';
 import { templateRuntime } from '@/lib/blocks/runtime';
-import { FREE_TEXT_KIND, FREE_TEXT_LABEL, RESPONSE_KINDS, RESPONSE_NODE, emptyResponse, responseAttrs, responseHasOptions, responseKindOptions, responseNeedsOptions, withinResponse, type ResponseOption } from '@/lib/responseKinds';
+import { FREE_TEXT_KIND, RESPONSE_KINDS, RESPONSE_NODE, emptyResponse, responseAttrs, responseNeedsOptions, withinResponse, type ResponseOption } from '@/lib/responseKinds';
 import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 
 const isHeaderRow = (row: DocumentNode): boolean => Boolean(row.content?.length) && row.content!.every((cell) => cell.type === 'tableHeader');
@@ -35,8 +36,6 @@ const headerColumns = (headers: DocumentNode[]): string[] => {
 const onlyBlocks = (document: DocumentNode): boolean => (document.content ?? []).some((node) => node.type === 'documentBlock')
     && (document.content ?? []).every((node) => node.type === 'documentBlock' || blankResponse(node));
 const hasResponse = (node: DocumentNode): boolean => blankResponse(node) || node.type === 'documentBlock' || node.type === RESPONSE_NODE || (node.content ?? []).some(hasResponse);
-const KIND_ICONS: Record<string, Component> = { [FREE_TEXT_KIND]: Type, numero: Hash, una: CircleDot, varias: ListChecks };
-const setupKinds = [{ kind: FREE_TEXT_KIND, label: FREE_TEXT_LABEL }, ...responseKindOptions];
 const lineText = (node: DocumentNode): string => (node.content ?? []).map((part) => part.type === 'hardBreak' ? '\n' : part.text ?? '').join('');
 const inline = (text: string): DocumentNode[] => text.split('\n').flatMap((line, index) => [...(index > 0 ? [{ type: 'hardBreak' }] : []), ...(line ? [{ type: 'text', text: line }] : [])]);
 
@@ -55,13 +54,10 @@ export default defineComponent({
     emits: { 'update:modelValue': (value: DocumentNode) => Boolean(value) },
     setup(props, { emit }) {
         const document = computed(() => props.template ? responseDocument(props.template, props.modelValue, props.setup) : props.modelValue);
-        const selected = ref<number[] | null>(null);
-        const isSelected = (path: number[]): boolean => selected.value !== null && selected.value.join('-') === path.join('-');
         const builtAt = (path: number[]): DocumentNode | undefined => nodesOfType(responseAt(document.value!, path), RESPONSE_NODE)[0];
         const kindAt = (path: number[]): string => builtAt(path)?.attrs?.kind as string | undefined ?? FREE_TEXT_KIND;
-        const apply = (kind: string): void => {
-            const path = selected.value;
-            if (!path || !props.template) return;
+        const apply = (path: number[], kind: string): void => {
+            if (!props.template) return;
             const blank = cloneResponse(responseAt(props.template, path));
             if (kind === FREE_TEXT_KIND) return update(path, blank);
             const previous = builtAt(path);
@@ -75,18 +71,13 @@ export default defineComponent({
             'onUpdate:modelValue': (options: ResponseOption[]) => update(path, { ...current, attrs: { ...current.attrs, options } }),
         });
         const setupSlot = (path: number[], label: string): VNodeChild => {
-            const kind = kindAt(path);
-            const name = kind === FREE_TEXT_KIND ? FREE_TEXT_LABEL : RESPONSE_KINDS[kind]?.label ?? FREE_TEXT_LABEL;
             const built = builtAt(path);
             const inner = built ? [...path, ...(responseAt(document.value!, path).type === 'paragraph' ? [0] : [0, 0])] : path;
-            return h('div', { key: `${props.id}-${path.join('-')}`, class: 'flex min-w-0 flex-col gap-2' }, [
-                h(Button, {
-                    type: 'button', variant: isSelected(path) ? 'secondary' : 'outline', size: 'sm', class: 'w-fit', disabled: props.disabled,
-                    'aria-label': `${label}: ${name}`, 'aria-pressed': isSelected(path), 'data-response-slot': '',
-                    onClick: () => { selected.value = path; },
-                }, () => [h(KIND_ICONS[kind] ?? Type, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), name]),
-                built && responseHasOptions(kind) ? optionsEditor(built, inner, label) : null,
-            ]);
+            return h(ResponseSlotSetup, {
+                key: `${props.id}-${path.join('-')}`, kind: kindAt(path), options: built ? responseAttrs(built).options : [], label, disabled: props.disabled,
+                onKind: (kind: string) => apply(path, kind),
+                onOptions: (options: ResponseOption[]) => built && update(inner, { ...built, attrs: { ...built.attrs, options } }),
+            });
         };
         const fixedResponse = (template: DocumentNode, current: DocumentNode, path: number[], label: string): VNodeChild => {
             const attrs = responseAttrs(current);
@@ -213,16 +204,6 @@ export default defineComponent({
             return (template.content ?? []).map((child, index) => render(child, [...path, index], label));
         }
 
-        const ribbon = (): VNodeChild => h('div', { role: 'toolbar', 'aria-label': `Tipo de respuesta de ${props.label}`, class: 'flex flex-wrap items-center gap-1 border-b p-1.5' }, [
-            ...setupKinds.map((item) => h(Button, {
-                key: item.kind, type: 'button', variant: 'ghost', size: 'sm', disabled: props.disabled || selected.value === null,
-                'aria-pressed': selected.value !== null && kindAt(selected.value) === item.kind,
-                class: selected.value !== null && kindAt(selected.value) === item.kind ? 'bg-accent text-accent-foreground' : undefined,
-                onClick: () => apply(item.kind),
-            }, () => [h(KIND_ICONS[item.kind] ?? Type, { 'data-icon': 'inline-start', 'aria-hidden': 'true' }), item.label])),
-            selected.value === null ? h('span', { class: 'px-1 text-sm text-muted-foreground' }, 'Haga clic en un espacio y elija su tipo de respuesta') : null,
-        ]);
-
         return () => {
             const legacy = props.modelValue;
             if ((!props.template || blankResponse(props.template)) && legacy && onlyBlocks(legacy)) {
@@ -230,10 +211,8 @@ export default defineComponent({
                     (legacy.content ?? []).map((node, index) => node.type === 'documentBlock' ? render(node, [index]) : null));
             }
             if (props.setup && props.template) {
-                return h('div', { id: props.id, class: 'flex min-w-0 flex-col rounded-md border border-border bg-background', role: 'group', 'aria-label': props.label }, [
-                    ribbon(),
-                    h('div', { class: 'flex min-w-0 flex-col gap-4 p-3' }, blankResponse(props.template) ? [setupSlot([], props.label)] : nodes(props.template, [])),
-                ]);
+                return h('div', { id: props.id, class: 'flex min-w-0 flex-col gap-3', role: 'group', 'aria-label': props.label },
+                    blankResponse(props.template) ? [setupSlot([], props.label)] : nodes(props.template, []));
             }
             if (!props.template || blankResponse(props.template)) return h(FreeTextEditor, {
                 id: props.id, label: props.label, modelValue: props.modelValue ?? props.template, disabled: props.disabled, allowTables: false,

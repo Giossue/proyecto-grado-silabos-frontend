@@ -23,53 +23,74 @@ const mountSetup = (source: DocumentNode, modelValue: DocumentNode | null = null
     return wrapper;
 };
 const last = (wrapper: ReturnType<typeof mountSetup>): DocumentNode => wrapper.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
-const ribbon = (wrapper: ReturnType<typeof mountSetup>, label: string) => wrapper.get('[role="toolbar"]').findAll('button').find((button) => button.text() === label)!;
+const kinds = (): HTMLButtonElement[] => [...document.querySelectorAll<HTMLButtonElement>('[role="radio"]')];
+const choose = async (wrapper: ReturnType<typeof mountSetup>, slot: string, kind: string): Promise<void> => {
+    if (!kinds().length) {
+        await wrapper.get(`button[aria-label="${slot}"]`).trigger('click');
+        await flushPromises();
+    }
+    kinds().find((button) => button.textContent?.trim() === kind)!.click();
+    await flushPromises();
+};
+const option = async (index: number, value: string): Promise<void> => {
+    const input = document.querySelector<HTMLInputElement>(`input[aria-label="Opción ${index}"]`)!;
+    input.value = value;
+    input.dispatchEvent(new Event('input'));
+    await flushPromises();
+};
 
 describe('Armar tipos de respuesta en un campo del docente', () => {
     afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
 
-    it('la cinta convierte la celda elegida en una respuesta y las opciones se escriben ahí mismo', async () => {
+    it('cada espacio es un recuadro limpio y al hacer clic se elige el tipo y se escriben las opciones ahí mismo', async () => {
         const wrapper = mountSetup(template());
         expect(wrapper.find('textarea').exists()).toBe(false);
+        expect(wrapper.find('[role="toolbar"]').exists()).toBe(false);
         expect(wrapper.text()).toContain('Estrategias de la asignatura');
-        expect(wrapper.get('[role="toolbar"]').attributes('aria-label')).toBe('Tipo de respuesta de Métodos');
-        expect(wrapper.get('[role="toolbar"]').findAll('button').map((button) => button.text())).toEqual(['Texto libre', 'Número', 'Elegir una', 'Elegir varias']);
-        expect(ribbon(wrapper, 'Elegir una').attributes('disabled')).toBeDefined();
+        expect(wrapper.text()).toContain('Lo escribe el docente');
         expect(wrapper.findAll('button').some((button) => button.text() === 'Agregar fila')).toBe(false);
 
         await wrapper.get('button[aria-label="Técnica, fila 1: Texto libre"]').trigger('click');
-        expect(ribbon(wrapper, 'Texto libre').attributes('aria-pressed')).toBe('true');
-        await ribbon(wrapper, 'Elegir una').trigger('click');
+        await flushPromises();
+        expect(kinds().map((button) => button.textContent?.trim())).toEqual(['Texto libre', 'Número', 'Elegir una', 'Elegir varias']);
+        expect(kinds()[0]!.getAttribute('aria-checked')).toBe('true');
+        await choose(wrapper, 'Técnica, fila 1: Texto libre', 'Elegir una');
         expect(last(wrapper).content![2]!.content![1]!.content![0]!.content![0]!.content).toEqual([{ type: 'response', attrs: { kind: 'una', options: [], value: null } }]);
         expect(last(wrapper).content![0]).toEqual(template().content![0]);
 
         await wrapper.setProps({ modelValue: last(wrapper) });
-        expect(wrapper.find('button[aria-label="Técnica, fila 1: Elegir una"]').exists()).toBe(true);
-        await wrapper.get('input[aria-label="Opción 1"]').setValue('Taller');
+        await flushPromises();
+        expect(wrapper.get('button[aria-label="Técnica, fila 1: Elegir una"]').text()).toBe('Elegir una · sin opciones');
+        await option(1, 'Taller');
         expect(last(wrapper).content![2]!.content![1]!.content![0]!.content![0]!.content![0]!.attrs).toEqual({ kind: 'una', options: [{ const: 'o1', title: 'Taller' }], value: null });
 
         await wrapper.setProps({ modelValue: last(wrapper) });
-        await ribbon(wrapper, 'Elegir varias').trigger('click');
+        await flushPromises();
+        expect(wrapper.get('button[aria-label="Técnica, fila 1: Elegir una"]').text()).toBe('Elegir una · 1 opción');
+        await choose(wrapper, 'Técnica, fila 1: Elegir una', 'Elegir varias');
         expect(last(wrapper).content![2]!.content![1]!.content![0]!.content![0]!.content![0]!.attrs).toEqual({ kind: 'varias', options: [{ const: 'o1', title: 'Taller' }], value: [] });
 
         await wrapper.setProps({ modelValue: last(wrapper) });
-        await ribbon(wrapper, 'Texto libre').trigger('click');
+        await flushPromises();
+        await choose(wrapper, 'Técnica, fila 1: Elegir varias', 'Texto libre');
         expect(last(wrapper)).toEqual(template());
     });
 
     it('un espacio suelto se vuelve número y un campo vacío completo también se arma', async () => {
         const wrapper = mountSetup(template());
-        await wrapper.get('button[aria-label="Métodos: Texto libre"]').trigger('click');
-        await ribbon(wrapper, 'Número').trigger('click');
+        await choose(wrapper, 'Métodos: Texto libre', 'Número');
         expect(last(wrapper).content![1]!.content).toEqual([{ type: 'response', attrs: { kind: 'numero', options: [], value: '' } }]);
         await wrapper.setProps({ modelValue: last(wrapper) });
-        expect(wrapper.find('input[aria-label="Opción 1"]').exists()).toBe(false);
+        await flushPromises();
+        expect(document.querySelector('input[aria-label="Opción 1"]')).toBeNull();
+        wrapper.unmount();
+        wrappers.splice(0);
+        document.body.innerHTML = '';
 
         const whole = mountSetup({ type: 'doc', content: [{ type: 'paragraph' }] });
         await flushPromises();
         expect(whole.find('[aria-label="Negrita"]').exists()).toBe(false);
-        await whole.get('button[aria-label="Métodos: Texto libre"]').trigger('click');
-        await ribbon(whole, 'Elegir varias').trigger('click');
+        await choose(whole, 'Métodos: Texto libre', 'Elegir varias');
         expect(last(whole)).toEqual({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'response', attrs: { kind: 'varias', options: [], value: [] } }] }] });
     });
 
@@ -88,6 +109,8 @@ describe('Armar tipos de respuesta en un campo del docente', () => {
     it('bloqueado no deja elegir espacios ni tipos', async () => {
         const wrapper = mountSetup(template(), null, true);
         expect(wrapper.get('button[aria-label="Técnica, fila 1: Texto libre"]').attributes('disabled')).toBeDefined();
-        expect(ribbon(wrapper, 'Número').attributes('disabled')).toBeDefined();
+        await wrapper.get('button[aria-label="Técnica, fila 1: Texto libre"]').trigger('click');
+        await flushPromises();
+        expect(kinds()).toHaveLength(0);
     });
 });

@@ -12,7 +12,7 @@ import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import FieldResponseEditor from '@/components/domain/syllabus/FieldResponseEditor';
 import { responseEmpty } from '@/lib/fieldResponses';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import StatusBadge from '@/components/domain/StatusBadge.vue';
 import type { DocumentNode } from '@/lib/templateDocument';
@@ -27,8 +27,14 @@ const loading = ref(false);
 const saving = ref(false);
 const error = ref<string | null>(null);
 const GENERAL = 'General';
+// Los campos del docente van juntos en una pestaña aparte, para no mezclarlos con lo que escribe Coordinación.
+const RESPONSES = 'Respuestas del docente';
 const sectionOf = (field: SubjectProfileField): string => field.section?.trim() || GENERAL;
-const sections = computed(() => [...new Set(fields.value.map(sectionOf))]);
+const tabOf = (field: SubjectProfileField): string => builds(field) ? RESPONSES : sectionOf(field);
+const sections = computed(() => {
+  const own = [...new Set(fields.value.filter((field) => !builds(field)).map(sectionOf))];
+  return fields.value.some(builds) ? [...own, RESPONSES] : own;
+});
 const chosen = ref<string | null>(null);
 const activeSection = computed<string>({
   get: () => (chosen.value !== null && sections.value.includes(chosen.value) ? chosen.value : sections.value[0] ?? ''),
@@ -36,7 +42,8 @@ const activeSection = computed<string>({
 });
 const isEmpty = (fieldId: string): boolean => responseEmpty(fields.value.find((field) => field.id === fieldId)?.template, values.value[fieldId]);
 const sectionHasEmpty = (section: string): boolean => fields.value.some((field) => !builds(field) && sectionOf(field) === section && isEmpty(field.id));
-const shownFields = computed(() => fields.value.filter((field) => sectionOf(field) === activeSection.value));
+const newSection = (index: number): boolean => index === 0 || sectionOf(shownFields.value[index - 1]!) !== sectionOf(shownFields.value[index]!);
+const shownFields = computed(() => fields.value.filter((field) => tabOf(field) === activeSection.value));
 // Lo cargado al abrir: sin cambios no hay nada que guardar, como en los demás formularios.
 const loaded = ref('');
 const changed = computed(() => JSON.stringify(values.value) !== loaded.value);
@@ -137,13 +144,14 @@ const save = async (close: () => void) => {
                 </TabsList>
               </Tabs>
               <fieldset class="flex min-w-0 flex-1 flex-col gap-7" :disabled="disabled">
-              <Field v-for="field in shownFields" :key="field.id">
+              <p v-if="activeSection === RESPONSES" class="text-sm text-muted-foreground">Estos campos los llena el docente. Si quiere que en un espacio elija de una lista o escriba un número, haga clic en él</p>
+              <template v-for="(field, index) in shownFields" :key="field.id">
+              <h3 v-if="activeSection === RESPONSES && newSection(index)" class="-mb-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">{{ sectionOf(field) }}</h3>
+              <Field>
                 <div class="flex flex-wrap items-center gap-2">
                   <FieldLabel :for="`ficha-${field.id}`" :class="{ 'sr-only': !field.label.trim() }">{{ field.label.trim() || sectionOf(field) }}</FieldLabel>
-                  <StatusBadge v-if="builds(field)" label="Lo llena el docente" tone="info" />
-                  <StatusBadge v-else-if="isEmpty(field.id)" label="Sin llenar" tone="warning" />
+                  <StatusBadge v-if="!builds(field) && isEmpty(field.id)" label="Sin llenar" tone="warning" />
                 </div>
-                <FieldDescription v-if="builds(field)">Elija solo el tipo de respuesta de cada espacio: texto libre, número o elegir entre opciones. El docente lo llena en su sílabo</FieldDescription>
                 <FieldResponseEditor
                   :template="field.template"
                   :id="`ficha-${field.id}`"
@@ -155,6 +163,7 @@ const save = async (close: () => void) => {
                   @update:model-value="values[field.id] = $event"
                 />
               </Field>
+              </template>
               </fieldset>
             </div>
           </template>

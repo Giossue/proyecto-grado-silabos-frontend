@@ -128,10 +128,10 @@ describe('SubjectProfileDialog', () => {
     expect(saveSubjectProfile).toHaveBeenCalledWith('subject-1', expect.any(Object));
   });
 
-  it('muestra los campos del docente solo para armar su tipo de respuesta y los guarda con el proyecto', async () => {
+  it('junta los campos del docente en su pestaña, sin ruido, y guarda lo que el coordinador arma con el proyecto', async () => {
     const blank = { type: 'doc', content: [{ type: 'paragraph' }] };
     vi.mocked(getSubjectProfile).mockResolvedValue({
-      fields: [{ id: 'f1', key: 'descripcion', label: 'Descripción', section: 'Metodología', quien_llena: 'coordinacion', content: blank, position: 4 }],
+      fields: [{ id: 'f1', key: 'descripcion', label: 'Descripción', section: 'Descripción', quien_llena: 'coordinacion', content: blank, position: 1 }],
       response_fields: [{ id: 'd1', key: 'metodologia', label: 'Métodos', section: 'Metodología', quien_llena: 'docente', content: blank, template: blank, position: 2 }],
       values: {},
       complete: false,
@@ -141,14 +141,22 @@ describe('SubjectProfileDialog', () => {
     await wrapper.setProps({ open: true });
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Lo llena el docente');
-    expect(wrapper.text()).toContain('Elija solo el tipo de respuesta de cada espacio');
+    const tabs = wrapper.findAll('[role="tab"]').map((tab) => tab.text());
+    expect(tabs).toEqual(['Descripción● (con campos sin llenar)', 'Respuestas del docente']);
+    expect(wrapper.find('button[aria-label="Métodos: Texto libre"]').exists()).toBe(false);
     expect(wrapper.text().match(/Sin llenar/g)).toHaveLength(1);
-    expect(wrapper.text().indexOf('Métodos')).toBeLessThan(wrapper.text().indexOf('Descripción'));
+
+    await wrapper.findAll('[role="tab"]')[1]!.trigger('mousedown', { button: 0 });
+    await flushPromises();
+    expect(wrapper.text()).toContain('Estos campos los llena el docente');
+    expect(wrapper.text()).not.toContain('Lo llena el docente');
+    expect(wrapper.find('[role="toolbar"]').exists()).toBe(false);
     expect(wrapper.find('[data-id="ficha-d1"]').exists()).toBe(false);
 
     await wrapper.get('button[aria-label="Métodos: Texto libre"]').trigger('click');
-    await wrapper.get('[role="toolbar"]').findAll('button').find((button) => button.text() === 'Número')!.trigger('click');
+    await flushPromises();
+    [...document.querySelectorAll<HTMLButtonElement>('[role="radio"]')].find((button) => button.textContent?.includes('Número'))!.click();
+    await flushPromises();
     await wrapper.get('form').trigger('submit');
     await flushPromises();
 
