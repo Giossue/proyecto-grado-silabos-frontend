@@ -2,7 +2,7 @@
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import type { ChainedCommands, Editor } from '@tiptap/core';
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Baseline, Bold, ChevronDown, Italic, List, ListOrdered, Table2, Underline } from '@lucide/vue';
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Baseline, Bold, ChevronDown, Italic, List, ListOrdered, Redo2, Table2, Underline, Undo2 } from '@lucide/vue';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -23,6 +23,10 @@ const returnFocus = (event: Event): void => {
     if (ready.value) props.editor!.commands.focus();
 };
 
+const history = [
+    { label: 'Deshacer', icon: Undo2, apply: (chain: ChainedCommands) => chain.undo(), allowed: (editor: Editor) => editor.can().undo() },
+    { label: 'Rehacer', icon: Redo2, apply: (chain: ChainedCommands) => chain.redo(), allowed: (editor: Editor) => editor.can().redo() },
+] as const;
 const marks = [
     { name: 'bold', label: 'Negrita', icon: Bold, toggle: (chain: ChainedCommands) => chain.toggleBold() },
     { name: 'italic', label: 'Cursiva', icon: Italic, toggle: (chain: ChainedCommands) => chain.toggleItalic() },
@@ -51,6 +55,8 @@ const tableActions = [
 
 <template>
   <div class="flex shrink-0 items-center gap-0.5" role="group" aria-label="Formato del texto">
+    <IconTooltip v-for="step in history" :key="step.label" :label="step.label"><Button type="button" variant="ghost" size="icon-sm" :aria-label="step.label" :disabled="!can(step.allowed)" @mousedown.prevent @click="run(step.apply)"><component :is="step.icon" aria-hidden="true" /></Button></IconTooltip>
+    <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
     <IconTooltip v-for="mark in marks" :key="mark.name" :label="mark.label"><Button type="button" variant="ghost" size="icon-sm" :aria-label="mark.label" :aria-pressed="active(mark.name)" :disabled="!ready" :class="cn(active(mark.name) && 'bg-accent text-accent-foreground')" @mousedown.prevent @click="run(mark.toggle)"><component :is="mark.icon" aria-hidden="true" /></Button></IconTooltip>
     <MenuTooltip label="Color del texto"><DropdownMenu>
       <DropdownMenuTrigger as-child>

@@ -291,7 +291,7 @@ const sheets = computed(() => {
 });
 const toolbarWidth = computed(() => {
     const paper = paperOf(documentStyle.value);
-    return `${sheets.value[0]?.landscape ? paper.height : paper.width}mm`;
+    return `min(${sheets.value[0]?.landscape ? paper.height : paper.width}mm, 100%)`;
 });
 watch(changed, (value) => emit('dirty', value));
 watch(() => props.template, () => {
@@ -425,8 +425,9 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     <Alert v-if="error" variant="destructive" role="alert" class="mx-auto max-w-3xl"><AlertDescription>{{ error }}</AlertDescription></Alert>
 
 
-    <div v-if="!preview" class="pointer-events-none sticky top-16 z-20 mx-auto flex w-full justify-end" :style="{ maxWidth: toolbarWidth }">
-      <div data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
+    <!-- La cinta mide al menos lo que la hoja y crece con su contenido para quedar en una línea. -->
+    <div v-if="!preview" class="pointer-events-none sticky top-16 z-20 flex w-full justify-center">
+      <div data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" :style="{ minWidth: toolbarWidth }" class="pointer-events-auto flex w-max max-w-full items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
