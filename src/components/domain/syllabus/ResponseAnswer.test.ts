@@ -13,10 +13,10 @@ const wrappers: Array<ReturnType<typeof mount>> = [];
 const mounted = <T extends ReturnType<typeof mount>>(wrapper: T): T => { wrappers.push(wrapper); return wrapper; };
 const options = [{ const: 'o1', title: 'Clase magistral' }, { const: 'o2', title: 'Taller' }, { const: 'o3', title: 'Seminario' }];
 const answer = (attrs: ResponseAttrs, disabled = false) => mounted(mount(ResponseAnswer, { props: { attrs, label: 'Técnica', disabled }, attachTo: document.body }));
-const response = (kind: string, value: unknown, list = options): DocumentNode => ({ type: 'response', attrs: { kind, options: kind === 'numero' ? [] : list, value: value as never } });
+const response = (kind: string, value: unknown, list = options): DocumentNode => ({ type: 'response', attrs: { kind, options: kind === 'texto' ? [] : list, value: value as never } });
 const cellOf = (type: 'tableCell' | 'tableHeader', content: DocumentNode[]): DocumentNode => ({ type, attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content }] });
 const template: DocumentNode = { type: 'doc', content: [
-    { type: 'paragraph', content: [{ type: 'text', text: 'Horas de tutoría: ' }, response('numero', '')] },
+    { type: 'paragraph', content: [{ type: 'text', text: 'Horas de tutoría: ' }, response('texto', '')] },
     { type: 'table', content: [
         { type: 'tableRow', content: [cellOf('tableHeader', [{ type: 'text', text: 'Técnica' }]), cellOf('tableHeader', [{ type: 'text', text: 'Detalle' }])] },
         { type: 'tableRow', content: [cellOf('tableCell', [response('una', null)]), cellOf('tableCell', [])] },
@@ -40,17 +40,6 @@ describe('Responder un tipo de respuesta', () => {
         expect(wrapper.find('input').exists()).toBe(false);
         await wrapper.get('textarea[aria-label="Técnica"]').setValue('Primera línea\nSegunda línea');
         expect(emittedValue(wrapper)).toBe('Primera línea\nSegunda línea');
-    });
-
-    it('un número solo admite un número', async () => {
-        const wrapper = answer({ kind: 'numero', options: [], value: '' });
-        const input = wrapper.get('input[aria-label="Técnica"]');
-        expect(input.attributes('inputmode')).toBe('decimal');
-        const typed = (data: string): boolean => !input.element.dispatchEvent(new InputEvent('beforeinput', { data, cancelable: true }));
-        expect(typed('a')).toBe(true);
-        expect(typed('7')).toBe(false);
-        await input.setValue('12,5 horas');
-        expect(emittedValue(wrapper)).toBe('12,5');
     });
 
     it('elegir una marca una sola opción, queda fija y solo se quita', async () => {
@@ -102,9 +91,10 @@ describe('El editor del docente con tipos de respuesta', () => {
         setTemplateRuntime(definition as unknown as TemplateDefinitionPayload, {});
         const wrapper = mounted(mount(FieldResponseEditor, { props: { id: 'campo', label: 'Estrategias', template, modelValue: null }, attachTo: document.body }));
         expect(wrapper.text()).toContain('Horas de tutoría:');
-        expect(wrapper.findAll('textarea')).toHaveLength(1);
+        expect(wrapper.find('input').exists()).toBe(false);
+        expect(wrapper.findAll('textarea')).toHaveLength(2);
 
-        await wrapper.get('input[inputmode="decimal"]').setValue('8');
+        await wrapper.findAll('textarea')[0]!.setValue('8');
         let value = wrapper.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
         expect(value.content![0]!.content![1]!.attrs!.value).toBe('8');
         await wrapper.setProps({ modelValue: value });

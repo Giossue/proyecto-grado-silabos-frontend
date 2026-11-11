@@ -9,7 +9,7 @@ const table = (lastRow: DocumentNode[]): DocumentNode => ({ type: 'table', conte
     { type: 'tableRow', content: [cell('tableHeader', [text('N°')]), cell('tableHeader', [text('Actividad')])] },
     { type: 'tableRow', content: lastRow },
 ] });
-const response: DocumentNode = { type: RESPONSE_NODE, attrs: { kind: 'numero', options: [], value: null } };
+const response: DocumentNode = { type: RESPONSE_NODE, attrs: { kind: 'texto', options: [], value: null } };
 
 describe('responseListTable', () => {
     it('admite filas nuevas cuando la última fila son celdas vacías o de respuesta', () => {

@@ -58,7 +58,7 @@ describe('El coordinador escribe un campo Carrera y deja espacios para el docent
         const wrapper = mountSetup(template());
         expect(wrapper.findAll('button[aria-label="Espacio para el docente"]')).toHaveLength(3);
         await openSpace(wrapper, 1);
-        expect(kinds().map((button) => button.textContent?.trim())).toEqual(['Texto libre', 'Número', 'Elegir una', 'Elegir varias']);
+        expect(kinds().map((button) => button.textContent?.trim())).toEqual(['Texto libre', 'Elegir una', 'Elegir varias']);
         await pick('Elegir una');
         expect(document.querySelector<HTMLButtonElement>('[data-response-insert]')!.disabled).toBe(true);
         await option(1, 'Taller');
@@ -73,16 +73,12 @@ describe('El coordinador escribe un campo Carrera y deja espacios para el docent
         expect(last(wrapper)).toEqual(template());
     });
 
-    it('deja un espacio de texto libre o de número en un párrafo', async () => {
+    it('deja un espacio de texto libre en un párrafo', async () => {
         const wrapper = mountSetup(template());
         await openSpace(wrapper, 0);
         await pick('Texto libre');
         await insert();
         expect(last(wrapper).content![1]!.content).toEqual([{ type: 'response', attrs: { kind: 'texto', options: [], value: '' } }]);
-        await openSpace(wrapper, 0);
-        await pick('Número');
-        await insert();
-        expect(last(wrapper).content![1]!.content).toEqual([{ type: 'response', attrs: { kind: 'numero', options: [], value: '' } }]);
     });
 
     it('un campo vacío completo se escribe con el editor de texto y su cinta trae el botón de espacios', async () => {

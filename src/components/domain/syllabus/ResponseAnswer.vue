@@ -5,10 +5,8 @@ import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
-import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { guardNumber, numberText } from '@/lib/blocks/types';
 import { RESPONSE_KINDS, responseMany, responseSchema, type ResponseAttrs } from '@/lib/responseKinds';
 
 const props = withDefaults(defineProps<{ attrs: ResponseAttrs; label: string; disabled?: boolean; askFor?: string }>(), { disabled: false, askFor: 'al coordinador' });
@@ -17,7 +15,6 @@ const emit = defineEmits<{ 'update:value': [value: unknown] }>();
 const open = ref(false);
 const listId = useId();
 const schema = computed(() => responseSchema(props.attrs.kind, props.attrs.options));
-const number = computed(() => schema.value?.type === 'number' ? schema.value : null);
 const text = computed(() => schema.value?.type === 'string' && !('oneOf' in schema.value && schema.value.oneOf) ? schema.value : null);
 const many = computed(() => responseMany(props.attrs.kind));
 const isKey = (value: unknown): value is string => typeof value === 'string' && value !== '';
@@ -48,18 +45,6 @@ const remove = (key: string): void => {
     :model-value="typeof attrs.value === 'string' ? attrs.value : ''"
     :disabled="disabled"
     @update:model-value="emit('update:value', String($event))"
-  />
-  <Input
-    v-else-if="number"
-    class="w-36"
-    inputmode="decimal"
-    autocomplete="off"
-    placeholder="Número"
-    :aria-label="label"
-    :model-value="typeof attrs.value === 'string' || typeof attrs.value === 'number' ? String(attrs.value) : ''"
-    :disabled="disabled"
-    @beforeinput="guardNumber($event as InputEvent, number)"
-    @update:model-value="emit('update:value', numberText(String($event), number!))"
   />
   <div v-else class="flex min-w-0 flex-col gap-1.5" role="group" :aria-label="label">
     <ul v-if="chosen.length" class="flex flex-wrap gap-1.5" :aria-label="`Elegido en ${label}`">

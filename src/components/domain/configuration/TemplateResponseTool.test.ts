@@ -53,7 +53,7 @@ describe('Tipo de respuesta en la cinta de la plantilla', () => {
         const tool = mountTool(editor);
 
         await open(tool);
-        expect([...document.querySelectorAll('[role="radio"]')].map((item) => item.textContent?.trim())).toEqual(['Texto libre', 'Número', 'Elegir una', 'Elegir varias']);
+        expect([...document.querySelectorAll('[role="radio"]')].map((item) => item.textContent?.trim())).toEqual(['Texto libre', 'Elegir una', 'Elegir varias']);
         await pick('Elegir una');
         await write('Opción 1', '  Presencial ');
         await press('[data-response-add-option]');
@@ -66,7 +66,7 @@ describe('Tipo de respuesta en la cinta de la plantilla', () => {
         ]);
     });
 
-    it('un número no pide opciones y un campo Institucional no admite tipos de respuesta', async () => {
+    it('un texto libre no pide opciones y un campo Institucional no admite tipos de respuesta', async () => {
         const { host, editor } = await editorFor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Horas: ' }] }] });
         const blocked = mountTool(editor, false);
         expect(blocked.get('button[aria-label="Tipo de respuesta"]').attributes('disabled')).toBeDefined();
@@ -75,22 +75,22 @@ describe('Tipo de respuesta en la cinta de la plantilla', () => {
         editor.commands.setTextSelection(editor.state.doc.content.size - 1);
         const tool = mountTool(editor);
         await open(tool);
-        await pick('Número');
+        await pick('Texto libre');
         expect(document.querySelector('input[aria-label="Opción 1"]')).toBeNull();
         await press('[data-response-insert]');
 
         const value = host.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
-        expect(value.content![0]!.content).toEqual([{ type: 'text', text: 'Horas: ' }, { type: 'response', attrs: { kind: 'numero', options: [], value: '' } }]);
+        expect(value.content![0]!.content).toEqual([{ type: 'text', text: 'Horas: ' }, { type: 'response', attrs: { kind: 'texto', options: [], value: '' } }]);
     });
 
     it('la plantilla nombra el tipo mientras se edita y no lo imprime en la vista previa', () => {
         const field: TemplateField = { id: 'f1', key: 'modalidad', label: 'Modalidad', quien_llena: 'carrera', content: { type: 'doc', content: [
             { type: 'paragraph', content: [{ type: 'response', attrs: { kind: 'una', options: [{ const: 'o1', title: 'Presencial' }, { const: 'o2', title: 'En línea' }], value: null } }] },
-            { type: 'paragraph', content: [{ type: 'text', text: 'Horas: ' }, { type: 'response', attrs: { kind: 'numero', options: [], value: '' } }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Horas: ' }, { type: 'response', attrs: { kind: 'texto', options: [], value: '' } }] },
         ] } };
         const editing = mount(TemplateFieldContent, { props: { field } });
         expect(editing.get('[data-field-body]').text()).toContain('Elegir una: Presencial · En línea');
-        expect(editing.get('[data-field-body]').text()).toContain('Número');
+        expect(editing.get('[data-field-body]').text()).toContain('Texto libre');
 
         const preview = mount(TemplateFieldContent, { props: { field, preview: true } });
         expect(preview.get('[data-field-body]').text()).not.toContain('Elegir una');

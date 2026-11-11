@@ -17,7 +17,6 @@ export const RESPONSE_TEXT_LENGTH = 3000;
 
 export const RESPONSE_KINDS: Record<string, { label: string; schema: ValueSchema }> = {
     texto: { label: FREE_TEXT_LABEL, schema: { type: 'string', maxLength: RESPONSE_TEXT_LENGTH, multiline: true } },
-    numero: { label: 'Número', schema: { type: 'number', multipleOf: 0.01, maximum: 999999999.99 } },
     una: { label: 'Elegir una', schema: choice },
     varias: { label: 'Elegir varias', schema: { type: 'array', minItems: 0, maxItems: 100, initial: 0, items: choice } },
 };
