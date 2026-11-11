@@ -2,22 +2,22 @@ import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { getScheduledSubjects, type ScheduledSubjects } from '@/api/career-academics';
 import { getSession } from '@/api/session';
-import SubjectProfileDialog from '@/components/domain/academic/SubjectProfileDialog.vue';
 import SupportDocumentsPanel from '@/components/domain/academic/SupportDocumentsPanel.vue';
 import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import CoordinationCareerProjectPage from '@/pages/CoordinationCareerProjectPage.vue';
 
+const push = vi.fn();
 vi.mock('vue-router', async (importOriginal) => ({
   ...(await importOriginal<typeof import('vue-router')>()),
   useRoute: () => ({ params: {}, query: {}, fullPath: '/coordinacion/proyecto-carrera' }),
-  useRouter: () => ({ replace: vi.fn(), push: vi.fn() }),
+  useRouter: () => ({ replace: vi.fn(), push }),
 }));
 vi.mock('@/api/career-academics', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/api/career-academics')>()), getScheduledSubjects: vi.fn() }));
 vi.mock('@/api/session', () => ({ getSession: vi.fn() }));
 
 const subject = (id: string, nombre: string, ciclo: number, extra: Record<string, unknown> = {}) => ({ id, nombre, ciclo, generates_syllabus: true, profile_complete: true, ...extra });
 const scheduled = (subjects: unknown[]) => ({ career: { lock_reason: null, lock: null }, options: { activeSubjects: subjects } }) as unknown as ScheduledSubjects;
-const mountPage = () => mount(CoordinationCareerProjectPage, { attachTo: document.body, global: { stubs: { SubjectProfileDialog: true, FichaImportDialog: true, SupportDocumentsPanel: true, ProcessLockAlert: true } } });
+const mountPage = () => mount(CoordinationCareerProjectPage, { attachTo: document.body, global: { stubs: { FichaImportDialog: true, SupportDocumentsPanel: true, ProcessLockAlert: true } } });
 
 describe('Proyecto de carrera', () => {
   beforeEach(() => {
@@ -45,17 +45,17 @@ describe('Proyecto de carrera', () => {
     wrapper.unmount();
   });
 
-  it('al pulsar una tarjeta, con el mouse o con el teclado, abre el proyecto de carrera de esa materia', async () => {
+  it('al pulsar una tarjeta, con el mouse o con el teclado, abre la página del proyecto de carrera de esa materia', async () => {
     const wrapper = mountPage();
     await flushPromises();
     for (const trigger of wrapper.findAll('[data-slot="collapsible-trigger"]')) await trigger.trigger('click');
     await flushPromises();
 
     await wrapper.get('[aria-label="Abrir el proyecto de carrera de Matemática Discreta"]').trigger('click');
-    expect(wrapper.findComponent(SubjectProfileDialog).props()).toMatchObject({ subjectId: 'm2', subjectName: 'Matemática Discreta' });
+    expect(push).toHaveBeenLastCalledWith('/coordinacion/proyecto-carrera/m2');
 
     await wrapper.get('[aria-label="Abrir el proyecto de carrera de Estructuras de Datos"]').trigger('keydown.enter');
-    expect(wrapper.findComponent(SubjectProfileDialog).props()).toMatchObject({ subjectId: 'm3' });
+    expect(push).toHaveBeenLastCalledWith('/coordinacion/proyecto-carrera/m3');
     wrapper.unmount();
   });
 

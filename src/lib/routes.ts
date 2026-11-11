@@ -51,6 +51,7 @@ export const paths = {
     curriculum: '/coordinacion/malla',
     scheduledSubjects: '/coordinacion/materias-asignaciones',
     careerProject: '/coordinacion/proyecto-carrera',
+    careerProjectSubject: (subject: string): string => `/coordinacion/proyecto-carrera/${segment(subject)}`,
     teachers: '/coordinacion/docentes',
     documents: (revision: string): string =>
       `/coordinacion/revisiones/${segment(revision)}/documentos`,
@@ -219,6 +220,7 @@ export const routeRegistry: readonly RouteDefinition[] = [
   { name: 'coordination-history', path: '/coordinacion/revisiones/:revision/historial', component: 'CoordinationReviewHistoryPage', breadcrumb: 'Historial de versiones', layout: 'syllabus-editor', ...coordinator },
   { name: 'coordination-curriculum', path: paths.coordination.curriculum, component: 'CoordinationAcademicStructurePage', states: ['curriculum'], breadcrumb: 'Malla', ...coordinator },
   { name: 'coordination-career-project', path: paths.coordination.careerProject, component: 'CoordinationCareerProjectPage', breadcrumb: 'Proyecto de carrera', ...coordinator },
+  { name: 'coordination-career-project-subject', path: '/coordinacion/proyecto-carrera/:subject', component: 'CoordinationSubjectProfilePage', breadcrumb: 'Proyecto de carrera de una materia', ...coordinator },
   { name: 'coordination-scheduled-subjects', path: paths.coordination.scheduledSubjects, component: 'CoordinationAcademicStructurePage', states: ['schedule'], breadcrumb: 'Materias y asignaciones', ...coordinator },
   { name: 'coordination-teachers', path: paths.coordination.teachers, component: 'CoordinationAcademicStructurePage', states: ['teachers'], breadcrumb: 'Docentes', ...coordinator },
   { name: 'coordination-documents', path: '/coordinacion/revisiones/:revision/documentos', component: 'DocumentsPage', shortcut: 'documents', ...coordinator },

@@ -139,12 +139,10 @@ export type ScheduledSubjects = {
   };
 };
 
-export type SubjectProfileField = { id: string; key: string; label: string; section: string | null; quien_llena: 'coordinacion' | 'docente'; content: DocumentNode; template?: DocumentNode; position?: number };
-
+export type SubjectProfileField = { id: string; key: string; label: string; section: string | null; quien_llena: 'carrera'; content: DocumentNode; template?: DocumentNode; position?: number };
 
 export type SubjectProfile = {
   fields: SubjectProfileField[];
-  response_fields?: SubjectProfileField[];
   values: Record<string, DocumentNode | null>;
   complete: boolean;
   definition?: TemplateDefinitionPayload;

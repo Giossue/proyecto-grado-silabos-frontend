@@ -1,10 +1,10 @@
-import { Plus, Trash2 } from '@lucide/vue';
+import { Plus, Trash2, X } from '@lucide/vue';
 import { computed, defineComponent, h, type PropType, type VNodeChild } from 'vue';
 import BlockForm from '@/components/domain/syllabus/BlockForm';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
 import ResponseAnswer from '@/components/domain/syllabus/ResponseAnswer.vue';
 import ResponseOptionsEditor from '@/components/domain/syllabus/ResponseOptionsEditor.vue';
-import ResponseSlotSetup from '@/components/domain/syllabus/ResponseSlotSetup.vue';
+import TemplateResponseTool from '@/components/domain/configuration/TemplateResponseTool.vue';
 import { renderFreeText } from '@/components/domain/syllabus/freeTextRender';
 import { withTooltip } from '@/components/domain/withTooltip';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { blankResponse, cloneResponse, replaceResponse, responseAt, responseDocument, responseListTable, responseText } from '@/lib/fieldResponses';
 import { templateRuntime } from '@/lib/blocks/runtime';
-import { FREE_TEXT_KIND, RESPONSE_KINDS, RESPONSE_NODE, emptyResponse, responseAttrs, responseNeedsOptions, withinResponse, type ResponseOption } from '@/lib/responseKinds';
+import { RESPONSE_KINDS, RESPONSE_NODE, responseAnswered, responseAttrs, responseLines, responseNeedsOptions, withinResponse, type ResponseOption } from '@/lib/responseKinds';
 import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 
 const isHeaderRow = (row: DocumentNode): boolean => Boolean(row.content?.length) && row.content!.every((cell) => cell.type === 'tableHeader');
@@ -48,49 +48,55 @@ export default defineComponent({
         modelValue: { type: Object as PropType<DocumentNode | null>, default: null },
         disabled: { type: Boolean, default: false },
         required: { type: Boolean, default: false },
-        setup: { type: Boolean, default: false },
+        career: { type: Boolean, default: false },
         askFor: { type: String, default: 'al coordinador' },
     },
     emits: { 'update:modelValue': (value: DocumentNode) => Boolean(value) },
     setup(props, { emit }) {
-        const document = computed(() => props.template ? responseDocument(props.template, props.modelValue, props.setup) : props.modelValue);
-        const builtAt = (path: number[]): DocumentNode | undefined => nodesOfType(responseAt(document.value!, path), RESPONSE_NODE)[0];
-        const kindAt = (path: number[]): string => builtAt(path)?.attrs?.kind as string | undefined ?? FREE_TEXT_KIND;
-        const apply = (path: number[], kind: string): void => {
+        const document = computed(() => props.template ? responseDocument(props.template, props.modelValue, props.career) : props.modelValue);
+        const placeSpace = (path: number[], node: DocumentNode): void => {
             if (!props.template) return;
             const blank = cloneResponse(responseAt(props.template, path));
-            if (kind === FREE_TEXT_KIND) return update(path, blank);
-            const previous = builtAt(path);
-            const node = emptyResponse(kind, previous ? responseAttrs(previous).options : []);
             update(path, blank.type === 'paragraph'
                 ? { ...blank, content: [node] }
                 : { ...blank, content: [{ ...(blank.content?.[0] ?? { type: 'paragraph' }), content: [node] }] });
+        };
+        const clearSpace = (path: number[]): void => {
+            if (props.template) update(path, cloneResponse(responseAt(props.template, path)));
         };
         const optionsEditor = (current: DocumentNode, path: number[], label: string): VNodeChild => h(ResponseOptionsEditor, {
             modelValue: responseAttrs(current).options, label: `Opciones de ${label}`, disabled: props.disabled,
             'onUpdate:modelValue': (options: ResponseOption[]) => update(path, { ...current, attrs: { ...current.attrs, options } }),
         });
-        const setupSlot = (path: number[], label: string): VNodeChild => {
-            const built = builtAt(path);
-            const inner = built ? [...path, ...(responseAt(document.value!, path).type === 'paragraph' ? [0] : [0, 0])] : path;
-            return h(ResponseSlotSetup, {
-                key: `${props.id}-${path.join('-')}`, kind: kindAt(path), options: built ? responseAttrs(built).options : [], label, disabled: props.disabled,
-                onKind: (kind: string) => apply(path, kind),
-                onOptions: (options: ResponseOption[]) => built && update(inner, { ...built, attrs: { ...built.attrs, options } }),
-            });
-        };
-        const fixedResponse = (template: DocumentNode, current: DocumentNode, path: number[], label: string): VNodeChild => {
+        const spaceTool = (path: number[]): VNodeChild => h(TemplateResponseTool, {
+            label: 'Espacio para el docente', hint: 'El docente solo responde: no cambia el tipo ni las opciones',
+            optionsHint: 'Escriba las opciones que podrá elegir el docente', requireOptions: true, disabled: props.disabled,
+            onInsert: (node: DocumentNode) => placeSpace(path, node),
+        });
+        const careerSpace = (current: DocumentNode, path: number[], slotPath: number[], label: string): VNodeChild => {
             const attrs = responseAttrs(current);
-            return h('div', { key: `${props.id}-${path.join('-')}`, class: 'flex min-w-0 flex-col gap-2' }, [
-                h(Badge, { variant: 'secondary', class: 'w-fit font-normal' }, () => `${RESPONSE_KINDS[attrs.kind]?.label ?? 'Respuesta'} (lo definió Administración)`),
-                responseNeedsOptions(responseAttrs(template))
-                    ? optionsEditor(current, path, label)
-                    : attrs.options.length ? h('p', { class: 'text-sm text-muted-foreground' }, attrs.options.map((option) => option.title).join(' · ')) : null,
+            return h('div', { key: `${props.id}-${path.join('-')}`, class: 'flex min-w-0 flex-col gap-2', 'data-career-space': attrs.kind }, [
+                h('div', { class: 'flex flex-wrap items-center gap-1' }, [
+                    h(Badge, { variant: 'secondary', class: 'w-fit font-normal' }, () => `Espacio para el docente: ${RESPONSE_KINDS[attrs.kind]?.label ?? 'Respuesta'}`),
+                    withTooltip('Quitar el espacio', h(Button, {
+                        type: 'button', variant: 'ghost', size: 'icon-sm', disabled: props.disabled, 'aria-label': `Quitar el espacio de ${label}`,
+                        onClick: () => clearSpace(slotPath),
+                    }, () => h(X, { 'aria-hidden': 'true' }))),
+                ]),
+                attrs.options.length || responseNeedsOptions(attrs) ? optionsEditor(current, path, label) : null,
             ]);
         };
         const response = (template: DocumentNode, path: number[], label: string): VNodeChild => {
             const current = responseAt(document.value!, path);
-            if (props.setup) return fixedResponse(template, current, path, label);
+            if (props.career && responseNeedsOptions(responseAttrs(template))) {
+                return h('div', { key: `${props.id}-${path.join('-')}`, class: 'flex min-w-0 flex-col gap-2' }, [
+                    h(Badge, { variant: 'secondary', class: 'w-fit font-normal' }, () => `${RESPONSE_KINDS[responseAttrs(current).kind]?.label ?? 'Respuesta'} (lo definió Administración)`),
+                    optionsEditor(current, path, label),
+                ]);
+            }
+            if (!props.career && responseAnswered(responseAttrs(template))) {
+                return h('span', { key: `${props.id}-${path.join('-')}`, class: 'py-1 text-muted-foreground' }, responseLines(responseAttrs(template)).join(', '));
+            }
             return h(ResponseAnswer, {
                 key: `${props.id}-${path.join('-')}`, attrs: responseAttrs(current), label, disabled: props.disabled, askFor: props.askFor,
                 'onUpdate:value': (value: unknown) => update(path, { ...current, attrs: { ...current.attrs, value: value as never } }),
@@ -129,7 +135,7 @@ export default defineComponent({
             const values = current.content ?? [];
             const headers = rows.filter(isHeaderRow);
             const columns = headerColumns(headers);
-            const list = !props.setup && responseListTable(template);
+            const list = responseListTable(template);
             let position = 0;
             const body = values.map((_, index) => {
                 const rowTemplate = rows[index] ?? rows[rows.length - 1]!;
@@ -173,8 +179,21 @@ export default defineComponent({
         };
 
         const blankSlot = (template: DocumentNode, path: number[], label: string): VNodeChild => {
-            if (props.setup) return setupSlot(path, label);
             const current = responseAt(document.value!, path);
+            if (props.career) {
+                const spaces = nodesOfType(current, RESPONSE_NODE);
+                if (spaces.length) {
+                    const located = (node: DocumentNode, at: number[]): number[][] => node.type === RESPONSE_NODE ? [at] : (node.content ?? []).flatMap((child, index) => located(child, [...at, index]));
+                    return h('div', { key: `${props.id}-${path.join('-')}`, class: 'flex min-w-0 flex-col gap-2' }, [
+                        responseText(current).trim() ? h('p', { class: 'text-sm text-muted-foreground' }, responseText(current).trim()) : null,
+                        ...located(current, path).map((at) => careerSpace(responseAt(document.value!, at), at, path, label)),
+                    ]);
+                }
+                return h('div', { key: `${props.id}-${path.join('-')}`, class: 'flex min-w-0 items-start gap-1' }, [
+                    h('div', { class: 'min-w-0 flex-1' }, [slot(template, path, label, false)]),
+                    spaceTool(path),
+                ]);
+            }
             if (withinResponse(current)) return current.type === 'paragraph' ? line(current, path, label) : h('div', { class: 'flex flex-col gap-2' }, nodes(current, path, label));
             return slot(template, path, label, false);
         };
@@ -210,12 +229,8 @@ export default defineComponent({
                 return h('div', { id: props.id, class: 'flex min-w-0 flex-col gap-4', role: 'group', 'aria-label': props.label },
                     (legacy.content ?? []).map((node, index) => node.type === 'documentBlock' ? render(node, [index]) : null));
             }
-            if (props.setup && props.template) {
-                return h('div', { id: props.id, class: 'flex min-w-0 flex-col gap-3', role: 'group', 'aria-label': props.label },
-                    blankResponse(props.template) ? [setupSlot([], props.label)] : nodes(props.template, []));
-            }
             if (!props.template || blankResponse(props.template)) return h(FreeTextEditor, {
-                id: props.id, label: props.label, modelValue: props.modelValue ?? props.template, disabled: props.disabled, allowTables: false,
+                id: props.id, label: props.label, modelValue: props.modelValue ?? props.template, disabled: props.disabled, allowTables: false, spaces: props.career,
                 'onUpdate:modelValue': (value: DocumentNode) => emit('update:modelValue', value),
             });
             return h('div', { id: props.id, class: 'flex min-w-0 flex-col gap-4', role: 'group', 'aria-label': props.label }, nodes(props.template, []));

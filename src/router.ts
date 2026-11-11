@@ -18,6 +18,7 @@ const EmailPreferencesPage = () => import("@/pages/EmailPreferencesPage.vue");
 const LoginPage = () => import("@/pages/LoginPage.vue");
 const WorkspacePage = () => import("@/pages/WorkspacePage.vue");
 const CoordinationCareerProjectPage = () => import("@/pages/CoordinationCareerProjectPage.vue");
+const CoordinationSubjectProfilePage = () => import("@/pages/CoordinationSubjectProfilePage.vue");
 const SupportDocumentsPage = () => import("@/pages/SupportDocumentsPage.vue");
 const TeacherSyllabiPage = () => import("@/pages/TeacherSyllabiPage.vue");
 const TeacherHistoryPage = () => import("@/pages/TeacherHistoryPage.vue");
@@ -101,6 +102,7 @@ export const router = createRouter({
     { path: "/coordinacion/revisiones/:revision", component: CoordinationReviewDetailPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Detalle de revisión" } },
     { path: "/coordinacion/revisiones/:revision/historial", component: CoordinationReviewHistoryPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Historial de versiones", layout: "syllabus-editor" } },
     { path: "/coordinacion/proyecto-carrera", component: CoordinationCareerProjectPage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Proyecto de carrera" } },
+    { path: "/coordinacion/proyecto-carrera/:subject", component: CoordinationSubjectProfilePage, meta: { requiresAuth: true, roles: ["coordinador"], title: "Proyecto de carrera" } },
     { path: "/coordinacion/documentos-apoyo", redirect: { path: "/coordinacion/proyecto-carrera", query: { tab: "documentos" } } },
     { path: "/coordinacion/malla", component: CoordinationAcademicStructurePage, props: { mode: "curriculum" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Malla" } },
     { path: "/coordinacion/materias-asignaciones", component: CoordinationAcademicStructurePage, props: { mode: "schedule" }, meta: { requiresAuth: true, roles: ["coordinador"], title: "Materias y asignaciones" } },

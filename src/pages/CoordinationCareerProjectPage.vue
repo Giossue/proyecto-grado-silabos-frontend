@@ -7,7 +7,6 @@ import { ApiError } from '@/api/client';
 import { getScheduledSubjects, type ScheduledSubjects } from '@/api/career-academics';
 import { getSession } from '@/api/session';
 import FichaImportDialog from '@/components/domain/academic/FichaImportDialog.vue';
-import SubjectProfileDialog from '@/components/domain/academic/SubjectProfileDialog.vue';
 import SupportDocumentsPanel from '@/components/domain/academic/SupportDocumentsPanel.vue';
 import ClientFilterBar from '@/components/domain/ClientFilterBar.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -38,8 +37,6 @@ watch(tab, (value) => { void router.replace({ query: { ...route.query, tab: valu
 const data = ref<ScheduledSubjects | null>(null);
 const loading = ref(true);
 const loadError = ref<string | null>(null);
-const selected = ref<Subject | null>(null);
-const profileOpen = ref(false);
 
 const load = async (): Promise<void> => {
     loading.value = true;
@@ -75,8 +72,7 @@ const groups = computed(() => {
 });
 const completeCount = (list: Subject[]): number => list.filter((subject) => subject.profile_complete).length;
 const open = (subject: Subject): void => {
-    selected.value = subject;
-    profileOpen.value = true;
+    void router.push(paths.coordination.careerProjectSubject(subject.id));
 };
 const saved = async (message = 'Proyecto de carrera guardado'): Promise<void> => {
     toast.success(message);
@@ -157,6 +153,5 @@ onMounted(() => { void load(); });
         <SupportDocumentsPanel v-model:upload-open="uploadOpen" :manages="true" />
       </TabsContent>
     </Tabs>
-    <SubjectProfileDialog v-if="selected" v-model:open="profileOpen" :subject-id="selected.id" :subject-name="selected.nombre" :disabled="Boolean(data?.career.lock_reason)" @saved="saved" />
   </PageFrame>
 </template>
