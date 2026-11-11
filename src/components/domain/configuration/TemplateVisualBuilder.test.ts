@@ -187,18 +187,19 @@ describe('TemplateVisualBuilder', () => {
     await mountBuilder();
     expect(body().querySelector('[data-template-ribbon]')).toBeTruthy();
     expect(body().querySelector<HTMLButtonElement>('[aria-label="Negrita"]')!.disabled).toBe(true);
-    expect(body().querySelector('[aria-label="Quién llena el campo Primero"]')).toBeNull();
+    expect(body().querySelector('[aria-label="Si se puede editar el campo Primero"]')).toBeNull();
     expect(body().querySelector('[data-field="f1"] [role="toolbar"]')).toBeNull();
     await selectField('f1');
     expect(body().querySelector<HTMLButtonElement>('[aria-label="Negrita"]')!.disabled).toBe(false);
-    expect(body().querySelector('[aria-label="Quién llena el campo Primero"]')).toBeTruthy();
+    expect(body().querySelector('[aria-label="Si se puede editar el campo Primero"]')).toBeTruthy();
     expect(body().querySelector('[data-field="f1"] [role="toolbar"]')).toBeNull();
+    expect(body().querySelector('[aria-label="Tipo de respuesta"]')).toBeNull();
   });
 
-  it('cambia quién llena el campo desde la cinta y lo guarda con el botón', async () => {
+  it('cambia si el campo se puede editar desde la cinta y lo guarda con el botón', async () => {
     const wrapper = await mountBuilder();
     await selectField('f1');
-    expect(body().querySelector('[aria-label="Quién llena el campo Primero"]')!.textContent).toContain('Carrera');
+    expect(body().querySelector('[aria-label="Si se puede editar el campo Primero"]')!.textContent).toContain('Editable');
     ribbon(wrapper).vm.$emit('responsible', 'institucional');
     await flushPromises();
     await save();

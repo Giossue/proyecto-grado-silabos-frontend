@@ -11,7 +11,6 @@ import TemplateInsertPoint from '@/components/domain/configuration/TemplateInser
 import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
 import TemplateFormatTools from '@/components/domain/configuration/TemplateFormatTools.vue';
 import TemplateInlineText from '@/components/domain/configuration/TemplateInlineText.vue';
-import TemplateResponseTool from '@/components/domain/configuration/TemplateResponseTool.vue';
 import TemplateSelectionTools, { type TemplateSelection } from '@/components/domain/configuration/TemplateSelectionTools.vue';
 import TemplateSheetField from '@/components/domain/configuration/TemplateSheetField.vue';
 import { apiMessage, uniqueKey } from '@/components/domain/configuration/templateStructure';
@@ -430,7 +429,6 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
       <div data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" class="pointer-events-auto flex w-full min-w-0 items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" />
-        <TemplateResponseTool :editor="ribbonEditor" :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <TemplateSelectionTools
           :selection="selection"

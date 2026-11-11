@@ -5,7 +5,7 @@ import { computed } from 'vue';
 import type { TemplateField, TemplatePreset, TemplateSectionPayload } from '@/api/template';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { FIELD_RESPONSIBLES, responsibleLabel, type FieldResponsible } from '@/types/configuration';
+import { FIELD_EDITABILITY, editabilityLabel, type FieldResponsible } from '@/types/configuration';
 
 export type TemplateSelection =
     | { kind: 'field'; field: TemplateField; canMoveUp: boolean; canMoveDown: boolean }
@@ -22,12 +22,12 @@ const fieldName = computed(() => props.selection?.kind === 'field' ? props.selec
     <template v-if="selection?.kind === 'field'">
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button type="button" variant="ghost" size="sm" :disabled="locked" :aria-label="`Quién llena el campo ${fieldName}`" data-field-responsible>{{ responsibleLabel(selection.field.quien_llena) }}<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
+          <Button type="button" variant="ghost" size="sm" :disabled="locked" :aria-label="`Si se puede editar el campo ${fieldName}`" data-field-responsible>{{ editabilityLabel(selection.field.quien_llena) }}<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
-          <DropdownMenuLabel>Quién llena</DropdownMenuLabel>
+          <DropdownMenuLabel>¿Se puede editar?</DropdownMenuLabel>
           <DropdownMenuRadioGroup :model-value="selection.field.quien_llena" @update:model-value="emit('responsible', $event as FieldResponsible)">
-            <DropdownMenuRadioItem v-for="item in FIELD_RESPONSIBLES" :key="item.value" :value="item.value">{{ item.label }}</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem v-for="item in FIELD_EDITABILITY" :key="item.value" :value="item.value">{{ item.label }}</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
           <template v-if="presets?.length">
             <DropdownMenuSeparator />
