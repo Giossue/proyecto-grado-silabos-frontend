@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
+import TemplateResponseTool from '@/components/domain/configuration/TemplateResponseTool.vue';
 import { Table, TableRow } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
@@ -30,7 +31,8 @@ const props = withDefaults(defineProps<{
     blocks?: 'configure' | 'fill';
     allowTables?: boolean;
     align?: boolean;
-}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true, blocks: 'fill', allowTables: true, align: false });
+    spaces?: boolean;
+}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true, blocks: 'fill', allowTables: true, align: false, spaces: false });
 const emit = defineEmits<{ 'update:modelValue': [value: DocumentNode] }>();
 const slash = ref({ open: false, left: 0, top: 0, query: '', index: 0 });
 const slashItems = computed(() => props.variables.filter((item) => item.label.toLowerCase().includes(slash.value.query.toLowerCase())).slice(0, 8));
@@ -133,6 +135,10 @@ defineExpose({ editor });
       <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
       <IconTooltip label="Lista con viñetas"><Button type="button" variant="ghost" size="icon-sm" aria-label="Lista con viñetas" :aria-pressed="editor.isActive('bulletList')" :disabled="disabled" @click="editor.chain().focus().toggleBulletList().run()"><List aria-hidden="true" /></Button></IconTooltip>
       <IconTooltip label="Lista numerada"><Button type="button" variant="ghost" size="icon-sm" aria-label="Lista numerada" :aria-pressed="editor.isActive('orderedList')" :disabled="disabled" @click="editor.chain().focus().toggleOrderedList().run()"><ListOrdered aria-hidden="true" /></Button></IconTooltip>
+      <template v-if="spaces">
+        <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />
+        <TemplateResponseTool :editor="editor" :disabled="disabled" label="Espacio para el docente" hint="El docente solo responde: no cambia el tipo ni las opciones" options-hint="Escriba las opciones que podrá elegir el docente" require-options />
+      </template>
       <IconTooltip v-if="allowTables" label="Insertar tabla"><Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar tabla" :disabled="disabled" @click="editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()"><Table2 aria-hidden="true" /></Button></IconTooltip>
       <template v-if="editor.isActive('table')">
         <span class="mx-0.5 h-5 w-px bg-border" aria-hidden="true" />

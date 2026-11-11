@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Textarea } from '@/components/ui/textarea';
 import { guardNumber, numberText } from '@/lib/blocks/types';
 import { RESPONSE_KINDS, responseMany, responseSchema, type ResponseAttrs } from '@/lib/responseKinds';
 
@@ -17,6 +18,7 @@ const open = ref(false);
 const listId = useId();
 const schema = computed(() => responseSchema(props.attrs.kind, props.attrs.options));
 const number = computed(() => schema.value?.type === 'number' ? schema.value : null);
+const text = computed(() => schema.value?.type === 'string' && !('oneOf' in schema.value && schema.value.oneOf) ? schema.value : null);
 const many = computed(() => responseMany(props.attrs.kind));
 const isKey = (value: unknown): value is string => typeof value === 'string' && value !== '';
 const chosen = computed<string[]>(() => Array.isArray(props.attrs.value) ? props.attrs.value.filter(isKey) : isKey(props.attrs.value) ? [props.attrs.value] : []);
@@ -37,8 +39,18 @@ const remove = (key: string): void => {
 </script>
 
 <template>
+  <Textarea
+    v-if="text"
+    class="min-h-9 w-full"
+    placeholder="Escriba aquí"
+    :aria-label="label"
+    :maxlength="text.maxLength"
+    :model-value="typeof attrs.value === 'string' ? attrs.value : ''"
+    :disabled="disabled"
+    @update:model-value="emit('update:value', String($event))"
+  />
   <Input
-    v-if="number"
+    v-else-if="number"
     class="w-36"
     inputmode="decimal"
     autocomplete="off"

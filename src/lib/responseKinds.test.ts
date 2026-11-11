@@ -6,9 +6,9 @@ const options = [{ const: 'o1', title: 'Presencial' }, { const: 'o2', title: 'En
 const node = (kind: string, value: unknown, list = options): DocumentNode => ({ type: 'response', attrs: { kind, options: list, value: value as never } });
 
 describe('Catálogo de tipos de respuesta', () => {
-    it('ofrece número, elegir una y elegir varias, sin texto corto ni fecha', () => {
-        expect(Object.keys(RESPONSE_KINDS)).toEqual(['numero', 'una', 'varias']);
-        expect(responseKindOptions.map((kind) => kind.label)).toEqual(['Número', 'Elegir una', 'Elegir varias']);
+    it('ofrece texto libre, número, elegir una y elegir varias, sin texto corto ni fecha', () => {
+        expect(Object.keys(RESPONSE_KINDS)).toEqual(['texto', 'numero', 'una', 'varias']);
+        expect(responseKindOptions.map((kind) => kind.label)).toEqual(['Texto libre', 'Número', 'Elegir una', 'Elegir varias']);
         expect(responseHasOptions('numero')).toBe(false);
         expect(responseHasOptions('una')).toBe(true);
         expect(responseHasOptions('varias')).toBe(true);
@@ -22,6 +22,7 @@ describe('Catálogo de tipos de respuesta', () => {
 
     it('una respuesta nueva empieza sin contestar y avisa si le faltan opciones', () => {
         expect(emptyResponse('numero')).toEqual({ type: 'response', attrs: { kind: 'numero', options: [], value: '' } });
+        expect(emptyResponse('texto')).toEqual({ type: 'response', attrs: { kind: 'texto', options: [], value: '' } });
         expect(emptyResponse('una', options).attrs).toEqual({ kind: 'una', options, value: null });
         expect(emptyResponse('varias').attrs).toEqual({ kind: 'varias', options: [], value: [] });
         expect(responseNeedsOptions(responseAttrs(emptyResponse('varias')))).toBe(true);

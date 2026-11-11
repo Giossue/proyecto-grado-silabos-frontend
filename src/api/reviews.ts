@@ -1,7 +1,7 @@
 import { api } from "@/api/client";
 import type { DocumentPresentation } from "@/api/syllabi";
 import type { SignaturePayload, SignatureSummary } from "@/api/signatures";
-import type { DocumentField, FieldResponsible } from "@/types/configuration";
+import type { DocumentField, StoredResponsible } from "@/types/configuration";
 import type { PaginationMeta } from "@/types/pagination";
 
 export type ReviewStage = "biblioteca" | "coordinacion";
@@ -105,7 +105,7 @@ export type ReviewComparison = {
       section_title: string;
       field_key: string;
       label: string;
-      quien_llena: FieldResponsible;
+      quien_llena: StoredResponsible;
       change: "added" | "removed" | "modified";
       before: { value: unknown } | null;
       after: { value: unknown } | null;

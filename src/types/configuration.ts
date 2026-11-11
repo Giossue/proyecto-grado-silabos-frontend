@@ -1,11 +1,12 @@
 import type { DocumentNode } from '@/lib/templateDocument';
 
-export type FieldResponsible = 'docente' | 'coordinacion' | 'institucional';
+export type FieldResponsible = 'carrera' | 'institucional';
+export type StoredResponsible = FieldResponsible | 'docente' | 'coordinacion';
 export type DocumentField = {
     id?: string;
     key: string;
     label: string;
-    quien_llena: FieldResponsible;
+    quien_llena: StoredResponsible;
     value: DocumentNode | null;
     document?: DocumentNode | null;
     template?: DocumentNode;
@@ -13,9 +14,10 @@ export type DocumentField = {
     required?: boolean;
 };
 export const FIELD_RESPONSIBLES: Array<{ value: FieldResponsible; label: string; hint: string }> = [
-    { value: 'docente', label: 'Docente', hint: 'Completa las respuestas; el texto y el formato de la plantilla se conservan' },
-    { value: 'coordinacion', label: 'Carrera', hint: 'Lo llena la carrera en el proyecto de carrera de la asignatura. El docente lo consulta' },
-    { value: 'institucional', label: 'Fijo', hint: 'Contenido de la plantilla, igual para todos y de solo lectura' },
+    { value: 'institucional', label: 'Institucional', hint: 'Contenido de la plantilla, igual para todos y de solo lectura' },
+    { value: 'carrera', label: 'Carrera', hint: 'La carrera lo escribe en el proyecto de carrera de cada materia y el docente llena los espacios que le dejen' },
 ];
-export const responsibleLabel = (value: FieldResponsible): string => FIELD_RESPONSIBLES.find((item) => item.value === value)?.label ?? value;
+export const responsibleLabel = (value: StoredResponsible): string => value === 'docente' || value === 'coordinacion'
+    ? 'Carrera'
+    : FIELD_RESPONSIBLES.find((item) => item.value === value)?.label ?? value;
 export const emptyDocument = (): DocumentNode => ({ type: 'doc', content: [{ type: 'paragraph' }] });

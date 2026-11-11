@@ -15,18 +15,18 @@ import { templateEditorState } from '@/state/templateEditor';
 vi.mock('@/api/template');
 
 type Template = NonNullable<TemplatePayload['template']>;
-const field = (id: string, label: string, quien_llena: FieldResponsible = 'docente') => ({ id, key: id, label, quien_llena, content: emptyDocument() });
+const field = (id: string, label: string, quien_llena: FieldResponsible = 'carrera') => ({ id, key: id, label, quien_llena, content: emptyDocument() });
 const template: Template = {
   id: 't1', name: 'Plantilla', description: null, titleBlock: { text: 'SÍLABO' },
   sections: [
-    { id: 's1', key: 'uno', title: 'Uno', orientation: 'portrait', fields: [field('f1', 'Primero'), field('f2', 'Segundo', 'coordinacion')] },
+    { id: 's1', key: 'uno', title: 'Uno', orientation: 'portrait', fields: [field('f1', 'Primero'), field('f2', 'Segundo', 'institucional')] },
     { id: 's2', key: 'dos', title: 'Dos', orientation: 'portrait', fields: [] },
   ],
 };
 
 const presets = [
   { key: 'identificacion' as const, field_key: 'asignatura', label: 'Datos de identificación', quien_llena: 'institucional' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Dato' }] }] }] }] }] } as DocumentNode },
-  { key: 'planificacion' as const, field_key: 'unidades', label: 'Unidades', quien_llena: 'docente' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Dato' }] }] }] }] }] } as DocumentNode },
+  { key: 'planificacion' as const, field_key: 'unidades', label: 'Unidades', quien_llena: 'carrera' as FieldResponsible, content: { type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Dato' }] }] }] }] }] } as DocumentNode },
 ];
 const mountBuilder = async (props: { processLock?: string | null } = {}) => {
   const wrapper = mount(TemplateVisualBuilder, { props: { template, presets, ...props }, attachTo: document.body });
@@ -107,7 +107,7 @@ describe('TemplateVisualBuilder', () => {
     await save();
     expect(templateApi.importTemplateJson).toHaveBeenCalledTimes(1);
     expect(templateApi.importTemplateJson).toHaveBeenCalledWith('t1', expect.objectContaining({ version: 1 }));
-    expect(saved().sections[0]!.fields[0]).toMatchObject({ key: 'f1', label: 'Primer campo', quien_llena: 'docente' });
+    expect(saved().sections[0]!.fields[0]).toMatchObject({ key: 'f1', label: 'Primer campo', quien_llena: 'carrera' });
   });
 
   it('aplica márgenes y tamaños del diseño a la hoja y los guarda con la plantilla', async () => {
@@ -198,7 +198,7 @@ describe('TemplateVisualBuilder', () => {
   it('cambia quién llena el campo desde la cinta y lo guarda con el botón', async () => {
     const wrapper = await mountBuilder();
     await selectField('f1');
-    expect(body().querySelector('[aria-label="Quién llena el campo Primero"]')!.textContent).toContain('Docente');
+    expect(body().querySelector('[aria-label="Quién llena el campo Primero"]')!.textContent).toContain('Carrera');
     ribbon(wrapper).vm.$emit('responsible', 'institucional');
     await flushPromises();
     await save();
@@ -231,7 +231,7 @@ describe('TemplateVisualBuilder', () => {
     expect(templateApi.importTemplateJson).not.toHaveBeenCalled();
     await save();
     expect(saved().sections[0]!.fields.map((item) => item.key)).toEqual(['f1', 'campo', 'f2']);
-    expect(saved().sections[0]!.fields[1]).toMatchObject({ quien_llena: 'docente', label: '', content: emptyDocument() });
+    expect(saved().sections[0]!.fields[1]).toMatchObject({ quien_llena: 'carrera', label: '', content: emptyDocument() });
   });
 
   it('agrega una sección «Nueva sección» y avisa del cambio al guardar', async () => {

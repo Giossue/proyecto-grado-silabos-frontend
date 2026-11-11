@@ -7,7 +7,7 @@ import FieldView from '@/components/domain/syllabus/FieldView.vue';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
+import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { fieldTitle, isTeacherField } from '@/lib/syllabusForm';
@@ -70,7 +70,6 @@ const fieldErrors = (fieldId: string): string[] => props.errors(fieldId);
           <AccordionContent class="flex flex-col gap-3 px-1 pt-1">
             <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="fieldErrors(field.id).length > 0">
               <FieldLabel :for="`input-${field.id}`" required class="sr-only">{{ fieldTitle(field, section) }}</FieldLabel>
-              <FieldDescription v-if="field.quien_llena === 'coordinacion'">Viene del proyecto de carrera; puede ajustarlo</FieldDescription>
               <FieldResponseEditor required :template="field.template" :label="fieldTitle(field, section)" :model-value="field.value" :id="`input-${field.id}`" :disabled="disabled" @update:model-value="emit('update:value', field, $event)" />
             </Field>
             <FieldView v-else :id="`field-${field.id}`" :field="field" bare />

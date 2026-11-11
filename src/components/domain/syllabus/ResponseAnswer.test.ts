@@ -35,6 +35,13 @@ afterAll(() => { Element.prototype.scrollIntoView = scrollIntoView; });
 describe('Responder un tipo de respuesta', () => {
     afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
 
+    it('un texto libre se escribe en un cuadro, con saltos de línea', async () => {
+        const wrapper = answer({ kind: 'texto', options: [], value: '' });
+        expect(wrapper.find('input').exists()).toBe(false);
+        await wrapper.get('textarea[aria-label="Técnica"]').setValue('Primera línea\nSegunda línea');
+        expect(emittedValue(wrapper)).toBe('Primera línea\nSegunda línea');
+    });
+
     it('un número solo admite un número', async () => {
         const wrapper = answer({ kind: 'numero', options: [], value: '' });
         const input = wrapper.get('input[aria-label="Técnica"]');

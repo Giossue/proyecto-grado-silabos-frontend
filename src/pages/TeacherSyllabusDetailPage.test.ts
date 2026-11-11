@@ -12,7 +12,7 @@ import FreeTextEditor from "@/components/domain/syllabus/FreeTextEditor.vue";
 import SyllabusDocumentPreview from "@/components/domain/syllabus/SyllabusDocumentPreview.vue";
 import PageFrame from "@/components/domain/PageFrame.vue";
 import { copyTeacherSyllabus, getTeacherSigningStatement, getTeacherSyllabus, saveTeacherField, submitTeacherSyllabus, validateTeacherSyllabus, type SyllabusDetail, type SyllabusField, startTeacherSyllabus } from "@/api/syllabi";
-import type { FieldResponsible } from "@/types/configuration";
+import type { StoredResponsible } from "@/types/configuration";
 import { ApiError } from "@/api/client";
 import { handleUnauthorized } from "@/lib/unauthorized";
 import { makeTestP12 } from "@/lib/signature/testCertificate";
@@ -68,12 +68,12 @@ const appearance = {
 };
 
 const doc = (text: string) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "text", text }] }] });
-const field = (id: string, quien_llena: FieldResponsible = 'docente', overrides: Partial<SyllabusField> = {}): SyllabusField => ({
+const field = (id: string, quien_llena: StoredResponsible = 'docente', overrides: Partial<SyllabusField> = {}): SyllabusField => ({
   id, key: `campo_${id}`, label: 'Contenido', quien_llena,
-  required: true, teacher_editable: quien_llena === 'docente', value: doc('Texto enviado'), ...overrides,
+  required: true, teacher_editable: quien_llena === 'docente' || quien_llena === 'carrera', value: doc('Texto enviado'), ...overrides,
 });
 
-const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", quien_llena: FieldResponsible = "docente"): SyllabusDetail => ({
+const syllabus = (state: "borrador" | "en_revision" | "correccion_solicitada", quien_llena: StoredResponsible = "docente"): SyllabusDetail => ({
   id: "syllabus-1",
   subject: "Inteligencia Artificial",
   code: "SW-01",
@@ -227,16 +227,17 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
-  it('Carrera es de solo lectura salvo que el proyecto de carrera permita editarlo', async () => {
-    const detail = syllabus('borrador', 'coordinacion');
-    detail.sections[0]!.fields.push(field('field-2', 'docente', { label: 'Bibliografía' }));
-    detail.sections[0]!.fields.push(field('field-3', 'coordinacion', { label: 'Herramientas TIC', teacher_editable: true }));
+  it('un campo Carrera sin espacios para el docente es de solo lectura', async () => {
+    const detail = syllabus('borrador', 'carrera');
+    detail.sections[0]!.fields[0]!.teacher_editable = false;
+    detail.sections[0]!.fields.push(field('field-2', 'carrera', { label: 'Bibliografía' }));
+    detail.sections[0]!.fields.push(field('field-3', 'carrera', { label: 'Herramientas TIC', teacher_editable: true }));
     vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
     const wrapper = mountPage();
     await flushPromises();
     expect(wrapper.get('#field-field-1').element.closest('[data-slot="accordion-item"]')!.textContent).toContain('Carrera');
     expect(wrapper.findAllComponents(FreeTextEditor).map((editor) => editor.attributes('id'))).toEqual(['input-field-2', 'input-field-3']);
-    expect(wrapper.get('#field-field-3').text()).toContain('Viene del proyecto de carrera; puede ajustarlo');
+    expect(wrapper.text()).not.toContain('Viene del proyecto de carrera');
     wrapper.unmount();
   });
 

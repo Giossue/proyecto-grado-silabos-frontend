@@ -51,8 +51,8 @@ const payload: TemplatePayload = {
     sections: [{
       id: "section-1", key: "descripcion", title: "Descripción de la asignatura",
       orientation: 'portrait', fields: [
-        { id: 'field-1', key: 'descripcion', label: 'Descripción', quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
-        { id: 'field-2', key: 'sin_nombre', label: '', quien_llena: 'docente', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
+        { id: 'field-1', key: 'descripcion', label: 'Descripción', quien_llena: 'carrera', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
+        { id: 'field-2', key: 'sin_nombre', label: '', quien_llena: 'carrera', content: { type: 'doc', content: [{ type: 'paragraph' }] } },
       ],
     }],
   },
@@ -84,7 +84,7 @@ describe("AdminTemplatePage", () => {
     const doc = { type: 'doc' as const, content: [{ type: 'paragraph' }] };
     vi.mocked(getTemplateTeacherPreview).mockResolvedValue({ sections: [{
       id: 'section-1', key: 'descripcion', title: 'Descripción de la asignatura', description: null, orientation: 'portrait',
-      fields: [{ id: 'field-1', key: 'descripcion', label: 'Descripción', quien_llena: 'docente', teacher_editable: true, required: true, value: doc, document: doc }],
+      fields: [{ id: 'field-1', key: 'descripcion', label: 'Descripción', quien_llena: 'carrera', teacher_editable: true, required: true, value: doc, document: doc }],
     }] } as never);
     const wrapper = mountPage();
     await flushPromises();
@@ -109,9 +109,9 @@ describe("AdminTemplatePage", () => {
     id: 'p-1', status: 'pendiente' as const, draft_version: version, changes: ['Nuevo campo «Competencias» en «Descripción de la asignatura».'],
     changed: { sections: [], fields: ['competencias'] },
     sections: [{ key: 'descripcion', title: 'Descripción de la asignatura', orientation: 'portrait' as const, fields: [
-      { key: 'descripcion', label: 'Descripción', quien_llena: 'docente' as const, content: { type: 'doc' as const, content: [{ type: 'paragraph' }] } },
-      { key: 'sin_nombre', label: '', quien_llena: 'docente' as const, content: { type: 'doc' as const, content: [{ type: 'paragraph' }] } },
-      { key: 'competencias', label: 'Competencias', quien_llena: 'docente' as const, content: { type: 'doc' as const, content: [{ type: 'paragraph' }] } },
+      { key: 'descripcion', label: 'Descripción', quien_llena: 'carrera' as const, content: { type: 'doc' as const, content: [{ type: 'paragraph' }] } },
+      { key: 'sin_nombre', label: '', quien_llena: 'carrera' as const, content: { type: 'doc' as const, content: [{ type: 'paragraph' }] } },
+      { key: 'competencias', label: 'Competencias', quien_llena: 'carrera' as const, content: { type: 'doc' as const, content: [{ type: 'paragraph' }] } },
     ] }],
   });
 

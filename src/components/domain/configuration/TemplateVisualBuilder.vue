@@ -332,7 +332,7 @@ const addSection = (index?: number): void => {
 const addField = (sectionId: string, index?: number): void => {
     const section = draft.value.find((item) => item.id === sectionId);
     if (!section) return;
-    const created: TemplateField = { id: temporaryId(), key: uniqueKey('', 'campo', usedFieldKeys.value), label: '', quien_llena: 'docente', content: emptyDocument() };
+    const created: TemplateField = { id: temporaryId(), key: uniqueKey('', 'campo', usedFieldKeys.value), label: '', quien_llena: 'carrera', content: emptyDocument() };
     section.fields.splice(index ?? section.fields.length, 0, created);
     focusId.value = created.id;
     touched();

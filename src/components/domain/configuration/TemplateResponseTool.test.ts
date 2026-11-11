@@ -53,7 +53,7 @@ describe('Tipo de respuesta en la cinta de la plantilla', () => {
         const tool = mountTool(editor);
 
         await open(tool);
-        expect([...document.querySelectorAll('[role="radio"]')].map((item) => item.textContent?.trim())).toEqual(['Número', 'Elegir una', 'Elegir varias']);
+        expect([...document.querySelectorAll('[role="radio"]')].map((item) => item.textContent?.trim())).toEqual(['Texto libre', 'Número', 'Elegir una', 'Elegir varias']);
         await pick('Elegir una');
         await write('Opción 1', '  Presencial ');
         await press('[data-response-add-option]');
@@ -66,7 +66,7 @@ describe('Tipo de respuesta en la cinta de la plantilla', () => {
         ]);
     });
 
-    it('un número no pide opciones y un campo Fijo no admite tipos de respuesta', async () => {
+    it('un número no pide opciones y un campo Institucional no admite tipos de respuesta', async () => {
         const { host, editor } = await editorFor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Horas: ' }] }] });
         const blocked = mountTool(editor, false);
         expect(blocked.get('button[aria-label="Tipo de respuesta"]').attributes('disabled')).toBeDefined();
@@ -84,7 +84,7 @@ describe('Tipo de respuesta en la cinta de la plantilla', () => {
     });
 
     it('la plantilla nombra el tipo mientras se edita y no lo imprime en la vista previa', () => {
-        const field: TemplateField = { id: 'f1', key: 'modalidad', label: 'Modalidad', quien_llena: 'docente', content: { type: 'doc', content: [
+        const field: TemplateField = { id: 'f1', key: 'modalidad', label: 'Modalidad', quien_llena: 'carrera', content: { type: 'doc', content: [
             { type: 'paragraph', content: [{ type: 'response', attrs: { kind: 'una', options: [{ const: 'o1', title: 'Presencial' }, { const: 'o2', title: 'En línea' }], value: null } }] },
             { type: 'paragraph', content: [{ type: 'text', text: 'Horas: ' }, { type: 'response', attrs: { kind: 'numero', options: [], value: '' } }] },
         ] } };
