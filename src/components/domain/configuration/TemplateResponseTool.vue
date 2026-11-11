@@ -62,12 +62,11 @@ const insert = (): void => {
 </script>
 
 <template>
-  <Popover v-model:open="open">
-    <MenuTooltip :label="tooltip">
-      <PopoverTrigger as-child>
-        <Button type="button" variant="ghost" size="icon-sm" :aria-label="label" :disabled="!ready" @mousedown.prevent><ListChecks aria-hidden="true" /></Button>
-      </PopoverTrigger>
-    </MenuTooltip>
+  <!-- El Popover va DENTRO del tooltip (ver MenuTooltip.vue); al revés, el menú no se muestra. -->
+  <MenuTooltip :label="tooltip"><Popover v-model:open="open">
+    <PopoverTrigger as-child>
+      <Button type="button" variant="ghost" size="icon-sm" :aria-label="label" :disabled="!ready" @mousedown.prevent><ListChecks aria-hidden="true" /></Button>
+    </PopoverTrigger>
     <PopoverContent align="start" class="w-80">
       <form @submit.prevent="insert">
         <FieldGroup>
@@ -85,5 +84,5 @@ const insert = (): void => {
         </FieldGroup>
       </form>
     </PopoverContent>
-  </Popover>
+  </Popover></MenuTooltip>
 </template>

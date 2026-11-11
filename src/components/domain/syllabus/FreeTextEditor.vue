@@ -222,4 +222,7 @@ defineExpose({ editor });
     margin: 0;
 }
 .free-text-editor .document-variable { border-radius: 0.25rem; background: var(--muted); color: var(--foreground); padding: 0.1rem 0.25rem; }
+/* Un espacio para el docente se distingue del texto que escribe el coordinador. */
+.free-text-editor .document-response { border: 1px dashed color-mix(in oklab, var(--primary) 55%, transparent); background: var(--background); color: var(--primary); padding: 0.05rem 0.4rem; cursor: pointer; }
+.free-text-editor .document-response.ProseMirror-selectednode { outline: 2px solid var(--ring); outline-offset: 1px; }
 </style>
