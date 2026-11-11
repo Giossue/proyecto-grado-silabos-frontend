@@ -105,13 +105,13 @@ describe('TeacherSyllabiPage', () => {
     expect(open.text()).not.toContain('Todavía no hay una convocatoria abierta');
   });
 
-  it('con la convocatoria en pausa y sin sílabos dice que está en pausa', async () => {
+  it('con la convocatoria en pausa y sin sílabos dice que no tiene sílabos asignados', async () => {
     deadline.value = { state: 'paused' };
     vi.mocked(getTeacherSyllabi).mockResolvedValue({ ...syllabi, syllabi: { ...syllabi.syllabi, data: [], total: 0, from: null, to: null }, convocation_open: false });
     const wrapper = mountPage();
     await flushPromises();
-    expect(wrapper.text()).toContain('La convocatoria está en pausa');
-    expect(wrapper.text()).toContain('Cuando se reanude, aquí verá sus sílabos');
+    expect(wrapper.text()).toContain('No tiene sílabos asignados');
+    expect(wrapper.text()).toContain('Cuando se reanude la convocatoria, aquí verá sus sílabos');
     expect(wrapper.text()).not.toContain('Todavía no hay una convocatoria abierta');
   });
 

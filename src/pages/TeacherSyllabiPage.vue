@@ -56,7 +56,7 @@ const clearFilters = (): void => {
 };
 const emptyCopy = computed((): { title: string; description?: string } => {
   if (result.value?.filters.q || result.value?.filters.state) return { title: 'Ningún sílabo coincide con la búsqueda' };
-  if (deadlineState.deadline.value?.state === 'paused') return { title: 'La convocatoria está en pausa', description: 'Cuando se reanude, aquí verá sus sílabos' };
+  if (deadlineState.deadline.value?.state === 'paused') return { title: 'No tiene sílabos asignados', description: 'Cuando se reanude la convocatoria, aquí verá sus sílabos' };
   if (result.value?.convocation_open === false) return { title: 'Todavía no hay una convocatoria abierta', description: 'Cuando Coordinación la abra, aquí verá sus sílabos' };
   return { title: 'No tiene sílabos asignados' };
 });
