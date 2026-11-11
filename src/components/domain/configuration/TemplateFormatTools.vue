@@ -2,7 +2,7 @@
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import type { ChainedCommands, Editor } from '@tiptap/core';
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Baseline, Bold, ChevronDown, Italic, List, ListOrdered, Redo2, Table2, Underline, Undo2 } from '@lucide/vue';
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Baseline, Bold, Italic, List, ListOrdered, Redo2, Table2, Underline, Undo2 } from '@lucide/vue';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -71,9 +71,9 @@ const tableActions = [
     <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
     <IconTooltip v-for="list in lists" :key="list.name" :label="list.label"><Button type="button" variant="ghost" size="icon-sm" :aria-label="list.label" :aria-pressed="active(list.name)" :disabled="!ready" :class="cn(active(list.name) && 'bg-accent text-accent-foreground')" @mousedown.prevent @click="run(list.toggle)"><component :is="list.icon" aria-hidden="true" /></Button></IconTooltip>
     <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
-    <DropdownMenu>
+    <MenuTooltip label="Tabla"><DropdownMenu>
       <DropdownMenuTrigger as-child>
-        <Button type="button" variant="ghost" size="sm" aria-label="Tabla" :disabled="!ready" :class="cn(inTable && 'bg-accent text-accent-foreground')"><Table2 data-icon="inline-start" aria-hidden="true" />Tabla<ChevronDown data-icon="inline-end" aria-hidden="true" /></Button>
+        <Button type="button" variant="ghost" size="icon-sm" aria-label="Tabla" :disabled="!ready" :class="cn(inTable && 'bg-accent text-accent-foreground')"><Table2 aria-hidden="true" /></Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" @close-auto-focus="returnFocus">
         <DropdownMenuItem @select="run((chain) => chain.insertTable({ rows: 3, cols: 3, withHeaderRow: true }))">Insertar tabla</DropdownMenuItem>
@@ -88,6 +88,6 @@ const tableActions = [
         <DropdownMenuSeparator />
         <DropdownMenuItem :disabled="!inTable" @select="run((chain) => chain.deleteTable())">Quitar tabla</DropdownMenuItem>
       </DropdownMenuContent>
-    </DropdownMenu>
+    </DropdownMenu></MenuTooltip>
   </div>
 </template>
