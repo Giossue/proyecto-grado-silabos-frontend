@@ -39,7 +39,7 @@ const hasActiveRole = computed(() => sessionState.current.value?.active_role != 
 // La lista de avisos; no la pestaña «Notificaciones» de Configuración (avisos por correo), que también termina así.
 const isNotificationsPage = computed(() => (route.path.endsWith('/notificaciones') && !route.path.includes('/configuracion/')) || route.path === paths.notifications);
 
-const LIBRARY_NOTICES = ['coordinacion.aprobado', 'silabo.reenviado_biblioteca'];
+const LIBRARY_NOTICES = ['silabo.enviado', 'silabo.reenviado_biblioteca', 'coordinacion.aprobado'];
 
 const iconFor = (tipo: string): Component => {
     if (LIBRARY_NOTICES.includes(tipo) || tipo.startsWith('biblioteca')) return Library;

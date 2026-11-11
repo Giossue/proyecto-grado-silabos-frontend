@@ -77,12 +77,12 @@ export const screenTours: Record<string, TourStep[]> = {
     step(ACTIONS, 'Convocatoria de su carrera', 'Ábrala cuando termine «Antes de empezar». También puede pausarla y reanudarla', 'left'),
     step(TABS, 'Por revisar y seguimiento', '«Cola de revisión» es lo que le toca revisar. «Seguimiento» muestra cómo va cada sílabo', 'bottom'),
     step(FILTERS, 'Buscar', 'Busque una materia por nombre o código', 'bottom'),
-    step(TABLE, 'Sílabos', 'Pulse uno para revisarlo. Puede pedir correcciones o firmarlo y enviarlo a biblioteca', 'top'),
+    step(TABLE, 'Sílabos', 'Llegan con la bibliografía ya verificada por Biblioteca. Pulse uno para revisarlo: puede pedir correcciones o firmarlo y aprobarlo', 'top'),
     checklist,
     ...basics,
   ],
   '/coordinacion/revisiones/:revision': [
-    step(ACTIONS, 'Qué puede hacer', 'Pida correcciones al docente o firme y envíe el sílabo a biblioteca. También puede ver versiones anteriores y comparar', 'bottom'),
+    step(ACTIONS, 'Qué puede hacer', 'Pida correcciones al docente o firme y apruebe el sílabo. También puede ver versiones anteriores y comparar', 'bottom'),
     step(SHEET, 'El sílabo', 'Así lo entregó el docente. Léalo antes de decidir', 'top'),
   ],
   '/coordinacion/revisiones/:revision/historial': [
@@ -128,7 +128,7 @@ export const screenTours: Record<string, TourStep[]> = {
     shell.user,
   ],
   '/biblioteca/revisiones/:revision': [
-    step(ACTIONS, 'Qué puede hacer', 'Si los libros están bien, firme y apruebe. Si algo falla, devuélvalo al docente diciendo qué corregir', 'bottom'),
+    step(ACTIONS, 'Qué puede hacer', 'Si los libros están bien, firme y envíe el sílabo a coordinación. Si algo falla, devuélvalo al docente diciendo qué corregir', 'bottom'),
     step('[aria-label="Bibliografía"]', 'Libros del sílabo', 'Revise que cada libro esté en la biblioteca y que sus datos sean correctos', 'top'),
   ],
   '/biblioteca/historial': [

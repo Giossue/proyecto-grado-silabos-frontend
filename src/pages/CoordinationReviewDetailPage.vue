@@ -3,7 +3,7 @@ import ProcessLockAlert from '@/components/domain/ProcessLockAlert.vue';
 import { deadlineState } from '@/state/deadline';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
-import { ArrowLeft, FileSignature, FileText, GitCompareArrows, Highlighter, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
+import { ArrowLeft, CheckCheck, FileSignature, FileText, GitCompareArrows, Highlighter, History, MoreHorizontal, RotateCcw, Undo2 } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -60,6 +60,7 @@ const load = async (): Promise<void> => {
 
 const canReviewCurrent = computed(() => Boolean(data.value?.can_decide && data.value.revision.is_current && data.value.syllabus.state === 'en_revision'));
 const canSign = computed(() => canReviewCurrent.value && Boolean(data.value?.signing_statement));
+const canApproveWithoutSigning = computed(() => canReviewCurrent.value && !data.value?.signing_statement);
 const sheetWidth = computed(() => (data.value ? sheetPixels(data.value.presentation.document).portrait : 0));
 const defaultSheetWidth = sheetPixels(null).portrait;
 const statusNotes = computed(() => {
@@ -165,6 +166,20 @@ const approve = async (sign: StatementSigner): Promise<void> => {
   await afterDialogExit();
   await router.replace(area.reviews);
 };
+const approving = ref(false);
+const approveWithoutSigning = async (): Promise<void> => {
+  if (!data.value) return;
+  approving.value = true;
+  try {
+    const result = await approveReview(data.value.revision.id, null);
+    toast.success(result.message);
+    await router.replace(area.reviews);
+  } catch (failure) {
+    toast.error(failure instanceof ApiError ? failure.message : 'No se pudo aprobar el sílabo');
+  } finally {
+    approving.value = false;
+  }
+};
 
 watch(() => route.params.revision, (current, previous) => { if (current !== previous) { comparing.value = false; void load(); } });
 onMounted(load);
@@ -218,7 +233,8 @@ onMounted(load);
       
       
       <Button v-if="canReviewCurrent" type="button" variant="outline" @click="openCorrection">Solicitar corrección</Button>
-      <Button v-if="canSign" type="button" @click="signOpen = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y enviar a biblioteca</Button>
+      <Button v-if="canSign" type="button" @click="signOpen = true"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
+      <Button v-if="canApproveWithoutSigning" type="button" :disabled="approving" @click="approveWithoutSigning"><Spinner v-if="approving" data-icon="inline-start" /><CheckCheck v-else data-icon="inline-start" aria-hidden="true" />Aprobar</Button>
     </template>
 
     <div v-if="correctionComments" class="mx-auto w-full" :style="{ maxWidth: `${sheetWidth}px` }">
@@ -267,7 +283,7 @@ onMounted(load);
         </form>
       </DialogContent>
     </Dialog>
-    <SignatureDialog v-model:open="signOpen" title="Firmar y enviar a biblioteca" confirm-label="Firmar y enviar" :run="approve" />
+    <SignatureDialog v-model:open="signOpen" title="Firmar y aprobar" confirm-label="Firmar y aprobar" :run="approve" />
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
   <PageFrame v-else-if="loading" title="" description="" loading :actions-skeleton="['w-9', 'w-44', 'w-64']" header-class="syllabus-editor-header" :header-width="defaultSheetWidth" hide-icon><template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, fromHistory ? area.periodHistory : area.reviews)"><ArrowLeft aria-hidden="true" />{{ fromHistory ? 'Volver al historial' : 'Volver a la cola' }}</Button></template><LoadingSkeleton variant="preview" /></PageFrame>

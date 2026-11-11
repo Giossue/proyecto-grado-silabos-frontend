@@ -44,6 +44,8 @@ export type LibraryReviewDetail = LibraryReviewItem & {
   signatures?: SignatureSummary[];
   verified_at: string | null;
   verified_by: string | null;
+  /** Coordinación aprobó el sílabo y ya hay PDF. */
+  approved_at?: string | null;
   presentation: ReviewDetail['presentation'];
   template_variables: Record<string, string>;
   sections: SnapshotSection[];
@@ -88,7 +90,7 @@ export const commentLibraryReview = (revisionId: string, payload: { reasons: str
     body: JSON.stringify(payload),
   });
 
-export const verifyLibraryReview = (revisionId: string, signature: SignaturePayload) =>
+export const verifyLibraryReview = (revisionId: string, signature: SignaturePayload | null) =>
   api<{ message: string }>(`/library/reviews/${revisionId}/verify`, {
     method: 'POST',
     body: JSON.stringify({ signature }),

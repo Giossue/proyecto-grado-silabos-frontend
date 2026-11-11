@@ -108,19 +108,20 @@ describe('LibraryReviewDetailPage', () => {
     expect(text).not.toContain('Enviado por');
     expect(text).not.toContain('Por revisar');
     expect(headerButton(wrapper, 'Devolver al docente')).toBeDefined();
-    expect(headerButton(wrapper, 'Firmar y aprobar')).toBeDefined();
+    expect(headerButton(wrapper, 'Firmar y enviar a coordinación')).toBeDefined();
+    expect(headerButton(wrapper, 'Enviar a coordinación')).toBeUndefined();
     wrapper.unmount();
   });
 
-  it('firma y aprueba la bibliografía', async () => {
+  it('firma la bibliografía y la envía a coordinación', async () => {
     vi.mocked(getLibraryReview)
       .mockResolvedValueOnce({ review: detail() })
       .mockResolvedValueOnce({ review: detail({ state: 'atendido', outcome: 'firmado', can_verify: false, can_comment: false, signing_statement: null }) });
-    vi.mocked(verifyLibraryReview).mockResolvedValue({ message: 'Sílabo aprobado' });
+    vi.mocked(verifyLibraryReview).mockResolvedValue({ message: 'Sílabo firmado y enviado a coordinación.' });
     const wrapper = mountPage();
     await flushPromises();
 
-    await headerButton(wrapper, 'Firmar y aprobar')!.trigger('click');
+    await headerButton(wrapper, 'Firmar y enviar a coordinación')!.trigger('click');
     await flushPromises();
     expect(verifyLibraryReview).not.toHaveBeenCalled();
     await fillSignatureDialog(makeTestP12('BIBLIOTECA DEMO', 'clave'), 'clave');
@@ -130,9 +131,25 @@ describe('LibraryReviewDetailPage', () => {
       statement: 'silabos-ueb|silabo:syllabus-1|accion:aprobacion_biblioteca|huella:abc',
       cms: expect.stringMatching(/^[A-Za-z0-9+/]+=*$/),
     });
-    expect(toastSuccess).toHaveBeenCalledWith('Sílabo aprobado');
+    expect(toastSuccess).toHaveBeenCalledWith('Sílabo firmado y enviado a coordinación.');
     // Vuelve a la lista cuando el diálogo terminó de cerrarse.
     await vi.waitFor(() => expect(replace).toHaveBeenCalledWith('/biblioteca/revisiones'));
+    wrapper.unmount();
+  });
+
+  it('si Biblioteca ya firmó el sílabo, lo envía a coordinación sin volver a firmar', async () => {
+    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail({ signing_statement: null }) });
+    vi.mocked(verifyLibraryReview).mockResolvedValue({ message: 'Sílabo firmado y enviado a coordinación.' });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(headerButton(wrapper, 'Firmar y enviar a coordinación')).toBeUndefined();
+    await headerButton(wrapper, 'Enviar a coordinación')!.trigger('click');
+    await flushPromises();
+
+    expect(verifyLibraryReview).toHaveBeenCalledWith('revision-2', null);
+    expect(toastSuccess).toHaveBeenCalledWith('Sílabo firmado y enviado a coordinación.');
+    expect(replace).toHaveBeenCalledWith('/biblioteca/revisiones');
     wrapper.unmount();
   });
 
@@ -197,12 +214,12 @@ describe('LibraryReviewDetailPage', () => {
     wrapper.unmount();
   });
 
-  it('si otro bibliotecario devolvió el sílabo antes, avisa quién lo atiende y pide confirmar antes de actuar', async () => {
+  it('si otro bibliotecario revisó el sílabo antes, avisa quién lo atiende y pide confirmar antes de actuar', async () => {
     vi.mocked(getLibraryReview).mockResolvedValue({ review: detail({ assigned_to_other: true, responsible: 'Bibliotecaria Ana' }) });
     const wrapper = mountPage();
     await flushPromises();
 
-    expect(wrapper.text()).toContain('Lo atiende Bibliotecaria Ana, que lo devolvió antes');
+    expect(wrapper.text()).toContain('Lo atiende Bibliotecaria Ana, que lo revisó antes');
     await headerButton(wrapper, 'Devolver al docente')!.trigger('click');
     await flushPromises();
     expect(document.body.textContent).toContain('¿Quiere continuar usted?');
@@ -246,7 +263,7 @@ describe('LibraryReviewDetailPage', () => {
 
   it('con el sílabo aprobado ofrece el ícono «Ver PDF», también en el historial', async () => {
     openRevisionPdf.mockResolvedValue(null);
-    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail({ state: 'atendido', outcome: 'firmado', verified_at: '2026-10-01T10:00:00Z', verified_by: 'Bibliotecario Demo', can_comment: false, can_verify: false, signing_statement: null }) });
+    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail({ state: 'atendido', outcome: 'firmado', verified_at: '2026-10-01T10:00:00Z', verified_by: 'Bibliotecario Demo', approved_at: '2026-10-02T10:00:00Z', can_comment: false, can_verify: false, signing_statement: null }) });
     const wrapper = mountPage();
     await flushPromises();
 
@@ -256,8 +273,8 @@ describe('LibraryReviewDetailPage', () => {
     wrapper.unmount();
   });
 
-  it('sin aprobar no ofrece «Ver PDF»', async () => {
-    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail() });
+  it('verificado pero sin la aprobación de Coordinación no ofrece «Ver PDF»', async () => {
+    vi.mocked(getLibraryReview).mockResolvedValue({ review: detail({ state: 'atendido', outcome: 'firmado', verified_at: '2026-10-01T10:00:00Z', verified_by: 'Bibliotecario Demo', approved_at: null, can_comment: false, can_verify: false, signing_statement: null }) });
     const wrapper = mountPage();
     await flushPromises();
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import IconTooltip from '@/components/domain/IconTooltip.vue';
-import { ArrowLeft, FileSignature, FileText, MessageSquareText, UserCheck } from '@lucide/vue';
+import { ArrowLeft, FileSignature, FileText, MessageSquareText, Send, UserCheck } from '@lucide/vue';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
@@ -52,6 +52,7 @@ const openPdf = async (): Promise<void> => {
   if (failure) toast.error(failure);
 };
 const canSign = computed(() => Boolean(review.value?.can_verify && review.value.signing_statement));
+const canSendWithoutSigning = computed(() => Boolean(review.value?.can_verify && !review.value.signing_statement));
 const fields = computed(() => (review.value?.sections ?? []).flatMap((section) =>
   section.fields.map((field) => ({ ...field, title: field.label.trim() || section.title }))));
 
@@ -73,21 +74,25 @@ const toggleReason = (code: string, checked: boolean | 'indeterminate'): void =>
     : selectedReasons.value.filter((item) => item !== code);
 };
 
-// Si otra persona devolvió antes este sílabo, se le pregunta a quién lo abre si quiere continuar.
-const takeoverFor = ref<'return' | 'sign' | null>(null);
-const act = (action: 'return' | 'sign'): void => {
+// Si otra persona revisó antes este sílabo, se le pregunta a quién lo abre si quiere continuar.
+type LibraryAction = 'return' | 'sign' | 'send';
+const takeoverFor = ref<LibraryAction | null>(null);
+const run = (action: LibraryAction): void => {
+  if (action === 'return') openReturn();
+  else if (action === 'sign') signOpen.value = true;
+  else void sendWithoutSigning();
+};
+const act = (action: LibraryAction): void => {
   if (review.value?.assigned_to_other) {
     takeoverFor.value = action;
     return;
   }
-  if (action === 'return') openReturn();
-  else signOpen.value = true;
+  run(action);
 };
 const confirmTakeover = (): void => {
   const action = takeoverFor.value;
   takeoverFor.value = null;
-  if (action === 'return') openReturn();
-  else if (action === 'sign') signOpen.value = true;
+  if (action !== null) run(action);
 };
 const openReturn = (): void => {
   reasonErrors.value = [];
@@ -142,6 +147,20 @@ const approve = async (sign: StatementSigner): Promise<void> => {
   await afterDialogExit();
   await router.replace(paths.library.reviews);
 };
+const sendingOn = ref(false);
+const sendWithoutSigning = async (): Promise<void> => {
+  if (!review.value) return;
+  sendingOn.value = true;
+  try {
+    const result = await verifyLibraryReview(review.value.revision_id, null);
+    toast.success(result.message);
+    await router.replace(paths.library.reviews);
+  } catch (failure) {
+    toast.error(failure instanceof ApiError ? failure.message : 'No se pudo enviar a coordinación');
+  } finally {
+    sendingOn.value = false;
+  }
+};
 
 
 const outcomeBadge = computed((): { label: string; tone: StatusTone } | null => {
@@ -162,15 +181,16 @@ onMounted(load);
       <span v-if="review.outcome === 'reemplazado'" class="text-sm text-muted-foreground">Hay un envío más reciente · solo consulta</span>
     </template>
     <template #tools>
-      <IconTooltip v-if="review.verified_at" label="Ver PDF"><Button type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip v-if="review.approved_at" label="Ver PDF"><Button type="button" variant="ghost" size="icon" aria-label="Ver PDF" :disabled="openingPdf" @click="openPdf"><Spinner v-if="openingPdf" /><FileText v-else aria-hidden="true" /></Button></IconTooltip>
     </template>
     <template #actions>
       
       <Button v-if="review.can_comment" type="button" variant="outline" @click="act('return')">Devolver al docente</Button>
-      <Button v-if="canSign" type="button" @click="act('sign')"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y aprobar</Button>
+      <Button v-if="canSign" type="button" @click="act('sign')"><FileSignature data-icon="inline-start" aria-hidden="true" />Firmar y enviar a coordinación</Button>
+      <Button v-if="canSendWithoutSigning" type="button" :disabled="sendingOn" @click="act('send')"><Spinner v-if="sendingOn" data-icon="inline-start" /><Send v-else data-icon="inline-start" aria-hidden="true" />Enviar a coordinación</Button>
     </template>
 
-    <Alert v-if="review.assigned_to_other"><AlertDescription>Lo atiende {{ review.responsible }}, que lo devolvió antes</AlertDescription></Alert>
+    <Alert v-if="review.assigned_to_other"><AlertDescription>Lo atiende {{ review.responsible }}, que lo revisó antes</AlertDescription></Alert>
 
     <article v-if="fields.length" class="flex flex-col gap-6 rounded-md bg-card px-6 py-6 text-card-foreground shadow-surface ring-1 ring-surface-ring" aria-label="Bibliografía">
       <section v-for="field in fields" :key="field.key" class="flex min-w-0 flex-col gap-2">
@@ -214,7 +234,7 @@ onMounted(load);
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Lo atiende {{ review.responsible }}</DialogTitle>
-          <DialogDescription>{{ review.responsible }} devolvió este sílabo antes y es quien lo revisa. ¿Quiere continuar usted?</DialogDescription>
+          <DialogDescription>{{ review.responsible }} revisó este sílabo antes y es quien lo atiende. ¿Quiere continuar usted?</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" @click="takeoverFor = null">Cancelar</Button>
@@ -222,7 +242,7 @@ onMounted(load);
         </DialogFooter>
       </DialogContent>
     </Dialog>
-    <SignatureDialog v-model:open="signOpen" title="Firmar y aprobar" confirm-label="Firmar y aprobar" :run="approve" />
+    <SignatureDialog v-model:open="signOpen" title="Firmar y enviar a coordinación" confirm-label="Firmar y enviar" :run="approve" />
   </PageFrame>
   <LoadErrorState v-else-if="loadError" :message="loadError" @retry="load" />
   <PageFrame v-else-if="loading" title="" description="" loading :actions-skeleton="['w-44', 'w-40']" hide-icon size="narrow">

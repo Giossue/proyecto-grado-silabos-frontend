@@ -55,6 +55,24 @@ describe('CoordinationReviewHistoryPage', () => {
     expect(wrapper.text()).toContain('Calidad de Software');
   });
 
+  it('muestra que Biblioteca verificó antes y que Coordinación dio la aprobación final', async () => {
+    vi.mocked(getReview).mockResolvedValue({
+      ...detail('r2', 2),
+      timeline: [
+        { kind: 'aprobado', at: '2026-10-31T10:00:00Z', revision_id: 'r2', revision_number: 2, by: 'Coordinadora Demo', comment: null, previous_id: null },
+        { kind: 'biblioteca_verifico', at: '2026-10-30T15:00:00Z', revision_id: 'r2', revision_number: 2, by: 'Bibliotecaria Demo', comment: null, previous_id: null },
+        { kind: 'enviado', at: '2026-10-30T10:00:00Z', revision_id: 'r2', revision_number: 2, by: 'Docente Demo', comment: null, previous_id: 'r1' },
+      ],
+    } as ReviewDetail);
+    const wrapper = mount(CoordinationReviewHistoryPage, { attachTo: document.body, global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } } });
+    await flushPromises();
+
+    const panel = wrapper.get('aside[aria-label="Historial de versiones"]');
+    expect(panel.text()).toContain('Biblioteca verificó la bibliografía y envió a Coordinación');
+    expect(panel.text()).toContain('Coordinación aprobó el sílabo');
+    expect(panel.text()).not.toContain('Sílabo aprobado por Biblioteca');
+  });
+
   it('al elegir otra versión abre ese envío', async () => {
     const wrapper = mount(CoordinationReviewHistoryPage, { attachTo: document.body, global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } } });
     await flushPromises();

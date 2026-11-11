@@ -86,7 +86,7 @@ export type ReviewDetail = {
   reset: { allowed: boolean; erases_history?: boolean; revisions?: number; signatures?: number; has_pdf?: boolean };
 };
 export type ReviewTimelineEvent = {
-  kind: "enviado" | "coordinacion_aprobo" | "correccion" | "devuelto_biblioteca" | "aprobado";
+  kind: "enviado" | "biblioteca_verifico" | "coordinacion_aprobo" | "correccion" | "devuelto_biblioteca" | "aprobado";
   at: string;
   revision_id: string;
   revision_number: number;
@@ -135,7 +135,7 @@ export const requestCorrection = (
     `/coordination/reviews/${revisionId}/request-correction`,
     { method: "POST", body: JSON.stringify(payload) },
   );
-export const approveReview = (revisionId: string, signature: SignaturePayload) =>
+export const approveReview = (revisionId: string, signature: SignaturePayload | null) =>
   api<{ message: string }>(`/coordination/reviews/${revisionId}/approve`, {
     method: "POST",
     body: JSON.stringify({ signature }),

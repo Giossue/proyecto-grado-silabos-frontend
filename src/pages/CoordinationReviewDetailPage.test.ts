@@ -168,7 +168,8 @@ describe("CoordinationReviewDetailPage", () => {
     expect(wrapper.findComponent(RoleDeadlineBanner).exists()).toBe(false);
     expect(wrapper.text()).not.toContain("está en pausa");
     expect(wrapper.text()).not.toContain("Convocatoria finalizada");
-    expect(headerButton(wrapper, "Firmar y enviar a biblioteca")).toBeUndefined();
+    expect(headerButton(wrapper, "Firmar y aprobar")).toBeUndefined();
+    expect(headerButton(wrapper, "Aprobar")).toBeUndefined();
   });
 
   it("deja la revisión solo para consulta con la convocatoria finalizada", async () => {
@@ -181,7 +182,7 @@ describe("CoordinationReviewDetailPage", () => {
     expect(wrapper.text()).not.toContain("Convocatoria finalizada · solo consulta");
     expect(wrapper.text()).not.toContain("Convocatoria cerrada");
     expect(headerButton(wrapper, "Solicitar corrección")).toBeUndefined();
-    expect(headerButton(wrapper, "Firmar y enviar a biblioteca")).toBeUndefined();
+    expect(headerButton(wrapper, "Firmar y aprobar")).toBeUndefined();
     wrapper.unmount();
   });
 
@@ -216,15 +217,15 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
-  it("firma la declaración y envía a biblioteca", async () => {
+  it("firma la declaración y aprueba el sílabo", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
-    vi.mocked(approveReview).mockResolvedValue({ message: "Enviado a biblioteca" });
+    vi.mocked(approveReview).mockResolvedValue({ message: "Sílabo firmado y aprobado." });
     const wrapper = mountPage();
     await flushPromises();
 
     expect(wrapper.text()).not.toContain("Firmado por Docente Demo (docente)");
     expect(wrapper.text()).not.toContain("SW-601");
-    await headerButton(wrapper, "Firmar y enviar a biblioteca")!.trigger("click");
+    await headerButton(wrapper, "Firmar y aprobar")!.trigger("click");
     await flushPromises();
     await fillSignatureDialog(makeTestP12("COORDINACION DEMO", "clave"), "clave");
     await confirmSignatureDialog();
@@ -238,13 +239,28 @@ describe("CoordinationReviewDetailPage", () => {
     wrapper.unmount();
   });
 
+  it("si Coordinación ya firmó el sílabo, lo aprueba sin volver a firmar", async () => {
+    vi.mocked(getReview).mockResolvedValue({ ...detail(), signing_statement: null });
+    vi.mocked(approveReview).mockResolvedValue({ message: "Sílabo firmado y aprobado." });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(headerButton(wrapper, "Firmar y aprobar")).toBeUndefined();
+    await headerButton(wrapper, "Aprobar")!.trigger("click");
+    await flushPromises();
+
+    expect(approveReview).toHaveBeenCalledWith("revision-1", null);
+    expect(replace).toHaveBeenCalledWith("/coordinacion/revisiones");
+    wrapper.unmount();
+  });
+
   it("muestra en el diálogo el error de firma del servidor", async () => {
     vi.mocked(getReview).mockResolvedValue(detail());
     vi.mocked(approveReview).mockRejectedValue(new ApiError("Datos inválidos", 422, { signature: ["El certificado no es de una entidad de confianza"] }));
     const wrapper = mountPage();
     await flushPromises();
 
-    await headerButton(wrapper, "Firmar y enviar a biblioteca")!.trigger("click");
+    await headerButton(wrapper, "Firmar y aprobar")!.trigger("click");
     await flushPromises();
     await fillSignatureDialog(makeTestP12("COORDINACION DEMO", "clave"), "clave");
     await confirmSignatureDialog();

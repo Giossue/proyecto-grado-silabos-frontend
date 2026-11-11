@@ -106,10 +106,11 @@ const time = (value: string): string => formatDateDisplay(value, { hour: '2-digi
 const capitalized = (value: string): string => value.charAt(0).toUpperCase() + value.slice(1);
 const eventText = (event: ReviewTimelineEvent): string => ({
   enviado: 'El docente envió el sílabo',
+  biblioteca_verifico: 'Biblioteca verificó la bibliografía y envió a Coordinación',
   coordinacion_aprobo: 'Coordinación aprobó y envió a Biblioteca',
   correccion: 'Coordinación pidió correcciones',
   devuelto_biblioteca: 'Biblioteca devolvió al docente',
-  aprobado: 'Sílabo aprobado por Biblioteca',
+  aprobado: event.by ? 'Coordinación aprobó el sílabo' : 'Sílabo aprobado',
 }[event.kind]);
 
 const versionLabel = (version: Version): string => {

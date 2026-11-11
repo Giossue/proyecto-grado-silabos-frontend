@@ -54,7 +54,7 @@ describe('LibraryReviewsPage', () => {
     vi.mocked(getDashboard).mockReset();
     vi.mocked(getDashboard).mockResolvedValue({
       metrics: [
-        { key: 'library_pending', label: 'En revisión', value: 2, suffix: null, hint: 'Aprobados por coordinación; falta la bibliografía' },
+        { key: 'library_pending', label: 'En revisión', value: 2, suffix: null, hint: 'Enviados por los docentes; falta verificar la bibliografía' },
         { key: 'library_signed', label: 'Firmados', value: 3, suffix: null, hint: 'Bibliografía aprobada y firmada' },
         { key: 'library_commented', label: 'Corrección solicitada', value: 1, suffix: null, hint: 'Con observaciones para el docente' },
       ],
