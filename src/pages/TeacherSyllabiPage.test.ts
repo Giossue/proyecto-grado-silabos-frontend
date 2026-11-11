@@ -111,7 +111,7 @@ describe('TeacherSyllabiPage', () => {
     const wrapper = mountPage();
     await flushPromises();
     expect(wrapper.text()).toContain('No tiene sílabos asignados');
-    expect(wrapper.text()).toContain('Cuando se reanude la convocatoria, aquí verá sus sílabos');
+    expect(wrapper.text()).not.toContain('Cuando se reanude');
     expect(wrapper.text()).not.toContain('Todavía no hay una convocatoria abierta');
   });
 
