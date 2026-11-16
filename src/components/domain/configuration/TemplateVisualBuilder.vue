@@ -429,7 +429,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
     <div v-if="!preview" class="pointer-events-none sticky top-16 z-20 flex w-full justify-center">
       <div data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" :style="{ minWidth: toolbarWidth }" class="pointer-events-auto flex w-max max-w-full items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
-        <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" />
+        <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" :variables="variables" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <TemplateSelectionTools
           :selection="selection"
@@ -523,6 +523,7 @@ const fieldName = (field: TemplateField): string => field.label.trim() || 'Campo
               :locked="locked"
               :focus-on-create="focusId === field.id"
               :naming="naming === field.id"
+              :variables="variables"
               @select="selectField(field.id, $event)"
               @named="naming = null"
               @update:field="setField(section.id, field.id, $event)"

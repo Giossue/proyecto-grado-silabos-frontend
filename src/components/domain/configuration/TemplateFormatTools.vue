@@ -2,14 +2,16 @@
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import type { ChainedCommands, Editor } from '@tiptap/core';
-import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Baseline, Bold, Italic, List, ListOrdered, Redo2, Table2, Underline, Undo2 } from '@lucide/vue';
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight, Baseline, Bold, Braces, Italic, List, ListOrdered, Redo2, Table2, Underline, Undo2 } from '@lucide/vue';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { DOCUMENT_CELL_COLORS, DOCUMENT_TEXT_COLORS, paintCell } from '@/lib/documentPalette';
 import { cn } from '@/lib/utils';
+import { variableNode } from '@/components/domain/syllabus/fieldDocumentExtensions';
+import type { TemplateVariable } from '@/lib/templateDocument';
 
-const props = defineProps<{ editor: Editor | null; disabled?: boolean }>();
+const props = defineProps<{ editor: Editor | null; disabled?: boolean; variables?: TemplateVariable[] }>();
 
 const ready = computed(() => !props.disabled && props.editor !== null && !props.editor.isDestroyed && props.editor.isEditable);
 const run = (command: (chain: ChainedCommands) => ChainedCommands): void => {
@@ -89,5 +91,17 @@ const tableActions = [
         <DropdownMenuItem :disabled="!inTable" @select="run((chain) => chain.deleteTable())">Quitar tabla</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu></MenuTooltip>
+    <template v-if="variables?.length">
+      <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
+      <MenuTooltip label="Insertar dato del sistema"><DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button type="button" variant="ghost" size="icon-sm" aria-label="Insertar dato del sistema" :disabled="!ready" @mousedown.prevent><Braces aria-hidden="true" /></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" class="max-h-72 overflow-y-auto" @close-auto-focus="returnFocus">
+          <DropdownMenuLabel>Datos del sistema</DropdownMenuLabel>
+          <DropdownMenuItem v-for="variable in variables" :key="variable.key" @select="run((chain) => chain.insertContent(variableNode(variable)))">{{ variable.label }}</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu></MenuTooltip>
+    </template>
   </div>
 </template>

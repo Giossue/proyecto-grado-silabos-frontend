@@ -1,9 +1,13 @@
-import { mergeAttributes, Node } from '@tiptap/core';
+import { mergeAttributes, Node, type Editor } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import DocumentBlockView from '@/components/domain/syllabus/DocumentBlockView.vue';
 import Document from '@tiptap/extension-document';
 import { TableCell, TableHeader } from '@tiptap/extension-table';
 import { RESPONSE_NODE, responseAttrs, responseLabel } from '@/lib/responseKinds';
+
+export const variableNode = (variable: { key: string; label: string }) => ({ type: 'variable', attrs: { id: variable.key, label: variable.label } });
+
+export const variableLabels = (editor: Editor): Record<string, string> => (editor.extensionManager.extensions.find((item) => item.name === 'variable')?.options as { labels?: Record<string, string> } | undefined)?.labels ?? {};
 
 export const DocumentVariable = Node.create<{ labels: Record<string, string> }>({
     name: 'variable',

@@ -4,13 +4,14 @@ import { computed, nextTick, onMounted, ref, shallowRef, watch } from 'vue';
 import type { TemplateField } from '@/api/template';
 import TemplateInlineText from '@/components/domain/configuration/TemplateInlineText.vue';
 import FreeTextEditor from '@/components/domain/syllabus/FreeTextEditor.vue';
-import type { DocumentNode } from '@/lib/templateDocument';
+import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 
 const props = defineProps<{
     block?: boolean;
     locked: boolean;
     focusOnCreate?: boolean;
     naming?: boolean;
+    variables?: TemplateVariable[];
 }>();
 const field = defineModel<TemplateField>('field', { required: true });
 const emit = defineEmits<{ select: [editor: Editor | null]; named: [] }>();
@@ -50,6 +51,6 @@ const select = (): void => emit('select', editor.value?.editor ?? null);
         @blur="leaveLabel"
       />
     </div>
-    <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :blocks="field.quien_llena === 'institucional' ? 'fill' : 'configure'" :disabled="locked || block" :toolbar="false" align bare /></div>
+    <div data-field-body><FreeTextEditor :id="`field-content-${field.id}`" ref="editor" v-model="content" :label="`Contenido de ${name()}`" :blocks="field.quien_llena === 'institucional' ? 'fill' : 'configure'" :disabled="locked || block" :variables="variables" :toolbar="false" align bare /></div>
   </div>
 </template>

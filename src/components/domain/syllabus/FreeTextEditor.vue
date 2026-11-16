@@ -12,7 +12,7 @@ import { Bold, Braces, ChevronDown, Italic, Underline, List, ListOrdered, Plus, 
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { DocumentBlock, DocumentResponse, DocumentWithBlocks, DocumentVariable, DocumentTableCell, DocumentTableHeader } from '@/components/domain/syllabus/fieldDocumentExtensions';
+import { DocumentBlock, DocumentResponse, DocumentWithBlocks, DocumentVariable, DocumentTableCell, DocumentTableHeader, variableNode } from '@/components/domain/syllabus/fieldDocumentExtensions';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
 import { emptyDocument } from '@/types/configuration';
@@ -55,7 +55,7 @@ const chooseSlash = (key: string): void => {
     const current = editor.value;
     if (!variable || !current) return;
     const to = current.state.selection.from;
-    current.chain().focus().deleteRange({ from: to - slash.value.query.length - 1, to }).insertContent({ type: 'variable', attrs: { id: variable.key, label: variable.label } }).run();
+    current.chain().focus().deleteRange({ from: to - slash.value.query.length - 1, to }).insertContent(variableNode(variable)).run();
     closeSlash();
 };
 const onSlashKey = (event: KeyboardEvent): boolean => {
@@ -114,7 +114,7 @@ const addTableRow = (): void => {
 const insertVariable = (key: unknown): void => {
     const variable = props.variables.find((item) => item.key === key);
     if (!variable || props.disabled) return;
-    editor.value?.chain().focus().insertContent({ type: 'variable', attrs: { id: variable.key, label: variable.label } }).run();
+    editor.value?.chain().focus().insertContent(variableNode(variable)).run();
 };
 watch(() => props.disabled, (disabled) => editor.value?.setEditable(!disabled));
 watch(() => props.modelValue, (value) => {

@@ -47,11 +47,17 @@ export default defineComponent({
         props: { type: Object as PropType<Record<string, unknown>>, required: true },
         value: { type: Object as PropType<Record<string, unknown>>, required: true },
         mode: { type: String as PropType<Mode>, default: 'read' },
+        labels: { type: Object as PropType<Record<string, string>>, default: () => ({}) },
     },
     emits: { 'update:value': (value: Record<string, unknown>) => typeof value === 'object', 'update:props': (props: Record<string, unknown>) => typeof props === 'object' },
     setup(props, { emit }) {
         const definition = computed(() => blockDefinition(props.kind));
         const variables = computed(() => templateRuntime().variables);
+
+        const variable = (id: string): VNodeChild => {
+            const label = props.labels[id];
+            return label ? h('span', { class: 'document-variable', 'data-variable': id, contenteditable: 'false' }, label) : variables.value[id] ?? '';
+        };
 
         const change = (next: Record<string, unknown>): void => {
             if (definition.value) emit('update:value', settle(definition.value.value, next, props.props));
@@ -195,7 +201,7 @@ export default defineComponent({
             if (!block) return h('p', { class: 'text-muted-foreground' }, 'Bloque sin definición en la plantilla');
             if (props.mode === 'configure' && Object.keys(block.props).length > 0) return configure(block);
             const resolved = resolveBlock(block, props.props, props.value, variables.value);
-            if (props.mode !== 'fill') return h('div', { class: 'document-block' }, toDocument(resolved).map((child) => renderFreeText(child, { variable: (id) => variables.value[id] ?? '' })));
+            if (props.mode !== 'fill') return h('div', { class: 'document-block' }, toDocument(resolved).map((child) => renderFreeText(child, { variable })));
             const search = block.catalog ? h(LibraryCatalogSearch, {
                 disabled: !canAddCatalogBook(block, props.value),
                 onPick: (book: CatalogBook) => {
@@ -203,7 +209,7 @@ export default defineComponent({
                     if (next) change(next);
                 },
             }) : null;
-            return h('div', { class: 'document-block flex flex-col gap-2' }, [search, summary(), ...resolved.map((child) => renderFreeText(child as DocumentNode, { ...fillOptions, variable: (id) => variables.value[id] ?? '' }))]);
+            return h('div', { class: 'document-block flex flex-col gap-2' }, [search, summary(), ...resolved.map((child) => renderFreeText(child as DocumentNode, { ...fillOptions, variable }))]);
         };
     },
 });

@@ -47,6 +47,14 @@ describe('bloques definidos en la plantilla', () => {
             expect(wrapper.findAll('td').map((item) => item.text())).toContain('X');
         });
 
+        it('en el editor del docente las celdas muestran el valor real y no hay botón de datos del sistema', async () => {
+            mountEditor(identification());
+            await flushPromises();
+            expect(document.body.querySelector('[data-block]')!.textContent).toContain('Ciencias');
+            expect(document.body.querySelector('[data-block]')!.textContent).not.toContain('Nombre de la facultad');
+            expect(document.body.querySelector('[aria-label="Insertar dato del sistema"]')).toBeNull();
+        });
+
         it('el docente marca Sí y escribe el tipo dentro de la misma tabla', async () => {
             const wrapper = mountEditor(identification());
             await flushPromises();
