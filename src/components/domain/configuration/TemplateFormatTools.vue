@@ -11,7 +11,8 @@ import { cn } from '@/lib/utils';
 import { variableNode } from '@/components/domain/syllabus/fieldDocumentExtensions';
 import type { TemplateVariable } from '@/lib/templateDocument';
 
-const props = defineProps<{ editor: Editor | null; disabled?: boolean; variables?: TemplateVariable[] }>();
+const props = defineProps<{ editor: Editor | null; disabled?: boolean; variables?: TemplateVariable[]; canUndo?: boolean; canRedo?: boolean }>();
+const emit = defineEmits<{ undo: []; redo: [] }>();
 
 const ready = computed(() => !props.disabled && props.editor !== null && !props.editor.isDestroyed && props.editor.isEditable);
 const run = (command: (chain: ChainedCommands) => ChainedCommands): void => {
@@ -26,9 +27,20 @@ const returnFocus = (event: Event): void => {
 };
 
 const history = [
-    { label: 'Deshacer', icon: Undo2, apply: (chain: ChainedCommands) => chain.undo(), allowed: (editor: Editor) => editor.can().undo() },
-    { label: 'Rehacer', icon: Redo2, apply: (chain: ChainedCommands) => chain.redo(), allowed: (editor: Editor) => editor.can().redo() },
+    { label: 'Deshacer', icon: Undo2, structure: 'undo', apply: (chain: ChainedCommands) => chain.undo(), allowed: (editor: Editor) => editor.can().undo() },
+    { label: 'Rehacer', icon: Redo2, structure: 'redo', apply: (chain: ChainedCommands) => chain.redo(), allowed: (editor: Editor) => editor.can().redo() },
 ] as const;
+type HistoryStep = (typeof history)[number];
+const structureAllowed = (step: HistoryStep): boolean => !props.disabled && Boolean(step.structure === 'undo' ? props.canUndo : props.canRedo);
+const textFocused = (): boolean => ready.value && props.editor!.isFocused;
+const historyAllowed = (step: HistoryStep): boolean => can(step.allowed) || structureAllowed(step);
+const stepHistory = (step: HistoryStep): void => {
+    if (textFocused() && can(step.allowed)) run(step.apply);
+    else if (structureAllowed(step)) {
+        if (step.structure === 'undo') emit('undo');
+        else emit('redo');
+    } else run(step.apply);
+};
 const marks = [
     { name: 'bold', label: 'Negrita', icon: Bold, toggle: (chain: ChainedCommands) => chain.toggleBold() },
     { name: 'italic', label: 'Cursiva', icon: Italic, toggle: (chain: ChainedCommands) => chain.toggleItalic() },
@@ -57,7 +69,7 @@ const tableActions = [
 
 <template>
   <div class="flex shrink-0 items-center gap-0.5" role="group" aria-label="Formato del texto">
-    <IconTooltip v-for="step in history" :key="step.label" :label="step.label"><Button type="button" variant="ghost" size="icon-sm" :aria-label="step.label" :disabled="!can(step.allowed)" @mousedown.prevent @click="run(step.apply)"><component :is="step.icon" aria-hidden="true" /></Button></IconTooltip>
+    <IconTooltip v-for="step in history" :key="step.label" :label="step.label"><Button type="button" variant="ghost" size="icon-sm" :aria-label="step.label" :disabled="!historyAllowed(step)" @mousedown.prevent @click="stepHistory(step)"><component :is="step.icon" aria-hidden="true" /></Button></IconTooltip>
     <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
     <IconTooltip v-for="mark in marks" :key="mark.name" :label="mark.label"><Button type="button" variant="ghost" size="icon-sm" :aria-label="mark.label" :aria-pressed="active(mark.name)" :disabled="!ready" :class="cn(active(mark.name) && 'bg-accent text-accent-foreground')" @mousedown.prevent @click="run(mark.toggle)"><component :is="mark.icon" aria-hidden="true" /></Button></IconTooltip>
     <MenuTooltip label="Color del texto"><DropdownMenu>

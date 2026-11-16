@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import IconTooltip from '@/components/domain/IconTooltip.vue';
-import { ArrowDown, ArrowUp, ChevronDown, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
+import MenuTooltip from '@/components/domain/MenuTooltip.vue';
+import { ArrowDown, ArrowUp, ChevronDown, Copy, FolderInput, RectangleHorizontal, RectangleVertical, Trash2 } from '@lucide/vue';
 import { computed } from 'vue';
 import type { TemplateField, TemplatePreset, TemplateSectionPayload } from '@/api/template';
 import { Button } from '@/components/ui/button';
@@ -11,8 +12,10 @@ export type TemplateSelection =
     | { kind: 'field'; field: TemplateField; canMoveUp: boolean; canMoveDown: boolean }
     | { kind: 'section'; section: TemplateSectionPayload; canMoveUp: boolean; canMoveDown: boolean };
 
-const props = defineProps<{ selection: TemplateSelection | null; presets?: TemplatePreset[]; locked: boolean; busy: boolean }>();
-const emit = defineEmits<{ responsible: [value: FieldResponsible]; preset: [preset: TemplatePreset]; name: []; move: [direction: -1 | 1]; remove: []; orientation: [] }>();
+export type TemplateSectionTarget = { id: string; title: string };
+
+const props = defineProps<{ selection: TemplateSelection | null; presets?: TemplatePreset[]; locked: boolean; busy: boolean; targets?: TemplateSectionTarget[] }>();
+const emit = defineEmits<{ responsible: [value: FieldResponsible]; preset: [preset: TemplatePreset]; name: []; move: [direction: -1 | 1]; remove: []; orientation: []; duplicate: []; moveTo: [sectionId: string] }>();
 
 const fieldName = computed(() => props.selection?.kind === 'field' ? props.selection.field.label.trim() || 'Campo sin nombre' : '');
 </script>
@@ -46,12 +49,23 @@ const fieldName = computed(() => props.selection?.kind === 'field' ? props.selec
       </DropdownMenu>
       <IconTooltip :label="`Subir el campo ${fieldName}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveUp" :aria-label="`Subir el campo ${fieldName}`" @click="emit('move', -1)"><ArrowUp aria-hidden="true" /></Button></IconTooltip>
       <IconTooltip :label="`Bajar el campo ${fieldName}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveDown" :aria-label="`Bajar el campo ${fieldName}`" @click="emit('move', 1)"><ArrowDown aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip :label="`Duplicar el campo ${fieldName}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy" :aria-label="`Duplicar el campo ${fieldName}`" @click="emit('duplicate')"><Copy aria-hidden="true" /></Button></IconTooltip>
+      <MenuTooltip label="Mover a…"><DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !targets?.length" :aria-label="`Mover el campo ${fieldName} a otra sección`"><FolderInput aria-hidden="true" /></Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" class="max-h-72 overflow-y-auto">
+          <DropdownMenuLabel>Mover a…</DropdownMenuLabel>
+          <DropdownMenuItem v-for="target in targets" :key="target.id" @select="emit('moveTo', target.id)">{{ target.title.trim() || 'Sección sin título' }}</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu></MenuTooltip>
       <IconTooltip :label="`Eliminar el campo ${fieldName}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar el campo ${fieldName}`" @click="emit('remove')"><Trash2 aria-hidden="true" /></Button></IconTooltip>
     </template>
     <template v-else-if="selection?.kind === 'section'">
       <Button type="button" variant="ghost" size="sm" :disabled="locked || busy" :aria-label="`Orientación de la sección ${selection.section.title}`" :aria-pressed="selection.section.orientation === 'landscape'" @click="emit('orientation')"><RectangleHorizontal v-if="selection.section.orientation === 'landscape'" data-icon="inline-start" aria-hidden="true" /><RectangleVertical v-else data-icon="inline-start" aria-hidden="true" />{{ selection.section.orientation === 'landscape' ? 'Horizontal' : 'Vertical' }}</Button>
       <IconTooltip :label="`Subir la sección ${selection.section.title}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveUp" :aria-label="`Subir la sección ${selection.section.title}`" @click="emit('move', -1)"><ArrowUp aria-hidden="true" /></Button></IconTooltip>
       <IconTooltip :label="`Bajar la sección ${selection.section.title}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy || !selection.canMoveDown" :aria-label="`Bajar la sección ${selection.section.title}`" @click="emit('move', 1)"><ArrowDown aria-hidden="true" /></Button></IconTooltip>
+      <IconTooltip :label="`Duplicar la sección ${selection.section.title}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked || busy" :aria-label="`Duplicar la sección ${selection.section.title}`" @click="emit('duplicate')"><Copy aria-hidden="true" /></Button></IconTooltip>
       <IconTooltip :label="`Eliminar la sección ${selection.section.title}`"><Button type="button" variant="ghost" size="icon-sm" :disabled="locked" :aria-label="`Eliminar la sección ${selection.section.title}`" @click="emit('remove')"><Trash2 aria-hidden="true" /></Button></IconTooltip>
     </template>
     <span v-else class="min-w-0 basis-0 grow truncate px-2 text-sm text-muted-foreground">Seleccione un campo</span>
