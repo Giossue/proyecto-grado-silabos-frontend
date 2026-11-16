@@ -12,6 +12,7 @@ vi.mock('vue-router', async (importOriginal) => ({
   useRoute: () => ({ params: { subject: 'm2' }, query: {}, fullPath: '/coordinacion/proyecto-carrera/m2' }),
   useRouter: () => ({ replace: vi.fn(), push, back: vi.fn() }),
   onBeforeRouteLeave: vi.fn(),
+  onBeforeRouteUpdate: vi.fn(),
 }));
 vi.mock('@/api/career-academics', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/api/career-academics')>()),
@@ -53,6 +54,28 @@ describe('Página del proyecto de carrera de una materia', () => {
     vi.mocked(getScheduledSubjects).mockResolvedValue(scheduled());
     vi.mocked(getSubjectProfile).mockResolvedValue(profile());
     vi.mocked(saveSubjectProfile).mockReset();
+  });
+
+
+  it('pasa a la materia anterior o siguiente de la carrera, en orden de ciclo, sin las que no generan sílabo', async () => {
+    vi.mocked(getScheduledSubjects).mockResolvedValue({
+      ...scheduled(),
+      options: { activeSubjects: [
+        { id: 'm3', nombre: 'Estructuras de Datos', ciclo: 2 },
+        { id: 'm1', nombre: 'Álgebra', ciclo: 1 },
+        { id: 'm4', nombre: 'Prácticas', ciclo: 1, generates_syllabus: false },
+        { id: 'm2', nombre: 'Matemática Discreta', ciclo: 1 },
+      ] },
+    } as unknown as ScheduledSubjects);
+    const wrapper = mountPage();
+    await flushPromises();
+
+    await wrapper.get('[aria-label="Materia anterior"]').trigger('click');
+    expect(push).toHaveBeenLastCalledWith('/coordinacion/proyecto-carrera/m1');
+    await wrapper.get('[aria-label="Materia siguiente"]').trigger('click');
+    expect(push).toHaveBeenLastCalledWith('/coordinacion/proyecto-carrera/m3');
+    expect(push).toHaveBeenCalledTimes(2);
+    wrapper.unmount();
   });
 
   it('muestra las secciones a la izquierda, el editor con el botón de espacios a la derecha y guarda lo escrito', async () => {

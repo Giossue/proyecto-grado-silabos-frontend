@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ArrowLeft, Eye } from '@lucide/vue';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
+import { ArrowLeft, ChevronLeft, ChevronRight, Eye } from '@lucide/vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router';
 import { ApiError } from '@/api/client';
 import { getScheduledSubjects, getSubjectProfile, getSubjectProfilePreview, saveSubjectProfile, type ScheduledSubjects, type SubjectProfileField, type SubjectProfilePreview } from '@/api/career-academics';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
@@ -16,6 +16,7 @@ import SyllabusDocumentPreview from '@/components/domain/syllabus/SyllabusDocume
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
@@ -31,6 +32,19 @@ const router = useRouter();
 const subjectId = computed(() => String(route.params.subject ?? ''));
 const career = ref<ScheduledSubjects['career'] | null>(null);
 const subjectName = ref('');
+const subjects = ref<ScheduledSubjects['options']['activeSubjects']>([]);
+const subjectIndex = computed(() => subjects.value.findIndex((subject) => subject.id === subjectId.value));
+const previousSubject = computed(() => (subjectIndex.value > 0 ? subjects.value[subjectIndex.value - 1] : null));
+const nextSubject = computed(() => (subjectIndex.value >= 0 ? subjects.value[subjectIndex.value + 1] ?? null : null));
+const cycleLabel = (cycle: number): string => (cycle ? `Ciclo ${cycle}` : 'Sin ciclo');
+const subjectGroups = computed(() => {
+  const byCycle = new Map<number, typeof subjects.value>();
+  for (const subject of subjects.value) byCycle.set(subject.ciclo, [...(byCycle.get(subject.ciclo) ?? []), subject]);
+  return [...byCycle].map(([cycle, list]) => ({ cycle, list }));
+});
+const openSubject = (id: unknown): void => {
+  if (typeof id === 'string' && id !== '' && id !== subjectId.value) void router.push(paths.coordination.careerProjectSubject(id));
+};
 const fields = ref<SubjectProfileField[]>([]);
 const values = ref<Record<string, DocumentNode | null>>({});
 const loading = ref(true);
@@ -89,6 +103,11 @@ const load = async (): Promise<void> => {
   try {
     const [scheduled, profile] = await Promise.all([getScheduledSubjects(), getSubjectProfile(subjectId.value)]);
     career.value = scheduled.career;
+    subjects.value = scheduled.options.activeSubjects
+      .filter((subject) => subject.generates_syllabus !== false)
+      .map((subject, order) => ({ subject, order }))
+      .sort((first, second) => (first.subject.ciclo || Infinity) - (second.subject.ciclo || Infinity) || first.order - second.order)
+      .map(({ subject }) => subject);
     subjectName.value = scheduled.options.activeSubjects.find((subject) => subject.id === subjectId.value)?.nombre ?? '';
     fields.value = [...profile.fields].sort((first, second) => (first.position ?? 0) - (second.position ?? 0));
     values.value = Object.fromEntries(fields.value.map((field) => [field.id, profile.values[field.id] ?? field.template ?? field.content ?? null]));
@@ -119,6 +138,15 @@ const save = async (): Promise<void> => {
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
 onBeforeRouteLeave(() => !changed.value || askToDiscard());
+onBeforeRouteUpdate(() => !changed.value || askToDiscard());
+watch(subjectId, () => {
+  view.value = 'editar';
+  preview.value = null;
+  previewError.value = null;
+  chosen.value = null;
+  error.value = null;
+  void load();
+});
 const warnBeforeUnload = (event: BeforeUnloadEvent): void => {
   if (!changed.value) return;
   event.preventDefault();
@@ -140,6 +168,19 @@ onBeforeUnmount(() => {
     <template #eyebrow><Button type="button" variant="link" size="sm" class="h-auto px-0" @click="goBack(router, paths.coordination.careerProject)"><ArrowLeft aria-hidden="true" />Volver al proyecto de carrera</Button></template>
     <template v-if="locked && career?.lock" #banner><ProcessLockAlert banner :lock="career.lock" /></template>
     <template v-if="!loading && !loadError && fields.length > 0" #actions>
+      <div v-if="subjects.length > 1" class="flex items-center gap-1">
+        <IconTooltip label="Materia anterior"><Button type="button" variant="ghost" size="icon" aria-label="Materia anterior" :disabled="!previousSubject" @click="previousSubject && openSubject(previousSubject.id)"><ChevronLeft aria-hidden="true" /></Button></IconTooltip>
+        <Select :model-value="subjectId" @update:model-value="openSubject">
+          <SelectTrigger class="w-56" aria-label="Cambiar de materia"><SelectValue placeholder="Cambiar de materia" /></SelectTrigger>
+          <SelectContent>
+            <SelectGroup v-for="group in subjectGroups" :key="group.cycle">
+              <SelectLabel>{{ cycleLabel(group.cycle) }}</SelectLabel>
+              <SelectItem v-for="subject in group.list" :key="subject.id" :value="subject.id">{{ subject.nombre }}</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <IconTooltip label="Materia siguiente"><Button type="button" variant="ghost" size="icon" aria-label="Materia siguiente" :disabled="!nextSubject" @click="nextSubject && openSubject(nextSubject.id)"><ChevronRight aria-hidden="true" /></Button></IconTooltip>
+      </div>
       <IconTooltip :label="view === 'vista-previa' ? 'Volver a editar' : 'Vista previa'"><Button type="button" :variant="view === 'vista-previa' ? 'secondary' : 'ghost'" size="icon" aria-label="Vista previa" :aria-pressed="view === 'vista-previa'" @click="toggleView"><Eye aria-hidden="true" /></Button></IconTooltip>
       <Button type="button" :disabled="!canSave" @click="save"><Spinner v-if="saving" data-icon="inline-start" />Guardar proyecto de carrera</Button>
     </template>
