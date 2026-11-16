@@ -24,6 +24,7 @@ import { RESPONSE_NODE, responseAttrs, responseNeedsOptions } from '@/lib/respon
 import { paths } from '@/lib/routes';
 import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 import { toast } from '@/lib/toast';
+import { curriculumEditorState } from '@/state/curriculumEditor';
 
 const route = useRoute();
 const router = useRouter();
@@ -124,10 +125,14 @@ const warnBeforeUnload = (event: BeforeUnloadEvent): void => {
   event.returnValue = '';
 };
 onMounted(() => {
+  curriculumEditorState.setOpen(true);
   window.addEventListener('beforeunload', warnBeforeUnload);
   void load();
 });
-onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeUnload));
+onBeforeUnmount(() => {
+  curriculumEditorState.setOpen(false);
+  window.removeEventListener('beforeunload', warnBeforeUnload);
+});
 </script>
 
 <template>
@@ -147,7 +152,6 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnBeforeUnloa
         <Alert v-if="previewError" variant="destructive"><AlertDescription>{{ previewError }}</AlertDescription></Alert>
         <LoadingSkeleton v-else-if="previewLoading || !preview" variant="preview" />
         <template v-else>
-          <p class="text-sm text-muted-foreground">Así recibirán el sílabo los docentes de esta materia, antes de llenarlo</p>
           <SyllabusDocumentPreview :presentation="preview.presentation" :sections="previewSections" />
         </template>
       </template>
