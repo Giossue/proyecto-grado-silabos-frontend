@@ -14,7 +14,8 @@ export type ResponseOption = { const: string; title: string };
 export type ResponseDisplay = 'lista' | 'desplegable';
 export type ResponseSettings = { required?: boolean; help?: string; maxLength?: number; minChoices?: number; maxChoices?: number; display?: ResponseDisplay };
 export type ResponseSettingName = keyof ResponseSettings;
-export type ResponseAttrs = { kind: string; options: ResponseOption[]; value: unknown } & ResponseSettings;
+export type ResponseLogic = { id?: string; showIf?: { response: string; options: string[] } };
+export type ResponseAttrs = { kind: string; options: ResponseOption[]; value: unknown } & ResponseSettings & ResponseLogic;
 
 export const RESPONSE_DISPLAYS: Array<{ value: ResponseDisplay; label: string }> = [{ value: 'lista', label: 'Lista' }, { value: 'desplegable', label: 'Desplegable' }];
 
@@ -82,9 +83,17 @@ const emptyOf = (kind: string): unknown => {
     return schema ? emptyValue(schema, {}) : null;
 };
 
-export const emptyResponse = (kind: string, options: ResponseOption[] = [], settings: ResponseSettings = {}): DocumentNode => ({
+const logicOf = (raw: Record<string, unknown>): ResponseLogic => {
+    const logic: ResponseLogic = {};
+    if (typeof raw.id === 'string' && raw.id) logic.id = raw.id;
+    const showIf = raw.showIf as ResponseLogic['showIf'] | undefined;
+    if (showIf && typeof showIf.response === 'string' && Array.isArray(showIf.options)) logic.showIf = { response: showIf.response, options: [...showIf.options] };
+    return logic;
+};
+
+export const emptyResponse = (kind: string, options: ResponseOption[] = [], settings: ResponseSettings = {}, logic: ResponseLogic = {}): DocumentNode => ({
     type: RESPONSE_NODE,
-    attrs: { kind, options: responseHasOptions(kind) ? options : [], value: emptyOf(kind) as never, ...responseSettings(kind, settings) },
+    attrs: { kind, options: responseHasOptions(kind) ? options : [], value: emptyOf(kind) as never, ...responseSettings(kind, settings), ...logicOf(logic) },
 });
 
 export const responseAttrs = (node: DocumentNode | null | undefined): ResponseAttrs => {
@@ -94,7 +103,7 @@ export const responseAttrs = (node: DocumentNode | null | undefined): ResponseAt
         ? (attrs.options as unknown[]).filter((option): option is ResponseOption => typeof option === 'object' && option !== null
             && typeof (option as ResponseOption).const === 'string' && typeof (option as ResponseOption).title === 'string')
         : [];
-    return { kind, options, value: attrs.value === undefined ? emptyOf(kind) : attrs.value, ...responseSettings(kind, attrs) };
+    return { kind, options, value: attrs.value === undefined ? emptyOf(kind) : attrs.value, ...responseSettings(kind, attrs), ...logicOf(attrs) };
 };
 
 export const responseAnswered = (attrs: ResponseAttrs): boolean =>

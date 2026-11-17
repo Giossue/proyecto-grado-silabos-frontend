@@ -46,6 +46,8 @@ import { attemptKey } from '@/lib/attemptKey';
 import { afterDialogExit, useShownWhileClosing } from '@/lib/dialogExit';
 import { paths } from '@/lib/routes';
 import { handleUnauthorized } from '@/lib/unauthorized';
+import { responseDocument } from '@/lib/fieldResponses';
+import { syllabusConditions, visibleSections as withoutHiddenParts } from '@/lib/responseConditions';
 import { ArrowLeft, Copy, Eye, FileSignature, FileText, Send } from '@lucide/vue';
 
 const { open: discardOpen, ask: askToDiscard, decide: decideDiscard } = useDiscardConfirmation();
@@ -348,6 +350,10 @@ const flushAutosave = async (): Promise<boolean> => {
 };
 
 // Antes de mostrar la hoja se guarda lo pendiente, para que muestre lo último que escribió el docente.
+const previewSections = computed(() => {
+  const sections = syllabus.value?.sections ?? [];
+  return withoutHiddenParts(sections, syllabusConditions(sections, (field) => field.template ? responseDocument(field.template, field.value) : field.value));
+});
 const openPreview = async (): Promise<void> => {
   await flushAutosave();
   previewing.value = true;
@@ -534,7 +540,7 @@ onBeforeUnmount(() => {
           <ReviewCommentNotice v-if="syllabus.state === 'correccion_solicitada' && reviewComments.length" :comments="reviewComments" />
 
           <SyllabusTeacherForm v-if="showEditor && !previewing" v-model:active="activeSectionId" v-model:collapsed="collapsedFields" :sections="syllabus.sections" :disabled="conflict || pausedEdit" :errors="visibleValidationMessages" @update:value="updateValue" />
-          <SyllabusDocumentPreview v-else :presentation="syllabus.presentation" :sections="syllabus.sections" />
+          <SyllabusDocumentPreview v-else :presentation="syllabus.presentation" :sections="previewSections" />
 
         </div>
 

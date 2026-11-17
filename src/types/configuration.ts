@@ -1,3 +1,4 @@
+import type { ResponseCondition } from '@/lib/responseConditions';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 export type FieldResponsible = 'carrera' | 'institucional';
@@ -12,6 +13,7 @@ export type DocumentField = {
     template?: DocumentNode;
     teacher_editable?: boolean;
     required?: boolean;
+    show_if?: ResponseCondition | null;
 };
 export const FIELD_RESPONSIBLES: Array<{ value: FieldResponsible; label: string; hint: string }> = [
     { value: 'institucional', label: 'Institucional', hint: 'Contenido de la plantilla, igual para todos y de solo lectura' },

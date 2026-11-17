@@ -1,3 +1,4 @@
+import type { ResponseCondition } from '@/lib/responseConditions';
 import type { SyllabusDetail } from '@/api/syllabi';
 import { setTemplateRuntime } from '@/lib/blocks/runtime';
 import type { BlockDefinition, TemplateDefinitionPayload } from '@/lib/blocks/types';
@@ -7,7 +8,7 @@ import { api } from '@/api/client';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 import type { FieldResponsible } from '@/types/configuration';
 
-export type TemplateField = { id: string; key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode };
+export type TemplateField = { id: string; key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode; show_if?: ResponseCondition | null };
 export type TemplateAppearance = { font_family: string; body_font_size: number; title_font_size: number; section_font_size: number; field_font_size: number; text_color: string; accent_color: string; table_header_background: string; table_header_color: string; margin_cm: number; orientation: string; title_bold: boolean; title_italic: boolean; title_alignment: string; section_bold: boolean; section_italic: boolean; section_alignment: string; body_alignment: string };
 
 export type TemplateSectionPayload = { id: string; key: string; title: string; orientation: 'portrait' | 'landscape'; fields: TemplateField[] };
@@ -39,7 +40,7 @@ export const clearTemplate = (id: string) => api<{ message: string }>(`/admin/te
 export const formatTemplate = (id: string) => api<{ message: string }>(`/admin/template/${id}/format`, { method: 'POST', body: JSON.stringify({}) });
 
 export type TemplateVersionSummary = { id: string; number: number; saved_at: string; saved_by: string; sections: number; fields: number; current?: boolean };
-export type TemplateVersionDraft = { title: string; layout: DocumentLayout; sections: Array<{ key: string; title: string; orientation: 'portrait' | 'landscape'; fields: Array<{ key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode }> }> };
+export type TemplateVersionDraft = { title: string; layout: DocumentLayout; sections: Array<{ key: string; title: string; orientation: 'portrait' | 'landscape'; fields: Array<{ key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode; show_if?: ResponseCondition | null }> }> };
 export type TemplateVersionDetail = TemplateVersionSummary & { json: Record<string, unknown>; draft: TemplateVersionDraft };
 export const getTemplateVersions = (templateId: string) => api<{ versions: TemplateVersionSummary[] }>(`/admin/template/${templateId}/versions`);
 export const getTemplateVersion = (templateId: string, versionId: string) => api<TemplateVersionDetail>(`/admin/template/${templateId}/versions/${versionId}`);

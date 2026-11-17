@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { responseDocument } from '@/lib/fieldResponses';
+import { syllabusConditions } from '@/lib/responseConditions';
 import { fieldTitle, isTeacherField } from '@/lib/syllabusForm';
 import type { DocumentNode } from '@/lib/templateDocument';
 import { responsibleLabel } from '@/types/configuration';
@@ -26,7 +28,9 @@ const activeSectionId = defineModel<string>('active', { default: '' });
 // Cada campo es un acordeón que arranca abierto; se guardan solo los que se cerraron.
 const collapsed = defineModel<Set<string>>('collapsed', { default: () => new Set() });
 
-const visibleSections = computed(() => props.sections.filter((section) => section.fields.some(isTeacherField)));
+const conditions = computed(() => syllabusConditions(props.sections, (field) => field.template ? responseDocument(field.template, field.value) : field.value));
+const shownFields = (section: Section): SyllabusField[] => section.fields.filter((field) => !conditions.value.hidden.has(field.key));
+const visibleSections = computed(() => props.sections.filter((section) => shownFields(section).some(isTeacherField)));
 const currentId = computed(() => visibleSections.value.find((section) => section.id === activeSectionId.value)?.id ?? visibleSections.value[0]?.id ?? '');
 const shownSections = computed(() => visibleSections.value.filter((section) => section.id === currentId.value));
 const position = computed(() => visibleSections.value.findIndex((section) => section.id === currentId.value));
@@ -58,7 +62,7 @@ const fieldErrors = (fieldId: string): string[] => props.errors(fieldId);
     <header class="flex flex-col gap-1"><h2 class="text-lg font-semibold">{{ section.title }}</h2><p v-if="section.description" class="text-sm text-muted-foreground">{{ section.description }}</p></header>
     <FieldGroup>
       <Accordion type="multiple" class="-mx-1" :model-value="openFields(section)" @update:model-value="setOpenFields(section, $event as string[])">
-        <AccordionItem v-for="field in section.fields" :key="field.id" :value="field.id">
+        <AccordionItem v-for="field in shownFields(section)" :key="field.id" :value="field.id" :data-field-key="field.key">
           <!-- Un campo sin nombre en la plantilla se muestra sin título, igual que en la plantilla. -->
           <AccordionTrigger v-if="field.label.trim()" class="items-center px-1 hover:no-underline">
             <span class="flex flex-wrap items-center gap-2">
@@ -70,7 +74,7 @@ const fieldErrors = (fieldId: string): string[] => props.errors(fieldId);
           <AccordionContent class="flex flex-col gap-3 px-1 pt-1">
             <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="fieldErrors(field.id).length > 0">
               <FieldLabel :for="`input-${field.id}`" required class="sr-only">{{ fieldTitle(field, section) }}</FieldLabel>
-              <FieldResponseEditor required :template="field.template" :label="fieldTitle(field, section)" :model-value="field.value" :id="`input-${field.id}`" :disabled="disabled" @update:model-value="emit('update:value', field, $event)" />
+              <FieldResponseEditor required :template="field.template" :label="fieldTitle(field, section)" :model-value="field.value" :id="`input-${field.id}`" :disabled="disabled" :answers="conditions.answers" @update:model-value="emit('update:value', field, $event)" />
             </Field>
             <FieldView v-else :id="`field-${field.id}`" :field="field" bare />
             <FieldError :errors="fieldErrors(field.id)" />

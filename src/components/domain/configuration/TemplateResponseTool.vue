@@ -3,6 +3,7 @@ import type { Editor } from '@tiptap/core';
 import { ChevronDown, ListChecks, RotateCcw } from '@lucide/vue';
 import { computed, ref, useId, watch } from 'vue';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
+import TemplateConditionPicker from '@/components/domain/configuration/TemplateConditionPicker.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
 import ResponseOptionsEditor from '@/components/domain/syllabus/ResponseOptionsEditor.vue';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import {
     RESPONSE_DISPLAYS, RESPONSE_HELP_LENGTH, RESPONSE_NODE, RESPONSE_TEXT_LENGTH, emptyResponse, responseAttrs, responseHasOptions, responseKindOptions, responseSettingNames,
     responseSettings, sameResponseOptions, type ResponseAttrs, type ResponseDisplay, type ResponseOption, type ResponseSettings,
 } from '@/lib/responseKinds';
+import { choiceOf, conditionSourceKey, conditionSources, newResponseId, responseIds, type ConditionChoice, type ConditionSource } from '@/lib/responseConditions';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const props = withDefaults(defineProps<{
@@ -29,6 +31,9 @@ const props = withDefaults(defineProps<{
     fixed?: boolean;
     fixedReason?: string;
     templateOptions?: ResponseOption[] | null;
+    sources?: ConditionSource[] | null;
+    usedIds?: string[];
+    claimSource?: ((source: ConditionSource) => string | null) | null;
 }>(), {
     editor: undefined,
     allowed: true,
@@ -41,6 +46,9 @@ const props = withDefaults(defineProps<{
     fixed: false,
     fixedReason: 'El tipo y Más opciones los fija Administración: aquí solo cambia las opciones',
     templateOptions: null,
+    sources: null,
+    usedIds: () => [],
+    claimSource: null,
 });
 const emit = defineEmits<{ insert: [node: DocumentNode] }>();
 
@@ -101,6 +109,24 @@ const selected = (): ReturnType<typeof responseAttrs> | null => {
     return node?.type.name === RESPONSE_NODE ? responseAttrs({ type: RESPONSE_NODE, attrs: node.attrs as never }) : null;
 };
 const editing = ref(false);
+const logicId = ref<string | undefined>(undefined);
+const condition = ref<ConditionChoice>({ source: '', options: [] });
+const anchor = (): number => {
+    const selection = props.editor?.state.selection as { from: number; node?: unknown } | undefined;
+    return selection?.from ?? 0;
+};
+const ownSources = (): ConditionSource[] => {
+    const editor = props.editor;
+    if (!editor || editor.isDestroyed) return [];
+    let before = 0;
+    editor.state.doc.nodesBetween(0, Math.min(anchor(), editor.state.doc.content.size), (node, position) => {
+        if (node.type.name === RESPONSE_NODE && position < anchor()) before += 1;
+    });
+    return conditionSources([{ id: 'campo', label: 'Este campo', content: editor.getJSON() as DocumentNode }]).filter((source) => source.index < before);
+};
+const allSources = ref<ConditionSource[]>([]);
+const showsCondition = computed(() => props.sources !== null && !props.fixed);
+const conditionError = computed(() => showsCondition.value && condition.value.source && condition.value.options.length === 0 ? 'Elija al menos una opción para «Mostrar solo si»' : '');
 watch(open, (value) => {
     if (!value) return;
     const current = props.current ?? selected();
@@ -108,11 +134,44 @@ watch(open, (value) => {
     kind.value = current?.kind || kind.value;
     options.value = current?.options ?? [];
     draft.value = current ? fromSettings(current) : fresh();
-    more.value = false;
+    logicId.value = current?.id;
+    allSources.value = props.sources === null ? [] : [...props.sources, ...ownSources()];
+    condition.value = choiceOf(current?.showIf, allSources.value);
+    more.value = Boolean(current?.showIf);
 });
+const claim = (source: ConditionSource): string | null => {
+    if (source.id) return source.id;
+    const id = newResponseId([...props.usedIds, ...responseIds([props.editor?.getJSON() as DocumentNode])]);
+    if (source.field !== 'campo') return props.claimSource?.(source) ?? null;
+    const editor = props.editor!;
+    let index = -1;
+    let at = -1;
+    editor.state.doc.descendants((node, position) => {
+        if (node.type.name !== RESPONSE_NODE) return;
+        index += 1;
+        if (index === source.index) at = position;
+    });
+    if (at < 0) return null;
+    editor.view.dispatch(editor.state.tr.setNodeMarkup(at, undefined, { ...editor.state.doc.nodeAt(at)!.attrs, id }));
+    return id;
+};
 const insert = (): void => {
-    if (!ready.value || missingOptions.value || settingsError.value) return;
-    const node = emptyResponse(kind.value, options.value, props.fixed && props.current ? responseSettings(kind.value, props.current) : settings.value);
+    if (!ready.value || missingOptions.value || settingsError.value || conditionError.value) return;
+    const logic: { id?: string; showIf?: { response: string; options: string[] } } = {};
+    if (props.fixed && props.current) {
+        if (props.current.id) logic.id = props.current.id;
+        if (props.current.showIf) logic.showIf = props.current.showIf;
+    } else if (showsCondition.value) {
+        const used = [...props.usedIds, ...responseIds([props.editor?.getJSON() as DocumentNode])].filter((item) => item !== logicId.value);
+        if (responseHasOptions(kind.value)) logic.id = logicId.value ?? newResponseId(used);
+        const source = allSources.value.find((item) => conditionSourceKey(item) === condition.value.source);
+        const response = source ? claim(source) : null;
+        if (source && response) logic.showIf = { response, options: condition.value.options };
+    } else {
+        if (logicId.value) logic.id = logicId.value;
+        if (props.current?.showIf ?? selected()?.showIf) logic.showIf = (props.current?.showIf ?? selected()?.showIf)!;
+    }
+    const node = emptyResponse(kind.value, options.value, props.fixed && props.current ? responseSettings(kind.value, props.current) : settings.value, logic);
     if (standalone.value) emit('insert', node);
     else props.editor!.chain().focus().insertContent(node).run();
     options.value = [];
@@ -180,9 +239,11 @@ const reset = (): void => {
               </FieldGroup>
             </CollapsibleContent>
           </Collapsible>
+          <TemplateConditionPicker v-if="showsCondition && more" v-model="condition" :sources="allSources" />
           <FieldError v-if="settingsError" data-response-settings-error>{{ settingsError }}</FieldError>
+          <FieldError v-if="conditionError" data-response-condition-error>{{ conditionError }}</FieldError>
           <div class="flex flex-wrap gap-2">
-            <Button type="submit" size="sm" class="w-fit" :disabled="missingOptions || Boolean(settingsError)" data-response-insert>{{ editing ? 'Guardar cambios' : 'Insertar' }}</Button>
+            <Button type="submit" size="sm" class="w-fit" :disabled="missingOptions || Boolean(settingsError) || Boolean(conditionError)" data-response-insert>{{ editing ? 'Guardar cambios' : 'Insertar' }}</Button>
             <Button v-if="resettable" type="button" variant="outline" size="sm" class="w-fit" data-response-reset @click="reset"><RotateCcw data-icon="inline-start" aria-hidden="true" />Restablecer opciones de la plantilla</Button>
           </div>
         </FieldGroup>

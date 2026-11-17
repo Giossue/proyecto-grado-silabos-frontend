@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { responseShown } from '@/lib/responseConditions';
 import { blankResponse, cloneResponse, replaceResponse, responseAt, responseDocument, responseListTable, responseText } from '@/lib/fieldResponses';
 import { templateRuntime } from '@/lib/blocks/runtime';
 import {
@@ -62,6 +63,7 @@ export default defineComponent({
         required: { type: Boolean, default: false },
         career: { type: Boolean, default: false },
         askFor: { type: String, default: 'al coordinador' },
+        answers: { type: Object as PropType<Record<string, unknown> | null>, default: null },
     },
     emits: { 'update:modelValue': (value: DocumentNode) => Boolean(value) },
     setup(props, { emit }) {
@@ -124,6 +126,7 @@ export default defineComponent({
             ]);
         };
         const response = (template: DocumentNode, path: number[], label: string): VNodeChild => {
+            if (props.answers && !responseShown(template, props.answers)) return null;
             const current = responseAt(document.value!, path);
             if (props.career && responseAdjustable(responseAttrs(template))) return templateSpace(template, current, path, label);
             if (props.career && responseNeedsOptions(responseAttrs(template))) {

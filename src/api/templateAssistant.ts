@@ -1,3 +1,4 @@
+import type { ResponseCondition } from '@/lib/responseConditions';
 import type { BlockDefinition } from '@/lib/blocks/types';
 import { api } from '@/api/client';
 import type { DocumentNode } from '@/lib/templateDocument';
@@ -28,7 +29,7 @@ export type TemplateAssistantDraft = {
         key: string;
         title: string;
         orientation: 'portrait' | 'landscape';
-        fields: Array<{ key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode }>;
+        fields: Array<{ key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode; show_if?: ResponseCondition | null }>;
     }>;
     version: string;
 };
@@ -43,7 +44,7 @@ export type TemplateAssistantProposal = {
         key: string;
         title: string;
         orientation: 'portrait' | 'landscape';
-        fields: Array<{ key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode }>;
+        fields: Array<{ key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode; show_if?: ResponseCondition | null }>;
     }>;
     block_changes?: Record<string, BlockDefinition>;
 };

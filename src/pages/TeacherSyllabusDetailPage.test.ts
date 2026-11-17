@@ -195,6 +195,30 @@ describe("TeacherSyllabusDetailPage", () => {
     wrapper.unmount();
   });
 
+  it("lo oculto por «Mostrar solo si» no sale en la vista previa y conserva lo escrito", async () => {
+    const detail = syllabus("borrador", "docente");
+    const choice = (value: string | null) => ({ type: "doc", content: [{ type: "paragraph", content: [{ type: "response", attrs: { kind: "una", options: [{ const: "o1", title: "Sí" }, { const: "o2", title: "No" }], value, id: "usa_lab" } }] }] });
+    detail.sections[0]!.fields = [
+      field("field-0", "institucional", { key: "pregunta", value: choice("o2"), document: choice("o2") }),
+      field("field-1", "docente", { key: "contenido" }),
+      field("field-2", "docente", { key: "tecnicas", value: doc("Prácticas guiadas"), document: doc("Prácticas guiadas"), show_if: { response: "usa_lab", options: ["o1"] } }),
+    ];
+    vi.mocked(getTeacherSyllabus).mockResolvedValue({ syllabus: detail });
+    vi.mocked(saveTeacherField).mockResolvedValue({ version_bloqueo: 3, guardado_en: null, document: doc("Texto nuevo") });
+    const wrapper = mountPage();
+    await flushPromises();
+    expect(wrapper.find("#field-field-2").exists()).toBe(false);
+
+    wrapper.findComponent(FreeTextEditor).vm.$emit("update:modelValue", doc("Texto nuevo"));
+    await buttonNamed(wrapper, "Vista previa")!.trigger("click");
+    await flushPromises();
+
+    const sections = wrapper.findComponent(SyllabusDocumentPreview).props("sections") as Array<{ fields: Array<{ id: string }> }>;
+    expect(sections[0]!.fields.map((item) => item.id)).toEqual(["field-0", "field-1"]);
+    expect(detail.sections[0]!.fields[2]!.value).toEqual(doc("Prácticas guiadas"));
+    wrapper.unmount();
+  });
+
   it("el campo de texto se escribe con su editor y se guarda como documento", async () => {
     vi.useFakeTimers();
     const detail = syllabus("borrador", "docente");

@@ -12,6 +12,7 @@ import { paginateSheet } from '@/components/domain/configuration/templatePaginat
 import TemplateJsonDialog from '@/components/domain/configuration/TemplateJsonDialog.vue';
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
 import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
+import TemplateFieldConditionTool from '@/components/domain/configuration/TemplateFieldConditionTool.vue';
 import TemplateFormatTools from '@/components/domain/configuration/TemplateFormatTools.vue';
 import TemplateInlineText from '@/components/domain/configuration/TemplateInlineText.vue';
 import TemplateResponseTool from '@/components/domain/configuration/TemplateResponseTool.vue';
@@ -31,6 +32,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { layoutOf, layoutStyle, paperOf, sheetPixels, type DocumentLayout } from '@/lib/documentLayout';
 import { setTemplateRuntime, templateRuntime } from '@/lib/blocks/runtime';
 import type { BlockDefinition, TemplateDefinitionPayload } from '@/lib/blocks/types';
+import { conditionLabel, conditionSources, newResponseId, responseIds, withNewResponseIds, withResponseId, type ConditionSource } from '@/lib/responseConditions';
 import type { DocumentNode } from '@/lib/templateDocument';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
@@ -297,7 +299,7 @@ const draftSections = () => draft.value.map((section) => ({
     key: section.key,
     title: section.title.trim(),
     orientation: section.orientation,
-    fields: section.fields.map((field) => ({ key: field.key, label: field.label.trim(), quien_llena: field.quien_llena, content: field.content })),
+    fields: section.fields.map((field) => ({ key: field.key, label: field.label.trim(), quien_llena: field.quien_llena, content: field.content, ...(field.show_if ? { show_if: field.show_if } : {}) })),
 }));
 const draftPayload = (): TemplateDraftPayload => ({
     version: 1,
@@ -318,7 +320,7 @@ const applyProposal = (proposal: TemplateAssistantProposal & { block_changes?: R
         key: section.key,
         title: section.title,
         orientation: section.orientation,
-        fields: section.fields.map((field) => ({ id: fieldIds.get(field.key) ?? temporaryId(), key: field.key, label: field.label, quien_llena: field.quien_llena, content: field.content })),
+        fields: section.fields.map((field) => ({ id: fieldIds.get(field.key) ?? temporaryId(), key: field.key, label: field.label, quien_llena: field.quien_llena, content: field.content, ...(field.show_if ? { show_if: field.show_if } : {}) })),
     }));
     assistantMarks.value = {
         sections: [...new Set([...assistantMarks.value.sections, ...proposal.changed.sections])],
@@ -655,7 +657,33 @@ const dropMissingSelection = (): void => {
 const copyField = (field: TemplateField, used: string[], label: string): TemplateField => {
     const key = uniqueKey(field.key, 'campo', used);
     used.push(key);
-    return { ...clone(field), id: temporaryId(), key, label };
+    return { ...clone(field), id: temporaryId(), key, label, content: withNewResponseIds(clone(field.content), new Set(usedResponseIds.value)) };
+};
+const orderedFields = computed(() => draft.value.flatMap((section) => section.fields));
+const usedResponseIds = computed(() => responseIds(orderedFields.value.map((field) => field.content)));
+const sourcesBefore = (fieldId: string | null): ConditionSource[] => {
+    const position = orderedFields.value.findIndex((field) => field.id === fieldId);
+    return position < 0 ? [] : conditionSources(orderedFields.value.slice(0, position));
+};
+const allSources = computed(() => conditionSources(orderedFields.value));
+const claimSource = (source: ConditionSource): string | null => {
+    if (source.id) return source.id;
+    for (const section of draft.value) {
+        const position = section.fields.findIndex((field) => field.id === source.field);
+        if (position < 0) continue;
+        const id = newResponseId(usedResponseIds.value);
+        const field = section.fields[position]!;
+        section.fields[position] = { ...field, content: withResponseId(field.content, source.index, id) };
+        return id;
+    }
+    return null;
+};
+const setSelectedCondition = (source: ConditionSource | null, options: string[]): void => {
+    const field = selectedTemplateField.value;
+    if (!field) return;
+    record();
+    const response = source ? claimSource(source) : null;
+    patchSelectedField({ show_if: response ? { response, options } : null });
 };
 const duplicateSelected = (): void => {
     const target = selected.value;
@@ -775,7 +803,8 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
       <div data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" :style="{ minWidth: toolbarWidth }" class="pointer-events-auto flex w-max max-w-full items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy || previewing" :variables="variables" :can-undo="canUndo" :can-redo="canRedo" @undo="undoStructure" @redo="redoStructure" />
-        <TemplateResponseTool :editor="ribbonEditor" :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy || previewing" />
+        <TemplateResponseTool :editor="ribbonEditor" :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy || previewing" :sources="sourcesBefore(selectedField)" :used-ids="usedResponseIds" :claim-source="claimSource" />
+        <TemplateFieldConditionTool :allowed="selection?.kind === 'field'" :disabled="locked || busy || previewing" :condition="selectedTemplateField?.show_if ?? null" :sources="sourcesBefore(selectedField)" @apply="setSelectedCondition" />
         <TemplateTableTool :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy || previewing" :tables="fieldTables" @create="openDesigner(null)" @edit="openDesigner($event)" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <TemplateSelectionTools
@@ -892,6 +921,7 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
               @named="naming = null"
               @update:field="setField(section.id, field.id, $event)"
             />
+            <p v-if="!readOnly && field.show_if" class="mt-1 font-sans text-xs text-muted-foreground" :data-field-condition="field.id">{{ conditionLabel(field.show_if, allSources) }}</p>
             <ul v-if="!preview && problemsByTarget.fields[field.id]?.length" class="mt-1 flex flex-col gap-1 font-sans text-xs text-destructive" :data-field-problems="field.id">
               <li v-for="(problem, index) in problemsByTarget.fields[field.id]" :key="index" class="flex items-start gap-1" data-problem><CircleAlert class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />{{ problem.message }}</li>
             </ul>

@@ -154,4 +154,34 @@ describe('Tipo de respuesta en la cinta de la plantilla', () => {
         const value = host.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
         expect(JSON.parse(JSON.stringify(nodesOfType(value, 'response')[0]!.attrs))).toEqual({ kind: 'varias', options: [{ const: 'o1', title: 'Aula' }, { const: 'o2', title: 'Campo' }], value: [], minChoices: 1, maxChoices: 2 });
     });
+
+    it('en la plantilla, una respuesta de elegir recibe identificador y se muestra solo si otra anterior tiene la opción elegida', async () => {
+        const question: DocumentNode = { type: 'response', attrs: { kind: 'una', options: [{ const: 'o1', title: 'Sí' }, { const: 'o2', title: 'No' }], value: null } };
+        const { host, editor } = await editorFor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: '¿Usa laboratorio? ' }, question, { type: 'text', text: ' Cuál: ' }] }] });
+        editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+        const claimed: string[] = [];
+        const other = { id: null, label: 'Campo anterior', options: [{ const: 'o1', title: 'Aula' }], field: 'f0', index: 0 };
+        const tool = mount(TemplateResponseTool, { props: { editor, sources: [other], usedIds: ['r_usado'], claimSource: (source: { field: string }) => { claimed.push(source.field); return 'r_otro'; } }, attachTo: document.body });
+        wrappers.push(tool);
+        await open(tool);
+        await pick('Elegir una');
+        await write('Opción 1', 'Química');
+        await press('[data-response-more]');
+        Object.assign(Element.prototype, { hasPointerCapture: () => false, releasePointerCapture: () => undefined, scrollIntoView: () => undefined });
+        document.querySelector<HTMLElement>('[data-condition-source]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        await flushPromises();
+        expect([...document.querySelectorAll('[role="option"]')].map((item) => item.textContent?.trim())).toEqual(['Siempre', 'Campo anterior', 'Usa laboratorio']);
+        document.querySelectorAll<HTMLElement>('[role="option"]')[2]!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+        await flushPromises();
+        expect(document.querySelector('[data-response-condition-error]')!.textContent).toContain('Elija al menos una opción');
+        await press('[data-condition-option="o1"]');
+        await press('[data-response-insert]');
+
+        const responses = nodesOfType(host.emitted('update:modelValue')!.at(-1)![0] as DocumentNode, 'response').map((node) => JSON.parse(JSON.stringify(node.attrs)));
+        const sourceId = responses[0].id as string;
+        expect(sourceId).toMatch(/^r_[a-z0-9]+$/);
+        expect(responses[1]).toEqual({ kind: 'una', options: [{ const: 'o1', title: 'Química' }], value: null, id: expect.stringMatching(/^r_[a-z0-9]+$/), showIf: { response: sourceId, options: ['o1'] } });
+        expect(responses[1].id).not.toBe(sourceId);
+        expect(claimed).toEqual([]);
+    });
 });

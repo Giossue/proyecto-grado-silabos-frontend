@@ -22,10 +22,12 @@ export const DocumentVariable = Node.create<{ labels: Record<string, string> }>(
     },
 });
 
+const RESPONSE_LOGIC = ['id', 'showIf'];
+
 const parseResponse = (element: HTMLElement): Record<string, unknown> | false => {
     try {
         const attrs = JSON.parse(element.getAttribute('data-response') ?? '') as Record<string, unknown>;
-        return { kind: attrs.kind ?? '', options: attrs.options ?? [], value: attrs.value ?? null, ...Object.fromEntries(Object.keys(RESPONSE_SETTING_DEFAULTS).map((name) => [name, attrs[name] ?? undefined])) };
+        return { kind: attrs.kind ?? '', options: attrs.options ?? [], value: attrs.value ?? null, ...Object.fromEntries([...Object.keys(RESPONSE_SETTING_DEFAULTS), ...RESPONSE_LOGIC].map((name) => [name, attrs[name] ?? undefined])) };
     } catch {
         return false;
     }
@@ -41,7 +43,7 @@ export const DocumentResponse = Node.create({
         kind: { default: '', rendered: false },
         options: { default: () => [], rendered: false },
         value: { default: null, rendered: false },
-        ...Object.fromEntries(Object.keys(RESPONSE_SETTING_DEFAULTS).map((name) => [name, { default: undefined, rendered: false }])),
+        ...Object.fromEntries([...Object.keys(RESPONSE_SETTING_DEFAULTS), ...RESPONSE_LOGIC].map((name) => [name, { default: undefined, rendered: false }])),
     }),
     parseHTML: () => [{ tag: 'span[data-response]', getAttrs: parseResponse }],
     renderHTML({ node, HTMLAttributes }) {
