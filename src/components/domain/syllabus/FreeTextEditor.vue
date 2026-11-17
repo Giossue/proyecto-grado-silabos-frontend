@@ -15,6 +15,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { DocumentBlock, DocumentResponse, DocumentWithBlocks, DocumentVariable, DocumentTableCell, DocumentTableHeader, variableNode } from '@/components/domain/syllabus/fieldDocumentExtensions';
 import type { DocumentNode, TemplateVariable } from '@/lib/templateDocument';
 import { pageSpacersPlugin } from '@/lib/editorPageSpacers';
+import { characterLimitPlugin } from '@/lib/editorCharacterLimit';
 import { emptyDocument } from '@/types/configuration';
 
 const PageSpacers = Extension.create({ name: 'pageSpacers', addProseMirrorPlugins: () => [pageSpacersPlugin()] });
@@ -32,7 +33,9 @@ const props = withDefaults(defineProps<{
     allowTables?: boolean;
     align?: boolean;
     spaces?: boolean;
-}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true, blocks: 'fill', allowTables: true, align: false, spaces: false });
+    limit?: number | null;
+}>(), { modelValue: null, disabled: false, variables: () => [], bare: false, toolbar: true, blocks: 'fill', allowTables: true, align: false, spaces: false, limit: null });
+const CharacterLimit = Extension.create({ name: 'characterLimit', addProseMirrorPlugins: () => [characterLimitPlugin(() => props.limit)] });
 const emit = defineEmits<{ 'update:modelValue': [value: DocumentNode] }>();
 const slash = ref({ open: false, left: 0, top: 0, query: '', index: 0 });
 const slashItems = computed(() => props.variables.filter((item) => item.label.toLowerCase().includes(slash.value.query.toLowerCase())).slice(0, 8));
@@ -86,6 +89,7 @@ const editor = useEditor({
         Table.configure({ resizable: false }), TableRow, DocumentTableHeader, DocumentTableCell,
         DocumentWithBlocks,
         PageSpacers,
+        CharacterLimit,
         DocumentBlock.configure({ mode: props.blocks }),
         DocumentVariable.configure({ labels: Object.fromEntries(props.variables.map((item) => [item.key, item.label])) }),
         DocumentResponse,

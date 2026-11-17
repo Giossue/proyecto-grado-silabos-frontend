@@ -13,6 +13,8 @@ import TemplateJsonDialog from '@/components/domain/configuration/TemplateJsonDi
 import TemplateInsertPoint from '@/components/domain/configuration/TemplateInsertPoint.vue';
 import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
 import TemplateFieldConditionTool from '@/components/domain/configuration/TemplateFieldConditionTool.vue';
+import TemplateFieldLimitTool from '@/components/domain/configuration/TemplateFieldLimitTool.vue';
+import { limitLabel } from '@/lib/fieldLimits';
 import TemplateFormatTools from '@/components/domain/configuration/TemplateFormatTools.vue';
 import TemplateInlineText from '@/components/domain/configuration/TemplateInlineText.vue';
 import TemplateResponseTool from '@/components/domain/configuration/TemplateResponseTool.vue';
@@ -299,7 +301,7 @@ const draftSections = () => draft.value.map((section) => ({
     key: section.key,
     title: section.title.trim(),
     orientation: section.orientation,
-    fields: section.fields.map((field) => ({ key: field.key, label: field.label.trim(), quien_llena: field.quien_llena, content: field.content, ...(field.show_if ? { show_if: field.show_if } : {}) })),
+    fields: section.fields.map((field) => ({ key: field.key, label: field.label.trim(), quien_llena: field.quien_llena, content: field.content, ...(field.show_if ? { show_if: field.show_if } : {}), ...(field.max_length && field.quien_llena !== 'institucional' ? { max_length: field.max_length } : {}) })),
 }));
 const draftPayload = (): TemplateDraftPayload => ({
     version: 1,
@@ -320,7 +322,7 @@ const applyProposal = (proposal: TemplateAssistantProposal & { block_changes?: R
         key: section.key,
         title: section.title,
         orientation: section.orientation,
-        fields: section.fields.map((field) => ({ id: fieldIds.get(field.key) ?? temporaryId(), key: field.key, label: field.label, quien_llena: field.quien_llena, content: field.content, ...(field.show_if ? { show_if: field.show_if } : {}) })),
+        fields: section.fields.map((field) => ({ id: fieldIds.get(field.key) ?? temporaryId(), key: field.key, label: field.label, quien_llena: field.quien_llena, content: field.content, ...(field.show_if ? { show_if: field.show_if } : {}), ...(field.max_length ? { max_length: field.max_length } : {}) })),
     }));
     assistantMarks.value = {
         sections: [...new Set([...assistantMarks.value.sections, ...proposal.changed.sections])],
@@ -678,6 +680,14 @@ const setSelectedCondition = (source: ConditionSource | null, options: string[])
     const response = source ? claimSource(source) : null;
     patchSelectedField({ show_if: response ? { response, options } : null });
 };
+const setSelectedLimit = (limit: number | null): void => {
+    if (!selectedTemplateField.value) return;
+    record();
+    patchSelectedField({ max_length: limit });
+};
+const setSelectedResponsible = (responsible: TemplateField['quien_llena']): void => {
+    patchSelectedField(responsible === 'institucional' ? { quien_llena: responsible, max_length: null } : { quien_llena: responsible });
+};
 const duplicateSelected = (): void => {
     const target = selected.value;
     if (!target || locked.value || busy.value) return;
@@ -798,6 +808,7 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy || previewing" :variables="variables" :can-undo="canUndo" :can-redo="canRedo" @undo="undoStructure" @redo="redoStructure" />
         <TemplateResponseTool :editor="ribbonEditor" :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy || previewing" :sources="sourcesBefore(selectedField)" :used-ids="usedResponseIds" :claim-source="claimSource" />
         <TemplateFieldConditionTool :allowed="selection?.kind === 'field'" :disabled="locked || busy || previewing" :condition="selectedTemplateField?.show_if ?? null" :sources="sourcesBefore(selectedField)" @apply="setSelectedCondition" />
+        <TemplateFieldLimitTool :selected="selection?.kind === 'field'" :editable="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy || previewing" :limit="selectedTemplateField?.max_length ?? null" @apply="setSelectedLimit" />
         <TemplateTableTool :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy || previewing" :tables="fieldTables" @create="openDesigner(null)" @edit="openDesigner($event)" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <TemplateSelectionTools
@@ -808,7 +819,7 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
           :targets="moveTargets"
           @duplicate="duplicateSelected"
           @move-to="moveSelectedTo"
-          @responsible="patchSelectedField({ quien_llena: $event })"
+          @responsible="setSelectedResponsible($event)"
           @preset="applyPreset"
           @name="nameSelected"
           @move="moveSelected"
@@ -915,6 +926,7 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
               @update:field="setField(section.id, field.id, $event)"
             />
             <p v-if="!readOnly && field.show_if" class="mt-1 font-sans text-xs text-muted-foreground" :data-field-condition="field.id">{{ conditionLabel(field.show_if, allSources) }}</p>
+            <p v-if="!readOnly && field.max_length && field.quien_llena !== 'institucional'" class="mt-1 font-sans text-xs text-muted-foreground" :data-field-limit="field.id">{{ limitLabel(field.max_length) }}</p>
             <ul v-if="!preview && problemsByTarget.fields[field.id]?.length" class="mt-1 flex flex-col gap-1 font-sans text-xs text-destructive" :data-field-problems="field.id">
               <li v-for="(problem, index) in problemsByTarget.fields[field.id]" :key="index" class="flex items-start gap-1" data-problem><CircleAlert class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />{{ problem.message }}</li>
             </ul>

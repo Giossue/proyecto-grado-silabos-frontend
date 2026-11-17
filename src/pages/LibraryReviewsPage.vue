@@ -151,7 +151,7 @@ onMounted(() => { void load(initialPage, true); });
               <TableCell :class="item.responsible ? '' : 'text-muted-foreground'">{{ item.responsible ?? 'Sin asignar' }}</TableCell>
               <TableCell class="text-center" data-card-hide="true"><StatusBadge :label="libraryStatusLabel(libraryStatus(item))" :tone="libraryStatusTone(libraryStatus(item))" /></TableCell>
             </TableRow>
-            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="5">No hay sílabos para los filtros seleccionados</TableEmpty>
+            <TableEmpty v-if="data.reviews.data.length === 0" :colspan="5">No hay sílabos por revisar</TableEmpty>
           </TableBody>
         </Table>
         <TablePagination :meta="data.reviews" label="Paginación de revisiones de biblioteca" @update:page="load" />

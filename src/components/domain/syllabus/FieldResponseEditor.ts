@@ -13,6 +13,7 @@ import { Field, FieldLabel } from '@/components/ui/field';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { onlyHiddenResponses, responseShown } from '@/lib/responseConditions';
+import { fieldCharacters, fitCharacters, textCharacters } from '@/lib/fieldLimits';
 import { blankResponse, cloneResponse, replaceResponse, responseAt, responseDocument, responseListTable, responseText } from '@/lib/fieldResponses';
 import { templateRuntime } from '@/lib/blocks/runtime';
 import {
@@ -64,6 +65,7 @@ export default defineComponent({
         career: { type: Boolean, default: false },
         askFor: { type: String, default: 'al coordinador' },
         answers: { type: Object as PropType<Record<string, unknown> | null>, default: null },
+        limit: { type: Number as PropType<number | null>, default: null },
     },
     emits: { 'update:modelValue': (value: DocumentNode) => Boolean(value) },
     setup(props, { emit }) {
@@ -72,6 +74,8 @@ export default defineComponent({
             const built = responseDocument(props.template, props.modelValue, props.career);
             return props.career ? withOwnOptions(built, props.modelValue) : built;
         });
+        const used = computed((): number => props.limit === null ? 0 : fieldCharacters(props.template, document.value, props.answers ?? {}));
+        const budget = (): number | null => props.limit === null ? null : props.limit - used.value;
         const placeSpace = (path: number[], node: DocumentNode): void => {
             if (!props.template) return;
             const blank = cloneResponse(responseAt(props.template, path));
@@ -139,7 +143,7 @@ export default defineComponent({
                 return h('span', { key: `${props.id}-${path.join('-')}`, class: 'py-1 text-muted-foreground' }, responseLines(responseAttrs(template)).join(', '));
             }
             return h(ResponseAnswer, {
-                key: `${props.id}-${path.join('-')}`, attrs: responseAttrs(current), label, disabled: props.disabled, askFor: props.askFor,
+                key: `${props.id}-${path.join('-')}`, attrs: responseAttrs(current), label, disabled: props.disabled, askFor: props.askFor, budget: props.career ? null : budget(),
                 'onUpdate:value': (value: unknown) => update(path, { ...current, attrs: { ...current.attrs, value: value as never } }),
             });
         };
@@ -158,13 +162,18 @@ export default defineComponent({
             const current = responseAt(document.value!, path);
             const paragraph = template.type === 'paragraph';
             const text = paragraph ? lineText(current) : (current.content ?? []).map(lineText).join('\n');
-            const write = (value: string): void => update(path, paragraph
-                ? { ...template, content: inline(value) }
-                : { ...template, content: value.split('\n').map((line) => ({ ...(template.content?.[0] ?? { type: 'paragraph' }), content: line ? [{ type: 'text', text: line }] : [] })) });
+            const room = props.career ? null : budget();
+            const own = textCharacters(current);
+            const write = (raw: string): void => {
+                const value = room === null ? raw : fitCharacters(raw, Math.max(own, own + room), false);
+                update(path, paragraph
+                    ? { ...template, content: inline(value) }
+                    : { ...template, content: value.split('\n').map((line) => ({ ...(template.content?.[0] ?? { type: 'paragraph' }), content: line ? [{ type: 'text', text: line }] : [] })) });
+            };
             return h(Field, { key: id }, () => [
                 visibleLabel ? h(FieldLabel, { for: id }, () => label) : null,
                 h(Textarea, {
-                    id, modelValue: text, disabled: props.disabled, class: visibleLabel ? 'min-h-9' : 'min-h-9 border-transparent bg-transparent shadow-none',
+                    id, modelValue: text, disabled: props.disabled, maxlength: room === null ? undefined : text.length + Math.max(0, room), class: visibleLabel ? 'min-h-9' : 'min-h-9 border-transparent bg-transparent shadow-none',
                     'aria-label': visibleLabel ? undefined : label,
                     'onUpdate:modelValue': (value: string | number) => write(String(value)),
                 }),
@@ -273,7 +282,7 @@ export default defineComponent({
                     (legacy.content ?? []).map((node, index) => node.type === 'documentBlock' ? render(node, [index]) : null));
             }
             if (!props.template || blankResponse(props.template)) return h(FreeTextEditor, {
-                id: props.id, label: props.label, modelValue: props.modelValue ?? props.template, disabled: props.disabled, allowTables: false, spaces: props.career,
+                id: props.id, label: props.label, modelValue: props.modelValue ?? props.template, disabled: props.disabled, allowTables: false, spaces: props.career, limit: props.career ? null : props.limit,
                 'onUpdate:modelValue': (value: DocumentNode) => emit('update:modelValue', value),
             });
             return h('div', { id: props.id, class: 'flex min-w-0 flex-col gap-4', role: 'group', 'aria-label': props.label }, nodes(props.template, []));

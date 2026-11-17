@@ -101,6 +101,10 @@ watch(open, (value) => {
 const submit = async (): Promise<void> => {
     if (props.disabled) return;
     errors.value = {};
+    if (props.entity === 'facultad' && !logo.value) {
+        errors.value = { logo: ['Cargue el logo de la facultad'] };
+        return;
+    }
     if (props.entity === 'facultad' && step.value === 1) {
         goTo(2);
         return;
@@ -146,9 +150,9 @@ const submit = async (): Promise<void> => {
                             <FieldError :errors="errors.campus" />
                         </Field>
                         <Field :data-invalid="Boolean(errors.logo)">
-                            <FieldLabel for="faculty-logo">Logo de la facultad</FieldLabel>
-                            <FacultyLogoField v-model="logo" input-id="faculty-logo" :disabled="processing" :invalid="Boolean(errors.logo)" @validation-error="logoValidationError" />
-                            <FieldDescription>PNG, JPG o WebP. Se ajusta a 600 × 180 px con fondo transparente. Puede cargarlo después, pero Coordinación no podrá abrir la convocatoria sin él</FieldDescription>
+                            <FieldLabel for="faculty-logo" required>Logo de la facultad</FieldLabel>
+                            <FacultyLogoField v-model="logo" input-id="faculty-logo" required :disabled="processing" :invalid="Boolean(errors.logo)" @validation-error="logoValidationError" />
+                            <FieldDescription>PNG, JPG o WebP. Se ajusta a 600 × 180 px con fondo transparente.</FieldDescription>
                             <FieldError :errors="errors.logo" />
                         </Field>
                         </FieldGroup>

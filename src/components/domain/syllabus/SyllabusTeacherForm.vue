@@ -11,6 +11,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { responseDocument } from '@/lib/fieldResponses';
+import { counterLabel, fieldCharacters } from '@/lib/fieldLimits';
 import { syllabusConditions } from '@/lib/responseConditions';
 import { fieldTitle, isTeacherField } from '@/lib/syllabusForm';
 import type { DocumentNode } from '@/lib/templateDocument';
@@ -50,6 +51,7 @@ const setOpenFields = (section: Section, open: string[]): void => {
   collapsed.value = next;
 };
 const fieldErrors = (fieldId: string): string[] => props.errors(fieldId);
+const written = (field: SyllabusField): number => fieldCharacters(field.template ?? null, field.template ? responseDocument(field.template, field.value) : field.value, conditions.value.answers);
 </script>
 
 <template>
@@ -72,9 +74,10 @@ const fieldErrors = (fieldId: string): string[] => props.errors(fieldId);
             </span>
           </AccordionTrigger>
           <AccordionContent class="flex flex-col gap-3 px-1 pt-1">
-            <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="fieldErrors(field.id).length > 0">
+            <Field v-if="isTeacherField(field)" :id="`field-${field.id}`" :data-invalid="fieldErrors(field.id).length > 0 || (Boolean(field.max_length) && written(field) > field.max_length!)">
               <FieldLabel :for="`input-${field.id}`" required class="sr-only">{{ fieldTitle(field, section) }}</FieldLabel>
-              <FieldResponseEditor required :template="field.template" :label="fieldTitle(field, section)" :model-value="field.value" :id="`input-${field.id}`" :disabled="disabled" :answers="conditions.answers" @update:model-value="emit('update:value', field, $event)" />
+              <FieldResponseEditor required :template="field.template" :label="fieldTitle(field, section)" :model-value="field.value" :id="`input-${field.id}`" :disabled="disabled" :answers="conditions.answers" :limit="field.max_length ?? null" @update:model-value="emit('update:value', field, $event)" />
+              <p v-if="field.max_length" :class="['text-sm tabular-nums', written(field) >= field.max_length ? 'text-destructive' : 'text-muted-foreground']" :data-field-counter="field.id" aria-live="polite">{{ counterLabel(written(field), field.max_length) }}<template v-if="written(field) > field.max_length"> · Supera el límite: recorte el texto para enviar</template></p>
             </Field>
             <FieldView v-else :id="`field-${field.id}`" :field="field" bare />
             <FieldError :errors="fieldErrors(field.id)" />

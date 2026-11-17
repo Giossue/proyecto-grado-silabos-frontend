@@ -8,9 +8,10 @@ import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { characters, fitCharacters } from '@/lib/fieldLimits';
 import { RESPONSE_KINDS, responseMany, responseRequired, responseSchema, responseSetting, type ResponseAttrs } from '@/lib/responseKinds';
 
-const props = withDefaults(defineProps<{ attrs: ResponseAttrs; label: string; disabled?: boolean; askFor?: string }>(), { disabled: false, askFor: 'al coordinador' });
+const props = withDefaults(defineProps<{ attrs: ResponseAttrs; label: string; disabled?: boolean; askFor?: string; budget?: number | null }>(), { disabled: false, askFor: 'al coordinador', budget: null });
 const emit = defineEmits<{ 'update:value': [value: unknown] }>();
 
 const open = ref(false);
@@ -30,6 +31,21 @@ const limits = computed((): string => {
 });
 const text = computed(() => schema.value?.type === 'string' && !('oneOf' in schema.value && schema.value.oneOf) ? schema.value : null);
 const many = computed(() => responseMany(props.attrs.kind));
+const written = computed((): string => typeof props.attrs.value === 'string' ? props.attrs.value : '');
+const maxLength = computed((): number | undefined => {
+    const own = text.value?.maxLength;
+    if (props.budget === null) return own;
+    const allowed = written.value.length + Math.max(0, props.budget);
+    return own === undefined ? allowed : Math.min(own, allowed);
+});
+const write = (value: string): void => {
+    if (props.budget === null) {
+        emit('update:value', value);
+        return;
+    }
+    const own = characters(written.value);
+    emit('update:value', fitCharacters(value, Math.max(own, own + props.budget)));
+};
 const isKey = (value: unknown): value is string => typeof value === 'string' && value !== '';
 const chosen = computed<string[]>(() => Array.isArray(props.attrs.value) ? props.attrs.value.filter(isKey) : isKey(props.attrs.value) ? [props.attrs.value] : []);
 const title = (key: string): string => props.attrs.options.find((option) => option.const === key)?.title ?? key;
@@ -57,10 +73,10 @@ const remove = (key: string): void => {
     class="min-h-9 w-full"
     :placeholder="optional ? 'Escriba aquí (opcional)' : 'Escriba aquí'"
     :aria-label="label"
-    :maxlength="text.maxLength"
-    :model-value="typeof attrs.value === 'string' ? attrs.value : ''"
+    :maxlength="maxLength"
+    :model-value="written"
     :disabled="disabled"
-    @update:model-value="emit('update:value', String($event))"
+    @update:model-value="write(String($event))"
   />
   <div v-else-if="dropdown" class="flex min-w-0 items-center gap-1" data-response-dropdown>
     <Select :model-value="chosen[0] ?? ''" :disabled="disabled || attrs.options.length === 0" @update:model-value="choose($event)">

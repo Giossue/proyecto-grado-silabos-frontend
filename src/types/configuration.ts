@@ -14,6 +14,7 @@ export type DocumentField = {
     teacher_editable?: boolean;
     required?: boolean;
     show_if?: ResponseCondition | null;
+    max_length?: number | null;
 };
 export const FIELD_RESPONSIBLES: Array<{ value: FieldResponsible; label: string; hint: string }> = [
     { value: 'institucional', label: 'Institucional', hint: 'Contenido de la plantilla, igual para todos y de solo lectura' },

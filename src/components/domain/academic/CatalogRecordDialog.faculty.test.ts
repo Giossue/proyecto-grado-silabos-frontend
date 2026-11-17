@@ -131,7 +131,7 @@ describe('Nueva facultad · paso de bibliotecas', () => {
         wrapper.unmount();
     });
 
-    it('el logo es opcional: sin logo pasa a las bibliotecas y crea la facultad', async () => {
+    it('el logo es obligatorio: sin logo no pasa a las bibliotecas ni crea la facultad', async () => {
         const wrapper = mount(CatalogRecordDialog, { attachTo: document.body, props: { entity: 'facultad', options, open: false } });
         await wrapper.setProps({ open: true });
         await flushPromises();
@@ -142,14 +142,12 @@ describe('Nueva facultad · paso de bibliotecas', () => {
         typed();
         await flushPromises();
 
-        expect(body().querySelector<HTMLInputElement>('#faculty-logo')?.required).toBe(false);
-        expect(body().textContent).toContain('Puede cargarlo después');
+        expect(body().querySelector<HTMLInputElement>('#faculty-logo')?.required).toBe(true);
         await next();
-        button('Crear facultad')!.click();
-        await flushPromises();
 
-        expect(sent().get('logo')).toBeNull();
-        expect(wrapper.emitted('saved')).toEqual([['Facultad creada.']]);
+        expect(button('Siguiente')).toBeDefined();
+        expect(button('Crear facultad')).toBeUndefined();
+        expect(createAcademicRecord).not.toHaveBeenCalled();
         wrapper.unmount();
     });
 });

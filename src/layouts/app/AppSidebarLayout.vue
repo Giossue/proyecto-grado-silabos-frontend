@@ -52,10 +52,13 @@ provide(pageTitleKey, pageTitle);
                 :page-title="pageTitle"
                 :sidebar="sidebarVisible"
             />
-            <!-- El desplazamiento empieza bajo el encabezado -->
+            <!-- Los avisos quedan fuera del área que se desplaza: siempre se ven arriba. En móvil, donde hace scroll el documento, se pegan al borde superior -->
+            <div v-if="!editorOpen" class="sticky top-0 z-20 shrink-0">
+                <SetupNextStepBanner />
+                <RoleDeadlineBanner />
+            </div>
+            <!-- El desplazamiento empieza bajo el encabezado y los avisos -->
             <ScrollArea data-app-scroll class="min-h-0 flex-1">
-                <SetupNextStepBanner v-if="!editorOpen" />
-                <RoleDeadlineBanner v-if="!editorOpen" />
                 <slot />
             </ScrollArea>
             <ScreenHelpButton :editor-mode="editorOpen" :corner="templateEditorOpen ? 'left' : 'right'" />
