@@ -793,7 +793,7 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
 
     <!-- La cinta mide al menos lo que la hoja y crece con su contenido para quedar en una línea. -->
     <div v-if="!preview" class="pointer-events-none sticky top-16 z-20 flex w-full justify-center">
-      <div data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" :style="{ minWidth: toolbarWidth }" class="pointer-events-auto flex w-max max-w-full items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
+      <div data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" :style="{ minWidth: toolbarWidth }" class="pointer-events-auto flex w-max max-w-[calc(100vw-2rem)] shrink-0 items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy || previewing" :variables="variables" :can-undo="canUndo" :can-redo="canRedo" @undo="undoStructure" @redo="redoStructure" />
         <TemplateResponseTool :editor="ribbonEditor" :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy || previewing" :sources="sourcesBefore(selectedField)" :used-ids="usedResponseIds" :claim-source="claimSource" />
