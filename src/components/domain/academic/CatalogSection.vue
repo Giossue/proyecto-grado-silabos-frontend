@@ -194,7 +194,7 @@ const {
                             {{ faculty.campus ?? 'Sin campus' }}
                         </TableCell>
                         <TableCell class="text-center">
-                            <IconTooltip v-if="faculty.logo_url" :label="`Ver logo de ${faculty.nombre}`"><Button
+                            <IconTooltip v-if="faculty.logo_url" label="Ver logo"><Button
                                 type="button"
                                 variant="ghost"
                                 size="icon-sm"

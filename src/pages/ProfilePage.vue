@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { GraduationCap, Save, UserRound } from '@lucide/vue';
+import { Save, UserRound } from '@lucide/vue';
 import { computed, ref, watch } from 'vue';
 import { ApiError } from '@/api/client';
 import { resendActivation, updateProfile } from '@/api/session';
@@ -7,13 +7,11 @@ import SettingsAccordionSection from '@/components/domain/SettingsAccordionSecti
 import { Accordion } from '@/components/ui/accordion';
 import InputError from '@/components/InputError.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
-import TeacherFormationField from '@/components/domain/identity/TeacherFormationField.vue';
 import TextLink from '@/components/TextLink.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
-import { useTeacherFormation } from '@/composables/useTeacherFormation';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { toast } from '@/lib/toast';
 import { sessionState } from '@/state/session';
@@ -22,8 +20,6 @@ const user = computed(() => sessionState.current.value?.user);
 const name = ref('');
 const email = ref('');
 const processing = ref(false);
-const { formation, saving: savingFormation, error: formationError, changed: formationChanged, reset: resetFormation, save: submitFormation } = useTeacherFormation();
-const isTeacher = computed(() => sessionState.current.value?.active_role?.code === 'docente');
 const resending = ref(false);
 const errors = ref<Record<string, string>>({});
 
@@ -34,7 +30,6 @@ const unchanged = computed(
 watch(user, (value) => {
     name.value = value?.name ?? '';
     email.value = value?.email ?? '';
-    resetFormation();
 }, { immediate: true });
 
 const submit = async (): Promise<void> => {
@@ -75,7 +70,7 @@ const openSection = ref<string | undefined>('cuenta');
 
 <template>
     <SettingsLayout :loading="!user">
-        <LoadingSkeleton v-if="!user" variant="settings" settings-section="profile" :readonly="sessionState.current.value?.active_role?.code !== 'administrador'" :formation="isTeacher" />
+        <LoadingSkeleton v-if="!user" variant="settings" settings-section="profile" :readonly="sessionState.current.value?.active_role?.code !== 'administrador'" />
         <!-- Secciones en acordeón como en Sistema. -->
         <Accordion v-else v-model="openSection" type="single" collapsible :unmount-on-hide="false" class="-mt-2">
             <SettingsAccordionSection value="cuenta" title="Datos de la cuenta" :description="user.can_edit_identity ? 'Actualice su nombre y correo electrónico' : 'Consulte su nombre y correo'" :icon="UserRound">
@@ -150,19 +145,6 @@ const openSection = ref<string | undefined>('cuenta');
                     Si necesita corregir su nombre o correo, solicite el cambio a Administración
                 </p>
             </div>
-            </SettingsAccordionSection>
-
-            <SettingsAccordionSection v-if="isTeacher" value="formacion" title="Formación y experiencia académica" description="Lo que aparece en sus sílabos como perfil del docente" :icon="GraduationCap">
-            <form class="flex flex-col gap-4" @submit.prevent="submitFormation">
-                <TeacherFormationField v-model="formation" :error="formationError" />
-                <div>
-                    <Button :disabled="savingFormation || !formationChanged" data-test="update-formation-button">
-                        <Spinner v-if="savingFormation" data-icon="inline-start" />
-                        <Save v-else data-icon="inline-start" aria-hidden="true" />
-                        Guardar
-                    </Button>
-                </div>
-            </form>
             </SettingsAccordionSection>
         </Accordion>
     </SettingsLayout>

@@ -31,6 +31,7 @@ const VerifyEmailPage = () => import("@/pages/VerifyEmailPage.vue");
 const TwoFactorChallengePage = () => import("@/pages/TwoFactorChallengePage.vue");
 const SecurityPage = () => import("@/pages/SecurityPage.vue");
 const ProfilePage = () => import("@/pages/ProfilePage.vue");
+const TeacherFormationPage = () => import("@/pages/TeacherFormationPage.vue");
 const NotificationsPage = () => import("@/pages/NotificationsPage.vue");
 const AdminUsersPage = () => import("@/pages/AdminUsersPage.vue");
 const AcademicGovernancePage = () => import("@/pages/AcademicGovernancePage.vue");
@@ -112,6 +113,7 @@ export const router = createRouter({
     { path: "/docente/notificaciones", component: NotificationsPage, meta: { requiresAuth: true, roles: ["docente"], title: "Notificaciones" } },
     { path: "/docente/configuracion/perfil", component: ProfilePage, meta: { requiresAuth: true, roles: ["docente"], title: "Perfil" } },
     { path: "/docente/configuracion/seguridad", component: SecurityPage, meta: { requiresAuth: true, roles: ["docente"], title: "Seguridad" } },
+    { path: "/docente/configuracion/perfil-docente", component: TeacherFormationPage, meta: { requiresAuth: true, roles: ["docente"], title: "Perfil docente" } },
     { path: "/docente/configuracion/notificaciones", component: EmailPreferencesPage, meta: { requiresAuth: true, roles: ["docente"], title: "Notificaciones" } },
     { path: "/docente/mis-silabos", component: TeacherSyllabiPage, meta: { requiresAuth: true, roles: ["docente"], title: "Mis sílabos" } },
     { path: "/docente/historial", component: TeacherHistoryPage, meta: { requiresAuth: true, roles: ["docente"], title: "Historial" } },

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ArrowLeft, Bell, Server, Settings, ShieldCheck, UserRound } from '@lucide/vue';
+import { ArrowLeft, Bell, GraduationCap, Server, Settings, ShieldCheck, UserRound } from '@lucide/vue';
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { areaEmailNotices, areaForPath, areaSetting, paths, roleHome } from '@/lib/routes';
+import { areaEmailNotices, areaForPath, areaSetting, areaTeacherFormation, paths, roleHome } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 import { sessionState } from '@/state/session';
 import { settingsReturn } from '@/state/settingsReturn';
@@ -21,6 +21,8 @@ const router = useRouter();
 const area = computed(() => areaForPath(route.path));
 const sidebarNavItems = computed(() => [
     { title: 'Perfil', href: area.value ? areaSetting(area.value, 'profile') : paths.configuration.profile, icon: UserRound },
+    // Formación y experiencia: lo que aparece en los sílabos, solo el docente.
+    ...(area.value && areaTeacherFormation(area.value) ? [{ title: 'Perfil docente', href: areaTeacherFormation(area.value) as string, icon: GraduationCap }] : []),
     { title: 'Seguridad', href: area.value ? areaSetting(area.value, 'security') : paths.configuration.security, icon: ShieldCheck },
     // Avisos por correo: cada persona de Coordinación, Docente y Biblioteca elige los suyos.
     ...(area.value && areaEmailNotices(area.value) ? [{ title: 'Notificaciones', href: areaEmailNotices(area.value) as string, icon: Bell }] : []),
