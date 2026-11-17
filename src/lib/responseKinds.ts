@@ -102,6 +102,17 @@ export const responseAnswered = (attrs: ResponseAttrs): boolean =>
 
 export const responseNeedsOptions = (attrs: ResponseAttrs): boolean => responseHasOptions(attrs.kind) && attrs.options.length === 0;
 
+export const responseAdjustable = (attrs: ResponseAttrs): boolean => responseHasOptions(attrs.kind) && attrs.options.length > 0;
+
+export const sameResponseOptions = (first: ResponseOption[], second: ResponseOption[]): boolean =>
+    first.length === second.length && first.every((option, index) => option.const === second[index]!.const && option.title === second[index]!.title);
+
+export const keptAnswer = (value: unknown, options: ResponseOption[]): unknown => {
+    const keys = options.map((option) => option.const);
+    if (Array.isArray(value)) return value.filter((chosen) => keys.includes(chosen as string));
+    return typeof value === 'string' && keys.includes(value) ? value : null;
+};
+
 export const responseLines = (attrs: ResponseAttrs): string[] => {
     if (!responseAnswered(attrs)) return [];
     if (!responseHasOptions(attrs.kind)) return [String(attrs.value)];

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/core';
-import { ChevronDown, ListChecks } from '@lucide/vue';
+import { ChevronDown, ListChecks, RotateCcw } from '@lucide/vue';
 import { computed, ref, useId, watch } from 'vue';
 import ChoiceGroup from '@/components/domain/ChoiceGroup.vue';
 import MenuTooltip from '@/components/domain/MenuTooltip.vue';
@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Switch } from '@/components/ui/switch';
 import {
     RESPONSE_DISPLAYS, RESPONSE_HELP_LENGTH, RESPONSE_NODE, RESPONSE_TEXT_LENGTH, emptyResponse, responseAttrs, responseHasOptions, responseKindOptions, responseSettingNames,
-    type ResponseDisplay, type ResponseOption, type ResponseSettings,
+    responseSettings, sameResponseOptions, type ResponseAttrs, type ResponseDisplay, type ResponseOption, type ResponseSettings,
 } from '@/lib/responseKinds';
 import type { DocumentNode } from '@/lib/templateDocument';
 
@@ -25,6 +25,10 @@ const props = withDefaults(defineProps<{
     hint?: string;
     optionsHint?: string;
     requireOptions?: boolean;
+    current?: ResponseAttrs | null;
+    fixed?: boolean;
+    fixedReason?: string;
+    templateOptions?: ResponseOption[] | null;
 }>(), {
     editor: undefined,
     allowed: true,
@@ -33,6 +37,10 @@ const props = withDefaults(defineProps<{
     hint: 'Quien llena el campo solo responde: no cambia el tipo ni las opciones',
     optionsHint: 'Si las deja vacías, Coordinación las escribe en cada materia',
     requireOptions: false,
+    current: null,
+    fixed: false,
+    fixedReason: 'El tipo y Más opciones los fija Administración: aquí solo cambia las opciones',
+    templateOptions: null,
 });
 const emit = defineEmits<{ insert: [node: DocumentNode] }>();
 
@@ -56,7 +64,9 @@ const tooltip = computed(() => props.allowed ? props.label : `${props.label}: no
 const kinds = responseKindOptions.map((item) => ({ value: item.kind, label: item.label }));
 const displays = RESPONSE_DISPLAYS.map((item) => ({ value: item.value, label: item.label }));
 const settingNames = computed(() => responseSettingNames(kind.value));
-const missingOptions = computed(() => props.requireOptions && responseHasOptions(kind.value) && options.value.length === 0);
+const missingOptions = computed(() => (props.requireOptions || props.fixed) && responseHasOptions(kind.value) && options.value.length === 0);
+const resettable = computed(() => props.fixed && props.templateOptions !== null && !sameResponseOptions(options.value, props.templateOptions));
+const plural = (count: number): string => (count === 1 ? '1 opción' : `${count} opciones`);
 const whole = (text: string): number | null => /^\d+$/.test(text.trim()) ? Number(text.trim()) : null;
 const settings = computed<ResponseSettings>(() => ({
     required: draft.value.required,
@@ -69,6 +79,13 @@ const settings = computed<ResponseSettings>(() => ({
 const inRange = (text: string, max: number): boolean => text.trim() === '' || ((whole(text) ?? 0) >= 1 && (whole(text) ?? 0) <= max);
 const settingsError = computed((): string => {
     const names = settingNames.value;
+    if (props.fixed) {
+        const min = props.current?.minChoices;
+        const max = props.current?.maxChoices;
+        if (min && min > options.value.length) return `Esta respuesta pide elegir al menos ${min}: deje al menos ${plural(min)}.`;
+        if (max && max > options.value.length) return `Esta respuesta permite elegir hasta ${max}: deje al menos ${plural(max)}.`;
+        return '';
+    }
     if (names.includes('maxLength') && !inRange(draft.value.maxLength, RESPONSE_TEXT_LENGTH)) return `El límite de caracteres va de 1 a ${RESPONSE_TEXT_LENGTH}.`;
     if (names.includes('minChoices') && (draft.value.minChoices.trim() || draft.value.maxChoices.trim())) {
         if (options.value.length === 0) return 'Escriba las opciones antes de fijar cuántas elegir.';
@@ -86,7 +103,7 @@ const selected = (): ReturnType<typeof responseAttrs> | null => {
 const editing = ref(false);
 watch(open, (value) => {
     if (!value) return;
-    const current = selected();
+    const current = props.current ?? selected();
     editing.value = current !== null;
     kind.value = current?.kind || kind.value;
     options.value = current?.options ?? [];
@@ -95,12 +112,17 @@ watch(open, (value) => {
 });
 const insert = (): void => {
     if (!ready.value || missingOptions.value || settingsError.value) return;
-    const node = emptyResponse(kind.value, options.value, settings.value);
+    const node = emptyResponse(kind.value, options.value, props.fixed && props.current ? responseSettings(kind.value, props.current) : settings.value);
     if (standalone.value) emit('insert', node);
     else props.editor!.chain().focus().insertContent(node).run();
     options.value = [];
     draft.value = fresh();
     open.value = false;
+};
+const reset = (): void => {
+    if (!props.templateOptions) return;
+    options.value = props.templateOptions.map((option) => ({ ...option }));
+    insert();
 };
 </script>
 
@@ -114,13 +136,14 @@ const insert = (): void => {
         <FieldGroup>
           <Field>
             <FieldLabel>Tipo de respuesta</FieldLabel>
-            <ChoiceGroup v-model="kind" label="Tipo de respuesta" :options="kinds" />
-            <FieldDescription>{{ hint }}</FieldDescription>
+            <ChoiceGroup v-model="kind" label="Tipo de respuesta" :options="kinds" :disabled="fixed" />
+            <FieldDescription v-if="fixed" data-response-fixed>{{ fixedReason }}</FieldDescription>
+            <FieldDescription v-else>{{ hint }}</FieldDescription>
           </Field>
           <Field v-if="responseHasOptions(kind)">
             <FieldLabel>Opciones</FieldLabel>
             <ResponseOptionsEditor v-model="options" />
-            <FieldDescription>{{ optionsHint }}</FieldDescription>
+            <FieldDescription v-if="!fixed">{{ optionsHint }}</FieldDescription>
           </Field>
           <Collapsible v-model:open="more">
             <CollapsibleTrigger as-child>
@@ -130,35 +153,38 @@ const insert = (): void => {
               <FieldGroup class="pt-3">
                 <Field orientation="horizontal">
                   <FieldLabel :for="`${id}-required`">Obligatoria</FieldLabel>
-                  <Switch :id="`${id}-required`" v-model="draft.required" data-response-required />
+                  <Switch :id="`${id}-required`" v-model="draft.required" :disabled="fixed" data-response-required />
                 </Field>
                 <Field>
                   <FieldLabel :for="`${id}-help`">Ayuda</FieldLabel>
-                  <Input :id="`${id}-help`" v-model="draft.help" :maxlength="RESPONSE_HELP_LENGTH" autocomplete="off" placeholder="Se muestra debajo de la respuesta" data-response-help />
+                  <Input :id="`${id}-help`" v-model="draft.help" :maxlength="RESPONSE_HELP_LENGTH" autocomplete="off" placeholder="Se muestra debajo de la respuesta" :disabled="fixed" data-response-help />
                 </Field>
                 <Field v-if="settingNames.includes('maxLength')">
                   <FieldLabel :for="`${id}-max-length`">Caracteres máximos</FieldLabel>
-                  <Input :id="`${id}-max-length`" v-model="draft.maxLength" inputmode="numeric" autocomplete="off" :placeholder="String(RESPONSE_TEXT_LENGTH)" data-response-max-length />
+                  <Input :id="`${id}-max-length`" v-model="draft.maxLength" inputmode="numeric" autocomplete="off" :placeholder="String(RESPONSE_TEXT_LENGTH)" :disabled="fixed" data-response-max-length />
                 </Field>
                 <Field v-if="settingNames.includes('display')">
                   <FieldLabel>Cómo se muestra</FieldLabel>
-                  <ChoiceGroup v-model="draft.display" label="Cómo se muestra" :options="displays" />
+                  <ChoiceGroup v-model="draft.display" label="Cómo se muestra" :options="displays" :disabled="fixed" />
                 </Field>
                 <div v-if="settingNames.includes('minChoices')" class="grid grid-cols-2 gap-2">
                   <Field>
                     <FieldLabel :for="`${id}-min`">Elegir al menos</FieldLabel>
-                    <Input :id="`${id}-min`" v-model="draft.minChoices" inputmode="numeric" autocomplete="off" placeholder="1" data-response-min />
+                    <Input :id="`${id}-min`" v-model="draft.minChoices" inputmode="numeric" autocomplete="off" placeholder="1" :disabled="fixed" data-response-min />
                   </Field>
                   <Field>
                     <FieldLabel :for="`${id}-max`">Como máximo</FieldLabel>
-                    <Input :id="`${id}-max`" v-model="draft.maxChoices" inputmode="numeric" autocomplete="off" placeholder="Todas" data-response-max />
+                    <Input :id="`${id}-max`" v-model="draft.maxChoices" inputmode="numeric" autocomplete="off" placeholder="Todas" :disabled="fixed" data-response-max />
                   </Field>
                 </div>
               </FieldGroup>
             </CollapsibleContent>
           </Collapsible>
           <FieldError v-if="settingsError" data-response-settings-error>{{ settingsError }}</FieldError>
-          <Button type="submit" size="sm" class="w-fit" :disabled="missingOptions || Boolean(settingsError)" data-response-insert>{{ editing ? 'Guardar cambios' : 'Insertar' }}</Button>
+          <div class="flex flex-wrap gap-2">
+            <Button type="submit" size="sm" class="w-fit" :disabled="missingOptions || Boolean(settingsError)" data-response-insert>{{ editing ? 'Guardar cambios' : 'Insertar' }}</Button>
+            <Button v-if="resettable" type="button" variant="outline" size="sm" class="w-fit" data-response-reset @click="reset"><RotateCcw data-icon="inline-start" aria-hidden="true" />Restablecer opciones de la plantilla</Button>
+          </div>
         </FieldGroup>
       </form>
     </PopoverContent>

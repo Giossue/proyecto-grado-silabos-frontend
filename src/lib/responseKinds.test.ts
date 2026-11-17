@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RESPONSE_KINDS, emptyResponse, responseRequired, responseSetting, nextOptionKey, responseAnswered, responseAttrs, responseHasOptions, responseKindOptions, responseLabel, responseLines, responseNeedsOptions, responseSchema } from '@/lib/responseKinds';
+import { RESPONSE_KINDS, emptyResponse, responseRequired, responseSetting, nextOptionKey, responseAnswered, responseAttrs, responseHasOptions, responseKindOptions, responseLabel, responseLines, responseNeedsOptions, responseSchema, keptAnswer, responseAdjustable, sameResponseOptions } from '@/lib/responseKinds';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const options = [{ const: 'o1', title: 'Presencial' }, { const: 'o2', title: 'En línea' }];
@@ -61,5 +61,17 @@ describe('Catálogo de tipos de respuesta', () => {
         expect(responseSchema('texto', [], { maxLength: 200 })).toMatchObject({ maxLength: 200 });
         expect(responseSchema('varias', options, { maxChoices: 1 })).toMatchObject({ maxItems: 1 });
         expect(responseSchema('varias', options)).toMatchObject({ maxItems: 100 });
+    });
+
+    it('una respuesta de elegir con opciones se ajusta por materia y conserva solo lo elegido que sigue', () => {
+        const options = [{ const: 'o1', title: 'Aula' }, { const: 'o2', title: 'Taller' }];
+        expect(responseAdjustable(responseAttrs({ type: 'response', attrs: { kind: 'una', options } }))).toBe(true);
+        expect(responseAdjustable(responseAttrs({ type: 'response', attrs: { kind: 'una', options: [] } }))).toBe(false);
+        expect(responseAdjustable(responseAttrs({ type: 'response', attrs: { kind: 'texto', options: [] } }))).toBe(false);
+        expect(sameResponseOptions(options, [...options])).toBe(true);
+        expect(sameResponseOptions(options, [options[0]!, { const: 'o2', title: 'Campo' }])).toBe(false);
+        expect(keptAnswer('o2', [options[0]!])).toBeNull();
+        expect(keptAnswer('o1', options)).toBe('o1');
+        expect(keptAnswer(['o1', 'o3'], options)).toEqual(['o1']);
     });
 });

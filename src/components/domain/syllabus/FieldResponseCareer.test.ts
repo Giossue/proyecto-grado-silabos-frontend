@@ -119,3 +119,48 @@ describe('El docente llena solo los espacios de un campo Carrera', () => {
         expect(last(wrapper).content![1]!.content![0]!.attrs).toEqual({ kind: 'texto', options: [], value: 'Lecturas' });
     });
 });
+
+describe('El coordinador ajusta las opciones de una respuesta de la plantilla en su materia', () => {
+    afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
+
+    const base = [{ const: 'o1', title: 'Aula' }, { const: 'o2', title: 'Laboratorio' }];
+    const placed = (options = base, value: unknown = null, extra: Record<string, unknown> = {}): DocumentNode => ({ type: 'response', attrs: { kind: 'una', options, value, ...extra } as never });
+    const openOptions = async (wrapper: ReturnType<typeof mountSetup>): Promise<void> => {
+        await wrapper.get('button[aria-label="Opciones de la respuesta"]').trigger('click');
+        await flushPromises();
+    };
+
+    it('la marca «De la plantilla» y el cuadro solo deja cambiar las opciones, no el tipo ni Más opciones', async () => {
+        const wrapper = mountSetup(template([placed(base, null, { display: 'desplegable' })]));
+        expect(wrapper.get('[data-template-response]').text()).toBe('De la plantilla');
+        await openOptions(wrapper);
+        expect(kinds().every((button) => button.disabled || button.getAttribute('data-disabled') !== null)).toBe(true);
+        expect(document.querySelector('[data-response-fixed]')?.textContent).toContain('Administración');
+        document.querySelector<HTMLButtonElement>('[data-response-more]')!.click();
+        await flushPromises();
+        expect(document.querySelector<HTMLButtonElement>('[data-response-required]')!.disabled).toBe(true);
+        expect(document.querySelector('[data-response-reset]')).toBeNull();
+        await option(2, 'Taller');
+        await insert();
+        expect(last(wrapper).content![1]!.content![0]!.attrs).toEqual({ kind: 'una', options: [{ const: 'o1', title: 'Aula' }, { const: 'o2', title: 'Taller' }], value: null, display: 'desplegable' });
+    });
+
+    it('muestra las opciones propias de la materia y las restablece a las de la plantilla, soltando lo elegido que ya no existe', async () => {
+        const own = [{ const: 'o1', title: 'Aula' }, { const: 'o3', title: 'Campo' }];
+        const wrapper = mountSetup(template([placed()]), template([placed(own, 'o3', { customOptions: true })]));
+        expect(wrapper.text()).toContain('Opciones propias');
+        await openOptions(wrapper);
+        expect(document.querySelector<HTMLInputElement>('input[aria-label="Opción 2"]')!.value).toBe('Campo');
+        document.querySelector<HTMLButtonElement>('[data-response-reset]')!.click();
+        await flushPromises();
+        expect(last(wrapper).content![1]!.content![0]!.attrs).toEqual({ kind: 'una', options: base, value: null });
+    });
+
+    it('cambiar las opciones conserva lo elegido si la opción sigue', async () => {
+        const wrapper = mountSetup(template([placed()]), template([placed(base, 'o1')]));
+        await openOptions(wrapper);
+        await option(2, 'Taller');
+        await insert();
+        expect(last(wrapper).content![1]!.content![0]!.attrs).toEqual({ kind: 'una', options: [{ const: 'o1', title: 'Aula' }, { const: 'o2', title: 'Taller' }], value: 'o1' });
+    });
+});

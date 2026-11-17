@@ -14,7 +14,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { blankResponse, cloneResponse, replaceResponse, responseAt, responseDocument, responseListTable, responseText } from '@/lib/fieldResponses';
 import { templateRuntime } from '@/lib/blocks/runtime';
-import { RESPONSE_KINDS, RESPONSE_NODE, responseAnswered, responseAttrs, responseLines, responseNeedsOptions, withinResponse, type ResponseOption } from '@/lib/responseKinds';
+import {
+    RESPONSE_KINDS, RESPONSE_NODE, keptAnswer, responseAdjustable, responseAnswered, responseAttrs, responseLines, responseNeedsOptions, sameResponseOptions, withinResponse, type ResponseOption,
+} from '@/lib/responseKinds';
 import { nodesOfType, type DocumentNode } from '@/lib/templateDocument';
 
 const isHeaderRow = (row: DocumentNode): boolean => Boolean(row.content?.length) && row.content!.every((cell) => cell.type === 'tableHeader');
@@ -37,6 +39,16 @@ const onlyBlocks = (document: DocumentNode): boolean => (document.content ?? [])
     && (document.content ?? []).every((node) => node.type === 'documentBlock' || blankResponse(node));
 const hasResponse = (node: DocumentNode): boolean => blankResponse(node) || node.type === 'documentBlock' || node.type === RESPONSE_NODE || (node.content ?? []).some(hasResponse);
 const lineText = (node: DocumentNode): string => (node.content ?? []).map((part) => part.type === 'hardBreak' ? '\n' : part.text ?? '').join('');
+const withOwnOptions = (document: DocumentNode, value: DocumentNode | null | undefined): DocumentNode => {
+    if (!value || value.type !== document.type) return document;
+    if (document.type === RESPONSE_NODE) {
+        const own = responseAttrs(value);
+        return own.kind === responseAttrs(document).kind && responseAdjustable(responseAttrs(document)) && own.options.length > 0
+            ? { ...document, attrs: { ...document.attrs, options: own.options } }
+            : document;
+    }
+    return document.content ? { ...document, content: document.content.map((child, index) => withOwnOptions(child, value.content?.[index])) } : document;
+};
 const inline = (text: string): DocumentNode[] => text.split('\n').flatMap((line, index) => [...(index > 0 ? [{ type: 'hardBreak' }] : []), ...(line ? [{ type: 'text', text: line }] : [])]);
 
 export default defineComponent({
@@ -53,7 +65,11 @@ export default defineComponent({
     },
     emits: { 'update:modelValue': (value: DocumentNode) => Boolean(value) },
     setup(props, { emit }) {
-        const document = computed(() => props.template ? responseDocument(props.template, props.modelValue, props.career) : props.modelValue);
+        const document = computed(() => {
+            if (!props.template) return props.modelValue;
+            const built = responseDocument(props.template, props.modelValue, props.career);
+            return props.career ? withOwnOptions(built, props.modelValue) : built;
+        });
         const placeSpace = (path: number[], node: DocumentNode): void => {
             if (!props.template) return;
             const blank = cloneResponse(responseAt(props.template, path));
@@ -86,8 +102,30 @@ export default defineComponent({
                 attrs.options.length || responseNeedsOptions(attrs) ? optionsEditor(current, path, label) : null,
             ]);
         };
+        const templateSpace = (template: DocumentNode, current: DocumentNode, path: number[], label: string): VNodeChild => {
+            const base = responseAttrs(template).options;
+            const attrs = responseAttrs(current);
+            return h('div', { key: `${props.id}-${path.join('-')}`, class: 'flex min-w-0 flex-col gap-2' }, [
+                h('div', { class: 'flex flex-wrap items-center gap-1' }, [
+                    h(Badge, { variant: 'outline', class: 'w-fit font-normal', 'data-template-response': '' }, () => 'De la plantilla'),
+                    sameResponseOptions(attrs.options, base) ? null : h(Badge, { variant: 'secondary', class: 'w-fit font-normal' }, () => 'Opciones propias'),
+                    h(TemplateResponseTool, {
+                        label: 'Opciones de la respuesta', current: attrs, fixed: true, templateOptions: base, disabled: props.disabled,
+                        onInsert: (node: DocumentNode) => {
+                            const options = responseAttrs(node).options;
+                            update(path, { ...current, attrs: { ...node.attrs, value: keptAnswer(attrs.value, options) as never } });
+                        },
+                    }),
+                ]),
+                h(ResponseAnswer, {
+                    attrs, label, disabled: props.disabled, askFor: props.askFor,
+                    'onUpdate:value': (value: unknown) => update(path, { ...current, attrs: { ...current.attrs, value: value as never } }),
+                }),
+            ]);
+        };
         const response = (template: DocumentNode, path: number[], label: string): VNodeChild => {
             const current = responseAt(document.value!, path);
+            if (props.career && responseAdjustable(responseAttrs(template))) return templateSpace(template, current, path, label);
             if (props.career && responseNeedsOptions(responseAttrs(template))) {
                 return h('div', { key: `${props.id}-${path.join('-')}`, class: 'flex min-w-0 flex-col gap-2' }, [
                     h(Badge, { variant: 'secondary', class: 'w-fit font-normal' }, () => `${RESPONSE_KINDS[responseAttrs(current).kind]?.label ?? 'Respuesta'} (lo definió Administración)`),
