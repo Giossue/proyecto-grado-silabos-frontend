@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { responseShown } from '@/lib/responseConditions';
+import { onlyHiddenResponses, responseShown } from '@/lib/responseConditions';
 import { blankResponse, cloneResponse, replaceResponse, responseAt, responseDocument, responseListTable, responseText } from '@/lib/fieldResponses';
 import { templateRuntime } from '@/lib/blocks/runtime';
 import {
@@ -143,7 +143,8 @@ export default defineComponent({
                 'onUpdate:value': (value: unknown) => update(path, { ...current, attrs: { ...current.attrs, value: value as never } }),
             });
         };
-        const line = (template: DocumentNode, path: number[], label: string): VNodeChild => h('div', { class: 'flex flex-wrap items-start gap-2 text-sm' },
+        const hiddenLine = (node: DocumentNode): boolean => Boolean(props.answers) && onlyHiddenResponses(node, props.answers!);
+        const line = (template: DocumentNode, path: number[], label: string): VNodeChild => hiddenLine(template) ? null : h('div', { class: 'flex flex-wrap items-start gap-2 text-sm' },
             (template.content ?? []).map((child, index) => child.type === RESPONSE_NODE
                 ? response(child, [...path, index], label)
                 : h('span', { class: 'py-1 text-muted-foreground' }, [renderFreeText(child, { variable })])));
@@ -189,6 +190,7 @@ export default defineComponent({
                     const span = { colspan: Number(cell.attrs?.colspan ?? 1), rowspan: Number(cell.attrs?.rowspan ?? 1) };
                     column += span.colspan;
                     const cellPath = [...path, index, cellIndex];
+                    if (hiddenLine(blankResponse(cell) ? responseAt(document.value!, cellPath) : cell)) return h(TableCell, { ...span, class: 'align-top' });
                     if (blankResponse(cell)) return h(TableCell, { ...span, class: 'min-w-40 align-top' }, () => blankSlot(cell, cellPath, `${name}, fila ${number}`));
                     if (hasResponse(cell)) return h(TableCell, { ...span, class: 'min-w-40 align-top' }, () => nodes(cell, cellPath, `${name}, fila ${number}`));
                     return h(TableCell, { ...span, class: 'align-top text-sm' }, () => responseText(cell).trim());

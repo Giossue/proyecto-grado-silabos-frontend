@@ -5,7 +5,7 @@ import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { conditionSourceKey as sourceKey, type ConditionChoice, type ConditionSource } from '@/lib/responseConditions';
 
-const props = withDefaults(defineProps<{ sources: ConditionSource[]; disabled?: boolean }>(), { disabled: false });
+const props = withDefaults(defineProps<{ sources: ConditionSource[]; disabled?: boolean; hint?: string }>(), { disabled: false, hint: '' });
 const model = defineModel<ConditionChoice>({ required: true });
 const id = useId();
 const ALWAYS = 'siempre';
@@ -32,6 +32,7 @@ const toggle = (option: string, checked: unknown): void => {
         </SelectGroup>
       </SelectContent>
     </Select>
+    <FieldDescription v-if="hint && sources.length > 0" data-condition-hint>{{ hint }}</FieldDescription>
     <FieldDescription v-if="sources.length === 0">Ponga antes una respuesta de elegir una o varias para usarla aquí</FieldDescription>
     <div v-if="selected" class="flex flex-col gap-2 pt-1" role="group" :aria-label="`Opciones de ${selected.label}`">
       <span class="text-sm text-muted-foreground">si eligió alguna de:</span>

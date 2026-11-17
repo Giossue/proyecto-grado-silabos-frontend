@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { conditionLabel, conditionSources, evaluateConditions, responseIds, visibleSections, withNewResponseIds, withoutHiddenAnswers } from '@/lib/responseConditions';
+import { conditionLabel, conditionSources, evaluateConditions, responseIds, visibleSections, withNewResponseIds, withoutHiddenAnswers, withoutHiddenLines } from '@/lib/responseConditions';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const yesNo = [{ const: 'o1', title: 'Sí' }, { const: 'o2', title: 'No' }];
@@ -64,6 +64,48 @@ describe('Mostrar solo si', () => {
         expect(responseIds([copy])[0]).toMatch(/^[a-z][a-z0-9_]{0,40}$/);
     });
 
+    it('si una respuesta queda oculta se quita toda su línea, salvo que la línea tenga otra respuesta que sí se ve', () => {
+        const answers = { usa_lab: 'o2' };
+        const label = (text: string): DocumentNode => ({ type: 'text', text });
+        const document: DocumentNode = { type: 'doc', content: [
+            { type: 'paragraph', content: [label('¿Usa laboratorio? '), source('o2')] },
+            { type: 'paragraph', content: [label('Cuál: '), target()] },
+            { type: 'paragraph', content: [label('Turno: '), source('o2'), label(' Cuál: '), target()] },
+            { type: 'paragraph', content: [label('Texto fijo')] },
+        ] };
+
+        const shown = withoutHiddenLines(document, answers)!;
+
+        expect(shown.content!.map((node) => (node.content ?? []).map((part) => part.text ?? part.type).join(''))).toEqual(['¿Usa laboratorio? response', 'Turno: response Cuál: response', 'Texto fijo']);
+        expect(withoutHiddenLines(document, { usa_lab: 'o1' })).toEqual(document);
+        expect(document.content).toHaveLength(4);
+    });
+
+    it('en una tabla se vacía la celda de la respuesta oculta y la celda se queda', () => {
+        const cell = (...content: DocumentNode[]): DocumentNode => ({ type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content }] });
+        const table = (second: DocumentNode): DocumentNode => ({ type: 'doc', content: [{ type: 'table', content: [{ type: 'tableRow', content: [cell(source('o2')), second] }] }] });
+        const hidden = { type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Cuál:' }] }, { type: 'paragraph', content: [target()] }] } as DocumentNode;
+
+        const shown = withoutHiddenLines(table(hidden), { usa_lab: 'o2' })!;
+
+        expect(shown.content![0]!.content![0]!.content).toEqual([cell(source('o2')), { type: 'tableCell', attrs: { colspan: 1, rowspan: 1 }, content: [{ type: 'paragraph' }] }]);
+        expect(withoutHiddenLines(table(hidden), { usa_lab: 'o1' })).toEqual(table(hidden));
+    });
+
+    it('la vista previa del docente no deja la etiqueta suelta de una respuesta oculta', () => {
+        const document: DocumentNode = { type: 'doc', content: [
+            { type: 'paragraph', content: [source('o2')] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Cuál: ' }, target()] },
+        ] };
+        const sections = [{ fields: [{ key: 'metodologia', value: document, document }] }];
+
+        const shown = visibleSections(sections, evaluateConditions(sections.flatMap((section) => section.fields)));
+
+        expect(JSON.stringify(shown[0]!.fields[0]!.document)).not.toContain('Cuál');
+        expect(JSON.stringify(shown[0]!.fields[0]!.value)).not.toContain('Cuál');
+        expect(JSON.stringify(sections[0]!.fields[0]!.document)).toContain('Química');
+    });
+
     it('si la respuesta que decide no está en el sílabo (sin identificador o en un campo que ya no existe), lo condicionado se muestra', () => {
         const withoutId: DocumentNode = { type: 'response', attrs: { kind: 'una', options: yesNo, value: 'o1' } };
         const result = evaluateConditions([
@@ -73,5 +115,6 @@ describe('Mostrar solo si', () => {
 
         expect(result.hidden.size).toBe(0);
         expect(withoutHiddenAnswers(line(withoutId, target()), result.answers)).toEqual(line(withoutId, target()));
+        expect(withoutHiddenLines(line({ type: 'text', text: 'Cuál: ' }, target()), result.answers)).toEqual(line({ type: 'text', text: 'Cuál: ' }, target()));
     });
 });

@@ -239,7 +239,7 @@ const reset = (): void => {
               </FieldGroup>
             </CollapsibleContent>
           </Collapsible>
-          <TemplateConditionPicker v-if="showsCondition && more" v-model="condition" :sources="allSources" />
+          <TemplateConditionPicker v-if="showsCondition && more" v-model="condition" :sources="allSources" hint="Si queda oculta, se oculta toda su línea" />
           <FieldError v-if="settingsError" data-response-settings-error>{{ settingsError }}</FieldError>
           <FieldError v-if="conditionError" data-response-condition-error>{{ conditionError }}</FieldError>
           <div class="flex flex-wrap gap-2">

@@ -70,6 +70,31 @@ export const withoutHiddenAnswers = (node: DocumentNode | null | undefined, answ
     return node.content ? { ...node, content: node.content.map((child) => withoutHiddenAnswers(child, answers)!) } : node;
 };
 
+const LINES = new Set(['paragraph', 'heading', 'listItem']);
+const CELLS = new Set(['tableCell', 'tableHeader']);
+const LISTS = new Set(['bulletList', 'orderedList']);
+
+export const onlyHiddenResponses = (node: DocumentNode | null | undefined, answers: Record<string, unknown>): boolean => {
+    const responses = responseNodes(node);
+    return responses.length > 0 && responses.every((response) => !responseShown(response, answers));
+};
+
+export const withoutHiddenLines = (node: DocumentNode | null | undefined, answers: Record<string, unknown>): DocumentNode | null | undefined => {
+    if (!node?.content) return node;
+    const content: DocumentNode[] = [];
+    for (const child of node.content) {
+        if (CELLS.has(child.type) && onlyHiddenResponses(child, answers)) {
+            content.push({ ...child, content: [{ type: 'paragraph' }] });
+            continue;
+        }
+        if (LINES.has(child.type) && onlyHiddenResponses(child, answers)) continue;
+        const kept = withoutHiddenLines(child, answers)!;
+        if (LISTS.has(child.type) && child.content?.length && !kept.content?.length) continue;
+        content.push(kept);
+    }
+    return content.length === node.content.length && content.every((child, index) => child === node.content![index]) ? node : { ...node, content };
+};
+
 export const newResponseId = (used: Iterable<string>): string => {
     const taken = new Set(used);
     let id = '';
@@ -152,7 +177,7 @@ export const visibleSections = <F extends ConditionedField, S extends { fields: 
         ...section,
         fields: section.fields.filter((field) => !result.hidden.has(field.key)).map((field) => ({
             ...field,
-            value: withoutHiddenAnswers(field.value, result.answers) ?? null,
-            document: withoutHiddenAnswers(field.document, result.answers) ?? null,
+            value: withoutHiddenLines(withoutHiddenAnswers(field.value, result.answers), result.answers) ?? null,
+            document: withoutHiddenLines(withoutHiddenAnswers(field.document, result.answers), result.answers) ?? null,
         })),
     })).filter((section, index) => section.fields.length > 0 || sections[index]!.fields.length === 0);

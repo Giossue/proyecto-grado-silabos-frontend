@@ -167,6 +167,7 @@ describe('Tipo de respuesta en la cinta de la plantilla', () => {
         await pick('Elegir una');
         await write('Opción 1', 'Química');
         await press('[data-response-more]');
+        expect(document.querySelector('[data-condition-hint]')!.textContent).toBe('Si queda oculta, se oculta toda su línea');
         Object.assign(Element.prototype, { hasPointerCapture: () => false, releasePointerCapture: () => undefined, scrollIntoView: () => undefined });
         document.querySelector<HTMLElement>('[data-condition-source]')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
         await flushPromises();
