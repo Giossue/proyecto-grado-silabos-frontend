@@ -11,6 +11,7 @@ import TemplateInsertPoint from '@/components/domain/configuration/TemplateInser
 import TemplateFieldContent from '@/components/domain/configuration/TemplateFieldContent.vue';
 import TemplateFormatTools from '@/components/domain/configuration/TemplateFormatTools.vue';
 import TemplateInlineText from '@/components/domain/configuration/TemplateInlineText.vue';
+import TemplateResponseTool from '@/components/domain/configuration/TemplateResponseTool.vue';
 import TemplateSelectionTools, { type TemplateSectionTarget, type TemplateSelection } from '@/components/domain/configuration/TemplateSelectionTools.vue';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { useStructureHistory } from '@/composables/useStructureHistory';
@@ -616,6 +617,7 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
       <div data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" :style="{ minWidth: toolbarWidth }" class="pointer-events-auto flex w-max max-w-full items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" :variables="variables" :can-undo="canUndo" :can-redo="canRedo" @undo="undoStructure" @redo="redoStructure" />
+        <TemplateResponseTool :editor="ribbonEditor" :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <TemplateSelectionTools
           :selection="selection"

@@ -8,18 +8,54 @@ export const FREE_TEXT_LABEL = 'Texto libre';
 export const RESPONSE_MAX_OPTIONS = 50;
 export const RESPONSE_OPTION_LENGTH = 120;
 
+export const RESPONSE_HELP_LENGTH = 200;
+
 export type ResponseOption = { const: string; title: string };
-export type ResponseAttrs = { kind: string; options: ResponseOption[]; value: unknown };
+export type ResponseDisplay = 'lista' | 'desplegable';
+export type ResponseSettings = { required?: boolean; help?: string; maxLength?: number; minChoices?: number; maxChoices?: number; display?: ResponseDisplay };
+export type ResponseSettingName = keyof ResponseSettings;
+export type ResponseAttrs = { kind: string; options: ResponseOption[]; value: unknown } & ResponseSettings;
+
+export const RESPONSE_DISPLAYS: Array<{ value: ResponseDisplay; label: string }> = [{ value: 'lista', label: 'Lista' }, { value: 'desplegable', label: 'Desplegable' }];
 
 const choice: ChoiceSchema = { type: 'string', oneOf: [] };
 
 export const RESPONSE_TEXT_LENGTH = 3000;
 
-export const RESPONSE_KINDS: Record<string, { label: string; schema: ValueSchema }> = {
-    texto: { label: FREE_TEXT_LABEL, schema: { type: 'string', maxLength: RESPONSE_TEXT_LENGTH, multiline: true } },
-    una: { label: 'Elegir una', schema: choice },
-    varias: { label: 'Elegir varias', schema: { type: 'array', minItems: 0, maxItems: 100, initial: 0, items: choice } },
+export const RESPONSE_KINDS: Record<string, { label: string; schema: ValueSchema; settings: ResponseSettingName[] }> = {
+    texto: { label: FREE_TEXT_LABEL, schema: { type: 'string', maxLength: RESPONSE_TEXT_LENGTH, multiline: true }, settings: ['maxLength'] },
+    una: { label: 'Elegir una', schema: choice, settings: ['display'] },
+    varias: { label: 'Elegir varias', schema: { type: 'array', minItems: 0, maxItems: 100, initial: 0, items: choice }, settings: ['minChoices', 'maxChoices'] },
 };
+
+export const RESPONSE_SETTING_DEFAULTS: { [name in ResponseSettingName]-?: ResponseSettings[name] | null } = {
+    required: true, help: '', maxLength: RESPONSE_TEXT_LENGTH, minChoices: null, maxChoices: null, display: 'lista',
+};
+
+export const RESPONSE_COMMON_SETTINGS: ResponseSettingName[] = ['required', 'help'];
+
+export const responseSettingNames = (kind: string): ResponseSettingName[] => [...RESPONSE_COMMON_SETTINGS, ...(RESPONSE_KINDS[kind]?.settings ?? [])];
+
+const validSetting = (name: ResponseSettingName, value: unknown): boolean => {
+    if (name === 'required') return typeof value === 'boolean';
+    if (name === 'help') return typeof value === 'string';
+    if (name === 'display') return RESPONSE_DISPLAYS.some((display) => display.value === value);
+    return typeof value === 'number' && Number.isInteger(value) && value >= 1;
+};
+
+export const responseSettings = (kind: string, raw: Record<string, unknown>): ResponseSettings => {
+    const settings: Record<string, unknown> = {};
+    for (const name of responseSettingNames(kind)) {
+        const value = name === 'help' && typeof raw[name] === 'string' ? (raw[name] as string).replace(/\s+/g, ' ').trim() : raw[name];
+        if (value !== null && value !== undefined && validSetting(name, value) && value !== RESPONSE_SETTING_DEFAULTS[name]) settings[name] = value;
+    }
+    return settings as ResponseSettings;
+};
+
+export const responseSetting = <K extends ResponseSettingName>(attrs: ResponseSettings, name: K): ResponseSettings[K] | null =>
+    attrs[name] ?? (RESPONSE_SETTING_DEFAULTS[name] as ResponseSettings[K] | null);
+
+export const responseRequired = (attrs: ResponseSettings): boolean => attrs.required !== false;
 
 export const responseKindOptions = Object.entries(RESPONSE_KINDS).map(([kind, entry]) => ({ kind, label: entry.label }));
 
@@ -32,11 +68,12 @@ export const responseHasOptions = (kind: string): boolean => {
 
 export const responseMany = (kind: string): boolean => kindSchema(kind)?.type === 'array';
 
-export const responseSchema = (kind: string, options: ResponseOption[]): ValueSchema | null => {
+export const responseSchema = (kind: string, options: ResponseOption[], settings: ResponseSettings = {}): ValueSchema | null => {
     const schema = kindSchema(kind);
     if (!schema) return null;
     if (isChoice(schema)) return { ...schema, oneOf: options };
-    if (schema.type === 'array' && isChoice(schema.items)) return { ...schema, items: { ...schema.items, oneOf: options } };
+    if (schema.type === 'array' && isChoice(schema.items)) return { ...schema, maxItems: settings.maxChoices ?? schema.maxItems, items: { ...schema.items, oneOf: options } };
+    if (schema.type === 'string' && settings.maxLength) return { ...schema, maxLength: settings.maxLength };
     return schema;
 };
 
@@ -45,9 +82,9 @@ const emptyOf = (kind: string): unknown => {
     return schema ? emptyValue(schema, {}) : null;
 };
 
-export const emptyResponse = (kind: string, options: ResponseOption[] = []): DocumentNode => ({
+export const emptyResponse = (kind: string, options: ResponseOption[] = [], settings: ResponseSettings = {}): DocumentNode => ({
     type: RESPONSE_NODE,
-    attrs: { kind, options: responseHasOptions(kind) ? options : [], value: emptyOf(kind) as never },
+    attrs: { kind, options: responseHasOptions(kind) ? options : [], value: emptyOf(kind) as never, ...responseSettings(kind, settings) },
 });
 
 export const responseAttrs = (node: DocumentNode | null | undefined): ResponseAttrs => {
@@ -57,7 +94,7 @@ export const responseAttrs = (node: DocumentNode | null | undefined): ResponseAt
         ? (attrs.options as unknown[]).filter((option): option is ResponseOption => typeof option === 'object' && option !== null
             && typeof (option as ResponseOption).const === 'string' && typeof (option as ResponseOption).title === 'string')
         : [];
-    return { kind, options, value: attrs.value === undefined ? emptyOf(kind) : attrs.value };
+    return { kind, options, value: attrs.value === undefined ? emptyOf(kind) : attrs.value, ...responseSettings(kind, attrs) };
 };
 
 export const responseAnswered = (attrs: ResponseAttrs): boolean =>
@@ -73,7 +110,7 @@ export const responseLines = (attrs: ResponseAttrs): string[] => {
 };
 
 export const responseLabel = (attrs: ResponseAttrs): string => {
-    const label = RESPONSE_KINDS[attrs.kind]?.label ?? 'Respuesta';
+    const label = `${RESPONSE_KINDS[attrs.kind]?.label ?? 'Respuesta'}${responseRequired(attrs) ? '' : ' (opcional)'}`;
     if (!responseHasOptions(attrs.kind)) return label;
     return `${label}: ${attrs.options.length ? attrs.options.map((option) => option.title).join(' · ') : 'sin opciones'}`;
 };

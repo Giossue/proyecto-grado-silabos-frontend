@@ -3,7 +3,7 @@ import { VueNodeViewRenderer } from '@tiptap/vue-3';
 import DocumentBlockView from '@/components/domain/syllabus/DocumentBlockView.vue';
 import Document from '@tiptap/extension-document';
 import { TableCell, TableHeader } from '@tiptap/extension-table';
-import { RESPONSE_NODE, responseAttrs, responseLabel } from '@/lib/responseKinds';
+import { RESPONSE_NODE, RESPONSE_SETTING_DEFAULTS, responseAttrs, responseLabel } from '@/lib/responseKinds';
 
 export const variableNode = (variable: { key: string; label: string }) => ({ type: 'variable', attrs: { id: variable.key, label: variable.label } });
 
@@ -25,7 +25,7 @@ export const DocumentVariable = Node.create<{ labels: Record<string, string> }>(
 const parseResponse = (element: HTMLElement): Record<string, unknown> | false => {
     try {
         const attrs = JSON.parse(element.getAttribute('data-response') ?? '') as Record<string, unknown>;
-        return { kind: attrs.kind ?? '', options: attrs.options ?? [], value: attrs.value ?? null };
+        return { kind: attrs.kind ?? '', options: attrs.options ?? [], value: attrs.value ?? null, ...Object.fromEntries(Object.keys(RESPONSE_SETTING_DEFAULTS).map((name) => [name, attrs[name] ?? undefined])) };
     } catch {
         return false;
     }
@@ -41,6 +41,7 @@ export const DocumentResponse = Node.create({
         kind: { default: '', rendered: false },
         options: { default: () => [], rendered: false },
         value: { default: null, rendered: false },
+        ...Object.fromEntries(Object.keys(RESPONSE_SETTING_DEFAULTS).map((name) => [name, { default: undefined, rendered: false }])),
     }),
     parseHTML: () => [{ tag: 'span[data-response]', getAttrs: parseResponse }],
     renderHTML({ node, HTMLAttributes }) {

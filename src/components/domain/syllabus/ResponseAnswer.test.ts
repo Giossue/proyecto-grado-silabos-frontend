@@ -84,6 +84,36 @@ describe('Responder un tipo de respuesta', () => {
     });
 });
 
+describe('Ajustes de la respuesta para el docente', () => {
+    afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
+
+    it('la ayuda se ve debajo y el texto respeta su límite de caracteres', () => {
+        const wrapper = answer({ kind: 'texto', options: [], value: '', help: 'Indique días y horas.', maxLength: 200 });
+        expect(wrapper.get('[data-response-help]').text()).toBe('Indique días y horas.');
+        expect(wrapper.get('textarea[aria-label="Técnica"]').attributes('maxlength')).toBe('200');
+        expect(answer({ kind: 'texto', options: [], value: '' }).find('[data-response-help]').exists()).toBe(false);
+    });
+
+    it('elegir una como desplegable se responde con una lista desplegable', async () => {
+        const wrapper = answer({ kind: 'una', options, value: null, display: 'desplegable' });
+        expect(wrapper.find('[data-response-dropdown]').exists()).toBe(true);
+        expect(wrapper.find('button[aria-label="Elegir en Técnica"][aria-haspopup="dialog"]').exists()).toBe(false);
+        wrapper.findComponent({ name: 'Select' }).vm.$emit('update:modelValue', 'o2');
+        await flushPromises();
+        expect(emittedValue(wrapper)).toBe('o2');
+        expect(answer({ kind: 'una', options, value: null }).find('[data-response-dropdown]').exists()).toBe(false);
+    });
+
+    it('elegir varias avisa cuántas elegir, no deja pasar del máximo y marca lo opcional', async () => {
+        const wrapper = answer({ kind: 'varias', options, value: ['o1', 'o2'], minChoices: 1, maxChoices: 2, required: false });
+        expect(wrapper.get('[data-response-help]').text()).toBe('Elija de 1 a 2 opciones · Opcional');
+        await wrapper.get('button[aria-label="Elegir en Técnica"]').trigger('click');
+        await flushPromises();
+        await chooseOption(2);
+        expect(wrapper.emitted('update:value')).toBeUndefined();
+    });
+});
+
 describe('El editor del docente con tipos de respuesta', () => {
     afterEach(() => { wrappers.splice(0).forEach((wrapper) => wrapper.unmount()); document.body.innerHTML = ''; });
 

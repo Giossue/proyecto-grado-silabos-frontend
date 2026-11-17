@@ -6,15 +6,28 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { RESPONSE_KINDS, responseMany, responseSchema, type ResponseAttrs } from '@/lib/responseKinds';
+import { RESPONSE_KINDS, responseMany, responseRequired, responseSchema, responseSetting, type ResponseAttrs } from '@/lib/responseKinds';
 
 const props = withDefaults(defineProps<{ attrs: ResponseAttrs; label: string; disabled?: boolean; askFor?: string }>(), { disabled: false, askFor: 'al coordinador' });
 const emit = defineEmits<{ 'update:value': [value: unknown] }>();
 
 const open = ref(false);
 const listId = useId();
-const schema = computed(() => responseSchema(props.attrs.kind, props.attrs.options));
+const schema = computed(() => responseSchema(props.attrs.kind, props.attrs.options, props.attrs));
+const dropdown = computed(() => !responseMany(props.attrs.kind) && responseSetting(props.attrs, 'display') === 'desplegable');
+const optional = computed(() => !responseRequired(props.attrs));
+const limits = computed((): string => {
+    if (!responseMany(props.attrs.kind)) return '';
+    const min = props.attrs.minChoices;
+    const max = props.attrs.maxChoices;
+    const plural = (count: number): string => count === 1 ? '1 opción' : `${count} opciones`;
+    if (min && max) return min === max ? `Elija ${plural(min)}` : `Elija de ${min} a ${max} opciones`;
+    if (min) return `Elija al menos ${plural(min)}`;
+    if (max) return `Elija como máximo ${plural(max)}`;
+    return '';
+});
 const text = computed(() => schema.value?.type === 'string' && !('oneOf' in schema.value && schema.value.oneOf) ? schema.value : null);
 const many = computed(() => responseMany(props.attrs.kind));
 const isKey = (value: unknown): value is string => typeof value === 'string' && value !== '';
@@ -24,7 +37,9 @@ const choose = (value: unknown): void => {
     if (props.disabled) return;
     if (many.value) {
         const picked = Array.isArray(value) ? value.filter(isKey) : [];
-        emit('update:value', [...chosen.value.filter((key) => picked.includes(key)), ...picked.filter((key) => !chosen.value.includes(key))]);
+        const next = [...chosen.value.filter((key) => picked.includes(key)), ...picked.filter((key) => !chosen.value.includes(key))];
+        if (props.attrs.maxChoices && next.length > props.attrs.maxChoices && next.length > chosen.value.length) return;
+        emit('update:value', next);
         return;
     }
     emit('update:value', isKey(value) ? value : null);
@@ -36,16 +51,24 @@ const remove = (key: string): void => {
 </script>
 
 <template>
+  <div :class="['flex min-w-0 flex-col gap-1', text ? 'w-full' : '']">
   <Textarea
     v-if="text"
     class="min-h-9 w-full"
-    placeholder="Escriba aquí"
+    :placeholder="optional ? 'Escriba aquí (opcional)' : 'Escriba aquí'"
     :aria-label="label"
     :maxlength="text.maxLength"
     :model-value="typeof attrs.value === 'string' ? attrs.value : ''"
     :disabled="disabled"
     @update:model-value="emit('update:value', String($event))"
   />
+  <div v-else-if="dropdown" class="flex min-w-0 items-center gap-1" data-response-dropdown>
+    <Select :model-value="chosen[0] ?? ''" :disabled="disabled || attrs.options.length === 0" @update:model-value="choose($event)">
+      <SelectTrigger class="w-fit min-w-40" :aria-label="`Elegir en ${label}`"><SelectValue :placeholder="optional ? 'Elegir (opcional)' : 'Elegir'" /></SelectTrigger>
+      <SelectContent><SelectGroup><SelectItem v-for="option in attrs.options" :key="option.const" :value="option.const">{{ option.title }}</SelectItem></SelectGroup></SelectContent>
+    </Select>
+    <IconTooltip v-if="chosen.length" label="Quitar la respuesta"><Button type="button" variant="ghost" size="icon-sm" aria-label="Quitar la respuesta" :disabled="disabled" @click="remove(chosen[0]!)"><X aria-hidden="true" /></Button></IconTooltip>
+  </div>
   <div v-else class="flex min-w-0 flex-col gap-1.5" role="group" :aria-label="label">
     <ul v-if="chosen.length" class="flex flex-wrap gap-1.5" :aria-label="`Elegido en ${label}`">
       <li v-for="key in chosen" :key="key">
@@ -73,5 +96,7 @@ const remove = (key: string): void => {
       </PopoverContent>
     </Popover>
     <p v-if="attrs.options.length === 0" class="text-sm text-muted-foreground">No hay opciones para elegir: pídalas {{ askFor }}</p>
+  </div>
+  <p v-if="attrs.help || limits || (optional && !text)" class="text-sm text-muted-foreground" data-response-help>{{ [attrs.help, limits, optional && !text ? 'Opcional' : ''].filter(Boolean).join(' · ') }}</p>
   </div>
 </template>

@@ -37,6 +37,12 @@ const write = async (label: string, text: string): Promise<void> => {
     input.dispatchEvent(new Event('input'));
     await flushPromises();
 };
+const type = async (selector: string, text: string): Promise<void> => {
+    const input = document.querySelector<HTMLInputElement>(selector)!;
+    input.value = text;
+    input.dispatchEvent(new Event('input'));
+    await flushPromises();
+};
 const press = async (selector: string): Promise<void> => {
     document.querySelector<HTMLButtonElement>(selector)!.click();
     await flushPromises();
@@ -95,5 +101,57 @@ describe('Tipo de respuesta en la cinta de la plantilla', () => {
         const preview = mount(TemplateFieldContent, { props: { field, preview: true } });
         expect(preview.get('[data-field-body]').text()).not.toContain('Elegir una');
         expect(preview.get('[data-field-body]').text()).toContain('Horas:');
+    });
+
+    it('en «Más opciones» marca si es obligatoria, la ayuda y el límite de caracteres', async () => {
+        const { host, editor } = await editorFor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Horario: ' }] }] });
+        editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+        const tool = mountTool(editor);
+        await open(tool);
+        await pick('Texto libre');
+        await press('[data-response-more]');
+        await press('[data-response-required]');
+        await type('[data-response-help]', 'Indique días y horas.');
+        await type('[data-response-max-length]', '5000');
+        expect(document.querySelector('[data-response-settings-error]')!.textContent).toContain('El límite de caracteres va de 1 a 3000.');
+        expect(document.querySelector<HTMLButtonElement>('[data-response-insert]')!.disabled).toBe(true);
+        await type('[data-response-max-length]', '500');
+        await press('[data-response-insert]');
+
+        const value = host.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
+        expect(JSON.parse(JSON.stringify(nodesOfType(value, 'response')[0]!.attrs))).toEqual({ kind: 'texto', options: [], value: '', required: false, help: 'Indique días y horas.', maxLength: 500 });
+    });
+
+    it('elegir una puede ir como desplegable', async () => {
+        const { host, editor } = await editorFor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Lugar: ' }] }] });
+        editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+        const tool = mountTool(editor);
+        await open(tool);
+        await pick('Elegir una');
+        await write('Opción 1', 'Aula');
+        await press('[data-response-more]');
+        await pick('Desplegable');
+        await press('[data-response-insert]');
+        const value = host.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
+        expect(JSON.parse(JSON.stringify(nodesOfType(value, 'response')[0]!.attrs))).toEqual({ kind: 'una', options: [{ const: 'o1', title: 'Aula' }], value: null, display: 'desplegable' });
+    });
+
+    it('elegir varias guarda cuántas elegir dentro del número de opciones', async () => {
+        const { host, editor } = await editorFor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Lugar: ' }] }] });
+        editor.commands.setTextSelection(editor.state.doc.content.size - 1);
+        const tool = mountTool(editor);
+        await open(tool);
+        await pick('Elegir varias');
+        await write('Opción 1', 'Aula');
+        await press('[data-response-add-option]');
+        await write('Opción 2', 'Campo');
+        await press('[data-response-more]');
+        await type('[data-response-min]', '3');
+        expect(document.querySelector('[data-response-settings-error]')!.textContent).toContain('Cuántas elegir va de 1 a 2, el número de opciones.');
+        await type('[data-response-min]', '1');
+        await type('[data-response-max]', '2');
+        await press('[data-response-insert]');
+        const value = host.emitted('update:modelValue')!.at(-1)![0] as DocumentNode;
+        expect(JSON.parse(JSON.stringify(nodesOfType(value, 'response')[0]!.attrs))).toEqual({ kind: 'varias', options: [{ const: 'o1', title: 'Aula' }, { const: 'o2', title: 'Campo' }], value: [], minChoices: 1, maxChoices: 2 });
     });
 });

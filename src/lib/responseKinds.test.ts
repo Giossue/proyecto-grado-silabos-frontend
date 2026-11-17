@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RESPONSE_KINDS, emptyResponse, nextOptionKey, responseAnswered, responseAttrs, responseHasOptions, responseKindOptions, responseLabel, responseLines, responseNeedsOptions, responseSchema } from '@/lib/responseKinds';
+import { RESPONSE_KINDS, emptyResponse, responseRequired, responseSetting, nextOptionKey, responseAnswered, responseAttrs, responseHasOptions, responseKindOptions, responseLabel, responseLines, responseNeedsOptions, responseSchema } from '@/lib/responseKinds';
 import type { DocumentNode } from '@/lib/templateDocument';
 
 const options = [{ const: 'o1', title: 'Presencial' }, { const: 'o2', title: 'En línea' }];
@@ -41,5 +41,25 @@ describe('Catálogo de tipos de respuesta', () => {
         expect(responseLabel(responseAttrs(node('una', null)))).toBe('Elegir una: Presencial · En línea');
         expect(responseLabel(responseAttrs(node('texto', '', [])))).toBe('Texto libre');
         expect(responseLabel(responseAttrs(node('varias', [], [])))).toBe('Elegir varias: sin opciones');
+    });
+
+    it('los ajustes de cada respuesta solo se guardan si cambian lo de siempre', () => {
+        expect(emptyResponse('texto', [], { required: true, help: '', maxLength: 3000 }).attrs).toEqual({ kind: 'texto', options: [], value: '' });
+        expect(emptyResponse('texto', [], { required: false, help: '  Horario  de atención ', maxLength: 500, display: 'desplegable' }).attrs)
+            .toEqual({ kind: 'texto', options: [], value: '', required: false, help: 'Horario de atención', maxLength: 500 });
+        expect(emptyResponse('una', options, { display: 'desplegable', minChoices: 1 }).attrs).toEqual({ kind: 'una', options, value: null, display: 'desplegable' });
+        expect(emptyResponse('varias', options, { minChoices: 1, maxChoices: 2, display: 'lista' }).attrs).toEqual({ kind: 'varias', options, value: [], minChoices: 1, maxChoices: 2 });
+        const legacy = responseAttrs(node('una', null));
+        expect(responseRequired(legacy)).toBe(true);
+        expect(responseSetting(legacy, 'display')).toBe('lista');
+        expect(responseSetting(legacy, 'help')).toBe('');
+        expect(responseRequired(responseAttrs({ type: 'response', attrs: { kind: 'texto', options: [], value: '', required: false } }))).toBe(false);
+        expect(responseLabel(responseAttrs({ type: 'response', attrs: { kind: 'texto', options: [], value: '', required: false } }))).toBe('Texto libre (opcional)');
+    });
+
+    it('los límites cambian el esquema de la respuesta', () => {
+        expect(responseSchema('texto', [], { maxLength: 200 })).toMatchObject({ maxLength: 200 });
+        expect(responseSchema('varias', options, { maxChoices: 1 })).toMatchObject({ maxItems: 1 });
+        expect(responseSchema('varias', options)).toMatchObject({ maxItems: 100 });
     });
 });

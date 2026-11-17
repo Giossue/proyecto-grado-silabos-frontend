@@ -193,7 +193,15 @@ describe('TemplateVisualBuilder', () => {
     expect(body().querySelector<HTMLButtonElement>('[aria-label="Negrita"]')!.disabled).toBe(false);
     expect(body().querySelector('[aria-label="Si se puede editar el campo Primero"]')).toBeTruthy();
     expect(body().querySelector('[data-field="f1"] [role="toolbar"]')).toBeNull();
-    expect(body().querySelector('[aria-label="Tipo de respuesta"]')).toBeNull();
+  });
+
+  it('la cinta ofrece el tipo de respuesta en un campo editable y no en uno No editable', async () => {
+    await mountBuilder();
+    expect(body().querySelector<HTMLButtonElement>('[aria-label="Tipo de respuesta"]')!.disabled).toBe(true);
+    await selectField('f1');
+    expect(body().querySelector<HTMLButtonElement>('[aria-label="Tipo de respuesta"]')!.disabled).toBe(false);
+    await selectField('f2');
+    expect(body().querySelector<HTMLButtonElement>('[aria-label="Tipo de respuesta"]')!.disabled).toBe(true);
   });
 
   it('cambia si el campo se puede editar desde la cinta y lo guarda con el botón', async () => {
