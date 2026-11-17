@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import type { Editor } from '@tiptap/core';
-import { Braces, GripVertical, ImageUp, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from '@lucide/vue';
+import { Braces, CircleAlert, Eye, EyeOff, GripVertical, ImageUp, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import type { TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload, TemplateVersionDraft } from '@/api/template';
-import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
+import type { TemplateDraftCheck, TemplateDraftImpact, TemplateDraftPayload, TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload, TemplateVersionDraft } from '@/api/template';
+import { ApiError } from '@/api/client';
+import { checkTemplateDraft, getTemplateDraftImpact, importTemplateJson, previewTemplateDraft, uploadTemplateLogo } from '@/api/template';
+import { draftProblemsByTarget, locateDraftProblems, problemCount, type DraftProblem } from '@/components/domain/configuration/templateDraftProblems';
+import TemplateImpactDialog from '@/components/domain/configuration/TemplateImpactDialog.vue';
 import type { TemplateAssistantProposal } from '@/api/templateAssistant';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
 import TemplateJsonDialog from '@/components/domain/configuration/TemplateJsonDialog.vue';
@@ -138,7 +141,11 @@ const reloadAfterJson = (): void => {
     toast.success('Plantilla actualizada desde el JSON');
     emit('changed');
 };
-const source = computed<TemplateSectionPayload[]>(() => preview.value && !awaitingReload.value ? props.template.sections : draft.value);
+const previewing = ref(false);
+const previewLoading = ref(false);
+const draftPreview = ref<TemplateSectionPayload[]>([]);
+const readOnly = computed(() => preview.value || previewing.value);
+const source = computed<TemplateSectionPayload[]>(() => previewing.value ? draftPreview.value : preview.value && !awaitingReload.value ? props.template.sections : draft.value);
 const editSession = ref('');
 const revision = ref(0);
 const assistantMarks = ref<{ sections: string[]; fields: string[] }>({ sections: [], fields: [] });
@@ -169,7 +176,7 @@ const restartHistory = (): void => {
     structure.reset();
     savedState.value = JSON.stringify(captureState());
 };
-const structureEditable = computed(() => !preview.value && !locked.value && !busy.value);
+const structureEditable = computed(() => !readOnly.value && !locked.value && !busy.value);
 const undoStructure = (): void => { if (structureEditable.value) structure.undo(); };
 const redoStructure = (): void => { if (structureEditable.value) structure.redo(); };
 const undoWithKeyboard = (event: KeyboardEvent): void => {
@@ -252,6 +259,8 @@ const startEditing = (): void => {
 };
 const cancelEditing = (): void => {
     preview.value = true;
+    previewing.value = false;
+    problems.value = [];
     assistantMarks.value = { sections: [], fields: [] };
     draft.value = [];
     structure.reset();
@@ -274,6 +283,12 @@ const draftSections = () => draft.value.map((section) => ({
     orientation: section.orientation,
     fields: section.fields.map((field) => ({ key: field.key, label: field.label.trim(), quien_llena: field.quien_llena, content: field.content })),
 }));
+const draftPayload = (): TemplateDraftPayload => ({
+    version: 1,
+    title: titleDraft.value.trim() || props.template.titleBlock.text,
+    layout: layoutDraft.value,
+    sections: draftSections(),
+});
 const draftVersion = computed(() => `${editSession.value}:${revision.value}`);
 const snapshot = () => ({ sections: draftSections(), version: draftVersion.value });
 const applyProposal = (proposal: TemplateAssistantProposal): void => {
@@ -306,23 +321,46 @@ const applyVersion = (version: TemplateVersionDraft): void => {
     touched();
 };
 
-defineExpose({ askEdit, leave, snapshot, applyProposal, applyVersion, draftVersion });
+defineExpose({ askEdit, leave, snapshot, applyProposal, applyVersion, draftVersion, payload: draftPayload });
+const impact = ref<TemplateDraftImpact | null>(null);
 const save = async (): Promise<void> => {
     if (busy.value) return;
     busy.value = true;
     error.value = null;
+    let result: TemplateDraftImpact | undefined;
     try {
-        await importTemplateJson(props.template.id, {
-            version: 1,
-            title: titleDraft.value.trim() || props.template.titleBlock.text,
-            layout: layoutDraft.value,
-            sections: draftSections(),
-        });
+        result = await getTemplateDraftImpact(props.template.id, draftPayload());
+    } catch (reason) {
+        busy.value = false;
+        if (reason instanceof ApiError && reason.status === 422) {
+            error.value = apiMessage(reason, 'No se pudo guardar la plantilla');
+            return;
+        }
+        impact.value = { affected: true, counted: false, in_progress: 0, keep: 0, lose: 0, back_to_draft: 0, careers: [] };
+        return;
+    }
+    if (result?.affected) {
+        impact.value = result;
+        busy.value = false;
+        return;
+    }
+    await persist();
+};
+const confirmImpact = (): void => {
+    impact.value = null;
+    busy.value = true;
+    void persist();
+};
+const persist = async (): Promise<void> => {
+    try {
+        await importTemplateJson(props.template.id, draftPayload());
         toast.success('Plantilla guardada');
         assistantMarks.value = { sections: [], fields: [] };
         awaitingReload.value = true;
         structure.reset();
         preview.value = true;
+        previewing.value = false;
+        problems.value = [];
         selectedField.value = null;
         selectedSection.value = null;
         activeEditor.value = null;
@@ -332,6 +370,66 @@ const save = async (): Promise<void> => {
     } finally {
         busy.value = false;
     }
+};
+
+const togglePreview = async (): Promise<void> => {
+    if (previewing.value) {
+        previewing.value = false;
+        return;
+    }
+    if (previewLoading.value) return;
+    previewLoading.value = true;
+    error.value = null;
+    try {
+        draftPreview.value = (await previewTemplateDraft(props.template.id, draftPayload())).sheets;
+        selectedField.value = null;
+        selectedSection.value = null;
+        activeEditor.value = null;
+        previewing.value = true;
+    } catch (reason) {
+        error.value = apiMessage(reason, 'No se pudo armar la vista previa');
+    } finally {
+        previewLoading.value = false;
+    }
+};
+
+const problems = ref<DraftProblem[]>([]);
+const problemsByTarget = computed(() => draftProblemsByTarget(problems.value));
+const problemLabel = computed(() => problemCount(problems.value.length));
+let checkTimer: ReturnType<typeof setTimeout> | undefined;
+let checkRun = 0;
+const runCheck = async (): Promise<void> => {
+    const run = checkRun += 1;
+    const sent = draft.value.map((section) => ({ id: section.id, fields: section.fields.map((field) => field.id) }));
+    let result: TemplateDraftCheck | undefined;
+    try {
+        result = await checkTemplateDraft(props.template.id, draftPayload());
+    } catch {
+        result = undefined;
+    }
+    if (run !== checkRun || preview.value || !result) return;
+    problems.value = locateDraftProblems(result.problems, sent);
+};
+watch(() => [revision.value, titleDraft.value, preview.value] as const, () => {
+    clearTimeout(checkTimer);
+    checkRun += 1;
+    if (preview.value) {
+        problems.value = [];
+        return;
+    }
+    checkTimer = setTimeout(() => void runCheck(), 800);
+});
+onBeforeUnmount(() => clearTimeout(checkTimer));
+const showFirstProblem = (): void => {
+    const first = problems.value.find((problem) => problem.target !== 'general') ?? problems.value[0];
+    if (!first) return;
+    if (previewing.value) previewing.value = false;
+    void nextTick(() => {
+        const selector = first.target === 'field' ? `[data-field="${first.id}"]` : first.target === 'section' ? `[data-section="${first.id}"]` : '[data-general-problems]';
+        root.value?.querySelector<HTMLElement>(selector)?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+        if (first.target === 'field' && first.id) selectField(first.id, null);
+        if (first.target === 'section' && first.id) selectSection(first.id);
+    });
 };
 
 const isLandscape = (section: TemplateSectionPayload): boolean => section.orientation === 'landscape';
@@ -616,13 +714,13 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
     <div v-if="!preview" class="pointer-events-none sticky top-16 z-20 flex w-full justify-center">
       <div data-template-ribbon role="toolbar" aria-label="Cinta de edición de la plantilla" :style="{ minWidth: toolbarWidth }" class="pointer-events-auto flex w-max max-w-full items-start gap-1 rounded-md ring-1 ring-surface-ring bg-card p-1.5 shadow-menu">
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
-        <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy" :variables="variables" :can-undo="canUndo" :can-redo="canRedo" @undo="undoStructure" @redo="redoStructure" />
-        <TemplateResponseTool :editor="ribbonEditor" :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy" />
+        <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy || previewing" :variables="variables" :can-undo="canUndo" :can-redo="canRedo" @undo="undoStructure" @redo="redoStructure" />
+        <TemplateResponseTool :editor="ribbonEditor" :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy || previewing" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <TemplateSelectionTools
           :selection="selection"
           :presets="presets"
-          :locked="locked"
+          :locked="locked || previewing"
           :busy="busy"
           :targets="moveTargets"
           @duplicate="duplicateSelected"
@@ -657,7 +755,9 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
             <TooltipContent>Opciones avanzadas</TooltipContent>
           </Tooltip>
         </div>
+        <IconTooltip :label="previewing ? 'Volver a editar' : 'Vista previa'"><Button type="button" :variant="previewing ? 'secondary' : 'ghost'" size="icon-sm" :aria-label="previewing ? 'Volver a editar' : 'Vista previa'" :aria-pressed="previewing" :disabled="busy || previewLoading" data-draft-preview @click="togglePreview"><Spinner v-if="previewLoading" /><EyeOff v-else-if="previewing" aria-hidden="true" /><Eye v-else aria-hidden="true" /></Button></IconTooltip>
         <div class="flex shrink-0 items-center gap-2">
+          <Button v-if="problems.length" type="button" variant="ghost" size="sm" class="text-destructive hover:text-destructive" data-problems @click="showFirstProblem"><CircleAlert data-icon="inline-start" aria-hidden="true" />{{ problemLabel }}</Button>
           <span class="sr-only" aria-live="polite"><template v-if="changed">Sin guardar</template></span>
           <Button type="button" class="relative" data-tour="template-save" :disabled="busy || !changed" @click="save"><Spinner v-if="busy" data-icon="inline-start" /><Save v-else data-icon="inline-start" aria-hidden="true" />Guardar<span v-if="changed" data-unsaved class="absolute -right-1 -top-1 size-2.5 rounded-full bg-warning ring-2 ring-background" aria-hidden="true" /></Button>
         </div>
@@ -666,13 +766,13 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
     </div>
 
     <div v-for="(sheet, sheetIndex) in sheets" :key="sheetIndex" class="min-w-0 overflow-x-auto" tabindex="0" role="region" :aria-label="`Hoja ${sheetIndex + 1} de la plantilla con desplazamiento horizontal`">
-    <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet :data-preview="preview" :style="{ zoom: scaleFor(sheet.landscape), ...layoutStyle(shownLayout, documentStyle) }" :class="cn('template-sheet relative shadow-none', sheet.landscape && 'template-sheet--landscape')">
+    <article :ref="(element) => setSheet(sheetIndex, element)" data-sheet :data-preview="readOnly" :style="{ zoom: scaleFor(sheet.landscape), ...layoutStyle(shownLayout, documentStyle) }" :class="cn('template-sheet relative shadow-none', sheet.landscape && 'template-sheet--landscape')">
       <div data-sheet-content class="flex flex-col gap-6">
       <header v-if="sheetIndex === 0" class="flex flex-col gap-3">
         <div v-if="logos" class="flex items-center justify-between gap-4">
-          <label :class="cn('group relative block', !preview && !locked && 'cursor-pointer')">
+          <label :class="cn('group relative block', !readOnly && !locked && 'cursor-pointer')">
             <img :src="logoOverride ?? logos.institution" alt="Logo de la universidad" class="h-12 w-auto object-contain" @load="paginate">
-            <template v-if="!preview && !locked">
+            <template v-if="!readOnly && !locked">
               <span class="absolute inset-0 flex items-center justify-center gap-1 rounded-sm bg-background/80 text-sm font-medium opacity-0 outline outline-1 outline-border group-focus-within:opacity-100 group-hover:opacity-100"><Spinner v-if="uploadingLogo" /><ImageUp v-else class="size-4" aria-hidden="true" />Cambiar logo</span>
               <input type="file" accept="image/png" class="sr-only" aria-label="Cambiar el logo de la universidad" :disabled="uploadingLogo" @change="changeLogo">
             </template>
@@ -680,17 +780,20 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
           <img :src="logos.faculty" alt="Logo de la facultad" class="h-12 w-auto object-contain" @load="paginate">
         </div>
         <div class="flex items-center justify-center px-2 py-1">
-          <div v-if="!preview && !locked" class="template-sheet-title w-full"><TemplateInlineText :model-value="titleDraft" :maxlength="180" label="Título del documento" class="rounded-sm text-center hover:outline hover:outline-1 hover:outline-primary/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary" @update:model-value="setDocumentTitle" /></div>
+          <div v-if="!readOnly && !locked" class="template-sheet-title w-full"><TemplateInlineText :model-value="titleDraft" :maxlength="180" label="Título del documento" class="rounded-sm text-center hover:outline hover:outline-1 hover:outline-primary/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary" @update:model-value="setDocumentTitle" /></div>
           <h2 v-else class="template-sheet-title">{{ shownTitle }}</h2>
         </div>
+        <ul v-if="!preview && problemsByTarget.general.length" data-general-problems class="flex flex-col gap-1 font-sans text-xs text-destructive">
+          <li v-for="(problem, index) in problemsByTarget.general" :key="index" class="flex items-start gap-1" data-problem><CircleAlert class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />{{ problem.message }}</li>
+        </ul>
       </header>
 
       <template v-for="({ section, fields, index: sectionIndex }) in sheet.items" :key="section.id">
       <section :data-section="section.id" :data-orientation="sheet.landscape ? 'landscape' : 'portrait'" class="relative flex min-w-0 scroll-mt-36 flex-col gap-3">
         <span v-if="sectionMarked(sectionIndex)" data-drop-mark class="pointer-events-none absolute inset-x-0 -top-3 z-10 h-0.5 rounded-full bg-primary" aria-hidden="true" />
         <span v-if="sectionIndex === sections.length - 1 && sectionMarked(sections.length)" data-drop-mark class="pointer-events-none absolute inset-x-0 -bottom-3 z-10 h-0.5 rounded-full bg-primary" aria-hidden="true" />
-        <TemplateInsertPoint v-if="!preview && !locked && (sectionIndex === 0 || (sections[sectionIndex - 1]?.fields.length ?? 0) === 0)" :disabled="locked || busy" :actions="[{ key: 'section', label: 'Nueva sección' }]" position="top" gap="section" @insert="addSection(sectionIndex)" />
-        <h3 v-if="preview" class="font-bold" data-section-title>{{ section.title }}</h3>
+        <TemplateInsertPoint v-if="!readOnly && !locked && (sectionIndex === 0 || (sections[sectionIndex - 1]?.fields.length ?? 0) === 0)" :disabled="locked || busy" :actions="[{ key: 'section', label: 'Nueva sección' }]" position="top" gap="section" @insert="addSection(sectionIndex)" />
+        <h3 v-if="readOnly" class="font-bold" data-section-title>{{ section.title }}</h3>
         <div v-else data-section-heading data-section-title :data-changed="proposedSection(section) || undefined" :class="cn('group/heading relative rounded-sm font-bold outline-offset-2', proposedSection(section) && 'rounded-md bg-warning/10 ring-2 ring-warning/60', selectedSection === section.id ? 'outline outline-2 outline-primary' : 'hover:outline hover:outline-1 hover:outline-primary/40')" @focusin="selectSection(section.id)">
           <span v-if="proposedSection(section)" class="absolute -top-2.5 right-2 z-10 rounded-full bg-warning px-2 py-0.5 font-sans text-xs font-medium text-warning-foreground" data-change-mark>Cambió</span>
           <IconTooltip :label="`Arrastrar la sección ${section.title}`"><Button type="button" variant="ghost" size="icon-sm" data-drag-handle :draggable="!locked && !busy" :disabled="locked || busy" :aria-label="`Arrastrar la sección ${section.title}`" :class="cn('absolute -left-8 top-1/2 -translate-y-1/2 cursor-grab font-normal text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover/heading:opacity-100', selectedSection === section.id && 'opacity-100')" @click="selectSection(section.id)" @dragstart="startDrag($event, { kind: 'section', id: section.id })" @dragend="endDrag"><GripVertical aria-hidden="true" /></Button></IconTooltip>
@@ -703,17 +806,20 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
             @update:model-value="setTitle(section, $event)"
           />
         </div>
+        <ul v-if="!preview && problemsByTarget.sections[section.id]?.length" class="flex flex-col gap-1 font-sans text-xs text-destructive" :data-section-problems="section.id">
+          <li v-for="(problem, index) in problemsByTarget.sections[section.id]" :key="index" class="flex items-start gap-1" data-problem><CircleAlert class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />{{ problem.message }}</li>
+        </ul>
 
         <ol class="flex flex-col gap-3">
           <template v-for="(field, fieldIndex) in fields" :key="field.id">
-          <li :data-field="field.id" :data-field-responsible="field.quien_llena" :data-changed="proposedField(field) || undefined" :class="cn('relative min-w-0 rounded-sm px-2 py-1', proposedField(field) && 'rounded-md bg-warning/10 ring-2 ring-warning/60', !preview && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-transparent hover:outline-primary/40'])">
+          <li :data-field="field.id" :data-field-responsible="field.quien_llena" :data-changed="proposedField(field) || undefined" :data-invalid="(!preview && Boolean(problemsByTarget.fields[field.id]?.length)) || undefined" :class="cn('relative min-w-0 rounded-sm px-2 py-1', proposedField(field) && 'rounded-md bg-warning/10 ring-2 ring-warning/60', !preview && problemsByTarget.fields[field.id]?.length && 'bg-destructive/5 ring-1 ring-destructive/60', !readOnly && ['group outline-offset-2', selectedField === field.id ? 'outline outline-2 outline-primary' : 'outline outline-1 outline-transparent hover:outline-primary/40'])">
             <span v-if="proposedField(field)" class="absolute -top-2.5 right-2 z-10 rounded-full bg-warning px-2 py-0.5 font-sans text-xs font-medium text-warning-foreground" data-change-mark>Cambió</span>
-            <span v-if="!preview && fieldMarked(section.id, fieldIndex)" data-drop-mark class="pointer-events-none absolute inset-x-0 -top-2 z-10 h-0.5 rounded-full bg-primary" aria-hidden="true" />
-            <span v-if="!preview && fieldIndex === fields.length - 1 && fieldMarked(section.id, fields.length)" data-drop-mark class="pointer-events-none absolute inset-x-0 -bottom-2 z-10 h-0.5 rounded-full bg-primary" aria-hidden="true" />
-            <IconTooltip v-if="!preview" :label="`Arrastrar el campo ${fieldName(field)}`"><Button type="button" variant="ghost" size="icon-sm" data-drag-handle :draggable="!locked && !busy" :disabled="locked || busy" :aria-label="`Arrastrar el campo ${fieldName(field)}`" :class="cn('absolute -left-8 top-0 z-10 cursor-grab text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover:opacity-100', selectedField === field.id && 'opacity-100')" @click="selectField(field.id, null)" @dragstart="startDrag($event, { kind: 'field', id: field.id })" @dragend="endDrag"><GripVertical aria-hidden="true" /></Button></IconTooltip>
-            <TemplateInsertPoint v-if="!preview && !locked" :disabled="busy" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="top" gap="field" @insert="addField(section.id, fieldIndex)" />
-            <TemplateInsertPoint v-if="!preview && !locked && fieldIndex === fields.length - 1" :disabled="busy" :actions="[{ key: 'section', label: 'Nueva sección' }, { key: 'field', label: 'Agregar campo' }]" position="bottom" gap="field" @insert="insertAfterLastField($event, section.id, sectionIndex)" />
-            <TemplateFieldContent v-if="preview" :field="field" :variables="variables" preview />
+            <span v-if="!readOnly && fieldMarked(section.id, fieldIndex)" data-drop-mark class="pointer-events-none absolute inset-x-0 -top-2 z-10 h-0.5 rounded-full bg-primary" aria-hidden="true" />
+            <span v-if="!readOnly && fieldIndex === fields.length - 1 && fieldMarked(section.id, fields.length)" data-drop-mark class="pointer-events-none absolute inset-x-0 -bottom-2 z-10 h-0.5 rounded-full bg-primary" aria-hidden="true" />
+            <IconTooltip v-if="!readOnly" :label="`Arrastrar el campo ${fieldName(field)}`"><Button type="button" variant="ghost" size="icon-sm" data-drag-handle :draggable="!locked && !busy" :disabled="locked || busy" :aria-label="`Arrastrar el campo ${fieldName(field)}`" :class="cn('absolute -left-8 top-0 z-10 cursor-grab text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover:opacity-100', selectedField === field.id && 'opacity-100')" @click="selectField(field.id, null)" @dragstart="startDrag($event, { kind: 'field', id: field.id })" @dragend="endDrag"><GripVertical aria-hidden="true" /></Button></IconTooltip>
+            <TemplateInsertPoint v-if="!readOnly && !locked" :disabled="busy" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="top" gap="field" @insert="addField(section.id, fieldIndex)" />
+            <TemplateInsertPoint v-if="!readOnly && !locked && fieldIndex === fields.length - 1" :disabled="busy" :actions="[{ key: 'section', label: 'Nueva sección' }, { key: 'field', label: 'Agregar campo' }]" position="bottom" gap="field" @insert="insertAfterLastField($event, section.id, sectionIndex)" />
+            <TemplateFieldContent v-if="readOnly" :field="field" :variables="variables" preview />
             <TemplateSheetField
               v-else
               :field="field"
@@ -725,13 +831,16 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
               @named="naming = null"
               @update:field="setField(section.id, field.id, $event)"
             />
+            <ul v-if="!preview && problemsByTarget.fields[field.id]?.length" class="mt-1 flex flex-col gap-1 font-sans text-xs text-destructive" :data-field-problems="field.id">
+              <li v-for="(problem, index) in problemsByTarget.fields[field.id]" :key="index" class="flex items-start gap-1" data-problem><CircleAlert class="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />{{ problem.message }}</li>
+            </ul>
           </li>
           </template>
         </ol>
-        <p v-if="fields.length === 0 && !preview" :class="cn('relative rounded-sm py-1 text-sm text-muted-foreground', fieldMarked(section.id, 0) && 'outline outline-2 outline-dashed outline-primary')">Sección sin campos.<TemplateInsertPoint v-if="!locked" :disabled="busy" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="inline" gap="field" @insert="addField(section.id)" /></p>
+        <p v-if="fields.length === 0 && !readOnly" :class="cn('relative rounded-sm py-1 text-sm text-muted-foreground', fieldMarked(section.id, 0) && 'outline outline-2 outline-dashed outline-primary')">Sección sin campos.<TemplateInsertPoint v-if="!locked" :disabled="busy" :actions="[{ key: 'field', label: 'Agregar campo' }]" position="inline" gap="field" @insert="addField(section.id)" /></p>
       </section>
       </template>
-      <div v-if="sheetIndex === 0 && !preview && sections.length === 0" class="flex flex-col items-center gap-3 py-10 text-sm text-muted-foreground">
+      <div v-if="sheetIndex === 0 && !readOnly && sections.length === 0" class="flex flex-col items-center gap-3 py-10 text-sm text-muted-foreground">
         <p>La plantilla no tiene secciones</p>
         <Button type="button" variant="outline" :disabled="locked || busy" @click="addSection()"><Plus data-icon="inline-start" aria-hidden="true" />Nueva sección</Button>
       </div>
@@ -740,6 +849,7 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
     </article>
     </div>
 
+    <TemplateImpactDialog :impact="impact" @confirm="confirmImpact" @cancel="impact = null" />
     <UnsavedChangesDialog :open="leaveOpen" title="Hay cambios sin guardar" description="Los cambios de la plantilla no se guardaron. Si vuelve, los perderá" discard-label="Volver y descartar cambios" @continue="leaveOpen = false" @discard="discardAndLeave" @update:open="leaveOpen = $event" />
 
     <Dialog v-model:open="designOpen">

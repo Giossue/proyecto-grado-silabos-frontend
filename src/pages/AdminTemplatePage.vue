@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import { ArrowLeft, Bot, History, Pencil, RotateCcw, UserPen, X } from '@lucide/vue';
 import { ApiError } from '@/api/client';
-import { createTemplate, getTemplate, getTemplateTeacherPreview, type TemplatePayload, type TemplateVersionDraft } from '@/api/template';
+import { createTemplate, getTemplate, getTemplateTeacherPreview, previewTemplateDraft, type TemplatePayload, type TemplateVersionDraft } from '@/api/template';
 import type { SyllabusDetail, SyllabusField } from '@/api/syllabi';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import SyllabusTeacherForm from '@/components/domain/syllabus/SyllabusTeacherForm.vue';
@@ -44,7 +44,8 @@ const toggleTeacherView = async (): Promise<void> => {
     teacherSections.value = null;
     teacherError.value = null;
     try {
-        teacherSections.value = (await getTemplateTeacherPreview(template.value.id)).sections;
+        const draft = editing.value ? builder.value?.payload() : undefined;
+        teacherSections.value = draft ? (await previewTemplateDraft(template.value.id, draft)).sections : (await getTemplateTeacherPreview(template.value.id)).sections;
     } catch (reason) {
         teacherError.value = reason instanceof ApiError ? reason.message : 'No se pudo armar la vista del docente';
     }
@@ -168,6 +169,7 @@ const askEdit = (): void => {
     builder.value?.askEdit();
 };
 watch(editing, (value) => {
+    teacherView.value = false;
     const version = pendingVersion.value;
     pendingVersion.value = null;
     if (value && version) loadVersion(version);
@@ -188,6 +190,7 @@ onBeforeUnmount(() => {
     <header v-if="editing" class="sticky top-0 z-30 flex min-h-14 items-center gap-3 border-b bg-background/95 px-3 backdrop-blur sm:px-5" aria-label="Herramientas de la plantilla">
         <Button type="button" variant="link" size="sm" class="h-auto px-0" data-tour="template-back" @click="builder?.leave()"><ArrowLeft aria-hidden="true" />Volver a la vista</Button>
         <span class="flex-1" />
+        <IconTooltip :label="teacherView ? 'Volver a la plantilla' : 'Ver como docente'"><Button type="button" :variant="teacherView ? 'secondary' : 'ghost'" size="icon" aria-label="Ver como docente" :aria-pressed="teacherView" data-draft-teacher-view @click="toggleTeacherView"><UserPen aria-hidden="true" /></Button></IconTooltip>
         <AppearanceToggle />
     </header>
     <PageFrame
@@ -234,7 +237,7 @@ onBeforeUnmount(() => {
             <Alert v-if="teacherError" variant="destructive"><AlertDescription>{{ teacherError }}</AlertDescription></Alert>
             <LoadingSkeleton v-else-if="!teacherSections" variant="syllabus" />
             <template v-else>
-                <Alert><AlertDescription>Vista de prueba: así verá el formulario el docente. Lo que escriba aquí no se guarda</AlertDescription></Alert>
+                <Alert><AlertDescription>{{ editing ? 'Vista de prueba del borrador sin guardar: así verá el formulario el docente. Lo que escriba aquí no se guarda' : 'Vista de prueba: así verá el formulario el docente. Lo que escriba aquí no se guarda' }}</AlertDescription></Alert>
                 <SyllabusTeacherForm v-model:active="teacherSection" v-model:collapsed="teacherCollapsed" :sections="teacherSections" @update:value="tryValue" />
             </template>
         </div>

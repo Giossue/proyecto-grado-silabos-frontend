@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import AdminTemplatePage from "@/pages/AdminTemplatePage.vue";
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { getSession } from "@/api/session";
-import { createTemplate, getTemplate, getTemplateJson, getTemplateTeacherPreview, type TemplatePayload } from "@/api/template";
+import { checkTemplateDraft, createTemplate, getTemplate, getTemplateJson, getTemplateTeacherPreview, previewTemplateDraft, type TemplatePayload } from "@/api/template";
 import { applyTemplateAssistantProposal, discardTemplateAssistantProposal, getTemplateAssistant, getTemplateAssistantProposal, sendTemplateAssistantMessage } from "@/api/templateAssistant";
 
 vi.mock("vue-router", async (importOriginal) => ({
@@ -34,7 +34,9 @@ vi.mock("@/api/template", async (importOriginal) => ({
   createTemplate: vi.fn(),
   getTemplateJson: vi.fn(),
   getTemplateTeacherPreview: vi.fn(),
-
+  previewTemplateDraft: vi.fn(),
+  checkTemplateDraft: vi.fn(),
+  getTemplateDraftImpact: vi.fn(),
 }));
 
 const payload: TemplatePayload = {
@@ -78,6 +80,32 @@ describe("AdminTemplatePage", () => {
     vi.mocked(sendTemplateAssistantMessage).mockResolvedValue({ message: 'El pedido quedó registrado.', assistant_message_id: 'a-1' });
     vi.mocked(applyTemplateAssistantProposal).mockResolvedValue({ message: 'Propuesta aplicada en el editor.' });
     vi.mocked(discardTemplateAssistantProposal).mockResolvedValue({ message: 'Propuesta descartada.' });
+    vi.mocked(checkTemplateDraft).mockResolvedValue({ problems: [] });
+  });
+
+  it('al editar, «Ver como docente» muestra el formulario del borrador sin guardar', async () => {
+    const doc = { type: 'doc' as const, content: [{ type: 'paragraph' }] };
+    vi.mocked(previewTemplateDraft).mockResolvedValue({ sheets: [], sections: [{
+      id: 'nuevo', key: 'descripcion', title: 'Descripción del borrador', description: null, orientation: 'portrait',
+      fields: [{ id: 'nuevo-1', key: 'descripcion', label: 'Descripción', quien_llena: 'carrera', teacher_editable: true, required: true, value: doc, document: doc }],
+    }] } as never);
+    vi.mocked(getTemplateTeacherPreview).mockClear();
+    const wrapper = mountPage();
+    await flushPromises();
+    await wrapper.findAll('button').find((button) => button.text() === 'Editar')!.trigger('click');
+    await flushPromises();
+    typeConfirmation('template-edit-confirm', 'editar plantilla');
+    await flushPromises();
+    [...document.body.querySelectorAll<HTMLButtonElement>('button')].find((button) => button.textContent?.trim() === 'Continuar')!.click();
+    await flushPromises();
+
+    await wrapper.get('button[aria-label="Ver como docente"]').trigger('click');
+    await flushPromises();
+
+    expect(getTemplateTeacherPreview).not.toHaveBeenCalled();
+    expect(previewTemplateDraft).toHaveBeenCalledWith('template-1', expect.objectContaining({ version: 1, title: 'PROGRAMA DE ASIGNATURA (SÍLABO)', sections: [expect.objectContaining({ key: 'descripcion' })] }));
+    expect(wrapper.text()).toContain('Vista de prueba del borrador sin guardar');
+    expect(wrapper.find('section.teacher-form').text()).toContain('Descripción del borrador');
   });
 
   it('«Ver como docente» cambia la hoja por el formulario del docente con la plantilla guardada, y se puede volver', async () => {

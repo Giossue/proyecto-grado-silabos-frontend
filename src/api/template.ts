@@ -39,3 +39,15 @@ export type TemplateVersionDetail = TemplateVersionSummary & { json: Record<stri
 export const getTemplateVersions = (templateId: string) => api<{ versions: TemplateVersionSummary[] }>(`/admin/template/${templateId}/versions`);
 export const getTemplateVersion = (templateId: string, versionId: string) => api<TemplateVersionDetail>(`/admin/template/${templateId}/versions/${versionId}`);
 export const getTemplateVersionComparison = (templateId: string, versionId: string) => api<{ changes: string[] }>(`/admin/template/${templateId}/versions/${versionId}/comparison`);
+
+export type TemplateDraftPayload = { version: 1; title: string; layout: DocumentLayout; sections: TemplateVersionDraft['sections'] };
+export type TemplateDraftImpactCounts = { in_progress: number; keep: number; lose: number; back_to_draft: number };
+export type TemplateDraftImpact = TemplateDraftImpactCounts & { affected: boolean; counted?: boolean; message?: string; careers: Array<TemplateDraftImpactCounts & { name: string }> };
+export type TemplateDraftProblem = { path: string; message: string; blocking: boolean };
+export type TemplateDraftCheck = { problems: TemplateDraftProblem[] };
+export const previewTemplateDraft = (templateId: string, body: TemplateDraftPayload) =>
+    api<{ sections: SyllabusDetail['sections']; sheets: TemplateSectionPayload[] }>(`/admin/template/${templateId}/draft/preview`, { method: 'POST', body: JSON.stringify(body) });
+export const getTemplateDraftImpact = (templateId: string, body: TemplateDraftPayload) =>
+    api<TemplateDraftImpact>(`/admin/template/${templateId}/draft/impact`, { method: 'POST', body: JSON.stringify(body), signal: AbortSignal.timeout(30000) });
+export const checkTemplateDraft = (templateId: string, body: TemplateDraftPayload) =>
+    api<TemplateDraftCheck>(`/admin/template/${templateId}/draft/check`, { method: 'POST', body: JSON.stringify(body) });
