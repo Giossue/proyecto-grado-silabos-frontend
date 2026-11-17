@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
-import { ArrowLeft, Bot, History, Pencil, RotateCcw, UserPen, X } from '@lucide/vue';
+import { ArrowLeft, Bot, Pencil, RotateCcw, UserPen, X } from '@lucide/vue';
 import { ApiError } from '@/api/client';
-import { createTemplate, getTemplate, getTemplateTeacherPreview, previewTemplateDraft, type TemplatePayload, type TemplateVersionDraft } from '@/api/template';
+import { createTemplate, getTemplate, getTemplateTeacherPreview, previewTemplateDraft, type TemplatePayload } from '@/api/template';
 import type { SyllabusDetail, SyllabusField } from '@/api/syllabi';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import SyllabusTeacherForm from '@/components/domain/syllabus/SyllabusTeacherForm.vue';
@@ -15,7 +15,6 @@ import AppearanceToggle from '@/components/AppearanceToggle.vue';
 import UnsavedChangesDialog from '@/components/domain/UnsavedChangesDialog.vue';
 import { useDiscardConfirmation } from '@/composables/useDiscardConfirmation';
 import TemplateVisualBuilder from '@/components/domain/configuration/TemplateVisualBuilder.vue';
-import TemplateHistorySheet from '@/components/domain/configuration/TemplateHistorySheet.vue';
 import PageFrame from '@/components/domain/PageFrame.vue';
 import LoadingSkeleton from '@/components/domain/LoadingSkeleton.vue';
 import LoadErrorState from '@/components/domain/LoadErrorState.vue';
@@ -149,30 +148,8 @@ const discardProposal = async (id: string): Promise<void> => {
     }
 };
 
-const historyOpen = ref(false);
-const pendingVersion = ref<{ draft: TemplateVersionDraft; number: number } | null>(null);
-const loadVersion = (version: { draft: TemplateVersionDraft; number: number }): void => {
-    builder.value?.applyVersion(version.draft);
-    toast.success(`Versión ${version.number} cargada. Guárdela con «Guardar»`);
-};
-const restoreVersion = (draft: TemplateVersionDraft, number: number): void => {
-    if (editing.value) {
-        loadVersion({ draft, number });
-        return;
-    }
+watch(editing, () => {
     teacherView.value = false;
-    pendingVersion.value = { draft, number };
-    builder.value?.askEdit();
-};
-const askEdit = (): void => {
-    pendingVersion.value = null;
-    builder.value?.askEdit();
-};
-watch(editing, (value) => {
-    teacherView.value = false;
-    const version = pendingVersion.value;
-    pendingVersion.value = null;
-    if (value && version) loadVersion(version);
 });
 
 onMounted(() => {
@@ -226,8 +203,7 @@ onBeforeUnmount(() => {
         </template>
         <template v-if="!editing" #actions>
             <IconTooltip :label="teacherView ? 'Volver a la plantilla' : 'Ver como docente'"><Button type="button" :variant="teacherView ? 'secondary' : 'ghost'" size="icon" aria-label="Ver como docente" :aria-pressed="teacherView" @click="toggleTeacherView"><UserPen aria-hidden="true" /></Button></IconTooltip>
-            <IconTooltip label="Historial"><Button type="button" variant="ghost" size="icon" aria-label="Historial" @click="historyOpen = true"><History aria-hidden="true" /></Button></IconTooltip>
-            <Button v-if="!teacherView" type="button" data-tour="template-edit" :disabled="Boolean(payload?.processLock)" @click="askEdit"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
+            <Button v-if="!teacherView" type="button" data-tour="template-edit" :disabled="Boolean(payload?.processLock)" @click="builder?.askEdit()"><Pencil data-icon="inline-start" aria-hidden="true" />Editar</Button>
         </template>
         <div class="mx-auto flex flex-col gap-4 empty:hidden" :style="{ width: `${SHEET_WIDTH}px`, maxWidth: '100%' }">
             <Alert v-if="actionError" variant="destructive"><AlertDescription>{{ actionError }}</AlertDescription></Alert>
@@ -253,7 +229,6 @@ onBeforeUnmount(() => {
                 <X v-if="assistantOpen" data-icon="inline-start" aria-hidden="true" /><Bot v-else data-icon="inline-start" aria-hidden="true" />{{ assistantOpen ? 'Cerrar asistente' : 'Asistente' }}
             </Button>
         </template>
-        <TemplateHistorySheet v-model:open="historyOpen" :template-id="template.id" :locked="payload?.processLock" @restore="restoreVersion" />
         <UnsavedChangesDialog :open="discardOpen" title="Hay cambios sin guardar" description="Los cambios de la plantilla no se guardaron. Si sale, los perderá" discard-label="Salir y descartar cambios" @continue="decideDiscard(false)" @discard="decideDiscard(true)" @update:open="(value) => { if (!value) decideDiscard(false); }" />
     </PageFrame>
 </template>

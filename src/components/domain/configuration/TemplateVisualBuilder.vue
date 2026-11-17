@@ -2,7 +2,7 @@
 import type { Editor } from '@tiptap/core';
 import { Braces, CircleAlert, Eye, EyeOff, GripVertical, ImageUp, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import type { DesignedTable, RepeatableTableDesign, TemplateDraftCheck, TemplateDraftImpact, TemplateDraftPayload, TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload, TemplateVersionDraft } from '@/api/template';
+import type { DesignedTable, RepeatableTableDesign, TemplateDraftCheck, TemplateDraftImpact, TemplateDraftPayload, TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload } from '@/api/template';
 import { ApiError } from '@/api/client';
 import { checkTemplateDraft, getTemplateDraftImpact, importTemplateJson, previewTemplateDraft, uploadTemplateLogo } from '@/api/template';
 import { draftProblemsByTarget, locateDraftProblems, problemCount, type DraftProblem } from '@/components/domain/configuration/templateDraftProblems';
@@ -334,14 +334,7 @@ const applyProposal = (proposal: TemplateAssistantProposal & { block_changes?: R
 // «Editar» vive en las acciones de la página; abre el aviso previo a editar.
 const askEdit = (): void => { if (!locked.value) editWarningOpen.value = true; };
 
-const applyVersion = (version: TemplateVersionDraft): void => {
-    applyProposal({ id: 'version', status: 'aplicada', draft_version: draftVersion.value, changes: [], changed: { sections: [], fields: [] }, sections: version.sections });
-    titleDraft.value = version.title;
-    layoutDraft.value = layoutOf(version.layout);
-    touched();
-};
-
-defineExpose({ askEdit, leave, snapshot, applyProposal, applyVersion, draftVersion, payload: draftPayload });
+defineExpose({ askEdit, leave, snapshot, applyProposal, draftVersion, payload: draftPayload });
 const impact = ref<TemplateDraftImpact | null>(null);
 const save = async (): Promise<void> => {
     if (busy.value) return;
