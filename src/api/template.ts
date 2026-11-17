@@ -32,3 +32,10 @@ export const uploadTemplateLogo = (id: string, file: File) => {
 };
 export const clearTemplate = (id: string) => api<{ message: string }>(`/admin/template/${id}/structure`, { method: 'DELETE' });
 export const formatTemplate = (id: string) => api<{ message: string }>(`/admin/template/${id}/format`, { method: 'POST', body: JSON.stringify({}) });
+
+export type TemplateVersionSummary = { id: string; number: number; saved_at: string; saved_by: string; sections: number; fields: number; current?: boolean };
+export type TemplateVersionDraft = { title: string; layout: DocumentLayout; sections: Array<{ key: string; title: string; orientation: 'portrait' | 'landscape'; fields: Array<{ key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode }> }> };
+export type TemplateVersionDetail = TemplateVersionSummary & { json: Record<string, unknown>; draft: TemplateVersionDraft };
+export const getTemplateVersions = (templateId: string) => api<{ versions: TemplateVersionSummary[] }>(`/admin/template/${templateId}/versions`);
+export const getTemplateVersion = (templateId: string, versionId: string) => api<TemplateVersionDetail>(`/admin/template/${templateId}/versions/${versionId}`);
+export const getTemplateVersionComparison = (templateId: string, versionId: string) => api<{ changes: string[] }>(`/admin/template/${templateId}/versions/${versionId}/comparison`);

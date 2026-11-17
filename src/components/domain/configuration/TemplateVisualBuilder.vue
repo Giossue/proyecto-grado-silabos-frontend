@@ -2,7 +2,7 @@
 import type { Editor } from '@tiptap/core';
 import { Braces, GripVertical, ImageUp, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import type { TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload } from '@/api/template';
+import type { TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload, TemplateVersionDraft } from '@/api/template';
 import { importTemplateJson, uploadTemplateLogo } from '@/api/template';
 import type { TemplateAssistantProposal } from '@/api/templateAssistant';
 import { paginateSheet } from '@/components/domain/configuration/templatePagination';
@@ -298,7 +298,14 @@ const applyProposal = (proposal: TemplateAssistantProposal): void => {
 // «Editar» vive en las acciones de la página; abre el aviso previo a editar.
 const askEdit = (): void => { if (!locked.value) editWarningOpen.value = true; };
 
-defineExpose({ askEdit, leave, snapshot, applyProposal, draftVersion });
+const applyVersion = (version: TemplateVersionDraft): void => {
+    applyProposal({ id: 'version', status: 'aplicada', draft_version: draftVersion.value, changes: [], changed: { sections: [], fields: [] }, sections: version.sections });
+    titleDraft.value = version.title;
+    layoutDraft.value = layoutOf(version.layout);
+    touched();
+};
+
+defineExpose({ askEdit, leave, snapshot, applyProposal, applyVersion, draftVersion });
 const save = async (): Promise<void> => {
     if (busy.value) return;
     busy.value = true;
