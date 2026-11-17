@@ -2,7 +2,7 @@
 import type { Editor } from '@tiptap/core';
 import { Braces, CircleAlert, Eye, EyeOff, GripVertical, ImageUp, Pencil, Plus, Ruler, Save, Settings2, Trash2 } from '@lucide/vue';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import type { TemplateDraftCheck, TemplateDraftImpact, TemplateDraftPayload, TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload, TemplateVersionDraft } from '@/api/template';
+import type { DesignedTable, RepeatableTableDesign, TemplateDraftCheck, TemplateDraftImpact, TemplateDraftPayload, TemplateField, TemplatePayload, TemplatePreset, TemplateSectionPayload, TemplateVersionDraft } from '@/api/template';
 import { ApiError } from '@/api/client';
 import { checkTemplateDraft, getTemplateDraftImpact, importTemplateJson, previewTemplateDraft, uploadTemplateLogo } from '@/api/template';
 import { draftProblemsByTarget, locateDraftProblems, problemCount, type DraftProblem } from '@/components/domain/configuration/templateDraftProblems';
@@ -15,6 +15,8 @@ import TemplateFieldContent from '@/components/domain/configuration/TemplateFiel
 import TemplateFormatTools from '@/components/domain/configuration/TemplateFormatTools.vue';
 import TemplateInlineText from '@/components/domain/configuration/TemplateInlineText.vue';
 import TemplateResponseTool from '@/components/domain/configuration/TemplateResponseTool.vue';
+import TemplateTableDesigner from '@/components/domain/configuration/TemplateTableDesigner.vue';
+import TemplateTableTool, { type FieldTable } from '@/components/domain/configuration/TemplateTableTool.vue';
 import TemplateSelectionTools, { type TemplateSectionTarget, type TemplateSelection } from '@/components/domain/configuration/TemplateSelectionTools.vue';
 import IconTooltip from '@/components/domain/IconTooltip.vue';
 import { useStructureHistory } from '@/composables/useStructureHistory';
@@ -27,7 +29,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { layoutOf, layoutStyle, paperOf, sheetPixels, type DocumentLayout } from '@/lib/documentLayout';
-import { templateRuntime } from '@/lib/blocks/runtime';
+import { setTemplateRuntime, templateRuntime } from '@/lib/blocks/runtime';
+import type { BlockDefinition, TemplateDefinitionPayload } from '@/lib/blocks/types';
+import type { DocumentNode } from '@/lib/templateDocument';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
@@ -40,7 +44,7 @@ import { cn } from '@/lib/utils';
 import { emptyDocument } from '@/types/configuration';
 
 
-const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; variables?: TemplatePayload['variables']; presets?: TemplatePayload['presets'] }>();
+const props = defineProps<{ template: NonNullable<TemplatePayload['template']>; processLock?: string | null; logos?: TemplatePayload['logos']; variables?: TemplatePayload['variables']; presets?: TemplatePayload['presets']; blockDesigns?: TemplatePayload['blockDesigns'] }>();
 const emit = defineEmits<{ changed: []; dirty: [value: boolean]; editing: [value: boolean] }>();
 
 const locked = computed(() => Boolean(props.processLock));
@@ -155,8 +159,16 @@ const proposedField = (field: TemplateField): boolean => !preview.value && assis
 const dirty = ref(false);
 const titleDraft = ref('');
 const layoutDraft = ref<DocumentLayout>(layoutOf(props.template.layout));
-type BuilderState = { sections: TemplateSectionPayload[]; title: string; layout: DocumentLayout; marks: { sections: string[]; fields: string[] } };
-const captureState = (): BuilderState => ({ sections: draft.value, title: titleDraft.value, layout: layoutDraft.value, marks: assistantMarks.value });
+type TableChange = { definition: BlockDefinition; design: RepeatableTableDesign | null };
+const tables = ref<Record<string, TableChange>>({});
+let baseDefinition: TemplateDefinitionPayload | null = null;
+const showTables = (): void => {
+    if (!baseDefinition) return;
+    setTemplateRuntime({ ...baseDefinition, blocks: { ...baseDefinition.blocks, ...Object.fromEntries(Object.entries(tables.value).map(([kind, table]) => [kind, table.definition])) } }, templateRuntime().variables);
+};
+watch(tables, showTables, { deep: true });
+type BuilderState = { sections: TemplateSectionPayload[]; title: string; layout: DocumentLayout; marks: { sections: string[]; fields: string[] }; tables: Record<string, TableChange> };
+const captureState = (): BuilderState => ({ sections: draft.value, title: titleDraft.value, layout: layoutDraft.value, marks: assistantMarks.value, tables: tables.value });
 const savedState = ref('');
 const structure = useStructureHistory<BuilderState>({
     capture: captureState,
@@ -165,6 +177,7 @@ const structure = useStructureHistory<BuilderState>({
         titleDraft.value = state.title;
         layoutDraft.value = state.layout;
         assistantMarks.value = state.marks;
+        tables.value = state.tables;
         dropMissingSelection();
         dirty.value = JSON.stringify(captureState()) !== savedState.value;
         paginateSoon();
@@ -252,6 +265,8 @@ const startEditing = (): void => {
         dirty.value = false;
     }
     error.value = null;
+    baseDefinition = templateRuntime().definition;
+    tables.value = {};
     editSession.value = crypto.randomUUID();
     assistantMarks.value = { sections: [], fields: [] };
     restartHistory();
@@ -263,6 +278,7 @@ const cancelEditing = (): void => {
     problems.value = [];
     assistantMarks.value = { sections: [], fields: [] };
     draft.value = [];
+    tables.value = {};
     structure.reset();
     error.value = null;
     selectedField.value = null;
@@ -288,11 +304,13 @@ const draftPayload = (): TemplateDraftPayload => ({
     title: titleDraft.value.trim() || props.template.titleBlock.text,
     layout: layoutDraft.value,
     sections: draftSections(),
+    ...(Object.keys(tables.value).length ? { block_changes: Object.fromEntries(Object.entries(tables.value).map(([kind, table]) => [kind, table.definition])) } : {}),
 });
 const draftVersion = computed(() => `${editSession.value}:${revision.value}`);
 const snapshot = () => ({ sections: draftSections(), version: draftVersion.value });
-const applyProposal = (proposal: TemplateAssistantProposal): void => {
+const applyProposal = (proposal: TemplateAssistantProposal & { block_changes?: Record<string, BlockDefinition> }): void => {
     record();
+    if (proposal.block_changes) tables.value = { ...tables.value, ...Object.fromEntries(Object.entries(proposal.block_changes).map(([kind, definition]) => [kind, { definition, design: null }])) };
     const sectionIds = new Map(draft.value.map((section) => [section.key, section.id]));
     const fieldIds = new Map(draft.value.flatMap((section) => section.fields.map((field) => [field.key, field.id] as const)));
     draft.value = proposal.sections.map((section) => ({
@@ -539,6 +557,48 @@ const patchSelectedField = (changes: Partial<TemplateField>): void => {
     const field = target && target.fieldIndex >= 0 ? target.section.fields[target.fieldIndex] : undefined;
     if (target && field) setField(target.section.id, field.id, { ...field, ...changes });
 };
+const designerOpen = ref(false);
+const designerKind = ref<string | null>(null);
+const selectedTemplateField = computed(() => selection.value?.kind === 'field' ? selection.value.field : null);
+const designOf = (kind: string): RepeatableTableDesign | null => tables.value[kind] ? tables.value[kind]!.design : props.blockDesigns?.[kind]?.design ?? null;
+const reasonOf = (kind: string): string | null => {
+    if (designOf(kind)) return null;
+    if (tables.value[kind]) return 'Esta tabla llegó del asistente; ábrala de nuevo después de guardar para cambiarla.';
+    return props.blockDesigns?.[kind]?.reason ?? 'Esta tabla no se puede editar aquí. Para cambiarla use Opciones avanzadas → Editar JSON.';
+};
+const fieldTables = computed<FieldTable[]>(() => {
+    const kinds = (selectedTemplateField.value?.content.content ?? [])
+        .filter((node) => node.type === 'documentBlock' && typeof node.attrs?.kind === 'string')
+        .map((node) => String(node.attrs!.kind));
+    return [...new Set(kinds)].map((kind) => ({ kind, label: templateRuntime().definition?.blocks[kind]?.label ?? kind, editable: designOf(kind) !== null }));
+});
+const takenKinds = computed(() => Object.keys(templateRuntime().definition?.blocks ?? {}));
+const openDesigner = (kind: string | null): void => {
+    designerKind.value = kind;
+    designerOpen.value = true;
+};
+const withTableValues = (content: DocumentNode, kind: string, table: DesignedTable): DocumentNode => {
+    const list = table.design.list;
+    return { ...content, content: (content.content ?? []).map((node) => {
+        const rows = (node.attrs?.value as Record<string, unknown> | undefined)?.[list];
+        return node.type === 'documentBlock' && node.attrs?.kind === kind && Array.isArray(rows) && rows.length > table.design.max
+            ? { ...node, attrs: { ...node.attrs, value: table.initial } }
+            : node;
+    }) };
+};
+const isBlank = (content: DocumentNode): boolean => (content.content ?? []).every((node) => node.type === 'paragraph' && !(node.content ?? []).length);
+const applyTable = (table: DesignedTable, created: boolean): void => {
+    record();
+    tables.value = { ...tables.value, [table.kind]: { definition: table.definition, design: table.design } };
+    const field = selectedTemplateField.value;
+    if (created && field) {
+        const node: DocumentNode = { type: 'documentBlock', attrs: { kind: table.kind, props: {}, value: table.initial } };
+        patchSelectedField({ content: { ...field.content, content: isBlank(field.content) ? [node] : [...(field.content.content ?? []), node] } });
+    } else {
+        draft.value = draft.value.map((section) => ({ ...section, fields: section.fields.map((item) => ({ ...item, content: withTableValues(item.content, table.kind, table) })) }));
+    }
+    touched();
+};
 const applyPreset = (preset: TemplatePreset): void => patchSelectedField({ quien_llena: preset.quien_llena, content: JSON.parse(JSON.stringify(preset.content)) as TemplateField['content'] });
 const moveSelected = (direction: -1 | 1): void => {
     const target = selected.value;
@@ -716,6 +776,7 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1">
         <TemplateFormatTools :editor="ribbonEditor" :disabled="locked || busy || previewing" :variables="variables" :can-undo="canUndo" :can-redo="canRedo" @undo="undoStructure" @redo="redoStructure" />
         <TemplateResponseTool :editor="ribbonEditor" :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy || previewing" />
+        <TemplateTableTool :allowed="selection?.kind === 'field' && selection.field.quien_llena !== 'institucional'" :disabled="locked || busy || previewing" :tables="fieldTables" @create="openDesigner(null)" @edit="openDesigner($event)" />
         <span class="mx-1 h-5 w-px shrink-0 bg-border" aria-hidden="true" />
         <TemplateSelectionTools
           :selection="selection"
@@ -870,6 +931,7 @@ const sectionMarked = (index: number): boolean => dropMark.value?.kind === 'sect
         <DialogFooter><DialogClose as-child><Button type="button" variant="outline">Cerrar</Button></DialogClose></DialogFooter>
       </DialogContent>
     </Dialog>
+    <TemplateTableDesigner v-model:open="designerOpen" :template-id="template.id" :design="designerKind ? designOf(designerKind) : null" :reason="designerKind ? reasonOf(designerKind) : null" :name="designerKind ? templateRuntime().definition?.blocks[designerKind]?.label : undefined" :taken-kinds="takenKinds" @applied="applyTable" />
     <TemplateJsonDialog v-model:open="jsonOpen" :template-id="template.id" :locked="locked" @imported="reloadAfterJson" />
 
     <Dialog v-model:open="editWarningOpen">

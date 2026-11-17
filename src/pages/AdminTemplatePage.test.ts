@@ -83,6 +83,15 @@ describe("AdminTemplatePage", () => {
     vi.mocked(checkTemplateDraft).mockResolvedValue({ problems: [] });
   });
 
+  it('pasa al editor qué tablas repetibles se pueden abrir en el diseñador', async () => {
+    const blockDesigns = { unidades: { design: null, reason: 'Tiene listas o grupos dentro de cada fila. Para cambiarla use Opciones avanzadas → Editar JSON.' } };
+    vi.mocked(getTemplate).mockResolvedValue({ ...payload, blockDesigns });
+    const wrapper = mountPage();
+    await flushPromises();
+
+    expect(wrapper.findComponent({ name: 'TemplateVisualBuilder' }).props('blockDesigns')).toEqual(blockDesigns);
+  });
+
   it('al editar, «Ver como docente» muestra el formulario del borrador sin guardar', async () => {
     const doc = { type: 'doc' as const, content: [{ type: 'paragraph' }] };
     vi.mocked(previewTemplateDraft).mockResolvedValue({ sheets: [], sections: [{

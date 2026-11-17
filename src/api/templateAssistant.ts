@@ -1,3 +1,4 @@
+import type { BlockDefinition } from '@/lib/blocks/types';
 import { api } from '@/api/client';
 import type { DocumentNode } from '@/lib/templateDocument';
 import type { FieldResponsible } from '@/types/configuration';
@@ -44,6 +45,7 @@ export type TemplateAssistantProposal = {
         orientation: 'portrait' | 'landscape';
         fields: Array<{ key: string; label: string; quien_llena: FieldResponsible; content: DocumentNode }>;
     }>;
+    block_changes?: Record<string, BlockDefinition>;
 };
 
 export const getTemplateAssistant = () => api<TemplateAssistantChat>('/admin/template/assistant');

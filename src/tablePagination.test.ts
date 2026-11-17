@@ -3,7 +3,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 // La tabla de un campo de la ficha muestra un valor completo para comparar: no es un listado.
-const IGNORED = ['src/components/ui/', 'src/components/domain/academic/FichaProposalValue.vue'];
+// La vista previa del diseñador de tablas repetibles muestra cómo queda la tabla: tampoco es un listado.
+const IGNORED = ['src/components/ui/', 'src/components/domain/academic/FichaProposalValue.vue', 'src/components/domain/configuration/TemplateTableDesigner.vue'];
 
 const vueFiles = (directory: string): string[] => readdirSync(directory).flatMap((name) => {
   const path = join(directory, name);
