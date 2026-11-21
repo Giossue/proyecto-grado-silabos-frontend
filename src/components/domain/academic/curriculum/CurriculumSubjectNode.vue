@@ -115,7 +115,9 @@ const totalFields = computed(
           :position="Position.Top"
           :connectable="data.editable"
           :class="cn(data.editable && 'curriculum-handle')"
-          aria-label="Conectar el requisito de esta materia"
+          :role="data.editable ? 'button' : undefined"
+          :aria-label="data.editable ? 'Conectar el requisito de esta materia' : undefined"
+          :aria-hidden="data.editable ? undefined : 'true'"
         ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
       </TooltipTrigger>
       <TooltipContent v-if="data.editable">Conectar materias</TooltipContent>
@@ -182,9 +184,9 @@ const totalFields = computed(
           class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1.5 p-2 text-center"
           :class="cn(data.editable && 'pr-9')"
         >
-          <h3 class="line-clamp-3 text-xs leading-snug font-semibold uppercase">
+          <h2 class="line-clamp-3 text-xs leading-snug font-semibold uppercase">
             {{ data.subject.name }}
-          </h3>
+          </h2>
         </div>
       </div>
 
@@ -198,11 +200,11 @@ const totalFields = computed(
         }}<template v-if="data.subject.generates_syllabus === false"> · Sin sílabo</template>
       </p>
 
-      <dl
+      <div
         v-if="data.subject.display_fields.length > 0"
         class="border-t bg-muted/40"
       >
-        <div
+        <dl
           v-if="regularFields.length > 0"
           class="grid"
           :style="{
@@ -224,8 +226,8 @@ const totalFields = computed(
               {{ formatFieldValue(field.value) }}
             </dd>
           </div>
-        </div>
-        <div
+        </dl>
+        <dl
           v-for="field in totalFields"
           :key="field.id"
           class="text-center"
@@ -240,8 +242,8 @@ const totalFields = computed(
           <dd class="px-1 py-1 text-xs font-medium">
             {{ formatFieldValue(field.value) }}
           </dd>
-        </div>
-      </dl>
+        </dl>
+      </div>
     </article>
 
     <Dialog v-model:open="deleteOpen">
@@ -282,7 +284,9 @@ const totalFields = computed(
           :position="Position.Bottom"
           :connectable="data.editable"
           :class="cn(data.editable && 'curriculum-handle')"
-          aria-label="Conectar a la materia que requiere esta"
+          :role="data.editable ? 'button' : undefined"
+          :aria-label="data.editable ? 'Conectar a la materia que requiere esta' : undefined"
+          :aria-hidden="data.editable ? undefined : 'true'"
         ><Plus v-if="data.editable" class="pointer-events-none size-3 text-success-foreground" :stroke-width="3.5" aria-hidden="true" /></Handle>
       </TooltipTrigger>
       <TooltipContent v-if="data.editable">Conectar materias</TooltipContent>
